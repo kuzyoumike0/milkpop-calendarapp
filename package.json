@@ -12,6 +12,7 @@
     "body-parser": "^1.20.2"
   }
   "scripts": {
-  "check": "npm -v"
+  "start": "node index.js"
 }
+
 }
