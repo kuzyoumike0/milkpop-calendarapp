@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # コンテナ起動時のコマンド
-CMD ["node", "start", "index.js"]
+CMD ["node", "start"]
 
 # コンテナが使用するポート番号（Express側の設定に合わせる）
 EXPOSE 4000
