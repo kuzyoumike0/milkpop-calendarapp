@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # 依存関係インストール
-RUN npm install --production
+RUN npm install
 
 # アプリケーションのソースコードをコピー
 COPY . .
 
 # コンテナ起動時のコマンド
-CMD ["node", "index.js"]
+CMD ["node", "start", "index.js"]
 
 # コンテナが使用するポート番号（Express側の設定に合わせる）
 EXPOSE 4000
