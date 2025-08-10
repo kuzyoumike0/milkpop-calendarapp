@@ -1,0 +1,8 @@
+[services.web]
+root = "apps/web"                # アプリのルートディレクトリ
+buildCommand = "npm run build"   # ビルドコマンド
+startCommand = "npm run start"   # 起動コマンド
+
+[services.db]
+source = "postgres:16-alpine"    # 使用するDBイメージ
+volumes = ["/var/lib/postgresql/data"]
