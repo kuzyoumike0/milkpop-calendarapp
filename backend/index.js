@@ -1,21 +1,24 @@
-const express = require("express");
-const path = require("path");
-
+const express = require('express');
+const path = require('path');
 const app = express();
 
-// APIルート（例）
-app.get("/api/hello", (req, res) => {
-  res.json({ message: "Hello from backend!" });
+// JSONパース
+app.use(express.json());
+
+// 静的ファイル提供
+app.use(express.static(path.join(__dirname, 'public')));
+
+// APIルートの例
+app.get('/api/hello', (req, res) => {
+  res.json({ message: 'Hello from backend!' });
 });
 
-// Reactビルドファイルを静的配信
-app.use(express.static(path.join(__dirname, "public")));
-
-// ReactのSPAルーティング対応
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// Reactルーティング対応（フロントのルート全部をindex.htmlに返す）
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// 環境変数 PORT を優先
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ サーバーがポート ${PORT} で起動しました`);
