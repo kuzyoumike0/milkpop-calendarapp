@@ -1,34 +1,29 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const path = require('path');
-const pool = require('./pool');
+const { Pool } = require('pg');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('public')); // フロントビルド配信
 
-// ----- API -----
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
+
+// ---------------------
+// 共有予定
+// ---------------------
 app.post('/api/shared', async (req, res) => {
   try {
     const { title, time_slot, created_by, date } = req.body;
     const result = await pool.query(
-      'INSERT INTO shared_calendar(title, time_slot, created_by, date) VALUES($1,$2,$3,$4) RETURNING *',
-      [title, time_slot, created_by, date]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/personal', async (req, res) => {
-  try {
-    const { shared_id, note, user_id, date } = req.body;
-    const result = await pool.query(
-      'INSERT INTO personal_calendar(shared_id, note, user_id, date) VALUES($1,$2,$3,$4) RETURNING *',
-      [shared_id, note, user_id, date]
+      `INSERT INTO shared_events(date, time_slot, title, created_by)
+       VALUES($1,$2,$3,$4) RETURNING *`,
+      [date, time_slot, title, created_by]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -39,29 +34,55 @@ app.post('/api/personal', async (req, res) => {
 
 app.get('/api/shared', async (req, res) => {
   const { date } = req.query;
-  const result = await pool.query(
-    'SELECT * FROM shared_calendar WHERE date = $1 ORDER BY time_slot',
-    [date]
-  );
-  res.json(result.rows);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM shared_events WHERE date=$1 ORDER BY time_slot',
+      [date]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------
+// 個人予定
+// ---------------------
+app.post('/api/personal', async (req, res) => {
+  try {
+    const { user_id, title, time_slot, date } = req.body;
+    const result = await pool.query(
+      `INSERT INTO personal_events(user_id, date, time_slot, title)
+       VALUES($1,$2,$3,$4) RETURNING *`,
+      [user_id, date, time_slot, title]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/api/personal/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { date } = req.query;
-  const result = await pool.query(
-    'SELECT * FROM personal_calendar WHERE user_id=$1 AND date=$2',
-    [user_id, date]
-  );
-  res.json(result.rows);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM personal_events WHERE user_id=$1 AND date=$2 ORDER BY time_slot',
+      [user_id, date]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ----- React 静的配信 -----
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ----- サーバ起動 -----
+// ---------------------
+// サーバー起動
+// ---------------------
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
