@@ -17,16 +17,6 @@ export default function App() {
 
   useEffect(() => { fetchData(); }, [date]);
 
-  const addShared = async () => {
-    await axios.post('/api/shared', { date, time_slot: timeSlot, title, created_by: userId });
-    fetchData();
-  };
-
-  const addPersonal = async () => {
-    await axios.post('/api/personal', { user_id: userId, date, time_slot: timeSlot, title });
-    fetchData();
-  };
-
   return (
     <div>
       <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
@@ -34,8 +24,7 @@ export default function App() {
       <select value={timeSlot} onChange={e=>setTimeSlot(e.target.value)}>
         <option>全日</option><option>昼</option><option>夜</option>
       </select>
-      <button onClick={addShared}>共有に追加</button>
-      <button onClick={addPersonal}>個人に追加</button>
+      <button onClick={fetchData}>更新</button>
 
       <h3>共有カレンダー</h3>
       <ul>{shared.map(e=><li key={e.id}>{e.time_slot}: {e.title} ({e.created_by})</li>)}</ul>
