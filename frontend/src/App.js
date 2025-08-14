@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Calendar from './components/calendar';
+import Calendar from './components/calendar'; // calendar.jsのみ参照
 
 export default function App() {
   return (
