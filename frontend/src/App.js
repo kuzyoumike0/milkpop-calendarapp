@@ -54,6 +54,7 @@ export default function App() {
     <div className="container">
       <h1>Milkpop カレンダー</h1>
 
+      {/* 入力フォーム */}
       <div className="controls">
         <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
         <input placeholder="ユーザー名" value={userName} onChange={e=>setUserName(e.target.value)} />
@@ -67,33 +68,30 @@ export default function App() {
         <button onClick={() => addEvent('personal')}>個人カレンダーに追加</button>
       </div>
 
-      <div className="calendars">
-        <div className="calendar-card">
-          <h2>共有カレンダー</h2>
-          {shared.length === 0 ? <p>予定なし</p> :
-            shared.map(e => (
-              <div key={e.id} className={`event ${e.time_slot}`}>
-                <span>
-                  <strong>{e.time_slot}</strong>: {e.title} ({e.created_by})
-                </span>
-                <button className="delete-btn" onClick={() => deleteEvent('shared', e.id)}>削除</button>
-              </div>
-            ))
-          }
-        </div>
-
-        <div className="calendar-card">
-          <h2>個人カレンダー</h2>
-          {personal.length === 0 ? <p>予定なし</p> :
-            personal.map(e => (
-              <div key={e.id} className={`event ${e.time_slot}`}>
-                <span>
-                  <strong>{e.time_slot}</strong>: {e.title}
-                </span>
-                <button className="delete-btn" onClick={() => deleteEvent('personal', e.id)}>削除</button>
-              </div>
-            ))
-          }
+      {/* カレンダー表示 */}
+      <div className="calendar-grid">
+        <div className="calendar-cell">
+          <h3>{date}</h3>
+          <div className="events-list">
+            <h4>共有</h4>
+            {shared.length === 0 ? <p>予定なし</p> :
+              shared.map(e => (
+                <div key={e.id} className={`event ${e.time_slot}`}>
+                  <span><strong>{e.time_slot}</strong>: {e.title} ({e.created_by})</span>
+                  <button className="delete-btn" onClick={() => deleteEvent('shared', e.id)}>削除</button>
+                </div>
+              ))
+            }
+            <h4>個人</h4>
+            {personal.length === 0 ? <p>予定なし</p> :
+              personal.map(e => (
+                <div key={e.id} className={`event ${e.time_slot}`}>
+                  <span><strong>{e.time_slot}</strong>: {e.title}</span>
+                  <button className="delete-btn" onClick={() => deleteEvent('personal', e.id)}>削除</button>
+                </div>
+              ))
+            }
+          </div>
         </div>
       </div>
     </div>
