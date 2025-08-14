@@ -1,17 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const pool = require('./pool');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('../frontend/build'));
 
 // ----- API -----
-
-// 共有カレンダー登録
 app.post('/api/shared', async (req, res) => {
   try {
     const { title, time_slot, created_by, date } = req.body;
@@ -26,7 +23,6 @@ app.post('/api/shared', async (req, res) => {
   }
 });
 
-// 個人カレンダー登録
 app.post('/api/personal', async (req, res) => {
   try {
     const { shared_id, note, user_id, date } = req.body;
@@ -41,7 +37,6 @@ app.post('/api/personal', async (req, res) => {
   }
 });
 
-// 共有カレンダー取得
 app.get('/api/shared', async (req, res) => {
   const { date } = req.query;
   const result = await pool.query(
@@ -51,7 +46,6 @@ app.get('/api/shared', async (req, res) => {
   res.json(result.rows);
 });
 
-// 個人カレンダー取得
 app.get('/api/personal/:user_id', async (req, res) => {
   const { user_id } = req.params;
   const { date } = req.query;
@@ -60,6 +54,12 @@ app.get('/api/personal/:user_id', async (req, res) => {
     [user_id, date]
   );
   res.json(result.rows);
+});
+
+// ----- React 静的配信 -----
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ----- サーバ起動 -----
