@@ -1,21 +1,27 @@
+/* 全体 */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f4f8;
+  background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
   color: #333;
 }
 
+/* コンテナ */
 .container {
   max-width: 1000px;
   margin: 40px auto;
   padding: 20px;
 }
 
+/* タイトル */
 h1 {
   text-align: center;
   color: #4a90e2;
+  font-size: 2.5em;
+  margin-bottom: 20px;
 }
 
+/* 入力フォーム */
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -24,11 +30,20 @@ h1 {
   margin-bottom: 30px;
 }
 
-.controls input, .controls select, .controls button {
+.controls input, 
+.controls select, 
+.controls button {
   padding: 10px 15px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #ccc;
   font-size: 16px;
+  transition: 0.3s;
+}
+
+.controls input:focus, 
+.controls select:focus {
+  border-color: #4a90e2;
+  outline: none;
 }
 
 .controls button {
@@ -36,27 +51,32 @@ h1 {
   color: white;
   border: none;
   cursor: pointer;
-  transition: 0.3s;
 }
 
 .controls button:hover {
   background-color: #357ABD;
 }
 
+/* カレンダーカード */
 .calendars {
   display: flex;
-  gap: 20px;
   flex-wrap: wrap;
+  gap: 20px;
   justify-content: center;
 }
 
 .calendar-card {
   background: white;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   flex: 1;
   min-width: 300px;
+  transition: transform 0.2s;
+}
+
+.calendar-card:hover {
+  transform: translateY(-5px);
 }
 
 .calendar-card h2 {
@@ -65,13 +85,30 @@ h1 {
   margin-bottom: 15px;
 }
 
+/* イベント */
 .event {
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 10px;
+  padding: 12px 15px;
+  margin: 8px 0;
+  border-radius: 15px;
   font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.event.全日 { background-color: #ffeb3b44; }
-.event.昼 { background-color: #4caf5044; }
-.event.夜 { background-color: #673ab744; color: white; }
+.event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* 色分け */
+.event.全日 { background-color: #ffe06644; }
+.event.昼 { background-color: #6bcB7744; }
+.event.夜 { background-color: #674ea744; color: white; }
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+  .calendars {
+    flex-direction: column;
+    align-items: center;
+  }
+}
