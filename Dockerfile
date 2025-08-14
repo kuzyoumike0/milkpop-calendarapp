@@ -1,24 +1,18 @@
-# ==========================
-# 1. バックエンド用 Node
-# ==========================
+# フロントステージ
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+ENV NODE_OPTIONS=--max-old-space-size=4096
+RUN npm run build
+
+# バックエンドステージ
 FROM node:18
-
-WORKDIR /app
-
-# 依存関係インストール
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
-
-# バックエンドコードコピー
-COPY backend/ ./backend/
-
-# フロントビルド済みファイルをコピー
-# ローカルで npm run build した frontend/build を使用
-COPY frontend/build ./backend/public
-
-# ポート設定
-EXPOSE 8080
-
-# サーバー起動
 WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+COPY --from=frontend-build /app/frontend/build ./public
+EXPOSE 8080
 CMD ["node", "index.js"]
