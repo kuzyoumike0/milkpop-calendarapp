@@ -1,133 +1,27 @@
-/* 全体 */
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(to bottom, #f0f4f8, #d9e2ec);
-  color: #333;
-}
-
-/* コンテナ */
-.container {
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 20px;
-}
-
-/* タイトル */
-h1 {
-  text-align: center;
-  color: #4a90e2;
-  font-size: 2.5em;
-  margin-bottom: 20px;
-}
-
-/* 入力フォーム */
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 30px;
-}
-
-.controls input, 
-.controls select, 
-.controls button {
-  padding: 10px 15px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-  transition: 0.3s;
-}
-
-.controls input:focus, 
-.controls select:focus {
-  border-color: #4a90e2;
-  outline: none;
-}
-
-.controls button {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-.controls button:hover {
-  background-color: #357ABD;
-}
-
-/* カレンダーカード */
-.calendars {
-  display: flex;
-  flex-wrap: wrap;
+/* カレンダーグリッド */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
-  justify-content: center;
+  justify-items: center;
 }
 
-.calendar-card {
-  background: white;
-  padding: 25px;
+.calendar-cell {
+  background: #fff;
+  padding: 20px;
   border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  flex: 1;
-  min-width: 300px;
-  transition: transform 0.2s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  width: 100%;
 }
 
-.calendar-card:hover {
-  transform: translateY(-5px);
-}
-
-.calendar-card h2 {
+.calendar-cell h3 {
   text-align: center;
   color: #4a90e2;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
-/* イベント */
-.event {
-  padding: 12px 15px;
-  margin: 8px 0;
-  border-radius: 15px;
-  font-weight: bold;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.event:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-}
-
-/* 色分け */
-.event.全日 { background-color: #ffe06644; }
-.event.昼 { background-color: #6bcB7744; }
-.event.夜 { background-color: #674ea744; color: white; }
-
-/* 削除ボタン */
-.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: 0.3s;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-/* レスポンシブ */
-@media (max-width: 768px) {
-  .calendars {
-    flex-direction: column;
-    align-items: center;
-  }
+.events-list h4 {
+  margin: 10px 0 5px 0;
+  color: #333;
+  font-size: 1em;
 }
