@@ -3,52 +3,33 @@ import axios from 'axios';
 import './App.css';
 
 export default function App() {
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(new Date().toISOString().slice(0,10));
   const [title, setTitle] = useState('');
   const [timeSlot, setTimeSlot] = useState('全日');
   const [shared, setShared] = useState([]);
   const [personal, setPersonal] = useState([]);
   const userId = 'user1'; // ダミーID
 
-  // データ取得
   const fetchData = async () => {
-    try {
-      const s = await axios.get(`/api/shared?date=${date}`);
-      const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
-      setShared(s.data);
-      setPersonal(p.data);
-    } catch (err) {
-      console.error('データ取得エラー', err);
-    }
+    const s = await axios.get(`/api/shared?date=${date}`);
+    const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
+    setShared(s.data); setPersonal(p.data);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [date]);
+  useEffect(() => { fetchData(); }, [date]);
 
-  // 予定追加
   const addEvent = async (type) => {
     if (!title) return alert('イベント名を入力してください');
     try {
       if (type === 'shared') {
-        await axios.post('/api/shared', {
-          title,
-          time_slot: timeSlot,
-          created_by: userId,
-          date
-        });
+        await axios.post('/api/shared', { title, time_slot: timeSlot, created_by: userId, date });
       } else {
-        await axios.post('/api/personal', {
-          title,
-          time_slot: timeSlot,
-          user_id: userId,
-          date
-        });
+        await axios.post('/api/personal', { title, time_slot: timeSlot, user_id: userId, date });
       }
       setTitle('');
-      fetchData(); // 追加後に再取得
+      fetchData();
     } catch (err) {
-      console.error('追加エラー', err);
+      console.error(err);
       alert('追加に失敗しました');
     }
   };
@@ -56,23 +37,13 @@ export default function App() {
   return (
     <div className="container">
       <h1>Milkpop カレンダー</h1>
-
       <div className="controls">
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="イベント名"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-        />
-        <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)}>
-          <option value="全日">全日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
+        <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
+        <input placeholder="イベント名" value={title} onChange={e=>setTitle(e.target.value)} />
+        <select value={timeSlot} onChange={e=>setTimeSlot(e.target.value)}>
+          <option>全日</option>
+          <option>昼</option>
+          <option>夜</option>
         </select>
         <button onClick={() => addEvent('shared')}>共有カレンダーに追加</button>
         <button onClick={() => addEvent('personal')}>個人カレンダーに追加</button>
@@ -81,28 +52,24 @@ export default function App() {
       <div className="calendars">
         <div className="calendar-card">
           <h2>共有カレンダー</h2>
-          {shared.length === 0 ? (
-            <p>予定なし</p>
-          ) : (
+          {shared.length === 0 ? <p>予定なし</p> :
             shared.map(e => (
               <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title} ({e.created_by})
               </div>
             ))
-          )}
+          }
         </div>
 
         <div className="calendar-card">
           <h2>個人カレンダー</h2>
-          {personal.length === 0 ? (
-            <p>予定なし</p>
-          ) : (
+          {personal.length === 0 ? <p>予定なし</p> :
             personal.map(e => (
               <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title}
               </div>
             ))
-          )}
+          }
         </div>
       </div>
     </div>
