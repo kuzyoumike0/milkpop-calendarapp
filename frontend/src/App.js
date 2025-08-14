@@ -1,8 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import SharedCalendar from './components/SharedCalendar';
-import PersonalCalendar from './components/PersonalCalendar';
-import './App.css';
+import Calendar from './components/calendar'; // 修正点
 
 export default function App() {
   return (
@@ -11,10 +9,9 @@ export default function App() {
         <Link to="/">共有カレンダー</Link>
         <Link to="/personal">個人カレンダー</Link>
       </div>
-
       <Routes>
-        <Route path="/" element={<SharedCalendar />} />
-        <Route path="/personal" element={<PersonalCalendar />} />
+        <Route path="/" element={<Calendar type="shared" />} />
+        <Route path="/personal" element={<Calendar type="personal" />} />
       </Routes>
     </Router>
   );
