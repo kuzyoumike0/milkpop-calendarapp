@@ -1,0 +1,125 @@
+/* --------------------
+   全体設定
+-------------------- */
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  color: #333;
+}
+
+.container {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* --------------------
+   タイトル
+-------------------- */
+h1, h2, h3 {
+  text-align: center;
+  color: #444;
+  margin-bottom: 20px;
+}
+
+/* --------------------
+   カレンダーリスト
+-------------------- */
+.calendar-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.calendar-item {
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.calendar-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* 時間帯別カラー */
+.calendar-item[data-time="全日"] {
+  border-left: 6px solid #ff6b6b;
+}
+
+.calendar-item[data-time="昼"] {
+  border-left: 6px solid #feca57;
+}
+
+.calendar-item[data-time="夜"] {
+  border-left: 6px solid #1e90ff;
+}
+
+/* --------------------
+   ボタン
+-------------------- */
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+button.add-shared {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+button.add-personal {
+  background-color: #1e90ff;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+/* --------------------
+   入力欄
+-------------------- */
+input, select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* --------------------
+   フォームラベル
+-------------------- */
+label {
+  font-weight: bold;
+  margin-top: 8px;
+  display: block;
+  color: #555;
+}
+
+/* --------------------
+   フッター
+-------------------- */
+footer {
+  text-align: center;
+  margin-top: 40px;
+  color: #777;
+  font-size: 14px;
+}
