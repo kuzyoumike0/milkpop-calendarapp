@@ -8,26 +8,28 @@ WORKDIR /app
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
-# 4. バックエンド・フロントエンド依存関係インストール
+# 4. バックエンド依存関係インストール
 RUN cd backend && npm install
-RUN cd frontend && npm install
 
-# 5. フロントエンドをビルド
+# 5. フロントエンド依存関係インストール（react-router-dom含む）
+RUN cd frontend && npm install && npm install react-router-dom
+
+# 6. フロントエンドソースコードコピー＆ビルド
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
-# 6. バックエンドファイルをコピー
+# 7. バックエンドソースコードコピー
 COPY backend/ ./backend/
 
-# 7. ビルドしたフロントをバックエンド public に配置
+# 8. ビルドしたフロントをバックエンド public に配置
 RUN rm -rf backend/public
 RUN mv frontend/build backend/public
 
-# 8. 作業ディレクトリをバックエンドに変更
+# 9. 作業ディレクトリをバックエンドに変更
 WORKDIR /app/backend
 
-# 9. ポートを公開
+# 10. ポートを公開
 EXPOSE 8080
 
-# 10. サーバー起動
+# 11. サーバー起動
 CMD ["node", "index.js"]
