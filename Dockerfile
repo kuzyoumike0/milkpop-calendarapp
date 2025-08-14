@@ -4,31 +4,44 @@ FROM node:18 AS build
 # 2. 作業ディレクトリ
 WORKDIR /app
 
-# 3. package.json のコピー
+# =============================
+# バックエンドの準備
+# =============================
+# 3. package.json と lock ファイルだけコピー
 COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
 
 # 4. バックエンド依存関係インストール
 RUN cd backend && npm install
 
-# 5. フロントエンド依存関係インストール
-RUN cd frontend && npm install
+# =============================
+# フロントエンドの準備
+# =============================
+# 5. package.json と lock ファイルだけコピー
+COPY frontend/package*.json ./frontend/
 
-# 6. フロントエンドソースコピー＆ビルド
-COPY frontend ./frontend
-RUN cd frontend && npm run build
+# 6. フロントエンド依存関係インストール
+WORKDIR /app/frontend
+RUN npm ci
 
-# 7. バックエンドソースコピー
-COPY backend ./backend
+# 7. フロントエンドソースコードコピー
+COPY frontend/ ./
 
-# 8. ビルドしたフロントを backend/public に配置
+# 8. フロントエンドビルド
+RUN npm run build
+
+# =============================
+# バックエンドと統合
+# =============================
+WORKDIR /app
+# バックエンドソースコードコピー
+COPY backend/ ./backend/
+
+# ビルドしたフロントを backend/public に配置
 RUN rm -rf backend/public && mv frontend/build backend/public
 
-# 9. 作業ディレクトリをバックエンドに変更
+# =============================
+# 最終設定
+# =============================
 WORKDIR /app/backend
-
-# 10. ポート公開
 EXPOSE 8080
-
-# 11. サーバー起動
 CMD ["node", "index.js"]
