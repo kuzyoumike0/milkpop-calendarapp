@@ -2,15 +2,15 @@ FROM node:18
 
 WORKDIR /app
 
-# パッケージコピー
+# バックエンド依存関係
 COPY package*.json ./
 RUN npm install
 
-# フロントビルド
+# フロントエンドビルド
 COPY ../frontend ./frontend
 RUN npm run build-frontend
 
-# バックエンドコピー
+# バックエンドコードコピー
 COPY . .
 
 EXPOSE 4000
