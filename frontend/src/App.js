@@ -49,6 +49,26 @@ export default function App() {
     }
   };
 
+  const deleteShared = async (id) => {
+    try {
+      await axios.delete(`/api/shared/${id}`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('削除に失敗しました');
+    }
+  };
+
+  const deletePersonal = async (id) => {
+    try {
+      await axios.delete(`/api/personal/${userId}/${id}`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('削除に失敗しました');
+    }
+  };
+
   return (
     <div className="container">
       <h1>Milkpop カレンダー</h1>
@@ -71,6 +91,7 @@ export default function App() {
             shared.map(e => (
               <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title} ({e.created_by})
+                <button onClick={() => deleteShared(e.id)}>削除</button>
               </div>
             ))
           }
@@ -79,9 +100,10 @@ export default function App() {
         <div className="calendar-card">
           <h2>個人カレンダー</h2>
           {personal.length === 0 ? <p>予定なし</p> :
-            personal.map((e,i) => (
-              <div key={i} className={`event ${e.time_slot}`}>
+            personal.map(e => (
+              <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title}
+                <button onClick={() => deletePersonal(e.id)}>削除</button>
               </div>
             ))
           }
