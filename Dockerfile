@@ -1,34 +1,30 @@
 # ==========================
-# ベースイメージ
+# フロントビルドステージ
 # ==========================
-FROM node:18
+FROM node:18 AS frontend-build
 
-# ==========================
 # 作業ディレクトリ
-# ==========================
-WORKDIR /app
-
-# ==========================
-# --- フロントエンド ---
-# ==========================
 WORKDIR /app/frontend
 
-# package.json だけ先にコピーして依存インストール（キャッシュ効率）
+# 依存関係のみ先にコピーしてインストール（キャッシュ効率）
 COPY frontend/package*.json ./
 RUN npm install
 
-# フロントエンドソース全体をコピー
+# フロントソース全体をコピー
 COPY frontend/ ./
 
 # ビルド
 RUN npm run build
 
 # ==========================
-# --- バックエンド ---
+# バックエンドステージ
 # ==========================
+FROM node:18
+
+# 作業ディレクトリ
 WORKDIR /app/backend
 
-# package.json だけ先にコピーして依存インストール
+# バックエンド依存関係インストール
 COPY backend/package*.json ./
 RUN npm install
 
@@ -36,7 +32,7 @@ RUN npm install
 COPY backend/ ./
 
 # フロントビルド成果物をバックエンドで配信
-COPY --from=0 /app/frontend/build ./public
+COPY --from=frontend-build /app/frontend/build ./public
 
 # ==========================
 # 環境変数・ポート
