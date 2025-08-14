@@ -5,25 +5,20 @@ FROM node:18 AS build
 WORKDIR /app
 
 # =============================
-# バックエンドの準備
+# バックエンド準備
 # =============================
-# 3. package.json と lock ファイルだけコピー
 COPY backend/package*.json ./backend/
-
-# 4. バックエンド依存関係インストール
 RUN cd backend && npm install
 
 # =============================
-# フロントエンドの準備
+# フロントエンド準備
 # =============================
-# 5. package.json と lock ファイルだけコピー
 COPY frontend/package*.json ./frontend/
-
-# 6. フロントエンド依存関係インストール
 WORKDIR /app/frontend
-RUN npm ci
+# package-lock.json がなければ npm install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-# 7. フロントエンドソースコードコピー
+# 7. フロントエンドソースコピー
 COPY frontend/ ./
 
 # 8. フロントエンドビルド
@@ -33,10 +28,7 @@ RUN npm run build
 # バックエンドと統合
 # =============================
 WORKDIR /app
-# バックエンドソースコードコピー
 COPY backend/ ./backend/
-
-# ビルドしたフロントを backend/public に配置
 RUN rm -rf backend/public && mv frontend/build backend/public
 
 # =============================
