@@ -1,22 +1,19 @@
-# Node.js ベースイメージ
+# 1. フロントビルド用
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# 2. バックエンド + 静的ファイル用
 FROM node:18
-
-WORKDIR /app
-
-# バックエンド依存
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
-
-# フロント依存 & ビルド
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install && npm run build
-
-# バックエンド & フロントビルドをコピー
-COPY backend/ ./backend/
-# ビルド成果物を public にコピー
-RUN mkdir -p backend/public
-COPY frontend/build/ ./backend/public/
-
 WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+# frontend build を public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
 EXPOSE 4000
 CMD ["node", "index.js"]
