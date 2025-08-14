@@ -1,128 +1,65 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-const path = require('path');   // 追加
-require('dotenv').config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const app = express();
+const port = process.env.PORT || 5000;
+
+// ミドルウェア設定
 app.use(cors());
 app.use(bodyParser.json());
 
-// 静的ファイル配信
-app.use(express.static(path.join(__dirname, 'public')));
-
+// PostgreSQL 接続設定
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
 });
 
-// ---------------------
-// 共有予定 API
-// ---------------------
-app.post('/api/shared', async (req, res) => {
-  try {
-    const { title, time_slot, created_by, date } = req.body;
-    const result = await pool.query(
-      `INSERT INTO shared_events(date, time_slot, title, created_by)
-       VALUES($1,$2,$3,$4) RETURNING *`,
-      [date, time_slot, title, created_by]
+// テーブル作成（初回のみ）
+const createTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS events (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      date DATE NOT NULL,
+      time_slot TEXT NOT NULL, -- "morning" | "afternoon" | "evening"
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
+  `);
+};
+createTable();
 
-app.get('/api/shared', async (req, res) => {
-  const { date } = req.query;
+// 予定取得API
+app.get("/api/events", async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM shared_events WHERE date=$1 ORDER BY time_slot',
-      [date]
-    );
+    const result = await pool.query("SELECT * FROM events ORDER BY date, time_slot");
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "データ取得に失敗しました" });
   }
 });
 
-app.delete('/api/shared/:id', async (req, res) => {
-  const { id } = req.params;
+// 予定追加API
+app.post("/api/events", async (req, res) => {
   try {
+    const { title, date, time_slot } = req.body;
+    if (!title || !date || !time_slot) {
+      return res.status(400).json({ error: "すべてのフィールドを入力してください" });
+    }
     const result = await pool.query(
-      'DELETE FROM shared_events WHERE id=$1 RETURNING *',
-      [id]
+      "INSERT INTO events (title, date, time_slot) VALUES ($1, $2, $3) RETURNING *",
+      [title, date, time_slot]
     );
-    if (result.rowCount === 0) return res.status(404).json({ error: '該当予定がありません' });
-    res.json({ message: '削除成功', deleted: result.rows[0] });
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "データ追加に失敗しました" });
   }
 });
 
-// ---------------------
-// 個人予定 API
-// ---------------------
-app.post('/api/personal', async (req, res) => {
-  try {
-    const { user_id, title, time_slot, date } = req.body;
-    const result = await pool.query(
-      `INSERT INTO personal_events(user_id, date, time_slot, title)
-       VALUES($1,$2,$3,$4) RETURNING *`,
-      [user_id, date, time_slot, title]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/api/personal/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  const { date } = req.query;
-  try {
-    const result = await pool.query(
-      'SELECT * FROM personal_events WHERE user_id=$1 AND date=$2 ORDER BY time_slot',
-      [user_id, date]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/personal/:user_id/:id', async (req, res) => {
-  const { user_id, id } = req.params;
-  try {
-    const result = await pool.query(
-      'DELETE FROM personal_events WHERE user_id=$1 AND id=$2 RETURNING *',
-      [user_id, id]
-    );
-    if (result.rowCount === 0) return res.status(404).json({ error: '該当予定がありません' });
-    res.json({ message: '削除成功', deleted: result.rows[0] });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ---------------------
-// SPA対応：React Router でのページ遷移対応
-// ---------------------
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ---------------------
-// サーバー起動
-// ---------------------
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ サーバーがポート ${port} で起動しました`);
 });
