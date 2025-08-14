@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3'
 services:
   db:
     image: postgres:15
@@ -16,7 +16,6 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:eJjJplyhHrsYWyTqeOauZwunjRPMFUFv@db:5432/calendar
       PORT: 8080
-      NODE_ENV: production
     ports:
       - "8080:8080"
     depends_on:
