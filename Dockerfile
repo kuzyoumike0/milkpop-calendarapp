@@ -1,24 +1,29 @@
-# ==== フロントビルド ====
-FROM node:18 AS frontend-build
+# ベース
+FROM node:18
+
+# 作業ディレクトリ
+WORKDIR /app
+
+# --- フロント ---
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# ==== バックエンド ====
-FROM node:18
+# --- バック ---
 WORKDIR /app/backend
-
-# バックエンド依存
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# フロントビルド成果物をバックエンドの public にコピー
-COPY --from=frontend-build /app/frontend/build ./public
+# フロントのビルド成果物をバックエンドで配信
+COPY --from=0 /app/frontend/build ./public
 
-# ポート
+# 環境変数
+ENV PORT 8080
+
+# ポート開放
 EXPOSE 8080
 
 # 起動
