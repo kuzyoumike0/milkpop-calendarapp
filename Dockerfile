@@ -1,6 +1,3 @@
-# ---------------------
-# バックエンド + フロント静的配信
-# ---------------------
 FROM node:18
 WORKDIR /app
 
@@ -8,10 +5,10 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドコピー
+# バックエンドソースコピー
 COPY backend/ ./
 
-# ローカルで作った React ビルドをコピー
+# ローカルでビルドした React をコピー
 COPY frontend/build ./public
 
 # ポート指定
