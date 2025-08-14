@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -12,13 +13,13 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-// 共有カレンダー取得
+// 共有カレンダー
 app.get('/api/shared', async (req, res) => {
   const result = await pool.query('SELECT * FROM shared_calendar ORDER BY date, period');
   res.json(result.rows);
 });
 
-// 個人カレンダー取得
+// 個人カレンダー
 app.get('/api/personal/:userId', async (req, res) => {
   const { userId } = req.params;
   const result = await pool.query(
@@ -32,7 +33,7 @@ app.get('/api/personal/:userId', async (req, res) => {
   res.json(result.rows);
 });
 
-// 共有カレンダー追加
+// 共有予定追加
 app.post('/api/shared', async (req, res) => {
   const { date, period, title } = req.body;
   const result = await pool.query(
@@ -42,7 +43,7 @@ app.post('/api/shared', async (req, res) => {
   res.json(result.rows[0]);
 });
 
-// 個人カレンダー追加
+// 個人予定追加
 app.post('/api/personal', async (req, res) => {
   const { user_id, shared_id, note } = req.body;
   const result = await pool.query(
@@ -50,6 +51,12 @@ app.post('/api/personal', async (req, res) => {
     [user_id, shared_id, note]
   );
   res.json(result.rows[0]);
+});
+
+// React ビルド配信
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 4000;
