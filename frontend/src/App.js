@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './App.css';
+import './index.css';
 
 export default function App() {
   const [date, setDate] = useState(new Date().toISOString().slice(0,10));
@@ -8,11 +8,11 @@ export default function App() {
   const [timeSlot, setTimeSlot] = useState('全日');
   const [shared, setShared] = useState([]);
   const [personal, setPersonal] = useState([]);
-  const userId = 'user1'; // ダミーID
+  const userId = 'user1';
 
   const fetchData = async () => {
     const s = await axios.get(`/api/shared?date=${date}`);
-    const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
+    const p = await axios.get(`/api/personal/${userId}?date=${date}`);
     setShared(s.data); setPersonal(p.data);
   };
 
@@ -24,7 +24,8 @@ export default function App() {
       if (type === 'shared') {
         await axios.post('/api/shared', { title, time_slot: timeSlot, created_by: userId, date });
       } else {
-        await axios.post('/api/personal', { title, time_slot: timeSlot, user_id: userId, date });
+        if(shared.length===0) return alert('まず共有カレンダーを追加してください');
+        await axios.post('/api/personal', { shared_id: shared[0].id, note: title, user_id: userId, date });
       }
       setTitle('');
       fetchData();
@@ -65,8 +66,8 @@ export default function App() {
           <h2>個人カレンダー</h2>
           {personal.length === 0 ? <p>予定なし</p> :
             personal.map(e => (
-              <div key={e.id} className={`event ${e.time_slot}`}>
-                <strong>{e.time_slot}</strong>: {e.title}
+              <div key={e.id} className={`event`}>
+                {e.note}
               </div>
             ))
           }
