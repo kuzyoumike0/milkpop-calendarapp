@@ -13,7 +13,8 @@ export default function App() {
   const fetchData = async () => {
     const s = await axios.get(`/api/shared?date=${date}`);
     const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
-    setShared(s.data); setPersonal(p.data);
+    setShared(s.data);
+    setPersonal(p.data);
   };
 
   useEffect(() => { fetchData(); }, [date]);
@@ -31,6 +32,21 @@ export default function App() {
     } catch (err) {
       console.error(err);
       alert('追加に失敗しました');
+    }
+  };
+
+  const deleteEvent = async (type, id) => {
+    if (!window.confirm('本当に削除しますか？')) return;
+    try {
+      if (type === 'shared') {
+        await axios.delete(`/api/shared/${id}`);
+      } else {
+        await axios.delete(`/api/personal/${id}`);
+      }
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('削除に失敗しました');
     }
   };
 
@@ -56,6 +72,7 @@ export default function App() {
             shared.map(e => (
               <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title} ({e.created_by})
+                <button className="delete-btn" onClick={() => deleteEvent('shared', e.id)}>削除</button>
               </div>
             ))
           }
@@ -67,6 +84,7 @@ export default function App() {
             personal.map(e => (
               <div key={e.id} className={`event ${e.time_slot}`}>
                 <strong>{e.time_slot}</strong>: {e.title}
+                <button className="delete-btn" onClick={() => deleteEvent('personal', e.id)}>削除</button>
               </div>
             ))
           }
