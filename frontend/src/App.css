@@ -1,78 +1,62 @@
-/* カレンダー全体 */
+/* 全体背景 */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f3f4f6;
+  margin: 0;
+  padding: 0;
+}
+
+/* カレンダーコンテナ */
 .react-calendar {
   width: 100%;
   max-width: 900px;
-  margin: 20px auto;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border: none;
-  border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* カレンダーのヘッダー */
-.react-calendar__navigation {
-  background-color: #4f46e5; /* 紫系 */
-  color: #fff;
-  border-radius: 15px 15px 0 0;
-  padding: 10px 0;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* 月・曜日 */
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
-  color: #4f46e5;
-  text-transform: uppercase;
 }
 
 /* 日付セル */
 .react-calendar__tile {
   height: 80px;
-  background: #f9fafb;
-  margin: 2px;
-  border-radius: 10px;
-  position: relative;
-  transition: transform 0.2s, background 0.2s;
+  padding: 5px;
+  border-radius: 8px;
+  transition: background 0.3s;
 }
 
-/* ホバー効果 */
 .react-calendar__tile:hover {
-  background: #e0e7ff;
-  transform: translateY(-2px);
+  background-color: #e0e7ff;
 }
 
-/* 今日の日付 */
+/* 今日の強調 */
 .react-calendar__tile--now {
   background: #c7d2fe;
-  font-weight: bold;
   color: #1e40af;
+  font-weight: bold;
 }
 
-/* 選択中の日付 */
+/* 選択日 */
 .react-calendar__tile--active {
   background: #4f46e5;
   color: white;
   font-weight: bold;
 }
 
-/* 予定リスト */
-.react-calendar__tile ul {
-  padding-left: 5px;
-  margin-top: 5px;
-  font-size: 0.65em;
+/* イベントリスト */
+.react-calendar ul {
   list-style: none;
+  padding: 0;
+  margin: 5px 0 0 0;
+  font-size: 0.75rem;
 }
 
-.react-calendar__tile ul li {
-  background: #e0e7ff;
+.react-calendar li {
+  background: #fef3c7;
   margin-bottom: 2px;
   padding: 2px 4px;
-  border-radius: 5px;
-  white-space: nowrap;
+  border-radius: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
