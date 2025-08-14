@@ -1,40 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const sharedEvents = [
-  { id: 1, date: '2025-08-15', time: '全日', title: '共有イベント1' },
-  { id: 2, date: '2025-08-15', time: '昼', title: '共有イベント2' },
-];
+export default function App() {
+  const [date, setDate] = useState(new Date().toISOString().slice(0,10));
+  const [title, setTitle] = useState('');
+  const [timeSlot, setTimeSlot] = useState('全日');
+  const [shared, setShared] = useState([]);
+  const [personal, setPersonal] = useState([]);
+  const userId = 'user1';
 
-const personalEvents = [
-  { id: 1, date: '2025-08-15', time: '夜', title: '個人イベント1' },
-];
+  const fetchData = async () => {
+    const s = await axios.get(`/api/shared?date=${date}`);
+    const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
+    setShared(s.data); setPersonal(p.data);
+  };
 
-function App() {
+  useEffect(() => { fetchData(); }, [date]);
+
+  const addShared = async () => {
+    await axios.post('/api/shared', { date, time_slot: timeSlot, title, created_by: userId });
+    fetchData();
+  };
+
+  const addPersonal = async () => {
+    await axios.post('/api/personal', { user_id: userId, date, time_slot: timeSlot, title });
+    fetchData();
+  };
+
   return (
-    <div className="container">
-      <h1>Milkpop Calendar</h1>
+    <div>
+      <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
+      <input placeholder="イベント名" value={title} onChange={e=>setTitle(e.target.value)} />
+      <select value={timeSlot} onChange={e=>setTimeSlot(e.target.value)}>
+        <option>全日</option><option>昼</option><option>夜</option>
+      </select>
+      <button onClick={addShared}>共有に追加</button>
+      <button onClick={addPersonal}>個人に追加</button>
 
-      <h2>共有カレンダー</h2>
-      <ul className="calendar-list">
-        {sharedEvents.map(event => (
-          <li key={event.id} className="calendar-item" data-time={event.time}>
-            {event.date} - {event.time} : {event.title}
-          </li>
-        ))}
-      </ul>
+      <h3>共有カレンダー</h3>
+      <ul>{shared.map(e=><li key={e.id}>{e.time_slot}: {e.title} ({e.created_by})</li>)}</ul>
 
-      <h2>個人カレンダー</h2>
-      <ul className="calendar-list">
-        {personalEvents.map(event => (
-          <li key={event.id} className="calendar-item" data-time={event.time}>
-            {event.date} - {event.time} : {event.title}
-          </li>
-        ))}
-      </ul>
-
-      <footer>© 2025 Milkpop Calendar</footer>
+      <h3>個人カレンダー</h3>
+      <ul>{personal.map(e=><li key={e.id}>{e.time_slot}: {e.title}</li>)}</ul>
     </div>
   );
 }
-
-export default App;
