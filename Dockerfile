@@ -4,7 +4,7 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係を先にコピーしてインストール（キャッシュ効率化）
+# 依存関係のみ先にコピーしてインストール（キャッシュ効率化）
 COPY frontend/package*.json ./
 RUN npm install
 
@@ -21,16 +21,16 @@ RUN npm run build
 # バックエンドステージ
 # =====================
 FROM node:18
-WORKDIR /app/backend
+WORKDIR /app
 
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドコピー
+# バックエンドソースコピー
 COPY backend/ ./
 
-# フロントビルド成果物を public 配下にコピー
+# フロントビルド成果物をバックエンドの public 配下にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 # ポート指定
