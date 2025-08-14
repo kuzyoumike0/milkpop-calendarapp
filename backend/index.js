@@ -1,40 +1,29 @@
-const express = require('express');
-const path = require('path');
-const pool = require('./db');
-require('dotenv').config();
-
-const app = express();
-app.use(express.json());
-
-// API例: 共有カレンダー取得
-app.get('/api/shared', async (req, res) => {
-  const { date } = req.query;
-  const result = await pool.query(
-    'SELECT * FROM shared_events WHERE date=$1 ORDER BY time_slot',
-    [date]
-  );
-  res.json(result.rows);
+// 共有カレンダーに追加
+app.post('/api/shared', async (req, res) => {
+  const { title, time_slot, created_by, date } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO shared_events(title, time_slot, created_by, date) VALUES($1, $2, $3, $4) RETURNING *',
+      [title, time_slot, created_by, date]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '共有カレンダー追加失敗' });
+  }
 });
 
-// API例: 個人カレンダー取得
-app.get('/api/personal', async (req, res) => {
-  const { user_id, date } = req.query;
-  const result = await pool.query(
-    'SELECT * FROM personal_events WHERE user_id=$1 AND date=$2 ORDER BY time_slot',
-    [user_id, date]
-  );
-  res.json(result.rows);
-});
-
-// 静的ファイル配信
-app.use(express.static(path.join(__dirname, 'public')));
-
-// React のルート
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// サーバ起動
-app.listen(process.env.PORT || 8080, () => {
-  console.log(`サーバー起動: ポート ${process.env.PORT || 8080}`);
+// 個人カレンダーに追加
+app.post('/api/personal', async (req, res) => {
+  const { title, time_slot, user_id, date } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO personal_events(title, time_slot, user_id, date) VALUES($1, $2, $3, $4) RETURNING *',
+      [title, time_slot, user_id, date]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '個人カレンダー追加失敗' });
+  }
 });
