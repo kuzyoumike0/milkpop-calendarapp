@@ -3,27 +3,40 @@ import axios from 'axios';
 import './App.css';
 
 export default function App() {
-  const [date, setDate] = useState(new Date().toISOString().slice(0,10));
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [userName, setUserName] = useState('');
   const [title, setTitle] = useState('');
   const [timeSlot, setTimeSlot] = useState('全日');
-  const [shared, setShared] = useState([]);
-  const [personal, setPersonal] = useState([]);
+  const [events, setEvents] = useState({}); // { '2025-08-14': { shared: [], personal: [] } }
+
+  const formatDate = (date) => date.toISOString().slice(0, 10);
 
   const fetchData = async () => {
-    try {
-      const s = await axios.get(`/api/shared?date=${date}`);
-      const p = await axios.get(`/api/personal?user_id=${userName}&date=${date}`);
-      setShared(s.data);
-      setPersonal(p.data);
-    } catch (err) {
-      console.error(err);
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    const data = {};
+    for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = formatDate(new Date(d));
+      try {
+        const s = await axios.get(`/api/shared?date=${dateStr}`);
+        const p = await axios.get(`/api/personal?user_id=${userName}&date=${dateStr}`);
+        data[dateStr] = { shared: s.data, personal: p.data };
+      } catch (err) {
+        console.error(err);
+        data[dateStr] = { shared: [], personal: [] };
+      }
     }
+    setEvents(data);
   };
 
-  useEffect(() => { fetchData(); }, [date, userName]);
+  useEffect(() => {
+    if (userName) fetchData();
+  }, [currentMonth, userName]);
 
-  const addEvent = async (type) => {
+  const addEvent = async (type, date) => {
     if (!userName) return alert('ユーザー名を入力してください');
     if (!title) return alert('イベント名を入力してください');
     try {
@@ -50,13 +63,53 @@ export default function App() {
     }
   };
 
+  const renderCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const calendarDays = [];
+    for (let i = 0; i < firstDay; i++) calendarDays.push(null);
+    for (let d = 1; d <= lastDate; d++) calendarDays.push(new Date(year, month, d));
+
+    return calendarDays.map((day, idx) => {
+      if (!day) return <div key={idx} className="calendar-cell empty"></div>;
+      const dateStr = formatDate(day);
+      const dayEvents = events[dateStr] || { shared: [], personal: [] };
+      return (
+        <div key={idx} className="calendar-cell">
+          <h4>{day.getDate()}</h4>
+          <div className="events-list">
+            {dayEvents.shared.map(e => (
+              <div key={e.id} className={`event ${e.time_slot}`}>
+                <span>{e.time_slot}: {e.title} ({e.created_by})</span>
+                <button className="delete-btn" onClick={() => deleteEvent('shared', e.id)}>削除</button>
+              </div>
+            ))}
+            {dayEvents.personal.map(e => (
+              <div key={e.id} className={`event ${e.time_slot}`}>
+                <span>{e.time_slot}: {e.title}</span>
+                <button className="delete-btn" onClick={() => deleteEvent('personal', e.id)}>削除</button>
+              </div>
+            ))}
+          </div>
+          <div className="add-event-buttons">
+            <button onClick={() => addEvent('shared', dateStr)}>共有追加</button>
+            <button onClick={() => addEvent('personal', dateStr)}>個人追加</button>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() -1, 1));
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() +1, 1));
+
   return (
     <div className="container">
       <h1>Milkpop カレンダー</h1>
-
-      {/* 入力フォーム */}
       <div className="controls">
-        <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
         <input placeholder="ユーザー名" value={userName} onChange={e=>setUserName(e.target.value)} />
         <input placeholder="イベント名" value={title} onChange={e=>setTitle(e.target.value)} />
         <select value={timeSlot} onChange={e=>setTimeSlot(e.target.value)}>
@@ -64,35 +117,12 @@ export default function App() {
           <option>昼</option>
           <option>夜</option>
         </select>
-        <button onClick={() => addEvent('shared')}>共有カレンダーに追加</button>
-        <button onClick={() => addEvent('personal')}>個人カレンダーに追加</button>
+        <button onClick={prevMonth}>前の月</button>
+        <button onClick={nextMonth}>次の月</button>
       </div>
 
-      {/* カレンダー表示 */}
       <div className="calendar-grid">
-        <div className="calendar-cell">
-          <h3>{date}</h3>
-          <div className="events-list">
-            <h4>共有</h4>
-            {shared.length === 0 ? <p>予定なし</p> :
-              shared.map(e => (
-                <div key={e.id} className={`event ${e.time_slot}`}>
-                  <span><strong>{e.time_slot}</strong>: {e.title} ({e.created_by})</span>
-                  <button className="delete-btn" onClick={() => deleteEvent('shared', e.id)}>削除</button>
-                </div>
-              ))
-            }
-            <h4>個人</h4>
-            {personal.length === 0 ? <p>予定なし</p> :
-              personal.map(e => (
-                <div key={e.id} className={`event ${e.time_slot}`}>
-                  <span><strong>{e.time_slot}</strong>: {e.title}</span>
-                  <button className="delete-btn" onClick={() => deleteEvent('personal', e.id)}>削除</button>
-                </div>
-              ))
-            }
-          </div>
-        </div>
+        {renderCalendar()}
       </div>
     </div>
   );
