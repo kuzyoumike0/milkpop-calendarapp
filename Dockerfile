@@ -1,22 +1,18 @@
-# --------------------
-# バックエンド
-# --------------------
+# フロントビルドステージ
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+ENV NODE_OPTIONS=--max-old-space-size=8192
+RUN npm run build
+
+# バックエンドステージ
 FROM node:18
-
 WORKDIR /app/backend
-
-# package.json インストール
 COPY backend/package*.json ./
 RUN npm install
-
-# バックエンドコードコピー
 COPY backend/ ./
-
-# 事前ビルド済みのフロントをコピー
-COPY frontend/build ./public
-
-# ポート設定
+COPY --from=frontend-build /app/frontend/build ./public
 EXPOSE 8080
-
-# サーバー起動
 CMD ["node", "index.js"]
