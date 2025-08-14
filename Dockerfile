@@ -10,15 +10,18 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 
-# バックエンド依存関係インストール
+# バックエンドの依存関係インストール
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドコードコピー
+# バックエンドコードをコピー
 COPY backend/ ./
 
-# フロントのbuildをバックエンドのpublicへコピー
+# フロントのbuildをpublicへコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
+# 環境変数
 ENV NODE_ENV=production
+
+# 起動
 CMD ["node", "index.js"]
