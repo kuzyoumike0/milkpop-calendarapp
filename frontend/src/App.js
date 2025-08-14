@@ -8,19 +8,31 @@ export default function App() {
   const [timeSlot, setTimeSlot] = useState('全日');
   const [shared, setShared] = useState([]);
   const [personal, setPersonal] = useState([]);
-  const userId = 'user1';
+  const userId = 'user1'; // ダミーID
 
   const fetchData = async () => {
-    try {
-      const s = await axios.get(`/api/shared?date=${date}`);
-      const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
-      setShared(s.data); setPersonal(p.data);
-    } catch (err) {
-      console.error(err);
-    }
+    const s = await axios.get(`/api/shared?date=${date}`);
+    const p = await axios.get(`/api/personal?user_id=${userId}&date=${date}`);
+    setShared(s.data); setPersonal(p.data);
   };
 
   useEffect(() => { fetchData(); }, [date]);
+
+  const addEvent = async (type) => {
+    if (!title) return alert('イベント名を入力してください');
+    try {
+      if (type === 'shared') {
+        await axios.post('/api/shared', { title, time_slot: timeSlot, created_by: userId, date });
+      } else {
+        await axios.post('/api/personal', { title, time_slot: timeSlot, user_id: userId, date });
+      }
+      setTitle('');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('追加に失敗しました');
+    }
+  };
 
   return (
     <div className="container">
@@ -33,7 +45,8 @@ export default function App() {
           <option>昼</option>
           <option>夜</option>
         </select>
-        <button onClick={fetchData}>更新</button>
+        <button onClick={() => addEvent('shared')}>共有カレンダーに追加</button>
+        <button onClick={() => addEvent('personal')}>個人カレンダーに追加</button>
       </div>
 
       <div className="calendars">
