@@ -8,25 +8,26 @@ const PORT = process.env.PORT || 8080;
 // PostgreSQL 接続プール
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // Raiway PostgreSQL は SSL 接続が必要
-  },
+  ssl: { rejectUnauthorized: false },
 });
 
 pool.connect()
   .then(() => console.log('✅ PostgreSQL 接続成功'))
   .catch(err => {
     console.error('❌ PostgreSQL 接続エラー:', err);
-    process.exit(1); // 接続できない場合はサーバーを停止
+    process.exit(1);
   });
 
-// JSON を受け付ける設定
+// JSON 受け取り
 app.use(express.json());
 
 // サンプル API
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from Milkpop Calendar Backend!' });
 });
+
+// フロントエンド静的ファイル
+app.use(express.static('public'));
 
 // サーバー起動
 app.listen(PORT, () => {
