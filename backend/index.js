@@ -5,10 +5,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// PostgreSQL 接続プール
+// PostgreSQL 接続プール（Raiway 用）
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: {
+    rejectUnauthorized: false, // Raiway は SSL 必須
+  },
 });
 
 pool.connect()
