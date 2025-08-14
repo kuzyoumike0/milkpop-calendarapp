@@ -1,12 +1,23 @@
-<!DOCTYPE html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>共有カレンダー & 個人カレンダー</title>
-  </head>
-  <body>
-    <noscript>JavaScript を有効にしてください。</noscript>
-    <div id="root"></div>
-  </body>
-</html>
+<div className="container">
+  <h1>Milkpop Calendar</h1>
+
+  <h2>共有カレンダー</h2>
+  <ul className="calendar-list">
+    {sharedEvents.map(event => (
+      <li key={event.id} className="calendar-item" data-time={event.time}>
+        <div>{event.date} - {event.time} : {event.title}</div>
+      </li>
+    ))}
+  </ul>
+
+  <h2>個人カレンダー</h2>
+  <ul className="calendar-list">
+    {personalEvents.map(event => (
+      <li key={event.id} className="calendar-item" data-time={event.time}>
+        <div>{event.date} - {event.time} : {event.title}</div>
+      </li>
+    ))}
+  </ul>
+
+  <footer>© 2025 Milkpop Calendar</footer>
+</div>
