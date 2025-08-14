@@ -1,38 +1,61 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function Calendar() {
-  const [personal, setPersonal] = useState([]);
-  const [shared, setShared] = useState([]);
+export default function Calendar({ type }) {
+  const [events, setEvents] = useState([]);
+  const [date, setDate] = useState(new Date().toISOString().slice(0,10));
+  const [title, setTitle] = useState('');
+  const [timeSlot, setTimeSlot] = useState('全日');
+  const userId = 'user1';
 
-  // ページロード時にAPI取得
-  useEffect(() => {
-    axios.get('/api/personal')
-      .then(res => setPersonal(res.data))
-      .catch(err => console.error(err));
+  const fetchEvents = async () => {
+    try {
+      const url = type === 'shared' 
+        ? `/api/shared?date=${date}` 
+        : `/api/personal?user_id=${userId}&date=${date}`;
+      const res = await axios.get(url);
+      setEvents(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-    axios.get('/api/shared')
-      .then(res => setShared(res.data))
-      .catch(err => console.error(err));
-  }, []);
+  useEffect(() => { fetchEvents(); }, [date]);
+
+  const addEvent = async () => {
+    if (!title) return alert('イベント名を入力してください');
+    try {
+      const url = type === 'shared' ? '/api/shared' : '/api/personal';
+      const data = type === 'shared' 
+        ? { title, time_slot: timeSlot, created_by: userId, date }
+        : { title, time_slot: timeSlot, user_id: userId, date };
+      await axios.post(url, data);
+      setTitle('');
+      fetchEvents();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div>
-      <h2>個人カレンダー</h2>
-      <ul>
-        {personal.map(event => (
-          <li key={event.id}>{event.date} {event.time_slot} {event.title}</li>
-        ))}
-      </ul>
+      <h2>{type === 'shared' ? '共有カレンダー' : '個人カレンダー'}</h2>
+      <input type="date" value={date} onChange={e=>setDate(e.target.value)} />
+      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="イベント名" />
+      <select value={timeSlot} onChange={e=>setTimeSlot(e.target.value)}>
+        <option>全日</option>
+        <option>昼</option>
+        <option>夜</option>
+      </select>
+      <button onClick={addEvent}>追加</button>
 
-      <h2>共有カレンダー</h2>
       <ul>
-        {shared.map(event => (
-          <li key={event.id}>{event.date} {event.time_slot} {event.title} 作成者: {event.created_by}</li>
+        {events.map(e => (
+          <li key={e.id}>
+            {e.time_slot}: {e.title} {type === 'shared' && `(${e.created_by})`}
+          </li>
         ))}
       </ul>
     </div>
   );
 }
-
-export default Calendar;
