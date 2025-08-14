@@ -4,17 +4,17 @@
 FROM node:18 AS frontend-build
 WORKDIR /app
 
-# 依存関係インストール（npm ci → npm install に変更）
+# 依存関係を先にコピー
 COPY frontend/package*.json ./
 RUN npm install
 
 # フロントソースコピー
 COPY frontend/ ./
 
-# メモリ制限緩和
+# メモリ制限緩和（大規模ビルド対応）
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
-# Reactビルド
+# React ビルド
 RUN npm run build
 
 # ---------------------
@@ -30,11 +30,11 @@ RUN npm install
 # バックエンドソースコピー
 COPY backend/ ./
 
-# フロントビルド成果物を public 配下にコピー
+# フロントビルド成果物をバックエンドの public 配下にコピー
 COPY --from=frontend-build /app/build ./public
 
 # ポート指定
-ENV PORT 8080
+ENV PORT=8080
 EXPOSE 8080
 
 # サーバー起動
