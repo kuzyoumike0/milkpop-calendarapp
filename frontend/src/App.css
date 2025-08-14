@@ -93,6 +93,9 @@ h1 {
   font-weight: bold;
   box-shadow: 0 3px 10px rgba(0,0,0,0.05);
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .event:hover {
@@ -104,6 +107,22 @@ h1 {
 .event.全日 { background-color: #ffe06644; }
 .event.昼 { background-color: #6bcB7744; }
 .event.夜 { background-color: #674ea744; color: white; }
+
+/* 削除ボタン */
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: 0.3s;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
 
 /* レスポンシブ */
 @media (max-width: 768px) {
