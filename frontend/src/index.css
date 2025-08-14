@@ -1,53 +1,77 @@
 body {
   margin: 0;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f4f8;
   color: #333;
 }
 
 .container {
-  max-width: 960px;
+  max-width: 1000px;
   margin: 40px auto;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
-h1, h2, h3 {
+h1 {
   text-align: center;
-  color: #444;
-  margin-bottom: 20px;
+  color: #4a90e2;
 }
 
-.calendar-list {
-  list-style: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 30px;
 }
 
-.calendar-item {
-  padding: 16px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+.controls input, .controls select, .controls button {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
 }
 
-.calendar-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+.controls button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-.calendar-item[data-time="全日"] { border-left: 6px solid #ff6b6b; }
-.calendar-item[data-time="昼"] { border-left: 6px solid #feca57; }
-.calendar-item[data-time="夜"] { border-left: 6px solid #1e90ff; }
+.controls button:hover {
+  background-color: #357ABD;
+}
 
-footer {
+.calendars {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.calendar-card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  flex: 1;
+  min-width: 300px;
+}
+
+.calendar-card h2 {
   text-align: center;
-  margin-top: 40px;
-  color: #777;
-  font-size: 14px;
+  color: #4a90e2;
+  margin-bottom: 15px;
 }
+
+.event {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.event.全日 { background-color: #ffeb3b44; }
+.event.昼 { background-color: #4caf5044; }
+.event.夜 { background-color: #673ab744; color: white; }
