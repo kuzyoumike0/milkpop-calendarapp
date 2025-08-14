@@ -2,12 +2,15 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+const path = require('path');   // 追加
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
+
+// 静的ファイル配信
+app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -15,7 +18,7 @@ const pool = new Pool({
 });
 
 // ---------------------
-// 共有予定
+// 共有予定 API
 // ---------------------
 app.post('/api/shared', async (req, res) => {
   try {
@@ -46,7 +49,6 @@ app.get('/api/shared', async (req, res) => {
   }
 });
 
-// 共有予定削除
 app.delete('/api/shared/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -63,7 +65,7 @@ app.delete('/api/shared/:id', async (req, res) => {
 });
 
 // ---------------------
-// 個人予定
+// 個人予定 API
 // ---------------------
 app.post('/api/personal', async (req, res) => {
   try {
@@ -95,7 +97,6 @@ app.get('/api/personal/:user_id', async (req, res) => {
   }
 });
 
-// 個人予定削除
 app.delete('/api/personal/:user_id/:id', async (req, res) => {
   const { user_id, id } = req.params;
   try {
@@ -109,6 +110,13 @@ app.delete('/api/personal/:user_id/:id', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ---------------------
+// SPA対応：React Router でのページ遷移対応
+// ---------------------
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ---------------------
