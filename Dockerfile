@@ -8,15 +8,17 @@ RUN npm run build
 
 # ===== バックエンド + 静的ファイル提供 =====
 FROM node:18
-WORKDIR /app
-COPY backend/package*.json ./backend/
 WORKDIR /app/backend
+
+# バックエンド依存関係インストール
+COPY backend/package*.json ./
 RUN npm install
+
+# バックエンドコードコピー
 COPY backend/ ./
 
 # フロントのbuildをバックエンドのpublicへコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# 環境変数を使えるようにする
 ENV NODE_ENV=production
 CMD ["node", "index.js"]
