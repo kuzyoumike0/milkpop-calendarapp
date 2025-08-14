@@ -1,23 +1,4 @@
 # =====================
-# フロントビルドステージ
-# =====================
-FROM node:18 AS frontend-build
-WORKDIR /app/frontend
-
-# 依存関係コピー
-COPY frontend/package*.json ./
-RUN npm install
-
-# フロントソースコピー
-COPY frontend/ ./
-
-# メモリ制限増加（大規模ビルド対応）
-ENV NODE_OPTIONS=--max-old-space-size=8192
-
-# React ビルド
-RUN npm run build
-
-# =====================
 # バックエンドステージ
 # =====================
 FROM node:18
@@ -30,8 +11,8 @@ RUN npm install
 # バックエンドソースコピー
 COPY backend/ ./
 
-# フロントビルド成果物をバックエンドの public にコピー
-COPY --from=frontend-build /app/frontend/build ./public
+# ホストでビルド済みのフロントビルドをコピー
+COPY frontend/build ./public
 
 # ポート指定
 ENV PORT=8080
