@@ -1,34 +1,33 @@
-# 1. Node.jsイメージ
+# 1. Node.js 18 を使用
 FROM node:18 AS build
 
 # 2. 作業ディレクトリ
 WORKDIR /app
 
-# 3. package.json 全コピー（依存関係インストール用）
-COPY backend/package*.json ./backend/
+# 3. package.json と package-lock.json を先にコピー（キャッシュ活用）
 COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
 
-# 4. バックエンド依存関係インストール
+# 4. 依存関係インストール
+RUN cd frontend && npm install
 RUN cd backend && npm install
 
-# 5. フロントエンド依存関係インストール（react-router-dom含む）
-RUN cd frontend && npm install && npm install react-router-dom
-
-# 6. ソースコード全コピー
-COPY backend ./backend
+# 5. フロントエンドソースコピー＆ビルド
 COPY frontend ./frontend
+RUN cd frontend && npm run build
 
-# 7. フロントエンドビルド（詳細ログ付き）
-RUN cd frontend && npm run build --verbose
+# 6. バックエンドコピー
+COPY backend ./backend
 
-# 8. ビルドしたフロントをバックエンド public に配置
-RUN rm -rf backend/public && mv frontend/build backend/public
+# 7. ビルド成果物をバックエンド public に配置
+RUN rm -rf backend/public
+RUN mv frontend/build backend/public
 
-# 9. 作業ディレクトリをバックエンドに変更
+# 8. 作業ディレクトリをバックエンドに変更
 WORKDIR /app/backend
 
-# 10. ポート公開
+# 9. ポート公開
 EXPOSE 8080
 
-# 11. サーバー起動
+# 10. サーバー起動
 CMD ["node", "index.js"]
