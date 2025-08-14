@@ -4,31 +4,31 @@ FROM node:18 AS build
 # 2. 作業ディレクトリ
 WORKDIR /app
 
-# 3. パッケージコピー（フロントとバック両方）
+# 3. パッケージコピー（package-lock.json は存在する場合のみ）
 COPY backend/package*.json ./backend/
-COPY backend/package-lock.json ./backend/
 COPY frontend/package*.json ./frontend/
-COPY frontend/package-lock.json ./frontend/
 
-# 4. 依存関係インストール
+# 4. バックエンド依存関係インストール
 RUN cd backend && npm install
+
+# 5. フロントエンド依存関係インストール
 RUN cd frontend && npm install
 
-# 5. フロントエンドビルド
+# 6. フロントエンドソースコピー＆ビルド
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
-# 6. バックエンドコピー
+# 7. バックエンドソースコピー
 COPY backend ./backend
 
-# 7. フロントをバックエンド public に配置
+# 8. ビルドしたフロントをバックエンド public に配置
 RUN rm -rf backend/public && mv frontend/build backend/public
 
-# 8. 作業ディレクトリ変更
+# 9. 作業ディレクトリ変更
 WORKDIR /app/backend
 
-# 9. ポート公開
+# 10. ポート公開
 EXPOSE 8080
 
-# 10. サーバー起動
+# 11. サーバー起動
 CMD ["node", "index.js"]
