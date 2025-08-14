@@ -1,37 +1,24 @@
-# =====================
-# フロントエンドビルド
-# =====================
+# ==== フロントビルド ====
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
-
-# package.json と package-lock.json をコピーして依存インストール
 COPY frontend/package*.json ./
 RUN npm install
-
-# フロントエンドソースをコピー
 COPY frontend/ ./
-
-# React ビルド
 RUN npm run build
 
-# =====================
-# バックエンド + フロント統合
-# =====================
+# ==== バックエンド ====
 FROM node:18
 WORKDIR /app/backend
 
-# バックエンド依存インストール
+# バックエンド依存
 COPY backend/package*.json ./
 RUN npm install
-
-# バックエンドソースをコピー
 COPY backend/ ./
 
-# フロントビルド成果物をバックエンドの public フォルダにコピー
+# フロントビルド成果物をバックエンドの public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# ポート公開
+# 環境変数を使って起動
+ENV PORT=8080
 EXPOSE 8080
-
-# 起動コマンド
 CMD ["node", "index.js"]
