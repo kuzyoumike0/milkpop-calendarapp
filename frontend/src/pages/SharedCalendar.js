@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
-import './App.css'; // ここでスタイル読み込み
+import './App.css';
 import axios from "axios";
 
 export default function SharedCalendar() {
