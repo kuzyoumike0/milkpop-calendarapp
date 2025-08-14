@@ -1,30 +1,23 @@
-// index.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Pool } = require('pg');
+const pool = require('./pool');
+require('dotenv').config();
 
-// Express アプリの作成
 const app = express();
-
-// ミドルウェア
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // フロントビルドを配信
+app.use(express.static('../frontend/build'));
 
-// PostgreSQL プール設定
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Raiway DB URL を環境変数で指定
-  ssl: { rejectUnauthorized: false },
-});
+// ----- API -----
 
-// 共有カレンダーのデータ登録
+// 共有カレンダー登録
 app.post('/api/shared', async (req, res) => {
   try {
-    const { user, dayType, date } = req.body;
+    const { title, time_slot, created_by, date } = req.body;
     const result = await pool.query(
-      'INSERT INTO shared_calendar(username, day_type, date) VALUES($1, $2, $3) RETURNING *',
-      [user, dayType, date]
+      'INSERT INTO shared_calendar(title, time_slot, created_by, date) VALUES($1,$2,$3,$4) RETURNING *',
+      [title, time_slot, created_by, date]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -33,13 +26,13 @@ app.post('/api/shared', async (req, res) => {
   }
 });
 
-// 個人カレンダーのデータ登録
+// 個人カレンダー登録
 app.post('/api/personal', async (req, res) => {
   try {
-    const { user, dayType, date } = req.body;
+    const { shared_id, note, user_id, date } = req.body;
     const result = await pool.query(
-      'INSERT INTO personal_calendar(username, day_type, date) VALUES($1, $2, $3) RETURNING *',
-      [user, dayType, date]
+      'INSERT INTO personal_calendar(shared_id, note, user_id, date) VALUES($1,$2,$3,$4) RETURNING *',
+      [shared_id, note, user_id, date]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -48,8 +41,27 @@ app.post('/api/personal', async (req, res) => {
   }
 });
 
-// サーバー起動
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`ポート${PORT}でサーバー起動`);
+// 共有カレンダー取得
+app.get('/api/shared', async (req, res) => {
+  const { date } = req.query;
+  const result = await pool.query(
+    'SELECT * FROM shared_calendar WHERE date = $1 ORDER BY time_slot',
+    [date]
+  );
+  res.json(result.rows);
 });
+
+// 個人カレンダー取得
+app.get('/api/personal/:user_id', async (req, res) => {
+  const { user_id } = req.params;
+  const { date } = req.query;
+  const result = await pool.query(
+    'SELECT * FROM personal_calendar WHERE user_id=$1 AND date=$2',
+    [user_id, date]
+  );
+  res.json(result.rows);
+});
+
+// ----- サーバ起動 -----
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
