@@ -1,31 +1,31 @@
-// index.js
+// 必要なモジュール読み込み
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
-require('dotenv').config(); // .env から DATABASE_URL を読み込む
 
-// Express アプリの作成
+// Express アプリ作成
 const app = express();
 
-// ミドルウェア
+// ミドルウェア設定
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // フロントビルドを配信
+app.use(express.static('public'));
 
-// PostgreSQL プール設定
+// PostgreSQLプール設定
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Raiway DB URL
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-// 共有カレンダーのデータ登録
-app.post('/api/shared', async (req, res) => {
+// ===== ここに追加 =====
+// 個人・共有カレンダーの POST 処理をここに書きます
+app.post('/api/personal', async (req, res) => {
+  const { user_id, date, time_slot, title } = req.body;
   try {
-    const { user, dayType, date } = req.body;
     const result = await pool.query(
-      'INSERT INTO shared_events(username, day_type, date) VALUES($1, $2, $3) RETURNING *',
-      [user, dayType, date]
+      'INSERT INTO personal_events(user_id, date, time_slot, title, created_at) VALUES($1, $2, $3, $4, NOW()) RETURNING *',
+      [user_id, date, time_slot, title]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -34,13 +34,12 @@ app.post('/api/shared', async (req, res) => {
   }
 });
 
-// 個人カレンダーのデータ登録
-app.post('/api/personal', async (req, res) => {
+app.post('/api/shared', async (req, res) => {
+  const { date, time_slot, title, created_by } = req.body;
   try {
-    const { user, dayType, date } = req.body;
     const result = await pool.query(
-      'INSERT INTO personal_events(username, day_type, date) VALUES($1, $2, $3) RETURNING *',
-      [user, dayType, date]
+      'INSERT INTO shared_events(date, time_slot, title, created_by, created_at) VALUES($1, $2, $3, $4, NOW()) RETURNING *',
+      [date, time_slot, title, created_by]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -48,6 +47,7 @@ app.post('/api/personal', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ===== ここまで =====
 
 // サーバー起動
 const PORT = process.env.PORT || 8080;
