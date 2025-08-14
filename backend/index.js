@@ -8,7 +8,7 @@ app.use(express.json());
 // 静的ファイル提供
 app.use(express.static(path.join(__dirname, 'public')));
 
-// APIルート例
+// APIルートの例
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from backend!' });
 });
