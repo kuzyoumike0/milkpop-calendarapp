@@ -16,6 +16,5 @@ COPY backend/ ./
 # フロントのbuildをバックエンドのpublicへコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# 環境変数を使えるようにする
 ENV NODE_ENV=production
 CMD ["node", "index.js"]
