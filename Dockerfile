@@ -1,27 +1,25 @@
-# =====================
+# ---------------------
 # フロントビルドステージ
-# =====================
+# ---------------------
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json を先にコピー（依存関係キャッシュ用）
+# package.json を先にコピー（依存キャッシュ）
 COPY frontend/package*.json ./
-
-# 安定のためクリーンインストール
-RUN npm install react-scripts@5.0.1
+RUN npm install
 
 # フロントソースコピー
 COPY frontend/ ./
 
-# メモリ制限増加（大規模ビルド対応）
+# メモリ増加
 ENV NODE_OPTIONS=--max-old-space-size=8192
 
 # React ビルド
 RUN npm run build
 
-# =====================
+# ---------------------
 # バックエンドステージ
-# =====================
+# ---------------------
 FROM node:18
 WORKDIR /app
 
@@ -32,7 +30,7 @@ RUN npm install
 # バックエンドソースコピー
 COPY backend/ ./
 
-# フロントビルド成果物をバックエンド public 配下にコピー
+# フロントビルド成果物コピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 # ポート指定
