@@ -7,7 +7,7 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // フロントビルド配信
+app.use(express.static('public'));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -46,6 +46,22 @@ app.get('/api/shared', async (req, res) => {
   }
 });
 
+// 共有予定削除
+app.delete('/api/shared/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'DELETE FROM shared_events WHERE id=$1 RETURNING *',
+      [id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: '該当予定がありません' });
+    res.json({ message: '削除成功', deleted: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------------------
 // 個人予定
 // ---------------------
@@ -73,6 +89,22 @@ app.get('/api/personal/:user_id', async (req, res) => {
       [user_id, date]
     );
     res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 個人予定削除
+app.delete('/api/personal/:user_id/:id', async (req, res) => {
+  const { user_id, id } = req.params;
+  try {
+    const result = await pool.query(
+      'DELETE FROM personal_events WHERE user_id=$1 AND id=$2 RETURNING *',
+      [user_id, id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: '該当予定がありません' });
+    res.json({ message: '削除成功', deleted: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
