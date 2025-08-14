@@ -53,7 +53,7 @@ app.post('/api/personal', async (req, res) => {
   res.json(result.rows[0]);
 });
 
-// React ビルド配信
+// React 配信
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
