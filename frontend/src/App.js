@@ -1,15 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import SharedCalendar from './SharedCalendar';
-import PersonalCalendar from './PersonalCalendar';
+import SharedCalendar from './components/SharedCalendar';
+import PersonalCalendar from './components/PersonalCalendar';
 
 export default function App() {
   return (
     <Router>
-      <nav style={{textAlign:'center', margin:'20px'}}>
-        <Link to="/" style={{marginRight:'10px'}}>共有カレンダー</Link>
+      <div className="nav">
+        <Link to="/">共有カレンダー</Link>
         <Link to="/personal">個人カレンダー</Link>
-      </nav>
+      </div>
       <Routes>
         <Route path="/" element={<SharedCalendar />} />
         <Route path="/personal" element={<PersonalCalendar />} />
