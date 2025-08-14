@@ -1,4 +1,4 @@
-# 1. フロントビルド用
+# 1. フロントビルド専用
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -12,7 +12,7 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
-# frontend build を public にコピー
+# フロントビルド成果物を public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 EXPOSE 4000
