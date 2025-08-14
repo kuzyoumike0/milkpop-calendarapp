@@ -1,33 +1,34 @@
-# Node 18 使用
+# 1. Node.jsイメージ
 FROM node:18 AS build
 
-# 作業ディレクトリ
+# 2. 作業ディレクトリ
 WORKDIR /app
 
-# 依存関係用 package.json 先にコピー
-COPY frontend/package*.json ./frontend/
+# 3. パッケージコピー（フロントとバック両方）
 COPY backend/package*.json ./backend/
+COPY backend/package-lock.json ./backend/
+COPY frontend/package*.json ./frontend/
+COPY frontend/package-lock.json ./frontend/
 
-# 依存関係インストール
-RUN cd frontend && npm install
+# 4. 依存関係インストール
 RUN cd backend && npm install
+RUN cd frontend && npm install
 
-# フロントエンドコピー & ビルド
+# 5. フロントエンドビルド
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
-# バックエンドコピー
+# 6. バックエンドコピー
 COPY backend ./backend
 
-# ビルド成果物をバックエンド public に配置
-RUN rm -rf backend/public
-RUN mv frontend/build backend/public
+# 7. フロントをバックエンド public に配置
+RUN rm -rf backend/public && mv frontend/build backend/public
 
-# 作業ディレクトリをバックエンドに変更
+# 8. 作業ディレクトリ変更
 WORKDIR /app/backend
 
-# ポート公開
+# 9. ポート公開
 EXPOSE 8080
 
-# サーバー起動
+# 10. サーバー起動
 CMD ["node", "index.js"]
