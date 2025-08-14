@@ -1,25 +1,22 @@
-# 1. Node.js ベースイメージ
+# Node.js ベースイメージ
 FROM node:18
 
-# 2. 作業ディレクトリ
 WORKDIR /app
 
-# 3. バックエンド依存関係インストール
+# バックエンド依存
 COPY backend/package*.json ./backend/
 RUN cd backend && npm install
 
-# 4. フロントエンド依存関係インストール & ビルド
+# フロント依存 & ビルド
 COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install && npm run build
 
-# 5. バックエンドとフロントをコピー
+# バックエンド & フロントビルドをコピー
 COPY backend/ ./backend/
+# ビルド成果物を public にコピー
+RUN mkdir -p backend/public
 COPY frontend/build/ ./backend/public/
 
-# 6. 環境変数
-ENV PORT=4000
-
-# 7. バックエンド起動
 WORKDIR /app/backend
 EXPOSE 4000
 CMD ["node", "index.js"]
