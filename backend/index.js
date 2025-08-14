@@ -1,3 +1,4 @@
+// backend/index.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -15,6 +16,7 @@ const pool = new Pool({
 });
 
 // --- 共有カレンダー ---
+// 登録
 app.post('/api/shared', async (req, res) => {
   try {
     const { title, time_slot, created_by, date } = req.body;
@@ -29,6 +31,7 @@ app.post('/api/shared', async (req, res) => {
   }
 });
 
+// 取得
 app.get('/api/shared', async (req, res) => {
   try {
     const { date } = req.query;
@@ -43,7 +46,24 @@ app.get('/api/shared', async (req, res) => {
   }
 });
 
+// 削除
+app.delete('/api/shared/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM shared_events WHERE id=$1 RETURNING *',
+      [id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: '削除しました', deleted: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- 個人カレンダー ---
+// 登録
 app.post('/api/personal', async (req, res) => {
   try {
     const { title, time_slot, user_id, date } = req.body;
@@ -58,6 +78,7 @@ app.post('/api/personal', async (req, res) => {
   }
 });
 
+// 取得
 app.get('/api/personal', async (req, res) => {
   try {
     const { user_id, date } = req.query;
@@ -66,6 +87,22 @@ app.get('/api/personal', async (req, res) => {
       [user_id, date]
     );
     res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 削除
+app.delete('/api/personal/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM personal_events WHERE id=$1 RETURNING *',
+      [id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: '削除しました', deleted: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
