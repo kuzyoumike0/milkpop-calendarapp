@@ -4,9 +4,9 @@
 FROM node:18 AS frontend-build
 WORKDIR /app
 
-# 依存関係インストール
+# 依存関係インストール（npm ci → npm install に変更）
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # フロントソースコピー
 COPY frontend/ ./
@@ -25,7 +25,7 @@ WORKDIR /app
 
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # バックエンドソースコピー
 COPY backend/ ./
