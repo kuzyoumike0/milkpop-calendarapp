@@ -1,10 +1,10 @@
-# フロントステージ
+# フロントビルドステージ
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV NODE_OPTIONS=--max-old-space-size=8192
 RUN npm run build
 
 # バックエンドステージ
