@@ -1,0 +1,38 @@
+/* frontend/src/index.css */
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #f0f4f8;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+button {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 5px;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: #4338ca;
+  transform: translateY(-2px);
+}
