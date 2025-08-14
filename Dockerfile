@@ -5,15 +5,15 @@ FROM node:18 AS frontend-build
 
 WORKDIR /app/frontend
 
-# package.json と package-lock.json を先にコピーして依存関係インストール
-COPY frontend/package*.json ./
-RUN npm ci
-
-# フロントソース全コピー
-COPY frontend/ ./
-
-# ビルド時メモリ制限を設定（大規模アプリでも安全）
+# ビルドメモリ確保
 ENV NODE_OPTIONS=--max-old-space-size=4096
+
+# 依存関係インストール（npm ci → npm install に変更）
+COPY frontend/package*.json ./
+RUN npm install
+
+# フロントソースコピー
+COPY frontend/ ./
 
 # React ビルド
 RUN npm run build
@@ -27,12 +27,12 @@ WORKDIR /app
 
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # バックエンドソースコピー
 COPY backend/ ./
 
-# フロントビルド成果物をバックエンドの public 配下にコピー
+# フロントビルド成果物をバックエンド public 配下にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 # 環境変数
@@ -40,5 +40,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-# サーバー起動
 CMD ["node", "index.js"]
