@@ -4,7 +4,7 @@ WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
 
-# 正しい cache key を付与
+# BuildKit キャッシュマウントを利用
 RUN --mount=type=cache,id=cache-frontend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit \
     --fetch-retries=10 --fetch-retry-mintimeout=5000
@@ -25,7 +25,7 @@ WORKDIR /app/backend
 
 COPY backend/package*.json ./
 
-# 正しい cache key を付与
+# BuildKit キャッシュマウントを利用
 RUN --mount=type=cache,id=cache-backend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit \
     --fetch-retries=10 --fetch-retry-mintimeout=5000
