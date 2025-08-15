@@ -1,25 +1,30 @@
-version: '3'
-services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: examplepassword
-      POSTGRES_DB: calendar
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+version: '3.9'
 
-  app:
-    build: .
-    environment:
-      DATABASE_URL: postgres://postgres:examplepassword@db:5432/calendar
-      PORT: 8080
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: my-app-backend
     ports:
       - "8080:8080"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./backend:/app/backend
     depends_on:
-      - db
+      - frontend
 
-volumes:
-  pgdata:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-build
+    container_name: my-app-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./frontend:/app/frontend
