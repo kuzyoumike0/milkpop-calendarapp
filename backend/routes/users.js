@@ -26,4 +26,11 @@ router.post('/login', async (req,res) => {
     res.json({ token, user: { id: user.rows[0].id, name: user.rows[0].name } });
 });
 
+// routes/users.js
+router.get("/", auth, async (req,res)=>{
+  const users = await pool.query("SELECT id, name FROM users");
+  res.json(users.rows);
+});
+
+
 module.exports = router;
