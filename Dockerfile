@@ -6,13 +6,18 @@ WORKDIR /app/frontend
 ENV NODE_OPTIONS=--max_old_space_size=4096
 ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 
-# 依存関係インストール（完全クリーン + 安定インストール）
+# 依存関係インストール用の package.json コピー
 COPY frontend/package*.json ./
-RUN rm -rf node_modules /tmp/npm-cache \
-    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000
 
-# フロントエンドコードコピー & ビルド
+# キャッシュ削除 & 安定インストール
+RUN rm -rf node_modules /tmp/npm-cache \
+    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000 || \
+       (cat /root/.npm/_logs/* && exit 1)
+
+# フロントエンドコードコピー
 COPY frontend/ ./
+
+# ビルド
 RUN npm run build
 
 # ===== バックエンド =====
@@ -25,7 +30,8 @@ ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
 RUN rm -rf node_modules /tmp/npm-cache \
-    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000
+    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000 || \
+       (cat /root/.npm/_logs/* && exit 1)
 
 # バックエンドコードコピー
 COPY backend/ ./
