@@ -33,16 +33,40 @@ export default function SharedCalendar() {
     axios.delete(`/api/events/${id}`).then(() => fetchEvents());
   };
 
+  // 時間帯ごとの色を設定
+  const timeSlotColor = {
+    全日: "bg-blue-100 text-blue-800",
+    昼: "bg-yellow-100 text-yellow-800",
+    夜: "bg-purple-100 text-purple-800"
+  };
+
+  const tileContent = ({ date: d, view }) => {
+    if (view === 'month') {
+      const formattedDate = dayjs(d).format("YYYY-MM-DD");
+      const dayEvents = events.filter(e => e.date === formattedDate);
+      return (
+        <ul className="mt-1 space-y-1 text-xs">
+          {dayEvents.map(e => (
+            <li key={e.id} className={`px-1 rounded ${timeSlotColor[e.time_slot]}`}>
+              {e.time_slot} {e.title} ({e.user})
+            </li>
+          ))}
+        </ul>
+      );
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto mt-10 p-4">
       <h2 className="text-3xl font-bold text-indigo-600 mb-6 text-center">共有カレンダー</h2>
       <div className="flex flex-col md:flex-row gap-6">
-        {/* 左: 日付カレンダー */}
+        {/* 左: カレンダー */}
         <div className="md:w-1/3 bg-white rounded-lg shadow p-4">
           <Calendar
             value={date}
             onChange={setDate}
             className="rounded-lg border border-gray-200"
+            tileContent={tileContent}
           />
         </div>
 
@@ -71,4 +95,34 @@ export default function SharedCalendar() {
               placeholder="予定タイトル"
               className="border rounded px-2 py-1 flex-1"
               value={newEvent.title}
-              onChange={(e) => setNewEvent({ ...newEvent, title: e.t
+              onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+            />
+            <button
+              className="bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700"
+              onClick={handleAddEvent}
+            >
+              追加
+            </button>
+          </div>
+
+          {/* 予定リスト */}
+          <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
+            {events.length === 0 ? (
+              <p className="text-gray-400 text-center">予定はありません</p>
+            ) : (
+              events.map(e => (
+                <div key={e.id} className={`flex justify-between items-center p-2 border rounded ${timeSlotColor[e.time_slot]} hover:opacity-90`}>
+                  <div>
+                    <span className="font-semibold">{e.time_slot}</span>{" "}
+                    <span>{e.title} ({e.user})</span>
+                  </div>
+                  <button className="text-red-500 font-bold" onClick={() => handleDeleteEvent(e.id)}>×</button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
