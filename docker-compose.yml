@@ -6,12 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: backend
-      cache_from:
-        - type=registry,ref=your-dockerhub-username/app:cache
     ports:
       - "8080:8080"
     environment:
       NODE_ENV: production
-    volumes:
-      - ./backend:/app/backend:cached
-      - ./frontend:/app/frontend:cached
