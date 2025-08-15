@@ -1,24 +1,21 @@
-# 1. Node でビルド
-FROM node:18 AS build
-WORKDIR /app
-
-# package.json のみコピー
+# ===== フロントビルド =====
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
 COPY frontend/package.json ./
-
-# lock ファイルなしで依存インストール
 RUN npm install
-
-# ソースコードコピー
 COPY frontend/ ./
-
-# React ビルド
 ENV NODE_OPTIONS=--max_old_space_size=4096
 RUN npm run build
 
-# 2. nginx で静的ファイル提供
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
+# ===== バックエンド =====
+FROM node:18
+WORKDIR /app/backend
+COPY backend/package.json ./
+RUN npm install
+COPY backend/ ./
 
-# デフォルトの nginx 設定で 80 ポート
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# フロントビルドを backend/public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
+EXPOSE 3000
+CMD ["node", "index.js"]
