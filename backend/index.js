@@ -1,7 +1,8 @@
+// backend/index.js
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
 const eventsRouter = require('./routes/events');
 
 const app = express();
@@ -12,9 +13,11 @@ app.use(bodyParser.json());
 app.use('/api/events', eventsRouter);
 
 // React ビルド配信
-app.use(express.static(path.join(__dirname, 'build')));
+// 修正: frontend/build を指定
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
 const port = process.env.PORT || 5000;
