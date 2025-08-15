@@ -1,3 +1,4 @@
+// backend/index.js
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -7,20 +8,26 @@ app.use(cors());
 app.use(express.json());
 
 // フロントのビルド済みファイルを静的配信
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "public")));
 
 // サンプル API
 app.get("/api/shared", (req, res) => {
-  res.json([{ id: 1, date: req.query.date, time_slot: "10:00", title: "共有イベント1" }]);
+  res.json([
+    { id: 1, date: req.query.date, time_slot: "10:00", title: "共有イベント1" },
+    { id: 2, date: req.query.date, time_slot: "14:00", title: "共有イベント2" },
+  ]);
 });
 
 app.get("/api/personal/:userId", (req, res) => {
-  res.json([{ id: 1, date: req.query.date, time_slot: "12:00", title: "個人イベント1" }]);
+  res.json([
+    { id: 1, date: req.query.date, time_slot: "12:00", title: "個人イベント1" },
+    { id: 2, date: req.query.date, time_slot: "16:00", title: "個人イベント2" },
+  ]);
 });
 
-// SPA対応
+// SPA対応（Reactのルーティング）
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
