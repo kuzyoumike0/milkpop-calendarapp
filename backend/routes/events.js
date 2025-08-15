@@ -7,10 +7,17 @@ router.post('/personal', async (req, res) => {
   try {
     const { user_id, date, time_slot, title } = req.body;
     const create_at = new Date();
-    await pool.query(
-      'INSERT INTO personal_events (user_id, date, time_slot, title, create_at) VALUES ($1,$2,$3,$4,$5)',
+    const personalRes = await pool.query(
+      'INSERT INTO personal_events (user_id, date, time_slot, title, create_at) VALUES ($1,$2,$3,$4,$5) RETURNING id',
       [user_id, date, time_slot, title, create_at]
     );
+
+    const personalId = personalRes.rows[0].id;
+    await pool.query(
+      'INSERT INTO shared_events (personal_id, date, time_slot, title, create_by, create_at) VALUES ($1,$2,$3,$4,$5,$6)',
+      [personalId, date, time_slot, title, user_id, create_at]
+    );
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -40,7 +47,6 @@ router.get('/personal', async (req, res) => {
     const result = await pool.query('SELECT * FROM personal_events ORDER BY date, time_slot');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -51,31 +57,30 @@ router.get('/shared', async (req, res) => {
     const result = await pool.query('SELECT * FROM shared_events ORDER BY date, time_slot');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 削除 (個人イベント)
-router.delete('/personal/:id', async (req, res) => {
+// イベントページ用
+router.post('/events', async (req, res) => {
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM personal_events WHERE id = $1', [id]);
+    const { title, date } = req.body;
+    const create_at = new Date();
+    await pool.query(
+      'INSERT INTO events (title, date, create_at) VALUES ($1,$2,$3)',
+      [title, date, create_at]
+    );
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 削除 (共有イベント)
-router.delete('/shared/:id', async (req, res) => {
+router.get('/events', async (req, res) => {
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM shared_events WHERE id = $1', [id]);
-    res.json({ success: true });
+    const result = await pool.query('SELECT * FROM events ORDER BY date');
+    res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
