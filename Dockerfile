@@ -3,7 +3,7 @@ FROM node:20.17-bullseye AS frontend-deps
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
-RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+RUN --mount=type=cache,id=cache-frontend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=10 --fetch-retry-mintimeout=5000
 
 # ===== フロントエンドビルドステージ =====
@@ -17,11 +17,5 @@ FROM node:20.17-bullseye AS backend
 WORKDIR /app/backend
 
 COPY backend/package*.json ./
-RUN --mount=type=cache,id=npm-cache-backend,target=/root/.npm \
-    npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=10 --fetch-retry-mintimeout=5000
-
-COPY backend/ ./
-COPY --from=frontend-build /app/frontend/build ./public
-
-EXPOSE 8080
-CMD ["node", "index.js"]
+RUN --mount=type=cache,id=cache-backend-npm,target=/root/.npm \
+    npm ci --legacy-peer-deps --force --pr
