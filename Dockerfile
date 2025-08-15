@@ -4,20 +4,21 @@ WORKDIR /app/frontend
 
 # Node メモリ増加
 ENV NODE_OPTIONS=--max_old_space_size=4096
+
+# npm キャッシュを Docker 内に分離
 ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 
-# 依存関係インストール用の package.json コピー
+# 依存関係インストール用 package.json コピー
 COPY frontend/package*.json ./
 
-# キャッシュ削除 & 安定インストール
+# node_modules とキャッシュを完全削除して安定インストール
 RUN rm -rf node_modules /tmp/npm-cache \
-    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000 || \
-       (cat /root/.npm/_logs/* && exit 1)
+    && npm install --legacy-peer-deps --prefer-offline=false --force --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
 
 # フロントエンドコードコピー
 COPY frontend/ ./
 
-# ビルド
+# フロントエンドビルド
 RUN npm run build
 
 # ===== バックエンド =====
@@ -30,8 +31,7 @@ ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
 RUN rm -rf node_modules /tmp/npm-cache \
-    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000 || \
-       (cat /root/.npm/_logs/* && exit 1)
+    && npm install --legacy-peer-deps --prefer-offline=false --force --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
 
 # バックエンドコードコピー
 COPY backend/ ./
