@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import 'react-calendar/dist/Calendar.css';
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { API_BASE_URL } from "../config";
 
 export default function SharedCalendar() {
   const [date, setDate] = useState(new Date());
@@ -14,13 +13,13 @@ export default function SharedCalendar() {
     const dd = String(date.getDate()).padStart(2, "0");
     const formattedDate = `${yyyy}-${mm}-${dd}`;
 
-    axios.get(`${API_BASE_URL}/api/shared?date=${formattedDate}`)
+    axios.get(`/api/shared?date=${formattedDate}`)
       .then(res => setEvents(res.data))
       .catch(err => console.error(err));
   }, [date]);
 
   const tileContent = ({ date, view }) => {
-    if (view === 'month') {
+    if (view === "month") {
       const yyyy = date.getFullYear();
       const mm = String(date.getMonth() + 1).padStart(2, "0");
       const dd = String(date.getDate()).padStart(2, "0");
