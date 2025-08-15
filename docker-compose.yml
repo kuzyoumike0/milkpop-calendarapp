@@ -1,25 +1,6 @@
 version: '3'
 services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: eJjJplyhHrsYWyTqeOauZwunjRPMFUFv
-      POSTGRES_DB: calendar
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
   app:
     build: .
-    environment:
-      DATABASE_URL: postgres://postgres:eJjJplyhHrsYWyTqeOauZwunjRPMFUFv@db:5432/calendar
-      PORT: 8080
     ports:
       - "8080:8080"
-    depends_on:
-      - db
-
-volumes:
-  pgdata:
