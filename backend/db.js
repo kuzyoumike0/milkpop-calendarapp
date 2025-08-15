@@ -1,7 +1,12 @@
 const { Pool } = require('pg');
-
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:eJjJplyhHrsYWyTqeOauZwunjRPMFUFv@tramway.proxy.rlwy.net:39592/railway'
+  connectionString: 'postgresql://postgres:eJjJplyhHrsYWyTqeOauZwunjRPMFUFv@tramway.proxy.rlwy.net:39592/railway',
+  ssl: { rejectUnauthorized: false }
 });
 
-module.exports = pool;
+pool.query('SELECT NOW()').then(res => {
+  console.log(res.rows);
+  pool.end();
+}).catch(err => {
+  console.error(err);
+});
