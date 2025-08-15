@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 // APIルート
 app.use('/api/events', eventsRouter);
 
-// React ビルド配信（Docker内でビルド済みのパスに変更）
+// React ビルド配信
 app.use(express.static(path.join(__dirname, 'build')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
