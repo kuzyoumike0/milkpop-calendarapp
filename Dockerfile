@@ -1,24 +1,18 @@
+# 1. フロントビルド
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# 2. バックエンドと統合
 FROM node:18
 WORKDIR /app
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./backend
+COPY --from=frontend-build /app/frontend/build ./frontend/build
 
-# フロントセットアップ
-COPY frontend/package*.json frontend/
-RUN cd frontend && npm install
-COPY frontend/ frontend/
-RUN cd frontend && npm run build
-
-# バックセットアップ
-COPY backend/package*.json backend/
-RUN cd backend && npm install
-COPY backend/ backend/
-
-# フロントビルドをバックに統合
-RUN cp -r frontend/build backend/build
-
-# Railway PostgreSQL 接続
-ENV PORT=5000
-ENV DATABASE_URL=postgresql://postgres:eJjJplyhHrsYWyTqeOauZwunjRPMFUFv@tramway.proxy.rlwy.net:39592/railway
-
-EXPOSE 5000
-WORKDIR /app/backend
-CMD ["node", "index.js"]
+EXPOSE 8080
+CMD ["node", "backend/index.js"]
