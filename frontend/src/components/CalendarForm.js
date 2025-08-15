@@ -22,10 +22,7 @@ export default function CalendarForm({ onAdded }) {
       setTitle('');
       setDate('');
       setTimeSlot('全日');
-
-      // ← 追加後に親コンポーネントに通知して再取得
       if (onAdded) onAdded();
-
     } catch (err) {
       setMessage('エラーが発生しました');
       console.error(err);
