@@ -1,3 +1,11 @@
+/* src/index.css */
+
+/* Tailwind の基本スタイルを読み込む */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 必要に応じてカスタムスタイルを追加可能 */
+body {
+  @apply bg-gray-100 text-gray-900 font-sans;
+}
