@@ -1,34 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const { v4: uuidv4 } = require('uuid');
 
 // 個人イベント追加
 router.post('/personal', async (req, res) => {
   try {
     const { user_id, date, time_slot, title } = req.body;
-    const id = uuidv4();
-    const create_at = new Date(); // DBカラム名に合わせる
+    const create_at = new Date();
     await pool.query(
-      'INSERT INTO personal_events (id, user_id, date, time_slot, title, created_at) VALUES ($1,$2,$3,$4,$5,$6)',
-      [id, user_id, date, time_slot, title, create_at]
+      'INSERT INTO personal_events (user_id, date, time_slot, title, create_at) VALUES ($1,$2,$3,$4,$5)',
+      [user_id, date, time_slot, title, create_at]
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('DB追加エラー:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-
-// 個人イベント取得
-router.get('/personal', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM personal_events ORDER BY date ASC');
-    res.json(result.rows);
-  } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -36,13 +22,23 @@ router.get('/personal', async (req, res) => {
 router.post('/shared', async (req, res) => {
   try {
     const { date, time_slot, title, create_by } = req.body;
-    const id = uuidv4();
     const create_at = new Date();
     await pool.query(
-      'INSERT INTO shared_events (id, date, time_slot, title, create_by, create_at) VALUES ($1,$2,$3,$4,$5,$6)',
-      [id, date, time_slot, title, create_by, create_at]
+      'INSERT INTO shared_events (date, time_slot, title, create_by, create_at) VALUES ($1,$2,$3,$4,$5)',
+      [date, time_slot, title, create_by, create_at]
     );
     res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 個人イベント取得
+router.get('/personal', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM personal_events ORDER BY date, time_slot');
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: err.message });
@@ -52,11 +48,35 @@ router.post('/shared', async (req, res) => {
 // 共有イベント取得
 router.get('/shared', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM shared_events ORDER BY date ASC');
+    const result = await pool.query('SELECT * FROM shared_events ORDER BY date, time_slot');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 削除 (例: 個人イベント)
+router.delete('/personal/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM personal_events WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 削除 (例: 共有イベント)
+router.delete('/shared/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM shared_events WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
