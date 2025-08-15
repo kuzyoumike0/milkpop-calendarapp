@@ -4,19 +4,15 @@ WORKDIR /app/frontend
 
 # Node メモリ増加
 ENV NODE_OPTIONS=--max_old_space_size=4096
-
-# npm キャッシュをステージ専用に分離
 ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 
-# 依存関係インストール
+# 依存関係インストール（完全クリーン + 安定インストール）
 COPY frontend/package*.json ./
 RUN rm -rf node_modules /tmp/npm-cache \
     && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000
 
-# フロントエンドコードコピー
+# フロントエンドコードコピー & ビルド
 COPY frontend/ ./
-
-# ビルド
 RUN npm run build
 
 # ===== バックエンド =====
@@ -34,11 +30,9 @@ RUN rm -rf node_modules /tmp/npm-cache \
 # バックエンドコードコピー
 COPY backend/ ./
 
-# フロントエンドのビルド成果物を public にコピー
+# フロントエンドビルド成果物を public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# ポート解放
+# ポート解放 & サーバ起動
 EXPOSE 8080
-
-# サーバ起動
 CMD ["node", "index.js"]
