@@ -5,9 +5,7 @@ import CalendarList from './components/CalendarList';
 function App() {
   const [refresh, setRefresh] = useState(0);
 
-  const handleAdded = () => {
-    setRefresh(prev => prev + 1); // CalendarList が再取得
-  };
+  const handleAdded = () => setRefresh(prev => prev + 1);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-10">
