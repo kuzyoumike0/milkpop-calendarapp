@@ -1,3 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../db'); // PostgreSQL接続プール
+const { v4: uuidv4 } = require('uuid');
+
+
 // 個人イベント追加
 router.post('/personal', async (req, res) => {
   try {
