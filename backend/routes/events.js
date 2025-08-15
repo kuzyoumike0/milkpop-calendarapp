@@ -59,4 +59,29 @@ router.get('/shared', async (req, res) => {
   }
 });
 
+// 個人イベント削除
+router.delete('/personal/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM personal_events WHERE id=$1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 共有イベント削除
+router.delete('/shared/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM shared_events WHERE id=$1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
 module.exports = router;
