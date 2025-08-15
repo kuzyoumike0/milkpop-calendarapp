@@ -4,7 +4,7 @@ WORKDIR /app/frontend
 
 # 依存関係インストール（キャッシュ活用）
 COPY frontend/package.json frontend/package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
     npm install --legacy-peer-deps
 
 # ビルド
@@ -18,7 +18,7 @@ WORKDIR /app/backend
 
 # 依存関係インストール（キャッシュ活用）
 COPY backend/package.json backend/package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm \
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
     npm install --legacy-peer-deps
 
 # バックエンドコードコピー
