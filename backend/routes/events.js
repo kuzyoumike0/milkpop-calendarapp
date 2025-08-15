@@ -56,7 +56,7 @@ router.get('/shared', async (req, res) => {
   }
 });
 
-// 削除 (例: 個人イベント)
+// 削除 (個人イベント)
 router.delete('/personal/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -68,7 +68,7 @@ router.delete('/personal/:id', async (req, res) => {
   }
 });
 
-// 削除 (例: 共有イベント)
+// 削除 (共有イベント)
 router.delete('/shared/:id', async (req, res) => {
   try {
     const { id } = req.params;
