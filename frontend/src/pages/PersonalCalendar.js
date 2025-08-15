@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import 'react-calendar/dist/Calendar.css';
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function PersonalCalendar() {
@@ -19,7 +19,7 @@ export default function PersonalCalendar() {
   }, [date]);
 
   const tileContent = ({ date, view }) => {
-    if (view === 'month') {
+    if (view === "month") {
       const yyyy = date.getFullYear();
       const mm = String(date.getMonth() + 1).padStart(2, "0");
       const dd = String(date.getDate()).padStart(2, "0");
@@ -27,7 +27,7 @@ export default function PersonalCalendar() {
 
       const dayEvents = events.filter(e => e.date === formattedDate);
       return (
-        <ul style={{ paddingLeft: '5px', fontSize: '0.7em' }}>
+        <ul style={{ paddingLeft: "5px", fontSize: "0.7em" }}>
           {dayEvents.map(e => <li key={e.id}>{e.time_slot} {e.title}</li>)}
         </ul>
       );
@@ -35,13 +35,9 @@ export default function PersonalCalendar() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '20px auto' }}>
+    <div style={{ maxWidth: "800px", margin: "20px auto" }}>
       <h2>個人カレンダー</h2>
-      <Calendar
-        value={date}
-        onChange={setDate}
-        tileContent={tileContent}
-      />
+      <Calendar value={date} onChange={setDate} tileContent={tileContent} />
     </div>
   );
 }
