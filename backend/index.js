@@ -1,32 +1,30 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// フロントのビルド済みファイルを静的配信
-app.use(express.static(path.join(__dirname, "public")));
+let events = []; // 簡易メモリ管理
 
-// サンプル API
+// 取得
 app.get("/api/shared", (req, res) => {
-  res.json([
-    { id: 1, date: req.query.date, time_slot: "10:00", title: "共有イベント1" },
-    { id: 2, date: req.query.date, time_slot: "14:00", title: "共有イベント2" }
-  ]);
+  const { date } = req.query;
+  res.json(events.filter(e => e.date === date));
 });
 
-app.get("/api/personal/:userId", (req, res) => {
-  res.json([
-    { id: 1, date: req.query.date, time_slot: "12:00", title: "個人イベント1" },
-    { id: 2, date: req.query.date, time_slot: "16:00", title: "個人イベント2" }
-  ]);
+// 追加
+app.post("/api/shared", (req, res) => {
+  const event = req.body;
+  events.push(event);
+  res.json(event);
 });
 
-// SPA対応（Reactのルーティング）
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// 削除
+app.delete("/api/shared/:id", (req, res) => {
+  const { id } = req.params;
+  events = events.filter(e => e.id != id);
+  res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 8080;
