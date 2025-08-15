@@ -5,11 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: my_app
+      target: backend
     ports:
       - "8080:8080"
-    volumes:
-      - ./backend:/app/backend
-      - ./frontend:/app/frontend
     environment:
       NODE_ENV: production
