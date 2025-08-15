@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import 'react-calendar/dist/Calendar.css';
-import './App.css';
 import axios from "axios";
 
 export default function SharedCalendar() {
@@ -12,7 +11,7 @@ export default function SharedCalendar() {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
 
-    // 月単位で予定を取得
+    // 月単位で取得
     axios.get(`/api/shared?month=${yyyy}-${mm}`)
       .then(res => setEvents(res.data))
       .catch(err => console.error(err));
