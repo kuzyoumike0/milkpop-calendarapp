@@ -1,39 +1,31 @@
-# ===== フロントエンドビルド =====
-FROM node:20.17-bullseye AS frontend-build
-
-# 作業ディレクトリ
+# ===== フロントエンド依存関係ステージ =====
+FROM node:20.17-bullseye AS frontend-deps
 WORKDIR /app/frontend
 
-# npm メモリ拡張
-ENV NODE_OPTIONS=--max_old_space_size=8192
-
-# package.json と package-lock.json をコピー
+# npm キャッシュを BuildKit キャッシュに置き換え
 COPY frontend/package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=10 --fetch-retry-mintimeout=5000
 
-# npm install（キャッシュ削除 & 強制）
-RUN rm -rf /tmp/npm-cache && npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
-
-# フロントエンドソースをコピー
+# ===== フロントエンドビルドステージ =====
+FROM frontend-deps AS frontend-build
 COPY frontend/ ./
-
-# ビルド
+ENV NODE_OPTIONS=--max_old_space_size=4096
 RUN npm run build
 
-# ===== バックエンド =====
-FROM node:20.17-bullseye
-
+# ===== バックエンドステージ =====
+FROM node:20.17-bullseye AS backend
 WORKDIR /app/backend
 
-# backend package.json / package-lock.json コピー
+# バックエンド依存関係
 COPY backend/package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=10 --fetch-retry-mintimeout=5000
 
-# npm install
-RUN rm -rf /tmp/npm-cache && npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
-
-# backend ソースコピー
+# バックエンドコード
 COPY backend/ ./
 
-# frontend のビルド成果物を backend/public にコピー
+# フロントエンド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 # ポート解放
