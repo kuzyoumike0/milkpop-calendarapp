@@ -1,12 +1,15 @@
 # syntax=docker/dockerfile:1.4
 
-# ===== 依存関係インストールステージ =====
+# ===== 依存関係インストール =====
 FROM node:18-alpine AS deps
 WORKDIR /app/frontend
 
+# package.json と package-lock.json をコピー
 COPY frontend/package*.json ./
-RUN --mount=type=cache,id=frontend-npm,target=/root/.npm \
-    npm install
+
+# キャッシュマウントIDにプレフィックスを付与 (例: npm-cache-frontend)
+RUN --mount=type=cache,id=npm-cache-frontend,target=/root/.npm \
+    npm ci --legacy-peer-deps
 
 # ===== ビルドステージ =====
 FROM node:18-alpine AS build
@@ -28,7 +31,6 @@ RUN npm install
 COPY backend/ ./
 COPY --from=build /app/frontend/build ./public
 
-# 環境変数
 ENV NODE_ENV=production
 EXPOSE 8080
 
