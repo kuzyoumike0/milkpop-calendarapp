@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import 'react-calendar/dist/Calendar.css';
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
-export default function CalendarApp() {
+export default function SharedCalendar() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [username, setUsername] = useState("");
@@ -25,21 +25,16 @@ export default function CalendarApp() {
 
   const addEvent = () => {
     if (!username) return alert("ユーザー名を入力してください");
-
-    const formattedDate = formatDate(date);
     const newEvent = {
-      date: formattedDate,
+      date: formatDate(date),
       username,
       time_slot: timeSlot,
       title: `${username}の予定`
     };
-
     axios.post("/api/shared", newEvent)
-      .then(res => {
-        setEvents([...events, res.data]); // サーバーから返されたデータを追加
-        setUsername(""); // 入力クリア
-      })
+      .then(res => setEvents([...events, res.data]))
       .catch(err => console.error(err));
+    setUsername("");
   };
 
   const deleteEvent = (id) => {
@@ -50,28 +45,13 @@ export default function CalendarApp() {
 
   const tileContent = ({ date: d, view }) => {
     if (view === "month") {
-      const formattedDate = formatDate(d);
-      const dayEvents = events.filter(e => e.date === formattedDate);
+      const dayEvents = events.filter(e => e.date === formatDate(d));
       return (
         <ul className="text-xs mt-1 space-y-1">
           {dayEvents.map(e => (
-            <li
-              key={e.id}
-              className={`rounded px-1 ${
-                e.time_slot === "全日"
-                  ? "bg-indigo-200"
-                  : e.time_slot === "昼"
-                  ? "bg-yellow-200"
-                  : "bg-pink-200"
-              }`}
-            >
+            <li key={e.id} className={`rounded px-1 ${e.time_slot === "全日" ? "bg-indigo-200" : e.time_slot === "昼" ? "bg-yellow-200" : "bg-pink-200"}`}>
               {e.time_slot}: {e.title}
-              <button
-                onClick={() => deleteEvent(e.id)}
-                className="ml-2 text-red-600 font-bold hover:text-red-800"
-              >
-                ×
-              </button>
+              <button onClick={() => deleteEvent(e.id)} className="ml-2 text-red-600 font-bold hover:text-red-800">×</button>
             </li>
           ))}
         </ul>
@@ -84,36 +64,16 @@ export default function CalendarApp() {
       <h2 className="text-2xl font-bold text-center text-indigo-600 mb-4">共有カレンダー</h2>
 
       <div className="flex justify-center gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="ユーザー名"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border rounded px-2 py-1"
-        />
-        <select
-          value={timeSlot}
-          onChange={(e) => setTimeSlot(e.target.value)}
-          className="border rounded px-2 py-1"
-        >
+        <input type="text" placeholder="ユーザー名" value={username} onChange={(e)=>setUsername(e.target.value)} className="border rounded px-2 py-1"/>
+        <select value={timeSlot} onChange={(e)=>setTimeSlot(e.target.value)} className="border rounded px-2 py-1">
           <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
         </select>
-        <button
-          onClick={addEvent}
-          className="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
-        >
-          追加
-        </button>
+        <button onClick={addEvent} className="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600">追加</button>
       </div>
 
-      <Calendar
-        value={date}
-        onChange={setDate}
-        tileContent={tileContent}
-        className="rounded-lg border border-gray-200 shadow-sm"
-      />
+      <Calendar value={date} onChange={setDate} tileContent={tileContent} className="rounded-lg border border-gray-200 shadow-sm"/>
     </div>
   );
 }
