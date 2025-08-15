@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-export default function CalendarForm({ onAdded }) {
+export default function CalendarForm({ onAdd }) {
   const [user, setUser] = useState('');
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
@@ -18,14 +18,10 @@ export default function CalendarForm({ onAdded }) {
         title
       });
       setMessage('イベントを追加しました！');
-      setUser('');
-      setTitle('');
-      setDate('');
-      setTimeSlot('全日');
-      if (onAdded) onAdded();
+      setUser(''); setTitle(''); setDate(''); setTimeSlot('全日');
+      if(onAdd) onAdd(); // 更新用
     } catch (err) {
       setMessage('エラーが発生しました');
-      console.error(err);
     }
   };
 
