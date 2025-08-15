@@ -1,14 +1,36 @@
+# =========================
 # フロントビルドステージ
+# =========================
 FROM node:18 AS frontend-build
-WORKDIR /app
-COPY package*.json ./
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
 RUN npm install
-COPY ./ ./
+COPY frontend/ ./
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
-# Nginx 配信ステージ
+# =========================
+# バックエンドビルドステージ
+# =========================
+FROM node:18 AS backend-build
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+
+# =========================
+# 本番ステージ（Nginx + バックエンド）
+# =========================
 FROM nginx:alpine
-COPY --from=frontend-build /app/build /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# React のビルド成果物を Nginx にコピー
+COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html
+
+# バックエンドを同じコンテナにコピー
+COPY --from=backend-build /app/backend /app/backend
+WORKDIR /app/backend
+
+# ポート設定
+EXPOSE 80 5000
+
+# バックエンドと Nginx を同時に起動
+CMD sh -c "node index.js & nginx -g 'daemon off;'"
