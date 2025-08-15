@@ -10,7 +10,7 @@ router.post('/personal', async (req, res) => {
     const id = uuidv4();
     const create_at = new Date(); // DBカラム名に合わせる
     await pool.query(
-      'INSERT INTO personal_events (id, user_id, date, time_slot, title, create_at) VALUES ($1,$2,$3,$4,$5,$6)',
+      'INSERT INTO personal_events (id, user_id, date, time_slot, title, created_at) VALUES ($1,$2,$3,$4,$5,$6)',
       [id, user_id, date, time_slot, title, create_at]
     );
     res.json({ success: true });
