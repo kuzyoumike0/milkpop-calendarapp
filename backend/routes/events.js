@@ -46,4 +46,25 @@ router.post('/', auth, async (req,res) => {
     res.json(event);
 });
 
+// 予定作成時に参加者指定
+router.post('/', auth, async (req,res) => {
+  const { title, description, date, time_slot, is_shared, participants } = req.body;
+
+  const result = await pool.query(
+    'INSERT INTO events (title, description, date, time_slot, created_by, is_shared) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+    [title, description, date, time_slot, req.user.id, is_shared]
+  );
+  const event = result.rows[0];
+
+  // 共有予定で参加者がいる場合、event_participants に登録
+  if(is_shared && Array.isArray(participants) && participants.length > 0){
+    for(const uid of participants){
+      await pool.query('INSERT INTO event_participants (event_id,user_id) VALUES ($1,$2)', [event.id, uid]);
+    }
+  }
+
+  res.json(event);
+});
+
+
 module.exports = router;
