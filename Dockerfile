@@ -5,13 +5,18 @@ WORKDIR /app/frontend
 # Node メモリ増加
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
-# 依存関係インストール（キャッシュ破棄 + 再試行）
-COPY frontend/package*.json ./
-RUN rm -rf /app/frontend/node_modules /root/.npm \
-    && npm install --legacy-peer-deps --fetch-retries=15 --fetch-retry-mintimeout=10000
+# npm キャッシュをステージ専用に分離
+ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 
-# フロントエンドビルド
+# 依存関係インストール
+COPY frontend/package*.json ./
+RUN rm -rf node_modules /tmp/npm-cache \
+    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000
+
+# フロントエンドコードコピー
 COPY frontend/ ./
+
+# ビルド
 RUN npm run build
 
 # ===== バックエンド =====
@@ -19,15 +24,21 @@ FROM node:20.17-bullseye
 WORKDIR /app/backend
 
 ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 
 # バックエンド依存関係インストール
 COPY backend/package*.json ./
-RUN rm -rf /app/backend/node_modules /root/.npm \
-    && npm install --legacy-peer-deps --fetch-retries=15 --fetch-retry-mintimeout=10000
+RUN rm -rf node_modules /tmp/npm-cache \
+    && npm install --legacy-peer-deps --prefer-offline=false --fetch-retries=15 --fetch-retry-mintimeout=10000
 
 # バックエンドコードコピー
 COPY backend/ ./
+
+# フロントエンドのビルド成果物を public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
+# ポート解放
 EXPOSE 8080
+
+# サーバ起動
 CMD ["node", "index.js"]
