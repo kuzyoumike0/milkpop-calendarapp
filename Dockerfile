@@ -1,49 +1,43 @@
 # ===== フロントエンドビルド =====
 FROM node:20.17-bullseye AS frontend-build
+
+# 作業ディレクトリ
 WORKDIR /app/frontend
 
-ENV NODE_OPTIONS=--max_old_space_size=4096
-ENV NPM_CONFIG_CACHE=/tmp/npm-cache
+# npm メモリ拡張
+ENV NODE_OPTIONS=--max_old_space_size=8192
 
-# npm を最新安定版にアップデート
-RUN npm install -g npm@11.5.2
-
-# package.json と package-lock.json だけ先にコピー
+# package.json と package-lock.json をコピー
 COPY frontend/package*.json ./
 
-# node_modules とキャッシュを完全削除して再インストール
-RUN rm -rf node_modules /tmp/npm-cache \
-    && npm ci --legacy-peer-deps --force --prefer-offline=false \
-       --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
+# npm install（キャッシュ削除 & 強制）
+RUN rm -rf /tmp/npm-cache && npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
 
-# フロントエンドコードコピー
+# フロントエンドソースをコピー
 COPY frontend/ ./
 
-# フロントエンドビルド
+# ビルド
 RUN npm run build
 
 # ===== バックエンド =====
 FROM node:20.17-bullseye
+
 WORKDIR /app/backend
 
-ENV NODE_OPTIONS=--max_old_space_size=4096
-ENV NPM_CONFIG_CACHE=/tmp/npm-cache
-
-# npm を最新安定版にアップデート
-RUN npm install -g npm@11.5.2
-
-# バックエンド依存関係コピー
+# backend package.json / package-lock.json コピー
 COPY backend/package*.json ./
-RUN rm -rf node_modules /tmp/npm-cache \
-    && npm ci --legacy-peer-deps --force --prefer-offline=false \
-       --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
 
-# バックエンドコードコピー
+# npm install
+RUN rm -rf /tmp/npm-cache && npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit --fetch-retries=20 --fetch-retry-mintimeout=10000
+
+# backend ソースコピー
 COPY backend/ ./
 
-# フロントエンドビルド成果物を public にコピー
+# frontend のビルド成果物を backend/public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# ポート解放 & サーバ起動
+# ポート解放
 EXPOSE 8080
+
+# サーバ起動
 CMD ["node", "index.js"]
