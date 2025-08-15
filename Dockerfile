@@ -24,8 +24,12 @@ RUN npm install
 # バックエンドソースコピー
 COPY backend/ ./
 
-# Reactビルドを backend/public にコピー
+# フロントビルドを backend/public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-EXPOSE 3000
+# Cloud Run が要求するポート環境変数
+ENV PORT=8080
+EXPOSE 8080
+
+# バックエンド起動
 CMD ["node", "index.js"]
