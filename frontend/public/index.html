@@ -5,13 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="個人用＋共有用カレンダーWebアプリ" />
     <title>My Calendar App</title>
-    <!-- favicon などを追加可能 -->
+
+    <!-- favicon -->
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 基本スタイル -->
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+      }
+      header {
+        background-color: #4a90e2;
+        color: white;
+        padding: 16px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      main {
+        max-width: 900px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      footer {
+        text-align: center;
+        padding: 16px;
+        font-size: 0.9rem;
+        color: #666;
+      }
+    </style>
   </head>
   <body>
-    <!-- React がこの div にマウントされる -->
-    <div id="root"></div>
-
-    <!-- CRA でビルド時に bundle.js が自動で挿入される -->
+    <header>
+      📅 My Calendar App
+    </header>
+    <main>
+      <!-- React がここにマウント -->
+      <div id="root"></div>
+    </main>
+    <footer>
+      &copy; 2025 My Calendar App
+    </footer>
   </body>
 </html>
