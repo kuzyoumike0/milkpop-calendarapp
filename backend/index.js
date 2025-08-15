@@ -5,6 +5,8 @@ const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// フロントの build フォルダを静的配信
 app.use(express.static(path.join(__dirname, "public")));
 
 // サンプル API
@@ -20,7 +22,7 @@ app.get("/api/personal/:userId", (req, res) => {
   ]);
 });
 
-// React の SPA ルーティング対応
+// SPA対応
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
