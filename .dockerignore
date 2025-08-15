@@ -2,6 +2,25 @@
 node_modules
 npm-debug.log
 yarn-error.log
+
+# Mac / Windows 系ファイル
 .DS_Store
+Thumbs.db
+
+# 環境変数ファイル
 .env
+.env.local
+.env.*.local
+
+# Git 関連
 .git
+.gitignore
+
+# ビルド成果物
+build
+dist
+*.log
+
+# キャッシュや一時ファイル
+tmp
+.cache
