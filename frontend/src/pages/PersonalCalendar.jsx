@@ -9,7 +9,7 @@ export default function CalendarApp() {
   const [username, setUsername] = useState("");
   const [timeSlot, setTimeSlot] = useState("全日");
 
-  // 日付のフォーマット
+  // 日付フォーマット関数
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -27,17 +27,18 @@ export default function CalendarApp() {
 
   // 追加
   const addEvent = () => {
+    if (!username) return alert("ユーザー名を入力してください");
     const formattedDate = formatDate(date);
     const newEvent = {
-      id: Date.now(),
       date: formattedDate,
       username,
       time_slot: timeSlot,
       title: `${username}の予定`
     };
     axios.post("/api/shared", newEvent)
-      .then(() => setEvents([...events, newEvent]))
+      .then(res => setEvents([...events, res.data]))
       .catch(err => console.error(err));
+    setUsername(""); // 入力クリア
   };
 
   // 削除
@@ -47,6 +48,7 @@ export default function CalendarApp() {
       .catch(err => console.error(err));
   };
 
+  // 日付タイルにイベントを表示
   const tileContent = ({ date: d, view }) => {
     if (view === "month") {
       const formattedDate = formatDate(d);
@@ -56,7 +58,12 @@ export default function CalendarApp() {
           {dayEvents.map(e => (
             <li key={e.id} className={`rounded px-1 ${e.time_slot === "全日" ? "bg-indigo-200" : e.time_slot === "昼" ? "bg-yellow-200" : "bg-pink-200"}`}>
               {e.time_slot}: {e.title}
-              <button onClick={() => deleteEvent(e.id)} className="ml-2 text-red-600">×</button>
+              <button
+                onClick={() => deleteEvent(e.id)}
+                className="ml-2 text-red-600 font-bold hover:text-red-800"
+              >
+                ×
+              </button>
             </li>
           ))}
         </ul>
@@ -76,12 +83,21 @@ export default function CalendarApp() {
           onChange={(e) => setUsername(e.target.value)}
           className="border rounded px-2 py-1"
         />
-        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} className="border rounded px-2 py-1">
+        <select
+          value={timeSlot}
+          onChange={(e) => setTimeSlot(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
           <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
         </select>
-        <button onClick={addEvent} className="bg-indigo-500 text-white px-3 py-1 rounded">追加</button>
+        <button
+          onClick={addEvent}
+          className="bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
+        >
+          追加
+        </button>
       </div>
 
       <Calendar
