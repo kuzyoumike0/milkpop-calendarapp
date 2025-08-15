@@ -3,7 +3,8 @@ FROM node:18.20.1-bullseye AS frontend-build
 WORKDIR /app/frontend
 
 COPY frontend/package.json frontend/package-lock.json ./
-RUN --mount=type=cache,id=frontend-npm,target=/root/.npm \
+# id を cache- プレフィックス付きにして Cloud Build 用に修正
+RUN --mount=type=cache,id=cache-frontend-npm,target=/root/.npm \
     npm install --legacy-peer-deps
 
 COPY frontend/ ./
@@ -15,7 +16,7 @@ FROM node:18.20.1-bullseye
 WORKDIR /app/backend
 
 COPY backend/package.json backend/package-lock.json ./
-RUN --mount=type=cache,id=backend-npm,target=/root/.npm \
+RUN --mount=type=cache,id=cache-backend-npm,target=/root/.npm \
     npm install --legacy-peer-deps
 
 COPY backend/ ./
