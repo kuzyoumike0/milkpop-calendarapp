@@ -5,16 +5,22 @@ const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// React の build を提供
 app.use(express.static(path.join(__dirname, "public")));
 
 // サンプル API
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Hello from backend!" });
+app.get("/api/shared", (req, res) => {
+  res.json([
+    { id: 1, date: req.query.date, time_slot: "10:00", title: "共有イベント1" }
+  ]);
 });
 
-// React ルーティング対応
+app.get("/api/personal/:userId", (req, res) => {
+  res.json([
+    { id: 1, date: req.query.date, time_slot: "12:00", title: "個人イベント1" }
+  ]);
+});
+
+// React の SPA ルーティング対応
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
