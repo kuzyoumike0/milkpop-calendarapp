@@ -1,65 +1,36 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-require('dotenv').config();
-
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
 const app = express();
+
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
-// 静的ファイル提供
-app.use(express.static(path.join(__dirname, 'public')));
-
-// PostgreSQL 接続
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+// 個人カレンダーAPI
+app.get("/api/personal/:userId", (req, res) => {
+  const { userId } = req.params;
+  const { month } = req.query;
+  res.json([
+    { id: 1, date: `${month}-01`, title: "打ち合わせ", time_slot: "10:00" },
+    { id: 2, date: `${month}-05`, title: "プレゼン", time_slot: "14:00" }
+  ]);
 });
 
-// ---------------------
-// 共有予定
-// ---------------------
-app.get('/api/shared', async (req, res) => {
-  const { date } = req.query;
-  try {
-    const result = await pool.query(
-      'SELECT * FROM shared_events WHERE date=$1 ORDER BY time_slot',
-      [date]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+// 共有カレンダーAPI
+app.get("/api/shared", (req, res) => {
+  const { month } = req.query;
+  res.json([
+    { id: 1, date: `${month}-02`, title: "チーム会議", time_slot: "09:00" },
+    { id: 2, date: `${month}-10`, title: "締切", time_slot: "23:59" }
+  ]);
 });
 
-// ---------------------
-// 個人予定
-// ---------------------
-app.get('/api/personal/:user_id', async (req, res) => {
-  const { user_id } = req.params;
-  const { date } = req.query;
-  try {
-    const result = await pool.query(
-      'SELECT * FROM personal_events WHERE user_id=$1 AND date=$2 ORDER BY time_slot',
-      [user_id, date]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+// React SPA フォールバック
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// React ルーティング用キャッチオール
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// サーバー起動
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`✅ サーバーがポート ${PORT} で起動しました`);
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
 });
