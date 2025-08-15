@@ -8,8 +8,8 @@ WORKDIR /app
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# npm キャッシュをマウントして依存関係をインストール
-RUN --mount=type=cache,target=/root/.npm \
+# npm キャッシュを正しい形式でマウントして依存関係をインストール
+RUN --mount=type=cache,id=frontend-npm,target=/root/.npm \
     cd frontend && npm ci --legacy-peer-deps && \
     cd ../backend && npm ci
 
