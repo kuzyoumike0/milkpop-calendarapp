@@ -6,8 +6,8 @@ import PersonalCalendar from "./pages/PersonalCalendar";
 export default function App() {
   return (
     <Router>
-      <nav style={{ textAlign: 'center', margin: '20px' }}>
-        <Link to="/" style={{ marginRight: '20px' }}>共有カレンダー</Link>
+      <nav style={{ textAlign: "center", margin: "20px" }}>
+        <Link to="/" style={{ marginRight: "20px" }}>共有カレンダー</Link>
         <Link to="/personal">個人カレンダー</Link>
       </nav>
 
