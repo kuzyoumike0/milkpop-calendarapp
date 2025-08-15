@@ -4,10 +4,9 @@
 FROM node:18-alpine AS deps
 WORKDIR /app
 
-# package.json と package-lock.json をコピー
 COPY package*.json ./
 
-# npm キャッシュをマウントして依存関係をインストール
+# Railway対応: キャッシュマウントIDにプレフィックスを付ける
 RUN --mount=type=cache,id=myapp-frontend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps
 
@@ -15,21 +14,23 @@ RUN --mount=type=cache,id=myapp-frontend-npm,target=/root/.npm \
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# node_modules をコピー
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# React ビルド
+# Reactビルド
 RUN npm run build
 
 # ====== 実行ステージ ======
 FROM nginx:alpine AS runner
 
-# ビルド成果物を nginx に配置
+# SPA対応の nginx 設定をコピー
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# ビルド成果物を配置
 COPY --from=build /app/build /usr/share/nginx/html
 
-# nginx のポート解放
+# Railway環境のPORT変数に対応
+ENV PORT=80
 EXPOSE 80
 
-# 起動コマンド
 CMD ["nginx", "-g", "daemon off;"]
