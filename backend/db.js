@@ -4,9 +4,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-pool.query('SELECT NOW()').then(res => {
-  console.log(res.rows);
-  pool.end();
-}).catch(err => {
-  console.error(err);
-});
+pool.query('SELECT NOW()')
+  .then(res => console.log(res.rows))
+  .catch(err => console.error(err));
