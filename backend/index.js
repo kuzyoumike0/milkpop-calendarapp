@@ -1,42 +1,38 @@
-// backend/index.js
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { nanoid } = require("nanoid"); // ID自動生成
+const { nanoid } = require("nanoid");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// メモリ管理用の簡易データ
-let events = [];
+let events = []; // 簡易メモリ管理
 
-// 静的ファイル配信 (React ビルド成果物)
-app.use(express.static(path.join(__dirname, "public")));
-
-// 共有カレンダー取得
+// API: 取得
 app.get("/api/shared", (req, res) => {
   const { date } = req.query;
-  const filtered = events.filter(e => e.date === date);
-  res.json(filtered);
+  res.json(events.filter(e => e.date === date));
 });
 
-// 共有カレンダー追加
+// API: 追加
 app.post("/api/shared", (req, res) => {
-  const { username, date, time_slot, title } = req.body;
-  const event = { id: nanoid(), username, date, time_slot, title };
+  const event = { ...req.body, id: nanoid() };
   events.push(event);
   res.json(event);
 });
 
-// 共有カレンダー削除
+// API: 削除
 app.delete("/api/shared/:id", (req, res) => {
   const { id } = req.params;
   events = events.filter(e => e.id !== id);
   res.sendStatus(200);
 });
 
-// SPA対応: React Router 用
+// 静的ファイル配信
+app.use(express.static(path.join(__dirname, "public")));
+
+// SPA対応（フロントのルーティング対策）
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
