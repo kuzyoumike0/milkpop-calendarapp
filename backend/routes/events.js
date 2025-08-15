@@ -1,9 +1,14 @@
+const express = require('express');
+const router = express.Router();  // ← これが必要
+const pool = require('../db');
+const { v4: uuidv4 } = require('uuid');
+
 // 個人イベント追加
 router.post('/personal', async (req, res) => {
   try {
     const { user_id, date, time_slot, title } = req.body;
     const id = uuidv4();
-    const create_at = new Date(); // DBに合わせて変数名も create_at
+    const create_at = new Date();
     await pool.query(
       'INSERT INTO personal_events (id, user_id, date, time_slot, title, create_at) VALUES ($1,$2,$3,$4,$5,$6)',
       [id, user_id, date, time_slot, title, create_at]
@@ -31,3 +36,27 @@ router.post('/shared', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// 個人イベント取得
+router.get('/personal', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM personal_events ORDER BY date ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 共有イベント取得
+router.get('/shared', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM shared_events ORDER BY date ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
