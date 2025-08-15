@@ -1,54 +1,25 @@
-import React, { useState } from "react";
-import MyCalendar from "./Calendar";
-import { login, register } from "./api";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-export default function App() {
-  const [token, setToken] = useState(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [isRegister, setIsRegister] = useState(false);
+function App() {
+  const [events, setEvents] = useState([]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isRegister) {
-        await register({ name, email, password });
-      }
-      const res = await login({ email, password });
-      setToken(res.data.token);
-    } catch (err) {
-      alert("認証エラー");
-    }
-  };
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/events")
+      .then(res => setEvents(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
-  if (!token) {
-    return (
-      <div style={{ maxWidth: "400px", margin: "40px auto" }}>
-        <h2>{isRegister ? "新規登録" : "ログイン"}</h2>
-        <form onSubmit={handleSubmit}>
-          {isRegister && (
-            <div>
-              <label>名前: </label>
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-          )}
-          <div>
-            <label>メール: </label>
-            <input value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div>
-            <label>パスワード: </label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-          <button type="submit">{isRegister ? "登録" : "ログイン"}</button>
-        </form>
-        <button onClick={() => setIsRegister(!isRegister)} style={{ marginTop: "12px" }}>
-          {isRegister ? "ログイン画面へ" : "新規登録へ"}
-        </button>
-      </div>
-    );
-  }
-
-  return <MyCalendar token={token} />;
+  return (
+    <div>
+      <h1>カレンダー</h1>
+      <ul>
+        {events.map(e => (
+          <li key={e.id}>{e.title} - {e.date}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
+
+export default App;
