@@ -1,26 +1,19 @@
-# ベースイメージ
-FROM node:18
-
-# 作業ディレクトリ
-WORKDIR /app
-
-# フロントエンド依存
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
-
-# バックエンド依存
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
-
-# フロント・バックコピー
-COPY frontend/ ./frontend/
-COPY backend/ ./backend/
-
 # フロントビルド
-RUN cd frontend && npm run build
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# ポート設定
+# バックエンド
+FROM node:18
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+COPY --from=frontend-build /app/frontend/build ./build
+
+ENV PORT=5000
 EXPOSE 5000
-
-# サーバ起動
-CMD ["node", "backend/index.js"]
+CMD ["node", "index.js"]
