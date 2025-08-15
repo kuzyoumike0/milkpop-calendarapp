@@ -6,11 +6,10 @@ import PersonalCalendar from "./pages/PersonalCalendar";
 export default function App() {
   return (
     <Router>
-      <nav className="text-center my-4">
-        <Link to="/" className="mr-4 text-indigo-600 font-bold">共有カレンダー</Link>
-        <Link to="/personal" className="text-indigo-600 font-bold">個人カレンダー</Link>
+      <nav className="text-center my-6">
+        <Link to="/" className="mx-4 text-indigo-600 font-semibold">共有カレンダー</Link>
+        <Link to="/personal" className="mx-4 text-indigo-600 font-semibold">個人カレンダー</Link>
       </nav>
-
       <Routes>
         <Route path="/" element={<SharedCalendar />} />
         <Route path="/personal" element={<PersonalCalendar />} />
