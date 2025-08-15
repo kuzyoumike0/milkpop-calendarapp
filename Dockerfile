@@ -1,44 +1,32 @@
-# syntax=docker/dockerfile:1.5
+# syntax=docker/dockerfile:1.4
 
-# ===== フロントエンド依存関係 =====
-FROM node:20.17-bullseye AS frontend-deps
-WORKDIR /app/frontend
+# ====== 依存関係インストール用ステージ ======
+FROM node:18-alpine AS deps
+WORKDIR /app
 
-COPY frontend/package*.json ./
+# package.json と package-lock.json をコピー
+COPY package*.json ./
 
-# 正しい cache key を付与
-RUN --mount=type=cache,target=/root/.npm,id=frontend-npm \
-    npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit \
-    --fetch-retries=10 --fetch-retry-mintimeout=5000
+# npm キャッシュを正しい形式でマウントして依存関係をインストール
+RUN --mount=type=cache,id=frontend-npm,target=/root/.npm \
+    npm ci --legacy-peer-deps
 
-# ===== フロントエンドビルド =====
-FROM node:20.17-bullseye AS frontend-build
-WORKDIR /app/frontend
+# ====== ビルドステージ ======
+FROM node:18-alpine AS build
+WORKDIR /app
 
-COPY frontend/ ./
-COPY --from=frontend-deps /app/frontend/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-ENV NODE_OPTIONS=--max_old_space_size=4096
+# ビルド
 RUN npm run build
 
-# ===== バックエンド依存関係 =====
-FROM node:20.17-bullseye AS backend-deps
-WORKDIR /app/backend
+# ====== 実行ステージ ======
+FROM nginx:alpine AS runner
 
-COPY backend/package*.json ./
+# Reactビルド成果物をnginxに配置
+COPY --from=build /app/build /usr/share/nginx/html
 
-# 正しい cache key を付与
-RUN --mount=type=cache,target=/root/.npm,id=backend-npm \
-    npm ci --legacy-peer-deps --force --prefer-offline=false --no-audit \
-    --fetch-retries=10 --fetch-retry-mintimeout=5000
-
-# ===== バックエンド =====
-FROM node:20.17-bullseye AS backend
-WORKDIR /app/backend
-
-COPY backend/ ./
-COPY --from=frontend-build /app/frontend/build ./public
-COPY --from=backend-deps /app/backend/node_modules ./node_modules
-
-EXPOSE 8080
-CMD ["node", "index.js"]
+# nginx設定（キャッシュ無効化やSPA対応したい場合は修正）
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
