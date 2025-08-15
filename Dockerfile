@@ -2,11 +2,11 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json と package-lock.json のみ先にコピー
-COPY frontend/package*.json ./
+# package.json のみコピー
+COPY frontend/package.json ./
 
-# 依存関係インストール
-RUN npm ci
+# lockファイルを使わない依存インストール
+RUN npm install
 
 # ビルド用にソースコピー
 COPY frontend/ ./
@@ -21,8 +21,10 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 
-COPY backend/package*.json ./
-RUN npm ci
+# package.json のみコピー
+COPY backend/package.json ./
+
+RUN npm install
 COPY backend/ ./
 
 # フロントの build を backend/public にコピー
