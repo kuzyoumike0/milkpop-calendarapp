@@ -10,9 +10,10 @@ export default function SharedCalendar() {
   useEffect(() => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
 
-    // 月単位で取得
-    axios.get(`/api/shared?month=${yyyy}-${mm}`)
+    axios.get(`/api/shared?date=${formattedDate}`)
       .then(res => setEvents(res.data))
       .catch(err => console.error(err));
   }, [date]);
@@ -26,12 +27,8 @@ export default function SharedCalendar() {
 
       const dayEvents = events.filter(e => e.date === formattedDate);
       return (
-        <ul style={{ paddingLeft: '5px', fontSize: '0.7em', margin: 0 }}>
-          {dayEvents.map(e => (
-            <li key={e.id} style={{ listStyle: 'none' }}>
-              {e.time_slot} {e.title}
-            </li>
-          ))}
+        <ul style={{ paddingLeft: '5px', fontSize: '0.7em' }}>
+          {dayEvents.map(e => <li key={e.id}>{e.time_slot} {e.title}</li>)}
         </ul>
       );
     }
