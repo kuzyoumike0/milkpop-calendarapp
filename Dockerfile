@@ -13,7 +13,6 @@ WORKDIR /app/backend
 COPY backend/package.json ./
 RUN npm install
 COPY backend/ ./
-# フロントのビルド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 EXPOSE 8080
