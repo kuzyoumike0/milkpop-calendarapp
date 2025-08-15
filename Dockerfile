@@ -7,47 +7,29 @@ WORKDIR /app
 # package.json と package-lock.json をコピー
 COPY package*.json ./
 
-# npm キャッシュを正しい形式でマウントして依存関係をインストール
-# Railway推奨: キャッシュキーにプロジェクト名プレフィックスを付与
-RUN --mount=type=cache,id=railway-frontend-npm,target=/root/.npm \
+# npm キャッシュをマウントして依存関係をインストール
+RUN --mount=type=cache,id=myapp-frontend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps
 
 # ====== ビルドステージ ======
 FROM node:18-alpine AS build
 WORKDIR /app
 
+# node_modules をコピー
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# ビルド
+# React ビルド
 RUN npm run build
 
 # ====== 実行ステージ ======
 FROM nginx:alpine AS runner
 
-# Reactビルド成果物をnginxに配置
+# ビルド成果物を nginx に配置
 COPY --from=build /app/build /usr/share/nginx/html
 
-# SPA対応 nginx 設定（必要なら修正）
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    server_name localhost;
-
-    location / {
-        root /usr/share/nginx/html;
-        index index.html;
-        try_files \$uri /index.html;
-    }
-
-    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
-        root /usr/share/nginx/html;
-        expires 6M;
-        access_log off;
-        add_header Cache-Control "public";
-    }
-}
-EOF
-
+# nginx のポート解放
 EXPOSE 80
+
+# 起動コマンド
 CMD ["nginx", "-g", "daemon off;"]
