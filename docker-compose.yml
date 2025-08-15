@@ -1,23 +1,12 @@
-version: '3'
-services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: calendar
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+version: "3.8"
 
+services:
   backend:
     build: ./backend
     ports:
       - "5000:5000"
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/calendar
-      JWT_SECRET: secret
     depends_on:
       - db
 
@@ -28,5 +17,11 @@ services:
     depends_on:
       - backend
 
-volumes:
-  pgdata:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: calendar
+    ports:
+      - "5432:5432"
