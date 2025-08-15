@@ -1,18 +1,17 @@
 # Build stage
 FROM node:18 AS builder
-WORKDIR /app
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
-COPY frontend/ ./frontend
-RUN cd frontend && npm run build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
 # Production stage
 FROM node:18
-WORKDIR /app
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
-COPY backend/ ./backend
-COPY --from=builder /app/frontend/build ./backend/build
 WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
+COPY backend/ ./
+COPY --from=builder /app/frontend/build ./build
 EXPOSE 5000
 CMD ["node", "index.js"]
