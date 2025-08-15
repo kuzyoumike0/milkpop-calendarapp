@@ -37,4 +37,27 @@ router.post('/shared', async (req, res) => {
   }
 });
 
+// 個人イベント取得
+router.get('/personal', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM personal_events ORDER BY date, time_slot');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 共有イベント取得
+router.get('/shared', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM shared_events ORDER BY date, time_slot');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
 module.exports = router;
