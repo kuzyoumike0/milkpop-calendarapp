@@ -8,8 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # npm キャッシュを正しい形式でマウントして依存関係をインストール
-# Railway推奨: idにプロジェクト名などのプレフィックスを付与
-RUN --mount=type=cache,id=myproject-frontend-npm,target=/root/.npm \
+# Railway推奨: キャッシュキーにプロジェクト名プレフィックスを付与
+RUN --mount=type=cache,id=railway-frontend-npm,target=/root/.npm \
     npm ci --legacy-peer-deps
 
 # ====== ビルドステージ ======
@@ -28,6 +28,26 @@ FROM nginx:alpine AS runner
 # Reactビルド成果物をnginxに配置
 COPY --from=build /app/build /usr/share/nginx/html
 
-# nginx設定（キャッシュ無効化やSPA対応する場合は修正）
+# SPA対応 nginx 設定（必要なら修正）
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files \$uri /index.html;
+    }
+
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|ttf|svg)$ {
+        root /usr/share/nginx/html;
+        expires 6M;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+}
+EOF
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
