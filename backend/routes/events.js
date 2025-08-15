@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();  // ← これが必要
+const router = express.Router();
 const pool = require('../db');
 const { v4: uuidv4 } = require('uuid');
 
@@ -20,6 +20,17 @@ router.post('/personal', async (req, res) => {
   }
 });
 
+// 個人イベント取得
+router.get('/personal', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM personal_events ORDER BY date ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 共有イベント追加
 router.post('/shared', async (req, res) => {
   try {
@@ -34,17 +45,6 @@ router.post('/shared', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 個人イベント取得
-router.get('/personal', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM personal_events ORDER BY date ASC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
   }
 });
 
