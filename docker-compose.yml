@@ -11,23 +11,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  backend:
-    build: ./backend
+  app:
+    build: .
+    ports:
+      - "3000:80"     # React / Nginx
+      - "5000:5000"   # Node.js バックエンド
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/calendar
       JWT_SECRET: secret
       NODE_ENV: production
-    ports:
-      - "5000:5000"
     depends_on:
       - db
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
 
 volumes:
   pgdata:
