@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CalendarForm from './components/CalendarForm';
 import CalendarList from './components/CalendarList';
+import EventPage from './components/EventPage';
 
 function App() {
   const [refresh, setRefresh] = useState(false);
@@ -11,6 +12,7 @@ function App() {
         <h1 className="text-3xl font-bold text-center mb-6">MilkPop Calendar</h1>
         <CalendarForm onAdd={() => setRefresh(!refresh)} />
         <CalendarList key={refresh} />
+        <EventPage />
       </div>
     </div>
   );
