@@ -2,16 +2,16 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json と package-lock.json だけコピー
+# package.json だけコピー
 COPY frontend/package*.json ./
 
 # メモリ不足対策
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # 依存関係インストール
-RUN npm ci
+RUN npm install
 
-# フロントエンドソースをコピー
+# フロントエンドソースコピー
 COPY frontend/ ./
 
 # 本番用ビルド
@@ -21,9 +21,11 @@ RUN npm run build
 FROM node:18 AS backend
 WORKDIR /app/backend
 
-# バックエンド package.json コピーして依存関係インストール
+# バックエンド package.json コピー
 COPY backend/package*.json ./
-RUN npm ci
+
+# 依存関係インストール
+RUN npm install
 
 # バックエンドソースコピー
 COPY backend/ ./
