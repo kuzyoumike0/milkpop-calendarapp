@@ -2,14 +2,14 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json だけコピー
-COPY frontend/package*.json ./
+# 依存関係ファイルだけコピー
+COPY frontend/package.json frontend/package-lock.json ./
 
 # メモリ不足対策
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # 依存関係インストール
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # フロントエンドソースコピー
 COPY frontend/ ./
@@ -22,10 +22,10 @@ FROM node:18 AS backend
 WORKDIR /app/backend
 
 # バックエンド package.json コピー
-COPY backend/package*.json ./
+COPY backend/package.json backend/package-lock.json ./
 
 # 依存関係インストール
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # バックエンドソースコピー
 COPY backend/ ./
