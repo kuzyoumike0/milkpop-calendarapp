@@ -1,31 +1,44 @@
-# ステージ1: フロントエンドビルド
-FROM node:18 AS frontend-build
+# -----------------------
+# フロントエンドビルド
+# -----------------------
+FROM node:18-bullseye AS frontend-build
 WORKDIR /app/frontend
 
-# package.json と package-lock.json をコピー
+# 依存関係のみ先にインストール（キャッシュを効かせる）
 COPY frontend/package*.json ./
+RUN npm install --legacy-peer-deps
 
-# メモリ不足回避
-ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN npm install
-
-# ソースコピー
+# ソースコードコピー
 COPY frontend/ ./
 
-# Vite ビルド
+# ビルド（Vite 4 + React 18 + 安定版 plugin-react）
 RUN npm run build
 
-# ステージ2: バックエンド
-FROM node:18
+# -----------------------
+# バックエンドビルド
+# -----------------------
+FROM node:18-bullseye AS backend-build
 WORKDIR /app/backend
 
+# 依存関係のみ先にインストール
 COPY backend/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
+# ソースコードコピー
 COPY backend/ ./
 
-# フロント dist をバックエンドにコピー
-COPY --from=frontend-build /app/frontend/dist ./frontend/dist
+# -----------------------
+# 実行用コンテナ
+# -----------------------
+FROM node:18-bullseye
+WORKDIR /app
 
-EXPOSE 8080
-CMD ["node", "index.js"]
+# バックエンド配置
+COPY --from=backend-build /app/backend ./backend
+
+# フロントエンドのビルド成果物をバックエンドのpublicディレクトリへコピー
+COPY --from=frontend-build /app/frontend/dist ./backend/public
+
+# ポートと起動コマンド
+EXPOSE 3000
+CMD ["node", "backend/server.js"]
