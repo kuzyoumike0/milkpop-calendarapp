@@ -102,7 +102,7 @@ export default function Shared({ embedUrl }) {
     if (!selectedCal) return '';
     const src = encodeURIComponent(selectedCal);
     // タイムゾーン: Asia/Tokyo
-    return `https://calendar.google.com/calendar/embed?src=${src}&ctz=Asia%2FTokyo`;
+    return `https://calendar.google.com/calendar/embed?src=c5b59382c5570230f3a7a58e12c047a1c5c16d271722f5c094bcd01046d6606d%40group.calendar.google.com&ctz=Asia%2FTokyo`;
   })();
 
   return (
