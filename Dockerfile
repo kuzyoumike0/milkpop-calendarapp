@@ -13,10 +13,8 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# フロント dist をバックエンドにコピー
+# フロント dist をコピー
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
-ENV PORT=8080
 EXPOSE 8080
-
 CMD ["node", "index.js"]
