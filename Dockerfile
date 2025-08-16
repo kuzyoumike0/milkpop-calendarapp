@@ -1,25 +1,24 @@
-# ビルド用イメージ
-FROM node:18 AS build
+# フロントエンドビルド用
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
 
-WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm install
 
-# フロントエンド依存関係を先にコピー
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm install
-
-# フロントエンドビルド
-COPY frontend/ ./frontend
-RUN cd frontend && npm run build
+COPY frontend/ ./
+RUN npm run build
 
 # バックエンド用
+FROM node:18 AS backend
 WORKDIR /app/backend
+
 COPY backend/package*.json ./
 RUN npm install
 
 COPY backend/ ./
 
-# ビルド済みフロントをバックエンドの公開フォルダにコピー
-COPY --from=build /app/frontend/build ./frontend/build
+# ビルド済みフロントをバックエンド配信用フォルダにコピー
+COPY --from=frontend-build /app/frontend/build ./frontend_build
 
 # 環境変数
 ENV PORT=8080
