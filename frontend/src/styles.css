@@ -1,0 +1,106 @@
+/* シンプルでおしゃれな雰囲気のライトテーマ */
+:root{
+  --bg: #f7f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #8b5cf6;
+  --brand-2: #ec4899;
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.07);
+}
+
+*{ box-sizing: border-box; }
+html, body, #root{ height: 100%; }
+body{
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  background: radial-gradient(1200px 800px at 10% 0%, #f5e9ff 0%, var(--bg) 40%, var(--bg) 100%);
+  color: var(--text);
+}
+
+.container{
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100%;
+}
+
+.header{
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, rgba(139,92,246,0.12), rgba(236,72,153,0.12));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
+
+.header h1{
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: .2px;
+}
+
+.nav .link{
+  margin-right: 14px;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: var(--text);
+  border-radius: 999px;
+  transition: all .2s ease;
+  border: 1px solid transparent;
+}
+.nav .link:hover{ background: #fff; border-color: var(--border); box-shadow: var(--shadow); }
+.nav .link.active{ background: linear-gradient(90deg, var(--brand), var(--brand-2)); color: #fff; }
+
+.main{
+  padding: 28px;
+  display: grid;
+  gap: 24px;
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.row{ display:flex; gap:12px; flex-wrap: wrap; }
+.input, .select, .button{
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+}
+.button{
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform .06s ease, box-shadow .2s ease;
+  box-shadow: var(--shadow);
+}
+.button:active{ transform: translateY(1px); }
+.list{ list-style: none; padding-left: 0; margin: 0; }
+.item{ padding: 10px 12px; border-bottom: 1px dashed var(--border); }
+.item:last-child{ border-bottom: none; }
+
+.tag{
+  display:inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color:#fff;
+  background: var(--brand);
+  margin-left: 8px;
+}
+
+.footer{
+  padding: 18px 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--muted);
+}
