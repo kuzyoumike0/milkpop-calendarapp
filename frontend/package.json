@@ -1,7 +1,6 @@
 {
   "name": "milkpop-frontend",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,10 +9,10 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "axios": "^1.6.5"
+    "axios": "^1.5.0"
   },
   "devDependencies": {
-    "vite": "^5.4.19",
-    "@vitejs/plugin-react": "^5.0.1"
+    "vite": "^4.4.9",
+    "@vitejs/plugin-react": "^4.0.0"
   }
 }
