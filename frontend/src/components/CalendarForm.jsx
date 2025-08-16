@@ -11,10 +11,14 @@ export default function CalendarForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/events/personal', { user_id: user, date, time_slot: timeSlot, title });
-      setMessage('個人スケジュールを追加しました！');
+      await axios.post('http://localhost:5000/api/events/personal', {
+        user_id: user,
+        date,
+        time_slot: timeSlot,
+        title
+      });
+      setMessage('イベントを追加しました！');
     } catch (err) {
-      console.error(err);
       setMessage('エラーが発生しました');
     }
   };
