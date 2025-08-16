@@ -120,6 +120,9 @@ async function migrate(){
 if(hasPG){
   pool=new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL==='false'?false:{rejectUnauthorized:false} })
   migrate().catch(e=>console.error('DB init error',e))
+  await safeExec(`ALTER TABLE shared_events ADD COLUMN IF NOT EXISTS created_by integer;`);
+  await safeExec(`UPDATE shared_events SET created_by = user_id WHERE created_by IS NULL AND user_id IS NOT NULL;`);
+
 }
 
 // users helpers
