@@ -1,6 +1,6 @@
 import React from 'react';
 import CalendarForm from './components/CalendarForm';
-import CalendarList from './components/CalendarList';
+import CalendarList from './components/CalendarList.jsx';
 
 export default function App() {
   return (
