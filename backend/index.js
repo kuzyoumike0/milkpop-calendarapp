@@ -8,13 +8,12 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// APIルート
 app.use('/api/events', eventsRouter);
 
-// フロントビルド静的ファイル配信
+// 静的ファイル配信（Viteビルド結果）
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-// SPA 対応（React Routerがある場合）
+// SPA対応
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
 });
