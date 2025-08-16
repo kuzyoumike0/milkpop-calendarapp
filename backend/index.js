@@ -1,21 +1,21 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const eventsRouter = require('./routes/events');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import cors from 'cors';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-app.use('/api/events', eventsRouter);
-
-// 静的ファイル配信（Viteビルド結果）
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// 静的配信
+app.use(express.static(path.join(__dirname, './frontend/dist')));
 
 // SPA対応
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  res.sendFile(path.join(__dirname, './frontend/dist/index.html'));
 });
 
 const port = process.env.PORT || 8080;
