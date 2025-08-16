@@ -66,7 +66,7 @@ export default function Shared({ embedUrl }) {
           <iframe title="Google Calendar" src={embedUrl} style={{border:0, width:'100%', height:'600px', borderRadius:'12px'}} frameBorder="0" scrolling="no" />
         </div>
       ) : (
-        <p>環境変数 VITE_GOOGLE_CALENDAR_EMBED_URL を設定すると Google カレンダーを埋め込めます。</p>
+        <p><iframe src="https://calendar.google.com/calendar/embed?src=c5b59382c5570230f3a7a58e12c047a1c5c16d271722f5c094bcd01046d6606d%40group.calendar.google.com&ctz=Asia%2FTokyo" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe></p>
       )}
 
       <div className="row" style={{alignItems:'center', marginTop:12}}>
