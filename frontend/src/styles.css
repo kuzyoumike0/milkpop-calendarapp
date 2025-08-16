@@ -1,0 +1,176 @@
+/* ===============================
+   MilkPop Calendar — Chic UI Theme
+   =============================== */
+
+/* Color system */
+:root {
+  --bg: #0f1020;
+  --bg-soft: #13142a;
+  --card: rgba(255, 255, 255, 0.06);
+  --card-strong: rgba(255, 255, 255, 0.22);
+  --border: rgba(255, 255, 255, 0.12);
+  --txt: #e8e9f3;
+  --muted: #9aa0b4;
+  --brand: #9f7aea;      /* purple */
+  --brand2: #f472b6;     /* pink  */
+  --accent: #22d3ee;     /* cyan  */
+  --success: #34d399;    /* green */
+  --warn: #fbbf24;       /* amber */
+  --danger: #fb7185;     /* rose */
+  --shadow: 0 20px 60px rgba(0,0,0,.35);
+  --radius: 18px;
+}
+
+/* Background gradient + glow */
+html, body, #root { height: 100%; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--txt);
+  background: radial-gradient(1200px 800px at 80% -10%, rgba(159,122,234,.18), transparent 40%),
+              radial-gradient(900px 600px at -20% 120%, rgba(244,114,182,.16), transparent 42%),
+              linear-gradient(180deg, #121326 0%, #0f1020 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout */
+.container {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.header {
+  position: sticky; top: 0; z-index: 10;
+  display: grid; grid-template-columns: 1fr auto auto; gap: 16px;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(180deg, rgba(19,20,42,.75), rgba(19,20,42,.35));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+.header h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .4px;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.header h1::before {
+  content: "";
+  width: 12px; height: 12px; border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--brand), var(--brand2), var(--accent), var(--brand));
+  box-shadow: 0 0 18px rgba(159,122,234,.65), 0 0 36px rgba(34,211,238,.25) inset;
+}
+
+.nav {
+  display: inline-flex; gap: 10px; align-items: center;
+}
+.link {
+  color: var(--txt);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  transition: all .18s ease;
+}
+.link:hover { transform: translateY(-1px); border-color: var(--card-strong); }
+.link.active { 
+  color: #0b1020;
+  background: linear-gradient(90deg, var(--brand), var(--brand2));
+  border-color: transparent;
+  box-shadow: 0 10px 28px rgba(159,122,234,.35);
+}
+
+.main { padding: 26px; display: grid; gap: 22px; }
+
+.footer {
+  padding: 18px 24px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  text-align: center;
+  background: linear-gradient(0deg, rgba(19,20,42,.6), rgba(19,20,42,.2));
+}
+
+/* Cards */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 18px 16px;
+  box-shadow: var(--shadow);
+  animation: rise .4s ease both;
+}
+.card h2, .card h3 {
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+/* Controls */
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.input, .select, .button {
+  font-size: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.04);
+  color: var(--txt);
+  padding: 10px 12px;
+  outline: none;
+  transition: all .18s ease;
+}
+.input:focus, .select:focus {
+  border-color: var(--brand2);
+  box-shadow: 0 0 0 3px rgba(244,114,182,.16);
+}
+.button {
+  border: none;
+  background: linear-gradient(90deg, var(--brand), var(--brand2));
+  color: #0f1020;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(159,122,234,.25);
+}
+.button:hover { transform: translateY(-1px); }
+.button:active { transform: translateY(0); }
+.button.ghost {
+  background: transparent;
+  color: var(--txt);
+  border: 1px solid var(--border);
+}
+
+/* Lists */
+.list { list-style: none; padding: 0; margin: 8px 0 0; }
+.item {
+  border-bottom: 1px dashed var(--border);
+  padding: 10px 4px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.item:last-child { border-bottom: none; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; font-size: 12px;
+  background: linear-gradient(90deg, var(--accent), var(--brand2));
+  color: #081018;
+}
+
+/* Inline status colors */
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+.badge--ok { background: rgba(52, 211, 153, .2); color: #9ef6d0; }
+.badge--warn { background: rgba(251, 191, 36, .2); color: #ffe6a6; }
+.badge--danger { background: rgba(251, 113, 133, .2); color: #ffd0d7; }
+
+/* Fancy table (if needed later) */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px dashed var(--border); }
+.table th { text-align: left; color: var(--muted); font-weight: 600; }
+
+/* Animations */
+@keyframes rise {
+  from { transform: translateY(6px); opacity: .0; }
+  to { transform: translateY(0); opacity: 1; }
+}
