@@ -1,6 +1,7 @@
 import React from 'react';
 import CalendarForm from './components/CalendarForm';
-import CalendarList from './components/CalendarList.jsx';
+import CalendarList from './components/CalendarList';
+import SharedSchedule from './components/SharedSchedule';
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
         <h1 className="text-3xl font-bold text-center mb-6">MilkPop Calendar</h1>
         <CalendarForm />
         <CalendarList />
+        <SharedSchedule />
       </div>
     </div>
   );
