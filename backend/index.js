@@ -10,12 +10,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 静的配信
-app.use(express.static(path.join(__dirname, './frontend/dist')));
+// フロントビルド配信
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // SPA対応
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './frontend/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 const port = process.env.PORT || 8080;
