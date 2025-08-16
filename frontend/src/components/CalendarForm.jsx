@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../axios';
+import axios from 'axios';
 
 export default function CalendarForm() {
   const [user, setUser] = useState('');
@@ -11,15 +11,10 @@ export default function CalendarForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/events/personal', {
-        user_id: user,
-        date,
-        time_slot: timeSlot,
-        title
-      });
-      setMessage('イベントを追加しました！');
-      setUser(''); setTitle(''); setDate(''); setTimeSlot('全日');
+      await axios.post('/api/events/personal', { user_id: user, date, time_slot: timeSlot, title });
+      setMessage('個人スケジュールを追加しました！');
     } catch (err) {
+      console.error(err);
       setMessage('エラーが発生しました');
     }
   };
