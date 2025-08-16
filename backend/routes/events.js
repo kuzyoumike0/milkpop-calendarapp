@@ -1,57 +1,22 @@
-const express = require('express');
+// routes/events.js
+import express from 'express';
 const router = express.Router();
-const pool = require('../db');
 
-// 個人イベント追加
-router.post('/personal', async (req, res) => {
-  const { user_id, date, time_slot, title } = req.body;
-  try {
-    const result = await pool.query(
-      'INSERT INTO personal_events (user_id, date, time_slot, title) VALUES ($1,$2,$3,$4) RETURNING *',
-      [user_id, date, time_slot, title]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: '個人イベント追加エラー' });
-  }
+let personalEvents = [];
+let sharedEvents = [];
+
+router.get('/personal', (req, res) => res.json(personalEvents));
+router.post('/personal', (req, res) => {
+  const { title } = req.body;
+  personalEvents.push({ title });
+  res.json({ message: '追加完了' });
 });
 
-// 個人イベント取得
-router.get('/personal', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM personal_events ORDER BY date ASC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: '取得エラー' });
-  }
+router.get('/shared', (req, res) => res.json(sharedEvents));
+router.post('/shared', (req, res) => {
+  const { title } = req.body;
+  sharedEvents.push({ title });
+  res.json({ message: '追加完了' });
 });
 
-// 共有イベント追加
-router.post('/shared', async (req, res) => {
-  const { date, time_slot, title, created_by } = req.body;
-  try {
-    const result = await pool.query(
-      'INSERT INTO shared_events (date, time_slot, title, created_by) VALUES ($1,$2,$3,$4) RETURNING *',
-      [date, time_slot, title, created_by]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: '共有イベント追加エラー' });
-  }
-});
-
-// 共有イベント取得
-router.get('/shared', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM shared_events ORDER BY date ASC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: '取得エラー' });
-  }
-});
-
-module.exports = router;
+export default router;
