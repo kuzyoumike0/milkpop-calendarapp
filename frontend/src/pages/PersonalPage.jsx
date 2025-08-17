@@ -1,0 +1,1 @@
+export default function PersonalPage(){return <div className='p-4'>個人スケジュール作成ページ</div>;}

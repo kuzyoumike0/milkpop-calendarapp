@@ -1,0 +1,1 @@
+export default function SharedPage(){return <div className='p-4'>共有スケジュール作成ページ</div>;}

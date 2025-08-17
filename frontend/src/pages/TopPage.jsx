@@ -1,0 +1,1 @@
+export default function TopPage(){return <div className='p-4'>トップページ</div>;}
