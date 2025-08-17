@@ -1,0 +1,71 @@
+/* Daycode-ish glass theme */
+:root{
+  --bg:#0b0f1a;
+  --card:#11172a;
+  --muted:#9aa0b4;
+  --fg:#e8e9f3;
+  --accent:#7c5cff;
+  --cyan:#22d3ee;
+  --danger:#ef4444;
+  --ring: rgba(124,92,255,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family: ui-sans-serif,system-ui,Inter,Helvetica,Arial;
+  color:var(--fg); background:
+    radial-gradient(120% 120% at 100% 0%, rgba(124,92,255,.25), rgba(0,0,0,0) 60%),
+    radial-gradient(120% 120% at 0% 100%, rgba(34,211,238,.2), rgba(0,0,0,0) 60%),
+    var(--bg);
+}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.header{display:flex;align-items:center;gap:12px;margin:0 0 16px 0}
+.logo{width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--cyan));box-shadow:0 0 18px var(--accent)}
+.title{font-weight:900;letter-spacing:.3px;font-size:22px}
+.nav a{color:var(--fg);opacity:.8;margin-right:12px;text-decoration:none}
+.nav a:hover{opacity:1;text-decoration:underline}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter: blur(6px)}
+.row{display:flex;gap:8px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.input,.select{
+  width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.06);color:var(--fg);outline:none
+}
+.select.strong{border-color: rgba(124,92,255,.55);font-weight:600}
+.input:focus,.select:focus{box-shadow:0 0 0 4px var(--ring);border-color:var(--accent)}
+.button{appearance:none;border:0;border-radius:12px;padding:10px 16px;background:linear-gradient(135deg,var(--accent),#9b8cff);color:white;font-weight:700;cursor:pointer}
+.button.ghost{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--fg)}
+.link{background:transparent;border:0;color:var(--cyan);cursor:pointer}
+.link.active{color:white;text-decoration:underline}
+.small{font-size:12px;color:var(--muted)}
+.list{list-style:none;padding:0;margin:0}
+.item{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,.06)}
+.badge{width:8px;height:8px;border-radius:999px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06)}
+.chip.time{border-color: rgba(124,92,255,.45)}
+.chip.user{border-color: rgba(34,211,238,.45)}
+
+/* calendar */
+.cal-wrap{display:grid;gap:10px}
+.cal-head{display:flex;justify-content:space-between;align-items:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{font-size:12px;color:var(--muted);text-align:center}
+.cal-btn{
+  height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.03);color:var(--fg);display:grid;place-items:center;cursor:pointer
+}
+.cal-btn.today{outline:2px solid rgba(124,92,255,.5)}
+.cal-btn.sel{background:linear-gradient(135deg, rgba(124,92,255,.25), rgba(34,211,238,.2));border-color:rgba(124,92,255,.5)}
+.cal-btn.disabled{opacity:.45;pointer-events:none;position:relative}
+.cal-btn.disabled::after{content:'×';position:absolute;inset:0;display:grid;place-items:center;color:#fca5a5;font-weight:800;font-size:20px}
+
+/* --- holiday & today highlight --- */
+.cell.sun .date, .cell.holiday .date { color: #ef4444; }   /* red */
+.cell.sat .date { color: #3b82f6; }                        /* blue */
+.cell.today { outline: 2px solid rgba(99,102,241,.7); box-shadow: 0 0 0 3px rgba(99,102,241,.25) inset; border-radius: 10px; }
+.cell.today .date { font-weight: 800; }
+
+/* keep selection visible even on today */
+.cell.today.selected { background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(236,72,153,.12)); }
+
+/* badge/date area assumes .date element exists */
