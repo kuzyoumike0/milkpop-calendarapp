@@ -1,0 +1,1 @@
+export default function Shared(){return <h2>共有カレンダー</h2>}

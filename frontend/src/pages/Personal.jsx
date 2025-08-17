@@ -1,0 +1,1 @@
+export default function Personal(){return <h2>個人スケジュール</h2>}
