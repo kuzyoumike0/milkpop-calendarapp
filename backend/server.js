@@ -1,0 +1,167 @@
+// backend/server.js
+import express from 'express'
+import cors from 'cors'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
+import pkg from 'pg'
+const { Pool } = pkg
+
+dotenv.config()
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const app = express()
+app.use(cors())
+app.use(express.json())
+
+// DB optional
+const hasPG = !!process.env.DATABASE_URL
+const pool = hasPG ? new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_SSL === '0' ? false : { rejectUnauthorized: false }
+}) : null
+
+function baseUrl(req){
+  const env = process.env.PUBLIC_BASE_URL
+  if(env) return env.replace(/\/$/,'')
+  const host = req.get('host')
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http'
+  return `${proto}://${host}`
+}
+
+
+async function migrate(){
+  if(!hasPG) return
+  const q = (s,p)=>pool.query(s,p)
+
+  // base tables
+  await q(`CREATE TABLE IF NOT EXISTS shared_sessions(
+    id serial PRIMARY KEY,
+    owner_user_id integer,
+    token text UNIQUE,
+    allowed_dates jsonb,
+    mode text,
+    title text,
+    created_at timestamptz DEFAULT now()
+  )`)
+  await q(`CREATE TABLE IF NOT EXISTS shared_events(
+    id serial PRIMARY KEY,
+    user_id integer,
+    date date,
+    time_slot text,
+    title text,
+    member_name text,
+    created_by integer,
+    token text,
+    created_at timestamptz DEFAULT now()
+  )`)
+  await q(`CREATE TABLE IF NOT EXISTS personal_events(
+    id serial PRIMARY KEY,
+    user_id integer,
+    date date,
+    time_slot text,
+    title text,
+    created_at timestamptz DEFAULT now()
+  )`)
+
+  // ensure columns exist (idempotent)
+  await q(`ALTER TABLE shared_sessions
+    ADD COLUMN IF NOT EXISTS owner_user_id integer,
+    ADD COLUMN IF NOT EXISTS token text,
+    ADD COLUMN IF NOT EXISTS allowed_dates jsonb,
+    ADD COLUMN IF NOT EXISTS mode text,
+    ADD COLUMN IF NOT EXISTS title text,
+    ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now()`)
+
+  await q(`ALTER TABLE shared_events
+    ADD COLUMN IF NOT EXISTS user_id integer,
+    ADD COLUMN IF NOT EXISTS date date,
+    ADD COLUMN IF NOT EXISTS time_slot text,
+    ADD COLUMN IF NOT EXISTS title text,
+    ADD COLUMN IF NOT EXISTS member_name text,
+    ADD COLUMN IF NOT EXISTS created_by integer,
+    ADD COLUMN IF NOT EXISTS token text,
+    ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now()`)
+
+  await q(`ALTER TABLE personal_events
+    ADD COLUMN IF NOT EXISTS user_id integer,
+    ADD COLUMN IF NOT EXISTS date date,
+    ADD COLUMN IF NOT EXISTS time_slot text,
+    ADD COLUMN IF NOT EXISTS title text,
+    ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now()`)
+}
+
+await migrate()
+
+const parseRange = (slot)=>{
+  if (slot==='×'||slot==='午前'||slot==='午後'||slot==='終日') return {ok:true,label:slot}
+  const m = /^([0-2]?\d):([0-5]\d)-([0-2]?\d):([0-5]\d)$/.exec(slot)
+  if(!m) return {ok:false}
+  const s = Number(m[1])*60+Number(m[2])
+  let e = Number(m[3])*60+Number(m[4])
+  if(e===0) e = 24*60
+  return {ok:e>s,start:s,end:e}
+}
+
+// shared session (host)
+app.post('/api/shared/session', async (req,res)=>{
+  const { dates=[], mode='multi', title='' } = req.body||{}
+  if(!Array.isArray(dates) || dates.length===0) return res.status(400).json({error:'no_dates'})
+  const token = Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)
+  if(hasPG){
+    try{
+      await pool.query('INSERT INTO shared_sessions(owner_user_id,token,allowed_dates,mode,title) VALUES ($1,$2,$3,$4,$5)',
+        [1, token, JSON.stringify(dates), mode, title])
+    }catch(e){
+      console.warn('[shared_session] insert failed, continue without DB:', e.message)
+    }
+  }
+  res.json({ url: baseUrl(req) + '/share_session.html?token=' + token, token })
+})
+
+app.get('/api/shared/session/:token', async (req,res)=>{
+  if(!hasPG) return res.json({ allowed_dates: [], mode: 'multi', title: '' })
+  const { rows } = await pool.query('SELECT allowed_dates,mode,title FROM shared_sessions WHERE token=$1',[req.params.token])
+  if(rows.length===0) return res.status(404).json({error:'not_found'})
+  res.json({ allowed_dates: rows[0].allowed_dates||[], mode: rows[0].mode||'multi', title: rows[0].title||'' })
+})
+
+app.post('/api/shared/session/:token/register', async (req,res)=>{
+  const { date, time_slot } = req.body||{}
+  if(!date || !time_slot) return res.status(400).json({error:'bad_params'})
+  const pr = parseRange(time_slot); if(!pr.ok) return res.status(400).json({error:'invalid_time_range_or_label'})
+  if(!hasPG) return res.json({success:true})
+  const srow = await pool.query('SELECT allowed_dates,owner_user_id FROM shared_sessions WHERE token=$1',[req.params.token])
+  if(srow.rowCount===0) return res.status(404).json({error:'not_found'})
+  const allowed = srow.rows[0].allowed_dates||[]
+  if(!allowed.includes(date)) return res.status(400).json({error:'date_not_allowed'})
+  const owner = srow.rows[0].owner_user_id||1
+  const ins = await pool.query('INSERT INTO shared_events(user_id,date,time_slot,title,member_name,created_by,token) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+    [owner, date, time_slot, '', '', owner, req.params.token])
+  res.json({success:true, item: ins.rows[0]})
+})
+
+// personal
+app.post('/api/personal', async (req,res)=>{
+  const { user_id=1, date, time_slot, title='' } = req.body||{}
+  if(!date || !time_slot) return res.status(400).json({error:'bad_params'})
+  const pr = parseRange(time_slot); if(!pr.ok) return res.status(400).json({error:'invalid_time_range_or_label'})
+  if(!hasPG) return res.json({success:true})
+  const ins = await pool.query('INSERT INTO personal_events(user_id,date,time_slot,title) VALUES ($1,$2,$3,$4) RETURNING *',
+    [user_id, date, time_slot, title])
+  res.json({success:true, item: ins.rows[0]})
+})
+
+// static
+app.use(express.static(path.join(__dirname, '../frontend')))
+app.get('*', (_req,res)=>{
+  res.sendFile(path.join(__dirname, '../frontend/index.html'))
+})
+
+const PORT = process.env.PORT || 8080
+app.listen(PORT, ()=> console.log('Server running on port', PORT))
+
+
+app.get('/api/health', (req,res)=>res.json({ok:true, hasPG}))
