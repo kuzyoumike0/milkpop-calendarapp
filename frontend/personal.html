@@ -1,0 +1,117 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>個人スケジュール - MilkPop</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="nav">
+      <div class="brand"><div class="logo"></div><h1>個人スケジュール</h1></div>
+      <div class="row">
+        <a class="btn" href="index.html">トップ</a>
+        <a class="btn" href="shared_setup.html">共有設定</a>
+        <a class="btn" href="share_session.html">共有リンク先</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>予定の追加</h2>
+        <label>ユーザー名</label>
+        <input id="user" type="text" placeholder="あなたの名前"/>
+        <div id="cal"></div>
+        <label>方法</label>
+        <div class="row">
+          <label class="small"><input type="radio" name="mode" value="x"> ×</label>
+          <label class="small"><input type="radio" name="mode" value="am"> 午前</label>
+          <label class="small"><input type="radio" name="mode" value="pm"> 午後</label>
+          <label class="small"><input type="radio" name="mode" value="allday" checked> 終日</label>
+          <label class="small"><input type="radio" name="mode" value="time"> 時間指定</label>
+        </div>
+        <div class="row">
+          <select id="start">
+            <option value="">開始</option>
+            ${["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"].map(t=>`<option>${t}</option>`).join("")}
+          </select>
+          <select id="end">
+            <option value="">終了</option>
+            ${["01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00","24:00"].map(t=>`<option>${t}</option>`).join("")}
+          </select>
+        </div>
+        <label>メモ</label>
+        <textarea id="memo" placeholder="補足など"></textarea>
+        <div><button class="btn" id="add">選択した日すべてに登録</button></div>
+      </div>
+
+      <div class="card">
+        <h2>自分の予定</h2>
+        <label>ユーザー名で絞り込み</label>
+        <div class="row">
+          <input id="userFilter" type="text" placeholder="あなたの名前"/>
+          <button class="btn secondary" id="reload">再読込</button>
+        </div>
+        <div id="list" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { makeCalendar } from './assets/simple_calendar.js';
+    import { api, buildTimeSlot } from './assets/api.js';
+
+    const cal = makeCalendar('#cal', { onChange: (list)=> window.sel=list, multi:true });
+    window.sel = [];
+
+    async function refresh(){
+      const user = document.querySelector('#userFilter').value.trim();
+      const rows = await api('/api/personal'+(user?('?user='+encodeURIComponent(user)):'') );
+      const list = document.querySelector('#list');
+      list.innerHTML = rows.map(r=>`
+        <div class="item">
+          <div><b>${r.date}</b> — ${r.user_name}</div>
+          <div class="meta">${r.time_slot}${r.memo ? ' / '+r.memo : ''}</div>
+          <button class="btn secondary" data-del="${r.id}" data-user="${r.user_name}">削除</button>
+        </div>
+      `).join('');
+    }
+
+    document.querySelector('#reload').addEventListener('click', refresh);
+
+    document.querySelector('#add').addEventListener('click', async ()=>{
+      const user = document.querySelector('#user').value.trim();
+      if (!user) return alert('ユーザー名を入力してください');
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const start = document.querySelector('#start').value;
+      const end = document.querySelector('#end').value;
+      const memo = document.querySelector('#memo').value.trim();
+      if (!window.sel.length) return alert('日付を選択してください');
+      try{
+        const slot = buildTimeSlot(mode, start, end);
+        for (const d of window.sel){
+          await api('/api/personal', { method:'POST', body: JSON.stringify({ user_name:user, date:d, time_slot:slot, memo }) });
+        }
+        await refresh();
+        alert('登録しました');
+      }catch(e){ alert('登録失敗: '+e.message); }
+    });
+
+    document.querySelector('#list').addEventListener('click', async (e)=>{
+      const btn = e.target.closest('[data-del]');
+      if (!btn) return;
+      const id = btn.dataset.del;
+      const user = btn.dataset.user;
+      if (!confirm('削除しますか？')) return;
+      try{
+        await api('/api/personal/'+id, { method:'DELETE', body: JSON.stringify({ user_name:user }) });
+        await refresh();
+      }catch(e){ alert('削除失敗: '+e.message); }
+    });
+
+    refresh();
+  </script>
+</body>
+</html>

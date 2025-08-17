@@ -1,0 +1,59 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>共有設定 - MilkPop</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="nav">
+      <div class="brand"><div class="logo"></div><h1>共有設定</h1></div>
+      <div class="row">
+        <a class="btn" href="index.html">トップ</a>
+        <a class="btn" href="share_session.html">共有リンク先</a>
+        <a class="btn" href="personal.html">個人スケジュール</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>候補日を選択</h2>
+        <label>タイトル</label>
+        <input id="title" type="text" placeholder="例）8月の打合せ候補" />
+        <div id="cal"></div>
+        <div class="row">
+          <button class="btn" id="issue">共有リンクを発行</button>
+          <span class="small">選択した日が <span class="badge">allowed_dates</span> になります</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>発行結果</h2>
+        <div id="result" class="stack small">未発行</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { makeCalendar } from './assets/simple_calendar.js';
+    import { api } from './assets/api.js';
+
+    const cal = makeCalendar('#cal', { onChange: (list)=> { window.sel = list; } });
+    window.sel = [];
+
+    document.querySelector('#issue').addEventListener('click', async ()=>{
+      const title = document.querySelector('#title').value.trim() || '共有スケジュール';
+      try{
+        const res = await api('/api/shared/session', { method:'POST', body: JSON.stringify({ title, allowed_dates: window.sel }) });
+        const out = document.querySelector('#result');
+        out.innerHTML = `<div class="item"><div><div class="meta">token</div><div class="kbd">${res.token}</div></div>
+                         <div><a class="btn" target="_blank" href="share_session.html?token=${res.token}">開く</a></div></div>`;
+      }catch(e){
+        alert('発行に失敗: '+e.message);
+      }
+    });
+  </script>
+</body>
+</html>
