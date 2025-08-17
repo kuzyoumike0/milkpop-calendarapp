@@ -1,6 +1,0 @@
-body{font-family:sans-serif;background:#fafafa;margin:20px}
-h1,h2{color:#333}
-#calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:20px 0}
-.day{border:1px solid #ccc;padding:8px;text-align:center;cursor:pointer}
-.day.today{background:#ffeeba}
-.day.selected{background:#90ee90}
