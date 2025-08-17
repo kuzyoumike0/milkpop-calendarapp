@@ -5,6 +5,10 @@ const nameInput = document.querySelector('#personName')
 const btnLoad = document.querySelector('#loadOrCreate')
 const info = document.querySelector('#userInfo')
 
+
+const hourStart = Array.from({length:24},(_,h)=>`${String(h).padStart(2,'0')}:00`)
+const hourEnd   = Array.from({length:25},(_,h)=>`${String(h).padStart(2,'0')}:00`)
+
 const calEl = document.querySelector('#pcal').parentElement
 const cal = Calendar(calEl, { mode:'multi' })
 let mode='multi'

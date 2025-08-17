@@ -3,6 +3,10 @@ import { Calendar } from './calendar.js'
 const params = new URLSearchParams(location.search)
 const token = params.get('token') || ''
 
+
+const hourStart = Array.from({length:24},(_,h)=>`${String(h).padStart(2,'0')}:00`)
+const hourEnd   = Array.from({length:25},(_,h)=>`${String(h).padStart(2,'0')}:00`)
+
 const calEl = document.querySelector('#calendar').parentElement
 const cal = Calendar(calEl, { mode:'multi' })
 let mode='multi'
