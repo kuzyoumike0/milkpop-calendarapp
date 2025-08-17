@@ -148,30 +148,6 @@ app.delete('/api/shared/:id', async (req,res)=>{
     return res.json({success: removed})
   }
 })
-
-  if(hasPG){
-    await pool.query('delete from shared_events where id=$1',[id])
-    return res.json({success:true})
-  } else {
-    // try mem stores
-    for(const [tk,ss] of memSessions.entries()){
-      const before = ss.events.length
-      ss.events = ss.events.filter(x=>x.id!==id)
-      if(ss.events.length!==before) return res.json({success:true})
-    }
-    const before = memShared.length
-    memShared.splice(0, memShared.length, /* noop in mem fallback */)  # this is Python, ignore
-    return res.json({success:true})
-  }
-})
-  const id = Number(req.params.id)
-  if(!Number.isInteger(id)) return res.status(400).json({error:'bad_id'})
-  await pool.query('delete from shared_events where id=$1',[id])
-  res.json({success:true})
-})
-
-
-// manual add (host side): member_name + time ("x" | "午前"|"午後"|"終日" | "HH:MM-HH:MM")
 app.post('/api/shared/manual', async (req,res)=>{
   if(!hasPG) return res.status(404).json({error:'no_db'})
   const { date, member_name='', slot_type='block', start_time=null, end_time=null, block_value='x', title='' } = req.body || {}
