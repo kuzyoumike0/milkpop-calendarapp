@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --pink:#FDB9C8;
+  --blue:#004CA0;
+}
+body{
+  font-family:'Poppins','Noto Sans JP',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+}
+.brand-btn{
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-bold transition;
+  background: linear-gradient(90deg,var(--blue),#101828);
+  color:#fff;
+}
+.brand-btn:hover{ filter: brightness(1.1); }
+.card{ @apply bg-[#121217] border border-[#24242a] rounded-2xl p-6 shadow-xl; }
