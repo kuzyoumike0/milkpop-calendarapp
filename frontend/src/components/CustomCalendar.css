@@ -1,0 +1,26 @@
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin: 1rem auto;
+}
+.calendar-cell {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+}
+.calendar-cell:hover {
+  transform: scale(1.05);
+  background: #004CA0;
+}
+.calendar-cell.selected {
+  background: #FDB9C8;
+  color: #000;
+  font-weight: bold;
+}
