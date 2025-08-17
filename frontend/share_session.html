@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>共有スケジュール | MilkPop</title>
+  <link rel="stylesheet" href="assets/app.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <img src="assets/logo.png" class="logo" alt="logo"/>
+    <h1 id="shareTitle">共有スケジュール</h1>
+  </header>
+  <main class="container">
+    <section class="card">
+      <div class="row" style="gap:10px; align-items:center">
+        <input id="memberName" class="w100 fancy" placeholder="あなたの名前（必須）" style="max-width:240px">
+        <input id="memoText" class="w100 fancy" placeholder="メモ（任意）" style="max-width:340px">
+      </div>
+      <div id="status" class="status mt8"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="mb8">候補日一覧（選択→登録）</h3>
+      <div id="allowedWrap"></div>
+      <button id="register" class="primary mt8">選択した日程を登録</button>
+    </section>
+
+    <section class="card">
+      <h3>登録済み一覧</h3>
+      <div id="regs"></div>
+    </section>
+  </main>
+  <script src="assets/share_session.js"></script>
+</body>
+</html>
