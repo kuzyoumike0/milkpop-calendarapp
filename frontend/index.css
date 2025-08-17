@@ -1,0 +1,37 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  width: 600px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #222;
+}
+
+input, select, button {
+  margin: 5px;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #4facfe;
+  color: white;
+  cursor: pointer;
+}
