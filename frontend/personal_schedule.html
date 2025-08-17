@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>個人スケジュール</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/simple_calendar.js" defer></script>
+</head>
+<body>
+  <header><h1>個人スケジュール</h1></header>
+  <main>
+    <div id="calendar"></div>
+    <form id="personalForm">
+      <input type="text" id="userName" placeholder="名前">
+      <input type="text" id="memo" placeholder="メモ">
+      <select id="timeSlot">
+        <option value="午前">午前</option>
+        <option value="午後">午後</option>
+        <option value="終日">終日</option>
+      </select>
+      <button type="submit">登録</button>
+    </form>
+    <div id="personalList"></div>
+  </main>
+  <script src="assets/personal_schedule.js" defer></script>
+</body>
+</html>
