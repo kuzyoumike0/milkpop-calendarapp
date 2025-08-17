@@ -1,1 +1,0 @@
-export default function Home(){return <h2>トップ画面</h2>}

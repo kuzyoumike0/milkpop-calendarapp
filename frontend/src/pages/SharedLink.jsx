@@ -1,1 +1,0 @@
-export default function SharedLink(){return <h2>共有リンクページ</h2>}
