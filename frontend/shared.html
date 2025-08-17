@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>共有スケジュール</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/calendar.js"></script>
+  <script src="assets/shared.js" defer></script>
+</head>
+<body>
+  <h2>共有スケジュール</h2>
+  <div id="calendar"></div>
+  <div id="controls">
+    <label>タイトル: <input id="title" type="text"></label><br>
+    <label><input type="radio" name="mode" value="allday"> 全日</label>
+    <label><input type="radio" name="mode" value="morning"> 午前</label>
+    <label><input type="radio" name="mode" value="afternoon"> 午後</label>
+    <label><input type="radio" name="mode" value="custom"> 時間指定</label><br>
+    <select id="startHour"></select> ～ <select id="endHour"></select><br>
+    <button id="save">登録</button>
+  </div>
+  <div id="link"></div>
+</body>
+</html>
