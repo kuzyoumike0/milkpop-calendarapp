@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>共有ページ | MilkPop</title>
+  <link rel="stylesheet" href="./assets/app.css" />
+</head>
+<body>
+  <header class="banner">
+    <div class="brand">MilkPop Calendar</div>
+    <nav class="nav">
+      <a href="./shared.html">共有リンク発行</a>
+      <a href="./personal.html">個人スケジュール</a>
+    </nav>
+  </header>
+
+  <main class="container">
+  <section class="card">
+    <h2 id="shareTitle">共有スケジュール</h2>
+
+    <div class="row">
+      <div class="input-wrap" style="max-width:420px">
+        <span class="input-icon">👤</span>
+        <input id="memberName" class="w100 fancy" placeholder="あなたの名前を入力" />
+      </div>
+    </div>
+
+    <!-- 取得した候補日を一覧表示 -->
+    <div id="datesList" class="dates-list"></div>
+
+    <div class="row">
+      <button class="primary" id="btnSubmit" disabled>選択した日程を登録</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+</main>
+
+  <script src="./assets/calendar.js"></script>
+  <script src="./assets/share_session.js"></script>
+</body>
+</html>
