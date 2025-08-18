@@ -12,6 +12,11 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
+// ✅ GET / のルートを追加（これで必ず応答する）
+app.get("/", (req, res) => {
+  res.send("✅ Calendar backend is running");
+});
+
 // 共有リンク発行
 app.post("/api/share-link", async (req, res) => {
   const { dates, slotMode, slot, start_time, end_time, title } = req.body;
