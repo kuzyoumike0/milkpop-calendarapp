@@ -1,17 +1,22 @@
-# === Frontend Build ===
+# ==========================
+# フロントエンドビルド
+# ==========================
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# === Backend ===
-FROM node:18
+# ==========================
+# バックエンド
+# ==========================
+FROM node:18 AS backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps   # ← uuid もここで必ず入る
+RUN npm install
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/build ./public
+
 EXPOSE 8080
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
