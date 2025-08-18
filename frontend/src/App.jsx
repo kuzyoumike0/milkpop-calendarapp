@@ -1,33 +1,25 @@
-import React, { useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Home from "./pages/Home";
+import SharedCalendar from "./pages/SharedCalendar";
+import SharedLink from "./pages/SharedLink";
+import PersonalSchedule from "./pages/PersonalSchedule";
 
 export default function App() {
-  const [username, setUsername] = useState("");
-  const [event, setEvent] = useState("");
-  const [timeRange, setTimeRange] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert(`ユーザー: ${username}\n予定: ${event}\n時間: ${timeRange}`);
-  };
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>共有カレンダー</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>ユーザー名: </label>
-          <input value={username} onChange={(e) => setUsername(e.target.value)} />
-        </div>
-        <div>
-          <label>予定: </label>
-          <input value={event} onChange={(e) => setEvent(e.target.value)} />
-        </div>
-        <div>
-          <label>時間 (例: 13:00-15:00): </label>
-          <input value={timeRange} onChange={(e) => setTimeRange(e.target.value)} />
-        </div>
-        <button type="submit">登録</button>
-      </form>
-    </div>
+    <Router>
+      <nav style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
+        <Link to="/" style={{ marginRight: "10px" }}>🏠 トップ</Link>
+        <Link to="/shared" style={{ marginRight: "10px" }}>📅 共有カレンダー</Link>
+        <Link to="/personal">👤 個人スケジュール</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/shared" element={<SharedCalendar />} />
+        <Route path="/shared/:linkId" element={<SharedLink />} />
+        <Route path="/personal" element={<PersonalSchedule />} />
+      </Routes>
+    </Router>
   );
 }
