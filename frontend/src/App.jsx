@@ -1,17 +1,15 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CalendarView from "./CalendarView";
-import "./styles.css";
+import SharePage from "./SharePage";
 
 export default function App() {
   return (
-    <div className="app-shell">
-      <div className="glass-card">
-        <div className="header">
-          <div className="title">📅 共有カレンダー</div>
-          <div className="badge">Glam UI</div>
-        </div>
-        <CalendarView />
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<CalendarView />} />
+        <Route path="/share/:shareId" element={<SharePage />} />
+      </Routes>
+    </Router>
   );
 }
