@@ -6,6 +6,7 @@ import axios from "axios";
 export default function SharePage() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
+  const [newEvent, setNewEvent] = useState("");
 
   // 日付フォーマット関数
   const formatDate = (d) => {
@@ -15,25 +16,63 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 日付変更時にイベント取得
-  useEffect(() => {
-    const formattedDate = formatDate(date);
+  // イベント取得
+  const fetchEvents = (selectedDate) => {
+    const formattedDate = formatDate(selectedDate);
     axios
       .get(`/api/shared?date=${formattedDate}`)
       .then((res) => setEvents(res.data))
       .catch((err) => console.error("イベント取得エラー:", err));
+  };
+
+  // 初期ロード & 日付変更時
+  useEffect(() => {
+    fetchEvents(date);
   }, [date]);
+
+  // イベント登録
+  const handleAddEvent = (e) => {
+    e.preventDefault();
+    if (!newEvent.trim()) return;
+
+    const formattedDate = formatDate(date);
+
+    axios
+      .post("/api/shared", {
+        date: formattedDate,
+        title: newEvent,
+      })
+      .then(() => {
+        setNewEvent("");
+        fetchEvents(date); // 再取得
+      })
+      .catch((err) => console.error("イベント登録エラー:", err));
+  };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>共有ページ</h1>
-      <p style={styles.subtitle}>カレンダーの日付をクリックして予定を確認できます</p>
+      <p style={styles.subtitle}>カレンダーから日付を選び、予定を確認・追加できます</p>
 
       {/* カレンダー */}
       <Calendar onChange={setDate} value={date} />
 
       {/* 選択日表示 */}
       <h2 style={styles.dateTitle}>選択日: {formatDate(date)}</h2>
+
+      {/* 予定追加フォーム */}
+      <form style={styles.form} onSubmit={handleAddEvent}>
+        <input
+          type="text"
+          placeholder="予定を入力"
+          value={newEvent}
+          onChange={(e) => setNewEvent(e.target.value)}
+          style={styles.input}
+        />
+        <button type="submit" style={styles.button}>
+          追加
+        </button>
+      </form>
 
       {/* イベント一覧 */}
       <ul style={styles.eventList}>
@@ -74,6 +113,28 @@ const styles = {
     marginTop: "20px",
     fontSize: "1.2rem",
     color: "#444",
+  },
+  form: {
+    display: "flex",
+    justifyContent: "center",
+    margin: "20px 0",
+    gap: "10px",
+  },
+  input: {
+    flex: 1,
+    padding: "10px",
+    fontSize: "1rem",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+  },
+  button: {
+    padding: "10px 20px",
+    fontSize: "1rem",
+    borderRadius: "6px",
+    border: "none",
+    cursor: "pointer",
+    background: "#2196F3",
+    color: "white",
   },
   eventList: {
     listStyle: "none",
