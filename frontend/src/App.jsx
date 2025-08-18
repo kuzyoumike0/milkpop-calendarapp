@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home";
+import TopPage from "./pages/TopPage";   // ← Home.jsx から変更
 import SharedCalendar from "./pages/SharedCalendar";
 import SharedLink from "./pages/SharedLink";
 import PersonalSchedule from "./pages/PersonalSchedule";
@@ -15,7 +15,7 @@ export default function App() {
       </nav>
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<TopPage />} />
         <Route path="/shared" element={<SharedCalendar />} />
         <Route path="/shared/:linkId" element={<SharedLink />} />
         <Route path="/personal" element={<PersonalSchedule />} />
