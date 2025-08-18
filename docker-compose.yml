@@ -9,7 +9,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8080
-      # PostgreSQL接続情報（必要に応じて設定）
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USER=postgres
@@ -30,6 +29,7 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # 起動時にSQLを実行
 
 volumes:
   db_data:
