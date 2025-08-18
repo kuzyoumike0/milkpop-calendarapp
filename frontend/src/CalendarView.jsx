@@ -8,17 +8,18 @@ export default function CalendarView() {
   const [mode, setMode] = useState("range"); // "range" or "multi"
   const [range, setRange] = useState([new Date(), new Date()]);
   const [multi, setMulti] = useState([]);
+  const [slotMode, setSlotMode] = useState("allday"); // "allday" or "time"
   const [slot, setSlot] = useState("終日");
-  const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState(9);
   const [endTime, setEndTime] = useState(17);
+  const [title, setTitle] = useState("");
   const [shares, setShares] = useState([]);
 
   useEffect(() => {
     axios.get("/api/shares").then((res) => setShares(res.data));
   }, []);
 
-  // 日付クリック（複数モード用）
+  // 複数選択モードで日付クリック
   const handleDateClick = (value) => {
     if (mode === "multi") {
       const exists = multi.find((d) => d.toDateString() === value.toDateString());
@@ -27,8 +28,6 @@ export default function CalendarView() {
       } else {
         setMulti([...multi, value]);
       }
-    } else {
-      setRange(value);
     }
   };
 
@@ -50,10 +49,11 @@ export default function CalendarView() {
     axios
       .post("/api/shares", {
         dates,
-        slot,
+        slotMode,
+        slot: slotMode === "allday" ? slot : null,
+        start_time: slotMode === "time" ? startTime : null,
+        end_time: slotMode === "time" ? endTime : null,
         title,
-        start_time: slot === "時間指定" ? startTime : null,
-        end_time: slot === "時間指定" ? endTime : null,
       })
       .then((res) => {
         setShares([...shares, ...res.data]);
@@ -64,7 +64,7 @@ export default function CalendarView() {
   // 祝日判定
   const isHoliday = (d) => JapaneseHolidays.isHoliday(d);
 
-  // カレンダーセル装飾
+  // カレンダー装飾
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = isHoliday(date);
@@ -87,12 +87,13 @@ export default function CalendarView() {
     return null;
   };
 
-  const hours = [...Array(24).keys()];
+  const hours = [...Array(24).keys()].map((h) => (h === 0 ? 24 : h)); // 1〜24
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>📅 共有カレンダー（範囲/複数日 + 時間指定対応）</h1>
+      <h1>📅 共有カレンダー</h1>
 
+      {/* 範囲 or 複数 */}
       <div>
         <label>
           <input
@@ -117,38 +118,59 @@ export default function CalendarView() {
       <Calendar
         selectRange={mode === "range"}
         value={mode === "range" ? range : null}
-        onClickDay={handleDateClick}
+        onChange={(val) => mode === "range" && setRange(val)}
+        onClickDay={(val) => handleDateClick(val)}
         tileContent={tileContent}
         tileClassName={tileClassName}
       />
 
+      {/* 区分 */}
       <div style={{ marginTop: 20 }}>
         <label>
-          区分：
-          <select value={slot} onChange={(e) => setSlot(e.target.value)}>
-            <option value="終日">終日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            <option value="時間指定">時間指定</option>
-          </select>
+          <input
+            type="radio"
+            value="allday"
+            checked={slotMode === "allday"}
+            onChange={() => setSlotMode("allday")}
+          />
+          終日・昼・夜
         </label>
+        <label>
+          <input
+            type="radio"
+            value="time"
+            checked={slotMode === "time"}
+            onChange={() => setSlotMode("time")}
+          />
+          時間指定
+        </label>
+      </div>
 
-        {slot === "時間指定" && (
-          <span>
-            <select value={startTime} onChange={(e) => setStartTime(parseInt(e.target.value))}>
-              {hours.map((h) => (
-                <option key={h} value={h}>{h}:00</option>
-              ))}
-            </select>
-            〜
-            <select value={endTime} onChange={(e) => setEndTime(parseInt(e.target.value))}>
-              {hours.map((h) => (
-                <option key={h} value={h}>{h}:00</option>
-              ))}
-            </select>
-          </span>
-        )}
+      {slotMode === "allday" && (
+        <select value={slot} onChange={(e) => setSlot(e.target.value)}>
+          <option value="終日">終日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
+      )}
 
+      {slotMode === "time" && (
+        <span>
+          <select value={startTime} onChange={(e) => setStartTime(parseInt(e.target.value))}>
+            {hours.map((h) => (
+              <option key={h} value={h}>{h}:00</option>
+            ))}
+          </select>
+          〜
+          <select value={endTime} onChange={(e) => setEndTime(parseInt(e.target.value))}>
+            {hours.map((h) => (
+              <option key={h} value={h}>{h}:00</option>
+            ))}
+          </select>
+        </span>
+      )}
+
+      <div>
         <input
           type="text"
           placeholder="予定タイトル"
@@ -162,8 +184,7 @@ export default function CalendarView() {
       <ul>
         {shares.map((s) => (
           <li key={s.id}>
-            {s.date} [{s.slot}]
-            {s.slot === "時間指定" && ` ${s.start_time}:00〜${s.end_time}:00`} - {s.title}
+            {s.date} {s.slotMode === "allday" ? `[${s.slot}]` : `${s.start_time}:00〜${s.end_time}:00`} - {s.title}
           </li>
         ))}
       </ul>
