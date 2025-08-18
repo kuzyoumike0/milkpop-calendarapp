@@ -17,57 +17,68 @@ app.get("/", (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="ja">
-    <head><meta charset="UTF-8"><title>Calendar Backend</title></head>
+    <head>
+      <meta charset="UTF-8">
+      <title>Calendar App</title>
+      <style>
+        body {
+          margin: 0;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+        }
+        .glass {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 16px;
+          padding: 40px;
+          width: 400px;
+          text-align: center;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          color: #fff;
+        }
+        h1 {
+          margin-bottom: 20px;
+        }
+        .btn {
+          display: block;
+          margin: 12px auto;
+          padding: 12px 20px;
+          width: 80%;
+          border: none;
+          border-radius: 8px;
+          font-size: 1em;
+          font-weight: bold;
+          color: #fff;
+          cursor: pointer;
+          transition: 0.3s;
+          text-decoration: none;
+        }
+        .btn.green {
+          background: #27ae60;
+        }
+        .btn.green:hover {
+          background: #219150;
+        }
+        .btn.blue {
+          background: #2980b9;
+        }
+        .btn.blue:hover {
+          background: #1f6391;
+        }
+      </style>
+    </head>
     <body>
-      <h1>✅ Calendar backend is running</h1>
-      <p>APIエンドポイント例:</p>
-      <ul>
-        <li>POST /api/share-link → 共有リンク発行</li>
-        <li>GET /share/:id → 共有予定の表示</li>
-      </ul>
+      <div class="glass">
+        <h1>📅 Calendar App</h1>
+        <a class="btn green" href="/api/share-link">➕ 新しい予定を共有</a>
+        <a class="btn blue" href="/share/demo123">🔗 サンプル共有リンクを見る</a>
+      </div>
     </body>
     </html>
   `);
-});
-
-// 共有リンク発行
-app.post("/api/share-link", async (req, res) => {
-  const { dates, slotMode, slot, start_time, end_time, title } = req.body;
-  const shareId = uuidv4();
-
-  try {
-    await pool.query(
-      `INSERT INTO share_links (id, dates, slotMode, slot, start_time, end_time, title)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [shareId, dates, slotMode, slot, start_time, end_time, title]
-    );
-
-    res.json({ url: `${process.env.BASE_URL || "http://localhost:8080"}/share/${shareId}` });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("DBエラー");
-  }
-});
-
-// 共有リンクから予定を表示
-app.get("/share/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query("SELECT * FROM share_links WHERE id=$1", [id]);
-    if (result.rows.length === 0) return res.status(404).send("リンクが無効です");
-
-    const data = result.rows[0];
-    res.send(`
-      <h1>📅 共有された予定</h1>
-      <p><b>タイトル:</b> ${data.title}</p>
-      <p><b>日程:</b> ${data.dates.join(", ")}</p>
-      <p><b>区分:</b> ${data.slotMode === "allday" ? data.slot : `${data.start_time}:00〜${data.end_time}:00`}</p>
-    `);
-  } catch (err) {
-    res.status(500).send("DBエラー");
-  }
-});
-
-app.listen(8080, () => {
-  console.log("✅ Server running on http://localhost:8080");
 });
