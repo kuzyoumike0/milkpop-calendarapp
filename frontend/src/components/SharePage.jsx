@@ -23,23 +23,17 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // カレンダー選択処理
   const handleCalendarChange = (value) => {
     if (selectMode === "single") {
       setSelectedDate(value);
     } else if (selectMode === "range") {
-      setSelectedDate(value); // valueは[start, end]
+      setSelectedDate(value); // [start, end]
     } else if (selectMode === "multiple") {
-      // 複数選択
-      if (Array.isArray(value)) {
-        setSelectedDates(value);
-      } else {
-        setSelectedDates([value]);
-      }
+      setSelectedDates(Array.isArray(value) ? value : [value]);
     }
   };
 
-  // イベント登録
+  // イベント登録 & 共有リンク発行
   const handleAddEvent = (e) => {
     e.preventDefault();
     if (!newEvent.trim() || !username.trim()) return;
@@ -63,35 +57,29 @@ export default function SharePage() {
         ? preset
         : `${startTime}-${endTime}`;
 
-    // 複数日分リンク発行
-    Promise.all(
-      dates.map((d) =>
-        axios.post("/api/shared", {
-          date: d,
-          title: `${newEvent} (${timeInfo})`,
-          username,
-        })
-      )
-    )
-      .then((responses) => {
-        // 最後のリンクに遷移
-        const lastLink = responses[responses.length - 1].data.linkId;
-        navigate(`/sharelink/${lastLink}`);
+    axios
+      .post("/api/shared", {
+        dates,
+        title: newEvent,
+        username,
+        timeInfo,
+      })
+      .then((res) => {
+        const linkId = res.data.linkId;
+        navigate(`/sharelink/${linkId}`);
       })
       .catch((err) => console.error("イベント登録エラー:", err));
   };
 
-  // 時刻リスト生成（1時〜0時）
-  const timeOptions = [];
-  for (let h = 0; h < 24; h++) {
-    const label = `${String(h).padStart(2, "0")}:00`;
-    timeOptions.push(label);
-  }
+  // 時刻リスト生成
+  const timeOptions = Array.from({ length: 24 }, (_, h) =>
+    `${String(h).padStart(2, "0")}:00`
+  );
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>共有ページ</h1>
-      <p style={styles.subtitle}>カレンダーで日付を選び、予定を登録してください</p>
+      <p style={styles.subtitle}>複数日をまとめて共有リンクに登録できます</p>
 
       {/* ユーザー名 */}
       <input
@@ -120,7 +108,7 @@ export default function SharePage() {
             checked={selectMode === "range"}
             onChange={() => setSelectMode("range")}
           />
-          範囲選択
+          範囲
         </label>
         <label>
           <input
@@ -133,7 +121,6 @@ export default function SharePage() {
         </label>
       </div>
 
-      {/* カレンダー */}
       <Calendar
         selectRange={selectMode === "range"}
         onChange={handleCalendarChange}
@@ -163,20 +150,32 @@ export default function SharePage() {
       </div>
 
       {timeMode === "preset" ? (
-        <select value={preset} onChange={(e) => setPreset(e.target.value)} style={styles.input}>
+        <select
+          value={preset}
+          onChange={(e) => setPreset(e.target.value)}
+          style={styles.input}
+        >
           <option value="allday">終日</option>
           <option value="daytime">昼</option>
           <option value="night">夜</option>
         </select>
       ) : (
         <div style={styles.section}>
-          <select value={startTime} onChange={(e) => setStartTime(e.target.value)} style={styles.input}>
+          <select
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            style={styles.input}
+          >
             {timeOptions.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
           〜
-          <select value={endTime} onChange={(e) => setEndTime(e.target.value)} style={styles.input}>
+          <select
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            style={styles.input}
+          >
             {timeOptions.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
