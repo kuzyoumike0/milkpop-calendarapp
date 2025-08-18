@@ -10,15 +10,17 @@
     "socket.io-client": "^4.7.5",
     "react-scripts": "5.0.1",
     "ajv": "^6.12.6",
-    "ajv-keywords": "^3.5.2"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096 --openssl-legacy-provider' GENERATE_SOURCEMAP=false react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "ajv-keywords": "^3.5.2",
+    "path-browserify": "^1.0.1"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "cross-env": "^7.0.3"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096 --openssl-legacy-provider' GENERATE_SOURCEMAP=false craco build",
+    "test": "craco test",
+    "eject": "react-scripts eject"
   }
 }
