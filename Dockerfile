@@ -1,26 +1,38 @@
-# Node.js 18 を利用
-FROM node:18
-
-# 作業ディレクトリ
-WORKDIR /app
-
-# frontend ディレクトリの package.json をコピー
-COPY frontend/package.json ./frontend/
-
-# 依存関係インストール
+# =============================
+# Frontend Build Stage
+# =============================
+FROM node:18 AS frontend-build
 WORKDIR /app/frontend
+
+# 依存関係だけコピー
+COPY frontend/package*.json ./
+
+# 環境変数とメモリ設定
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN npm install --legacy-peer-deps
 
-# ソースをコピー
-COPY frontend ./ 
-
-# OpenSSL 互換モード（Node17以降のwebpackエラー回避）
-ENV NODE_OPTIONS=--openssl-legacy-provider
-
-# Reactビルド
+# ソースをコピーしてビルド
+COPY frontend/ ./
 RUN npm run build
 
-# 本番は serve を利用
-RUN npm install -g serve
-EXPOSE 3000
-CMD ["serve", "-s", "build"]
+# =============================
+# Backend Stage
+# =============================
+FROM node:18
+WORKDIR /app/backend
+
+# backend依存関係インストール
+COPY backend/package*.json ./
+RUN npm install
+
+# ソースコピー
+COPY backend/ ./
+
+# フロントのビルド済みファイルを backend/public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
+ENV NODE_ENV=production
+EXPOSE 8080
+CMD ["node", "index.js"]
