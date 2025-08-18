@@ -4,16 +4,13 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係だけコピー
+# package.json と lockファイルをコピー
 COPY frontend/package*.json ./
 
-# 環境変数とメモリ設定（ビルド安定化）
-ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-
+# 依存関係インストール
 RUN npm install --legacy-peer-deps
 
-# ソースをコピーしてビルド
+# ソースコードをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
@@ -23,16 +20,15 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 
-# backend依存関係インストール
+# backend依存関係
 COPY backend/package*.json ./
 RUN npm install
 
 # ソースコピー
 COPY backend/ ./
 
-# フロントのビルド済みファイルを backend/public にコピー
+# frontendのbuild成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-ENV NODE_ENV=production
 EXPOSE 8080
-CMD ["node", "index.js"]
+CMD ["node", "index
