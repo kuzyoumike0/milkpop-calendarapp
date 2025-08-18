@@ -8,15 +8,15 @@ export default function TopPage() {
         <h1 style={{margin:0, fontSize:24}}>📅 カレンダーアプリ</h1>
         <p style={{opacity:.8, marginTop:8, marginBottom:20}}>共有・個人スケジュールを管理</p>
         <div style={{display:"grid", gap:12}}>
-          <Link to="/share" className="btn" style={btnStyle}>🌐 共有カレンダー</Link>
-          <Link to="/personal" className="btn" style={btnGhost}>👤 個人スケジュール</Link>
-          <Link to="/link/demo" className="btn" style={btnGhost}>🔗 共有リンク先（サンプル）</Link>
+          <Link to="/share" style={btnStyle}>🌐 共有カレンダー</Link>
+          <Link to="/personal" style={btnGhost}>👤 個人スケジュール</Link>
+          <Link to="/link/demo" style={btnGhost}>🔗 共有リンク先（サンプル）</Link>
         </div>
       </div>
     </div>
   );
 }
 
-const brand = "#6C8CFF"; // 以前の配色想定（必要なら調整可）
+const brand = "#6C8CFF";
 const btnStyle = {display:"block", textAlign:"center", padding:"12px 16px", borderRadius:12, background:brand, color:"#fff", textDecoration:"none", fontWeight:600};
 const btnGhost = { ...btnStyle, background:"transparent", color:brand, border:`1px solid ${brand}` };
