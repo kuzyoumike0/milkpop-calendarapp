@@ -10,9 +10,7 @@ const { v4: uuidv4 } = require("uuid");
 // ==== 環境変数 ====
 const PORT = Number(process.env.PORT || 8080);
 
-// Docker Compose でも単体実行でも動くように柔軟に設定
-// 1) DATABASE_URL があれば最優先（例: postgres://user:pass@host:5432/dbname）
-// 2) なければ個別項目で接続（DB_HOST が無ければ localhost を既定）
+// DB接続設定（Composeでも単体でも動く）
 const DATABASE_URL = process.env.DATABASE_URL || null;
 const DB_HOST = process.env.DB_HOST || "localhost";
 const DB_USER = process.env.DB_USER || "postgres";
@@ -29,7 +27,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(cors());
 app.use(express.json());
 
-// ==== DB プール作成（DNS 未解決・起動順の問題に耐えるためリトライ）====
+// ==== DBプール（再生成可能）====
 function createPool() {
   if (DATABASE_URL) {
     return new Pool({
@@ -37,7 +35,7 @@ function createPool() {
       ssl: process.env.PGSSLMODE === "require" ? { rejectUnauthorized: false } : false,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000
     });
   }
   return new Pool({
@@ -49,17 +47,13 @@ function createPool() {
     ssl: false,
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000
   });
 }
-
 let pool = createPool();
 
-// DB 接続を待つ（DNS 解決失敗/DB 未起動でも絶対に落ちない）
-async function waitForDb({
-  tries = 30,          // 試行回数（約 30 回）
-  intervalMs = 2000,   // 間隔 2 秒
-} = {}) {
+// DB接続待機（DNS/起動順対策、フォールバックあり）
+async function waitForDb({ tries = 30, intervalMs = 2000 } = {}) {
   for (let i = 1; i <= tries; i++) {
     try {
       const r = await pool.query("SELECT 1");
@@ -70,7 +64,6 @@ async function waitForDb({
     } catch (e) {
       const hostShown = DATABASE_URL ? new URL(DATABASE_URL).hostname : DB_HOST;
       console.log(`⏳ DB 待機中 (${i}/${tries}) host=${hostShown}… (${e.code || e.message})`);
-      // ENOTFOUND などでプールが壊れている可能性に備え再生成
       if (e.code === "ENOTFOUND" || e.code === "EAI_AGAIN" || e.message?.includes("getaddrinfo")) {
         try { await pool.end().catch(() => {}); } catch {}
         pool = createPool();
@@ -78,45 +71,45 @@ async function waitForDb({
       await new Promise(r => setTimeout(r, intervalMs));
     }
   }
-  // ここまで来ても失敗なら、API はメモリモードで動かせるようにフォールバックして継続
-  console.warn("⚠️ DB に接続できません。フォールバック（メモリ保存）で継続します。");
+  console.warn("⚠️ DB 接続不可。メモリフォールバックで継続します。");
   pool = null;
 }
 
-// ==== スキーマ（起動時に自動作成。DB無し時はスキップ）====
+// ==== スキーマ（DB有効時のみ）====
 async function ensureSchema() {
-  if (!pool) return; // メモリモード
+  if (!pool) return; // メモリモード時はスキップ
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_links (
-      share_id     TEXT PRIMARY KEY,
-      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      share_id   TEXT PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_events (
-      id           UUID PRIMARY KEY,
-      share_id     TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
-      title        TEXT NOT NULL,
-      dates        DATE[] NOT NULL,
-      category     TEXT NOT NULL,
-      start_time   TIME NOT NULL,
-      end_time     TIME NOT NULL,
-      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      id         UUID PRIMARY KEY,
+      share_id   TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
+      title      TEXT NOT NULL,
+      dates      DATE[] NOT NULL,
+      category   TEXT NOT NULL,
+      start_time TIME NOT NULL,
+      end_time   TIME NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_participants (
-      id           UUID PRIMARY KEY,
-      share_id     TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
-      event_id     UUID NOT NULL REFERENCES share_events(id) ON DELETE CASCADE,
-      username     TEXT NOT NULL,
-      category     TEXT,
-      start_time   TIME,
-      end_time     TIME,
-      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE(share_id, event_id, username)
+      id         UUID PRIMARY KEY,
+      share_id   TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
+      event_id   UUID NOT NULL REFERENCES share_events(id) ON DELETE CASCADE,
+      username   TEXT NOT NULL,
+      category   TEXT,
+      start_time TIME,
+      end_time   TIME,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (share_id, event_id, username)
     );
   `);
 
@@ -125,11 +118,11 @@ async function ensureSchema() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_share_participants_event ON share_participants(event_id);`);
 }
 
-// ==== メモリフォールバック（DB 不可時）====
+// ==== メモリフォールバック ====
 const mem = {
-  links: new Set(), // shareId
-  events: new Map(), // shareId -> [{...}]
-  participants: new Map(), // shareId -> { eventId: [{...}] }
+  links: new Set(),
+  events: new Map(),        // shareId -> [event]
+  participants: new Map()   // shareId -> { eventId: [ {username, ...} ] }
 };
 
 function genShareId() { return Math.random().toString(36).slice(2, 10); }
@@ -142,7 +135,7 @@ io.on("connection", (socket) => {
 
 // ==== API ====
 
-// 共有リンク作成
+// 共有リンク作成（毎回新規）
 app.post("/api/create-share", async (_req, res) => {
   const shareId = genShareId();
   if (!pool) {
@@ -177,7 +170,6 @@ app.post("/api/:shareId/events", async (req, res) => {
   };
 
   if (!pool) {
-    // メモリ保存
     mem.links.add(shareId);
     const list = mem.events.get(shareId) || [];
     list.push(payload);
@@ -193,9 +185,7 @@ app.post("/api/:shareId/events", async (req, res) => {
       VALUES($1,$2,$3,$4,$5,$6,$7)
       RETURNING id, title, dates, category, start_time, end_time
     `;
-    const r = await pool.query(q, [
-      id, shareId, title, dates, category, toPgTime(startTime), toPgTime(endTime),
-    ]);
+    const r = await pool.query(q, [id, shareId, title, dates, category, toPgTime(startTime), toPgTime(endTime)]);
     const ev = r.rows[0];
     const out = {
       id: ev.id,
@@ -209,7 +199,6 @@ app.post("/api/:shareId/events", async (req, res) => {
     res.json(out);
   } catch (e) {
     console.error(e);
-    // 最後の砦：メモリ保存して成功扱い
     mem.links.add(shareId);
     const list = mem.events.get(shareId) || [];
     list.push(payload);
@@ -225,7 +214,6 @@ app.get("/api/:shareId/events", async (req, res) => {
 
   if (!pool) {
     const list = mem.events.get(shareId) || [];
-    // dates[0], startTime でソート
     const sorted = [...list].sort((a, b) => {
       const ka = `${a.dates?.[0] || "9999-12-31"} ${a.startTime || "00:00"}`;
       const kb = `${b.dates?.[0] || "9999-12-31"} ${b.startTime || "00:00"}`;
@@ -302,7 +290,6 @@ app.post("/api/:shareId/join", async (req, res) => {
     for (const [eventId, v] of Object.entries(responses)) {
       if (!v) continue;
       map[eventId] = map[eventId] || [];
-      // 既存の同ユーザーを排除してから追加
       map[eventId] = map[eventId].filter(p => p.username !== username);
       if (v.join !== false) {
         map[eventId].push({
@@ -388,16 +375,15 @@ app.get("*", (_req, res) => {
 // ==== 起動 ====
 (async () => {
   try {
-    await waitForDb();   // ← ここで DNS/起動を待つ
+    await waitForDb();
     await ensureSchema();
     server.listen(PORT, () => {
       console.log(`✅ Backend running on http://localhost:${PORT}`);
     });
   } catch (e) {
     console.error("❌ 起動時エラー:", e);
-    // それでもプロセスは落とさず、メモリモードで起動継続
     server.listen(PORT, () => {
-      console.log(`⚠️ DB なしのフォールバックで起動: http://localhost:${PORT}`);
+      console.log(`⚠️ DBなしフォールバックで起動: http://localhost:${PORT}`);
     });
   }
 })();
