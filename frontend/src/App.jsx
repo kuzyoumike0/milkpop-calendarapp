@@ -1,6 +1,10 @@
 import React from "react";
-import CalendarView from "./CalendarView";   // ✅ 波括弧なし
+import CalendarView from "./CalendarView";
 
 export default function App() {
-  return <CalendarView />;
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#74ebd5 0%,#ACB6E5 100%)" }}>
+      <CalendarView />
+    </div>
+  );
 }
