@@ -17,16 +17,13 @@ module.exports = {
         os: require.resolve("os-browserify/browser"),
         crypto: require.resolve("crypto-browserify")
       };
-
       config.plugins = [
         ...(config.plugins || []),
-        // window.process / Buffer を自動提供
         new webpack.ProvidePlugin({
           process: "process/browser",
           Buffer: ["buffer", "Buffer"]
         })
       ];
-
       return config;
     }
   }
