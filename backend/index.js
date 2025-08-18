@@ -1,95 +1,92 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
-const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const cors = require("cors");
+const path = require("path");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const port = process.env.PORT || 8080;
 
-// ======== DB 接続設定 ========
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
-
-// ======== ミドルウェア ========
-app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ======== DB 初期化 ========
-async function initDB() {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+});
+
+// DB 初期化
+(async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_links (
-      id TEXT PRIMARY KEY,
-      dates TEXT[] NOT NULL,
-      slotmode TEXT NOT NULL,
-      slot TEXT NOT NULL,
-      start_time TEXT,
-      end_time TEXT,
-      title TEXT
+      id SERIAL PRIMARY KEY,
+      share_id TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `);
-  console.log("✅ DB 初期化完了");
-}
 
-// ======== API: 共有リンク作成 ========
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS shared_events (
+      id SERIAL PRIMARY KEY,
+      share_id TEXT NOT NULL,
+      username TEXT NOT NULL,
+      event_date DATE NOT NULL
+    );
+  `);
+})();
+
+// 📌 新しい共有リンクを発行
 app.post("/api/share-link", async (req, res) => {
   try {
-    const { dates, slotmode, slot, start_time, end_time, title } = req.body;
-
-    const id = uuidv4();
-
-    await pool.query(
-      `INSERT INTO share_links (id, dates, slotmode, slot, start_time, end_time, title)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, dates, slotmode, slot, start_time, end_time, title]
-    );
-
-    res.json({ url: `/share/${id}` });
+    const shareId = uuidv4();
+    await pool.query("INSERT INTO share_links (share_id) VALUES ($1)", [shareId]);
+    res.json({ url: `/share/${shareId}` });
   } catch (err) {
-    console.error("❌ 共有リンク作成エラー:", err);
-    res.status(500).json({ error: "共有リンク作成に失敗しました" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to create share link" });
   }
 });
 
-// ======== API: 共有リンク取得 ========
-app.get("/api/share-link/:id", async (req, res) => {
+// 📌 共有リンクの予定取得（ソート済み）
+app.get("/api/share/:shareId", async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM share_links WHERE id = $1", [id]);
+    const { shareId } = req.params;
+    const result = await pool.query(
+      "SELECT username, event_date FROM shared_events WHERE share_id = $1 ORDER BY event_date ASC",
+      [shareId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch events" });
+  }
+});
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "共有リンクが見つかりません" });
+// 📌 共有リンクに予定を追加
+app.post("/api/share/:shareId", async (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const { username, dates } = req.body; // dates は [ "2025-08-01", "2025-08-03" ] の形式
+
+    for (const d of dates) {
+      await pool.query(
+        "INSERT INTO shared_events (share_id, username, event_date) VALUES ($1, $2, $3)",
+        [shareId, username, d]
+      );
     }
 
-    res.json(result.rows[0]);
+    res.json({ message: "Events saved" });
   } catch (err) {
-    console.error("❌ 共有リンク取得エラー:", err);
-    res.status(500).json({ error: "共有リンク取得に失敗しました" });
+    console.error(err);
+    res.status(500).json({ error: "Failed to save events" });
   }
 });
 
-// ======== フロントエンド返却 ========
+// 📌 React のルーティング用
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ======== サーバー起動 ========
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ サーバー起動: http://localhost:${PORT}`);
-  });
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
 });
