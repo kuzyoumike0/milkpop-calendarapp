@@ -10,7 +10,7 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps   # ← uuid もここで必ず入る
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/build ./public
 EXPOSE 8080
