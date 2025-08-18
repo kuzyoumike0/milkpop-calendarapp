@@ -1,7 +1,27 @@
-version: "3"
+version: "3.9"
+
 services:
+  app:
+    build: .
+    container_name: calendar-app
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      # PostgreSQL接続情報（必要に応じて設定）
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=mydb
+    depends_on:
+      - db
+
   db:
     image: postgres:15
+    container_name: calendar-db
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -9,18 +29,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db-data:/var/lib/postgresql/data
-
-  backend:
-    build: .
-    working_dir: /app/backend
-    command: npm start
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/mydb
+      - db_data:/var/lib/postgresql/data
 
 volumes:
-  db-data:
+  db_data:
