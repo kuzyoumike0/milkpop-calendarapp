@@ -1,19 +1,17 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import TopPage from "./components/TopPage";
-import SharePage from "./components/SharePage";
-import PersonalPage from "./components/PersonalPage";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import CalendarPage from "./components/CalendarPage";
 
 export default function App() {
   return (
     <Router>
+      <nav style={{ padding: "10px", background: "#f0f0f0" }}>
+        <Link to="/">トップ</Link> | <Link to="/shared">共有カレンダー</Link>
+      </nav>
+
       <Routes>
-        {/* トップページ */}
-        <Route path="/" element={<TopPage />} />
-        {/* 共有カレンダーページ */}
-        <Route path="/share" element={<SharePage />} />
-        {/* 個人スケジュールページ */}
-        <Route path="/personal" element={<PersonalPage />} />
+        <Route path="/" element={<h2>✅ トップページ</h2>} />
+        <Route path="/shared" element={<CalendarPage />} />
       </Routes>
     </Router>
   );
