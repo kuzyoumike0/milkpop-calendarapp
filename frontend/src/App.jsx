@@ -1,8 +1,6 @@
 import React from "react";
-import CalendarView from "./CalendarView";  // ✅ 波括弧なし
+import CalendarView from "./CalendarView";
 
-function App() {
+export default function App() {
   return <CalendarView />;
 }
-
-export default App;
