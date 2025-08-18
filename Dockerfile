@@ -2,9 +2,9 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係だけコピーしてインストール
+# package.json だけコピーして依存関係をインストール
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --omit=dev --legacy-peer-deps
 
 # ソースをコピーしてビルド
 COPY frontend/ ./
@@ -14,14 +14,10 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 
-# 依存関係だけコピーしてインストール
 COPY backend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --omit=dev --legacy-peer-deps
 
-# ソースをコピー
 COPY backend/ ./
-
-# フロントエンドのビルド成果物を配置
 COPY --from=frontend-build /app/frontend/build ./public
 
 EXPOSE 8080
