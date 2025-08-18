@@ -22,6 +22,8 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS shares (
       id TEXT PRIMARY KEY,
       date DATE NOT NULL,
+      start_time INT,
+      end_time INT,
       slot TEXT NOT NULL,
       title TEXT NOT NULL
     );
@@ -36,10 +38,21 @@ app.get("/api/shares", async (req, res) => {
 });
 
 app.post("/api/shares", async (req, res) => {
-  const { date, slot, title } = req.body;
-  const id = uuidv4();
-  aawait pool.query("INSERT INTO shares (id, date, slot, title) VALUES ($1,$2,$3,$4)", [id, date, slot, title]);
-  res.json({ id, date, slot, title });
+  const { dates, slot, title, start_time, end_time } = req.body;
+  if (!dates || dates.length === 0) {
+    return res.status(400).json({ error: "dates is required" });
+  }
+
+  const inserted = [];
+  for (const d of dates) {
+    const id = uuidv4();
+    await pool.query(
+      `INSERT INTO shares (id, date, start_time, end_time, slot, title) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [id, d, start_time || null, end_time || null, slot, title]
+    );
+    inserted.push({ id, date: d, start_time, end_time, slot, title });
+  }
+  res.json(inserted);
 });
 
 // === React build を返す ===
