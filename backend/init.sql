@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE IF NOT EXISTS shared_schedules (
   id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  date DATE NOT NULL
+  date DATE NOT NULL,
+  title TEXT NOT NULL
 );
