@@ -1,21 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 export default function SharePage() {
-  const [events, setEvents] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("single"); // "range" or "multi"
+  const [selectionMode, setSelectionMode] = useState("single");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("終日");
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("01:00");
+  const [shareLink, setShareLink] = useState("");
 
-  // 共有イベントを取得
-  useEffect(() => {
-    axios.get("/api/shared").then((res) => setEvents(res.data));
-  }, []);
-
-  // 日付クリック時
+  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "single") {
       setSelectedDates([date]);
@@ -29,8 +24,8 @@ export default function SharePage() {
       if (selectedDates.length === 0) {
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        const start = new Date(selectedDates[0]);
-        const end = new Date(date);
+        let start = new Date(selectedDates[0]);
+        let end = new Date(date);
         if (start > end) [start, end] = [end, start];
         const range = [];
         let cur = new Date(start);
@@ -45,9 +40,13 @@ export default function SharePage() {
     }
   };
 
-  // 保存処理
+  // 保存 → 共有リンク発行
   const handleSave = async () => {
-    if (!title || selectedDates.length === 0) return alert("タイトルと日付を入力してください");
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
+
     const newEvent = {
       id: Date.now(),
       title,
@@ -56,10 +55,23 @@ export default function SharePage() {
       startTime,
       endTime,
     };
-    await axios.post("/api/personal", newEvent);
-    setEvents([...events, newEvent]);
-    setTitle("");
-    setSelectedDates([]);
+
+    try {
+      // サーバーにイベント送信
+      const res = await axios.post("/api/shared", newEvent);
+
+      // サーバーから共有IDを受け取る（例: /share/xxxx）
+      if (res.data && res.data.shareId) {
+        setShareLink(`${window.location.origin}/share/${res.data.shareId}`);
+      }
+
+      // 入力リセット
+      setTitle("");
+      setSelectedDates([]);
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    }
   };
 
   // 時刻プルダウン生成
@@ -165,14 +177,19 @@ export default function SharePage() {
       </div>
 
       {/* 保存ボタン */}
-      <button onClick={handleSave} style={{ marginTop: "10px" }}>追加</button>
+      <button onClick={handleSave} style={{ marginTop: "10px" }}>共有リンクを発行</button>
 
-      {/* 選択済み日付 */}
-      <div style={{ marginTop: "10px" }}>
-        <strong>選択日: </strong>{selectedDates.join(", ")}
-      </div>
+      {/* 発行されたリンク */}
+      {shareLink && (
+        <div style={{ marginTop: "20px" }}>
+          <strong>✅ 共有リンク:</strong><br />
+          <a href={shareLink} target="_blank" rel="noopener noreferrer">
+            {shareLink}
+          </a>
+        </div>
+      )}
 
-      {/* 簡易カレンダー（1か月表示） */}
+      {/* 簡易カレンダー */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px", marginTop: "20px" }}>
         {Array.from({ length: 30 }, (_, i) => {
           const date = new Date();
@@ -194,16 +211,6 @@ export default function SharePage() {
           );
         })}
       </div>
-
-      {/* イベント一覧 */}
-      <h3 style={{ marginTop: "20px" }}>登録済みイベント</h3>
-      <ul>
-        {events.map((ev) => (
-          <li key={ev.id}>
-            {ev.dates.join(", ")}: {ev.title} ({ev.category}) {ev.startTime}〜{ev.endTime}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
