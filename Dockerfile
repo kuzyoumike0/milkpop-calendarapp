@@ -1,43 +1,27 @@
-# ============================
-# 1. フロントエンドビルドステージ
-# ============================
-FROM node:18 AS frontend-build
+# Node.js 18 をベースに利用
+FROM node:18
+
+# 作業ディレクトリ
 WORKDIR /app/frontend
 
-# package.json & lock ファイルを先にコピー
-COPY frontend/package*.json ./
+# 依存関係を先にコピーしてインストール
+COPY package*.json ./
 
 # 依存関係をインストール
+# ajv/ajv-keywords のバージョンを固定しているので --legacy-peer-deps で解決
 RUN npm install --legacy-peer-deps
 
-# フロントエンドソースをコピー
-COPY frontend/ ./
+# ソースをコピー
+COPY . .
 
-# OpenSSL3 対応: 古いハッシュ関数を許可
+# OpenSSL 互換性対策（Node.js v17以降で必要）
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
-# React ビルド
+# React をビルド
 RUN npm run build
 
-# ============================
-# 2. バックエンドステージ
-# ============================
-FROM node:18 AS backend
-WORKDIR /app/backend
+# 本番用サーバーとして serve を利用
+RUN npm install -g serve
 
-# backend の依存関係をインストール
-COPY backend/package*.json ./
-RUN npm install
-
-# バックエンドソースをコピー
-COPY backend/ ./
-
-# フロントエンドのビルド成果物を public に配置
-COPY --from=frontend-build /app/frontend/build ./public
-
-# ポート設定
-ENV PORT=8080
-EXPOSE 8080
-
-# アプリ起動
-CMD ["node", "index.js"]
+EXPOSE 3000
+CMD ["serve", "-s", "build"]
