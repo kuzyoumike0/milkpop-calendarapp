@@ -4,15 +4,14 @@
 FROM node:18-bullseye AS frontend-build
 WORKDIR /app/frontend
 
-# 依存解決を安定化
 ENV npm_config_loglevel=warn
 ENV NODE_OPTIONS="--max-old-space-size=4096 --openssl-legacy-provider"
 ENV CI=false
 ENV GENERATE_SOURCEMAP=false
 
-# 依存だけ先に入れてキャッシュを効かせる
+# 依存のみ先に入れてキャッシュ活用
 COPY frontend/package*.json ./
-# 依存競合を避ける（react-scripts 5系でありがちなpeerエラー回避）
+COPY frontend/craco.config.js ./craco.config.js
 RUN npm install --legacy-peer-deps
 
 # ソース投入→ビルド
