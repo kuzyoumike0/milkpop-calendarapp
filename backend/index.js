@@ -1,77 +1,121 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
-const path = require("path");
+const cors = require("cors");
 
 const app = express();
-const PORT = 8080;
-
-// DB 接続設定
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgres://postgres:password@db:5432/postgres",
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-});
-
-// ミドルウェア
 app.use(cors());
 app.use(bodyParser.json());
 
-// DB 初期化
+// === PostgreSQL 接続設定 ===
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      }
+    : {
+        host: process.env.DB_HOST || "db",
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "password",
+        database: process.env.DB_NAME || "mydb",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+      }
+);
+
+// === DB 初期化 ===
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_links (
       id SERIAL PRIMARY KEY,
       share_id TEXT UNIQUE NOT NULL,
-      dates TEXT[] NOT NULL,
-      slotmode TEXT,
-      slot TEXT,
-      start_time TEXT,
-      end_time TEXT,
-      title TEXT,
-      username TEXT
+      created_at TIMESTAMP DEFAULT NOW()
     );
   `);
-}
-initDB();
 
-// API: 新しい共有リンク作成
-app.post("/api/share-link", async (req, res) => {
-  try {
-    const { dates, slotmode, slot, start_time, end_time, title, username } = req.body;
-    const shareId = uuidv4();
-    await pool.query(
-      `INSERT INTO share_links (share_id, dates, slotmode, slot, start_time, end_time, title, username)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [shareId, dates, slotmode, slot, start_time, end_time, title, username]
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id SERIAL PRIMARY KEY,
+      share_id TEXT REFERENCES share_links(share_id) ON DELETE CASCADE,
+      username TEXT NOT NULL,
+      date DATE NOT NULL
     );
-    res.json({ shareId });
+  `);
+
+  // 既存テーブルに share_id が無い場合は追加
+  const res = await pool.query(`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_name='share_links' AND column_name='share_id';
+  `);
+
+  if (res.rowCount === 0) {
+    await pool.query(`ALTER TABLE share_links ADD COLUMN share_id TEXT UNIQUE;`);
+    // 古いデータにUUIDを入れる
+    await pool.query(`UPDATE share_links SET share_id = gen_random_uuid() WHERE share_id IS NULL;`);
+  }
+
+  console.log("✅ Database initialized");
+}
+
+// === API ===
+
+// 共有リンク作成
+app.post("/api/share", async (req, res) => {
+  try {
+    const shareId = uuidv4();
+
+    await pool.query(
+      "INSERT INTO share_links (share_id) VALUES ($1) ON CONFLICT DO NOTHING",
+      [shareId]
+    );
+
+    res.json({ success: true, shareId });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "DBエラー" });
+    console.error("Error creating share link:", err);
+    res.status(500).json({ error: "Failed to create share link" });
   }
 });
 
-// API: 共有リンク情報取得
-app.get("/api/share-link/:id", async (req, res) => {
+// スケジュール追加
+app.post("/api/schedule", async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM share_links WHERE share_id=$1", [id]);
+    const { shareId, username, date } = req.body;
+
+    await pool.query(
+      "INSERT INTO schedules (share_id, username, date) VALUES ($1, $2, $3)",
+      [shareId, username, date]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error inserting schedule:", err);
+    res.status(500).json({ error: "Failed to insert schedule" });
+  }
+});
+
+// 共有リンクのスケジュール一覧取得
+app.get("/api/schedules/:shareId", async (req, res) => {
+  try {
+    const { shareId } = req.params;
+
+    const result = await pool.query(
+      "SELECT username, date FROM schedules WHERE share_id = $1 ORDER BY date ASC",
+      [shareId]
+    );
+
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "取得エラー" });
+    console.error("Error fetching schedules:", err);
+    res.status(500).json({ error: "Failed to fetch schedules" });
   }
 });
 
-// 静的ファイル配信
-app.use(express.static(path.join(__dirname, "public")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// 起動
-app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
+// サーバー起動
+const PORT = process.env.PORT || 8080;
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+  });
 });
