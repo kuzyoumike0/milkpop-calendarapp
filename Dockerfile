@@ -2,20 +2,23 @@
 # フロントエンドビルド
 # ==========================
 FROM node:18 AS frontend-build
+WORKDIR /app
+COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
 RUN npm install
-COPY frontend/ ./
+COPY frontend/ ./ 
 RUN npm run build
 
 # ==========================
 # バックエンド
 # ==========================
-FROM node:18 AS backend
+FROM node:18
+WORKDIR /app
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
-COPY backend/package*.json ./
 RUN npm install
-COPY backend/ ./
+COPY backend/ ./ 
+# フロントエンドのビルド成果物を public に配置
 COPY --from=frontend-build /app/frontend/build ./public
 
 EXPOSE 8080
