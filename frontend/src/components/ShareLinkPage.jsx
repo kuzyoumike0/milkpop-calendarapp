@@ -3,60 +3,42 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { id } = useParams(); // /share/:id
-  const [events, setEvents] = useState([]);        // [{id, title, dates[], category, startTime, endTime}]
-  const [participants, setParticipants] = useState({}); // { [eventId]: [{username, category, startTime, endTime}] }
+  const { id } = useParams();
+  const [events, setEvents] = useState([]);
+  const [participants, setParticipants] = useState({});
   const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({});  // { [eventId]: { join: boolean, category, startTime, endTime } }
+  const [responses, setResponses] = useState({});
 
   useEffect(() => {
-    // イベント取得
     (async () => {
       try {
         const ev = await axios.get(`/api/${id}/events`);
         setEvents(Array.isArray(ev.data) ? ev.data : ev.data?.events || []);
-      } catch {
-        setEvents([]);
-      }
-      // 参加者取得（存在しない場合は空でOK）
+      } catch { setEvents([]); }
       try {
         const pr = await axios.get(`/api/${id}/participants`);
         setParticipants(pr.data || {});
-      } catch {
-        setParticipants({});
-      }
+      } catch { setParticipants({}); }
     })();
   }, [id]);
 
-  // ソート：最も早い日付 + startTime で昇順
   const sorted = useMemo(() => {
-    const key = (e) => {
-      const d = (e.dates && e.dates[0]) || e.date; // 互換
-      const t = e.startTime || e.start || "00:00";
-      return `${d ?? "9999-12-31"} ${t}`;
-    };
+    const key = (e) => `${(e.dates?.[0] || e.date || "9999-12-31")} ${(e.startTime || e.start || "00:00")}`;
     return [...events].sort((a,b)=> key(a) > key(b) ? 1 : -1);
   }, [events]);
 
-  const hours = useMemo(()=>{
-    const arr=[]; for(let h=0; h<24; h++){arr.push(`${String(h).padStart(2,"0")}:00`);} return arr;
-  },[]);
-
-  const updateResp = (eventId, patch) => {
-    setResponses(prev => ({ ...prev, [eventId]: { ...prev[eventId], ...patch }}));
-  };
+  const hours = useMemo(()=>Array.from({length:24},(_,h)=>`${String(h).padStart(2,"0")}:00`),[]);
+  const updateResp = (eventId, patch) => setResponses(prev => ({ ...prev, [eventId]: { ...prev[eventId], ...patch }}));
 
   const saveParticipation = async () => {
     if (!username.trim()) { alert("ユーザー名を入力してください"); return; }
     const payload = { username, responses };
     try {
       await axios.post(`/api/${id}/join`, payload);
-      // 送信後すぐに最新の参加状況を再取得して即時反映
       const pr = await axios.get(`/api/${id}/participants`);
       setParticipants(pr.data || {});
       alert("参加状況を保存しました");
-    } catch (e) {
-      console.error(e);
+    } catch {
       alert("保存に失敗しました（API未実装の可能性）");
     }
   };
@@ -81,7 +63,6 @@ export default function ShareLinkPage() {
             </div>
           </div>
 
-          {/* 参加入力 */}
           <div style={{marginTop:12}}>
             <label><input type="radio" name={`j-${ev.id}`} checked={responses[ev.id]?.join === true} onChange={()=>updateResp(ev.id,{join:true})}/> 参加</label>{" "}
             <label><input type="radio" name={`j-${ev.id}`} checked={responses[ev.id]?.join === false} onChange={()=>updateResp(ev.id,{join:false})}/> 不参加</label>
@@ -110,7 +91,6 @@ export default function ShareLinkPage() {
             </div>
           )}
 
-          {/* 参加者一覧 */}
           <div style={{marginTop:12}}>
             <div style={{fontSize:13, opacity:.7, marginBottom:6}}>参加者</div>
             <ul style={{margin:0, paddingLeft:18}}>
@@ -126,6 +106,5 @@ export default function ShareLinkPage() {
     </div>
   );
 }
-
 const card = { border:"1px solid rgba(0,0,0,.08)", borderRadius:12, padding:12, marginBottom:12, background:"#fff", boxShadow:"0 6px 16px rgba(0,0,0,.04)"};
 const saveBtn = { marginLeft:8, padding:"8px 12px", borderRadius:10, border:"none", background:"#6C8CFF", color:"#fff", fontWeight:700, cursor:"pointer" };
