@@ -1,34 +1,29 @@
-# =============================
-# Frontend Build Stage
-# =============================
+# === フロントエンドビルド ===
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json と lockファイルをコピー
+# 依存関係を先にコピーしてインストール
 COPY frontend/package*.json ./
-
-# 依存関係インストール
 RUN npm install --legacy-peer-deps
 
-# ソースコードをコピーしてビルド
+# 追加でajvを明示的にインストール（react-scripts依存対策）
+RUN npm install ajv@8 ajv-keywords@5 axios@1 --legacy-peer-deps
+
+# ソースをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
-# =============================
-# Backend Stage
-# =============================
-FROM node:18
+# === バックエンド ===
+FROM node:18 AS backend
 WORKDIR /app/backend
 
-# backend依存関係
 COPY backend/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-# ソースコピー
 COPY backend/ ./
 
-# frontendのbuild成果物をコピー
+# フロントのビルド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 EXPOSE 8080
-CMD ["node", "index
+CMD ["node", "index.js"]
