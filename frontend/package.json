@@ -5,12 +5,10 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
     "react-router-dom": "^6.22.3",
     "axios": "^1.7.2",
-    "react-calendar": "^4.8.0",
-    "date-fns": "^3.6.0",
-    "japanese-holidays": "^1.0.10",
-    "react-scripts": "5.0.1"   ✅ これを必ず追加
+    "japanese-holidays": "^1.0.15"
   },
   "scripts": {
     "start": "react-scripts start",
