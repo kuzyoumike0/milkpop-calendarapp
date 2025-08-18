@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import TopPage from "./pages/TopPage";   // ← Home.jsx から変更
-import SharedCalendar from "./pages/SharedCalendar";
-import SharedLink from "./pages/SharedLink";
-import PersonalSchedule from "./pages/PersonalSchedule";
+import TopPage from "./components/TopPage";
+import SharePage from "./components/SharePage";
+import SharedLink from "./components/SharedLink";
+import PersonalPage from "./components/PersonalPage";
 
 export default function App() {
   return (
@@ -16,9 +16,9 @@ export default function App() {
 
       <Routes>
         <Route path="/" element={<TopPage />} />
-        <Route path="/shared" element={<SharedCalendar />} />
+        <Route path="/shared" element={<SharePage />} />
         <Route path="/shared/:linkId" element={<SharedLink />} />
-        <Route path="/personal" element={<PersonalSchedule />} />
+        <Route path="/personal" element={<PersonalPage />} />
       </Routes>
     </Router>
   );
