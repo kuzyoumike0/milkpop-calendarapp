@@ -1,61 +1,25 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from "react";
 
-export default function PersonalPage() {
-  const [events, setEvents] = useState([]);
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+export default function ShareButton({ link }) {
+  if (!link) return null;
 
-  useEffect(() => {
-    axios.get("/api/personal").then((res) => setEvents(res.data));
-  }, []);
-
-  const addEvent = async () => {
-    if (!title || !date) return alert("タイトルと日付は必須です");
-    await axios.post("/api/personal", { title, date, time });
-    const res = await axios.get("/api/personal");
-    setEvents(res.data);
-    setTitle("");
-    setDate("");
-    setTime("");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      alert("リンクをコピーしました");
+    } catch {
+      alert("コピーに失敗しました");
+    }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>👤 個人スケジュール</h2>
-
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          placeholder="予定のタイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
-        <button onClick={addEvent}>追加</button>
-      </div>
-
-      {events.length === 0 ? (
-        <p>予定がありません。</p>
-      ) : (
-        <ul>
-          {events.map((ev) => (
-            <li key={ev.id}>
-              {ev.date} {ev.time || "時間未設定"} {ev.title}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div style={{display:"flex", alignItems:"center", gap:8}}>
+      <a href={link} target="_blank" rel="noreferrer" style={{textDecoration:"none", color:"#6C8CFF", fontWeight:700}}>
+        {link}
+      </a>
+      <button onClick={copy} style={{padding:"8px 10px", borderRadius:10, border:"1px solid #6C8CFF", background:"white", color:"#6C8CFF", fontWeight:700, cursor:"pointer"}}>
+        コピー
+      </button>
     </div>
   );
 }
