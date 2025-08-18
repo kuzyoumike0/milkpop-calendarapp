@@ -38,10 +38,7 @@ app.get("/api/shares", async (req, res) => {
 app.post("/api/shares", async (req, res) => {
   const { date, slot, title } = req.body;
   const id = uuidv4();
-  await pool.query(
-    `INSERT INTO shares (id, date, slot, title) VALUES ($1, $2, $3, $4)`,
-    [id, date, slot, title]
-  );
+  aawait pool.query("INSERT INTO shares (id, date, slot, title) VALUES ($1,$2,$3,$4)", [id, date, slot, title]);
   res.json({ id, date, slot, title });
 });
 
