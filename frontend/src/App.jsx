@@ -1,121 +1,122 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useParams } from "react-router-dom";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
-// ===== 個人スケジュールページ =====
-function SchedulePage() {
+export default function App() {
+  const [date, setDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
   const [username, setUsername] = useState("");
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [timeSlot, setTimeSlot] = useState("全日");
-  const [events, setEvents] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+  const [timeslot, setTimeslot] = useState("全日");
+  const [shareUrl, setShareUrl] = useState(null);
 
-  // スケジュール取得
+  // 日付フォーマット関数
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // イベント取得
   useEffect(() => {
-    axios.get("/api/schedules").then((res) => setEvents(res.data));
-  }, []);
+    const fetchEvents = async () => {
+      const formattedDate = formatDate(date);
+      try {
+        const res = await axios.get(`/api/schedules?date=${formattedDate}`);
+        setEvents(res.data);
+      } catch (err) {
+        console.error("予定取得エラー:", err);
+      }
+    };
+    fetchEvents();
+  }, [date]);
 
-  // スケジュール追加
-  const addSchedule = async () => {
-    if (!username || !title || !date) {
-      alert("全て入力してください");
+  // 予定追加
+  const addEvent = async () => {
+    if (!username || !title) {
+      alert("名前と予定を入力してください");
       return;
     }
-    await axios.post("/api/schedules", { username, title, date, time_slot: timeSlot });
-    const res = await axios.get("/api/schedules");
-    setEvents(res.data);
-    setTitle("");
+    const formattedDate = formatDate(date);
+    try {
+      await axios.post("/api/schedules", {
+        date: formattedDate,
+        username,
+        timeslot,
+        title,
+      });
+      setTitle("");
+      const res = await axios.get(`/api/schedules?date=${formattedDate}`);
+      setEvents(res.data);
+    } catch (err) {
+      console.error("予定追加エラー:", err);
+    }
   };
 
   // 共有リンク発行
   const generateShareLink = async () => {
-    const res = await axios.post("/api/share");
-    const { shareId } = res.data;
-    const url = `${window.location.origin}/share/${shareId}`;
-    setShareUrl(url);
+    try {
+      const res = await axios.post("/api/share");
+      setShareUrl(window.location.origin + res.data.url);
+    } catch (err) {
+      console.error("共有リンク発行エラー:", err);
+    }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>📅 個人スケジュール管理</h2>
+    <div style={{ padding: 20 }}>
+      <h1>共有カレンダー</h1>
+
+      {/* カレンダー */}
+      <Calendar value={date} onChange={setDate} />
+
+      <h2>予定の追加</h2>
       <input
         type="text"
-        placeholder="ユーザー名"
+        placeholder="名前"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        style={{ marginRight: 10 }}
       />
       <input
         type="text"
-        placeholder="予定タイトル"
+        placeholder="予定"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        style={{ marginRight: 10 }}
       />
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
+      <select
+        value={timeslot}
+        onChange={(e) => setTimeslot(e.target.value)}
+        style={{ marginRight: 10 }}
+      >
         <option value="全日">全日</option>
         <option value="昼">昼</option>
         <option value="夜">夜</option>
       </select>
-      <button onClick={addSchedule}>追加</button>
+      <button onClick={addEvent}>追加</button>
 
-      <h3>📌 登録済みスケジュール</h3>
+      <h2>{formatDate(date)} の予定</h2>
       <ul>
-        {events.map((e, i) => (
-          <li key={i}>
-            {e.date} [{e.time_slot}] {e.username} - {e.title}
+        {events.map((ev) => (
+          <li key={ev.id}>
+            [{ev.timeslot}] {ev.username}: {ev.title}
           </li>
         ))}
       </ul>
 
-      <h3>🔗 共有リンク</h3>
+      <h2>共有リンク</h2>
       <button onClick={generateShareLink}>共有リンクを発行</button>
       {shareUrl && (
         <p>
-          <a href={shareUrl} target="_blank" rel="noreferrer">
+          共有リンク:{" "}
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
             {shareUrl}
           </a>
         </p>
       )}
     </div>
-  );
-}
-
-// ===== 共有ページ =====
-function SharePage() {
-  const { shareId } = useParams();
-  const [events, setEvents] = useState([]);
-
-  useEffect(() => {
-    axios
-      .get(`/api/share/${shareId}`)
-      .then((res) => setEvents(res.data))
-      .catch(() => alert("リンクが無効です"));
-  }, [shareId]);
-
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>📤 共有スケジュール</h2>
-      <ul>
-        {events.map((e, i) => (
-          <li key={i}>
-            {e.date} [{e.time_slot}] {e.username} - {e.title}
-          </li>
-        ))}
-      </ul>
-      <Link to="/">← 戻る</Link>
-    </div>
-  );
-}
-
-// ===== ルーティング =====
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<SchedulePage />} />
-        <Route path="/share/:shareId" element={<SharePage />} />
-      </Routes>
-    </Router>
   );
 }
