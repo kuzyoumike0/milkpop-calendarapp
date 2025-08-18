@@ -42,7 +42,7 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       date DATE NOT NULL,
       username TEXT NOT NULL,
-      timeslot TEXT NOT NULL,
+      time TEXT NOT NULL,
       title TEXT NOT NULL,
       share_id TEXT
     )
@@ -64,18 +64,12 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// 共有リンクから予定一覧を取得
+// 共有リンクから予定一覧を取得（時間昇順でソート）
 app.get("/api/share/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
-      `SELECT * FROM schedules WHERE share_id=$1 ORDER BY 
-        CASE timeslot
-          WHEN '全日' THEN 1
-          WHEN '昼' THEN 2
-          WHEN '夜' THEN 3
-          ELSE 4
-        END`,
+      `SELECT * FROM schedules WHERE share_id=$1 ORDER BY time ASC`,
       [id]
     );
     res.json(result.rows);
@@ -88,12 +82,12 @@ app.get("/api/share/:id", async (req, res) => {
 // 共有リンクから予定を追加
 app.post("/api/share/:id/add", async (req, res) => {
   const { id } = req.params;
-  const { username, timeslot, title } = req.body;
+  const { username, time, title } = req.body;
   try {
     await pool.query(
-      `INSERT INTO schedules (date, username, timeslot, title, share_id)
+      `INSERT INTO schedules (date, username, time, title, share_id)
        VALUES ($1, $2, $3, $4, $5)`,
-      [new Date().toISOString().split("T")[0], username, timeslot, title, id]
+      [new Date().toISOString().split("T")[0], username, time, title, id]
     );
     res.json({ message: "予定を追加しました" });
   } catch (err) {
