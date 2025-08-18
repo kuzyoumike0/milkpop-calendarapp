@@ -1,52 +1,87 @@
 const express = require("express");
-const cors = require("cors");
+const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const path = require("path");
-
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// PostgreSQL Pool
-const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "password",
-  database: process.env.DB_NAME || "calendar",
-  port: process.env.DB_PORT || 5432
-});
+app.use(bodyParser.json());
 
-// API: get events
-app.get("/api/events", async (req, res) => {
+// === PostgreSQL 接続設定 ===
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+      }
+    : {
+        host: process.env.DB_HOST || "db",
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "password",
+        database: process.env.DB_NAME || "mydb",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+      }
+);
+
+// === DB初期化 ===
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS shared_schedules (
+      id SERIAL PRIMARY KEY,
+      date DATE NOT NULL,
+      title TEXT NOT NULL
+    );
+  `);
+}
+initDB();
+
+// === 予定取得 ===
+app.get("/api/shared", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM events ORDER BY id DESC");
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ error: "date is required" });
+
+    const result = await pool.query(
+      "SELECT id, date, title FROM shared_schedules WHERE date = $1 ORDER BY id ASC",
+      [date]
+    );
+
     res.json(result.rows);
   } catch (err) {
-    console.error("DB error:", err);
-    res.json([]);
+    console.error("予定取得エラー:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// API: add event
-app.post("/api/events", async (req, res) => {
-  const { title, date } = req.body;
+// === 予定追加 ===
+app.post("/api/shared", async (req, res) => {
   try {
-    const result = await pool.query(
-      "INSERT INTO events(title, date) VALUES($1, $2) RETURNING *",
-      [title, date]
-    );
-    res.json(result.rows[0]);
+    const { date, title } = req.body;
+    if (!date || !title) {
+      return res.status(400).json({ error: "date and title are required" });
+    }
+
+    await pool.query("INSERT INTO shared_schedules (date, title) VALUES ($1, $2)", [
+      date,
+      title,
+    ]);
+
+    res.status(201).json({ message: "Event added successfully" });
   } catch (err) {
-    console.error("DB error:", err);
-    res.status(500).json({ error: "Insert failed" });
+    console.error("予定追加エラー:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Serve frontend build (for Docker)
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// === 静的ファイル配信 (React ビルド済み) ===
+app.use(express.static(path.join(__dirname, "public")));
+
+// React Router 対応
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`✅ Backend running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
