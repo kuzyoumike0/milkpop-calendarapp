@@ -12,9 +12,22 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
-// ✅ GET / のルート
+// ✅ 必ず / を定義
 app.get("/", (req, res) => {
-  res.send("✅ Calendar backend is running");
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head><meta charset="UTF-8"><title>Calendar Backend</title></head>
+    <body>
+      <h1>✅ Calendar backend is running</h1>
+      <p>APIエンドポイント例:</p>
+      <ul>
+        <li>POST /api/share-link → 共有リンク発行</li>
+        <li>GET /share/:id → 共有予定の表示</li>
+      </ul>
+    </body>
+    </html>
+  `);
 });
 
 // 共有リンク発行
@@ -36,7 +49,7 @@ app.post("/api/share-link", async (req, res) => {
   }
 });
 
-// ✅ HTML で予定を表示
+// 共有リンクから予定を表示
 app.get("/share/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -44,42 +57,13 @@ app.get("/share/:id", async (req, res) => {
     if (result.rows.length === 0) return res.status(404).send("リンクが無効です");
 
     const data = result.rows[0];
-
-    // HTML生成
-    let html = `
-      <!DOCTYPE html>
-      <html lang="ja">
-      <head>
-        <meta charset="UTF-8" />
-        <title>共有された予定</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; }
-          h1 { color: #2c3e50; }
-          .card {
-            border: 1px solid #ccc; 
-            border-radius: 8px; 
-            padding: 16px; 
-            margin: 8px 0;
-            background: #f9f9f9;
-          }
-          .dates { font-weight: bold; color: #27ae60; }
-          .slot { color: #2980b9; }
-        </style>
-      </head>
-      <body>
-        <h1>📅 共有された予定</h1>
-        <div class="card">
-          <div><strong>タイトル:</strong> ${data.title}</div>
-          <div class="dates"><strong>日程:</strong> ${data.dates.join(", ")}</div>
-          <div class="slot"><strong>区分:</strong> ${data.slotMode === "allday" ? data.slot : `${data.start_time}:00〜${data.end_time}:00`}</div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    res.send(html);
+    res.send(`
+      <h1>📅 共有された予定</h1>
+      <p><b>タイトル:</b> ${data.title}</p>
+      <p><b>日程:</b> ${data.dates.join(", ")}</p>
+      <p><b>区分:</b> ${data.slotMode === "allday" ? data.slot : `${data.start_time}:00〜${data.end_time}:00`}</p>
+    `);
   } catch (err) {
-    console.error(err);
     res.status(500).send("DBエラー");
   }
 });
