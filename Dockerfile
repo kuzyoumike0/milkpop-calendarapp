@@ -1,27 +1,23 @@
-# Node.js 18 をベースに利用
+# Node.js 18 を利用
 FROM node:18
 
-# 作業ディレクトリ
+# 作業ディレクトリを設定
 WORKDIR /app/frontend
 
-# 依存関係を先にコピーしてインストール
-COPY package*.json ./
-
-# 依存関係をインストール
-# ajv/ajv-keywords のバージョンを固定しているので --legacy-peer-deps で解決
+# package.json をコピーして依存関係をインストール
+COPY package.json ./
 RUN npm install --legacy-peer-deps
 
 # ソースをコピー
 COPY . .
 
-# OpenSSL 互換性対策（Node.js v17以降で必要）
+# OpenSSL 互換モード（Node17以降のwebpackエラー回避）
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
-# React をビルド
+# Reactビルド
 RUN npm run build
 
-# 本番用サーバーとして serve を利用
+# 本番は serve を利用
 RUN npm install -g serve
-
 EXPOSE 3000
 CMD ["serve", "-s", "build"]
