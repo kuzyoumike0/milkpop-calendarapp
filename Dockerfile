@@ -4,35 +4,40 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-COPY frontend/package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps
+# メモリ不足対策
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
+# 依存関係インストール（段階的にインストールしてメモリ負荷軽減）
+COPY frontend/package*.json ./
+RUN npm install react-scripts react react-dom --legacy-peer-deps
+RUN npm install --legacy-peer-deps
+
+# ソースコピー & ビルド
 COPY frontend/ ./
 RUN npm run build
 
 # =============================
-# 2. バックエンドビルドステージ
+# 2. バックエンドステージ
 # =============================
-FROM node:18 AS backend-build
+FROM node:18 AS backend
 WORKDIR /app/backend
 
-COPY backend/package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps
+# メモリ不足対策
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
+# 依存関係インストール
+COPY backend/package*.json ./
+RUN npm install --legacy-peer-deps
+
+# バックエンドコードコピー
 COPY backend/ ./
 
-# =============================
-# 3. 本番ステージ
-# =============================
-FROM node:18
-WORKDIR /app
-
-COPY --from=backend-build /app/backend ./
+# フロントのビルド成果物を配置
 COPY --from=frontend-build /app/frontend/build ./public
 
-ENV NODE_ENV=production
-ENV NODE_OPTIONS=--max-old-space-size=4096
+# ポート設定
 ENV PORT=8080
-
 EXPOSE 8080
+
+# サーバー起動
 CMD ["node", "index.js"]
