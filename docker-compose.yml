@@ -4,8 +4,26 @@ services:
     build: .
     ports:
       - "8080:8080"
-    volumes:
-      - ./backend:/app/backend
-      - ./frontend:/app/frontend
+    depends_on:
+      - db
     environment:
-      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=calendar
+      - DB_PORT=5432
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: calendar
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  db_data:
