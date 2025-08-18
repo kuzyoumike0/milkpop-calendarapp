@@ -1,39 +1,31 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function SharePage() {
   const [events, setEvents] = useState([]);
-  const [title, setTitle] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/api/shared").then((res) => setEvents(res.data));
+    axios.get("/api/share").then((res) => setEvents(res.data));
   }, []);
 
-  const addEvent = async () => {
-    if (!title) return;
-    await axios.post("/api/shared", { title });
-    setEvents([...events, { title }]);
-    setTitle("");
+  const createLink = async () => {
+    const res = await axios.post("/api/share/link");
+    navigate(`/link/${res.data.id}`);
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>共有カレンダー</h2>
-      <input
-        placeholder="予定名"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <button onClick={addEvent}>追加</button>
+    <div style={{ padding: "20px" }}>
+      <h1>共有カレンダー</h1>
       <ul>
-        {events.map((ev, i) => (
-          <li key={i}>{ev.title}</li>
+        {events.map((e) => (
+          <li key={e.id}>
+            {e.date} {e.timeStart}〜{e.timeEnd} {e.title} ({e.user})
+          </li>
         ))}
       </ul>
-      <p>
-        共有リンク: <Link to="/share/abc123">/share/abc123</Link>
-      </p>
+      <button onClick={createLink}>共有リンクを発行</button>
     </div>
   );
 }
