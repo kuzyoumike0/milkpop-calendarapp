@@ -7,7 +7,7 @@ WORKDIR /app/frontend
 # 依存関係だけコピー
 COPY frontend/package*.json ./
 
-# 環境変数とメモリ設定
+# 環境変数とメモリ設定（ビルド安定化）
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
