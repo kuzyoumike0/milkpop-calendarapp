@@ -1,27 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+import React from "react";
+import { useParams, Link } from "react-router-dom";
 
 export default function LinkPage() {
   const { id } = useParams();
-  const [events, setEvents] = useState([]);
-
-  useEffect(() => {
-    axios.get(`/api/share/${id}`).then((res) => setEvents(res.data));
-  }, [id]);
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>共有リンクの予定一覧</h1>
-      <ul>
-        {events
-          .sort((a, b) => (a.date + a.timeStart).localeCompare(b.date + b.timeStart))
-          .map((e) => (
-            <li key={e.id}>
-              {e.date} {e.timeStart}〜{e.timeEnd} {e.title} ({e.user})
-            </li>
-          ))}
-      </ul>
+    <div style={{padding:"24px"}}>
+      <h2>🔗 共有リンク</h2>
+      <p>リンクID: <b>{id}</b></p>
+      <p><Link to={`/share/${id}`}>共有リンク先ページへ</Link></p>
     </div>
   );
 }
