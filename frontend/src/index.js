@@ -1,108 +1,83 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
-const path = require("path");
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 
-const app = express();
-const PORT = process.env.PORT || 8080;
+export default function SharePage() {
+  const { id } = useParams();
+  const [events, setEvents] = useState([]);
+  const [username, setUsername] = useState("");
+  const [startTime, setStartTime] = useState("12:00");
+  const [endTime, setEndTime] = useState("13:00");
+  const [title, setTitle] = useState("");
 
-// === DB接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "calendar",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
+  // データ取得
+  useEffect(() => {
+    fetch(`/api/share/${id}`)
+      .then((res) => res.json())
+      .then((data) => setEvents(data));
+  }, [id]);
 
-app.use(cors());
-app.use(bodyParser.json());
+  // 予定追加
+  const addEvent = async () => {
+    if (!username || !title || !startTime || !endTime) {
+      alert("ユーザー名、開始時間、終了時間、タイトルを入力してください");
+      return;
+    }
+    await fetch(`/api/share/${id}/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, start_time: startTime, end_time: endTime, title }),
+    });
+    setUsername("");
+    setStartTime("12:00");
+    setEndTime("13:00");
+    setTitle("");
+    // 再読み込み
+    const updated = await fetch(`/api/share/${id}`).then((res) => res.json());
+    setEvents(updated);
+  };
 
-// === テーブル初期化 ===
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS share_links (
-      id SERIAL PRIMARY KEY,
-      share_id TEXT UNIQUE NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>共有スケジュール</h2>
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      date DATE NOT NULL,
-      username TEXT NOT NULL,
-      time TEXT NOT NULL,
-      title TEXT NOT NULL,
-      share_id TEXT
-    )
-  `);
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="ユーザー名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={{ marginRight: "10px" }}
+        />
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          style={{ marginRight: "5px" }}
+        />
+        <span>〜</span>
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          style={{ marginLeft: "5px", marginRight: "10px" }}
+        />
+        <input
+          type="text"
+          placeholder="予定内容"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          style={{ marginRight: "10px" }}
+        />
+        <button onClick={addEvent}>追加</button>
+      </div>
+
+      <ul>
+        {events.map((e, i) => (
+          <li key={i}>
+            <strong>{e.start_time}〜{e.end_time}</strong> — {e.username} : {e.title}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
-initDB().catch((err) => console.error("DB初期化エラー:", err));
-
-// === API ===
-
-// 共有リンクを発行
-app.post("/api/share", async (req, res) => {
-  try {
-    const shareId = uuidv4();
-    await pool.query(`INSERT INTO share_links (share_id) VALUES ($1)`, [shareId]);
-    res.json({ url: `/share/${shareId}` });
-  } catch (err) {
-    console.error("共有リンク発行エラー:", err);
-    res.status(500).json({ error: "共有リンク発行に失敗しました" });
-  }
-});
-
-// 共有リンクから予定一覧を取得（時間昇順でソート）
-app.get("/api/share/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      `SELECT * FROM schedules WHERE share_id=$1 ORDER BY time ASC`,
-      [id]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("共有リンクの予定取得エラー:", err);
-    res.status(500).json({ error: "予定取得に失敗しました" });
-  }
-});
-
-// 共有リンクから予定を追加
-app.post("/api/share/:id/add", async (req, res) => {
-  const { id } = req.params;
-  const { username, time, title } = req.body;
-  try {
-    await pool.query(
-      `INSERT INTO schedules (date, username, time, title, share_id)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [new Date().toISOString().split("T")[0], username, time, title, id]
-    );
-    res.json({ message: "予定を追加しました" });
-  } catch (err) {
-    console.error("共有リンク経由の予定追加エラー:", err);
-    res.status(500).json({ error: "予定追加に失敗しました" });
-  }
-});
-
-// === 静的ファイル（React） ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
-
-// === サーバー起動 ===
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
