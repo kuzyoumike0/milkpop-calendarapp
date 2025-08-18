@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
@@ -13,13 +13,9 @@ export default function CalendarView() {
   const [startTime, setStartTime] = useState(9);
   const [endTime, setEndTime] = useState(17);
   const [title, setTitle] = useState("");
-  const [shares, setShares] = useState([]);
+  const [shareUrl, setShareUrl] = useState("");
 
-  useEffect(() => {
-    axios.get("/api/shares").then((res) => setShares(res.data));
-  }, []);
-
-  // 複数選択モードで日付クリック
+  // 日付クリック（複数モード用）
   const handleDateClick = (value) => {
     if (mode === "multi") {
       const exists = multi.find((d) => d.toDateString() === value.toDateString());
@@ -31,8 +27,8 @@ export default function CalendarView() {
     }
   };
 
-  // 予定追加
-  const addShare = () => {
+  // 共有リンク発行
+  const createShareLink = () => {
     let dates = [];
     if (mode === "range") {
       let start = range[0];
@@ -47,7 +43,7 @@ export default function CalendarView() {
     if (!title || dates.length === 0) return;
 
     axios
-      .post("/api/shares", {
+      .post("/api/share-link", {
         dates,
         slotMode,
         slot: slotMode === "allday" ? slot : null,
@@ -56,38 +52,12 @@ export default function CalendarView() {
         title,
       })
       .then((res) => {
-        setShares([...shares, ...res.data]);
-        setTitle("");
+        setShareUrl(res.data.url); // サーバーから発行されたURLを受け取る
       });
   };
 
   // 祝日判定
   const isHoliday = (d) => JapaneseHolidays.isHoliday(d);
-
-  // カレンダー装飾
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = isHoliday(date);
-      if (holiday) {
-        return <span style={{ color: "red", fontSize: "0.7em" }}>{holiday}</span>;
-      }
-    }
-    return null;
-  };
-
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      if (isHoliday(date)) return "holiday";
-      if (date.getDay() === 0) return "sunday";
-      if (date.getDay() === 6) return "saturday";
-      if (mode === "multi" && multi.some((d) => d.toDateString() === date.toDateString())) {
-        return "selected-day";
-      }
-    }
-    return null;
-  };
-
-  const hours = [...Array(24).keys()].map((h) => (h === 0 ? 24 : h)); // 1〜24
 
   return (
     <div style={{ padding: 20 }}>
@@ -120,8 +90,6 @@ export default function CalendarView() {
         value={mode === "range" ? range : null}
         onChange={(val) => mode === "range" && setRange(val)}
         onClickDay={(val) => handleDateClick(val)}
-        tileContent={tileContent}
-        tileClassName={tileClassName}
       />
 
       {/* 区分 */}
@@ -157,13 +125,13 @@ export default function CalendarView() {
       {slotMode === "time" && (
         <span>
           <select value={startTime} onChange={(e) => setStartTime(parseInt(e.target.value))}>
-            {hours.map((h) => (
+            {[...Array(24).keys()].map((h) => (
               <option key={h} value={h}>{h}:00</option>
             ))}
           </select>
           〜
           <select value={endTime} onChange={(e) => setEndTime(parseInt(e.target.value))}>
-            {hours.map((h) => (
+            {[...Array(24).keys()].map((h) => (
               <option key={h} value={h}>{h}:00</option>
             ))}
           </select>
@@ -177,17 +145,18 @@ export default function CalendarView() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        <button onClick={addShare}>追加</button>
+        <button onClick={createShareLink}>共有リンク発行</button>
       </div>
 
-      <h2>予定一覧</h2>
-      <ul>
-        {shares.map((s) => (
-          <li key={s.id}>
-            {s.date} {s.slotMode === "allday" ? `[${s.slot}]` : `${s.start_time}:00〜${s.end_time}:00`} - {s.title}
-          </li>
-        ))}
-      </ul>
+      {/* 生成された共有リンクを表示 */}
+      {shareUrl && (
+        <div style={{ marginTop: 20 }}>
+          <strong>共有リンク:</strong>{" "}
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
