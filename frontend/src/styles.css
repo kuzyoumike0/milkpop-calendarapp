@@ -1,43 +1,35 @@
 body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f7f9fc;
   margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #89f7fe, #66a6ff);
-  color: #333;
+  padding: 0;
 }
 
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.nav a {
-  margin: 0 1rem;
-  text-decoration: none;
-  color: #fff;
-  font-weight: 500;
-}
-
-.nav a:hover {
-  text-decoration: underline;
-}
-
-.main-content {
-  flex: 1;
+.page {
+  max-width: 600px;
+  margin: auto;
   padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+button {
+  margin: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #357ABD;
+}
+
+.holiday {
+  background-color: #ffcccc !important;
+  color: red !important;
+  border-radius: 50%;
 }
