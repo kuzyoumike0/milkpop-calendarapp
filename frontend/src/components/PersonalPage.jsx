@@ -1,35 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 
 export default function PersonalPage() {
-  const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
+  const [user, setUser] = useState("");
+  const [date, setDate] = useState("");
+  const [timeStart, setTimeStart] = useState("");
+  const [timeEnd, setTimeEnd] = useState("");
 
-  useEffect(() => {
-    axios.get("/api/personal").then((res) => setEvents(res.data));
-  }, []);
-
-  const addEvent = async () => {
-    if (!title) return;
-    await axios.post("/api/personal", { title });
-    setEvents([...events, { title }]);
-    setTitle("");
+  const submit = async () => {
+    await axios.post("/api/personal", { title, user, date, timeStart, timeEnd });
+    alert("登録しました");
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>個人スケジュール</h2>
-      <input
-        placeholder="予定名"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <button onClick={addEvent}>追加</button>
-      <ul>
-        {events.map((ev, i) => (
-          <li key={i}>{ev.title}</li>
-        ))}
-      </ul>
+    <div style={{ padding: "20px" }}>
+      <h1>個人スケジュール</h1>
+      <input placeholder="ユーザー名" value={user} onChange={(e) => setUser(e.target.value)} />
+      <input placeholder="予定タイトル" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <input type="time" value={timeStart} onChange={(e) => setTimeStart(e.target.value)} />
+      <input type="time" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} />
+      <button onClick={submit}>登録</button>
     </div>
   );
 }
