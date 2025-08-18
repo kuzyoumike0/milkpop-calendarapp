@@ -1,17 +1,25 @@
-import axios from "axios";
+import React from "react";
 
-function ShareButton() {
-  const handleShare = async () => {
+export default function ShareButton({ link }) {
+  if (!link) return null;
+
+  const copy = async () => {
     try {
-      const res = await axios.post("/api/share", { description: "共有テスト" });
-      alert("共有リンク: " + window.location.origin + res.data.shareUrl);
-    } catch (err) {
-      alert("共有リンク発行に失敗しました");
-      console.error(err);
+      await navigator.clipboard.writeText(link);
+      alert("リンクをコピーしました");
+    } catch {
+      alert("コピーに失敗しました");
     }
   };
 
-  return <button onClick={handleShare}>共有リンクを発行</button>;
+  return (
+    <div style={{display:"flex", alignItems:"center", gap:8}}>
+      <a href={link} target="_blank" rel="noreferrer" style={{textDecoration:"none", color:"#6C8CFF", fontWeight:700}}>
+        {link}
+      </a>
+      <button onClick={copy} style={{padding:"8px 10px", borderRadius:10, border:"1px solid #6C8CFF", background:"white", color:"#6C8CFF", fontWeight:700, cursor:"pointer"}}>
+        コピー
+      </button>
+    </div>
+  );
 }
-
-export default ShareButton;
