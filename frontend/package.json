@@ -1,19 +1,10 @@
 {
-  "name": "calendar-frontend",
-  "version": "1.4.1",
-  "private": true,
   "dependencies": {
-    "axios": "^1.7.2",
     "react": "^18.2.0",
-    "react-calendar": "^4.0.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3",
-    "react-scripts": "5.0.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "react-scripts": "4.0.3",
+    // ← react-scripts v4 は AJV v6 系が必須
+    "ajv": "^6.12.6",
+    "ajv-keywords": "^3.5.2"
   }
 }
