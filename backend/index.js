@@ -1,121 +1,56 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
-const cors = require("cors");
+import express from "express";
+import { Pool } from "pg";
+import { v4 as uuidv4 } from "uuid";
+import cors from "cors";
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// === PostgreSQL 接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+});
 
-// === DB 初期化 ===
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS share_links (
-      id SERIAL PRIMARY KEY,
-      share_id TEXT UNIQUE NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      share_id TEXT REFERENCES share_links(share_id) ON DELETE CASCADE,
-      username TEXT NOT NULL,
-      date DATE NOT NULL
-    );
-  `);
-
-  // 既存テーブルに share_id が無い場合は追加
-  const res = await pool.query(`
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_name='share_links' AND column_name='share_id';
-  `);
-
-  if (res.rowCount === 0) {
-    await pool.query(`ALTER TABLE share_links ADD COLUMN share_id TEXT UNIQUE;`);
-    // 古いデータにUUIDを入れる
-    await pool.query(`UPDATE share_links SET share_id = gen_random_uuid() WHERE share_id IS NULL;`);
-  }
-
-  console.log("✅ Database initialized");
-}
-
-// === API ===
-
-// 共有リンク作成
+// 共有リンク発行
 app.post("/api/share", async (req, res) => {
   try {
     const shareId = uuidv4();
+    const { description } = req.body;
 
     await pool.query(
-      "INSERT INTO share_links (share_id) VALUES ($1) ON CONFLICT DO NOTHING",
-      [shareId]
+      "INSERT INTO share_links (share_id, description) VALUES ($1, $2)",
+      [shareId, description || null]
     );
 
-    res.json({ success: true, shareId });
+    res.json({ success: true, shareUrl: `/share/${shareId}` });
   } catch (err) {
     console.error("Error creating share link:", err);
-    res.status(500).json({ error: "Failed to create share link" });
+    res.status(500).json({ success: false, error: "Failed to create share link" });
   }
 });
 
-// スケジュール追加
-app.post("/api/schedule", async (req, res) => {
-  try {
-    const { shareId, username, date } = req.body;
-
-    await pool.query(
-      "INSERT INTO schedules (share_id, username, date) VALUES ($1, $2, $3)",
-      [shareId, username, date]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Error inserting schedule:", err);
-    res.status(500).json({ error: "Failed to insert schedule" });
-  }
-});
-
-// 共有リンクのスケジュール一覧取得
-app.get("/api/schedules/:shareId", async (req, res) => {
+// 共有リンク先データ取得
+app.get("/api/share/:shareId", async (req, res) => {
   try {
     const { shareId } = req.params;
-
     const result = await pool.query(
-      "SELECT username, date FROM schedules WHERE share_id = $1 ORDER BY date ASC",
+      "SELECT * FROM share_links WHERE share_id = $1",
       [shareId]
     );
 
-    res.json(result.rows);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Link not found" });
+    }
+
+    res.json({ success: true, link: result.rows[0] });
   } catch (err) {
-    console.error("Error fetching schedules:", err);
-    res.status(500).json({ error: "Failed to fetch schedules" });
+    console.error("Error fetching share link:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch share link" });
   }
 });
 
-// サーバー起動
 const PORT = process.env.PORT || 8080;
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-  });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
