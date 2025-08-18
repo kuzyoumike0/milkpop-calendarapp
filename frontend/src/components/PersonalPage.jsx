@@ -1,27 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function PersonalPage() {
+  const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
-  const [user, setUser] = useState("");
   const [date, setDate] = useState("");
-  const [timeStart, setTimeStart] = useState("");
-  const [timeEnd, setTimeEnd] = useState("");
+  const [time, setTime] = useState("");
 
-  const submit = async () => {
-    await axios.post("/api/personal", { title, user, date, timeStart, timeEnd });
-    alert("登録しました");
+  useEffect(() => {
+    axios.get("/api/personal").then((res) => setEvents(res.data));
+  }, []);
+
+  const addEvent = async () => {
+    if (!title || !date) return alert("タイトルと日付は必須です");
+    await axios.post("/api/personal", { title, date, time });
+    const res = await axios.get("/api/personal");
+    setEvents(res.data);
+    setTitle("");
+    setDate("");
+    setTime("");
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>個人スケジュール</h1>
-      <input placeholder="ユーザー名" value={user} onChange={(e) => setUser(e.target.value)} />
-      <input placeholder="予定タイトル" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <input type="time" value={timeStart} onChange={(e) => setTimeStart(e.target.value)} />
-      <input type="time" value={timeEnd} onChange={(e) => setTimeEnd(e.target.value)} />
-      <button onClick={submit}>登録</button>
+      <h2>👤 個人スケジュール</h2>
+
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="予定のタイトル"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        <button onClick={addEvent}>追加</button>
+      </div>
+
+      {events.length === 0 ? (
+        <p>予定がありません。</p>
+      ) : (
+        <ul>
+          {events.map((ev) => (
+            <li key={ev.id}>
+              {ev.date} {ev.time || "時間未設定"} {ev.title}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
