@@ -2,161 +2,213 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import * as JapaneseHolidays from "japanese-holidays";
 
 export default function CalendarView() {
-  const [mode, setMode] = useState("range"); // "range" or "multi"
-  const [range, setRange] = useState([new Date(), new Date()]);
-  const [multi, setMulti] = useState([]);
-  const [slotMode, setSlotMode] = useState("allday"); // "allday" or "time"
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [slotMode, setSlotMode] = useState("allday");
   const [slot, setSlot] = useState("終日");
-  const [startTime, setStartTime] = useState(9);
-  const [endTime, setEndTime] = useState(17);
+  const [startTime, setStartTime] = useState("09");
+  const [endTime, setEndTime] = useState("18");
   const [title, setTitle] = useState("");
   const [shareUrl, setShareUrl] = useState("");
 
-  // 日付クリック（複数モード用）
-  const handleDateClick = (value) => {
-    if (mode === "multi") {
-      const exists = multi.find((d) => d.toDateString() === value.toDateString());
-      if (exists) {
-        setMulti(multi.filter((d) => d.toDateString() !== value.toDateString()));
-      } else {
-        setMulti([...multi, value]);
-      }
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // 日付クリックで複数選択
+  const handleDateClick = (date) => {
+    const formatted = formatDate(date);
+    if (selectedDates.includes(formatted)) {
+      setSelectedDates(selectedDates.filter((d) => d !== formatted));
+    } else {
+      setSelectedDates([...selectedDates, formatted]);
     }
   };
 
   // 共有リンク発行
-  const createShareLink = () => {
-    let dates = [];
-    if (mode === "range") {
-      let start = range[0];
-      let end = range[1] || range[0];
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        dates.push(new Date(d).toISOString().slice(0, 10));
-      }
-    } else {
-      dates = multi.map((d) => d.toISOString().slice(0, 10));
-    }
-
-    if (!title || dates.length === 0) return;
-
-    axios
-      .post("/api/share-link", {
-        dates,
+  const handleShare = async () => {
+    try {
+      const res = await axios.post("/api/share-link", {
+        dates: selectedDates,
         slotMode,
-        slot: slotMode === "allday" ? slot : null,
-        start_time: slotMode === "time" ? startTime : null,
-        end_time: slotMode === "time" ? endTime : null,
+        slot,
+        start_time: startTime,
+        end_time: endTime,
         title,
-      })
-      .then((res) => {
-        setShareUrl(res.data.url); // サーバーから発行されたURLを受け取る
       });
+      setShareUrl(res.data.url);
+    } catch (err) {
+      console.error("共有リンク発行エラー", err);
+      alert("共有リンクの発行に失敗しました");
+    }
   };
 
-  // 祝日判定
-  const isHoliday = (d) => JapaneseHolidays.isHoliday(d);
-
   return (
-    <div style={{ padding: 20 }}>
-      <h1>📅 共有カレンダー</h1>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "40px",
+      }}
+    >
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.2)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "16px",
+          padding: "30px",
+          width: "600px",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+          color: "#fff",
+        }}
+      >
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+          📅 カレンダー
+        </h1>
 
-      {/* 範囲 or 複数 */}
-      <div>
-        <label>
-          <input
-            type="radio"
-            value="range"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="multi"
-            checked={mode === "multi"}
-            onChange={() => setMode("multi")}
-          />
-          複数選択
-        </label>
-      </div>
-
-      <Calendar
-        selectRange={mode === "range"}
-        value={mode === "range" ? range : null}
-        onChange={(val) => mode === "range" && setRange(val)}
-        onClickDay={(val) => handleDateClick(val)}
-      />
-
-      {/* 区分 */}
-      <div style={{ marginTop: 20 }}>
-        <label>
-          <input
-            type="radio"
-            value="allday"
-            checked={slotMode === "allday"}
-            onChange={() => setSlotMode("allday")}
-          />
-          終日・昼・夜
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="time"
-            checked={slotMode === "time"}
-            onChange={() => setSlotMode("time")}
-          />
-          時間指定
-        </label>
-      </div>
-
-      {slotMode === "allday" && (
-        <select value={slot} onChange={(e) => setSlot(e.target.value)}>
-          <option value="終日">終日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
-        </select>
-      )}
-
-      {slotMode === "time" && (
-        <span>
-          <select value={startTime} onChange={(e) => setStartTime(parseInt(e.target.value))}>
-            {[...Array(24).keys()].map((h) => (
-              <option key={h} value={h}>{h}:00</option>
-            ))}
-          </select>
-          〜
-          <select value={endTime} onChange={(e) => setEndTime(parseInt(e.target.value))}>
-            {[...Array(24).keys()].map((h) => (
-              <option key={h} value={h}>{h}:00</option>
-            ))}
-          </select>
-        </span>
-      )}
-
-      <div>
-        <input
-          type="text"
-          placeholder="予定タイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+        {/* カレンダー */}
+        <Calendar
+          onClickDay={handleDateClick}
+          tileClassName={({ date }) =>
+            selectedDates.includes(formatDate(date)) ? "selected-day" : null
+          }
         />
-        <button onClick={createShareLink}>共有リンク発行</button>
-      </div>
 
-      {/* 生成された共有リンクを表示 */}
-      {shareUrl && (
-        <div style={{ marginTop: 20 }}>
-          <strong>共有リンク:</strong>{" "}
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
+        {/* CSSで選択日を強調 */}
+        <style>{`
+          .selected-day {
+            background: #27ae60 !important;
+            color: #fff !important;
+            border-radius: 50%;
+          }
+        `}</style>
+
+        {/* タイトル入力 */}
+        <div style={{ marginTop: "20px" }}>
+          <input
+            type="text"
+            placeholder="予定タイトル"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "none",
+            }}
+          />
         </div>
-      )}
+
+        {/* 区分の選択 */}
+        <div style={{ marginTop: "20px" }}>
+          <label>
+            <input
+              type="radio"
+              value="allday"
+              checked={slotMode === "allday"}
+              onChange={() => setSlotMode("allday")}
+            />
+            終日/昼/夜
+          </label>
+          <label style={{ marginLeft: "15px" }}>
+            <input
+              type="radio"
+              value="time"
+              checked={slotMode === "time"}
+              onChange={() => setSlotMode("time")}
+            />
+            時間指定
+          </label>
+        </div>
+
+        {/* プルダウン */}
+        {slotMode === "allday" ? (
+          <select
+            value={slot}
+            onChange={(e) => setSlot(e.target.value)}
+            style={{ marginTop: "10px", width: "100%", padding: "8px" }}
+          >
+            <option value="終日">終日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
+        ) : (
+          <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              style={{ flex: 1, padding: "8px" }}
+            >
+              {Array.from({ length: 24 }).map((_, i) => (
+                <option key={i} value={String(i).padStart(2, "0")}>
+                  {i}:00
+                </option>
+              ))}
+            </select>
+            <span>〜</span>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              style={{ flex: 1, padding: "8px" }}
+            >
+              {Array.from({ length: 24 }).map((_, i) => (
+                <option key={i} value={String(i).padStart(2, "0")}>
+                  {i}:00
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* ボタン */}
+        <button
+          onClick={handleShare}
+          style={{
+            marginTop: "20px",
+            padding: "12px 20px",
+            background: "#27ae60",
+            color: "#fff",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "1em",
+            width: "100%",
+          }}
+        >
+          🔗 共有リンクを発行
+        </button>
+
+        {/* 生成されたURLを表示 */}
+        {shareUrl && (
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "10px",
+              background: "#2980b9",
+              borderRadius: "8px",
+              textAlign: "center",
+              wordBreak: "break-all",
+            }}
+          >
+            <span style={{ fontWeight: "bold" }}>共有リンク:</span>
+            <br />
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#fff" }}
+            >
+              {shareUrl}
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
