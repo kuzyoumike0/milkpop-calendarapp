@@ -12,7 +12,9 @@ module.exports = {
     },
     plugins: {
       add: [
-        new NodePolyfillPlugin()
+        new NodePolyfillPlugin({
+          excludeAliases: ["console"], // console ポリフィルを除外
+        }),
       ],
     },
   },
