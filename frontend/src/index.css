@@ -1,29 +1,18 @@
-/* ===== ベース ===== */
-:root{
-  --ink:#2c3e50;   /* 文字/枠 基調 */
-  --green:#27ae60; /* アクセント(確定/OK) */
-  --blue:#2980b9;  /* アクセント(操作/リンク) */
+:root {
+  --ink: #2c3e50;
+  --green: #27ae60;
+  --blue: #2980b9;
   --glass: rgba(255,255,255,0.18);
 }
-
-*{ box-sizing: border-box; }
-html,body,#root{ height: 100%; }
-body{
-  margin:0;
-  font-family: "Noto Sans JP", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: "Noto Sans JP", sans-serif;
   background: linear-gradient(135deg, #b3e5fc 0%, #e0f7fa 35%, #e8f1ff 100%);
   color: var(--ink);
 }
-
-/* ===== コンテナ（グラス） ===== */
-.app-shell{
-  min-height: 100%;
-  display:flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.glass-card{
+.app-shell { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.glass-card {
   width: min(1100px, 96vw);
   background: var(--glass);
   backdrop-filter: blur(14px);
@@ -33,161 +22,83 @@ body{
   border: 1px solid rgba(255,255,255,.3);
   padding: 26px;
 }
-
-/* ===== 見出し/レイアウト ===== */
-.header{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.title{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight: 700;
-  font-size: 20px;
-}
-.badge{
-  background: var(--blue);
-  color: #fff;
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns: 1fr 360px;
-  gap: 20px;
-}
-@media (max-width: 900px){
-  .grid{ grid-template-columns: 1fr; }
-}
-
-/* ===== パネル ===== */
-.panel{
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
+.badge { background: var(--blue); color: #fff; border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+.grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.panel {
   background: rgba(255,255,255,.55);
-  border:1px solid rgba(0,0,0,.06);
+  border: 1px solid rgba(0,0,0,.06);
   border-radius: 16px;
   padding: 16px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
 }
-
-/* ===== コントロール ===== */
-.controls{
-  display:grid;
-  gap:12px;
-}
-.row{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-label.radio{
-  display:flex;
-  align-items:center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(41,128,185,.09);
-  color: var(--blue);
+.controls { display: grid; gap: 12px; }
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+label.radio {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: rgba(41,128,185,.09); color: var(--blue);
   border: 1px solid rgba(41,128,185,.2);
 }
-select, input[type="text"]{
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.12);
-  background: #fff;
-  font-size: 14px;
+select, input[type="text"] {
+  width: 100%; padding: 10px 12px;
+  border-radius: 12px; border: 1px solid rgba(0,0,0,.12);
+  background: #fff; font-size: 14px;
 }
-.time-row{
-  display:grid;
-  grid-template-columns: 1fr 24px 1fr;
-  gap:10px;
-  align-items:center;
-}
-.btn{
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border:none;
-  color:#fff;
-  font-weight: 700;
-  cursor:pointer;
-  transition:.2s ease;
-  box-shadow: 0 8px 20px rgba(39,174,96,.25);
+.time-row { display: grid; grid-template-columns: 1fr 24px 1fr; gap:10px; align-items: center; }
+.btn {
+  width: 100%; padding: 12px 20px;
   background: linear-gradient(180deg, #2ecc71 0%, var(--green) 100%);
+  color: #fff; border: none; border-radius: 12px;
+  font-weight: 700; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(39,174,96,.25);
+  transition: .2s ease;
 }
-.btn:hover{ filter: brightness(0.97); transform: translateY(-1px); }
-.btn:active{ transform: translateY(0); }
-
-/* ===== 結果表示 ===== */
-.share{
-  margin-top: 12px;
-  background: #f6fbff;
-  border:1px solid rgba(41,128,185,.25);
-  color: var(--blue);
-  padding: 10px 12px;
-  border-radius: 12px;
+.btn:hover { filter: brightness(0.97); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.share {
+  margin-top: 12px; padding: 10px; background: #f6fbff;
+  border: 1px solid rgba(41,128,185,.25);
+  color: var(--blue); border-radius: 12px;
   word-break: break-all;
 }
-
-/* ===== react-calendar の見た目調整 ===== */
-.react-calendar{
-  width: 100%;
-  background: transparent;
-  border: none;
-  font-size: 15px;
+.react-calendar {
+  width: 100%; background: transparent; border: none; font-size: 15px;
 }
-.react-calendar__navigation{
+.react-calendar__navigation {
   margin-bottom: 8px;
 }
-.react-calendar__navigation button{
-  color: var(--ink);
-  min-width: 44px;
+.react-calendar__navigation button {
+  color: var(--ink); min-width: 44px;
   background: rgba(255,255,255,.7);
-  border:1px solid rgba(0,0,0,.08);
-  border-radius: 10px;
-  margin: 2px;
-  padding: 8px;
+  border: 1px solid rgba(0,0,0,.08); border-radius: 10px;
+  margin: 2px; padding: 8px;
 }
-.react-calendar__tile{
-  padding: 10px 6px;
-  border-radius: 10px;
-  transition:.15s ease;
+.react-calendar__tile {
+  padding: 10px 6px; border-radius: 10px;
+  transition: .15s ease;
 }
-.react-calendar__tile:enabled:hover{
+.react-calendar__tile:enabled:hover {
   background: rgba(41,128,185,.12);
 }
-.react-calendar__tile--now{
+.react-calendar__tile--now {
   outline: 2px solid rgba(41,128,185,.35);
 }
-
-/* === 範囲選択の見た目 === */
-.range-start, .range-end{
-  background: var(--blue) !important;
-  color:#fff !important;
+/* 範囲選択装飾 */
+.range-start, .range-end {
+  background: var(--blue) !important; color: #fff !important;
 }
-.in-range{
-  background: rgba(41,128,185,.13);
+.in-range {
+  background: rgba(41,128,185,.13) !important;
 }
-
-/* === 複数選択の見た目 === */
-.selected-day{
-  background: var(--green) !important;
-  color:#fff !important;
+/* 複数選択装飾 */
+.selected-day {
+  background: var(--green) !important; color: #fff !important;
 }
-
-/* 情報行 */
-.info{
-  font-size: 13px; 
-  color: #555;
-  background: rgba(255,255,255,.55);
-  border:1px dashed rgba(0,0,0,.12);
-  border-radius: 10px;
-  padding: 8px 10px;
+/* 祝日表示 */
+.react-calendar__tile--holiday {
+  background: #f8d7da !important;
+  color: #721c24 !important;
 }
