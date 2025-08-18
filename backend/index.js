@@ -1,43 +1,43 @@
 const express = require("express");
+const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
-const bodyParser = require("body-parser");
-const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
+// ミドルウェア
 app.use(cors());
 app.use(bodyParser.json());
 
-let eventsByShareId = {}; // { shareId: [event, ...] }
+// ✅ React ビルドされたファイルを配信
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
 
-// 新規イベント登録
-app.post("/api/events", (req, res) => {
-  const { title, date } = req.body;
-  const shareId = uuidv4();
-
-  const event = { id: uuidv4(), title, date };
-  eventsByShareId[shareId] = [event];
-
-  // 全員に通知
-  io.emit("eventUpdated", { shareId, events: eventsByShareId[shareId] });
-
-  res.json({ shareId });
+// API ルート (例)
+app.get("/api/hello", (req, res) => {
+  res.json({ message: "Hello from backend!" });
 });
 
-// 特定のリンクのイベント取得
-app.get("/api/events/:shareId", (req, res) => {
-  const { shareId } = req.params;
-  res.json(eventsByShareId[shareId] || []);
+// ✅ React のルート対応（SPA対策）
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// サーバー起動
+// Socket.io
+io.on("connection", (socket) => {
+  console.log("ユーザー接続:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("ユーザー切断:", socket.id);
+  });
+});
+
+// ポート設定
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`✅ Backend running on port ${PORT}`);
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
 });
