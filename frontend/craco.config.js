@@ -1,20 +1,18 @@
-const path = require("path");
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 module.exports = {
   webpack: {
+    plugins: {
+      add: [new NodePolyfillPlugin()]
+    },
     configure: (webpackConfig) => {
       webpackConfig.resolve.fallback = {
-        ...webpackConfig.resolve.fallback,
+        fs: false,
         path: require.resolve("path-browserify"),
-        os: require.resolve("os-browserify/browser"),
-        stream: require.resolve("stream-browserify"),
         http: require.resolve("stream-http"),
         https: require.resolve("https-browserify"),
-        zlib: require.resolve("browserify-zlib"),
-        url: require.resolve("url/"),
-        util: require.resolve("util/"),
-        buffer: require.resolve("buffer/"),
-        process: require.resolve("process/browser")
+        os: require.resolve("os-browserify/browser"),
+        buffer: require.resolve("buffer/")
       };
       return webpackConfig;
     }
