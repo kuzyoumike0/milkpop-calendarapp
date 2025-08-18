@@ -72,6 +72,50 @@ app.post("/api/shared", async (req, res) => {
   }
 });
 
+// === 予定編集 ===
+app.put("/api/shared/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title } = req.body;
+
+    if (!title) return res.status(400).json({ error: "title is required" });
+
+    const result = await pool.query(
+      "UPDATE shared_schedules SET title = $1 WHERE id = $2 RETURNING *",
+      [title, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    res.json({ message: "Event updated successfully", event: result.rows[0] });
+  } catch (err) {
+    console.error("予定編集エラー:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// === 予定削除 ===
+app.delete("/api/shared/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query("DELETE FROM shared_schedules WHERE id = $1 RETURNING *", [
+      id,
+    ]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    res.json({ message: "Event deleted successfully" });
+  } catch (err) {
+    console.error("予定削除エラー:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // === 静的ファイル配信 (React ビルド済み) ===
 app.use(express.static(path.join(__dirname, "public")));
 
