@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const app = express();
 
@@ -25,8 +26,16 @@ const pool = new Pool(
 // === DB初期化 ===
 async function initDB() {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS shared_links (
+      id TEXT PRIMARY KEY,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS shared_schedules (
       id SERIAL PRIMARY KEY,
+      link_id TEXT NOT NULL REFERENCES shared_links(id) ON DELETE CASCADE,
       date DATE NOT NULL,
       title TEXT NOT NULL,
       username TEXT NOT NULL
@@ -35,25 +44,7 @@ async function initDB() {
 }
 initDB();
 
-// === 予定取得 ===
-app.get("/api/shared", async (req, res) => {
-  try {
-    const { date } = req.query;
-    if (!date) return res.status(400).json({ error: "date is required" });
-
-    const result = await pool.query(
-      "SELECT id, date, title, username FROM shared_schedules WHERE date = $1 ORDER BY id ASC",
-      [date]
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error("予定取得エラー:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// === 予定追加 ===
+// === 新しいリンク発行 & 予定追加 ===
 app.post("/api/shared", async (req, res) => {
   try {
     const { date, title, username } = req.body;
@@ -61,71 +52,39 @@ app.post("/api/shared", async (req, res) => {
       return res.status(400).json({ error: "date, title, username are required" });
     }
 
+    // 新しいリンクIDを発行
+    const linkId = uuidv4();
+    await pool.query("INSERT INTO shared_links (id) VALUES ($1)", [linkId]);
+
+    // 予定を保存
     await pool.query(
-      "INSERT INTO shared_schedules (date, title, username) VALUES ($1, $2, $3)",
-      [date, title, username]
+      "INSERT INTO shared_schedules (link_id, date, title, username) VALUES ($1, $2, $3, $4)",
+      [linkId, date, title, username]
     );
 
-    res.status(201).json({ message: "Event added successfully" });
+    res.status(201).json({ message: "Event added successfully", linkId });
   } catch (err) {
     console.error("予定追加エラー:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// === 予定編集 ===
-app.put("/api/shared/:id", async (req, res) => {
+// === リンクページの予定一覧 ===
+app.get("/api/sharelink/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, username } = req.body;
-
-    if (!title || !username) {
-      return res.status(400).json({ error: "title and username are required" });
-    }
-
     const result = await pool.query(
-      "UPDATE shared_schedules SET title = $1 WHERE id = $2 AND username = $3 RETURNING *",
-      [title, id, username]
+      "SELECT id, date, title, username FROM shared_schedules WHERE link_id = $1 ORDER BY date ASC",
+      [id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(403).json({ error: "Not authorized or event not found" });
-    }
-
-    res.json({ message: "Event updated successfully", event: result.rows[0] });
+    res.json(result.rows);
   } catch (err) {
-    console.error("予定編集エラー:", err);
+    console.error("共有リンク取得エラー:", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// === 予定削除 ===
-app.delete("/api/shared/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { username } = req.body;
-
-    if (!username) {
-      return res.status(400).json({ error: "username is required" });
-    }
-
-    const result = await pool.query(
-      "DELETE FROM shared_schedules WHERE id = $1 AND username = $2 RETURNING *",
-      [id, username]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(403).json({ error: "Not authorized or event not found" });
-    }
-
-    res.json({ message: "Event deleted successfully" });
-  } catch (err) {
-    console.error("予定削除エラー:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// === 静的ファイル配信 (React ビルド済み) ===
+// === 静的ファイル配信 ===
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("*", (req, res) => {
