@@ -28,7 +28,8 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS shared_schedules (
       id SERIAL PRIMARY KEY,
       date DATE NOT NULL,
-      title TEXT NOT NULL
+      title TEXT NOT NULL,
+      username TEXT NOT NULL
     );
   `);
 }
@@ -41,7 +42,7 @@ app.get("/api/shared", async (req, res) => {
     if (!date) return res.status(400).json({ error: "date is required" });
 
     const result = await pool.query(
-      "SELECT id, date, title FROM shared_schedules WHERE date = $1 ORDER BY id ASC",
+      "SELECT id, date, title, username FROM shared_schedules WHERE date = $1 ORDER BY id ASC",
       [date]
     );
 
@@ -55,15 +56,15 @@ app.get("/api/shared", async (req, res) => {
 // === 予定追加 ===
 app.post("/api/shared", async (req, res) => {
   try {
-    const { date, title } = req.body;
-    if (!date || !title) {
-      return res.status(400).json({ error: "date and title are required" });
+    const { date, title, username } = req.body;
+    if (!date || !title || !username) {
+      return res.status(400).json({ error: "date, title, username are required" });
     }
 
-    await pool.query("INSERT INTO shared_schedules (date, title) VALUES ($1, $2)", [
-      date,
-      title,
-    ]);
+    await pool.query(
+      "INSERT INTO shared_schedules (date, title, username) VALUES ($1, $2, $3)",
+      [date, title, username]
+    );
 
     res.status(201).json({ message: "Event added successfully" });
   } catch (err) {
@@ -76,17 +77,19 @@ app.post("/api/shared", async (req, res) => {
 app.put("/api/shared/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title } = req.body;
+    const { title, username } = req.body;
 
-    if (!title) return res.status(400).json({ error: "title is required" });
+    if (!title || !username) {
+      return res.status(400).json({ error: "title and username are required" });
+    }
 
     const result = await pool.query(
-      "UPDATE shared_schedules SET title = $1 WHERE id = $2 RETURNING *",
-      [title, id]
+      "UPDATE shared_schedules SET title = $1 WHERE id = $2 AND username = $3 RETURNING *",
+      [title, id, username]
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Event not found" });
+      return res.status(403).json({ error: "Not authorized or event not found" });
     }
 
     res.json({ message: "Event updated successfully", event: result.rows[0] });
@@ -100,13 +103,19 @@ app.put("/api/shared/:id", async (req, res) => {
 app.delete("/api/shared/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const { username } = req.body;
 
-    const result = await pool.query("DELETE FROM shared_schedules WHERE id = $1 RETURNING *", [
-      id,
-    ]);
+    if (!username) {
+      return res.status(400).json({ error: "username is required" });
+    }
+
+    const result = await pool.query(
+      "DELETE FROM shared_schedules WHERE id = $1 AND username = $2 RETURNING *",
+      [id, username]
+    );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Event not found" });
+      return res.status(403).json({ error: "Not authorized or event not found" });
     }
 
     res.json({ message: "Event deleted successfully" });
@@ -119,7 +128,6 @@ app.delete("/api/shared/:id", async (req, res) => {
 // === 静的ファイル配信 (React ビルド済み) ===
 app.use(express.static(path.join(__dirname, "public")));
 
-// React Router 対応
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
