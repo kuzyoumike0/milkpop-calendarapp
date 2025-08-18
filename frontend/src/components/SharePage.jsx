@@ -7,10 +7,10 @@ export default function SharePage() {
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [newEvent, setNewEvent] = useState("");
+  const [username, setUsername] = useState("");
   const [editEventId, setEditEventId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
 
-  // 日付フォーマット関数
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -18,7 +18,6 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // イベント取得
   const fetchEvents = (selectedDate) => {
     const formattedDate = formatDate(selectedDate);
     axios
@@ -27,15 +26,13 @@ export default function SharePage() {
       .catch((err) => console.error("イベント取得エラー:", err));
   };
 
-  // 初期ロード & 日付変更時
   useEffect(() => {
     fetchEvents(date);
   }, [date]);
 
-  // イベント登録
   const handleAddEvent = (e) => {
     e.preventDefault();
-    if (!newEvent.trim()) return;
+    if (!newEvent.trim() || !username.trim()) return;
 
     const formattedDate = formatDate(date);
 
@@ -43,55 +40,61 @@ export default function SharePage() {
       .post("/api/shared", {
         date: formattedDate,
         title: newEvent,
+        username,
       })
       .then(() => {
         setNewEvent("");
-        fetchEvents(date); // 再取得
+        fetchEvents(date);
       })
       .catch((err) => console.error("イベント登録エラー:", err));
   };
 
-  // イベント編集開始
   const startEdit = (event) => {
     setEditEventId(event.id);
     setEditTitle(event.title);
   };
 
-  // イベント編集確定
   const handleEditEvent = (id) => {
-    if (!editTitle.trim()) return;
+    if (!editTitle.trim() || !username.trim()) return;
 
     axios
-      .put(`/api/shared/${id}`, { title: editTitle })
+      .put(`/api/shared/${id}`, { title: editTitle, username })
       .then(() => {
         setEditEventId(null);
         setEditTitle("");
         fetchEvents(date);
       })
-      .catch((err) => console.error("イベント編集エラー:", err));
+      .catch((err) => alert("編集権限がありません"));
   };
 
-  // イベント削除
   const handleDeleteEvent = (id) => {
     if (!window.confirm("本当に削除しますか？")) return;
+    if (!username.trim()) return;
 
     axios
-      .delete(`/api/shared/${id}`)
-      .then(() => {
-        fetchEvents(date);
-      })
-      .catch((err) => console.error("イベント削除エラー:", err));
+      .delete(`/api/shared/${id}`, { data: { username } })
+      .then(() => fetchEvents(date))
+      .catch((err) => alert("削除権限がありません"));
   };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>共有ページ</h1>
-      <p style={styles.subtitle}>カレンダーから日付を選び、予定を確認・追加・編集・削除できます</p>
+      <p style={styles.subtitle}>予定を登録した本人のみ編集・削除できます</p>
 
-      {/* カレンダー */}
+      {/* ユーザー名入力 */}
+      <div style={styles.usernameBox}>
+        <input
+          type="text"
+          placeholder="ユーザー名を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={styles.input}
+        />
+      </div>
+
       <Calendar onChange={setDate} value={date} />
 
-      {/* 選択日表示 */}
       <h2 style={styles.dateTitle}>選択日: {formatDate(date)}</h2>
 
       {/* 予定追加フォーム */}
@@ -136,19 +139,25 @@ export default function SharePage() {
                 </>
               ) : (
                 <>
-                  <span>{event.title}</span>
-                  <button
-                    onClick={() => startEdit(event)}
-                    style={styles.editButton}
-                  >
-                    編集
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEvent(event.id)}
-                    style={styles.deleteButton}
-                  >
-                    削除
-                  </button>
+                  <span>
+                    {event.title}（by {event.username}）
+                  </span>
+                  {event.username === username && (
+                    <>
+                      <button
+                        onClick={() => startEdit(event)}
+                        style={styles.editButton}
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEvent(event.id)}
+                        style={styles.deleteButton}
+                      >
+                        削除
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </li>
@@ -162,107 +171,19 @@ export default function SharePage() {
 }
 
 const styles = {
-  container: {
-    maxWidth: "800px",
-    margin: "0 auto",
-    padding: "20px",
-    fontFamily: "sans-serif",
-  },
-  title: {
-    textAlign: "center",
-    fontSize: "2rem",
-    marginBottom: "10px",
-    color: "#333",
-  },
-  subtitle: {
-    textAlign: "center",
-    fontSize: "1rem",
-    marginBottom: "20px",
-    color: "#666",
-  },
-  dateTitle: {
-    marginTop: "20px",
-    fontSize: "1.2rem",
-    color: "#444",
-  },
-  form: {
-    display: "flex",
-    justifyContent: "center",
-    margin: "20px 0",
-    gap: "10px",
-  },
-  input: {
-    flex: 1,
-    padding: "8px",
-    fontSize: "1rem",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-  },
-  addButton: {
-    padding: "8px 16px",
-    fontSize: "1rem",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    background: "#2196F3",
-    color: "white",
-  },
-  saveButton: {
-    marginLeft: "8px",
-    padding: "6px 12px",
-    fontSize: "0.9rem",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    background: "#4CAF50",
-    color: "white",
-  },
-  cancelButton: {
-    marginLeft: "8px",
-    padding: "6px 12px",
-    fontSize: "0.9rem",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    background: "#9E9E9E",
-    color: "white",
-  },
-  editButton: {
-    marginLeft: "12px",
-    padding: "6px 12px",
-    fontSize: "0.9rem",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    background: "#FFC107",
-    color: "white",
-  },
-  deleteButton: {
-    marginLeft: "8px",
-    padding: "6px 12px",
-    fontSize: "0.9rem",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    background: "#F44336",
-    color: "white",
-  },
-  eventList: {
-    listStyle: "none",
-    padding: 0,
-    marginTop: "10px",
-  },
-  eventItem: {
-    padding: "10px",
-    background: "#f1f1f1",
-    borderRadius: "6px",
-    marginBottom: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  noEvent: {
-    color: "#888",
-    fontStyle: "italic",
-  },
+  container: { maxWidth: "800px", margin: "0 auto", padding: "20px", fontFamily: "sans-serif" },
+  title: { textAlign: "center", fontSize: "2rem", marginBottom: "10px", color: "#333" },
+  subtitle: { textAlign: "center", fontSize: "1rem", marginBottom: "20px", color: "#666" },
+  usernameBox: { textAlign: "center", marginBottom: "15px" },
+  dateTitle: { marginTop: "20px", fontSize: "1.2rem", color: "#444" },
+  form: { display: "flex", justifyContent: "center", margin: "20px 0", gap: "10px" },
+  input: { padding: "8px", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "6px" },
+  addButton: { padding: "8px 16px", background: "#2196F3", color: "white", border: "none", borderRadius: "6px" },
+  saveButton: { marginLeft: "8px", padding: "6px 12px", background: "#4CAF50", color: "white", border: "none", borderRadius: "6px" },
+  cancelButton: { marginLeft: "8px", padding: "6px 12px", background: "#9E9E9E", color: "white", border: "none", borderRadius: "6px" },
+  editButton: { marginLeft: "12px", padding: "6px 12px", background: "#FFC107", color: "white", border: "none", borderRadius: "6px" },
+  deleteButton: { marginLeft: "8px", padding: "6px 12px", background: "#F44336", color: "white", border: "none", borderRadius: "6px" },
+  eventList: { listStyle: "none", padding: 0, marginTop: "10px" },
+  eventItem: { padding: "10px", background: "#f1f1f1", borderRadius: "6px", marginBottom: "8px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  noEvent: { color: "#888", fontStyle: "italic" },
 };
