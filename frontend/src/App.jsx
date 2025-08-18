@@ -1,15 +1,19 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import CalendarView from "./CalendarView";
+import TopPage from "./TopPage";
+import PersonalPage from "./PersonalPage";
 import SharePage from "./SharePage";
 
-export default function App() {
+function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<CalendarView />} />
+        <Route path="/" element={<TopPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
         <Route path="/share/:shareId" element={<SharePage />} />
       </Routes>
     </Router>
   );
 }
+
+export default App;
