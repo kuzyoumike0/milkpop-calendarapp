@@ -1,45 +1,43 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import "./personal.css";
+import * as JapaneseHolidays from "japanese-holidays";
 
 export default function PersonalPage() {
   const [date, setDate] = useState(new Date());
   const [title, setTitle] = useState("");
 
   const handleSave = async () => {
-    try {
-      await axios.post("/api/personal", {
-        date: date.toISOString().split("T")[0],
-        title,
-      });
-      alert("予定を保存しました！");
-    } catch (err) {
-      console.error("保存失敗:", err);
-      alert("予定の保存に失敗しました");
-    }
+    await axios.post("/api/share-link", {
+      dates: [date.toISOString().split("T")[0]],
+      slotmode: "allday",
+      slot: "終日",
+      start_time: "09",
+      end_time: "18",
+      title,
+      username: "user1"
+    });
+    alert("保存しました！");
   };
 
   return (
-    <div className="personal-container">
-      <h2>📅 個人スケジュール</h2>
-
-      <div className="calendar-box">
-        <Calendar value={date} onChange={setDate} />
-      </div>
-
+    <div className="page">
+      <h2>個人スケジュール</h2>
+      <Calendar
+        onChange={setDate}
+        value={date}
+        tileClassName={({ date }) =>
+          JapaneseHolidays.isHoliday(date)
+            ? "holiday"
+            : ""
+        }
+      />
       <input
-        type="text"
-        placeholder="予定のタイトル"
+        placeholder="予定タイトル"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="input-box"
       />
-
-      <button onClick={handleSave} className="save-btn">
-        保存
-      </button>
+      <button onClick={handleSave}>保存</button>
     </div>
   );
 }
