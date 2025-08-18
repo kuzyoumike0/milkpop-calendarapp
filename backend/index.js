@@ -1,43 +1,35 @@
 const express = require("express");
 const path = require("path");
-const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const PORT = process.env.PORT || 8080;
 
 // ミドルウェア
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// ✅ React ビルドされたファイルを配信
-const frontendPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(frontendPath));
-
-// API ルート (例)
+// -----------------------------
+// APIルート例
+// -----------------------------
 app.get("/api/hello", (req, res) => {
-  res.json({ message: "Hello from backend!" });
+  res.json({ message: "Hello from backend API!" });
 });
 
-// ✅ React のルート対応（SPA対策）
+// -----------------------------
+// React のビルド成果物を配信
+// -----------------------------
+const frontendPath = path.join(__dirname, "frontend/build");
+app.use(express.static(frontendPath));
+
+// React Router 対応: どのルートでも index.html を返す
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// Socket.io
-io.on("connection", (socket) => {
-  console.log("ユーザー接続:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("ユーザー切断:", socket.id);
-  });
-});
-
-// ポート設定
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
+// -----------------------------
+// サーバー起動
+// -----------------------------
+app.listen(PORT, () => {
+  console.log(`✅ Calendar backend running on port ${PORT}`);
 });
