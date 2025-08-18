@@ -1,46 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function PersonalPage() {
   const [events, setEvents] = useState([]);
-  const [event, setEvent] = useState("");
-  const [time, setTime] = useState("");
+  const [title, setTitle] = useState("");
 
-  const addEvent = () => {
-    if (!event) return;
-    const newEvent = { event, time };
-    const updated = [...events, newEvent].sort((a, b) =>
-      (a.time || "").localeCompare(b.time || "")
-    );
-    setEvents(updated);
-    setEvent("");
-    setTime("");
+  useEffect(() => {
+    axios.get("/api/personal").then((res) => setEvents(res.data));
+  }, []);
+
+  const addEvent = async () => {
+    if (!title) return;
+    await axios.post("/api/personal", { title });
+    setEvents([...events, { title }]);
+    setTitle("");
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>👤 個人スケジュール</h1>
-      <div>
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="予定を入力"
-          value={event}
-          onChange={(e) => setEvent(e.target.value)}
-        />
-        <button onClick={addEvent}>追加</button>
-      </div>
-
-      <h2>予定一覧</h2>
+    <div style={{ padding: 20 }}>
+      <h2>個人スケジュール</h2>
+      <input
+        placeholder="予定名"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <button onClick={addEvent}>追加</button>
       <ul>
-        {events.map((e, i) => (
-          <li key={i}>
-            {e.time ? `[${e.time}] ` : ""}
-            {e.event}
-          </li>
+        {events.map((ev, i) => (
+          <li key={i}>{ev.title}</li>
         ))}
       </ul>
     </div>
