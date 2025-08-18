@@ -1,7 +1,12 @@
 {
+  "name": "calendar-frontend",
+  "version": "1.4.1",
+  "private": true,
   "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0",
     "axios": "^1.7.9",
-    "socket.io-client": "^4.8.1",
     "path-browserify": "^1.0.1",
     "os-browserify": "^0.3.0",
     "stream-browserify": "^3.0.0",
@@ -12,5 +17,15 @@
     "util": "^0.12.5",
     "buffer": "^6.0.3",
     "process": "^0.11.10"
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096 --openssl-legacy-provider' GENERATE_SOURCEMAP=false craco build",
+    "test": "craco test",
+    "eject": "craco eject"
   }
 }
