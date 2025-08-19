@@ -24,9 +24,12 @@ export default function SharePage() {
       const formattedDate = formatDate(date);
       try {
         const res = await axios.get(`/api/shared?date=${formattedDate}`);
-        setEvents(res.data);
+        console.log("✅ /api/shared response:", res.data);
+        // ✅ 常に配列で state に入れる
+        setEvents(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error("予定取得に失敗:", err);
+        console.error("❌ 予定取得に失敗:", err);
+        setEvents([]); // mapエラー防止
       }
     };
     fetchEvents();
@@ -48,9 +51,9 @@ export default function SharePage() {
       setUsername("");
       setTimeSlot("全日");
       const res = await axios.get(`/api/shared?date=${formatDate(date)}`);
-      setEvents(res.data);
+      setEvents(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error("予定登録に失敗:", err);
+      console.error("❌ 予定登録に失敗:", err);
       alert("予定登録に失敗しました");
     }
   };
@@ -61,20 +64,20 @@ export default function SharePage() {
       const res = await axios.post("/api/share", {});
       setLinkId(res.data.linkId);
     } catch (err) {
-      console.error("共有リンク作成に失敗:", err);
+      console.error("❌ 共有リンク作成に失敗:", err);
       alert("共有リンクの作成に失敗しました");
     }
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">日程共有ページ</h2>
+    <div className="p-4 max-w-2xl mx-auto">
+      <h2 className="text-xl font-bold mb-4">共有スケジュール</h2>
 
       {/* カレンダー */}
-      <Calendar value={date} onChange={setDate} />
+      <Calendar value={date} onChange={setDate} className="mb-4" />
 
       {/* 入力フォーム */}
-      <div className="mt-4 space-y-2">
+      <div className="space-y-2 border p-4 rounded shadow">
         <input
           type="text"
           placeholder="名前"
@@ -99,31 +102,32 @@ export default function SharePage() {
         </button>
       </div>
 
+      {/* イベント表示 */}
+      <div className="mt-6">
+        <h3 className="font-semibold">予定一覧</h3>
+        <ul className="list-disc pl-5 space-y-1">
+          {Array.isArray(events) &&
+            events.map((event) => (
+              <li key={event.id}>
+                {event.username} - {event.date} - {event.timeslot}
+              </li>
+            ))}
+        </ul>
+      </div>
+
       {/* 共有リンク発行 */}
       <div className="mt-6">
         <button
           onClick={handleCreateShareLink}
           className="bg-green-500 text-white px-4 py-2 rounded"
         >
-          共有リンク発行
+          共有リンクを発行
         </button>
         {linkId && (
-          <div className="mt-2">
-            <span className="font-mono">{`${window.location.origin}/share/${linkId}`}</span>
-          </div>
+          <p className="mt-2 break-words">
+            共有リンク: {window.location.origin}/share/{linkId}
+          </p>
         )}
-      </div>
-
-      {/* 登録済み予定一覧 */}
-      <div className="mt-6">
-        <h3 className="font-semibold mb-2">登録済み予定</h3>
-        <ul className="list-disc pl-6">
-          {events.map((e) => (
-            <li key={e.id}>
-              {e.username} - {e.timeslot}
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );
