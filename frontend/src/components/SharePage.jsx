@@ -10,8 +10,8 @@ export default function SharePage() {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
   const [timeSlot, setTimeSlot] = useState("終日");
-  const [startHour, setStartHour] = useState("0");
-  const [endHour, setEndHour] = useState("1");
+  const [startHour, setStartHour] = useState(0);
+  const [endHour, setEndHour] = useState(1);
 
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
@@ -42,14 +42,17 @@ export default function SharePage() {
   };
 
   const createLinkAndSave = async () => {
+    if (parseInt(endHour) <= parseInt(startHour)) {
+      alert("終了時刻は開始時刻より後にしてください。");
+      return;
+    }
+
     try {
-      // 1. 新しいリンクを作成
       const res = await axios.post("/api/create-link");
       const linkId = res.data.linkId;
       const url = `${window.location.origin}/share/${linkId}`;
       setLink(url);
 
-      // 2. 選択した予定を登録
       if (username && selectedDates.length > 0) {
         await axios.post(`/api/schedules/${linkId}`, {
           username,
@@ -90,11 +93,20 @@ export default function SharePage() {
         </select>
       </div>
 
-      {/* 時刻範囲プルダウン */}
+      {/* 開始〜終了プルダウン */}
       <div style={{ marginTop: "10px" }}>
         <label>開始時刻: </label>
-        <select value={startHour} onChange={(e) => setStartHour(e.target.value)}>
-          {Array.from({ length: 24 }, (_, i) => (
+        <select
+          value={startHour}
+          onChange={(e) => {
+            const newStart = parseInt(e.target.value);
+            setStartHour(newStart);
+            if (parseInt(endHour) <= newStart) {
+              setEndHour(newStart + 1); // 自動で1時間後に調整
+            }
+          }}
+        >
+          {Array.from({ length: 23 }, (_, i) => (
             <option key={i} value={i}>
               {i}時
             </option>
@@ -102,12 +114,15 @@ export default function SharePage() {
         </select>
 
         <label style={{ marginLeft: "10px" }}>終了時刻: </label>
-        <select value={endHour} onChange={(e) => setEndHour(e.target.value)}>
-          {Array.from({ length: 24 }, (_, i) => (
-            <option key={i} value={i}>
-              {i}時
-            </option>
-          ))}
+        <select value={endHour} onChange={(e) => setEndHour(parseInt(e.target.value))}>
+          {Array.from({ length: 24 - (startHour + 1) }, (_, i) => {
+            const hour = startHour + 1 + i;
+            return (
+              <option key={hour} value={hour}>
+                {hour}時
+              </option>
+            );
+          })}
         </select>
       </div>
 
