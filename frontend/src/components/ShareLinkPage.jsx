@@ -2,112 +2,89 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-function ShareLinkPage() {
-  const { id } = useParams(); // /share/:id
+export default function ShareLinkPage() {
+  const { linkId } = useParams();
   const [title, setTitle] = useState("");
-  const [schedules, setSchedules] = useState([]); // [{date, timeslot}]
-  const [responses, setResponses] = useState({}); // { "2025-08-19|昼": { "Alice": "◯", "Bob": "×" } }
+  const [dates, setDates] = useState([]); // 選択された日付
+  const [answers, setAnswers] = useState([]); // ユーザー回答
   const [username, setUsername] = useState("");
-  const [choices, setChoices] = useState({});
+  const [myChoices, setMyChoices] = useState({}); // { "2025-08-20": "◯" }
 
+  // 日程取得
   useEffect(() => {
-    axios
-      .get(`/api/links/${id}`)
-      .then((res) => {
-        setTitle(res.data.title);
-        setSchedules(res.data.schedules || []);
-        setResponses(res.data.responses || {}); // サーバーが回答一覧を返す
-      })
-      .catch((err) => console.error(err));
-  }, [id]);
+    axios.get(`/api/link/${linkId}`).then((res) => {
+      setTitle(res.data.title);
+      setDates(res.data.dates || []);
+      setAnswers(res.data.answers || []);
+    });
+  }, [linkId]);
 
-  const handleChoiceChange = (date, timeslot, value) => {
-    const key = `${date}|${timeslot}`;
-    setChoices((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const submitChoices = async () => {
+  // 回答送信
+  const submit = async () => {
     try {
-      await axios.post(`/api/links/${id}/schedules`, {
+      await axios.post(`/api/link/${linkId}/answer`, {
         username,
-        choices,
+        choices: myChoices,
       });
-      alert("回答を保存しました！");
-      window.location.reload(); // 再取得して更新
+      const res = await axios.get(`/api/link/${linkId}`);
+      setAnswers(res.data.answers || []);
     } catch (err) {
       console.error(err);
-      alert("保存に失敗しました");
+      alert("送信失敗");
     }
   };
 
-  // すべてのユーザー名を収集
-  const allUsers = Array.from(
-    new Set(
-      Object.values(responses)
-        .flatMap((resp) => Object.keys(resp))
-        .concat(username ? [username] : [])
-    )
-  );
-
+  // マトリクス表で表示
   return (
     <div style={{ padding: "1rem" }}>
-      <h2>共有スケジュール: {title}</h2>
+      <h2>{title}</h2>
 
-      <div style={{ marginBottom: "1rem" }}>
+      <label>
+        名前:
         <input
-          type="text"
-          placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          style={{ marginLeft: "0.5rem" }}
         />
-      </div>
+      </label>
 
-      <table border="1" cellPadding="5" style={{ width: "100%", textAlign: "center" }}>
+      <table border="1" cellPadding="5" style={{ marginTop: "1rem" }}>
         <thead>
           <tr>
             <th>日付</th>
-            <th>時間帯</th>
-            {allUsers.map((u) => (
-              <th key={u}>{u}</th>
+            <th>自分の回答</th>
+            {answers.map((a, i) => (
+              <th key={i}>{a.username}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {schedules.map((s, idx) => {
-            const key = `${s.date}|${s.timeslot}`;
-            return (
-              <tr key={idx}>
-                <td>{s.date}</td>
-                <td>{s.timeslot}</td>
-                {allUsers.map((u) => (
-                  <td key={u}>
-                    {u === username ? (
-                      <select
-                        value={choices[key] || responses[key]?.[u] || ""}
-                        onChange={(e) =>
-                          handleChoiceChange(s.date, s.timeslot, e.target.value)
-                        }
-                      >
-                        <option value="">未選択</option>
-                        <option value="◯">◯</option>
-                        <option value="×">×</option>
-                      </select>
-                    ) : (
-                      responses[key]?.[u] || ""
-                    )}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+          {dates.map((d) => (
+            <tr key={d}>
+              <td>{d}</td>
+              <td>
+                <select
+                  value={myChoices[d] || ""}
+                  onChange={(e) =>
+                    setMyChoices({ ...myChoices, [d]: e.target.value })
+                  }
+                >
+                  <option value="">-</option>
+                  <option value="◯">◯</option>
+                  <option value="×">×</option>
+                </select>
+              </td>
+              {answers.map((a, i) => (
+                <td key={i}>{a.choices?.[d] || "-"}</td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
 
-      <button onClick={submitChoices} style={{ marginTop: "1rem" }}>
-        保存する
+      <button onClick={submit} style={{ marginTop: "1rem" }}>
+        回答を送信
       </button>
     </div>
   );
 }
-
-export default ShareLinkPage;
