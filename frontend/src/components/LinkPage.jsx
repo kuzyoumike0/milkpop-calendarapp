@@ -5,138 +5,185 @@ import axios from "axios";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [dateRange, setDateRange] = useState(null);
-  const [multiDates, setMultiDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("範囲選択");
-  const [timeslot, setTimeslot] = useState("終日");
-  const [shareUrl, setShareUrl] = useState("");
+  const [dates, setDates] = useState([]); // 複数 or 範囲
+  const [rangeMode, setRangeMode] = useState("single");
+  const [timeSlots, setTimeSlots] = useState([]); // 選択された時間帯
+  const [selectedTime, setSelectedTime] = useState("全日");
+  const [customTime, setCustomTime] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
 
-  // 日付クリック
-  const handleDateChange = (value) => {
-    if (rangeMode === "範囲選択") {
-      setDateRange(value);
+  // 日付選択
+  const handleDateChange = (date) => {
+    if (rangeMode === "range") {
+      setDates(date);
     } else {
-      const dateStr = value.toISOString().slice(0, 10);
-      if (multiDates.find(d => d.toISOString().slice(0, 10) === dateStr)) {
-        // 既に選択されていたら解除
-        setMultiDates(multiDates.filter(d => d.toISOString().slice(0, 10) !== dateStr));
-      } else {
-        setMultiDates([...multiDates, value]);
-      }
+      setDates(Array.isArray(date) ? date : [date]);
     }
+  };
+
+  // 時間帯追加
+  const addTimeSlot = () => {
+    const value = customTime || selectedTime;
+    if (value && !timeSlots.includes(value)) {
+      setTimeSlots([...timeSlots, value]);
+    }
+    setCustomTime("");
+  };
+
+  // 時間帯削除
+  const removeTimeSlot = (slot) => {
+    setTimeSlots(timeSlots.filter((s) => s !== slot));
   };
 
   // 登録処理
   const handleSubmit = async () => {
     try {
-      let start_date, end_date, dates = [];
-
-      if (rangeMode === "範囲選択" && Array.isArray(dateRange)) {
-        start_date = dateRange[0];
-        end_date = dateRange[1];
-      } else if (rangeMode === "範囲選択") {
-        start_date = dateRange;
-        end_date = dateRange;
-      } else {
-        const sorted = [...multiDates].sort((a, b) => a - b);
-        start_date = sorted[0];
-        end_date = sorted[sorted.length - 1];
-        dates = sorted;
-      }
-
-      const res = await axios.post("/api/schedule", {
+      const payload = {
         title,
-        start_date: start_date?.toISOString().slice(0, 10),
-        end_date: end_date?.toISOString().slice(0, 10),
-        timeslot,
-        range_mode: rangeMode,
-        dates: dates.map(d => d.toISOString().slice(0, 10)),
-      });
+        start_date:
+          rangeMode === "range"
+            ? dates[0].toISOString().slice(0, 10)
+            : dates[0]?.toISOString().slice(0, 10),
+        end_date:
+          rangeMode === "range"
+            ? dates[1].toISOString().slice(0, 10)
+            : dates[dates.length - 1]?.toISOString().slice(0, 10),
+        timeslot: timeSlots.join(","), // カンマ区切りで保存
+      };
 
-      setShareUrl(window.location.origin + res.data.url);
+      const res = await axios.post("/api/schedule", payload);
+      setLinkUrl(`${window.location.origin}/share/${res.data.linkid}`);
     } catch (err) {
       console.error(err);
-      alert("登録エラー");
+      alert("登録に失敗しました");
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-gradient-to-br from-[#1a1a1a] via-black to-[#0d0d0d] p-8 rounded-3xl shadow-2xl space-y-6 border border-gray-700">
-      <h2 className="text-3xl font-extrabold text-center text-[#FDB9C8] drop-shadow-lg">
-        日程登録
+    <div className="max-w-4xl mx-auto bg-[#111] text-white p-8 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-center text-[#FDB9C8]">
+        日程登録ページ
       </h2>
 
-      {/* タイトル */}
-      <input
-        className="w-full p-3 text-black rounded-xl shadow focus:ring-4 focus:ring-[#FDB9C8]"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-      />
-
-      {/* カレンダー */}
-      <div className="bg-white p-4 rounded-2xl shadow-lg">
-        <Calendar
-          onClickDay={handleDateChange}
-          value={rangeMode === "範囲選択" ? dateRange : null}
-          selectRange={rangeMode === "範囲選択"}
-          tileClassName={({ date }) => {
-            const dateStr = date.toISOString().slice(0, 10);
-            if (rangeMode === "複数選択" &&
-                multiDates.find(d => d.toISOString().slice(0, 10) === dateStr)) {
-              return "selected-day";
-            }
-            return "";
-          }}
+      {/* タイトル入力 */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">タイトル</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-3 rounded-xl text-black"
         />
       </div>
 
-      {/* 選択モード */}
-      <div className="flex space-x-6 justify-center text-gray-300">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            checked={rangeMode === "範囲選択"}
-            onChange={() => { setRangeMode("範囲選択"); setMultiDates([]); }}
-          />
-          <span>範囲選択</span>
-        </label>
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            checked={rangeMode === "複数選択"}
-            onChange={() => { setRangeMode("複数選択"); setDateRange(null); }}
-          />
-          <span>複数選択</span>
-        </label>
+      {/* 範囲選択 / 複数選択 */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">日付選択モード</label>
+        <div className="flex space-x-6">
+          <label>
+            <input
+              type="radio"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            複数選択
+          </label>
+        </div>
       </div>
 
-      {/* 時間帯 */}
-      <select
-        value={timeslot}
-        onChange={e => setTimeslot(e.target.value)}
-        className="w-full p-3 text-black rounded-xl shadow focus:ring-4 focus:ring-[#004CA0]"
-      >
-        <option>終日</option>
-        <option>昼</option>
-        <option>夜</option>
-        <option>1時から0時</option>
-      </select>
+      {/* カレンダー */}
+      <div className="mb-6 bg-black p-4 rounded-xl">
+        <Calendar
+          onChange={handleDateChange}
+          selectRange={rangeMode === "range"}
+          value={dates}
+          tileClassName={({ date }) =>
+            dates.some((d) => d.toDateString() === date.toDateString())
+              ? "bg-[#FDB9C8] text-black rounded-full"
+              : null
+          }
+        />
+      </div>
 
-      {/* 保存ボタン */}
-      <button
-        onClick={handleSubmit}
-        className="w-full bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] hover:scale-105 transform transition font-bold text-white py-3 rounded-2xl shadow-xl"
-      >
-        共有リンク発行
-      </button>
+      {/* 時間帯追加 */}
+      <div className="mb-6">
+        <label className="block mb-2 font-medium">時間帯</label>
+        <div className="flex space-x-4">
+          <select
+            value={selectedTime}
+            onChange={(e) => setSelectedTime(e.target.value)}
+            className="p-2 rounded-xl text-black"
+          >
+            <option value="全日">全日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
+          <input
+            type="text"
+            placeholder="例: 9:00-12:00"
+            value={customTime}
+            onChange={(e) => setCustomTime(e.target.value)}
+            className="p-2 rounded-xl text-black"
+          />
+          <button
+            type="button"
+            onClick={addTimeSlot}
+            className="px-4 py-2 bg-[#FDB9C8] text-black font-bold rounded-xl hover:scale-105 transform transition"
+          >
+            追加
+          </button>
+        </div>
 
-      {/* 共有URL */}
-      {shareUrl && (
-        <div className="bg-[#222] p-4 rounded-2xl shadow text-center animate-fade-in">
-          <p className="text-gray-300 mb-2">共有URL:</p>
-          <a href={shareUrl} className="text-[#FDB9C8] font-mono break-all hover:underline">
-            {shareUrl}
+        {/* 選択中の時間帯リスト */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {timeSlots.map((slot) => (
+            <span
+              key={slot}
+              className="bg-[#004CA0] px-3 py-1 rounded-full text-sm flex items-center"
+            >
+              {slot}
+              <button
+                onClick={() => removeTimeSlot(slot)}
+                className="ml-2 text-red-400 hover:text-red-600"
+              >
+                ✖
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* 登録ボタン */}
+      <div className="text-center">
+        <button
+          onClick={handleSubmit}
+          className="px-6 py-3 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] rounded-xl font-bold hover:scale-105 transform transition"
+        >
+          登録して共有リンク発行
+        </button>
+      </div>
+
+      {/* 発行されたリンク */}
+      {linkUrl && (
+        <div className="mt-6 text-center">
+          <p className="mb-2">共有リンク:</p>
+          <a
+            href={linkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#FDB9C8] underline"
+          >
+            {linkUrl}
           </a>
         </div>
       )}
