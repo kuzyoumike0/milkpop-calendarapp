@@ -12,7 +12,10 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
-COPY --from=frontend-build /app/frontend/build ../frontend/build
+
+# フロントのビルド成果物を backend/public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
 ENV PORT=8080
 EXPOSE 8080
 CMD ["node", "index.js"]
