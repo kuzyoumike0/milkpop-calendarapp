@@ -10,24 +10,36 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// === CSP設定 ===
+// === CSP設定 (Google Fonts 許可付き) ===
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
-        styleSrcElem: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://www.gstatic.com",
+          "https://fonts.googleapis.com",
+        ],
+        styleSrcElem: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://www.gstatic.com",
+          "https://fonts.googleapis.com",
+        ],
         fontSrc: [
           "'self'",
           "data:",
           "https://milkpop-calendarapp-production.up.railway.app",
+          "https://fonts.gstatic.com",
         ],
         fontSrcElem: [
           "'self'",
           "data:",
           "https://milkpop-calendarapp-production.up.railway.app",
+          "https://fonts.gstatic.com",
         ],
         imgSrc: ["'self'", "data:"],
         connectSrc: ["'self'"],
