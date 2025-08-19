@@ -18,12 +18,10 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-
       // ✅ Google Fonts の読み込み許可
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-
       // ✅ JS / 画像などの許可
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
@@ -57,11 +55,13 @@ app.post("/api/shared", async (req, res) => {
   }
 
   try {
+    // 既存削除
     await pool.query("DELETE FROM schedules WHERE username = $1", [username]);
 
+    // 日付ごとに保存
     for (const d of dates) {
       await pool.query(
-        "INSERT INTO schedules (username, date, mode) VALUES ($1, $2, $3)",
+        "INSERT INTO schedules (username, schedule_date, mode) VALUES ($1, $2, $3)",
         [username, d, mode]
       );
     }
@@ -77,7 +77,7 @@ app.post("/api/shared", async (req, res) => {
 app.get("/api/shared", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT username, date, mode FROM schedules ORDER BY username ASC, date ASC"
+      "SELECT username, schedule_date, mode FROM schedules ORDER BY username ASC, schedule_date ASC"
     );
     res.json(result.rows);
   } catch (err) {
