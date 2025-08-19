@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* カスタム: react-calendar の装飾 */
+.react-calendar {
+  width: 100%;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+.react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+  border-radius: 9999px;
+}
