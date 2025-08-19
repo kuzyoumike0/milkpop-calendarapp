@@ -9,13 +9,10 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// === PostgreSQL 接続設定 ===
+// === DB接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
+    ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }
     : {
         host: process.env.DB_HOST || "db",
         user: process.env.DB_USER || "postgres",
@@ -25,7 +22,6 @@ const pool = new Pool(
       }
 );
 
-// === ミドルウェア ===
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -45,7 +41,7 @@ async function initDB() {
 }
 initDB();
 
-// === API: 共有リンク発行 ===
+// === API ===
 app.post("/api/create-link", async (req, res) => {
   const { title } = req.body;
   const linkId = uuidv4();
@@ -61,7 +57,6 @@ app.post("/api/create-link", async (req, res) => {
   }
 });
 
-// === API: スケジュール取得 ===
 app.get("/api/schedules/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
@@ -76,7 +71,6 @@ app.get("/api/schedules/:linkId", async (req, res) => {
   }
 });
 
-// === API: スケジュール登録 ===
 app.post("/api/schedule", async (req, res) => {
   const { linkId, date, timeSlot, username, status } = req.body;
   try {
@@ -91,21 +85,20 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
-// === 静的ファイル配信 (Reactビルド成果物) ===
+// === Reactビルド配信 ===
 const buildPath = path.join(__dirname, "public");
-if (fs.existsSync(buildPath)) {
+if (fs.existsSync(path.join(buildPath, "index.html"))) {
   app.use(express.static(buildPath));
   app.get("*", (req, res) => {
     res.sendFile(path.join(buildPath, "index.html"));
   });
 } else {
-  console.warn("⚠️ ビルド成果物 (public/index.html) が見つかりませんでした。");
+  console.error("⚠️ Reactビルドが存在しません。public/index.html が必要です。");
   app.get("*", (req, res) => {
     res.send("<h1>Frontend not built yet</h1>");
   });
 }
 
-// === サーバ起動 ===
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
