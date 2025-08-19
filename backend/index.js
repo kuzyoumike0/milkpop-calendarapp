@@ -4,12 +4,12 @@ const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const cors = require("cors");
-const Holidays = require("date-holidays");
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+// === DB接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -32,121 +32,77 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
       memo TEXT,
-      date DATE NOT NULL,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL,
-      username TEXT,
+      mode TEXT NOT NULL, -- 範囲選択 or 複数選択
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       linkid TEXT
     );
-  `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS holidays (
+    CREATE TABLE IF NOT EXISTS responses (
       id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      date DATE NOT NULL UNIQUE
+      schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
+      username TEXT NOT NULL,
+      response TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
-
-  // 日本の祝日を複数年分投入
-  const hd = new Holidays("JP");
-  const currentYear = new Date().getFullYear();
-
-  for (let y = currentYear; y <= currentYear + 2; y++) {
-    const holidays = hd.getHolidays(y);
-    for (const h of holidays) {
-      try {
-        await pool.query(
-          `INSERT INTO holidays (name, date) VALUES ($1, $2) ON CONFLICT (date) DO NOTHING`,
-          [h.name, h.date]
-        );
-      } catch (err) {
-        console.error("祝日登録失敗:", err);
-      }
-    }
-  }
-  console.log("✅ 祝日データ投入完了");
 }
 initDB();
 
-// === API ===
-
-// スケジュール登録
+// === スケジュール登録 ===
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, memo, date, timeslot, range_mode, username, linkid } = req.body;
-    const result = await pool.query(
-      `INSERT INTO schedules (title, memo, date, timeslot, range_mode, username, linkid)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [title, memo, date, timeslot, range_mode, username, linkid]
-    );
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("スケジュール登録エラー:", err);
-    res.status(500).json({ error: "スケジュール登録に失敗しました" });
-  }
-});
-
-// スケジュール取得
-app.get("/api/schedules", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM schedules ORDER BY date ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("スケジュール取得エラー:", err);
-    res.status(500).json({ error: "取得失敗" });
-  }
-});
-
-// 祝日取得
-app.get("/api/holidays", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM holidays ORDER BY date ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("祝日取得エラー:", err);
-    res.status(500).json({ error: "祝日取得失敗" });
-  }
-});
-
-// 共有リンク発行 & 日程保存
-app.post("/api/share", async (req, res) => {
-  try {
-    const { title, timeslot, mode, dates } = req.body;
+    const { title, memo, start_date, end_date, timeslot, mode } = req.body;
     const linkid = uuidv4();
-
-    if (mode === "range" && dates.length === 2) {
-      const start = new Date(dates[0]);
-      const end = new Date(dates[1]);
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        await pool.query(
-          `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [title, d.toISOString().split("T")[0], timeslot, "range", linkid]
-        );
-      }
-    } else if (mode === "multiple") {
-      for (const day of dates) {
-        await pool.query(
-          `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [title, day, timeslot, "multiple", linkid]
-        );
-      }
-    }
-
-    res.json({ url: `/share/${linkid}`, linkid });
+    const result = await pool.query(
+      `INSERT INTO schedules (title, memo, start_date, end_date, timeslot, mode, linkid)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [title, memo, start_date, end_date, timeslot, mode, linkid]
+    );
+    res.json({ success: true, schedule: result.rows[0], url: `/share/${linkid}` });
   } catch (err) {
-    console.error("共有リンク作成エラー:", err);
-    res.status(500).json({ error: "共有リンク作成に失敗しました" });
+    console.error(err);
+    res.status(500).json({ success: false, error: "登録に失敗しました" });
   }
 });
 
-// 静的ファイル提供
+// === 共有リンクから取得 ===
+app.get("/api/share/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query("SELECT * FROM schedules WHERE linkid=$1", [linkid]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
+
+// === 応答保存 ===
+app.post("/api/responses", async (req, res) => {
+  try {
+    const { schedule_id, username, response } = req.body;
+    await pool.query(
+      `INSERT INTO responses (schedule_id, username, response) VALUES ($1,$2,$3)`,
+      [schedule_id, username, response]
+    );
+    const responses = await pool.query(
+      "SELECT * FROM responses WHERE schedule_id=$1 ORDER BY created_at DESC",
+      [schedule_id]
+    );
+    res.json(responses.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "保存に失敗しました" });
+  }
+});
+
+// === 静的ファイル ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
