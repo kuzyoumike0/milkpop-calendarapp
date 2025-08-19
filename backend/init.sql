@@ -1,18 +1,34 @@
-name: Init Railway DB (one-time)
+-- 既存テーブルを削除（依存関係ごと消す）
+DROP TABLE IF EXISTS responses CASCADE;
+DROP TABLE IF EXISTS schedules CASCADE;
+DROP TABLE IF EXISTS links CASCADE;
 
-on:
-  workflow_dispatch:   # ← GitHubから手動実行できる
+-- links テーブル
+CREATE TABLE links (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-jobs:
-  init-db:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+-- 候補日程（開始・終了時間を含む）
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    link_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    timeslot TEXT NOT NULL,
+    starttime TEXT,
+    endtime TEXT,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
+);
 
-      - name: Install PostgreSQL client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Run init.sql on Railway DB
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: psql "$DATABASE_URL" -f backend/init.sql
+-- 回答（◯ ×）
+CREATE TABLE responses (
+    id SERIAL PRIMARY KEY,
+    link_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    timeslot TEXT NOT NULL,
+    username TEXT NOT NULL,
+    choice TEXT NOT NULL CHECK (choice IN ('◯', '×')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
+);
