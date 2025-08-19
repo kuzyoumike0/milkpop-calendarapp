@@ -1,4 +1,4 @@
--- 既存テーブルを削除（安全に CASCADE）
+-- 既存テーブルを削除（依存関係ごと消す）
 DROP TABLE IF EXISTS responses CASCADE;
 DROP TABLE IF EXISTS schedules CASCADE;
 DROP TABLE IF EXISTS links CASCADE;
