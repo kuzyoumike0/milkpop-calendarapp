@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import Holidays from "date-holidays";
 import axios from "axios";
 
 export default function LinkPage() {
@@ -9,6 +10,14 @@ export default function LinkPage() {
   const [dates, setDates] = useState(new Date());
   const [timeslot, setTimeslot] = useState("終日");
   const [link, setLink] = useState("");
+
+  const hd = new Holidays("JP");
+  const holidays = hd.getHolidays(new Date().getFullYear()).map(h => h.date);
+
+  const isHoliday = (date) => {
+    const ymd = date.toISOString().split("T")[0];
+    return holidays.includes(ymd);
+  };
 
   const register = async () => {
     const start_date = Array.isArray(dates) ? dates[0] : dates;
@@ -28,7 +37,23 @@ export default function LinkPage() {
     <div style={{ padding: "20px" }}>
       <h2>日程登録</h2>
       <input placeholder="タイトル" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <Calendar selectRange={mode === "range"} onChange={setDates} value={dates} />
+      <Calendar
+        selectRange={mode === "range"}
+        onChange={setDates}
+        value={dates}
+        tileClassName={({ date, view }) =>
+          view === "month" && isHoliday(date) ? "holiday" : null
+        }
+      />
+      <style>
+        {`
+          .holiday {
+            background: #FDB9C8 !important;
+            color: #fff !important;
+            border-radius: 50%;
+          }
+        `}
+      </style>
       <div>
         <label>
           <input type="radio" checked={mode === "range"} onChange={() => setMode("range")} />
