@@ -1,39 +1,21 @@
-# =============================
-# 1. フロントエンドビルド
-# =============================
+# === フロントエンドビルド ===
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
-
-# 依存関係インストール
 COPY frontend/package*.json ./
 RUN npm install
-
-# ソースをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
-# =============================
-# 2. バックエンドセットアップ
-# =============================
+# === バックエンド ===
 FROM node:18
 WORKDIR /app/backend
-
-# バックエンド依存関係をインストール
 COPY backend/package*.json ./
 RUN npm install
-
-# バックエンドソースコードをコピー（index.js など）
 COPY backend/ ./
 
-# init.sql をコピー
-COPY backend/init.sql ./init.sql
-
-# フロントのビルド済みファイルを backend/public にコピー
+# フロントのビルド成果物を public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# 環境変数とポート
-ENV PORT=8080
+ENV PORT 8080
 EXPOSE 8080
-
-# サーバー起動
 CMD ["node", "index.js"]
