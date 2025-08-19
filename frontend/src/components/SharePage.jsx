@@ -1,83 +1,56 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import ShareButton from "./ShareButton";
+import Holidays from "date-holidays";
+
+const hd = new Holidays("JP");
 
 export default function SharePage() {
-  const { linkid } = useParams();
-  const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState([]);
-  const [username, setUsername] = useState({});
-  const [answers, setAnswers] = useState({});
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState(new Date());
+  const [timeslot, setTimeslot] = useState("全日");
+  const [link, setLink] = useState("");
 
-  useEffect(() => {
-    axios.get(`/api/share/${linkid}`).then((res) => {
-      setSchedules(res.data.schedules);
-      setResponses(res.data.responses);
-    });
-  }, [linkid]);
+  const handleSave = () => {
+    axios.post("/api/share").then(res => setLink(res.data.url));
+  };
 
-  const handleSave = async () => {
-    for (const sid of Object.keys(answers)) {
-      await axios.post("/api/respond", {
-        scheduleId: sid,
-        username,
-        response: answers[sid],
-      });
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (holiday) {
+        return <p className="text-red-500 text-xs">{holiday[0].name}</p>;
+      }
     }
-    const res = await axios.get(`/api/share/${linkid}`);
-    setResponses(res.data.responses);
+    return null;
+  };
+
+  const tileClassName = ({ date, view }) => {
+    if (view === "month" && hd.isHoliday(date)) {
+      return "bg-red-100";
+    }
+    return null;
   };
 
   return (
     <div>
-      <h2>共有スケジュール</h2>
-      <div>
-        名前:{" "}
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </div>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>タイトル</th>
-            <th>時間帯</th>
-            <th>回答</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((s) => (
-            <tr key={s.id}>
-              <td>{s.date}</td>
-              <td>{s.title}</td>
-              <td>{s.timeslot}</td>
-              <td>
-                <select
-                  value={answers[s.id] || ""}
-                  onChange={(e) =>
-                    setAnswers({ ...answers, [s.id]: e.target.value })
-                  }
-                >
-                  <option value="">選択</option>
-                  <option value="○">○</option>
-                  <option value="✖">✖</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={handleSave}>保存</button>
-      <h3>回答一覧</h3>
-      <ul>
-        {responses.map((r) => (
-          <li key={r.id}>
-            {r.username}: {r.response}
-          </li>
-        ))}
-      </ul>
+      <h2 className="text-xl font-bold text-[#004CA0]">日程登録ページ</h2>
+      <Calendar
+        onChange={setDate}
+        value={date}
+        tileContent={tileContent}
+        tileClassName={tileClassName}
+      />
+      <input className="border p-2 w-full mt-2" placeholder="タイトル" value={title} onChange={e=>setTitle(e.target.value)} />
+      <select className="border p-2 w-full mt-2" value={timeslot} onChange={e=>setTimeslot(e.target.value)}>
+        <option>全日</option>
+        <option>昼</option>
+        <option>夜</option>
+      </select>
+      <button onClick={handleSave} className="bg-[#FDB9C8] px-4 py-2 rounded-xl mt-2">共有リンク発行</button>
+      {link && <ShareButton link={link} />}
     </div>
   );
 }
