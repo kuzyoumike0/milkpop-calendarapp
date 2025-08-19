@@ -8,6 +8,7 @@ export default function SharePage() {
   const [mode, setMode] = useState("multi");
   const [title, setTitle] = useState("");
 
+  // 範囲選択の処理
   const handleChange = (value) => {
     if (mode === "range" && Array.isArray(value)) {
       const start = value[0];
@@ -24,6 +25,7 @@ export default function SharePage() {
     }
   };
 
+  // 複数日クリック選択の処理
   const handleClickDay = (date) => {
     if (mode === "multi") {
       const iso = date.toISOString().split("T")[0];
@@ -35,12 +37,16 @@ export default function SharePage() {
     }
   };
 
+  // リンク作成処理
   const createLink = async () => {
     try {
-      const res = await axios.post("/api/create-link", { title, dates });
-      alert(`共有リンク: ${window.location.origin}/link/${res.data.linkId}`);
+      const res = await axios.post("/api/create-link", {
+        title,
+        dates: dates || [],
+      });
+      alert(`✅ 共有リンク: ${window.location.origin}/link/${res.data.linkId}`);
     } catch (err) {
-      console.error(err);
+      console.error("リンク作成エラー", err);
       alert("リンク作成失敗");
     }
   };
