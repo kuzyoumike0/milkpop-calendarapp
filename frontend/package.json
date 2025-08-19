@@ -10,7 +10,7 @@
     "axios": "^1.6.7",
     "socket.io-client": "^4.7.5",
     "@craco/craco": "^7.1.0",
-    "react-scripts": "5.0.1"   // ← これを必ず追加！
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "craco start",
