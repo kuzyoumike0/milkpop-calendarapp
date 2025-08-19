@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import "./SharePage.css"; // カスタムCSS
 
 export default function SharePage({ linkId }) {
   const [date, setDate] = useState(new Date());
-  const [mode, setMode] = useState("single"); // "single" or "multi"
-  const [selectedDates, setSelectedDates] = useState([]); // 複数日選択
+  const [mode, setMode] = useState("single"); // "single" or "multi" or "range"
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [range, setRange] = useState(null); // 範囲選択用
   const [timeSlot, setTimeSlot] = useState("全日");
   const [username, setUsername] = useState("");
-  const [schedules, setSchedules] = useState([]);
 
   // === 日付フォーマット ===
   const formatDate = (d) => {
@@ -19,30 +20,35 @@ export default function SharePage({ linkId }) {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // === DBからスケジュール取得 ===
-  const fetchSchedules = async () => {
-    try {
-      const res = await axios.get(`/api/schedules/${linkId}`);
-      setSchedules(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, [linkId]);
-
   // === 日付クリック処理 ===
   const handleDateChange = (d) => {
     if (mode === "single") {
       setDate(d);
-    } else {
+      setSelectedDates([formatDate(d)]);
+      setRange(null);
+    } else if (mode === "multi") {
       const fd = formatDate(d);
       if (selectedDates.includes(fd)) {
         setSelectedDates(selectedDates.filter((x) => x !== fd));
       } else {
         setSelectedDates([...selectedDates, fd]);
+      }
+      setRange(null);
+    } else if (mode === "range") {
+      if (!range) {
+        setRange([d, d]);
+      } else {
+        const [start] = range;
+        const newRange =
+          d < start ? [d, start] : [start, d];
+        const days = [];
+        let current = new Date(newRange[0]);
+        while (current <= newRange[1]) {
+          days.push(formatDate(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setRange(newRange);
+        setSelectedDates(days);
       }
     }
   };
@@ -53,12 +59,8 @@ export default function SharePage({ linkId }) {
       alert("名前を入力してください");
       return;
     }
-
-    const datesToSave =
-      mode === "single" ? [formatDate(date)] : selectedDates;
-
     try {
-      for (const d of datesToSave) {
+      for (const d of selectedDates) {
         await axios.post("/api/schedule", {
           username,
           date: d,
@@ -68,7 +70,7 @@ export default function SharePage({ linkId }) {
       }
       alert("保存しました！");
       setSelectedDates([]);
-      fetchSchedules(); // 最新状態を反映
+      setRange(null);
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -98,7 +100,7 @@ export default function SharePage({ linkId }) {
             checked={mode === "single"}
             onChange={() => setMode("single")}
           />
-          範囲選択
+          単日選択
         </label>
         <label>
           <input
@@ -109,6 +111,15 @@ export default function SharePage({ linkId }) {
           />
           複数選択
         </label>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          範囲選択
+        </label>
       </div>
 
       {/* カレンダー */}
@@ -117,7 +128,8 @@ export default function SharePage({ linkId }) {
         value={date}
         tileClassName={({ date }) => {
           const fd = formatDate(date);
-          return selectedDates.includes(fd) ? "selected" : null;
+          if (selectedDates.includes(fd)) return "selected-day";
+          return null;
         }}
       />
 
@@ -137,27 +149,6 @@ export default function SharePage({ linkId }) {
 
       {/* 保存ボタン */}
       <button onClick={handleSave}>保存</button>
-
-      {/* 一覧表示 */}
-      <h3>登録一覧</h3>
-      <table border="1" cellPadding="5">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>時間帯</th>
-            <th>ユーザー</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((s, i) => (
-            <tr key={i}>
-              <td>{s.date}</td>
-              <td>{s.timeslot}</td>
-              <td>{s.username}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
