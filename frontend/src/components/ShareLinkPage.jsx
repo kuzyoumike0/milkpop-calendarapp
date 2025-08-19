@@ -12,7 +12,6 @@ export default function ShareLinkPage() {
   const [dates, setDates] = useState([]);
   const [message, setMessage] = useState("");
 
-  // データ取得
   const fetchSchedules = () => {
     axios.get(`/api/shared/${linkId}`)
       .then((res) => setSchedules(res.data))
@@ -23,7 +22,7 @@ export default function ShareLinkPage() {
     fetchSchedules();
   }, [linkId]);
 
-  // 追記フォーム送信
+  // 予定追記
   const handleAdd = async () => {
     try {
       const formatted = dates.map((d) => d.toISOString().split("T")[0]);
@@ -40,7 +39,20 @@ export default function ShareLinkPage() {
     }
   };
 
-  // 複数日クリック
+  // 予定削除
+  const handleDelete = async (username, date) => {
+    try {
+      await axios.delete(`/api/shared/${linkId}`, {
+        data: { username, date: date.split("T")[0] }
+      });
+      setMessage("✅ 削除しました！");
+      fetchSchedules();
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ 削除に失敗しました");
+    }
+  };
+
   const handleMultipleChange = (date) => {
     const exists = dates.find((d) => d.toDateString() === date.toDateString());
     if (exists) {
@@ -61,6 +73,12 @@ export default function ShareLinkPage() {
           {schedules.map((s, i) => (
             <li key={i}>
               {s.username} : {new Date(s.schedule_date).toLocaleDateString()} ({s.mode})
+              <button
+                style={{ marginLeft: "10px" }}
+                onClick={() => handleDelete(s.username, s.schedule_date)}
+              >
+                削除
+              </button>
             </li>
           ))}
         </ul>
