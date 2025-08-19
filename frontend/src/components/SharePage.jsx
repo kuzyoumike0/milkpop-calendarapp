@@ -4,13 +4,17 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function SharePage() {
-  const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [title, setTitle] = useState(""); // タイトル
+  const [selectedDates, setSelectedDates] = useState([]); // 選択日
   const [mode, setMode] = useState("multiple"); // multiple or range
   const [shareLink, setShareLink] = useState("");
   const [message, setMessage] = useState("");
-  const [timeslot, setTimeslot] = useState("全日");
 
+  const [timeslot, setTimeslot] = useState("全日"); // 全日 / 昼 / 夜 / custom
+  const [startTime, setStartTime] = useState("1");
+  const [endTime, setEndTime] = useState("2");
+
+  // 日付整形
   const formatDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -18,8 +22,8 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 日付選択（モードに応じて処理）
-  const handleDateSelect = (date) => {
+  // 日付クリック
+  const handleDateClick = (date) => {
     if (mode === "multiple") {
       const dateStr = formatDate(date);
       if (selectedDates.includes(dateStr)) {
@@ -27,16 +31,28 @@ export default function SharePage() {
       } else {
         setSelectedDates([...selectedDates, dateStr]);
       }
-    } else if (mode === "range" && Array.isArray(date)) {
-      const [start, end] = date;
-      if (start && end) {
+    } else if (mode === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([formatDate(date)]);
+      } else if (selectedDates.length === 1) {
+        const start = new Date(selectedDates[0]);
+        const end = date;
         const range = [];
         let current = new Date(start);
-        while (current <= end) {
-          range.push(formatDate(current));
-          current.setDate(current.getDate() + 1);
+        if (start <= end) {
+          while (current <= end) {
+            range.push(formatDate(current));
+            current.setDate(current.getDate() + 1);
+          }
+        } else {
+          while (current >= end) {
+            range.push(formatDate(current));
+            current.setDate(current.getDate() - 1);
+          }
         }
         setSelectedDates(range);
+      } else {
+        setSelectedDates([formatDate(date)]);
       }
     }
   };
@@ -51,11 +67,14 @@ export default function SharePage() {
       setMessage("❌ 日付を選択してください");
       return;
     }
+
     try {
       const res = await axios.post("/api/create-link", {
         title,
         dates: selectedDates,
         timeslot,
+        startTime: timeslot === "custom" ? startTime : null,
+        endTime: timeslot === "custom" ? endTime : null,
       });
       const url = `${window.location.origin}/link/${res.data.linkId}`;
       setShareLink(url);
@@ -66,9 +85,12 @@ export default function SharePage() {
     }
   };
 
+  // カレンダーハイライト
   const tileClassName = ({ date }) => {
     const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) return "selected-date";
+    if (selectedDates.includes(dateStr)) {
+      return "selected-date";
+    }
     return null;
   };
 
@@ -88,30 +110,31 @@ export default function SharePage() {
         />
       </div>
 
-      {/* モード切替 */}
+      {/* モード切り替え */}
       <div style={{ marginBottom: "10px" }}>
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={mode === "multiple"}
-            onChange={() => setMode("multiple")}
-          />
-          複数日クリック
-        </label>
-        <label style={{ marginLeft: "15px" }}>
-          <input
-            type="radio"
-            value="range"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
+        <label>選択モード: </label>
+        <input
+          type="radio"
+          value="multiple"
+          checked={mode === "multiple"}
+          onChange={() => setMode("multiple")}
+        />{" "}
+        複数選択
+        <input
+          type="radio"
+          value="range"
+          checked={mode === "range"}
+          onChange={() => setMode("range")}
+          style={{ marginLeft: "15px" }}
+        />{" "}
+        範囲選択
       </div>
 
-      {/* 時間帯プルダウン */}
-      <div style={{ marginBottom: "10px" }}>
+      {/* カレンダー */}
+      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
+
+      {/* 時間帯選択 */}
+      <div style={{ marginTop: "15px" }}>
         <label>時間帯: </label>
         <select
           value={timeslot}
@@ -121,30 +144,55 @@ export default function SharePage() {
           <option value="全日">全日（終日）</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
+          <option value="custom">時間指定</option>
         </select>
+
+        {timeslot === "custom" && (
+          <div style={{ marginTop: "10px" }}>
+            <label>開始: </label>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}:00
+                </option>
+              ))}
+            </select>
+
+            <label style={{ marginLeft: "10px" }}>終了: </label>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}:00
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* カレンダー */}
-      <Calendar
-        selectRange={mode === "range"}
-        onChange={handleDateSelect}
-        onClickDay={mode === "multiple" ? handleDateSelect : undefined}
-        tileClassName={tileClassName}
-      />
-
+      {/* リンク作成 */}
       <button
         onClick={handleCreateLink}
         style={{
           marginTop: "20px",
           padding: "10px 20px",
           fontSize: "16px",
+          cursor: "pointer",
         }}
       >
         🔗 共有リンクを作成
       </button>
 
+      {/* メッセージ */}
       {message && <p style={{ marginTop: "10px" }}>{message}</p>}
 
+      {/* リンク表示 */}
       {shareLink && (
         <div style={{ marginTop: "15px" }}>
           <p>
@@ -156,6 +204,7 @@ export default function SharePage() {
         </div>
       )}
 
+      {/* 選択済み日付のスタイル */}
       <style>{`
         .selected-date {
           background: #4caf50 !important;
