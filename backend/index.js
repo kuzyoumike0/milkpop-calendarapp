@@ -3,17 +3,10 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const http = require("http");
-const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
+const PORT = process.env.PORT || 8080;
 
 // === PostgreSQL 接続設定 ===
 const pool = new Pool(
@@ -27,30 +20,23 @@ const pool = new Pool(
         user: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "password",
         database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT || 5432,
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       }
 );
 
+// === ミドルウェア ===
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // === DB初期化 ===
 async function initDB() {
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedule_links (
-      linkId TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      dates TEXT[] NOT NULL,
-      mode TEXT NOT NULL
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedule_entries (
+    CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
-      linkId TEXT REFERENCES schedule_links(linkId) ON DELETE CASCADE,
+      linkId TEXT NOT NULL,
+      title TEXT,
       date TEXT NOT NULL,
+      timeSlot TEXT NOT NULL,
       username TEXT NOT NULL,
       status TEXT NOT NULL
     )
@@ -58,16 +44,16 @@ async function initDB() {
 }
 initDB();
 
-// === 共有リンク発行 ===
-app.post("/api/schedule-link", async (req, res) => {
-  const { title, dates, mode } = req.body;
+// === API: 共有リンク発行 ===
+app.post("/api/create-link", async (req, res) => {
+  const { title } = req.body;
   const linkId = uuidv4();
-
   try {
-    await pool.query(
-      `INSERT INTO schedule_links (linkId, title, dates, mode) VALUES ($1, $2, $3, $4)`,
-      [linkId, title, dates, mode]
-    );
+    await pool.query("INSERT INTO schedules (linkId, title, date, timeSlot, username, status) VALUES ($1,$2,$3,$4,$5,$6)", [
+      linkId,
+      title || "",
+      "", "", "", ""
+    ]);
     res.json({ linkId });
   } catch (err) {
     console.error("リンク作成失敗:", err);
@@ -75,53 +61,26 @@ app.post("/api/schedule-link", async (req, res) => {
   }
 });
 
-// === スケジュール取得 ===
+// === API: スケジュール取得 ===
 app.get("/api/schedules/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
-    const linkRes = await pool.query(
-      `SELECT * FROM schedule_links WHERE linkId = $1`,
-      [linkId]
-    );
-    if (linkRes.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
-    }
-
-    const entryRes = await pool.query(
-      `SELECT date, username, status FROM schedule_entries WHERE linkId = $1`,
-      [linkId]
-    );
-
-    res.json({
-      title: linkRes.rows[0].title,
-      dates: linkRes.rows[0].dates,
-      mode: linkRes.rows[0].mode,
-      entries: entryRes.rows,
-    });
+    const result = await pool.query("SELECT * FROM schedules WHERE linkId=$1 ORDER BY date, timeSlot", [linkId]);
+    res.json(result.rows);
   } catch (err) {
     console.error("取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
   }
 });
 
-// === 出欠登録 ===
-app.post("/api/schedule/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  const { date, username, status } = req.body;
-
+// === API: スケジュール登録 ===
+app.post("/api/schedule", async (req, res) => {
+  const { linkId, date, timeSlot, username, status } = req.body;
   try {
     await pool.query(
-      `INSERT INTO schedule_entries (linkId, date, username, status) VALUES ($1, $2, $3, $4)`,
-      [linkId, date, username, status]
+      "INSERT INTO schedules (linkId, date, timeSlot, username, status) VALUES ($1,$2,$3,$4,$5)",
+      [linkId, date, timeSlot, username, status]
     );
-
-    // 更新後のデータを取得して全員に送信
-    const entryRes = await pool.query(
-      `SELECT date, username, status FROM schedule_entries WHERE linkId = $1`,
-      [linkId]
-    );
-    io.to(linkId).emit("updateSchedules", entryRes.rows);
-
     res.json({ success: true });
   } catch (err) {
     console.error("保存失敗:", err);
@@ -129,27 +88,14 @@ app.post("/api/schedule/:linkId", async (req, res) => {
   }
 });
 
-// === Socket.io ===
-io.on("connection", (socket) => {
-  console.log("クライアント接続:", socket.id);
+// === 静的ファイル配信 (Reactビルド成果物) ===
+app.use(express.static(path.join(__dirname, "public")));
 
-  socket.on("join", (linkId) => {
-    socket.join(linkId);
-    console.log(`ルーム参加: ${linkId}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("切断:", socket.id);
-  });
-});
-
-// === フロントエンドを返す ===
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// === サーバー起動 ===
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`サーバー起動: http://localhost:${PORT}`);
+// === サーバ起動 ===
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
