@@ -1,180 +1,163 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
 
-export default function ShareLinkPage({ linkId }) {
-  const [username, setUsername] = useState("");
-  const [timeslot, setTimeslot] = useState("終日");
-  const [comment, setComment] = useState("");
-  const [schedules, setSchedules] = useState([]);
+const app = express();
+const PORT = process.env.PORT || 8080;
 
-  // カレンダー選択モード
-  const [selectMode, setSelectMode] = useState("single"); // single | range | multiple
-  const [calendarValue, setCalendarValue] = useState(new Date()); // 状態はモードに応じて変わる
+// === Middleware ===
+app.use(cors());
+app.use(bodyParser.json());
 
-  // 日付フォーマット
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  // 予定一覧取得
-  const fetchSchedules = async () => {
-    try {
-      const res = await axios.get(`/api/shared/${linkId}`);
-      setSchedules(res.data);
-    } catch (err) {
-      console.error("❌ Failed to fetch schedules:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, [linkId]);
-
-  // 登録処理
-  const handleRegister = async () => {
-    if (!username.trim()) {
-      alert("名前を入力してください");
-      return;
-    }
-
-    // モードごとに登録する日付リストを作る
-    let dates = [];
-    if (selectMode === "single") {
-      dates = [calendarValue];
-    } else if (selectMode === "range" && Array.isArray(calendarValue)) {
-      const [start, end] = calendarValue;
-      if (start && end) {
-        let cur = new Date(start);
-        while (cur <= end) {
-          dates.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
+// === PostgreSQL接続設定 ===
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
       }
-    } else if (selectMode === "multiple" && Array.isArray(calendarValue)) {
-      dates = calendarValue;
-    }
-
-    try {
-      for (const d of dates) {
-        await axios.post(`/api/share/${linkId}`, {
-          username,
-          date: formatDate(d),
-          timeslot,
-          comment,
-        });
+    : {
+        host: process.env.DB_HOST || "db",
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "password",
+        database: process.env.DB_NAME || "mydb",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       }
-      alert("✅ 予定を登録しました");
-      setComment("");
-      fetchSchedules();
-    } catch (err) {
-      alert(err.response?.data?.error || "登録失敗");
-    }
-  };
+);
 
-  return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">共有スケジュール</h2>
+// === DB初期化 ===
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS share_links (
+      id TEXT PRIMARY KEY,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
-      {/* 選択モード切り替え */}
-      <div className="mb-4 space-x-4">
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="single"
-            checked={selectMode === "single"}
-            onChange={() => setSelectMode("single")}
-          />{" "}
-          単日
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="range"
-            checked={selectMode === "range"}
-            onChange={() => {
-              setSelectMode("range");
-              setCalendarValue([new Date(), new Date()]);
-            }}
-          />{" "}
-          範囲選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="multiple"
-            checked={selectMode === "multiple"}
-            onChange={() => {
-              setSelectMode("multiple");
-              setCalendarValue([new Date()]);
-            }}
-          />{" "}
-          複数選択
-        </label>
-      </div>
-
-      {/* カレンダー UI */}
-      <Calendar
-        onChange={setCalendarValue}
-        value={calendarValue}
-        selectRange={selectMode === "range"}
-        allowMultiple={selectMode === "multiple"} // react-calendar で拡張: v5以降はmultiple対応
-      />
-
-      {/* 入力フォーム */}
-      <div className="mt-4 space-y-2 border p-4 rounded shadow">
-        <input
-          type="text"
-          placeholder="名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="border p-2 rounded w-full"
-        >
-          <option>終日</option>
-          <option>昼</option>
-          <option>夜</option>
-        </select>
-        <input
-          type="text"
-          placeholder="コメント（任意）"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="border p-2 rounded w-full"
-        />
-        <button
-          onClick={handleRegister}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          登録
-        </button>
-      </div>
-
-      {/* 既存スケジュール表示 */}
-      <div className="mt-6">
-        {schedules.length === 0 ? (
-          <p className="text-gray-500">まだ予定がありません</p>
-        ) : (
-          <ul className="list-disc pl-6">
-            {schedules.map((s) => (
-              <li key={s.id}>
-                {s.date} - {s.username} ({s.timeslot}) : {s.comment || "-"}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id TEXT PRIMARY KEY,
+      link_id TEXT REFERENCES share_links(id) ON DELETE CASCADE,
+      username TEXT NOT NULL,
+      date DATE NOT NULL,
+      timeslot TEXT NOT NULL,
+      comment TEXT,
+      token TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 }
+initDB().catch((err) => console.error("DB init error:", err));
+
+/* ============================
+   API エンドポイント
+============================ */
+
+// 1. 共有リンク作成
+app.post("/api/share", async (req, res) => {
+  try {
+    const linkId = uuidv4();
+    await pool.query("INSERT INTO share_links (id) VALUES ($1)", [linkId]);
+    res.json({ linkId });
+  } catch (err) {
+    console.error("Error creating share link:", err);
+    res.status(500).json({ error: "共有リンク作成失敗" });
+  }
+});
+
+// 2. 予定登録（共有リンク付き）
+app.post("/api/share/:linkId", async (req, res) => {
+  try {
+    const { linkId } = req.params;
+    const { username, date, timeslot, comment } = req.body;
+
+    // トークン発行
+    const scheduleId = uuidv4();
+    const token = uuidv4();
+
+    await pool.query(
+      `INSERT INTO schedules (id, link_id, username, date, timeslot, comment, token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [scheduleId, linkId, username, date, timeslot, comment || "", token]
+    );
+
+    res.json({ id: scheduleId, token });
+  } catch (err) {
+    console.error("Error inserting schedule:", err);
+    res.status(500).json({ error: "予定登録失敗" });
+  }
+});
+
+// 3. 共有リンクから予定一覧取得
+app.get("/api/shared/:linkId", async (req, res) => {
+  try {
+    const { linkId } = req.params;
+    const result = await pool.query(
+      "SELECT id, username, date, timeslot, comment FROM schedules WHERE link_id = $1 ORDER BY date ASC",
+      [linkId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching schedules:", err);
+    res.status(500).json({ error: "予定取得失敗" });
+  }
+});
+
+// 4. 予定更新
+app.put("/api/schedule/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, date, timeslot, comment, token } = req.body;
+
+    const result = await pool.query("SELECT token FROM schedules WHERE id = $1", [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: "予定が存在しません" });
+
+    if (result.rows[0].token !== token) {
+      return res.status(403).json({ error: "キーが一致しません" });
+    }
+
+    await pool.query(
+      `UPDATE schedules SET username=$1, date=$2, timeslot=$3, comment=$4 WHERE id=$5`,
+      [username, date, timeslot, comment, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error updating schedule:", err);
+    res.status(500).json({ error: "更新失敗" });
+  }
+});
+
+// 5. 予定削除
+app.delete("/api/schedule/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { token } = req.query;
+
+    const result = await pool.query("SELECT token FROM schedules WHERE id = $1", [id]);
+    if (result.rowCount === 0) return res.status(404).json({ error: "予定が存在しません" });
+
+    if (result.rows[0].token !== token) {
+      return res.status(403).json({ error: "キーが一致しません" });
+    }
+
+    await pool.query("DELETE FROM schedules WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting schedule:", err);
+    res.status(500).json({ error: "削除失敗" });
+  }
+});
+
+// === 静的ファイル (React ビルド) ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+// === サーバ起動 ===
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
+});
