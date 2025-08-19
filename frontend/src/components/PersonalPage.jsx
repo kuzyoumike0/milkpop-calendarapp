@@ -10,11 +10,9 @@ export default function PersonalPage() {
   const [dates, setDates] = useState(new Date());
   const [timeslot, setTimeslot] = useState("終日");
 
-  // 日本の祝日を取得
   const hd = new Holidays("JP");
   const holidays = hd.getHolidays(new Date().getFullYear()).map(h => h.date);
 
-  // 祝日判定
   const isHoliday = (date) => {
     const ymd = date.toISOString().split("T")[0];
     return holidays.includes(ymd);
