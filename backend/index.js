@@ -5,8 +5,8 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
 const helmet = require("helmet");
-const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -46,28 +46,18 @@ const pool = new Pool(
       }
 );
 
-// === init.sql を自動実行（最初の1回だけ） ===
-async function initDB() {
+// === init.sql を最初の1回だけ流す処理 ===
+async function runInitSQL() {
   try {
-    const result = await pool.query(
-      "SELECT to_regclass('public.schedules') as exists"
-    );
-    if (!result.rows[0].exists) {
-      console.log("📦 schedules テーブルが存在しません → init.sql を流します");
-
-      const initSql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
-      await pool.query(initSql);
-
-      console.log("✅ init.sql の実行が完了しました");
-    } else {
-      console.log("✅ schedules テーブルは既に存在します");
-    }
+    const initSql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
+    await pool.query(initSql);
+    console.log("✅ init.sql executed (schema ensured)");
   } catch (err) {
-    console.error("❌ init.sql 実行エラー:", err);
+    console.error("⚠️ init.sql 実行エラー:", err);
   }
 }
 
-// === 共有スケジュール作成 & リンク発行 ===
+// === スケジュール保存 & 共有リンク発行 ===
 app.post("/api/shared", async (req, res) => {
   const { username, mode, dates } = req.body;
 
@@ -85,14 +75,14 @@ app.post("/api/shared", async (req, res) => {
       );
     }
 
-    res.json({ message: "共有スケジュール作成完了", linkId });
+    res.json({ message: "保存完了", linkId });
   } catch (err) {
     console.error("DB保存エラー:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// === 共有スケジュール取得 ===
+// === 共有リンクから予定取得 ===
 app.get("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
 
@@ -113,7 +103,7 @@ app.get("/api/shared/:linkId", async (req, res) => {
   }
 });
 
-// === 共有スケジュール追記 ===
+// === 共有リンクに予定を追記 ===
 app.post("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
   const { username, mode, dates } = req.body;
@@ -137,15 +127,40 @@ app.post("/api/shared/:linkId", async (req, res) => {
   }
 });
 
+// === 共有リンクから予定を削除 ===
+app.delete("/api/shared/:linkId", async (req, res) => {
+  const { linkId } = req.params;
+  const { username, date } = req.body;
+
+  if (!username || !date) {
+    return res.status(400).json({ error: "必要な情報が不足しています" });
+  }
+
+  try {
+    const result = await pool.query(
+      "DELETE FROM schedules WHERE link_id = $1 AND username = $2 AND schedule_date = $3 RETURNING *",
+      [linkId, username, date]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "対象データが見つかりません" });
+    }
+
+    res.json({ message: "削除完了" });
+  } catch (err) {
+    console.error("DB削除エラー:", err);
+    res.status(500).json({ error: "削除に失敗しました" });
+  }
+});
+
 // === React ビルドファイル配信 ===
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-// === サーバー起動（init.sql 実行後） ===
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server is running on http://localhost:${PORT}`);
-  });
+// === サーバー起動 ===
+app.listen(PORT, async () => {
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  await runInitSQL(); // ← 起動時に一度だけ init.sql を流す
 });
