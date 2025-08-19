@@ -1,223 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import axios from "axios";
+import { useParams } from "react-router-dom";
+import { io } from "socket.io-client";
+
+const socket = io(); // デフォルトで同一オリジンに接続
 
 export default function SharePage() {
-  const [title, setTitle] = useState(""); // タイトル
-  const [selectedDates, setSelectedDates] = useState([]); // 選択日
-  const [mode, setMode] = useState("multiple"); // multiple or range
-  const [shareLink, setShareLink] = useState("");
-  const [message, setMessage] = useState("");
+  const { linkId } = useParams();
+  const [schedules, setSchedules] = useState([]);
+  const [date, setDate] = useState(new Date());
+  const [username, setUsername] = useState("");
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [status, setStatus] = useState("◯");
 
-  const [timeslot, setTimeslot] = useState("全日"); // 全日 / 昼 / 夜 / custom
-  const [startTime, setStartTime] = useState("1");
-  const [endTime, setEndTime] = useState("2");
-
-  // 日付整形
-  const formatDate = (date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 日付クリック
-  const handleDateClick = (date) => {
-    if (mode === "multiple") {
-      const dateStr = formatDate(date);
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, dateStr]);
-      }
-    } else if (mode === "range") {
-      if (selectedDates.length === 0) {
-        setSelectedDates([formatDate(date)]);
-      } else if (selectedDates.length === 1) {
-        const start = new Date(selectedDates[0]);
-        const end = date;
-        const range = [];
-        let current = new Date(start);
-        if (start <= end) {
-          while (current <= end) {
-            range.push(formatDate(current));
-            current.setDate(current.getDate() + 1);
-          }
-        } else {
-          while (current >= end) {
-            range.push(formatDate(current));
-            current.setDate(current.getDate() - 1);
-          }
-        }
-        setSelectedDates(range);
-      } else {
-        setSelectedDates([formatDate(date)]);
-      }
-    }
-  };
+  // 初期データ取得 & ソケット参加
+  useEffect(() => {
+    axios.get(`/api/schedules/${linkId}`)
+      .then((res) => setSchedules(res.data));
 
-  // リンク作成
-  const handleCreateLink = async () => {
-    if (!title.trim()) {
-      setMessage("❌ タイトルを入力してください");
-      return;
-    }
-    if (selectedDates.length === 0) {
-      setMessage("❌ 日付を選択してください");
-      return;
-    }
+    socket.emit("join", linkId);
+
+    // 他ユーザーから更新が来たら反映
+    socket.on("updateSchedules", (data) => {
+      setSchedules(data);
+    });
+
+    return () => {
+      socket.off("updateSchedules");
+    };
+  }, [linkId]);
+
+  const handleSave = async () => {
+    const newSchedule = {
+      linkId,
+      date: formatDate(date),
+      timeSlot,
+      username,
+      status,
+    };
 
     try {
-      // サーバーに渡す形式に変換
-      const datesPayload = selectedDates.map((d) => ({
-        date: d,
-        timeslot,
-        startTime: timeslot === "custom" ? startTime : null,
-        endTime: timeslot === "custom" ? endTime : null,
-      }));
-
-      const res = await axios.post("/api/create-link", {
-        title,
-        dates: datesPayload,
-      });
-
-      const url = `${window.location.origin}/link/${res.data.linkId}`;
-      setShareLink(url);
-      setMessage("✅ リンクを作成しました");
+      await axios.post("/api/schedule", newSchedule);
+      // 自分の画面はサーバーからの "updateSchedules" で更新される
     } catch (err) {
-      console.error("リンク作成エラー:", err);
-      setMessage("❌ リンク作成に失敗しました");
+      console.error("保存失敗:", err);
+      alert("保存に失敗しました");
     }
-  };
-
-  // カレンダーハイライト
-  const tileClassName = ({ date }) => {
-    const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) {
-      return "selected-date";
-    }
-    return null;
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>📅 共有リンク作成</h2>
+      <h2>共有スケジュール</h2>
 
-      {/* タイトル */}
-      <div style={{ marginBottom: "10px" }}>
-        <label>タイトル: </label>
+      <div>
+        <label>名前: </label>
         <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="例: 飲み会調整"
-          style={{ padding: "5px", width: "250px" }}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="名前を入力"
         />
       </div>
 
-      {/* モード切り替え */}
-      <div style={{ marginBottom: "10px" }}>
-        <label>選択モード: </label>
-        <input
-          type="radio"
-          value="multiple"
-          checked={mode === "multiple"}
-          onChange={() => setMode("multiple")}
-        />{" "}
-        複数選択
-        <input
-          type="radio"
-          value="range"
-          checked={mode === "range"}
-          onChange={() => setMode("range")}
-          style={{ marginLeft: "15px" }}
-        />{" "}
-        範囲選択
+      <div>
+        <label>日付: </label>
+        <Calendar onChange={setDate} value={date} />
       </div>
 
-      {/* カレンダー */}
-      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
-
-      {/* 時間帯選択 */}
-      <div style={{ marginTop: "15px" }}>
+      <div>
         <label>時間帯: </label>
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          style={{ padding: "5px" }}
-        >
-          <option value="全日">全日（終日）</option>
+        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
+          <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
-          <option value="custom">時間指定</option>
         </select>
-
-        {timeslot === "custom" && (
-          <div style={{ marginTop: "10px" }}>
-            <label>開始: </label>
-            <select
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            >
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}:00
-                </option>
-              ))}
-            </select>
-
-            <label style={{ marginLeft: "10px" }}>終了: </label>
-            <select
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            >
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}:00
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
-      {/* リンク作成 */}
-      <button
-        onClick={handleCreateLink}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-        }}
-      >
-        🔗 共有リンクを作成
-      </button>
+      <div>
+        <label>出欠: </label>
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="◯">◯</option>
+          <option value="✕">✕</option>
+        </select>
+      </div>
 
-      {/* メッセージ */}
-      {message && <p style={{ marginTop: "10px" }}>{message}</p>}
+      <button onClick={handleSave}>保存</button>
 
-      {/* リンク表示 */}
-      {shareLink && (
-        <div style={{ marginTop: "15px" }}>
-          <p>
-            ✅ 共有リンク:{" "}
-            <a href={shareLink} target="_blank" rel="noopener noreferrer">
-              {shareLink}
-            </a>
-          </p>
-        </div>
-      )}
-
-      {/* 選択済み日付のスタイル */}
-      <style>{`
-        .selected-date {
-          background: #4caf50 !important;
-          color: white !important;
-          border-radius: 50%;
-        }
-      `}</style>
+      <h3>登録済みスケジュール</h3>
+      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>時間帯</th>
+            <th>名前</th>
+            <th>出欠</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.map((s, idx) => (
+            <tr key={idx}>
+              <td>{s.date}</td>
+              <td>{s.timeSlot}</td>
+              <td>{s.username}</td>
+              <td>{s.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
