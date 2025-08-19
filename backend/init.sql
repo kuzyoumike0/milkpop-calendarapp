@@ -1,34 +1,26 @@
--- 既存テーブルを削除（依存関係ごと消す）
+-- init.sql
 DROP TABLE IF EXISTS responses CASCADE;
 DROP TABLE IF EXISTS schedules CASCADE;
-DROP TABLE IF EXISTS links CASCADE;
+DROP TABLE IF EXISTS share_links CASCADE;
 
--- links テーブル
-CREATE TABLE links (
-    id TEXT PRIMARY KEY,
-    title TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE share_links (
+  id SERIAL PRIMARY KEY,
+  linkid TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL
 );
 
--- 候補日程（開始・終了時間を含む）
 CREATE TABLE schedules (
-    id SERIAL PRIMARY KEY,
-    link_id TEXT NOT NULL,
-    date DATE NOT NULL,
-    timeslot TEXT NOT NULL,
-    starttime TEXT,
-    endtime TEXT,
-    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
+  id SERIAL PRIMARY KEY,
+  linkid TEXT NOT NULL REFERENCES share_links(linkid) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  timeslot TEXT NOT NULL,
+  starttime TEXT,
+  endtime TEXT
 );
 
--- 回答（◯ ×）
 CREATE TABLE responses (
-    id SERIAL PRIMARY KEY,
-    link_id TEXT NOT NULL,
-    date DATE NOT NULL,
-    timeslot TEXT NOT NULL,
-    username TEXT NOT NULL,
-    choice TEXT NOT NULL CHECK (choice IN ('◯', '×')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
+  id SERIAL PRIMARY KEY,
+  schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  response TEXT NOT NULL -- ○ or ✖
 );
