@@ -4,8 +4,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
-const fs = require("fs");
 const helmet = require("helmet");
+const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
@@ -46,14 +46,25 @@ const pool = new Pool(
       }
 );
 
-// === DB初期化処理 ===
+// === init.sql を自動実行（最初の1回だけ） ===
 async function initDB() {
   try {
-    const sql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf-8");
-    await pool.query(sql);
-    console.log("✅ init.sql executed successfully");
+    // schedules テーブルが存在するか確認
+    const result = await pool.query(
+      "SELECT to_regclass('public.schedules') as exists"
+    );
+    if (!result.rows[0].exists) {
+      console.log("📦 schedules テーブルが存在しません → init.sql を流します");
+
+      const initSql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
+      await pool.query(initSql);
+
+      console.log("✅ init.sql の実行が完了しました");
+    } else {
+      console.log("✅ schedules テーブルは既に存在します");
+    }
   } catch (err) {
-    console.error("❌ Failed to execute init.sql:", err);
+    console.error("❌ init.sql 実行エラー:", err);
   }
 }
 
@@ -159,8 +170,9 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
-// === サーバー起動 ===
-app.listen(PORT, async () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
-  await initDB(); // 起動時に init.sql を流す
+// === サーバー起動（init.sql 実行後） ===
+initDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server is running on http://localhost:${PORT}`);
+  });
 });
