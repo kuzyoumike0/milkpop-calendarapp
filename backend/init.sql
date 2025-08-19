@@ -1,13 +1,16 @@
+-- 既存テーブルをすべて削除（依存関係もまとめて削除）
 DROP TABLE IF EXISTS responses CASCADE;
 DROP TABLE IF EXISTS schedules CASCADE;
 DROP TABLE IF EXISTS links CASCADE;
 
+-- リンク情報
 CREATE TABLE links (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 候補日程
 CREATE TABLE schedules (
     id SERIAL PRIMARY KEY,
     link_id TEXT NOT NULL,
@@ -18,6 +21,7 @@ CREATE TABLE schedules (
     FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
 );
 
+-- 回答（◯ ×）
 CREATE TABLE responses (
     id SERIAL PRIMARY KEY,
     link_id TEXT NOT NULL,
