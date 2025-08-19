@@ -4,10 +4,14 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function SharePage() {
-  const [title, setTitle] = useState(""); 
-  const [selectedDates, setSelectedDates] = useState([]); 
-  const [shareLink, setShareLink] = useState(""); 
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [shareLink, setShareLink] = useState("");
   const [message, setMessage] = useState("");
+
+  const [startTime, setStartTime] = useState("18:00");
+  const [endTime, setEndTime] = useState("21:00");
+  const [specialSlot, setSpecialSlot] = useState(""); // 全日・昼・夜
 
   const formatDate = (date) => {
     const yyyy = date.getFullYear();
@@ -16,34 +20,15 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 日付クリック
   const handleDateClick = (date) => {
     const dateStr = formatDate(date);
-    if (selectedDates.find((d) => d.date === dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d.date !== dateStr));
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
     } else {
-      setSelectedDates([...selectedDates, { date: dateStr, start: "01:00", end: "24:00" }]);
+      setSelectedDates([...selectedDates, dateStr]);
     }
   };
 
-  // 時間プルダウン生成
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let i = 1; i <= 24; i++) {
-      const hour = String(i).padStart(2, "0") + ":00";
-      options.push(<option key={hour} value={hour}>{hour}</option>);
-    }
-    return options;
-  };
-
-  // 時間変更
-  const handleTimeChange = (dateStr, field, value) => {
-    setSelectedDates(selectedDates.map((d) =>
-      d.date === dateStr ? { ...d, [field]: value } : d
-    ));
-  };
-
-  // リンク作成
   const handleCreateLink = async () => {
     if (!title.trim()) {
       setMessage("❌ タイトルを入力してください");
@@ -54,16 +39,22 @@ export default function SharePage() {
       return;
     }
 
+    // specialSlotが選ばれていればそれを優先
+    let timeslot = "";
+    if (specialSlot) {
+      timeslot = specialSlot;
+    } else {
+      timeslot = `${startTime}-${endTime}`;
+    }
+
     try {
-      const payload = {
+      const res = await axios.post("/api/create-link", {
         title,
         dates: selectedDates.map((d) => ({
-          date: d.date,
-          timeslot: `${d.start}-${d.end}`,
+          date: d,
+          timeslot,
         })),
-      };
-
-      const res = await axios.post("/api/create-link", payload);
+      });
       const url = `${window.location.origin}/link/${res.data.linkId}`;
       setShareLink(url);
       setMessage("✅ リンクを作成しました");
@@ -75,11 +66,17 @@ export default function SharePage() {
 
   const tileClassName = ({ date }) => {
     const dateStr = formatDate(date);
-    if (selectedDates.find((d) => d.date === dateStr)) {
+    if (selectedDates.includes(dateStr)) {
       return "selected-date";
     }
     return null;
   };
+
+  // 時間リスト（1:00～24:00）
+  const timeOptions = Array.from({ length: 24 }, (_, i) => {
+    const h = String(i + 1).padStart(2, "0");
+    return `${h}:00`;
+  });
 
   return (
     <div style={{ padding: "20px" }}>
@@ -96,37 +93,57 @@ export default function SharePage() {
         />
       </div>
 
+      {/* カレンダー */}
       <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
 
-      {/* 選択済み日付ごとの時間選択 */}
-      {selectedDates.length > 0 && (
-        <div style={{ marginTop: "20px" }}>
-          <h3>⏰ 時間設定</h3>
-          {selectedDates.map((d) => (
-            <div key={d.date} style={{ marginBottom: "10px" }}>
-              <strong>{d.date}</strong>　
-              開始:
-              <select
-                value={d.start}
-                onChange={(e) => handleTimeChange(d.date, "start", e.target.value)}
-              >
-                {generateTimeOptions()}
-              </select>
-              終了:
-              <select
-                value={d.end}
-                onChange={(e) => handleTimeChange(d.date, "end", e.target.value)}
-              >
-                {generateTimeOptions()}
-              </select>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* 特別枠 or 時間帯選択 */}
+      <div style={{ marginTop: "15px" }}>
+        <label>時間帯: </label>
+        <select
+          value={specialSlot}
+          onChange={(e) => {
+            setSpecialSlot(e.target.value);
+          }}
+          style={{ marginRight: "10px" }}
+        >
+          <option value="">カスタム時間を選択</option>
+          <option value="全日">全日（終日）</option>
+          <option value="昼">昼（12:00-18:00）</option>
+          <option value="夜">夜（18:00-24:00）</option>
+        </select>
+
+        {!specialSlot && (
+          <>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            ～
+            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+      </div>
 
       <button
         onClick={handleCreateLink}
-        style={{ marginTop: "20px", padding: "10px 20px", fontSize: "16px" }}
+        style={{
+          marginTop: "20px",
+          padding: "10px 20px",
+          fontSize: "16px",
+          cursor: "pointer",
+        }}
       >
         🔗 共有リンクを作成
       </button>
