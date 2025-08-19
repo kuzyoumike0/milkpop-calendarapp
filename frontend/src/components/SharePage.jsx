@@ -9,7 +9,13 @@ export default function SharePage() {
   const [responses, setResponses] = useState({});
 
   useEffect(() => {
-    axios.get(`/api/share/${linkid}`).then(res => setSchedules(res.data));
+    axios.get(`/api/share/${linkid}`).then(res => {
+      // 日付順にソート
+      const sorted = res.data.sort((a, b) =>
+        new Date(a.start_date) - new Date(b.start_date)
+      );
+      setSchedules(sorted);
+    });
   }, [linkid]);
 
   const handleSave = async (id) => {
