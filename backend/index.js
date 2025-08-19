@@ -4,12 +4,12 @@ const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const cors = require("cors");
+const Holidays = require("date-holidays");
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// === DB接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -39,12 +39,35 @@ async function initDB() {
       linkid TEXT
     );
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS holidays (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      date DATE NOT NULL UNIQUE
+    );
+  `);
+
+  // 日本の祝日を初期投入
+  const hd = new Holidays("JP");
+  const year = new Date().getFullYear();
+  const holidays = hd.getHolidays(year);
+  for (const h of holidays) {
+    try {
+      await pool.query(
+        `INSERT INTO holidays (name, date) VALUES ($1, $2) ON CONFLICT (date) DO NOTHING`,
+        [h.name, h.date]
+      );
+    } catch (err) {
+      console.error("祝日登録失敗:", err);
+    }
+  }
 }
 initDB();
 
 // === API ===
 
-// 新規スケジュール登録
+// スケジュール登録
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, memo, date, timeslot, range_mode, username, linkid } = req.body;
@@ -68,6 +91,17 @@ app.get("/api/schedules", async (req, res) => {
   } catch (err) {
     console.error("スケジュール取得エラー:", err);
     res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 祝日取得
+app.get("/api/holidays", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM holidays ORDER BY date ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("祝日取得エラー:", err);
+    res.status(500).json({ error: "祝日取得失敗" });
   }
 });
 
