@@ -4,75 +4,114 @@ import axios from "axios";
 
 export default function SharePage() {
   const { linkid } = useParams();
-  const [schedules, setSchedules] = useState([]);
-  const [username, setUsername] = useState("");
+  const [schedule, setSchedule] = useState(null);
   const [responses, setResponses] = useState({});
+  const [username, setUsername] = useState("");
 
+  // データ取得
   useEffect(() => {
-    axios.get(`/api/share/${linkid}`).then(res => {
-      // 日付順にソート
-      const sorted = res.data.sort((a, b) =>
-        new Date(a.start_date) - new Date(b.start_date)
-      );
-      setSchedules(sorted);
+    axios.get(`/api/schedule/${linkid}`).then((res) => {
+      setSchedule(res.data.schedule);
+      setResponses(res.data.responses || {});
     });
   }, [linkid]);
 
-  const handleSave = async (id) => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
+  // 保存処理
+  const handleSave = async () => {
+    try {
+      await axios.post(`/api/response/${linkid}`, {
+        username,
+        responses,
+      });
+      const res = await axios.get(`/api/schedule/${linkid}`);
+      setResponses(res.data.responses || {});
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
     }
-    await axios.post("/api/response", {
-      schedule_id: id,
-      username,
-      response: responses[id] || "✖"
-    });
-    alert("保存しました！");
   };
 
+  // プルダウン変更
+  const handleChange = (dateKey, value) => {
+    setResponses({
+      ...responses,
+      [dateKey]: value,
+    });
+  };
+
+  if (!schedule) return <p className="text-center text-gray-400">読み込み中...</p>;
+
+  // 日付の範囲を展開
+  const getDatesInRange = (start, end) => {
+    const dates = [];
+    let current = new Date(start);
+    const endDate = new Date(end);
+    while (current <= endDate) {
+      dates.push(current.toISOString().slice(0, 10));
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
+  const dates = getDatesInRange(schedule.start_date, schedule.end_date);
+
   return (
-    <div className="max-w-3xl mx-auto bg-[#111] p-6 rounded-2xl shadow-lg space-y-6">
-      <h2 className="text-2xl font-bold text-[#FDB9C8]">共有スケジュール</h2>
+    <div className="max-w-4xl mx-auto bg-[#111] text-white p-8 rounded-2xl shadow-lg">
+      {/* タイトル */}
+      <h2 className="text-3xl font-bold text-center text-[#FDB9C8] mb-6">
+        {schedule.title}
+      </h2>
 
-      <input
-        className="w-full p-2 rounded text-black"
-        placeholder="あなたの名前を入力"
-        value={username}
-        onChange={e => setUsername(e.target.value)}
-      />
-
-      <div className="space-y-4">
-        {schedules.map(s => (
-          <div key={s.id} className="bg-[#222] p-4 rounded-xl shadow-md">
-            <div className="font-bold text-lg text-[#FDB9C8]">{s.title}</div>
-            <div className="text-sm text-gray-300">
-              {s.start_date} ~ {s.end_date} [{s.timeslot}]
-            </div>
-            <div className="mt-2">
-              <select
-                className="p-2 text-black rounded"
-                value={responses[s.id] || ""}
-                onChange={e => setResponses({ ...responses, [s.id]: e.target.value })}
-              >
-                <option value="">選択してください</option>
-                <option value="〇">〇</option>
-                <option value="✖">✖</option>
-              </select>
-              <button
-                onClick={() => handleSave(s.id)}
-                className="ml-3 bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-1 px-4 rounded transition"
-              >
-                保存
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* ユーザー名入力 */}
+      <div className="mb-6 text-center">
+        <input
+          type="text"
+          placeholder="名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="p-3 rounded-xl text-black w-64 text-center shadow"
+        />
       </div>
 
-      {schedules.length === 0 && (
-        <p className="text-gray-400">まだ共有された日程がありません。</p>
-      )}
+      {/* 日程表 */}
+      <table className="w-full border-collapse text-center bg-black rounded-xl overflow-hidden">
+        <thead>
+          <tr className="bg-[#004CA0] text-white">
+            <th className="p-3">日付</th>
+            <th className="p-3">時間帯</th>
+            <th className="p-3">出欠</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dates.map((date) => (
+            <tr key={date} className="border-b border-gray-700 hover:bg-[#222]">
+              <td className="p-3">{date}</td>
+              <td className="p-3">{schedule.timeslot}</td>
+              <td className="p-3">
+                <select
+                  value={responses[date] || ""}
+                  onChange={(e) => handleChange(date, e.target.value)}
+                  className="p-2 rounded-lg text-black"
+                >
+                  <option value="">未選択</option>
+                  <option value="◯">◯</option>
+                  <option value="✖">✖</option>
+                </select>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* 保存ボタン */}
+      <div className="text-center mt-6">
+        <button
+          onClick={handleSave}
+          className="px-6 py-3 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] rounded-xl font-bold hover:scale-105 transform transition"
+        >
+          保存
+        </button>
+      </div>
     </div>
   );
 }
