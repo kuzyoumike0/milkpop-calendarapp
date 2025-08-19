@@ -1,90 +1,70 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { linkId } = useParams();
-  const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]); // 選択された日付
-  const [answers, setAnswers] = useState([]); // ユーザー回答
+  const { id } = useParams();
+  const [schedules, setSchedules] = useState([]);
   const [username, setUsername] = useState("");
-  const [myChoices, setMyChoices] = useState({}); // { "2025-08-20": "◯" }
 
-  // 日程取得
   useEffect(() => {
-    axios.get(`/api/link/${linkId}`).then((res) => {
-      setTitle(res.data.title);
-      setDates(res.data.dates || []);
-      setAnswers(res.data.answers || []);
+    axios.get(`/api/link/${id}`).then((res) => {
+      setSchedules(res.data);
     });
-  }, [linkId]);
+  }, [id]);
 
-  // 回答送信
-  const submit = async () => {
-    try {
-      await axios.post(`/api/link/${linkId}/answer`, {
-        username,
-        choices: myChoices,
-      });
-      const res = await axios.get(`/api/link/${linkId}`);
-      setAnswers(res.data.answers || []);
-    } catch (err) {
-      console.error(err);
-      alert("送信失敗");
+  const respond = async (scheduleId, answer) => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
     }
+    await axios.post("/api/respond", { scheduleId, username, answer });
+    const res = await axios.get(`/api/link/${id}`);
+    setSchedules(res.data);
   };
 
-  // マトリクス表で表示
+  // 日付ごとにまとめる
+  const grouped = schedules.reduce((acc, cur) => {
+    const key = cur.date;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(cur);
+    return acc;
+  }, {});
+
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>{title}</h2>
+    <div style={{ padding: "20px" }}>
+      <h2>📅 共有スケジュール</h2>
+      <input
+        placeholder="あなたの名前"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-      <label>
-        名前:
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ marginLeft: "0.5rem" }}
-        />
-      </label>
-
-      <table border="1" cellPadding="5" style={{ marginTop: "1rem" }}>
+      <table border="1" style={{ marginTop: "20px", width: "100%" }}>
         <thead>
           <tr>
             <th>日付</th>
-            <th>自分の回答</th>
-            {answers.map((a, i) => (
-              <th key={i}>{a.username}</th>
-            ))}
+            <th>ユーザー</th>
+            <th>可否</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          {dates.map((d) => (
-            <tr key={d}>
-              <td>{d}</td>
-              <td>
-                <select
-                  value={myChoices[d] || ""}
-                  onChange={(e) =>
-                    setMyChoices({ ...myChoices, [d]: e.target.value })
-                  }
-                >
-                  <option value="">-</option>
-                  <option value="◯">◯</option>
-                  <option value="×">×</option>
-                </select>
-              </td>
-              {answers.map((a, i) => (
-                <td key={i}>{a.choices?.[d] || "-"}</td>
-              ))}
-            </tr>
-          ))}
+          {Object.entries(grouped).map(([date, rows]) =>
+            rows.map((r, i) => (
+              <tr key={r.id + i}>
+                <td>{date}</td>
+                <td>{r.username || "-"}</td>
+                <td>{r.answer === null ? "-" : r.answer ? "◯" : "×"}</td>
+                <td>
+                  <button onClick={() => respond(r.id, true)}>◯</button>
+                  <button onClick={() => respond(r.id, false)}>×</button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-
-      <button onClick={submit} style={{ marginTop: "1rem" }}>
-        回答を送信
-      </button>
     </div>
   );
 }
