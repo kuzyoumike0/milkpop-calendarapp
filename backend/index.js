@@ -37,7 +37,7 @@ app.post("/api/shared", async (req, res) => {
   }
 
   try {
-    // 既存削除
+    // 既存削除（同じユーザー名のスケジュールを一旦削除）
     await pool.query("DELETE FROM schedules WHERE username = $1", [username]);
 
     // 日付ごとに保存
@@ -55,7 +55,21 @@ app.post("/api/shared", async (req, res) => {
   }
 });
 
-// === React ビルドファイルを配信 ===
+// === 共有スケジュール取得 API ===
+app.get("/api/shared", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT username, date, mode FROM schedules ORDER BY username ASC, date ASC"
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("DB取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
+
+// === React ビルドファイルを配信（本番用） ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
