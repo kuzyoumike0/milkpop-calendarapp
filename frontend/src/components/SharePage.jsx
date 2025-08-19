@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 export default function SharePage() {
   const [mode, setMode] = useState("range"); // "range" or "multiple"
   const [rangeValue, setRangeValue] = useState([new Date(), new Date()]);
   const [multipleDates, setMultipleDates] = useState([]);
+  const [username, setUsername] = useState("");
+  const [message, setMessage] = useState("");
 
-  // 範囲選択時
+  // 範囲選択
   const handleRangeChange = (value) => {
     setRangeValue(value);
   };
 
-  // 複数選択時
+  // 複数選択
   const handleMultipleChange = (date) => {
     const exists = multipleDates.find(
       (d) => d.toDateString() === date.toDateString()
@@ -24,9 +27,41 @@ export default function SharePage() {
     }
   };
 
+  // 保存処理
+  const handleSubmit = async () => {
+    try {
+      let dates;
+      if (mode === "range") {
+        dates = rangeValue.map((d) => d.toISOString().split("T")[0]);
+      } else {
+        dates = multipleDates.map((d) => d.toISOString().split("T")[0]);
+      }
+
+      await axios.post("/api/shared", {
+        username,
+        mode,
+        dates,
+      });
+
+      setMessage("✅ スケジュールを共有しました！");
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ 保存に失敗しました");
+    }
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>共有スケジュール作成</h2>
+
+      <div style={{ marginBottom: "10px" }}>
+        <input
+          type="text"
+          placeholder="名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+      </div>
 
       {/* ラジオボタンでモード切替 */}
       <div style={{ marginBottom: "10px" }}>
@@ -68,7 +103,7 @@ export default function SharePage() {
         />
       )}
 
-      {/* 選択結果表示 */}
+      {/* 結果 */}
       <div style={{ marginTop: "20px" }}>
         {mode === "range" ? (
           <p>
@@ -83,6 +118,16 @@ export default function SharePage() {
           </p>
         )}
       </div>
+
+      {/* 送信ボタン */}
+      <button
+        onClick={handleSubmit}
+        style={{ marginTop: "20px", padding: "8px 16px" }}
+      >
+        保存する
+      </button>
+
+      {message && <p>{message}</p>}
 
       <style>{`
         .selected-day {
