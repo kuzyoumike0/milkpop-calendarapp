@@ -3,10 +3,12 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // === PostgreSQL 接続設定 ===
 const pool = new Pool(
@@ -24,153 +26,156 @@ const pool = new Pool(
       }
 );
 
-app.use(cors());
-app.use(bodyParser.json());
-
 // === DB初期化 ===
 async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS links (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
-      date DATE NOT NULL,
-      timeslot TEXT NOT NULL
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS responses (
-      id SERIAL PRIMARY KEY,
-      schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
-      username TEXT NOT NULL,
-      status TEXT NOT NULL  -- "〇" or "×"
-    );
-  `);
-
-  console.log("✅ init.sql でデータベースを初期化しました");
-}
-
-// === API: リンク作成 ===
-app.post("/api/create-link", async (req, res) => {
-  const { title, dates, timeslot, startTime, endTime } = req.body;
-
-  if (!title || !Array.isArray(dates) || dates.length === 0) {
-    return res.status(400).json({ error: "title と dates は必須です" });
-  }
-
+  const client = await pool.connect();
   try {
-    const linkId = uuidv4();
-    await pool.query("INSERT INTO links (id, title) VALUES ($1, $2)", [
-      linkId,
-      title,
-    ]);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS links (
+        id SERIAL PRIMARY KEY,
+        linkid TEXT UNIQUE NOT NULL,
+        title TEXT NOT NULL
+      );
 
-    // timeslotを決定（全日 / 昼 / 夜 / 開始-終了）
-    let slotValue = "全日";
-    if (timeslot === "全日" || timeslot === "昼" || timeslot === "夜") {
-      slotValue = timeslot;
-    } else if (startTime && endTime) {
-      // 開始 < 終了チェック
-      const start = parseInt(startTime, 10);
-      const end = parseInt(endTime, 10);
-      if (isNaN(start) || isNaN(end) || start >= end) {
-        return res.status(400).json({ error: "開始時間は終了時間より前にしてください" });
-      }
-      slotValue = `${startTime}:00-${endTime}:00`;
+      CREATE TABLE IF NOT EXISTS schedules (
+        id SERIAL PRIMARY KEY,
+        linkid TEXT REFERENCES links(linkid) ON DELETE CASCADE,
+        date DATE NOT NULL,
+        timeslot TEXT NOT NULL,
+        starttime TEXT,
+        endtime TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS responses (
+        id SERIAL PRIMARY KEY,
+        scheduleid INT REFERENCES schedules(id) ON DELETE CASCADE,
+        username TEXT NOT NULL,
+        status TEXT NOT NULL
+      );
+    `);
+    console.log("✅ init.sql でデータベースを初期化しました");
+  } finally {
+    client.release();
+  }
+}
+initDB();
+
+// === リンク作成 API ===
+app.post("/api/create-link", async (req, res) => {
+  try {
+    const { title, dates } = req.body;
+    if (!title || !dates || dates.length === 0) {
+      return res.status(400).json({ error: "タイトルと日程は必須です" });
     }
 
+    const client = await pool.connect();
+    const linkId = uuidv4(); // ✅ 毎回ユニーク
+
+    // links に挿入
+    await client.query(
+      "INSERT INTO links (linkid, title) VALUES ($1, $2)",
+      [linkId, title]
+    );
+
+    // schedules に日程を挿入
     for (const d of dates) {
-      await pool.query(
-        "INSERT INTO schedules (link_id, date, timeslot) VALUES ($1, $2, $3)",
-        [linkId, d, slotValue]
+      if (d.startTime && d.endTime && d.startTime >= d.endTime) {
+        throw new Error("開始時間は終了時間より前にしてください");
+      }
+
+      await client.query(
+        "INSERT INTO schedules (linkid, date, timeslot, starttime, endtime) VALUES ($1, $2, $3, $4, $5)",
+        [linkId, d.date, d.timeslot, d.startTime || null, d.endTime || null]
       );
     }
 
+    client.release();
     res.json({ linkId });
   } catch (err) {
-    console.error("リンク作成エラー:", err);
-    res.status(500).json({ error: "リンク作成失敗" });
+    console.error("❌ リンク作成エラー:", err);
+    res.status(500).json({ error: "リンク作成に失敗しました" });
   }
 });
 
-// === API: 共有リンク内容取得 ===
-app.get("/api/link/:id", async (req, res) => {
-  const { id } = req.params;
+// === リンク詳細取得 API ===
+app.get("/api/link/:linkId", async (req, res) => {
   try {
-    const linkRes = await pool.query("SELECT * FROM links WHERE id=$1", [id]);
-    if (linkRes.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
+    const { linkId } = req.params;
+    const client = await pool.connect();
+
+    const linkResult = await client.query(
+      "SELECT * FROM links WHERE linkid=$1",
+      [linkId]
+    );
+    if (linkResult.rows.length === 0) {
+      client.release();
+      return res.status(404).json({ error: "リンクが見つかりません" });
     }
 
-    const schedulesRes = await pool.query(
-      "SELECT * FROM schedules WHERE link_id=$1 ORDER BY date ASC",
-      [id]
+    const schedulesResult = await client.query(
+      "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
+      [linkId]
     );
+    client.release();
 
-    res.json({
-      link: linkRes.rows[0],
-      schedules: schedulesRes.rows,
-    });
+    res.json({ link: linkResult.rows[0], schedules: schedulesResult.rows });
   } catch (err) {
-    console.error("リンク取得エラー:", err);
-    res.status(500).json({ error: "リンク取得失敗" });
+    console.error("❌ リンク取得エラー:", err);
+    res.status(500).json({ error: "リンク取得に失敗しました" });
   }
 });
 
-// === API: 回答登録 ===
+// === 回答登録 API ===
 app.post("/api/respond", async (req, res) => {
-  const { scheduleId, username, status } = req.body;
-  if (!scheduleId || !username || !status) {
-    return res.status(400).json({ error: "scheduleId, username, status は必須です" });
-  }
-
   try {
-    await pool.query(
-      "INSERT INTO responses (schedule_id, username, status) VALUES ($1, $2, $3)",
+    const { scheduleId, username, status } = req.body;
+    if (!scheduleId || !username || !status) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    const client = await pool.connect();
+    await client.query(
+      `INSERT INTO responses (scheduleid, username, status)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (scheduleid, username) DO UPDATE
+       SET status = EXCLUDED.status`,
       [scheduleId, username, status]
     );
-    res.json({ success: true });
+    client.release();
+
+    res.json({ message: "✅ 回答を登録しました" });
   } catch (err) {
-    console.error("回答登録エラー:", err);
-    res.status(500).json({ error: "回答登録失敗" });
+    console.error("❌ 回答登録エラー:", err);
+    res.status(500).json({ error: "回答登録に失敗しました" });
   }
 });
 
-// === API: 回答取得（回答一覧） ===
+// === 回答取得 API ===
 app.get("/api/responses/:linkId", async (req, res) => {
-  const { linkId } = req.params;
   try {
-    const result = await pool.query(
-      `SELECT s.date, s.timeslot, r.username, r.status
-       FROM schedules s
-       LEFT JOIN responses r ON s.id = r.schedule_id
-       WHERE s.link_id = $1
+    const { linkId } = req.params;
+    const client = await pool.connect();
+    const result = await client.query(
+      `SELECT s.date, s.timeslot, s.starttime, s.endtime, r.username, r.status
+       FROM responses r
+       JOIN schedules s ON r.scheduleid = s.id
+       WHERE s.linkid=$1
        ORDER BY s.date ASC`,
       [linkId]
     );
+    client.release();
     res.json(result.rows);
   } catch (err) {
-    console.error("回答取得エラー:", err);
-    res.status(500).json({ error: "回答取得失敗" });
+    console.error("❌ 回答取得エラー:", err);
+    res.status(500).json({ error: "回答取得に失敗しました" });
   }
 });
 
-// === 静的ファイル提供（フロントエンド） ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// === フロントエンド配信 ===
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-// === サーバー起動 ===
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🚀 サーバーはポート ${PORT} で実行されています`);
-  });
+app.listen(PORT, () => {
+  console.log(`🚀 サーバーはポート ${PORT} で実行されています`);
 });
