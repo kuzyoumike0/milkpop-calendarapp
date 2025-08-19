@@ -122,6 +122,25 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
+// 個人スケジュール削除（自分の名前のみ）
+app.delete("/api/schedule", async (req, res) => {
+  const { username, date, timeslot, linkId } = req.body;
+  try {
+    const result = await pool.query(
+      `DELETE FROM schedules 
+       WHERE username = $1 AND date = $2 AND timeslot = $3 AND linkId = $4`,
+      [username, date, timeslot, linkId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(403).json({ error: "削除できるのは自分の予定のみです" });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "削除失敗" });
+  }
+});
+
 // 個人スケジュール取得
 app.get("/api/schedules/:linkId", async (req, res) => {
   const { linkId } = req.params;
