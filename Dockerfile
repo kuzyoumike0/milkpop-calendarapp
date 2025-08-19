@@ -1,40 +1,24 @@
-# =============================
-# フロントエンド ビルドステージ
-# =============================
+# ===== フロントエンドビルド =====
 FROM node:18 AS frontend-build
-
 WORKDIR /app/frontend
-
-# 依存関係インストール
 COPY frontend/package*.json ./
 RUN npm install
-
-# フロントエンドソースコピー
 COPY frontend/ ./
-
-# ビルド
 RUN npm run build
 
-# =============================
-# バックエンド ステージ
-# =============================
+# ===== バックエンド =====
 FROM node:18
-
 WORKDIR /app/backend
 
-# 依存関係インストール
+# バックエンド依存関係
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドソースコピー
+# ソースコピー
 COPY backend/ ./
 
-# フロントエンドのビルド成果物を public にコピー
-COPY --from=frontend-build /app/frontend/build ./public
+# フロントのビルド済み成果物をコピー
+COPY --from=frontend-build /app/frontend/build ../frontend/build
 
-# 環境変数
-ENV PORT 8080
 EXPOSE 8080
-
-# サーバー起動
 CMD ["node", "index.js"]
