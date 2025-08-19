@@ -15,51 +15,31 @@ export default function SharePage() {
   const [username, setUsername] = useState("");
   const [timeSlot, setTimeSlot] = useState("全日");
   const [status, setStatus] = useState("◯");
-  const [mode, setMode] = useState("range"); // 初期値は範囲選択
+  const [mode, setMode] = useState("range");
 
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
+  const formatDate = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
 
-  // 初期ロード
   useEffect(() => {
     axios.get(`/api/schedules/${linkId}`).then((res) => setSchedules(res.data));
-
-    // 現在のモード取得
     axios.get(`/api/mode/${linkId}`).then((res) => setMode(res.data.mode));
-
     socket.emit("join", linkId);
-
-    socket.on("updateSchedules", (data) => {
-      setSchedules(data);
-    });
-
-    socket.on("updateMode", (newMode) => {
-      setMode(newMode);
-    });
-
+    socket.on("updateSchedules", (data) => setSchedules(data));
+    socket.on("updateMode", (newMode) => setMode(newMode));
     return () => {
       socket.off("updateSchedules");
       socket.off("updateMode");
     };
   }, [linkId]);
 
-  // モード切替
   const handleModeChange = async (newMode) => {
-    try {
-      await axios.post("/api/mode", { linkId, mode: newMode });
-    } catch (err) {
-      console.error("モード変更失敗:", err);
-    }
+    await axios.post("/api/mode", { linkId, mode: newMode });
   };
 
-  // 保存処理
   const handleSave = async () => {
     let datesToSave = [];
-
     if (mode === "range") {
       const [start, end] = selectedDates;
       let cur = new Date(start);
@@ -70,36 +50,24 @@ export default function SharePage() {
     } else if (mode === "multiple") {
       datesToSave = selectedDates;
     }
-
-    try {
-      for (const d of datesToSave) {
-        await axios.post("/api/schedule", {
-          linkId,
-          date: formatDate(d),
-          timeSlot,
-          username,
-          status,
-        });
-      }
-    } catch (err) {
-      console.error("保存失敗:", err);
-      alert("保存に失敗しました");
+    for (const d of datesToSave) {
+      await axios.post("/api/schedule", {
+        linkId,
+        date: formatDate(d),
+        timeSlot,
+        username,
+        status
+      });
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>共有スケジュール</h2>
-
       <div>
         <label>名前: </label>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="名前を入力"
-        />
+        <input value={username} onChange={(e) => setUsername(e.target.value)} />
       </div>
-
       <div>
         <label>モード: </label>
         <label>
@@ -121,17 +89,11 @@ export default function SharePage() {
           複数選択
         </label>
       </div>
-
-      <div>
-        <label>日付: </label>
-        <Calendar
-          selectRange={mode === "range"}
-          onChange={(value) => setSelectedDates(value)}
-          value={selectedDates}
-          allowMultiple={mode === "multiple" ? true : undefined}
-        />
-      </div>
-
+      <Calendar
+        selectRange={mode === "range"}
+        onChange={(value) => setSelectedDates(value)}
+        value={selectedDates}
+      />
       <div>
         <label>時間帯: </label>
         <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
@@ -140,7 +102,6 @@ export default function SharePage() {
           <option value="夜">夜</option>
         </select>
       </div>
-
       <div>
         <label>出欠: </label>
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -148,11 +109,9 @@ export default function SharePage() {
           <option value="✕">✕</option>
         </select>
       </div>
-
       <button onClick={handleSave}>保存</button>
-
       <h3>登録済みスケジュール</h3>
-      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
+      <table border="1">
         <thead>
           <tr>
             <th>日付</th>
