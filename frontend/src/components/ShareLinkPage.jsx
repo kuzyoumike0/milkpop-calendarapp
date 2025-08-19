@@ -9,6 +9,7 @@ export default function ShareLinkPage() {
   const [timeslot, setTimeslot] = useState("終日");
   const [comment, setComment] = useState("");
   const [schedules, setSchedules] = useState([]);
+  const [editId, setEditId] = useState(null); // 編集中の予定ID
 
   // 今日の日付
   useEffect(() => {
@@ -37,19 +38,34 @@ export default function ShareLinkPage() {
       alert("名前を入力してください");
       return;
     }
+
     try {
-      await axios.post(`/api/share/${linkId}`, {
-        username,
-        date,
-        timeslot,
-        comment,
-      });
+      if (editId) {
+        // 編集モード
+        await axios.put(`/api/schedule/${editId}`, {
+          username,
+          date,
+          timeslot,
+          comment,
+        });
+      } else {
+        // 新規登録
+        await axios.post(`/api/share/${linkId}`, {
+          username,
+          date,
+          timeslot,
+          comment,
+        });
+      }
+
+      // リセット
       setUsername("");
       setTimeslot("終日");
       setComment("");
+      setEditId(null);
       fetchSchedules();
     } catch (err) {
-      console.error("登録失敗:", err);
+      console.error("登録/更新失敗:", err);
     }
   };
 
@@ -61,6 +77,14 @@ export default function ShareLinkPage() {
     } catch (err) {
       console.error("削除失敗:", err);
     }
+  };
+
+  const handleEdit = (schedule) => {
+    setEditId(schedule.id);
+    setUsername(schedule.username);
+    setDate(schedule.date);
+    setTimeslot(schedule.timeslot);
+    setComment(schedule.comment || "");
   };
 
   const formatJapaneseDate = (isoDate) => {
@@ -112,10 +136,25 @@ export default function ShareLinkPage() {
         />
         <button
           onClick={handleRegister}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className={`${
+            editId ? "bg-green-500" : "bg-blue-500"
+          } text-white px-4 py-2 rounded`}
         >
-          登録
+          {editId ? "更新" : "登録"}
         </button>
+        {editId && (
+          <button
+            onClick={() => {
+              setEditId(null);
+              setUsername("");
+              setTimeslot("終日");
+              setComment("");
+            }}
+            className="bg-gray-400 text-white px-4 py-2 rounded"
+          >
+            キャンセル
+          </button>
+        )}
       </div>
 
       {/* 一覧 */}
@@ -144,7 +183,13 @@ export default function ShareLinkPage() {
                       <td className="border p-2">{s.username}</td>
                       <td className="border p-2">{s.timeslot}</td>
                       <td className="border p-2">{s.comment || "-"}</td>
-                      <td className="border p-2">
+                      <td className="border p-2 space-x-2">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="bg-yellow-500 text-white px-2 py-1 rounded"
+                        >
+                          編集
+                        </button>
                         <button
                           onClick={() => handleDelete(s.id)}
                           className="bg-red-500 text-white px-2 py-1 rounded"
@@ -173,12 +218,20 @@ export default function ShareLinkPage() {
                     <p>
                       <strong>コメント:</strong> {s.comment || "-"}
                     </p>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      className="mt-2 bg-red-500 text-white px-3 py-1 rounded"
-                    >
-                      削除
-                    </button>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleEdit(s)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded"
+                      >
+                        編集
+                      </button>
+                      <button
+                        onClick={() => handleDelete(s.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        削除
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
