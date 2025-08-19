@@ -1,46 +1,71 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import CalendarWithHolidays from "./CalendarWithHolidays";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("終日");
-  const [list, setList] = useState([]);
+  const [date, setDate] = useState(new Date());
+  const [rangeMode, setRangeMode] = useState("single");
+  const [timeslot, setTimeslot] = useState("全日");
 
-  const save = async () => {
-    const res = await axios.post("/api/personal", {
-      title, memo, dates: selectedDates, timeslot
+  const handleSave = async () => {
+    const formattedDate = date.toISOString().split("T")[0];
+    await axios.post("/api/personal", {
+      title,
+      memo,
+      date: formattedDate,
+      timeslot,
+      rangeMode,
     });
-    setList(res.data);
+    alert("保存しました！");
   };
-
-  useEffect(() => {
-    axios.get("/api/personal").then(res => setList(res.data));
-  }, []);
 
   return (
     <div>
-      <h2>個人日程登録</h2>
-      <input placeholder="タイトル" value={title} onChange={e => setTitle(e.target.value)} /><br/>
-      <textarea placeholder="メモ" value={memo} onChange={e => setMemo(e.target.value)} /><br/>
-      <CalendarWithHolidays onSelectDates={setSelectedDates} />
-      <label>
-        時間帯:
-        <select value={timeslot} onChange={e => setTimeslot(e.target.value)}>
-          <option>終日</option>
+      <h2>個人スケジュール</h2>
+      <div>
+        タイトル:{" "}
+        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div>
+        メモ: <input value={memo} onChange={(e) => setMemo(e.target.value)} />
+      </div>
+      <Calendar value={date} onChange={setDate} />
+      <div>
+        範囲選択:{" "}
+        <label>
+          <input
+            type="radio"
+            name="range"
+            value="single"
+            checked={rangeMode === "single"}
+            onChange={() => setRangeMode("single")}
+          />
+          単日
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="range"
+            value="multiple"
+            checked={rangeMode === "multiple"}
+            onChange={() => setRangeMode("multiple")}
+          />
+          複数日
+        </label>
+      </div>
+      <div>
+        時間帯:{" "}
+        <select value={timeslot} onChange={(e) => setTimeslot(e.target.value)}>
+          <option>全日</option>
           <option>昼</option>
           <option>夜</option>
-          <option>時間指定</option>
+          <option>1時-0時</option>
         </select>
-      </label><br/>
-      <button onClick={save}>登録</button>
-
-      <h3>登録済み</h3>
-      <ul>
-        {list.map((p,i)=><li key={i}>{p.title} ({p.timeslot}) {p.memo}</li>)}
-      </ul>
+      </div>
+      <button onClick={handleSave}>保存</button>
     </div>
   );
 }
