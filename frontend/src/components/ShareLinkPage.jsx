@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { useParams } from "react-router-dom";
 
 export default function ShareLinkPage() {
   const { linkId } = useParams();
-  const [date, setDate] = useState(new Date());
   const [username, setUsername] = useState("");
-  const [timeSlot, setTimeSlot] = useState("全日");
-  const [mode, setMode] = useState("single");
+  const [date, setDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("single");
+  const [timeSlot, setTimeSlot] = useState("終日");
+  const [startHour, setStartHour] = useState(0);
+  const [endHour, setEndHour] = useState(1);
   const [schedules, setSchedules] = useState([]);
 
   const formatDate = (d) => {
@@ -20,11 +22,7 @@ export default function ShareLinkPage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  useEffect(() => {
-    loadSchedules();
-  }, []);
-
-  const loadSchedules = async () => {
+  const fetchSchedules = async () => {
     try {
       const res = await axios.get(`/api/schedules/${linkId}`);
       setSchedules(res.data);
@@ -32,6 +30,10 @@ export default function ShareLinkPage() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
 
   const handleDateChange = (value) => {
     if (mode === "single") {
@@ -55,54 +57,84 @@ export default function ShareLinkPage() {
   };
 
   const saveSchedule = async () => {
+    if (!username || selectedDates.length === 0) {
+      alert("名前と日付を入力してください");
+      return;
+    }
+    if (parseInt(endHour) <= parseInt(startHour)) {
+      alert("終了時刻は開始時刻より後にしてください。");
+      return;
+    }
+
     try {
       await axios.post(`/api/schedules/${linkId}`, {
         username,
         dates: selectedDates,
-        timeslot: timeSlot,
+        timeslot: `${timeSlot} (${startHour}時〜${endHour}時)`,
       });
-      loadSchedules();
+      alert("登録しました！");
+      setSelectedDates([]);
+      fetchSchedules();
     } catch (err) {
       console.error(err);
-      alert("保存失敗");
-    }
-  };
-
-  const deleteSchedule = async (date, timeslot) => {
-    try {
-      await axios.delete(`/api/schedules/${linkId}`, {
-        data: { username, date, timeslot },
-      });
-      loadSchedules();
-    } catch (err) {
-      console.error(err);
-      alert("削除失敗");
+      alert("登録失敗");
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>共有カレンダー</h2>
-      <p>リンクID: {linkId}</p>
+      <h2>共有スケジュールページ</h2>
 
+      {/* 名前入力 */}
       <div>
         <label>名前: </label>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          placeholder="名前を入力"
         />
       </div>
 
-      <div>
+      {/* 時間帯 + 開始終了 */}
+      <div style={{ marginTop: "10px" }}>
         <label>時間帯: </label>
         <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
-          <option value="全日">全日</option>
+          <option value="終日">終日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
         </select>
+
+        <label style={{ marginLeft: "10px" }}>開始: </label>
+        <select
+          value={startHour}
+          onChange={(e) => {
+            const newStart = parseInt(e.target.value);
+            setStartHour(newStart);
+            if (endHour <= newStart) setEndHour(newStart + 1);
+          }}
+        >
+          {Array.from({ length: 23 }, (_, i) => (
+            <option key={i} value={i}>
+              {i}時
+            </option>
+          ))}
+        </select>
+
+        <label style={{ marginLeft: "10px" }}>終了: </label>
+        <select value={endHour} onChange={(e) => setEndHour(parseInt(e.target.value))}>
+          {Array.from({ length: 23 - startHour }, (_, i) => {
+            const hour = startHour + 1 + i;
+            return (
+              <option key={hour} value={hour}>
+                {hour}時
+              </option>
+            );
+          })}
+        </select>
       </div>
 
-      <div>
+      {/* カレンダーモード切替 */}
+      <div style={{ marginTop: "10px" }}>
         <label>
           <input
             type="radio"
@@ -132,6 +164,7 @@ export default function ShareLinkPage() {
         </label>
       </div>
 
+      {/* カレンダー */}
       <Calendar
         onChange={handleDateChange}
         value={date}
@@ -141,31 +174,33 @@ export default function ShareLinkPage() {
         }
       />
 
-      <button onClick={saveSchedule}>登録</button>
+      {/* 選択済み日付リスト */}
+      {selectedDates.length > 0 && (
+        <div style={{ marginTop: "10px" }}>
+          <b>選択済み日付:</b> {selectedDates.join(", ")}
+        </div>
+      )}
 
-      <h3>登録一覧</h3>
-      <table border="1" style={{ width: "100%", textAlign: "center" }}>
+      <button style={{ marginTop: "10px" }} onClick={saveSchedule}>
+        登録
+      </button>
+
+      {/* 登録一覧 */}
+      <h3 style={{ marginTop: "20px" }}>登録一覧</h3>
+      <table border="1" style={{ borderCollapse: "collapse", width: "100%" }}>
         <thead>
           <tr>
             <th>日付</th>
-            <th>時間帯</th>
             <th>名前</th>
-            <th>操作</th>
+            <th>時間帯</th>
           </tr>
         </thead>
         <tbody>
           {schedules.map((s, i) => (
             <tr key={i}>
               <td>{s.date}</td>
-              <td>{s.timeslot}</td>
               <td>{s.username}</td>
-              <td>
-                {s.username === username && (
-                  <button onClick={() => deleteSchedule(s.date, s.timeslot)}>
-                    削除
-                  </button>
-                )}
-              </td>
+              <td>{s.timeslot}</td>
             </tr>
           ))}
         </tbody>
