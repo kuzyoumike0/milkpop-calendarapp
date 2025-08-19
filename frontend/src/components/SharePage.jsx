@@ -10,11 +10,9 @@ const socket = io(SOCKET_URL);
 
 export default function SharePage() {
   const { linkId } = useParams();
-  const [schedules, setSchedules] = useState([]);
   const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
   const [username, setUsername] = useState("");
   const [timeSlot, setTimeSlot] = useState("全日");
-  const [status, setStatus] = useState("◯");
   const [mode, setMode] = useState("range");
 
   const formatDate = (d) =>
@@ -23,18 +21,16 @@ export default function SharePage() {
     ).padStart(2, "0")}`;
 
   useEffect(() => {
-    axios.get(`/api/schedules/${linkId}`).then((res) => setSchedules(res.data));
     axios.get(`/api/mode/${linkId}`).then((res) => setMode(res.data.mode));
     socket.emit("join", linkId);
-    socket.on("updateSchedules", (data) => setSchedules(data));
     socket.on("updateMode", (newMode) => setMode(newMode));
     return () => {
-      socket.off("updateSchedules");
       socket.off("updateMode");
     };
   }, [linkId]);
 
   const handleModeChange = async (newMode) => {
+    setMode(newMode); // ← 即座にUIに反映
     await axios.post("/api/mode", { linkId, mode: newMode });
   };
 
@@ -55,8 +51,7 @@ export default function SharePage() {
         linkId,
         date: formatDate(d),
         timeSlot,
-        username,
-        status
+        username
       });
     }
   };
@@ -102,35 +97,7 @@ export default function SharePage() {
           <option value="夜">夜</option>
         </select>
       </div>
-      <div>
-        <label>出欠: </label>
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="◯">◯</option>
-          <option value="✕">✕</option>
-        </select>
-      </div>
       <button onClick={handleSave}>保存</button>
-      <h3>登録済みスケジュール</h3>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>時間帯</th>
-            <th>名前</th>
-            <th>出欠</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((s, idx) => (
-            <tr key={idx}>
-              <td>{s.date}</td>
-              <td>{s.timeSlot}</td>
-              <td>{s.username}</td>
-              <td>{s.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
