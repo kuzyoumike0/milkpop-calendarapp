@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import Holidays from "date-holidays";
 import axios from "axios";
 
 export default function SharePage() {
@@ -8,6 +11,10 @@ export default function SharePage() {
   const [username, setUsername] = useState("");
   const [response, setResponse] = useState("〇");
   const [responses, setResponses] = useState([]);
+
+  const hd = new Holidays("JP");
+  const holidays = hd.getHolidays(new Date().getFullYear()).map(h => h.date);
+  const isHoliday = (date) => holidays.includes(date.toISOString().split("T")[0]);
 
   useEffect(() => {
     axios.get(`/api/share/${linkid}`).then((res) => {
@@ -33,6 +40,21 @@ export default function SharePage() {
           <p>タイトル: {schedule.title}</p>
           <p>日付: {schedule.start_date} 〜 {schedule.end_date}</p>
           <p>時間帯: {schedule.timeslot}</p>
+          <Calendar
+            value={[new Date(schedule.start_date), new Date(schedule.end_date)]}
+            tileClassName={({ date, view }) =>
+              view === "month" && isHoliday(date) ? "holiday" : null
+            }
+          />
+          <style>
+            {`
+              .holiday {
+                background: #FDB9C8 !important;
+                color: #fff !important;
+                border-radius: 50%;
+              }
+            `}
+          </style>
         </div>
       )}
       <input placeholder="名前" value={username} onChange={(e) => setUsername(e.target.value)} />
