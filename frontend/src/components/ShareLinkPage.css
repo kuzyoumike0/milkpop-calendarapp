@@ -83,10 +83,6 @@ export default function ShareLinkPage() {
 
   // 回答編集
   const handleEdit = async (date, timeslot, newChoice) => {
-    if (!username.trim()) {
-      setMessage("❌ 名前を入力してください");
-      return;
-    }
     try {
       await axios.put("/api/participant", {
         linkId,
@@ -159,9 +155,6 @@ export default function ShareLinkPage() {
                   <button onClick={() => handleRespond(s.date, s.timeslot, "×")} style={{ marginRight: "5px" }}>
                     ×
                   </button>
-                  <button onClick={() => handleEdit(s.date, s.timeslot, "△")} style={{ marginRight: "5px", color: "orange" }}>
-                    △ 編集
-                  </button>
                   <button onClick={() => handleDelete(s.date, s.timeslot)} style={{ color: "red" }}>
                     削除
                   </button>
@@ -172,9 +165,21 @@ export default function ShareLinkPage() {
                       key={i}
                       style={{
                         fontWeight: r.username === username ? "bold" : "normal",
+                        marginBottom: "5px",
                       }}
                     >
-                      {r.username}: {r.status}
+                      {r.username}:{" "}
+                      {r.username === username ? (
+                        <select
+                          value={r.status}
+                          onChange={(e) => handleEdit(s.date, s.timeslot, e.target.value)}
+                        >
+                          <option value="◯">◯</option>
+                          <option value="×">×</option>
+                        </select>
+                      ) : (
+                        r.status
+                      )}
                     </div>
                   ))}
                 </td>
