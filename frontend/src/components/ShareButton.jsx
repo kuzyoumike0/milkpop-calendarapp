@@ -1,5 +1,5 @@
 import React from "react";
 
-export default function ShareButton() {
-  return <button>共有リンクを発行</button>;
+export default function ShareButton({ onClick }) {
+  return <button onClick={onClick}>共有リンク作成</button>;
 }
