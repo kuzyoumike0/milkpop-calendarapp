@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import "./ShareLinkPage.css"; // スタイルを別ファイルで定義
 
 export default function ShareLinkPage() {
   const { linkId } = useParams(); // URLからリンクID取得
@@ -58,36 +59,31 @@ export default function ShareLinkPage() {
   };
 
   return (
-    <div className="container" style={{ padding: "20px" }}>
+    <div className="share-container">
       <h2>共有スケジュール</h2>
 
       {/* 入力フォーム */}
-      <div style={{ marginBottom: "15px" }}>
+      <div className="form-container">
         <input
           type="text"
           placeholder="名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          style={{ marginRight: "10px", padding: "5px" }}
         />
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          style={{ marginRight: "10px", padding: "5px" }}
         />
         <select
           value={timeslot}
           onChange={(e) => setTimeslot(e.target.value)}
-          style={{ marginRight: "10px", padding: "5px" }}
         >
           <option value="終日">終日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
         </select>
-        <button onClick={handleRegister} style={{ padding: "5px 10px" }}>
-          登録
-        </button>
+        <button onClick={handleRegister}>登録</button>
       </div>
 
       {/* 登録済み予定一覧 */}
@@ -95,24 +91,38 @@ export default function ShareLinkPage() {
       {schedules.length === 0 ? (
         <p>まだ予定は登録されていません。</p>
       ) : (
-        <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th>名前</th>
-              <th>日付</th>
-              <th>時間帯</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((s) => (
-              <tr key={s.id}>
-                <td>{s.username}</td>
-                <td>{s.date}</td>
-                <td>{s.timeslot}</td>
+        <div>
+          {/* PC表示: テーブル */}
+          <table className="schedule-table">
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>日付</th>
+                <th>時間帯</th>
               </tr>
+            </thead>
+            <tbody>
+              {schedules.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.username}</td>
+                  <td>{s.date}</td>
+                  <td>{s.timeslot}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* スマホ表示: カード */}
+          <div className="schedule-cards">
+            {schedules.map((s) => (
+              <div key={s.id} className="schedule-card">
+                <p><strong>名前:</strong> {s.username}</p>
+                <p><strong>日付:</strong> {s.date}</p>
+                <p><strong>時間帯:</strong> {s.timeslot}</p>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
       )}
     </div>
   );
