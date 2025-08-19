@@ -4,18 +4,16 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function SharePage() {
-  const [mode, setMode] = useState("range"); // "range" or "multiple"
+  const [mode, setMode] = useState("range");
   const [rangeValue, setRangeValue] = useState([new Date(), new Date()]);
   const [multipleDates, setMultipleDates] = useState([]);
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
 
-  // 範囲選択
   const handleRangeChange = (value) => {
     setRangeValue(value);
   };
 
-  // 複数選択
   const handleMultipleChange = (date) => {
     const exists = multipleDates.find(
       (d) => d.toDateString() === date.toDateString()
@@ -27,7 +25,6 @@ export default function SharePage() {
     }
   };
 
-  // 保存処理
   const handleSubmit = async () => {
     try {
       let dates;
@@ -37,13 +34,15 @@ export default function SharePage() {
         dates = multipleDates.map((d) => d.toISOString().split("T")[0]);
       }
 
-      await axios.post("/api/shared", {
+      const res = await axios.post("/api/shared", {
         username,
         mode,
         dates,
       });
 
-      setMessage("✅ スケジュールを共有しました！");
+      const { linkId } = res.data;
+      const link = `${window.location.origin}/share/${linkId}`;
+      setMessage(`✅ 共有リンクを発行しました: ${link}`);
     } catch (err) {
       console.error(err);
       setMessage("❌ 保存に失敗しました");
@@ -63,7 +62,6 @@ export default function SharePage() {
         />
       </div>
 
-      {/* ラジオボタンでモード切替 */}
       <div style={{ marginBottom: "10px" }}>
         <label>
           <input
@@ -85,7 +83,6 @@ export default function SharePage() {
         </label>
       </div>
 
-      {/* カレンダー */}
       {mode === "range" ? (
         <Calendar
           selectRange
@@ -103,23 +100,6 @@ export default function SharePage() {
         />
       )}
 
-      {/* 結果 */}
-      <div style={{ marginTop: "20px" }}>
-        {mode === "range" ? (
-          <p>
-            選択範囲:{" "}
-            {rangeValue[0]?.toLocaleDateString()} 〜{" "}
-            {rangeValue[1]?.toLocaleDateString()}
-          </p>
-        ) : (
-          <p>
-            選択日:{" "}
-            {multipleDates.map((d) => d.toLocaleDateString()).join(", ")}
-          </p>
-        )}
-      </div>
-
-      {/* 送信ボタン */}
       <button
         onClick={handleSubmit}
         style={{ marginTop: "20px", padding: "8px 16px" }}
