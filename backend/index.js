@@ -15,10 +15,10 @@ const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
+        ssl: { rejectUnauthorized: false }, // Railway 本番用
       }
     : {
-        host: process.env.DB_HOST || "db",
+        host: process.env.DB_HOST || "localhost", // ローカル開発用
         user: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "password",
         database: process.env.DB_NAME || "mydb",
@@ -39,24 +39,26 @@ async function initDB() {
 
       CREATE TABLE IF NOT EXISTS schedules (
         id SERIAL PRIMARY KEY,
-        link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
+        link_id TEXT NOT NULL,
         date DATE NOT NULL,
         timeslot TEXT NOT NULL,
         starttime TEXT,
-        endtime TEXT
+        endtime TEXT,
+        FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS responses (
         id SERIAL PRIMARY KEY,
-        link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
+        link_id TEXT NOT NULL,
         date DATE NOT NULL,
         timeslot TEXT NOT NULL,
         username TEXT NOT NULL,
         choice TEXT NOT NULL CHECK (choice IN ('◯', '×')),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
       );
     `);
-    console.log("✅ init.sql と同じスキーマでデータベースを初期化しました");
+    console.log("✅ データベースを初期化しました");
   } finally {
     client.release();
   }
@@ -72,15 +74,13 @@ app.post("/api/create-link", async (req, res) => {
     }
 
     const client = await pool.connect();
-    const linkId = uuidv4(); // ✅ 毎回ユニーク
+    const linkId = uuidv4();
 
-    // links に挿入
     await client.query("INSERT INTO links (id, title) VALUES ($1, $2)", [
       linkId,
       title,
     ]);
 
-    // schedules に日程を挿入
     for (const d of dates) {
       if (d.startTime && d.endTime && d.startTime >= d.endTime) {
         throw new Error("開始時間は終了時間より前にしてください");
