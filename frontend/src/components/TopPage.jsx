@@ -3,12 +3,18 @@ import { Link } from "react-router-dom";
 
 export default function TopPage() {
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>📅 自作カレンダーアプリ</h1>
-      <p>個人スケジュールを登録して共有しましょう。</p>
-      <Link to="/share">
-        <button>共有リンクを発行する</button>
-      </Link>
+    <div>
+      <h2>🏠 トップページ</h2>
+      <p>このアプリでは、みんなで日程を共有できます。</p>
+
+      <div style={{ marginTop: "20px" }}>
+        <Link to="/register" style={{ marginRight: "15px" }}>
+          📌 日程登録ページへ
+        </Link>
+        <Link to="/personal">
+          ✍ 個人日程登録ページへ
+        </Link>
+      </div>
     </div>
   );
 }
