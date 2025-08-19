@@ -5,14 +5,12 @@ CREATE TABLE IF NOT EXISTS schedules (
   date DATE NOT NULL,
   timeslot TEXT NOT NULL,
   range_mode TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  username TEXT,
   linkid TEXT
 );
 
-CREATE TABLE IF NOT EXISTS responses (
+CREATE TABLE IF NOT EXISTS holidays (
   id SERIAL PRIMARY KEY,
-  schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
-  username TEXT NOT NULL,
-  response TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  name TEXT NOT NULL,
+  date DATE NOT NULL UNIQUE
 );
