@@ -5,6 +5,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
 const helmet = require("helmet");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -13,16 +14,14 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(bodyParser.json());
 
-// === CSP (Content Security Policy) 設定 ===
+// === CSP (Google Fonts対応) ===
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      // ✅ Google Fonts の読み込み許可
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-      // ✅ JS / 画像などの許可
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
@@ -46,7 +45,7 @@ const pool = new Pool(
       }
 );
 
-// === 共有スケジュール保存 API ===
+// === スケジュール保存 & 共有リンク発行 ===
 app.post("/api/shared", async (req, res) => {
   const { username, mode, dates } = req.body;
 
@@ -55,30 +54,36 @@ app.post("/api/shared", async (req, res) => {
   }
 
   try {
-    // 既存削除
-    await pool.query("DELETE FROM schedules WHERE username = $1", [username]);
+    const linkId = uuidv4();
 
-    // 日付ごとに保存
     for (const d of dates) {
       await pool.query(
-        "INSERT INTO schedules (username, schedule_date, mode) VALUES ($1, $2, $3)",
-        [username, d, mode]
+        "INSERT INTO schedules (link_id, username, schedule_date, mode) VALUES ($1, $2, $3, $4)",
+        [linkId, username, d, mode]
       );
     }
 
-    res.json({ message: "保存完了" });
+    res.json({ message: "保存完了", linkId });
   } catch (err) {
     console.error("DB保存エラー:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// === 共有スケジュール取得 API ===
-app.get("/api/shared", async (req, res) => {
+// === 共有リンクから取得 ===
+app.get("/api/shared/:linkId", async (req, res) => {
+  const { linkId } = req.params;
+
   try {
     const result = await pool.query(
-      "SELECT username, schedule_date, mode FROM schedules ORDER BY username ASC, schedule_date ASC"
+      "SELECT username, schedule_date, mode FROM schedules WHERE link_id = $1 ORDER BY username ASC, schedule_date ASC",
+      [linkId]
     );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "リンクが見つかりません" });
+    }
+
     res.json(result.rows);
   } catch (err) {
     console.error("DB取得エラー:", err);
@@ -86,7 +91,7 @@ app.get("/api/shared", async (req, res) => {
   }
 });
 
-// === React ビルドファイルを配信（本番用） ===
+// === React ビルドファイル配信 ===
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public/index.html"));
