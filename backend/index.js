@@ -32,14 +32,14 @@ async function initDB() {
   try {
     await client.query(`
       CREATE TABLE IF NOT EXISTS links (
-        id SERIAL PRIMARY KEY,
-        linkid TEXT UNIQUE NOT NULL,
-        title TEXT NOT NULL
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS schedules (
         id SERIAL PRIMARY KEY,
-        linkid TEXT REFERENCES links(linkid) ON DELETE CASCADE,
+        link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
         date DATE NOT NULL,
         timeslot TEXT NOT NULL,
         starttime TEXT,
@@ -48,12 +48,15 @@ async function initDB() {
 
       CREATE TABLE IF NOT EXISTS responses (
         id SERIAL PRIMARY KEY,
-        scheduleid INT REFERENCES schedules(id) ON DELETE CASCADE,
+        link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
+        date DATE NOT NULL,
+        timeslot TEXT NOT NULL,
         username TEXT NOT NULL,
-        status TEXT NOT NULL
+        choice TEXT NOT NULL CHECK (choice IN ('◯', '×')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log("✅ init.sql でデータベースを初期化しました");
+    console.log("✅ init.sql と同じスキーマでデータベースを初期化しました");
   } finally {
     client.release();
   }
@@ -72,10 +75,10 @@ app.post("/api/create-link", async (req, res) => {
     const linkId = uuidv4(); // ✅ 毎回ユニーク
 
     // links に挿入
-    await client.query(
-      "INSERT INTO links (linkid, title) VALUES ($1, $2)",
-      [linkId, title]
-    );
+    await client.query("INSERT INTO links (id, title) VALUES ($1, $2)", [
+      linkId,
+      title,
+    ]);
 
     // schedules に日程を挿入
     for (const d of dates) {
@@ -84,7 +87,7 @@ app.post("/api/create-link", async (req, res) => {
       }
 
       await client.query(
-        "INSERT INTO schedules (linkid, date, timeslot, starttime, endtime) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO schedules (link_id, date, timeslot, starttime, endtime) VALUES ($1, $2, $3, $4, $5)",
         [linkId, d.date, d.timeslot, d.startTime || null, d.endTime || null]
       );
     }
@@ -103,17 +106,16 @@ app.get("/api/link/:linkId", async (req, res) => {
     const { linkId } = req.params;
     const client = await pool.connect();
 
-    const linkResult = await client.query(
-      "SELECT * FROM links WHERE linkid=$1",
-      [linkId]
-    );
+    const linkResult = await client.query("SELECT * FROM links WHERE id=$1", [
+      linkId,
+    ]);
     if (linkResult.rows.length === 0) {
       client.release();
       return res.status(404).json({ error: "リンクが見つかりません" });
     }
 
     const schedulesResult = await client.query(
-      "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
+      "SELECT * FROM schedules WHERE link_id=$1 ORDER BY date ASC",
       [linkId]
     );
     client.release();
@@ -128,18 +130,16 @@ app.get("/api/link/:linkId", async (req, res) => {
 // === 回答登録 API ===
 app.post("/api/respond", async (req, res) => {
   try {
-    const { scheduleId, username, status } = req.body;
-    if (!scheduleId || !username || !status) {
+    const { linkId, date, timeslot, username, choice } = req.body;
+    if (!linkId || !date || !timeslot || !username || !choice) {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
     const client = await pool.connect();
     await client.query(
-      `INSERT INTO responses (scheduleid, username, status)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (scheduleid, username) DO UPDATE
-       SET status = EXCLUDED.status`,
-      [scheduleId, username, status]
+      `INSERT INTO responses (link_id, date, timeslot, username, choice)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [linkId, date, timeslot, username, choice]
     );
     client.release();
 
@@ -156,11 +156,10 @@ app.get("/api/responses/:linkId", async (req, res) => {
     const { linkId } = req.params;
     const client = await pool.connect();
     const result = await client.query(
-      `SELECT s.date, s.timeslot, s.starttime, s.endtime, r.username, r.status
+      `SELECT r.date, r.timeslot, r.username, r.choice
        FROM responses r
-       JOIN schedules s ON r.scheduleid = s.id
-       WHERE s.linkid=$1
-       ORDER BY s.date ASC`,
+       WHERE r.link_id=$1
+       ORDER BY r.date ASC`,
       [linkId]
     );
     client.release();
