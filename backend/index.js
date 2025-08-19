@@ -1,15 +1,15 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const cors = require("cors");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// === DB接続設定 ===
+// === PostgreSQL 接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -31,7 +31,7 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS schedules (
       id UUID PRIMARY KEY,
       title TEXT NOT NULL,
-      linkId UUID NOT NULL
+      linkId UUID NOT NULL UNIQUE
     );
   `);
 
@@ -57,56 +57,62 @@ async function initDB() {
     );
   `);
 }
-initDB();
+initDB().catch((err) => console.error("DB初期化エラー:", err));
 
-// === スケジュール作成 ===
-app.post("/api/schedule", async (req, res) => {
+// === API実装 ===
+
+// 新しいスケジュール作成
+app.post("/api/create-link", async (req, res) => {
   try {
     const { title, schedules } = req.body;
-    if (!title || !Array.isArray(schedules)) {
-      return res.status(400).json({ error: "タイトルとスケジュール配列が必要です" });
-    }
-
     const scheduleId = uuidv4();
     const linkId = uuidv4();
 
     await pool.query(
-      "INSERT INTO schedules (id, title, linkId) VALUES ($1, $2, $3)",
+      `INSERT INTO schedules (id, title, linkId) VALUES ($1, $2, $3)`,
       [scheduleId, title, linkId]
     );
 
-    for (const s of schedules) {
-      await pool.query(
-        "INSERT INTO schedule_items (id, scheduleId, date, timeslot, starttime, endtime) VALUES ($1, $2, $3, $4, $5, $6)",
-        [uuidv4(), scheduleId, s.date, s.timeslot, s.starttime || null, s.endtime || null]
-      );
+    if (Array.isArray(schedules)) {
+      for (const s of schedules) {
+        await pool.query(
+          `INSERT INTO schedule_items (id, scheduleId, date, timeslot, starttime, endtime)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [uuidv4(), scheduleId, s.date, s.timeslot, s.startTime, s.endTime]
+        );
+      }
     }
 
     res.json({ linkId });
   } catch (err) {
     console.error("リンク作成エラー:", err);
-    res.status(500).json({ error: "リンク作成に失敗しました" });
+    res.status(500).json({ error: "リンク作成失敗" });
   }
 });
 
-// === リンク取得 ===
+// リンクからスケジュール取得
 app.get("/api/link/:linkId", async (req, res) => {
   try {
     const { linkId } = req.params;
 
-    const scheduleRes = await pool.query("SELECT * FROM schedules WHERE linkId=$1", [linkId]);
+    const scheduleRes = await pool.query(
+      `SELECT * FROM schedules WHERE linkId = $1`,
+      [linkId]
+    );
     if (scheduleRes.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
+      return res.status(404).json({ error: "リンクが存在しません" });
     }
+
     const schedule = scheduleRes.rows[0];
 
-    const itemsRes = await pool.query("SELECT * FROM schedule_items WHERE scheduleId=$1", [
-      schedule.id,
-    ]);
-
-    const participantsRes = await pool.query("SELECT * FROM participants WHERE scheduleId=$1", [
-      schedule.id,
-    ]);
+    const itemsRes = await pool.query(
+      `SELECT * FROM schedule_items WHERE scheduleId = $1 ORDER BY date, timeslot`,
+      [schedule.id]
+    );
+    const participantsRes = await pool.query(
+      `SELECT * FROM participants WHERE scheduleId = $1`,
+      [schedule.id]
+    );
 
     res.json({
       title: schedule.title,
@@ -115,93 +121,68 @@ app.get("/api/link/:linkId", async (req, res) => {
     });
   } catch (err) {
     console.error("リンク取得エラー:", err);
-    res.status(500).json({ error: "リンク取得に失敗しました" });
+    res.status(500).json({ error: "取得失敗" });
   }
 });
 
-// === 個別回答保存 ===
+// 回答登録（追加・更新）
 app.post("/api/participant", async (req, res) => {
   try {
     const { scheduleId, date, timeslot, username, status } = req.body;
+    const id = uuidv4();
 
-    if (!scheduleId || !date || !timeslot || !username || !status) {
-      return res.status(400).json({ error: "必要なデータが不足しています" });
+    // すでに回答がある場合は更新
+    const existing = await pool.query(
+      `SELECT * FROM participants WHERE scheduleId = $1 AND date = $2 AND timeslot = $3 AND username = $4`,
+      [scheduleId, date, timeslot, username]
+    );
+
+    if (existing.rows.length > 0) {
+      await pool.query(
+        `UPDATE participants SET status = $1 WHERE id = $2`,
+        [status, existing.rows[0].id]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO participants (id, scheduleId, date, timeslot, username, status)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, scheduleId, date, timeslot, username, status]
+      );
     }
-
-    await pool.query(
-      `DELETE FROM participants WHERE scheduleId=$1 AND username=$2 AND date=$3 AND timeslot=$4`,
-      [scheduleId, username, date, timeslot]
-    );
-
-    await pool.query(
-      "INSERT INTO participants (id, scheduleId, username, date, timeslot, status) VALUES ($1,$2,$3,$4,$5,$6)",
-      [uuidv4(), scheduleId, username, date, timeslot, status]
-    );
 
     res.json({ success: true });
   } catch (err) {
     console.error("参加者追加エラー:", err);
-    res.status(500).json({ error: "参加者追加に失敗しました" });
+    res.status(500).json({ error: "参加者追加失敗" });
   }
 });
 
-// === 回答削除 ===
+// 回答削除
 app.delete("/api/participant", async (req, res) => {
   try {
     const { scheduleId, date, timeslot, username } = req.body;
 
     await pool.query(
-      `DELETE FROM participants WHERE scheduleId=$1 AND username=$2 AND date=$3 AND timeslot=$4`,
-      [scheduleId, username, date, timeslot]
+      `DELETE FROM participants WHERE scheduleId = $1 AND date = $2 AND timeslot = $3 AND username = $4`,
+      [scheduleId, date, timeslot, username]
     );
 
     res.json({ success: true });
   } catch (err) {
     console.error("回答削除エラー:", err);
-    res.status(500).json({ error: "削除に失敗しました" });
+    res.status(500).json({ error: "削除失敗" });
   }
 });
 
-// === 一括保存 (保存ボタン用) ===
-app.put("/api/participant/bulk", async (req, res) => {
-  try {
-    const { linkId, username, updates } = req.body;
+// === 本番環境: React ビルド配信 ===
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/build")));
+  app.get("*", (req, res) =>
+    res.sendFile(path.join(__dirname, "../frontend/build/index.html"))
+  );
+}
 
-    const scheduleRes = await pool.query("SELECT * FROM schedules WHERE linkId=$1", [linkId]);
-    if (scheduleRes.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
-    }
-    const scheduleId = scheduleRes.rows[0].id;
-
-    for (const { date, timeslot, choice } of updates) {
-      await pool.query(
-        `DELETE FROM participants WHERE scheduleId=$1 AND username=$2 AND date=$3 AND timeslot=$4`,
-        [scheduleId, username, date, timeslot]
-      );
-
-      if (choice) {
-        await pool.query(
-          "INSERT INTO participants (id, scheduleId, username, date, timeslot, status) VALUES ($1,$2,$3,$4,$5,$6)",
-          [uuidv4(), scheduleId, username, date, timeslot, choice]
-        );
-      }
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("一括保存エラー:", err);
-    res.status(500).json({ error: "一括保存に失敗しました" });
-  }
-});
-
-// === 静的ファイル（本番用） ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
-
-// === サーバ起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
