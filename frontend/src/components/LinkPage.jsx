@@ -1,21 +1,34 @@
 import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [timeslot, setTimeslot] = useState("終日");
+  const [dateRange, setDateRange] = useState(new Date());
   const [rangeMode, setRangeMode] = useState("範囲選択");
+  const [timeslot, setTimeslot] = useState("終日");
   const [shareUrl, setShareUrl] = useState("");
 
+  // カレンダーの日付選択（範囲選択か複数選択かで動作変更）
+  const handleDateChange = (value) => {
+    setDateRange(value);
+  };
+
   const handleSubmit = async () => {
+    let start_date, end_date;
+    if (Array.isArray(dateRange)) {
+      start_date = dateRange[0];
+      end_date = dateRange[1];
+    } else {
+      start_date = dateRange;
+      end_date = dateRange;
+    }
+
     const res = await axios.post("/api/schedule", {
       title,
-      memo,
-      start_date: start,
-      end_date: end,
+      start_date: start_date.toISOString().slice(0, 10),
+      end_date: end_date.toISOString().slice(0, 10),
       timeslot,
       range_mode: rangeMode,
     });
@@ -23,28 +36,72 @@ export default function LinkPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl">日程登録</h2>
-      <input className="text-black w-full p-2" placeholder="タイトル" value={title} onChange={e=>setTitle(e.target.value)} />
-      <textarea className="text-black w-full p-2" placeholder="メモ" value={memo} onChange={e=>setMemo(e.target.value)} />
-      <div>
-        開始日: <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="text-black" />
+    <div className="max-w-2xl mx-auto bg-[#111] p-6 rounded-2xl shadow-lg space-y-6">
+      <h2 className="text-2xl font-bold text-[#FDB9C8]">日程登録</h2>
+
+      <input
+        className="w-full p-2 text-black rounded"
+        placeholder="タイトルを入力"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      {/* カレンダー */}
+      <div className="bg-white p-4 rounded-xl shadow">
+        <Calendar
+          onChange={handleDateChange}
+          value={dateRange}
+          selectRange={rangeMode === "範囲選択"}
+        />
       </div>
-      <div>
-        終了日: <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="text-black" />
+
+      {/* 範囲 or 複数選択 */}
+      <div className="flex space-x-4">
+        <label>
+          <input
+            type="radio"
+            checked={rangeMode === "範囲選択"}
+            onChange={() => setRangeMode("範囲選択")}
+          />{" "}
+          範囲選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={rangeMode === "複数選択"}
+            onChange={() => setRangeMode("複数選択")}
+          />{" "}
+          複数選択
+        </label>
       </div>
-      <div>
-        <label><input type="radio" checked={rangeMode==="範囲選択"} onChange={()=>setRangeMode("範囲選択")} />範囲選択</label>
-        <label className="ml-4"><input type="radio" checked={rangeMode==="複数選択"} onChange={()=>setRangeMode("複数選択")} />複数選択</label>
-      </div>
-      <select value={timeslot} onChange={e=>setTimeslot(e.target.value)} className="text-black p-2">
+
+      {/* 時間帯プルダウン */}
+      <select
+        value={timeslot}
+        onChange={(e) => setTimeslot(e.target.value)}
+        className="w-full p-2 text-black rounded"
+      >
         <option>終日</option>
         <option>昼</option>
         <option>夜</option>
         <option>1時から0時</option>
       </select>
-      <button onClick={handleSubmit} className="bg-[#FDB9C8] px-4 py-2 rounded">共有リンク発行</button>
-      {shareUrl && <div>共有URL: <a href={shareUrl}>{shareUrl}</a></div>}
+
+      {/* 保存ボタン */}
+      <button
+        onClick={handleSubmit}
+        className="w-full bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-2 px-4 rounded-xl transition"
+      >
+        共有リンク発行
+      </button>
+
+      {/* 共有URL */}
+      {shareUrl && (
+        <div className="bg-[#222] p-4 rounded-xl text-center">
+          <p className="text-sm">共有URL:</p>
+          <a href={shareUrl} className="text-[#FDB9C8] break-all">{shareUrl}</a>
+        </div>
+      )}
     </div>
   );
 }
