@@ -3,24 +3,36 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// JSON パース有効化
 app.use(bodyParser.json());
+app.use(cors());
 
-// PostgreSQL 接続
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-});
+// === PostgreSQL 接続設定 ===
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: process.env.DB_HOST || "db",
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "password",
+        database: process.env.DB_NAME || "mydb",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+      }
+);
 
-// === DB初期化 ===
+// === DB 初期化 ===
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS links (
-      id TEXT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
+      link_id TEXT UNIQUE NOT NULL,
       title TEXT NOT NULL
     );
   `);
@@ -28,8 +40,9 @@ async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
-      link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
-      date DATE NOT NULL
+      link_id TEXT REFERENCES links(link_id) ON DELETE CASCADE,
+      date DATE NOT NULL,
+      timeslot TEXT NOT NULL
     );
   `);
 
@@ -38,81 +51,133 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
       username TEXT NOT NULL,
-      answer TEXT NOT NULL CHECK (answer IN ('yes', 'no'))
+      status TEXT NOT NULL CHECK (status IN ('〇', '×'))
     );
   `);
-
   console.log("✅ init.sql でデータベースを初期化しました");
 }
 
-// === API ===
-
-// 共有リンク作成
+// === API: リンク作成 ===
 app.post("/api/create-link", async (req, res) => {
   try {
-    let { title, dates } = req.body;
-    console.log("📩 受信データ:", req.body); // ← デバッグ用
-
-    if (!title || !dates) {
-      return res.status(400).json({ error: "タイトルと日付を指定してください" });
-    }
-
-    // dates が文字列なら配列に変換
-    if (!Array.isArray(dates)) {
-      if (typeof dates === "string") {
-        dates = dates.split(",");
-      } else {
-        return res.status(400).json({ error: "日付形式が不正です" });
-      }
+    const { title, dates } = req.body;
+    if (!title || !dates || !Array.isArray(dates)) {
+      return res.status(400).json({ error: "タイトルと日付が必須です" });
     }
 
     const linkId = uuidv4();
 
-    // links に保存
-    await pool.query("INSERT INTO links (id, title) VALUES ($1, $2)", [linkId, title]);
+    await pool.query("INSERT INTO links (link_id, title) VALUES ($1, $2)", [
+      linkId,
+      title,
+    ]);
 
-    // schedules に日付を保存
     for (const d of dates) {
-      await pool.query("INSERT INTO schedules (link_id, date) VALUES ($1, $2)", [linkId, d]);
+      const dateValue = typeof d === "string" ? d : d.date;
+      let timeslot = d.timeslot || "全日";
+
+      // ✅ 開始 < 終了を保証
+      if (timeslot.includes("-")) {
+        const [start, end] = timeslot.split("-");
+        if (start >= end) {
+          return res
+            .status(400)
+            .json({ error: `無効な時間帯: ${timeslot}` });
+        }
+      }
+
+      await pool.query(
+        "INSERT INTO schedules (link_id, date, timeslot) VALUES ($1, $2, $3)",
+        [linkId, dateValue, timeslot]
+      );
     }
 
     res.json({ linkId });
   } catch (err) {
-    console.error("❌ リンク作成エラー:", err);
+    console.error("リンク作成エラー:", err);
     res.status(500).json({ error: "リンク作成に失敗しました" });
   }
 });
 
-// 共有リンクのデータ取得
+// === API: リンク情報取得 ===
 app.get("/api/link/:linkId", async (req, res) => {
   try {
     const { linkId } = req.params;
-
-    const linkRes = await pool.query("SELECT * FROM links WHERE id = $1", [linkId]);
-    if (linkRes.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
+    const linkResult = await pool.query(
+      "SELECT * FROM links WHERE link_id=$1",
+      [linkId]
+    );
+    if (linkResult.rows.length === 0) {
+      return res.status(404).json({ error: "リンクが見つかりません" });
     }
 
-    const schedulesRes = await pool.query("SELECT * FROM schedules WHERE link_id = $1", [linkId]);
+    const schedules = await pool.query(
+      "SELECT * FROM schedules WHERE link_id=$1 ORDER BY date ASC",
+      [linkId]
+    );
 
     res.json({
-      title: linkRes.rows[0].title,
-      schedules: schedulesRes.rows,
+      title: linkResult.rows[0].title,
+      schedules: schedules.rows,
     });
   } catch (err) {
-    console.error("❌ リンク取得エラー:", err);
+    console.error("リンク取得エラー:", err);
     res.status(500).json({ error: "リンク取得に失敗しました" });
   }
 });
 
-// === React ビルド配信 (本番用) ===
+// === API: 回答登録 ===
+app.post("/api/respond", async (req, res) => {
+  try {
+    const { scheduleId, username, status } = req.body;
+    if (!scheduleId || !username || !status) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    await pool.query(
+      `INSERT INTO responses (schedule_id, username, status) 
+       VALUES ($1, $2, $3)`,
+      [scheduleId, username, status]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("回答登録エラー:", err);
+    res.status(500).json({ error: "回答登録に失敗しました" });
+  }
+});
+
+// === API: 回答一覧取得 ===
+app.get("/api/responses/:linkId", async (req, res) => {
+  try {
+    const { linkId } = req.params;
+
+    const responses = await pool.query(
+      `
+      SELECT r.id, r.schedule_id, r.username, r.status, s.date, s.timeslot
+      FROM responses r
+      JOIN schedules s ON r.schedule_id = s.id
+      WHERE s.link_id = $1
+      ORDER BY s.date ASC, r.username ASC
+      `,
+      [linkId]
+    );
+
+    res.json(responses.rows);
+  } catch (err) {
+    console.error("回答一覧取得エラー:", err);
+    res.status(500).json({ error: "回答一覧取得に失敗しました" });
+  }
+});
+
+// === 静的ファイル配信 ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 // === サーバー起動 ===
 app.listen(PORT, async () => {
   await initDB();
-  console.log(`🚀 サーバーはポート ${PORT} で実行中`);
+  console.log(`🚀 サーバーはポート ${PORT} で実行されています`);
 });
