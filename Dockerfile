@@ -1,36 +1,28 @@
-# =============================
-# 1. フロントエンドビルド
-# =============================
+# ===== Frontend build =====
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係を先にインストール
-COPY frontend/package*.json ./
-RUN npm install
+# 依存関係インストール
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm install --legacy-peer-deps
 
-# ソースコードをコピーしてビルド
+# ソースをコピーしてビルド
 COPY frontend/ ./
-RUN npm run build
+RUN npm run build && ls -l build/index.html
 
-# =============================
-# 2. バックエンドセットアップ
-# =============================
-FROM node:18 AS backend
+# ===== Backend =====
+FROM node:18
 WORKDIR /app/backend
 
-# 依存関係を先にインストール
-COPY backend/package*.json ./
+# 依存関係インストール
+COPY backend/package.json backend/package-lock.json ./
 RUN npm install
 
-# ソースコードをコピー
+# バックエンドソースコピー
 COPY backend/ ./
 
-# フロントのビルド成果物をコピー
+# フロントエンド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
-# =============================
-# 3. 本番実行
-# =============================
-ENV PORT=8080
 EXPOSE 8080
 CMD ["node", "index.js"]
