@@ -9,7 +9,9 @@ app.use(bodyParser.json());
 
 // === PostgreSQL 接続設定 ===
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:password@db:5432/mydb",
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://postgres:password@db:5432/mydb", // docker-compose.yml と合わせて設定
 });
 
 // === 静的ファイル（React ビルド済み）を配信 ===
@@ -17,7 +19,7 @@ app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // === API ===
 
-// スケジュール共有リンク作成
+// 共有リンク作成
 app.post("/api/sharelink", async (req, res) => {
   try {
     const { dates, category, startTime, endTime, username } = req.body;
@@ -26,7 +28,7 @@ app.post("/api/sharelink", async (req, res) => {
     for (const d of dates) {
       await pool.query(
         `INSERT INTO schedules (date, username, category, starttime, endtime, linkid)
-         VALUES ($1,$2,$3,$4,$5,$6)`,
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [d, username, category, startTime, endTime, linkId]
       );
     }
@@ -38,12 +40,13 @@ app.post("/api/sharelink", async (req, res) => {
   }
 });
 
-// 共有リンクから予定を取得
+// 共有リンクから予定取得
 app.get("/api/shared/:linkId", async (req, res) => {
   try {
     const { linkId } = req.params;
     const result = await pool.query(
-      "SELECT date, username, category, starttime, endtime FROM schedules WHERE linkid = $1 ORDER BY date ASC",
+      `SELECT date, username, category, starttime, endtime
+       FROM schedules WHERE linkid = $1 ORDER BY date ASC`,
       [linkId]
     );
     res.json(result.rows);
@@ -53,7 +56,7 @@ app.get("/api/shared/:linkId", async (req, res) => {
   }
 });
 
-// React のルーティング対応（フロントでの /share/:id ページ用）
+// React のルーティング対応（SPA 用）
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
@@ -61,5 +64,5 @@ app.get("*", (req, res) => {
 // === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`サーバー起動中: http://localhost:${PORT}`);
+  console.log(`✅ サーバー起動中: http://localhost:${PORT}`);
 });
