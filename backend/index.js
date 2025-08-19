@@ -4,10 +4,31 @@ const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const cors = require("cors");
+const helmet = require("helmet");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
+// === CSP設定 ===
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
+        fontSrc: [
+          "'self'",
+          "data:",
+          "https://milkpop-calendarapp-production.up.railway.app",
+        ],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+      },
+    },
+  })
+);
 
 // === PostgreSQL 接続設定 ===
 const pool = new Pool(
