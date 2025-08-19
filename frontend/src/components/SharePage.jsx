@@ -5,12 +5,8 @@ import "react-calendar/dist/Calendar.css";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
-// 開発と本番でURLを切り替え
-const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://あなたのRailwayドメイン.up.railway.app"
-    : "http://localhost:8080";
-
+// 環境変数からURLを取得（Railway 本番では REACT_APP_SOCKET_URL を設定）
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:8080";
 const socket = io(SOCKET_URL);
 
 export default function SharePage() {
@@ -35,6 +31,7 @@ export default function SharePage() {
       .then((res) => setSchedules(res.data))
       .catch((err) => console.error("取得失敗:", err));
 
+    // Socket.IOで同じリンクの部屋に参加
     socket.emit("join", linkId);
 
     socket.on("updateSchedules", (data) => {
@@ -46,6 +43,7 @@ export default function SharePage() {
     };
   }, [linkId]);
 
+  // 保存処理
   const handleSave = async () => {
     const newSchedule = {
       linkId,
@@ -57,7 +55,7 @@ export default function SharePage() {
 
     try {
       await axios.post("/api/schedule", newSchedule);
-      // 自分の画面はサーバーからの "updateSchedules" で更新される
+      // 更新はSocket.IO経由で反映される
     } catch (err) {
       console.error("保存失敗:", err);
       alert("保存に失敗しました");
