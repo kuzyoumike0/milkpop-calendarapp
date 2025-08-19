@@ -30,101 +30,121 @@ async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
+      linkid TEXT NOT NULL,
       title TEXT NOT NULL,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL,
-      linkid TEXT
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS responses (
+    CREATE TABLE IF NOT EXISTS shares (
       id SERIAL PRIMARY KEY,
-      schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
+      linkid TEXT NOT NULL,
       username TEXT NOT NULL,
-      response TEXT NOT NULL
+      responses JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
-initDB();
+initDB().catch((err) => console.error("DB初期化エラー:", err));
 
-// === スケジュール登録 ===
+// === APIルート ===
+
+// スケジュール登録（リンク発行）
 app.post("/api/schedule", async (req, res) => {
   try {
-    const { title, start_date, end_date, timeslot, range_mode, dates } = req.body;
+    const { title, start_date, end_date, timeslot } = req.body;
     const linkid = uuidv4();
 
-    if (!title || !start_date || !end_date) {
-      return res.status(400).json({ success: false, error: "必須項目が未入力です" });
-    }
+    await pool.query(
+      `INSERT INTO schedules (linkid, title, start_date, end_date, timeslot) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [linkid, title, start_date, end_date, timeslot]
+    );
 
-    if (range_mode === "複数選択" && Array.isArray(dates) && dates.length > 0) {
-      // 複数日 → 日ごとに保存
-      const inserted = [];
-      for (const d of dates) {
-        const result = await pool.query(
-          `INSERT INTO schedules (title, start_date, end_date, timeslot, range_mode, linkid)
-           VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-          [title, d, d, timeslot, range_mode, linkid]
-        );
-        inserted.push(result.rows[0]);
-      }
-      return res.json({ success: true, schedules: inserted, url: `/share/${linkid}` });
-    } else {
-      // 範囲選択
-      const result = await pool.query(
-        `INSERT INTO schedules (title, start_date, end_date, timeslot, range_mode, linkid)
-         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-        [title, start_date, end_date, timeslot, range_mode, linkid]
-      );
-      return res.json({ success: true, schedule: result.rows[0], url: `/share/${linkid}` });
-    }
+    res.json({ linkid, url: `/share/${linkid}` });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: "登録失敗" });
+    console.error("スケジュール登録エラー:", err);
+    res.status(500).json({ error: "スケジュール登録に失敗しました" });
   }
 });
 
-// === スケジュール一覧 ===
-app.get("/api/schedules", async (req, res) => {
-  const result = await pool.query("SELECT * FROM schedules ORDER BY start_date ASC");
-  res.json(result.rows);
+// スケジュール取得
+app.get("/api/schedule/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE linkid=$1 LIMIT 1",
+      [linkid]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("スケジュール取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
 });
 
-// === 共有リンクから取得 ===
+// 共有回答保存
+app.post("/api/share/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const { username, responses } = req.body;
+
+    // 既存があれば更新、なければ新規
+    const existing = await pool.query(
+      "SELECT id FROM shares WHERE linkid=$1 AND username=$2",
+      [linkid, username]
+    );
+
+    if (existing.rows.length > 0) {
+      await pool.query(
+        "UPDATE shares SET responses=$1, created_at=NOW() WHERE linkid=$2 AND username=$3",
+        [responses, linkid, username]
+      );
+    } else {
+      await pool.query(
+        "INSERT INTO shares (linkid, username, responses) VALUES ($1, $2, $3)",
+        [linkid, username, responses]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("共有保存エラー:", err);
+    res.status(500).json({ error: "保存に失敗しました" });
+  }
+});
+
+// 共有回答一覧取得
 app.get("/api/share/:linkid", async (req, res) => {
-  const { linkid } = req.params;
-  const result = await pool.query(
-    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY start_date ASC",
-    [linkid]
-  );
-  res.json(result.rows);
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query(
+      "SELECT username, responses FROM shares WHERE linkid=$1 ORDER BY created_at ASC",
+      [linkid]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("共有取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
 });
 
-// === 参加者レスポンス保存 ===
-app.post("/api/response", async (req, res) => {
-  const { schedule_id, username, response } = req.body;
-  await pool.query(
-    "INSERT INTO responses (schedule_id, username, response) VALUES ($1,$2,$3)",
-    [schedule_id, username, response]
-  );
-  res.json({ success: true });
-});
-
-// === 参加者レスポンス取得 ===
-app.get("/api/responses/:schedule_id", async (req, res) => {
-  const { schedule_id } = req.params;
-  const result = await pool.query("SELECT * FROM responses WHERE schedule_id=$1", [schedule_id]);
-  res.json(result.rows);
-});
-
-// === フロントエンド提供 ===
+// === 本番用 React 配信 ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
+// サーバー起動
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ サーバー起動: http://localhost:${PORT}`);
+});
