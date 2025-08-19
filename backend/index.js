@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
+const helmet = require("helmet");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -11,6 +12,25 @@ const PORT = process.env.PORT || 8080;
 // === ミドルウェア ===
 app.use(cors());
 app.use(bodyParser.json());
+
+// === CSP (Content Security Policy) 設定 ===
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+
+      // ✅ Google Fonts の読み込み許可
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+
+      // ✅ JS / 画像などの許可
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+    },
+  })
+);
 
 // === PostgreSQL 接続 ===
 const pool = new Pool(
@@ -37,10 +57,8 @@ app.post("/api/shared", async (req, res) => {
   }
 
   try {
-    // 既存削除（同じユーザー名のスケジュールを一旦削除）
     await pool.query("DELETE FROM schedules WHERE username = $1", [username]);
 
-    // 日付ごとに保存
     for (const d of dates) {
       await pool.query(
         "INSERT INTO schedules (username, date, mode) VALUES ($1, $2, $3)",
@@ -61,7 +79,6 @@ app.get("/api/shared", async (req, res) => {
     const result = await pool.query(
       "SELECT username, date, mode FROM schedules ORDER BY username ASC, date ASC"
     );
-
     res.json(result.rows);
   } catch (err) {
     console.error("DB取得エラー:", err);
@@ -70,9 +87,9 @@ app.get("/api/shared", async (req, res) => {
 });
 
 // === React ビルドファイルを配信（本番用） ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 // === サーバー起動 ===
