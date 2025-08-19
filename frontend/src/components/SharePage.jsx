@@ -4,35 +4,26 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function SharePage() {
-  const [dates, setDates] = useState([]);
-  const [mode, setMode] = useState("multi");
   const [title, setTitle] = useState("");
+  const [dates, setDates] = useState([]);
+  const [mode, setMode] = useState("multiple"); // multiple or range
 
-  // 範囲選択の処理
-  const handleChange = (value) => {
-    if (mode === "range" && Array.isArray(value)) {
-      const start = value[0];
-      const end = value[1];
-      if (start && end) {
-        const arr = [];
-        let cur = new Date(start);
-        while (cur <= end) {
-          arr.push(cur.toISOString().split("T")[0]);
-          cur.setDate(cur.getDate() + 1);
+  // 日付選択ハンドラ
+  const handleDateChange = (value) => {
+    if (mode === "multiple") {
+      setDates(value);
+    } else {
+      if (Array.isArray(value)) {
+        const [start, end] = value;
+        if (start && end) {
+          const arr = [];
+          let d = new Date(start);
+          while (d <= end) {
+            arr.push(new Date(d));
+            d.setDate(d.getDate() + 1);
+          }
+          setDates(arr);
         }
-        setDates(arr);
-      }
-    }
-  };
-
-  // 複数日クリック選択の処理
-  const handleClickDay = (date) => {
-    if (mode === "multi") {
-      const iso = date.toISOString().split("T")[0];
-      if (dates.includes(iso)) {
-        setDates(dates.filter((d) => d !== iso));
-      } else {
-        setDates([...dates, iso]);
       }
     }
   };
@@ -40,39 +31,58 @@ export default function SharePage() {
   // リンク作成処理
   const createLink = async () => {
     try {
+      if (!title) {
+        alert("タイトルを入力してください");
+        return;
+      }
+      if (!dates || dates.length === 0) {
+        alert("日付を選択してください");
+        return;
+      }
+
+      const formatted = dates.map((d) =>
+        new Date(d).toISOString().split("T")[0]
+      );
+      console.log("送信データ:", { title, dates: formatted });
+
       const res = await axios.post("/api/create-link", {
         title,
-        dates: dates || [],
+        dates: formatted,
       });
-      alert(`✅ 共有リンク: ${window.location.origin}/link/${res.data.linkId}`);
+
+      alert(
+        `✅ 共有リンク: ${window.location.origin}/link/${res.data.linkId}`
+      );
     } catch (err) {
       console.error("リンク作成エラー", err);
-      alert("リンク作成失敗");
+      alert("リンク作成失敗: " + err.message);
     }
   };
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <h2>共有リンク作成</h2>
-
-      <input
-        type="text"
-        placeholder="タイトル（例: 飲み会調整）"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        style={{ display: "block", marginBottom: "1rem", padding: "0.5rem" }}
-      />
+    <div style={{ padding: "20px" }}>
+      <h2>📅 共有リンク作成</h2>
 
       <div>
+        <label>タイトル: </label>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例: 飲み会調整"
+        />
+      </div>
+
+      <div>
+        <label>選択モード:</label>
         <label>
           <input
             type="radio"
-            checked={mode === "multi"}
-            onChange={() => setMode("multi")}
+            checked={mode === "multiple"}
+            onChange={() => setMode("multiple")}
           />
           複数選択
         </label>
-        <label style={{ marginLeft: "1rem" }}>
+        <label>
           <input
             type="radio"
             checked={mode === "range"}
@@ -83,39 +93,27 @@ export default function SharePage() {
       </div>
 
       <Calendar
+        onChange={handleDateChange}
+        value={dates}
         selectRange={mode === "range"}
-        onChange={handleChange}
-        onClickDay={handleClickDay}
-        tileClassName={({ date }) => {
-          const iso = date.toISOString().split("T")[0];
-          return dates.includes(iso) ? "selected-day" : null;
-        }}
+        tileClassName={({ date }) =>
+          dates.some((d) => d.toDateString() === date.toDateString())
+            ? "selected"
+            : ""
+        }
       />
 
-      <style>
-        {`
-          .selected-day {
-            background: #4caf50 !important;
-            color: white !important;
-            border-radius: 50% !important;
-          }
-        `}
-      </style>
-
-      <button
-        onClick={createLink}
-        style={{
-          marginTop: "1rem",
-          padding: "0.5rem 1rem",
-          background: "#2196f3",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-        }}
-      >
+      <button onClick={createLink} style={{ marginTop: "20px" }}>
         共有リンクを発行
       </button>
+
+      <style>{`
+        .selected {
+          background: #4caf50 !important;
+          color: white !important;
+          border-radius: 50%;
+        }
+      `}</style>
     </div>
   );
 }
