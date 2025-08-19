@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
@@ -49,11 +50,10 @@ app.post("/api/create-link", async (req, res) => {
   const { title } = req.body;
   const linkId = uuidv4();
   try {
-    await pool.query("INSERT INTO schedules (linkId, title, date, timeSlot, username, status) VALUES ($1,$2,$3,$4,$5,$6)", [
-      linkId,
-      title || "",
-      "", "", "", ""
-    ]);
+    await pool.query(
+      "INSERT INTO schedules (linkId, title, date, timeSlot, username, status) VALUES ($1,$2,$3,$4,$5,$6)",
+      [linkId, title || "", "", "", "", ""]
+    );
     res.json({ linkId });
   } catch (err) {
     console.error("リンク作成失敗:", err);
@@ -65,7 +65,10 @@ app.post("/api/create-link", async (req, res) => {
 app.get("/api/schedules/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM schedules WHERE linkId=$1 ORDER BY date, timeSlot", [linkId]);
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE linkId=$1 ORDER BY date, timeSlot",
+      [linkId]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("取得失敗:", err);
@@ -89,13 +92,20 @@ app.post("/api/schedule", async (req, res) => {
 });
 
 // === 静的ファイル配信 (Reactビルド成果物) ===
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+const buildPath = path.join(__dirname, "public");
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(buildPath, "index.html"));
+  });
+} else {
+  console.warn("⚠️ ビルド成果物 (public/index.html) が見つかりませんでした。");
+  app.get("*", (req, res) => {
+    res.send("<h1>Frontend not built yet</h1>");
+  });
+}
 
 // === サーバ起動 ===
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
