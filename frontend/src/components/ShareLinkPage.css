@@ -62,4 +62,11 @@
     display: inline-block;
     width: 60px;
   }
+  /* frontend/src/index.css など */
+.selected-day {
+  background: #1976d2 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
 }
