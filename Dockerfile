@@ -1,23 +1,9 @@
 # フロントエンドビルド
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
-COPY frontend/package.json ./
-COPY frontend/package-lock.json ./ || true
+COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
 # バックエンド
-FROM node:18
-WORKDIR /app/backend
-COPY backend/package.json ./
-COPY backend/package-lock.json ./ || true
-RUN npm install
-COPY backend/ ./
-
-# フロントのビルド成果物をコピー
-COPY --from=frontend-build /app/frontend/build ./public
-
-ENV PORT=8080
-EXPOSE 8080
-CMD ["node", "index.js"]
