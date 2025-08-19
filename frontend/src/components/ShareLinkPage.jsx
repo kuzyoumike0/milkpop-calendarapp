@@ -1,127 +1,107 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import io from "socket.io-client";
-
-const socket = io();
+import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { linkid } = useParams();
-  const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState({});
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState(new Date());
+  const [mode, setMode] = useState("range");
+  const [timeSlot, setTimeSlot] = useState("終日");
+  const [startHour, setStartHour] = useState(1);
+  const [endHour, setEndHour] = useState(24);
+  const [link, setLink] = useState(null);
 
-  // スケジュール取得
-  const fetchSchedules = async () => {
+  const handleCreateLink = async () => {
     try {
-      const res = await fetch(`/api/share/${linkid}`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        // 日付ソート
-        data.sort((a, b) => new Date(a.date) - new Date(b.date));
-        setSchedules(data);
-      }
-    } catch (err) {
-      console.error("取得エラー:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-    socket.on("update", fetchSchedules);
-    return () => socket.off("update", fetchSchedules);
-  }, [linkid]);
-
-  // 入力変更
-  const handleChange = (scheduleId, field, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [scheduleId]: {
-        ...prev[scheduleId],
-        [field]: value,
-      },
-    }));
-  };
-
-  // 登録処理
-  const handleSubmit = async (scheduleId) => {
-    const entry = responses[scheduleId];
-    if (!entry?.name || !entry?.status) {
-      alert("名前と出欠を入力してください");
-      return;
-    }
-
-    try {
-      await fetch(`/api/share/${linkid}/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduleId,
-          name: entry.name,
-          status: entry.status,
-        }),
+      const res = await axios.post("/api/create-link", {
+        title,
+        date,
+        mode,
+        timeSlot,
+        startHour,
+        endHour,
       });
-      setResponses((prev) => ({
-        ...prev,
-        [scheduleId]: { name: "", status: "" },
-      }));
+      setLink(`${window.location.origin}/share/${res.data.linkId}`);
     } catch (err) {
-      console.error("登録エラー:", err);
+      alert("リンク作成に失敗しました");
+      console.error(err);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有スケジュール回答ページ</h2>
-      <p>リンクID: {linkid}</p>
+    <div>
+      <h2>📌 日程登録ページ</h2>
 
-      {schedules.length === 0 ? (
-        <p>登録された日程がありません。</p>
-      ) : (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>タイトル</th>
-              <th>時間帯</th>
-              <th>名前</th>
-              <th>出欠</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((s) => (
-              <tr key={s.id}>
-                <td>{s.date}</td>
-                <td>{s.title}</td>
-                <td>
-                  {s.timemode === "custom"
-                    ? `${s.starthour}時〜${s.endhour}時`
-                    : s.timemode}
-                </td>
-                <td>
-                  <input
-                    type="text"
-                    placeholder="名前"
-                    value={responses[s.id]?.name || ""}
-                    onChange={(e) => handleChange(s.id, "name", e.target.value)}
-                  />
-                </td>
-                <td>
-                  <select
-                    value={responses[s.id]?.status || ""}
-                    onChange={(e) => handleChange(s.id, "status", e.target.value)}
-                  >
-                    <option value="">選択</option>
-                    <option value="〇">〇</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </td>
-                <td>
-                  <button onClick={() => handleSubmit(s.id)}>登録</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div>
+        <label>タイトル: </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+
+      <div style={{ marginTop: "10px" }}>
+        <Calendar value={date} onChange={setDate} />
+      </div>
+
+      <div style={{ marginTop: "10px" }}>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          範囲選択
+        </label>
+        <label style={{ marginLeft: "10px" }}>
+          <input
+            type="radio"
+            value="multi"
+            checked={mode === "multi"}
+            onChange={() => setMode("multi")}
+          />
+          複数選択
+        </label>
+      </div>
+
+      <div style={{ marginTop: "10px" }}>
+        <label>時間帯: </label>
+        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
+          <option value="終日">終日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+          <option value="時間指定">時間指定</option>
+        </select>
+        {timeSlot === "時間指定" && (
+          <span>
+            {" "}
+            <select value={startHour} onChange={(e) => setStartHour(Number(e.target.value))}>
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1}時</option>
+              ))}
+            </select>
+            ~
+            <select value={endHour} onChange={(e) => setEndHour(Number(e.target.value))}>
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1}時</option>
+              ))}
+            </select>
+          </span>
+        )}
+      </div>
+
+      <button style={{ marginTop: "15px" }} onClick={handleCreateLink}>
+        🔗 共有リンク発行
+      </button>
+
+      {link && (
+        <div style={{ marginTop: "15px" }}>
+          <p>✅ 発行されたリンク:</p>
+          <a href={link} target="_blank" rel="noreferrer">{link}</a>
+        </div>
       )}
     </div>
   );
