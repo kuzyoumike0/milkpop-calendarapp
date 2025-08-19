@@ -11,20 +11,15 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // === PostgreSQL 接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || undefined,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  host: process.env.DB_HOST || "db",
+  user: process.env.DB_USER || "postgres",
+  password: process.env.DB_PASSWORD || "password",
+  database: process.env.DB_NAME || "mydb",
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+});
 
 // === DB 初期化 ===
 async function initDB() {
@@ -53,6 +48,10 @@ async function initDB() {
 app.post("/api/shared", async (req, res) => {
   try {
     const { dates, title, username, timeInfo } = req.body;
+    if (!dates || !Array.isArray(dates) || dates.length === 0) {
+      return res.status(400).json({ error: "日付が指定されていません" });
+    }
+
     const linkId = uuidv4();
 
     await pool.query("INSERT INTO shared_links (id) VALUES ($1)", [linkId]);
@@ -66,7 +65,7 @@ app.post("/api/shared", async (req, res) => {
 
     res.json({ linkId });
   } catch (err) {
-    console.error(err);
+    console.error("❌ /api/shared エラー:", err);
     res.status(500).json({ error: "サーバーエラー" });
   }
 });
@@ -81,7 +80,7 @@ app.get("/api/shared/:linkId", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("❌ /api/shared/:linkId エラー:", err);
     res.status(500).json({ error: "サーバーエラー" });
   }
 });
