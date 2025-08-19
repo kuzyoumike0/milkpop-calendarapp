@@ -1,7 +1,7 @@
--- 古いテーブル削除
+-- 既存テーブル削除（なければ無視）
 DROP TABLE IF EXISTS schedules;
 
--- スケジュールテーブルを作成
+-- schedules テーブル作成
 CREATE TABLE schedules (
   id SERIAL PRIMARY KEY,
   link_id TEXT NOT NULL,
@@ -10,6 +10,6 @@ CREATE TABLE schedules (
   mode TEXT NOT NULL
 );
 
--- インデックス
+-- インデックス作成（検索高速化用）
 CREATE INDEX idx_schedules_link_id ON schedules(link_id);
 CREATE INDEX idx_schedules_date ON schedules(schedule_date);
