@@ -5,7 +5,6 @@ export default function SharePage() {
   const [linkId, setLinkId] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // === 共有リンク発行 ===
   const handleCreateLink = async () => {
     try {
       const res = await axios.post("/api/create-link");
@@ -17,12 +16,11 @@ export default function SharePage() {
     }
   };
 
-  // === クリップボードコピー ===
   const handleCopy = () => {
     const url = `${window.location.origin}/share/${linkId}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2秒後に消す
+      setTimeout(() => setCopied(false), 2000);
     });
   };
 
@@ -33,7 +31,7 @@ export default function SharePage() {
 
       {linkId && (
         <div style={{ marginTop: "20px" }}>
-          <p>以下のURLをみんなに共有してください:</p>
+          <p>以下のURLを共有してください:</p>
           <div style={{ display: "flex", gap: "10px" }}>
             <input
               type="text"
