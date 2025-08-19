@@ -7,12 +7,12 @@ export default function SharePage() {
   const [mode, setMode] = useState("range"); // "range" or "multiple"
   const [rangeValue, setRangeValue] = useState([new Date(), new Date()]);
   const [multiValue, setMultiValue] = useState([]);
-  const [categoryType, setCategoryType] = useState("allday");
+  const [categoryType, setCategoryType] = useState("allday"); // allday/day/night/time
   const [startTime, setStartTime] = useState("01:00");
   const [endTime, setEndTime] = useState("00:00");
   const [username, setUsername] = useState("");
 
-  // 複数選択時の処理
+  // 複数選択モード
   const handleMultiClick = (date) => {
     const dateStr = date.toDateString();
     if (multiValue.find((d) => d.toDateString() === dateStr)) {
@@ -62,7 +62,7 @@ export default function SharePage() {
         <input value={username} onChange={(e) => setUsername(e.target.value)} />
       </div>
 
-      {/* 範囲 / 複数 切り替え */}
+      {/* 範囲 / 複数切り替え */}
       <div>
         <label>
           <input
@@ -101,46 +101,21 @@ export default function SharePage() {
         }}
       />
 
-      {/* 区分 */}
+      {/* 区分のプルダウン */}
       <div style={{ marginTop: "10px" }}>
-        <label>
-          <input
-            type="radio"
-            value="allday"
-            checked={categoryType === "allday"}
-            onChange={() => setCategoryType("allday")}
-          />
-          終日
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="day"
-            checked={categoryType === "day"}
-            onChange={() => setCategoryType("day")}
-          />
-          昼（13時〜18時）
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="night"
-            checked={categoryType === "night"}
-            onChange={() => setCategoryType("night")}
-          />
-          夜（21時〜0時）
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="time"
-            checked={categoryType === "time"}
-            onChange={() => setCategoryType("time")}
-          />
-          時間帯指定
-        </label>
+        <label>区分: </label>
+        <select
+          value={categoryType}
+          onChange={(e) => setCategoryType(e.target.value)}
+        >
+          <option value="allday">終日</option>
+          <option value="day">昼（13時〜18時）</option>
+          <option value="night">夜（21時〜0時）</option>
+          <option value="time">時間帯指定</option>
+        </select>
       </div>
 
+      {/* 時間帯指定プルダウン */}
       {categoryType === "time" && (
         <div>
           <label>開始: </label>
