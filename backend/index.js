@@ -35,6 +35,7 @@ async function initDB() {
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
+      range_mode TEXT NOT NULL CHECK (range_mode IN ('range', 'multiple')),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -49,20 +50,22 @@ async function initDB() {
     );
   `);
 }
-initDB().catch((err) => console.error("DB初期化エラー:", err));
+initDB();
 
-// === APIルート ===
-
-// スケジュール登録（リンク発行）
+// === スケジュール登録（リンク発行） ===
 app.post("/api/schedule", async (req, res) => {
   try {
-    const { title, start_date, end_date, timeslot } = req.body;
+    const { title, start_date, end_date, timeslot, range_mode } = req.body;
     const linkid = uuidv4();
 
+    if (!["range", "multiple"].includes(range_mode)) {
+      return res.status(400).json({ error: "range_mode は range または multiple のみ有効です" });
+    }
+
     await pool.query(
-      `INSERT INTO schedules (linkid, title, start_date, end_date, timeslot) 
-       VALUES ($1, $2, $3, $4, $5)`,
-      [linkid, title, start_date, end_date, timeslot]
+      `INSERT INTO schedules (linkid, title, start_date, end_date, timeslot, range_mode) 
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [linkid, title, start_date, end_date, timeslot, range_mode]
     );
 
     res.json({ linkid, url: `/share/${linkid}` });
@@ -72,17 +75,14 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
-// スケジュール取得
+// === スケジュール取得 ===
 app.get("/api/schedule/:linkid", async (req, res) => {
   try {
     const { linkid } = req.params;
     const result = await pool.query(
-      "SELECT * FROM schedules WHERE linkid=$1 LIMIT 1",
+      `SELECT * FROM schedules WHERE linkid=$1`,
       [linkid]
     );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
-    }
     res.json(result.rows[0]);
   } catch (err) {
     console.error("スケジュール取得エラー:", err);
@@ -90,46 +90,37 @@ app.get("/api/schedule/:linkid", async (req, res) => {
   }
 });
 
-// 共有回答保存
+// === 共有結果保存 ===
 app.post("/api/share/:linkid", async (req, res) => {
   try {
     const { linkid } = req.params;
     const { username, responses } = req.body;
 
-    // 既存があれば更新、なければ新規
-    const existing = await pool.query(
-      "SELECT id FROM shares WHERE linkid=$1 AND username=$2",
-      [linkid, username]
+    await pool.query(
+      `INSERT INTO shares (linkid, username, responses) VALUES ($1, $2, $3)`,
+      [linkid, username, responses]
     );
 
-    if (existing.rows.length > 0) {
-      await pool.query(
-        "UPDATE shares SET responses=$1, created_at=NOW() WHERE linkid=$2 AND username=$3",
-        [responses, linkid, username]
-      );
-    } else {
-      await pool.query(
-        "INSERT INTO shares (linkid, username, responses) VALUES ($1, $2, $3)",
-        [linkid, username, responses]
-      );
-    }
+    const result = await pool.query(
+      `SELECT * FROM shares WHERE linkid=$1 ORDER BY created_at ASC`,
+      [linkid]
+    );
 
-    res.json({ success: true });
+    res.json(result.rows);
   } catch (err) {
     console.error("共有保存エラー:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// 共有回答一覧取得
+// === 共有結果取得 ===
 app.get("/api/share/:linkid", async (req, res) => {
   try {
     const { linkid } = req.params;
     const result = await pool.query(
-      "SELECT username, responses FROM shares WHERE linkid=$1 ORDER BY created_at ASC",
+      `SELECT * FROM shares WHERE linkid=$1 ORDER BY created_at ASC`,
       [linkid]
     );
-
     res.json(result.rows);
   } catch (err) {
     console.error("共有取得エラー:", err);
@@ -137,14 +128,14 @@ app.get("/api/share/:linkid", async (req, res) => {
   }
 });
 
-// === 本番用 React 配信 ===
+// === 静的ファイル提供（本番用） ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
-// サーバー起動
+// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ サーバー起動: http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
