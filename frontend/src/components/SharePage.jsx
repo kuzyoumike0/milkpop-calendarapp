@@ -10,7 +10,8 @@ export default function SharePage() {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
   const [timeSlot, setTimeSlot] = useState("終日");
-  const [hour, setHour] = useState("0");
+  const [startHour, setStartHour] = useState("0");
+  const [endHour, setEndHour] = useState("1");
 
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
@@ -53,7 +54,7 @@ export default function SharePage() {
         await axios.post(`/api/schedules/${linkId}`, {
           username,
           dates: selectedDates,
-          timeslot: `${timeSlot} (${hour}時)`,
+          timeslot: `${timeSlot} (${startHour}時〜${endHour}時)`,
         });
         alert("リンクを発行し、予定を登録しました！");
       } else {
@@ -69,6 +70,7 @@ export default function SharePage() {
     <div style={{ padding: "20px" }}>
       <h2>共有リンク発行 & カレンダー登録</h2>
 
+      {/* 名前入力 */}
       <div>
         <label>名前: </label>
         <input
@@ -78,16 +80,29 @@ export default function SharePage() {
         />
       </div>
 
-      <div>
+      {/* 時間帯プルダウン */}
+      <div style={{ marginTop: "10px" }}>
         <label>時間帯: </label>
         <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
           <option value="終日">終日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
         </select>
+      </div>
 
-        <label style={{ marginLeft: "10px" }}>時間: </label>
-        <select value={hour} onChange={(e) => setHour(e.target.value)}>
+      {/* 時刻範囲プルダウン */}
+      <div style={{ marginTop: "10px" }}>
+        <label>開始時刻: </label>
+        <select value={startHour} onChange={(e) => setStartHour(e.target.value)}>
+          {Array.from({ length: 24 }, (_, i) => (
+            <option key={i} value={i}>
+              {i}時
+            </option>
+          ))}
+        </select>
+
+        <label style={{ marginLeft: "10px" }}>終了時刻: </label>
+        <select value={endHour} onChange={(e) => setEndHour(e.target.value)}>
           {Array.from({ length: 24 }, (_, i) => (
             <option key={i} value={i}>
               {i}時
@@ -96,6 +111,7 @@ export default function SharePage() {
         </select>
       </div>
 
+      {/* カレンダーモード選択 */}
       <div style={{ marginTop: "10px" }}>
         <label>
           <input
@@ -126,6 +142,7 @@ export default function SharePage() {
         </label>
       </div>
 
+      {/* カレンダー */}
       <Calendar
         onChange={handleDateChange}
         value={date}
@@ -135,6 +152,7 @@ export default function SharePage() {
         }
       />
 
+      {/* 発行ボタン */}
       <button style={{ marginTop: "10px" }} onClick={createLinkAndSave}>
         発行＋登録
       </button>
