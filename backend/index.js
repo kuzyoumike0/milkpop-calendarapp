@@ -36,13 +36,13 @@ const pool = new Pool(
 // API ルート
 // ===============================
 
-// 個人予定の登録
+// 個人予定登録
 app.post("/api/personal", async (req, res) => {
-  const { username, date, timeslot } = req.body;
+  const { username, date, timeslot, comment } = req.body;
   try {
     await pool.query(
-      "INSERT INTO schedules (username, date, timeslot) VALUES ($1, $2, $3)",
-      [username, date, timeslot]
+      "INSERT INTO schedules (username, date, timeslot, comment) VALUES ($1, $2, $3, $4)",
+      [username, date, timeslot, comment]
     );
     res.json({ success: true });
   } catch (err) {
@@ -51,12 +51,12 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
-// 個人予定の取得（例: 日付指定）
+// 特定日付の予定取得
 app.get("/api/shared", async (req, res) => {
   const { date } = req.query;
   try {
     const result = await pool.query(
-      "SELECT * FROM schedules WHERE date = $1",
+      "SELECT * FROM schedules WHERE date = $1 ORDER BY timeslot",
       [date]
     );
     res.json(result.rows);
@@ -78,7 +78,7 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// 共有リンクの予定取得（日付＋時間帯順でソート）
+// 共有リンクの予定取得
 app.get("/api/share/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
@@ -103,16 +103,44 @@ app.get("/api/share/:linkId", async (req, res) => {
 // 共有リンクに予定登録
 app.post("/api/share/:linkId", async (req, res) => {
   const { linkId } = req.params;
-  const { username, date, timeslot } = req.body;
+  const { username, date, timeslot, comment } = req.body;
   try {
     await pool.query(
-      "INSERT INTO schedules (username, date, timeslot, linkId) VALUES ($1, $2, $3, $4)",
-      [username, date, timeslot, linkId]
+      "INSERT INTO schedules (username, date, timeslot, comment, linkId) VALUES ($1, $2, $3, $4, $5)",
+      [username, date, timeslot, comment, linkId]
     );
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Failed to insert schedule with link:", err);
     res.status(500).json({ error: "Failed to insert schedule with link" });
+  }
+});
+
+// 予定削除
+app.delete("/api/schedule/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM schedules WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Failed to delete schedule:", err);
+    res.status(500).json({ error: "Failed to delete schedule" });
+  }
+});
+
+// 予定編集
+app.put("/api/schedule/:id", async (req, res) => {
+  const { id } = req.params;
+  const { username, date, timeslot, comment } = req.body;
+  try {
+    await pool.query(
+      "UPDATE schedules SET username=$1, date=$2, timeslot=$3, comment=$4 WHERE id=$5",
+      [username, date, timeslot, comment, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Failed to update schedule:", err);
+    res.status(500).json({ error: "Failed to update schedule" });
   }
 });
 
