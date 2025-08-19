@@ -33,11 +33,11 @@ export default function SharePage() {
     }
   };
 
-  // 自分の入力を変更
-  const handleChange = (dateKey, value) => {
+  // 入力変更
+  const handleChange = (key, value) => {
     setMyResponses({
       ...myResponses,
-      [dateKey]: value,
+      [key]: value,
     });
   };
 
@@ -57,11 +57,24 @@ export default function SharePage() {
 
   const dates = getDatesInRange(schedule.start_date, schedule.end_date);
 
-  // ユーザー一覧を抽出
+  // 時間帯リスト（複数の場合に展開）
+  const timeSlots = schedule.timeslot.includes(",")
+    ? schedule.timeslot.split(",")
+    : [schedule.timeslot];
+
+  // 全行（date × timeslot の組み合わせ）
+  const allRows = [];
+  dates.forEach((date) => {
+    timeSlots.forEach((slot) => {
+      allRows.push({ date, slot });
+    });
+  });
+
+  // ユーザー一覧
   const userList = Object.keys(responses);
 
   return (
-    <div className="max-w-5xl mx-auto bg-[#111] text-white p-8 rounded-2xl shadow-lg">
+    <div className="max-w-6xl mx-auto bg-[#111] text-white p-8 rounded-2xl shadow-lg">
       {/* タイトル */}
       <h2 className="text-3xl font-bold text-center text-[#FDB9C8] mb-6">
         {schedule.title}
@@ -80,13 +93,13 @@ export default function SharePage() {
             </tr>
           </thead>
           <tbody>
-            {dates.map((date) => (
-              <tr key={date} className="border-b border-gray-700 hover:bg-[#222]">
+            {allRows.map(({ date, slot }) => (
+              <tr key={`${date}-${slot}`} className="border-b border-gray-700 hover:bg-[#222]">
                 <td className="p-3">{date}</td>
-                <td className="p-3">{schedule.timeslot}</td>
+                <td className="p-3">{slot}</td>
                 {userList.map((user) => (
                   <td key={user} className="p-3">
-                    {responses[user]?.[date] || "-"}
+                    {responses[user]?.[`${date}-${slot}`] || "-"}
                   </td>
                 ))}
               </tr>
@@ -118,14 +131,14 @@ export default function SharePage() {
               </tr>
             </thead>
             <tbody>
-              {dates.map((date) => (
-                <tr key={date} className="border-b border-gray-700 hover:bg-[#222]">
+              {allRows.map(({ date, slot }) => (
+                <tr key={`${date}-${slot}`} className="border-b border-gray-700 hover:bg-[#222]">
                   <td className="p-3">{date}</td>
-                  <td className="p-3">{schedule.timeslot}</td>
+                  <td className="p-3">{slot}</td>
                   <td className="p-3">
                     <select
-                      value={myResponses[date] || ""}
-                      onChange={(e) => handleChange(date, e.target.value)}
+                      value={myResponses[`${date}-${slot}`] || ""}
+                      onChange={(e) => handleChange(`${date}-${slot}`, e.target.value)}
                       className="p-2 rounded-lg text-black"
                     >
                       <option value="">未選択</option>
