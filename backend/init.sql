@@ -1,28 +1,31 @@
--- 既存テーブルを削除（依存関係を考慮して responses → schedules → links の順）
-DROP TABLE IF EXISTS responses;
-DROP TABLE IF EXISTS schedules;
-DROP TABLE IF EXISTS links;
+-- links テーブル
+DROP TABLE IF EXISTS responses CASCADE;
+DROP TABLE IF EXISTS schedules CASCADE;
+DROP TABLE IF EXISTS links CASCADE;
 
--- リンク（イベント）テーブル
 CREATE TABLE links (
-  id TEXT PRIMARY KEY,
-  title TEXT
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- スケジュール（候補日程）テーブル
+-- 候補日程
 CREATE TABLE schedules (
-  id SERIAL PRIMARY KEY,
-  link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
-  date TEXT NOT NULL,
-  timeslot TEXT NOT NULL
+    id SERIAL PRIMARY KEY,
+    link_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    timeslot TEXT NOT NULL,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
 );
 
--- 回答（ユーザーごとの可否）テーブル
+-- 回答（◯ ×）
 CREATE TABLE responses (
-  id SERIAL PRIMARY KEY,
-  link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
-  date TEXT NOT NULL,
-  timeslot TEXT NOT NULL,
-  username TEXT NOT NULL,
-  choice TEXT NOT NULL  -- '◯' または '×'
+    id SERIAL PRIMARY KEY,
+    link_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    timeslot TEXT NOT NULL,
+    username TEXT NOT NULL,
+    choice TEXT NOT NULL CHECK (choice IN ('◯', '×')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
 );
