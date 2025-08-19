@@ -44,7 +44,8 @@ async function initDB() {
       timemode TEXT,
       starthour INT,
       endhour INT,
-      title TEXT
+      title TEXT,
+      memo TEXT
     );
   `);
 
@@ -59,6 +60,32 @@ async function initDB() {
 }
 initDB();
 
+// === 個人スケジュール登録 ===
+app.post("/api/personal", async (req, res) => {
+  try {
+    const { date, timemode, starthour, endhour, title, memo } = req.body;
+    await pool.query(
+      `INSERT INTO schedules (linkid, date, timemode, starthour, endhour, title, memo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      ["personal", date, timemode, starthour, endhour, title, memo]
+    );
+    io.emit("update");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("個人日程登録エラー:", err);
+    res.status(500).json({ error: "登録に失敗しました" });
+  }
+});
+
+// === 個人スケジュール取得 ===
+app.get("/api/personal", async (req, res) => {
+  const result = await pool.query(
+    `SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC`,
+    ["personal"]
+  );
+  res.json(result.rows);
+});
+
 // === 共有リンク作成 ===
 app.post("/api/create-link", async (req, res) => {
   try {
@@ -67,9 +94,9 @@ app.post("/api/create-link", async (req, res) => {
 
     for (const s of schedules) {
       await pool.query(
-        `INSERT INTO schedules (linkid, date, timemode, starthour, endhour, title)
-         VALUES ($1,$2,$3,$4,$5,$6)`,
-        [linkid, s.date, s.timemode, s.starthour, s.endhour, s.title]
+        `INSERT INTO schedules (linkid, date, timemode, starthour, endhour, title, memo)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [linkid, s.date, s.timemode, s.starthour, s.endhour, s.title, s.memo || ""]
       );
     }
 
@@ -111,10 +138,8 @@ app.get("/api/share/:linkid", async (req, res) => {
 // === 出欠登録 ===
 app.post("/api/share/:linkid/respond", async (req, res) => {
   try {
-    const { linkid } = req.params;
     const { scheduleId, name, status } = req.body;
 
-    // 同じ人が既に回答していたら更新、なければ追加
     const existing = await pool.query(
       `SELECT * FROM responses WHERE scheduleid=$1 AND name=$2`,
       [scheduleId, name]
@@ -140,13 +165,12 @@ app.post("/api/share/:linkid/respond", async (req, res) => {
   }
 });
 
-// === 静的ファイル配信（フロントエンドビルド済み） ===
+// === 静的ファイル配信 ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
