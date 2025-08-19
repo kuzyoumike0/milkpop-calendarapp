@@ -10,9 +10,6 @@ export default function ShareLinkPage() {
   const [date, setDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
-  const [timeSlot, setTimeSlot] = useState("終日");
-  const [startHour, setStartHour] = useState(0);
-  const [endHour, setEndHour] = useState(1);
   const [schedules, setSchedules] = useState([]);
 
   const formatDate = (d) => {
@@ -61,16 +58,11 @@ export default function ShareLinkPage() {
       alert("名前と日付を入力してください");
       return;
     }
-    if (parseInt(endHour) <= parseInt(startHour)) {
-      alert("終了時刻は開始時刻より後にしてください。");
-      return;
-    }
-
     try {
       await axios.post(`/api/schedules/${linkId}`, {
         username,
         dates: selectedDates,
-        timeslot: `${timeSlot} (${startHour}時〜${endHour}時)`,
+        timeslot: "◯", // 登録済みを意味する
       });
       alert("登録しました！");
       setSelectedDates([]);
@@ -81,20 +73,19 @@ export default function ShareLinkPage() {
     }
   };
 
-  // マトリクス用のデータ整形
+  // === マトリクス用 ===
   const users = [...new Set(schedules.map((s) => s.username))];
   const dates = [...new Set(schedules.map((s) => s.date))].sort();
 
   const getCellValue = (date, user) => {
     const entry = schedules.find((s) => s.date === date && s.username === user);
-    return entry ? entry.timeslot : "";
+    return entry ? "◯" : "×";
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>共有スケジュールページ</h2>
 
-      {/* 名前入力 */}
       <div>
         <label>名前: </label>
         <input
@@ -102,44 +93,6 @@ export default function ShareLinkPage() {
           onChange={(e) => setUsername(e.target.value)}
           placeholder="名前を入力"
         />
-      </div>
-
-      {/* 時間帯 + 開始終了 */}
-      <div style={{ marginTop: "10px" }}>
-        <label>時間帯: </label>
-        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
-          <option value="終日">終日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
-        </select>
-
-        <label style={{ marginLeft: "10px" }}>開始: </label>
-        <select
-          value={startHour}
-          onChange={(e) => {
-            const newStart = parseInt(e.target.value);
-            setStartHour(newStart);
-            if (endHour <= newStart) setEndHour(newStart + 1);
-          }}
-        >
-          {Array.from({ length: 23 }, (_, i) => (
-            <option key={i} value={i}>
-              {i}時
-            </option>
-          ))}
-        </select>
-
-        <label style={{ marginLeft: "10px" }}>終了: </label>
-        <select value={endHour} onChange={(e) => setEndHour(parseInt(e.target.value))}>
-          {Array.from({ length: 23 - startHour }, (_, i) => {
-            const hour = startHour + 1 + i;
-            return (
-              <option key={hour} value={hour}>
-                {hour}時
-              </option>
-            );
-          })}
-        </select>
       </div>
 
       {/* カレンダーモード切替 */}
@@ -183,7 +136,6 @@ export default function ShareLinkPage() {
         }
       />
 
-      {/* 選択済み日付リスト */}
       {selectedDates.length > 0 && (
         <div style={{ marginTop: "10px" }}>
           <b>選択済み日付:</b> {selectedDates.join(", ")}
@@ -195,7 +147,7 @@ export default function ShareLinkPage() {
       </button>
 
       {/* マトリクス表 */}
-      <h3 style={{ marginTop: "20px" }}>登録一覧（マトリクス形式）</h3>
+      <h3 style={{ marginTop: "20px" }}>登録一覧（◯×形式）</h3>
       <div style={{ overflowX: "auto" }}>
         <table border="1" style={{ borderCollapse: "collapse", minWidth: "600px" }}>
           <thead>
@@ -212,7 +164,7 @@ export default function ShareLinkPage() {
                 <td>{d}</td>
                 {users.map((u, j) => (
                   <td key={j} style={{ textAlign: "center" }}>
-                    {getCellValue(d, u) || "―"}
+                    {getCellValue(d, u)}
                   </td>
                 ))}
               </tr>
