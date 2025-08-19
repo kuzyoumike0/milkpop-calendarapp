@@ -1,59 +1,132 @@
-.share-container {
-  padding: 20px;
-  font-family: sans-serif;
-}
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import "./ShareLinkPage.css";
 
-.form-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 15px;
-}
+export default function ShareLinkPage() {
+  const { linkId } = useParams();
+  const [username, setUsername] = useState("");
+  const [date, setDate] = useState("");
+  const [timeslot, setTimeslot] = useState("終日");
+  const [schedules, setSchedules] = useState([]);
 
-.form-container input,
-.form-container select,
-.form-container button {
-  padding: 8px;
-  font-size: 14px;
-}
+  // 今日の日付を初期値に設定
+  useEffect(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    setDate(`${yyyy}-${mm}-${dd}`);
+  }, []);
 
-/* PC用テーブル */
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
+  // 予定取得
+  const fetchSchedules = async () => {
+    try {
+      const res = await axios.get(`/api/share/${linkId}`);
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("予定取得に失敗:", err);
+    }
+  };
 
-.schedule-table th,
-.schedule-table td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
-}
+  useEffect(() => {
+    fetchSchedules();
+  }, [linkId]);
 
-/* スマホ用カード */
-.schedule-cards {
-  display: none;
-}
+  // 予定登録
+  const handleRegister = async () => {
+    if (!username.trim()) {
+      alert("名前を入力してください");
+      return;
+    }
+    try {
+      await axios.post(`/api/share/${linkId}`, {
+        username,
+        date,
+        timeslot,
+      });
+      setUsername("");
+      setTimeslot("終日");
+      fetchSchedules();
+    } catch (err) {
+      console.error("予定登録に失敗:", err);
+      alert("予定登録に失敗しました");
+    }
+  };
 
-.schedule-card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #f9f9f9;
-}
+  // 日付ごとにグループ化
+  const grouped = schedules.reduce((acc, s) => {
+    if (!acc[s.date]) acc[s.date] = [];
+    acc[s.date].push(s);
+    return acc;
+  }, {});
 
-/* 画面幅が小さいときはカード形式に切り替え */
-@media (max-width: 768px) {
-  .schedule-table {
-    display: none;
-  }
-  .schedule-cards {
-    display: block;
-  }
-  .form-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
+  return (
+    <div className="share-container">
+      <h2>共有スケジュール</h2>
+
+      {/* 入力フォーム */}
+      <div className="form-container">
+        <input
+          type="text"
+          placeholder="名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+        <select value={timeslot} onChange={(e) => setTimeslot(e.target.value)}>
+          <option value="終日">終日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
+        <button onClick={handleRegister}>登録</button>
+      </div>
+
+      {/* 登録済み予定一覧 */}
+      <h3>登録済み予定</h3>
+      {schedules.length === 0 ? (
+        <p>まだ予定は登録されていません。</p>
+      ) : (
+        Object.keys(grouped)
+          .sort()
+          .map((d) => (
+            <div key={d} className="date-section">
+              <h4>{d}</h4>
+
+              {/* PC: テーブル */}
+              <table className="schedule-table">
+                <thead>
+                  <tr>
+                    <th>名前</th>
+                    <th>時間帯</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grouped[d].map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.username}</td>
+                      <td>{s.timeslot}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* スマホ: カード */}
+              <div className="schedule-cards">
+                {grouped[d].map((s) => (
+                  <div key={s.id} className="schedule-card">
+                    <p><strong>名前:</strong> {s.username}</p>
+                    <p><strong>時間帯:</strong> {s.timeslot}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+      )}
+    </div>
+  );
 }
