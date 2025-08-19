@@ -111,9 +111,17 @@ app.get("/api/link/:linkId", async (req, res) => {
       [linkId]
     );
 
+    const responsesResult = await pool.query(
+      `SELECT username, date, timeslot, choice
+       FROM responses
+       WHERE link_id = $1`,
+      [linkId]
+    );
+
     res.json({
       title: linkResult.rows[0].title,
       schedules: schedulesResult.rows || [],
+      responses: responsesResult.rows || [],
     });
   } catch (err) {
     console.error("リンク取得エラー:", err);
@@ -141,7 +149,7 @@ app.post("/api/respond", async (req, res) => {
   }
 });
 
-// ===== 静的ファイル (本番用 React) =====
+// ===== 静的ファイル (React) =====
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
