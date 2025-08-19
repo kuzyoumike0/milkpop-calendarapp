@@ -70,7 +70,7 @@ app.post("/api/shared", async (req, res) => {
   }
 });
 
-// === 共有リンクから取得 ===
+// === 共有リンクから予定取得 ===
 app.get("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
 
@@ -88,6 +88,30 @@ app.get("/api/shared/:linkId", async (req, res) => {
   } catch (err) {
     console.error("DB取得エラー:", err);
     res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
+
+// === 共有リンクに予定を追記 ===
+app.post("/api/shared/:linkId", async (req, res) => {
+  const { linkId } = req.params;
+  const { username, mode, dates } = req.body;
+
+  if (!username || !dates || dates.length === 0) {
+    return res.status(400).json({ error: "必要な情報が不足しています" });
+  }
+
+  try {
+    for (const d of dates) {
+      await pool.query(
+        "INSERT INTO schedules (link_id, username, schedule_date, mode) VALUES ($1, $2, $3, $4)",
+        [linkId, username, d, mode]
+      );
+    }
+
+    res.json({ message: "追記完了" });
+  } catch (err) {
+    console.error("DB追記エラー:", err);
+    res.status(500).json({ error: "追記に失敗しました" });
   }
 });
 
