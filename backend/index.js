@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(bodyParser.json());
@@ -50,7 +51,7 @@ async function initDB() {
 }
 initDB();
 
-// === スケジュール登録 ===
+// === API: スケジュール登録 ===
 app.post("/api/schedule", async (req, res) => {
   const { title, start_date, end_date, timeslot, range_mode } = req.body;
   const linkid = uuidv4();
@@ -68,7 +69,7 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
-// === スケジュール取得 + 投票一覧 ===
+// === API: スケジュール取得 ===
 app.get("/api/schedule/:linkid", async (req, res) => {
   const { linkid } = req.params;
   try {
@@ -96,7 +97,7 @@ app.get("/api/schedule/:linkid", async (req, res) => {
   }
 });
 
-// === 投票保存 ===
+// === API: 投票保存 ===
 app.post("/api/vote/:linkid", async (req, res) => {
   const { linkid } = req.params;
   const { username, votes } = req.body;
@@ -112,6 +113,15 @@ app.post("/api/vote/:linkid", async (req, res) => {
     console.error("投票保存エラー:", err);
     res.status(500).json({ error: "投票保存に失敗しました" });
   }
+});
+
+// === React (フロント) の静的ファイルを配信 ===
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
+
+// フロントのルーティングをすべて React に任せる
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // === サーバー起動 ===
