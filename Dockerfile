@@ -1,28 +1,23 @@
-# ===== Frontend build =====
+# フロントエンドビルド
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
-
-# 依存関係インストール
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm install --legacy-peer-deps
-
-# ソースをコピーしてビルド
+COPY frontend/package.json ./
+COPY frontend/package-lock.json ./ || true
+RUN npm install
 COPY frontend/ ./
-RUN npm run build && ls -l build/index.html
+RUN npm run build
 
-# ===== Backend =====
+# バックエンド
 FROM node:18
 WORKDIR /app/backend
-
-# 依存関係インストール
-COPY backend/package.json backend/package-lock.json ./
+COPY backend/package.json ./
+COPY backend/package-lock.json ./ || true
 RUN npm install
-
-# バックエンドソースコピー
 COPY backend/ ./
 
-# フロントエンド成果物をコピー
+# フロントのビルド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
+ENV PORT=8080
 EXPOSE 8080
 CMD ["node", "index.js"]
