@@ -5,7 +5,13 @@ import "react-calendar/dist/Calendar.css";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
-const socket = io(); // デフォルトで同一オリジンに接続
+// 開発と本番でURLを切り替え
+const SOCKET_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://あなたのRailwayドメイン.up.railway.app"
+    : "http://localhost:8080";
+
+const socket = io(SOCKET_URL);
 
 export default function SharePage() {
   const { linkId } = useParams();
@@ -24,12 +30,13 @@ export default function SharePage() {
 
   // 初期データ取得 & ソケット参加
   useEffect(() => {
-    axios.get(`/api/schedules/${linkId}`)
-      .then((res) => setSchedules(res.data));
+    axios
+      .get(`/api/schedules/${linkId}`)
+      .then((res) => setSchedules(res.data))
+      .catch((err) => console.error("取得失敗:", err));
 
     socket.emit("join", linkId);
 
-    // 他ユーザーから更新が来たら反映
     socket.on("updateSchedules", (data) => {
       setSchedules(data);
     });
