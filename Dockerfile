@@ -17,7 +17,7 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# Reactビルド済みのファイルを public に配置
+# Reactビルド済みのファイルを配置
 COPY --from=frontend-build /app/frontend/build ./public
 
 ENV PORT=8080
