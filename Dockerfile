@@ -1,4 +1,4 @@
-# === フロントエンドビルド ===
+# 1. React ビルド
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -6,16 +6,15 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# === バックエンド ===
+# 2. Node サーバー
 FROM node:18
+WORKDIR /app
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install
+COPY backend ./backend
+COPY --from=frontend-build /app/frontend/build ./frontend/build
+
 WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install
-COPY backend/ ./
-
-# フロントのビルド成果物を public にコピー
-COPY --from=frontend-build /app/frontend/build ./public
-
-ENV PORT 8080
+ENV PORT=8080
 EXPOSE 8080
 CMD ["node", "index.js"]
