@@ -89,4 +89,33 @@ app.get("/api/link/:linkId", async (req, res) => {
     });
   } catch (err) {
     console.error("リンク取得エラー:", err);
-    res
+    res.status(500).send("リンク取得失敗");
+  }
+});
+
+// 回答登録
+app.post("/api/respond", async (req, res) => {
+  try {
+    const { scheduleId, username, available } = req.body;
+    await pool.query(
+      "INSERT INTO responses (schedule_id, username, available) VALUES ($1, $2, $3)",
+      [scheduleId, username, available]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("回答登録エラー:", err);
+    res.status(500).send("回答登録失敗");
+  }
+});
+
+// 静的ファイル
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+initDB();
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 サーバーはポート ${PORT} で実行されています`);
+});
