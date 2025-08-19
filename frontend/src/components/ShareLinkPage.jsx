@@ -24,7 +24,6 @@ export default function ShareLinkPage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // DBからスケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get(`/api/schedules/${linkId}`);
@@ -37,7 +36,6 @@ export default function ShareLinkPage() {
     fetchSchedules();
   }, [linkId]);
 
-  // 日付クリック処理
   const handleDateChange = (d) => {
     if (mode === "single") {
       setDate(d);
@@ -69,7 +67,6 @@ export default function ShareLinkPage() {
     }
   };
 
-  // 登録
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -94,13 +91,12 @@ export default function ShareLinkPage() {
     }
   };
 
-  // 削除処理（自分の名前だけ）
   const handleDelete = async (s) => {
     if (s.username !== username) {
       alert("自分の予定だけ削除できます");
       return;
     }
-    if (!window.confirm(`${s.date} [${s.timeslot}] の予定を削除しますか？`)) return;
+    if (!window.confirm(`${s.date} [${s.timeslot}] を削除しますか？`)) return;
     try {
       await axios.delete("/api/schedule", {
         data: {
@@ -117,7 +113,6 @@ export default function ShareLinkPage() {
     }
   };
 
-  // === 一覧を日付ごとにまとめて整形 ===
   const grouped = {};
   schedules.forEach((s) => {
     if (!grouped[s.date]) {
@@ -146,33 +141,9 @@ export default function ShareLinkPage() {
 
       {/* モード選択 */}
       <div>
-        <label>
-          <input
-            type="radio"
-            value="single"
-            checked={mode === "single"}
-            onChange={() => setMode("single")}
-          />
-          単日選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="multi"
-            checked={mode === "multi"}
-            onChange={() => setMode("multi")}
-          />
-          複数選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="range"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
+        <label><input type="radio" value="single" checked={mode==="single"} onChange={()=>setMode("single")}/> 単日</label>
+        <label><input type="radio" value="multi" checked={mode==="multi"} onChange={()=>setMode("multi")}/> 複数</label>
+        <label><input type="radio" value="range" checked={mode==="range"} onChange={()=>setMode("range")}/> 範囲</label>
       </div>
 
       {/* カレンダー */}
@@ -186,32 +157,24 @@ export default function ShareLinkPage() {
         }}
       />
 
-      {/* 時間帯選択 */}
+      {/* 時間帯 */}
       <div>
         <label>時間帯: </label>
-        <select
-          value={timeSlot}
-          onChange={(e) => setTimeSlot(e.target.value)}
-        >
-          {timeSlots.map((ts) => (
-            <option key={ts} value={ts}>{ts}</option>
-          ))}
+        <select value={timeSlot} onChange={(e)=>setTimeSlot(e.target.value)}>
+          {timeSlots.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
         </select>
       </div>
 
-      {/* 登録ボタン */}
       <button onClick={handleSave}>登録</button>
 
-      {/* 一覧表示 (表形式) */}
+      {/* 一覧 表形式 */}
       <h3>登録済み一覧</h3>
       <div className="schedule-table-wrapper">
         <table className="schedule-table">
           <thead>
             <tr>
               <th>日付</th>
-              {timeSlots.map((ts) => (
-                <th key={ts}>{ts}</th>
-              ))}
+              {timeSlots.map((ts) => <th key={ts}>{ts}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -220,16 +183,11 @@ export default function ShareLinkPage() {
                 <td>{d}</td>
                 {timeSlots.map((ts) => (
                   <td key={ts}>
-                    {grouped[d][ts].map((s, i) => (
+                    {grouped[d][ts].map((s,i)=>(
                       <span key={i} className="user-chip">
                         {s.username}
-                        {s.username === username && (
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDelete(s)}
-                          >
-                            ×
-                          </button>
+                        {s.username===username && (
+                          <button className="delete-btn" onClick={()=>handleDelete(s)}>×</button>
                         )}
                       </span>
                     ))}
