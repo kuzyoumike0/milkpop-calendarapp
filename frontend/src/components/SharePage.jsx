@@ -69,13 +69,19 @@ export default function SharePage() {
     }
 
     try {
-      const res = await axios.post("/api/create-link", {
-        title,
-        dates: selectedDates,
+      // サーバーに渡す形式に変換
+      const datesPayload = selectedDates.map((d) => ({
+        date: d,
         timeslot,
         startTime: timeslot === "custom" ? startTime : null,
         endTime: timeslot === "custom" ? endTime : null,
+      }));
+
+      const res = await axios.post("/api/create-link", {
+        title,
+        dates: datesPayload,
       });
+
       const url = `${window.location.origin}/link/${res.data.linkId}`;
       setShareLink(url);
       setMessage("✅ リンクを作成しました");
