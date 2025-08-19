@@ -18,7 +18,13 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
+        styleSrcElem: ["'self'", "'unsafe-inline'", "https://www.gstatic.com"],
         fontSrc: [
+          "'self'",
+          "data:",
+          "https://milkpop-calendarapp-production.up.railway.app",
+        ],
+        fontSrcElem: [
           "'self'",
           "data:",
           "https://milkpop-calendarapp-production.up.railway.app",
@@ -120,9 +126,9 @@ app.get("/api/schedules/:linkId", async (req, res) => {
 });
 
 // === 本番用: Reactビルド配信 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "./public")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "./public/index.html"));
 });
 
 // === 起動 ===
