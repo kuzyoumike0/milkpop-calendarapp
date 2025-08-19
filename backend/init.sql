@@ -1,15 +1,24 @@
--- スケジュールテーブル
-CREATE TABLE IF NOT EXISTS schedules (
-  id SERIAL PRIMARY KEY,
-  linkId TEXT NOT NULL,
-  username TEXT NOT NULL,
-  date TEXT NOT NULL,
-  timeslot TEXT NOT NULL
+DROP TABLE IF EXISTS responses;
+DROP TABLE IF EXISTS schedules;
+DROP TABLE IF EXISTS links;
+
+CREATE TABLE links (
+  id TEXT PRIMARY KEY,
+  title TEXT
 );
 
--- リンクテーブル
-CREATE TABLE IF NOT EXISTS links (
-  linkId TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE schedules (
+  id SERIAL PRIMARY KEY,
+  link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
+  date TEXT,
+  timeslot TEXT
+);
+
+CREATE TABLE responses (
+  id SERIAL PRIMARY KEY,
+  link_id TEXT REFERENCES links(id) ON DELETE CASCADE,
+  date TEXT,
+  timeslot TEXT,
+  username TEXT,
+  choice TEXT
 );
