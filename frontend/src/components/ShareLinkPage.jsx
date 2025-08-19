@@ -40,20 +40,61 @@ export default function ShareLinkPage() {
         username,
         choice,
       });
-      setResponses([
-        ...responses,
-        { username, date, timeslot, choice },
-      ]);
-      setMessage("✅ 回答を送信しました");
+
+      setResponses((prev) => {
+        const filtered = prev.filter(
+          (r) =>
+            !(
+              r.username === username &&
+              r.date === date &&
+              r.timeslot === timeslot
+            )
+        );
+        return [...filtered, { username, date, timeslot, choice }];
+      });
+
+      setMessage("✅ 回答を保存しました");
     } catch (err) {
       console.error("回答送信エラー:", err);
       setMessage("❌ 回答送信に失敗しました");
     }
   };
 
+  // 回答削除
+  const handleDelete = async (date, timeslot) => {
+    if (!username.trim()) {
+      setMessage("❌ 名前を入力してください");
+      return;
+    }
+    try {
+      await axios.post("/api/delete-response", {
+        linkId,
+        date,
+        timeslot,
+        username,
+      });
+
+      setResponses((prev) =>
+        prev.filter(
+          (r) =>
+            !(
+              r.username === username &&
+              r.date === date &&
+              r.timeslot === timeslot
+            )
+        )
+      );
+
+      setMessage("✅ 回答を削除しました");
+    } catch (err) {
+      console.error("削除エラー:", err);
+      setMessage("❌ 回答削除に失敗しました");
+    }
+  };
+
   // 特定の日付に対する回答まとめ
-  const getResponsesForDate = (date) => {
-    return responses.filter((r) => r.date === date);
+  const getResponsesForDate = (date, timeslot) => {
+    return responses.filter((r) => r.date === date && r.timeslot === timeslot);
   };
 
   return (
@@ -105,13 +146,26 @@ export default function ShareLinkPage() {
                   </button>
                   <button
                     onClick={() => handleRespond(s.date, s.timeslot, "×")}
+                    style={{ marginRight: "5px" }}
                   >
                     ×
                   </button>
+                  <button
+                    onClick={() => handleDelete(s.date, s.timeslot)}
+                    style={{ color: "red" }}
+                  >
+                    削除
+                  </button>
                 </td>
                 <td>
-                  {getResponsesForDate(s.date).map((r, i) => (
-                    <div key={i}>
+                  {getResponsesForDate(s.date, s.timeslot).map((r, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontWeight:
+                          r.username === username ? "bold" : "normal",
+                      }}
+                    >
                       {r.username}: {r.choice}
                     </div>
                   ))}
