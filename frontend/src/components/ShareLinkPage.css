@@ -1,129 +1,193 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { linkId } = useParams(); // URLからlinkIdを取得
-  const [link, setLink] = useState(null);
+  const { linkId } = useParams();
+  const [title, setTitle] = useState("");
   const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({}); // { "date-timeslot": "◯" or "×" }
   const [message, setMessage] = useState("");
 
-  // リンク情報取得
+  // データ取得
   useEffect(() => {
-    axios.get(`/api/link/${linkId}`).then((res) => {
-      setLink(res.data.link);
-      // 日付でソート
-      const sorted = [...res.data.schedules].sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
-      );
-      setSchedules(sorted);
-    });
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(`/api/link/${linkId}`);
+        setTitle(res.data.title);
+        setSchedules(res.data.schedules || []);
+        setResponses(res.data.responses || []);
+      } catch (err) {
+        console.error("リンク取得エラー:", err);
+        setMessage("❌ リンクの読み込みに失敗しました");
+      }
+    };
+    fetchData();
   }, [linkId]);
 
-  // 回答送信
-  const handleSubmit = async () => {
+  // 回答送信（新規 or 更新）
+  const handleRespond = async (date, timeslot, choice) => {
     if (!username.trim()) {
-      setMessage("❌ ユーザー名を入力してください");
+      setMessage("❌ 名前を入力してください");
       return;
     }
     try {
-      for (const s of schedules) {
-        const key = `${s.date}-${s.timeslot}`;
-        if (responses[key]) {
-          await axios.post("/api/respond", {
-            linkId,
-            date: s.date,
-            timeslot: s.timeslot,
-            username,
-            choice: responses[key],
-          });
-        }
-      }
-      setMessage("✅ 回答を送信しました");
+      await axios.post("/api/participant", {
+        linkId,
+        date,
+        timeslot,
+        username,
+        status: choice,
+      });
+
+      setResponses((prev) => {
+        const filtered = prev.filter(
+          (r) =>
+            !(r.username === username && r.date === date && r.timeslot === timeslot)
+        );
+        return [...filtered, { username, date, timeslot, status: choice }];
+      });
+
+      setMessage("✅ 回答を保存しました");
     } catch (err) {
       console.error("回答送信エラー:", err);
       setMessage("❌ 回答送信に失敗しました");
     }
   };
 
+  // 回答削除
+  const handleDelete = async (date, timeslot) => {
+    if (!username.trim()) {
+      setMessage("❌ 名前を入力してください");
+      return;
+    }
+    try {
+      await axios.delete("/api/participant", {
+        data: { linkId, date, timeslot, username },
+      });
+
+      setResponses((prev) =>
+        prev.filter(
+          (r) =>
+            !(r.username === username && r.date === date && r.timeslot === timeslot)
+        )
+      );
+
+      setMessage("✅ 回答を削除しました");
+    } catch (err) {
+      console.error("削除エラー:", err);
+      setMessage("❌ 回答削除に失敗しました");
+    }
+  };
+
+  // 回答編集
+  const handleEdit = async (date, timeslot, newChoice) => {
+    if (!username.trim()) {
+      setMessage("❌ 名前を入力してください");
+      return;
+    }
+    try {
+      await axios.put("/api/participant", {
+        linkId,
+        date,
+        timeslot,
+        username,
+        status: newChoice,
+      });
+
+      setResponses((prev) =>
+        prev.map((r) =>
+          r.username === username && r.date === date && r.timeslot === timeslot
+            ? { ...r, status: newChoice }
+            : r
+        )
+      );
+
+      setMessage("✏️ 回答を編集しました");
+    } catch (err) {
+      console.error("編集エラー:", err);
+      setMessage("❌ 回答編集に失敗しました");
+    }
+  };
+
+  // 特定の日付に対する回答まとめ
+  const getResponsesForDate = (date, timeslot) => {
+    return responses.filter((r) => r.date === date && r.timeslot === timeslot);
+  };
+
   return (
     <div style={{ padding: "20px" }}>
-      {link ? (
-        <>
-          <h2>📅 {link.title}</h2>
+      <h2>📅 共有スケジュール: {title}</h2>
 
-          {/* ユーザー名入力 */}
-          <div style={{ marginBottom: "10px" }}>
-            <label>ユーザー名: </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="名前を入力"
-              style={{ padding: "5px", width: "200px" }}
-            />
-          </div>
+      {/* ユーザー名入力 */}
+      <div style={{ marginBottom: "15px" }}>
+        <label>名前: </label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="あなたの名前"
+          style={{ padding: "5px" }}
+        />
+      </div>
 
-          {/* スケジュール一覧 */}
-          <table border="1" cellPadding="8" style={{ borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th>日付</th>
-                <th>時間帯</th>
-                <th>選択</th>
+      {/* 日付一覧 */}
+      {schedules.length > 0 ? (
+        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>時間帯</th>
+              <th>参加可否</th>
+              <th>回答一覧</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s, idx) => (
+              <tr key={idx}>
+                <td>{s.date}</td>
+                <td>
+                  {s.timeslot === "custom"
+                    ? `${s.starttime}:00 - ${s.endtime}:00`
+                    : s.timeslot}
+                </td>
+                <td>
+                  <button onClick={() => handleRespond(s.date, s.timeslot, "◯")} style={{ marginRight: "5px" }}>
+                    ◯
+                  </button>
+                  <button onClick={() => handleRespond(s.date, s.timeslot, "×")} style={{ marginRight: "5px" }}>
+                    ×
+                  </button>
+                  <button onClick={() => handleEdit(s.date, s.timeslot, "△")} style={{ marginRight: "5px", color: "orange" }}>
+                    △ 編集
+                  </button>
+                  <button onClick={() => handleDelete(s.date, s.timeslot)} style={{ color: "red" }}>
+                    削除
+                  </button>
+                </td>
+                <td>
+                  {getResponsesForDate(s.date, s.timeslot).map((r, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        fontWeight: r.username === username ? "bold" : "normal",
+                      }}
+                    >
+                      {r.username}: {r.status}
+                    </div>
+                  ))}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {schedules.map((s) => {
-                const key = `${s.date}-${s.timeslot}`;
-                return (
-                  <tr key={key}>
-                    <td>{s.date}</td>
-                    <td>
-                      {s.timeslot}
-                      {s.starttime && s.endtime
-                        ? ` (${s.starttime}:00 - ${s.endtime}:00)`
-                        : ""}
-                    </td>
-                    <td>
-                      <select
-                        value={responses[key] || ""}
-                        onChange={(e) =>
-                          setResponses({ ...responses, [key]: e.target.value })
-                        }
-                      >
-                        <option value="">-</option>
-                        <option value="◯">◯</option>
-                        <option value="×">×</option>
-                      </select>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
-          {/* 送信ボタン */}
-          <button
-            onClick={handleSubmit}
-            style={{
-              marginTop: "15px",
-              padding: "8px 16px",
-              fontSize: "16px",
-              cursor: "pointer",
-            }}
-          >
-            ✅ 回答を送信
-          </button>
-
-          {/* メッセージ */}
-          {message && <p style={{ marginTop: "10px" }}>{message}</p>}
-        </>
+            ))}
+          </tbody>
+        </table>
       ) : (
-        <p>読み込み中...</p>
+        <p>日付が登録されていません。</p>
       )}
+
+      {/* メッセージ */}
+      {message && <p style={{ marginTop: "10px" }}>{message}</p>}
     </div>
   );
 }
