@@ -1,14 +1,7 @@
-CREATE TABLE IF NOT EXISTS share_links (
-  linkId TEXT PRIMARY KEY,
-  createdAt TIMESTAMP DEFAULT NOW()
-);
-
+-- schedules テーブル作成
 CREATE TABLE IF NOT EXISTS schedules (
-  id TEXT PRIMARY KEY,
-  linkId TEXT REFERENCES share_links(linkId) ON DELETE CASCADE,
+  id SERIAL PRIMARY KEY,
   username TEXT NOT NULL,
-  date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
-  comment TEXT,
-  token TEXT NOT NULL
+  schedule_date DATE NOT NULL,
+  mode TEXT NOT NULL
 );
