@@ -1,33 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import axios from "axios";
 
-export default function ShareLinkPage() {
-  const { linkId } = useParams();
+export default function ShareLinkPage({ linkId }) {
   const [username, setUsername] = useState("");
   const [date, setDate] = useState("");
   const [timeslot, setTimeslot] = useState("終日");
   const [comment, setComment] = useState("");
-  const [token, setToken] = useState(""); // 🔑 パスワード（トークン）
   const [schedules, setSchedules] = useState([]);
   const [editId, setEditId] = useState(null);
 
-  // 今日の日付をデフォルトに設定
-  useEffect(() => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    setDate(`${yyyy}-${mm}-${dd}`);
-  }, []);
-
-  // スケジュール取得
+  // 予定一覧取得
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get(`/api/share/${linkId}`);
+      const res = await axios.get(`/api/shared/${linkId}`);
       setSchedules(res.data);
     } catch (err) {
-      console.error("予定取得失敗:", err);
+      console.error("❌ Failed to fetch schedules:", err);
     }
   };
 
@@ -35,16 +23,24 @@ export default function ShareLinkPage() {
     fetchSchedules();
   }, [linkId]);
 
-  // 登録 or 更新
+  // 予定登録/更新
   const handleRegister = async () => {
-    if (!username.trim() || !token.trim()) {
-      alert("名前とパスワードを入力してください");
-      return;
-    }
-
     try {
+      if (!username.trim()) {
+        alert("名前を入力してください");
+        return;
+      }
+
       if (editId) {
-        // 更新
+        // 更新処理
+        const savedTokens = JSON.parse(localStorage.getItem("scheduleTokens") || "{}");
+        const token = savedTokens[editId];
+
+        if (!token) {
+          alert("❌ この予定のキーが保存されていないため編集できません");
+          return;
+        }
+
         await axios.put(`/api/schedule/${editId}`, {
           username,
           date,
@@ -54,214 +50,170 @@ export default function ShareLinkPage() {
         });
       } else {
         // 新規登録
-        await axios.post(`/api/share/${linkId}`, {
+        const res = await axios.post(`/api/share/${linkId}`, {
           username,
           date,
           timeslot,
           comment,
-          token,
+        });
+
+        const { id: scheduleId, token: newToken } = res.data;
+
+        // localStorage に保存
+        const savedTokens = JSON.parse(localStorage.getItem("scheduleTokens") || "{}");
+        savedTokens[scheduleId] = newToken;
+        localStorage.setItem("scheduleTokens", JSON.stringify(savedTokens));
+
+        // コピー処理
+        navigator.clipboard.writeText(newToken).then(() => {
+          alert("✅ 予定を登録しました。\nキーは自動保存され、クリップボードにもコピーしました。\n他端末で編集/削除する場合はこのキーを保存してください。");
         });
       }
 
-      // 入力欄リセット
       setEditId(null);
       setTimeslot("終日");
       setComment("");
       fetchSchedules();
     } catch (err) {
       alert(err.response?.data?.error || "登録/更新失敗");
-      console.error("登録/更新失敗:", err);
     }
   };
 
-  // 削除
-  const handleDelete = async (id) => {
-    if (!window.confirm("この予定を削除しますか？")) return;
-    try {
-      await axios.delete(`/api/schedule/${id}`, { params: { token } });
-      fetchSchedules();
-    } catch (err) {
-      alert(err.response?.data?.error || "削除失敗");
-      console.error("削除失敗:", err);
-    }
-  };
-
-  // 編集モード開始
+  // 編集開始
   const handleEdit = (schedule) => {
     setEditId(schedule.id);
     setUsername(schedule.username);
     setDate(schedule.date);
     setTimeslot(schedule.timeslot);
     setComment(schedule.comment || "");
+
+    // トークンがない場合 → 手動入力
+    const savedTokens = JSON.parse(localStorage.getItem("scheduleTokens") || "{}");
+    if (!savedTokens[schedule.id]) {
+      const inputToken = prompt("この予定の編集キーを入力してください:");
+      if (inputToken) {
+        savedTokens[schedule.id] = inputToken;
+        localStorage.setItem("scheduleTokens", JSON.stringify(savedTokens));
+      }
+    }
   };
 
-  // 日付を日本語フォーマットに変換
-  const formatJapaneseDate = (isoDate) => {
-    const d = new Date(isoDate + "T00:00:00");
-    const options = { month: "numeric", day: "numeric", weekday: "short" };
-    return d.toLocaleDateString("ja-JP", options);
+  // 削除
+  const handleDelete = async (id) => {
+    const savedTokens = JSON.parse(localStorage.getItem("scheduleTokens") || "{}");
+    let token = savedTokens[id];
+
+    if (!token) {
+      token = prompt("この予定の削除キーを入力してください:");
+      if (token) {
+        savedTokens[id] = token;
+        localStorage.setItem("scheduleTokens", JSON.stringify(savedTokens));
+      } else {
+        return;
+      }
+    }
+
+    try {
+      await axios.delete(`/api/schedule/${id}`, { params: { token } });
+      fetchSchedules();
+    } catch (err) {
+      alert(err.response?.data?.error || "削除失敗");
+    }
   };
 
   // 日付ごとにグループ化
-  const grouped = schedules.reduce((acc, s) => {
+  const groupedSchedules = schedules.reduce((acc, s) => {
     if (!acc[s.date]) acc[s.date] = [];
     acc[s.date].push(s);
     return acc;
   }, {});
 
   return (
-    <div className="p-4 font-sans">
+    <div className="p-4 max-w-3xl mx-auto">
       <h2 className="text-xl font-bold mb-4">共有スケジュール</h2>
 
       {/* 入力フォーム */}
-      <div className="flex flex-col md:flex-row gap-2 mb-4">
+      <div className="space-y-2 border p-4 rounded shadow">
         <input
           type="text"
           placeholder="名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="border p-2 rounded flex-1"
-        />
-        <input
-          type="password"
-          placeholder="パスワード"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full"
         />
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full"
         />
         <select
           value={timeslot}
           onChange={(e) => setTimeslot(e.target.value)}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full"
         >
-          <option value="終日">終日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
+          <option>終日</option>
+          <option>昼</option>
+          <option>夜</option>
         </select>
         <input
           type="text"
-          placeholder="コメント (任意)"
+          placeholder="コメント（任意）"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="border p-2 rounded flex-1"
+          className="border p-2 rounded w-full"
         />
         <button
           onClick={handleRegister}
-          className={`${
-            editId ? "bg-green-500" : "bg-blue-500"
-          } text-white px-4 py-2 rounded`}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           {editId ? "更新" : "登録"}
         </button>
-        {editId && (
-          <button
-            onClick={() => {
-              setEditId(null);
-              setTimeslot("終日");
-              setComment("");
-            }}
-            className="bg-gray-400 text-white px-4 py-2 rounded"
-          >
-            キャンセル
-          </button>
-        )}
       </div>
 
       {/* スケジュール一覧 */}
-      {Object.keys(grouped).length === 0 ? (
-        <p>まだ予定は登録されていません。</p>
-      ) : (
-        Object.keys(grouped)
+      <div className="mt-6 space-y-4">
+        {Object.keys(groupedSchedules)
           .sort()
           .map((d) => (
-            <div key={d} className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">
-                {formatJapaneseDate(d)}
-              </h3>
-
-              {/* PC表示: テーブル */}
-              <table className="hidden md:table w-full border-collapse border">
+            <div key={d} className="border rounded p-4 shadow">
+              <h3 className="font-semibold mb-2">{d}</h3>
+              <table className="w-full border">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border p-2">名前</th>
-                    <th className="border p-2">時間帯</th>
-                    <th className="border p-2">コメント</th>
-                    <th className="border p-2">操作</th>
+                    <th className="p-2 border">名前</th>
+                    <th className="p-2 border">区分</th>
+                    <th className="p-2 border">コメント</th>
+                    <th className="p-2 border">操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {grouped[d].map((s) => (
+                  {groupedSchedules[d].map((s) => (
                     <tr key={s.id}>
-                      <td className="border p-2">{s.username}</td>
-                      <td className="border p-2">{s.timeslot}</td>
-                      <td className="border p-2">{s.comment || "-"}</td>
-                      <td className="border p-2 space-x-2">
-                        {s.username === username && (
-                          <>
-                            <button
-                              onClick={() => handleEdit(s)}
-                              className="bg-yellow-500 text-white px-2 py-1 rounded"
-                            >
-                              編集
-                            </button>
-                            <button
-                              onClick={() => handleDelete(s.id)}
-                              className="bg-red-500 text-white px-2 py-1 rounded"
-                            >
-                              削除
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* モバイル表示: カード */}
-              <div className="md:hidden">
-                {grouped[d].map((s) => (
-                  <div
-                    key={s.id}
-                    className="border rounded p-3 mb-2 shadow-sm bg-white"
-                  >
-                    <p>
-                      <strong>名前:</strong> {s.username}
-                    </p>
-                    <p>
-                      <strong>時間帯:</strong> {s.timeslot}
-                    </p>
-                    <p>
-                      <strong>コメント:</strong> {s.comment || "-"}
-                    </p>
-                    {s.username === username && (
-                      <div className="flex gap-2 mt-2">
+                      <td className="p-2 border">{s.username}</td>
+                      <td className="p-2 border">{s.timeslot}</td>
+                      <td className="p-2 border">{s.comment || "-"}</td>
+                      <td className="p-2 border space-x-2">
                         <button
                           onClick={() => handleEdit(s)}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded"
+                          className="bg-green-500 text-white px-2 py-1 rounded"
                         >
                           編集
                         </button>
                         <button
                           onClick={() => handleDelete(s.id)}
-                          className="bg-red-500 text-white px-3 py-1 rounded"
+                          className="bg-red-500 text-white px-2 py-1 rounded"
                         >
                           削除
                         </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))
-      )}
+          ))}
+      </div>
     </div>
   );
 }
