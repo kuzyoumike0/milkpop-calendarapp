@@ -58,17 +58,20 @@ export default function LinkPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-gradient-to-b from-[#111] to-black p-8 rounded-2xl shadow-2xl space-y-6">
-      <h2 className="text-3xl font-extrabold text-center text-[#FDB9C8]">日程登録</h2>
+    <div className="max-w-3xl mx-auto bg-gradient-to-br from-[#1a1a1a] via-black to-[#0d0d0d] p-8 rounded-3xl shadow-2xl space-y-6 border border-gray-700">
+      <h2 className="text-3xl font-extrabold text-center text-[#FDB9C8] drop-shadow-lg">
+        日程登録
+      </h2>
 
       <input
-        className="w-full p-3 text-black rounded-xl shadow focus:ring-2 focus:ring-[#FDB9C8]"
+        className="w-full p-3 text-black rounded-xl shadow focus:ring-4 focus:ring-[#FDB9C8]"
         placeholder="タイトルを入力"
         value={title}
         onChange={e => setTitle(e.target.value)}
       />
 
-      <div className="bg-white p-4 rounded-xl shadow-lg">
+      {/* カレンダー */}
+      <div className="bg-white p-4 rounded-2xl shadow-lg">
         <Calendar
           onClickDay={handleDateChange}
           value={rangeMode === "範囲選択" ? dateRange : null}
@@ -76,15 +79,16 @@ export default function LinkPage() {
           tileClassName={({ date }) => {
             if (rangeMode === "複数選択" &&
               multiDates.find(d => d.toDateString() === date.toDateString())) {
-              return "bg-[#FDB9C8] text-black rounded-full";
+              return "bg-[#FDB9C8] text-black rounded-full font-bold";
             }
             return "";
           }}
         />
       </div>
 
-      <div className="flex space-x-6 justify-center">
-        <label className="flex items-center space-x-2">
+      {/* モード切替 */}
+      <div className="flex space-x-6 justify-center text-gray-300">
+        <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="radio"
             checked={rangeMode === "範囲選択"}
@@ -92,7 +96,7 @@ export default function LinkPage() {
           />
           <span>範囲選択</span>
         </label>
-        <label className="flex items-center space-x-2">
+        <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="radio"
             checked={rangeMode === "複数選択"}
@@ -102,10 +106,11 @@ export default function LinkPage() {
         </label>
       </div>
 
+      {/* 時間帯 */}
       <select
         value={timeslot}
         onChange={e => setTimeslot(e.target.value)}
-        className="w-full p-3 text-black rounded-xl shadow focus:ring-2 focus:ring-[#004CA0]"
+        className="w-full p-3 text-black rounded-xl shadow focus:ring-4 focus:ring-[#004CA0]"
       >
         <option>終日</option>
         <option>昼</option>
@@ -113,15 +118,17 @@ export default function LinkPage() {
         <option>1時から0時</option>
       </select>
 
+      {/* 保存ボタン */}
       <button
         onClick={handleSubmit}
-        className="w-full bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] hover:scale-105 transform transition font-bold text-white py-3 rounded-2xl shadow-lg"
+        className="w-full bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] hover:scale-105 transform transition font-bold text-white py-3 rounded-2xl shadow-xl"
       >
         共有リンク発行
       </button>
 
+      {/* 共有リンク */}
       {shareUrl && (
-        <div className="bg-[#222] p-4 rounded-xl shadow text-center">
+        <div className="bg-[#222] p-4 rounded-2xl shadow text-center animate-fade-in">
           <p className="text-gray-300 mb-2">共有URL:</p>
           <a href={shareUrl} className="text-[#FDB9C8] font-mono break-all hover:underline">
             {shareUrl}
