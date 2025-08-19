@@ -2,16 +2,15 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 export default function SharePage() {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple"); // multiple / range
-  const [category, setCategory] = useState("終日");
+  const [mode, setMode] = useState("fixed"); // fixed = 終日/昼/夜, custom = 時間帯指定
+  const [fixedCategory, setFixedCategory] = useState("終日");
   const [startTime, setStartTime] = useState("01:00");
   const [endTime, setEndTime] = useState("00:00");
   const [shareUrl, setShareUrl] = useState("");
-  const navigate = useNavigate();
 
   // 日付フォーマット
   const formatDate = (d) => {
@@ -24,7 +23,7 @@ export default function SharePage() {
   // カレンダー選択
   const handleDateChange = (value) => {
     if (selectionMode === "range") {
-      const [start, end] = value;
+      const [start, end] = value || [];
       if (start && end) {
         const dates = [];
         let current = new Date(start);
@@ -35,12 +34,21 @@ export default function SharePage() {
         setSelectedDates(dates);
       }
     } else {
-      // multiple mode
       const dateStr = formatDate(value);
       setSelectedDates((prev) =>
         prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
       );
     }
+  };
+
+  // 時刻プルダウン
+  const renderTimeOptions = () => {
+    const times = [];
+    for (let h = 1; h <= 24; h++) {
+      const label = `${String(h % 24).padStart(2, "0")}:00`;
+      times.push(<option key={label} value={label}>{label}</option>);
+    }
+    return times;
   };
 
   // 共有リンク発行
@@ -50,29 +58,22 @@ export default function SharePage() {
       return;
     }
     try {
-      const res = await axios.post("/api/sharelink", {
+      const payload = {
         dates: selectedDates,
-        category,
-        startTime: category === "時間帯" ? startTime : null,
-        endTime: category === "時間帯" ? endTime : null,
+        category: mode === "fixed" ? fixedCategory : "時間帯",
+        startTime: mode === "custom" ? startTime : null,
+        endTime: mode === "custom" ? endTime : null,
         username: "guest",
-      });
+      };
+      console.log("送信データ:", payload);
+
+      const res = await axios.post("/api/sharelink", payload);
       const url = `${window.location.origin}/share/${res.data.linkId}`;
       setShareUrl(url);
     } catch (err) {
-      console.error(err);
+      console.error("共有リンク作成失敗:", err);
       alert("共有リンクの発行に失敗しました");
     }
-  };
-
-  // 時刻プルダウン（1時〜0時）
-  const renderTimeOptions = () => {
-    const times = [];
-    for (let h = 1; h <= 24; h++) {
-      const label = `${String(h % 24).padStart(2, "0")}:00`;
-      times.push(<option key={label} value={label}>{label}</option>);
-    }
-    return times;
   };
 
   return (
@@ -88,7 +89,7 @@ export default function SharePage() {
             value="multiple"
             checked={selectionMode === "multiple"}
             onChange={() => setSelectionMode("multiple")}
-          /> 複数日選択
+          /> 複数日選択（クリックで複数日）
         </label>
         <label className="ml-4">
           <input
@@ -97,7 +98,7 @@ export default function SharePage() {
             value="range"
             checked={selectionMode === "range"}
             onChange={() => setSelectionMode("range")}
-          /> 範囲選択
+          /> 範囲選択（ドラッグで範囲）
         </label>
       </div>
 
@@ -108,57 +109,50 @@ export default function SharePage() {
       />
       <p className="mt-2">選択日: {selectedDates.join(", ")}</p>
 
-      {/* 区分 */}
+      {/* 区分モード */}
       <div className="mt-4">
         <label>
           <input
             type="radio"
-            name="category"
-            value="終日"
-            checked={category === "終日"}
-            onChange={() => setCategory("終日")}
-          /> 終日
+            name="categoryMode"
+            value="fixed"
+            checked={mode === "fixed"}
+            onChange={() => setMode("fixed")}
+          /> 終日/昼/夜 を選択
         </label>
         <label className="ml-4">
           <input
             type="radio"
-            name="category"
-            value="昼"
-            checked={category === "昼"}
-            onChange={() => setCategory("昼")}
-          /> 昼（13:00〜18:00）
-        </label>
-        <label className="ml-4">
-          <input
-            type="radio"
-            name="category"
-            value="夜"
-            checked={category === "夜"}
-            onChange={() => setCategory("夜")}
-          /> 夜（21:00〜00:00）
-        </label>
-        <label className="ml-4">
-          <input
-            type="radio"
-            name="category"
-            value="時間帯"
-            checked={category === "時間帯"}
-            onChange={() => setCategory("時間帯")}
+            name="categoryMode"
+            value="custom"
+            checked={mode === "custom"}
+            onChange={() => setMode("custom")}
           /> 時間帯指定
         </label>
       </div>
 
-      {/* 時間帯プルダウン */}
-      {category === "時間帯" && (
+      {/* 固定区分プルダウン */}
+      {mode === "fixed" && (
+        <div className="mt-2">
+          <select value={fixedCategory} onChange={(e) => setFixedCategory(e.target.value)}>
+            <option value="終日">終日</option>
+            <option value="昼">昼（13:00〜18:00）</option>
+            <option value="夜">夜（21:00〜00:00）</option>
+          </select>
+        </div>
+      )}
+
+      {/* 時間帯指定 */}
+      {mode === "custom" && (
         <div className="mt-2 flex gap-4">
           <div>
-            開始時刻:
+            開始:
             <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
               {renderTimeOptions()}
             </select>
           </div>
           <div>
-            終了時刻:
+            終了:
             <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
               {renderTimeOptions()}
             </select>
