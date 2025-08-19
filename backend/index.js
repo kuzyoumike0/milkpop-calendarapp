@@ -46,20 +46,20 @@ const pool = new Pool(
       }
 );
 
-// === init.sql を最初の1回だけ流す処理 ===
-async function runInitSQL() {
+// === 起動時に init.sql を流す（1回目だけ CREATE TABLE IF NOT EXISTS） ===
+(async () => {
   try {
     const initSql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
     await pool.query(initSql);
-    console.log("✅ init.sql executed (schema ensured)");
+    console.log("✅ init.sql を実行しました");
   } catch (err) {
-    console.error("⚠️ init.sql 実行エラー:", err);
+    console.error("❌ init.sql 実行エラー:", err);
   }
-}
+})();
 
 // === スケジュール保存 & 共有リンク発行 ===
 app.post("/api/shared", async (req, res) => {
-  const { username, mode, dates } = req.body;
+  const { username, mode, timeSlot, dates } = req.body;
 
   if (!username || !dates || dates.length === 0) {
     return res.status(400).json({ error: "必要な情報が不足しています" });
@@ -70,8 +70,9 @@ app.post("/api/shared", async (req, res) => {
 
     for (const d of dates) {
       await pool.query(
-        "INSERT INTO schedules (link_id, username, schedule_date, mode) VALUES ($1, $2, $3, $4)",
-        [linkId, username, d, mode]
+        `INSERT INTO schedules (link_id, username, schedule_date, mode, time_slot)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [linkId, username, d, mode, timeSlot || null]
       );
     }
 
@@ -88,7 +89,10 @@ app.get("/api/shared/:linkId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "SELECT username, schedule_date, mode FROM schedules WHERE link_id = $1 ORDER BY username ASC, schedule_date ASC",
+      `SELECT username, schedule_date, mode, time_slot
+       FROM schedules
+       WHERE link_id = $1
+       ORDER BY schedule_date ASC, time_slot ASC NULLS LAST, username ASC`,
       [linkId]
     );
 
@@ -106,7 +110,7 @@ app.get("/api/shared/:linkId", async (req, res) => {
 // === 共有リンクに予定を追記 ===
 app.post("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
-  const { username, mode, dates } = req.body;
+  const { username, mode, timeSlot, dates } = req.body;
 
   if (!username || !dates || dates.length === 0) {
     return res.status(400).json({ error: "必要な情報が不足しています" });
@@ -115,8 +119,9 @@ app.post("/api/shared/:linkId", async (req, res) => {
   try {
     for (const d of dates) {
       await pool.query(
-        "INSERT INTO schedules (link_id, username, schedule_date, mode) VALUES ($1, $2, $3, $4)",
-        [linkId, username, d, mode]
+        `INSERT INTO schedules (link_id, username, schedule_date, mode, time_slot)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [linkId, username, d, mode, timeSlot || null]
       );
     }
 
@@ -130,7 +135,7 @@ app.post("/api/shared/:linkId", async (req, res) => {
 // === 共有リンクから予定を削除 ===
 app.delete("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
-  const { username, date } = req.body;
+  const { username, date, timeSlot } = req.body;
 
   if (!username || !date) {
     return res.status(400).json({ error: "必要な情報が不足しています" });
@@ -138,8 +143,11 @@ app.delete("/api/shared/:linkId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      "DELETE FROM schedules WHERE link_id = $1 AND username = $2 AND schedule_date = $3 RETURNING *",
-      [linkId, username, date]
+      `DELETE FROM schedules
+       WHERE link_id = $1 AND username = $2 AND schedule_date = $3
+       AND (time_slot = $4 OR ($4 IS NULL AND time_slot IS NULL))
+       RETURNING *`,
+      [linkId, username, date, timeSlot || null]
     );
 
     if (result.rowCount === 0) {
@@ -160,7 +168,6 @@ app.get("*", (req, res) => {
 });
 
 // === サーバー起動 ===
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
-  await runInitSQL(); // ← 起動時に一度だけ init.sql を流す
 });
