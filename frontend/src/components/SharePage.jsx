@@ -1,72 +1,76 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { io } from "socket.io-client";
 
 export default function SharePage() {
-  const { linkid } = useParams();
+  const { linkId } = useParams();
   const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState({});
   const [name, setName] = useState("");
 
-  const fetchData = () => {
-    axios.get(`/api/share/${linkid}`).then((res) => setSchedules(res.data));
+  useEffect(() => {
+    axios.get(`/api/share/${linkId}`).then((res) => {
+      setSchedules(res.data.schedules || []);
+    });
+  }, [linkId]);
+
+  const handleChange = (date, value) => {
+    setResponses((prev) => ({ ...prev, [date]: value }));
   };
 
-  useEffect(() => {
-    fetchData();
-    const socket = io();
-    socket.on("update", fetchData);
-    return () => socket.disconnect();
-  }, [linkid]);
-
-  const respond = (scheduleId, status) => {
-    axios.post(`/api/share/${linkid}/respond`, {
-      scheduleId,
+  const handleSave = async () => {
+    if (!name) {
+      alert("名前を入力してください");
+      return;
+    }
+    await axios.post(`/api/share/${linkId}/save`, {
       name,
-      status,
+      responses,
     });
+    const res = await axios.get(`/api/share/${linkId}`);
+    setSchedules(res.data.schedules || []);
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有ページ</h2>
+    <div>
+      <h2>👥 日程共有ページ</h2>
+
       <div>
         <label>名前: </label>
         <input value={name} onChange={(e) => setName(e.target.value)} />
       </div>
 
-      <table border="1">
+      <table border="1" cellPadding="5" style={{ marginTop: "15px", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th>日付</th>
-            <th>タイトル</th>
             <th>時間帯</th>
-            <th>参加可否</th>
-            <th>登録済み</th>
+            <th>出欠</th>
           </tr>
         </thead>
         <tbody>
-          {schedules.map((s) => (
-            <tr key={s.id}>
-              <td>{s.date}</td>
-              <td>{s.title}</td>
-              <td>{s.timemode}</td>
+          {schedules.map((sch, i) => (
+            <tr key={i}>
+              <td>{sch.date}</td>
+              <td>{sch.timeSlot}</td>
               <td>
-                <select onChange={(e) => respond(s.id, e.target.value)}>
-                  <option value="">選択</option>
+                <select
+                  value={responses[sch.date] || ""}
+                  onChange={(e) => handleChange(sch.date, e.target.value)}
+                >
+                  <option value="">選択してください</option>
                   <option value="〇">〇</option>
                   <option value="✖">✖</option>
                 </select>
-              </td>
-              <td>
-                {s.responses.map((r, i) => (
-                  <div key={i}>{r.name}: {r.status}</div>
-                ))}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <button style={{ marginTop: "15px" }} onClick={handleSave}>
+        保存
+      </button>
     </div>
   );
 }
