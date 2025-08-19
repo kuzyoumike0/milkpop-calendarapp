@@ -5,17 +5,17 @@ import "react-calendar/dist/Calendar.css";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
-// 環境変数からURLを取得（Railway 本番では REACT_APP_SOCKET_URL を設定）
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:8080";
 const socket = io(SOCKET_URL);
 
 export default function SharePage() {
   const { linkId } = useParams();
   const [schedules, setSchedules] = useState([]);
-  const [date, setDate] = useState(new Date());
+  const [selectedDates, setSelectedDates] = useState([new Date()]);
   const [username, setUsername] = useState("");
   const [timeSlot, setTimeSlot] = useState("全日");
   const [status, setStatus] = useState("◯");
+  const [mode, setMode] = useState("single"); // "single" | "range" | "multiple"
 
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
@@ -24,14 +24,12 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 初期データ取得 & ソケット参加
   useEffect(() => {
     axios
       .get(`/api/schedules/${linkId}`)
       .then((res) => setSchedules(res.data))
       .catch((err) => console.error("取得失敗:", err));
 
-    // Socket.IOで同じリンクの部屋に参加
     socket.emit("join", linkId);
 
     socket.on("updateSchedules", (data) => {
@@ -43,19 +41,32 @@ export default function SharePage() {
     };
   }, [linkId]);
 
-  // 保存処理
   const handleSave = async () => {
-    const newSchedule = {
-      linkId,
-      date: formatDate(date),
-      timeSlot,
-      username,
-      status,
-    };
+    let datesToSave = [];
+
+    if (mode === "single") {
+      datesToSave = [selectedDates];
+    } else if (mode === "range") {
+      const [start, end] = selectedDates;
+      let cur = new Date(start);
+      while (cur <= end) {
+        datesToSave.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+    } else if (mode === "multiple") {
+      datesToSave = selectedDates;
+    }
 
     try {
-      await axios.post("/api/schedule", newSchedule);
-      // 更新はSocket.IO経由で反映される
+      for (const d of datesToSave) {
+        await axios.post("/api/schedule", {
+          linkId,
+          date: formatDate(d),
+          timeSlot,
+          username,
+          status,
+        });
+      }
     } catch (err) {
       console.error("保存失敗:", err);
       alert("保存に失敗しました");
@@ -76,8 +87,44 @@ export default function SharePage() {
       </div>
 
       <div>
+        <label>モード: </label>
+        <label>
+          <input
+            type="radio"
+            value="single"
+            checked={mode === "single"}
+            onChange={(e) => setMode(e.target.value)}
+          />
+          単日
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={(e) => setMode(e.target.value)}
+          />
+          範囲選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="multiple"
+            checked={mode === "multiple"}
+            onChange={(e) => setMode(e.target.value)}
+          />
+          複数選択
+        </label>
+      </div>
+
+      <div>
         <label>日付: </label>
-        <Calendar onChange={setDate} value={date} />
+        <Calendar
+          selectRange={mode === "range"}
+          onChange={(value) => setSelectedDates(value)}
+          value={selectedDates}
+          allowMultiple={mode === "multiple" ? true : undefined}
+        />
       </div>
 
       <div>
