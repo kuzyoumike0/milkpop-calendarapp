@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ここからは追加のデザイン調整 */
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: #fefefe;
+  color: #222;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: bold;
+}
