@@ -15,6 +15,8 @@ CREATE TABLE schedules (
     link_id TEXT NOT NULL,
     date DATE NOT NULL,
     timeslot TEXT NOT NULL,
+    starttime TEXT,
+    endtime TEXT,
     FOREIGN KEY (link_id) REFERENCES links(id) ON DELETE CASCADE
 );
 
