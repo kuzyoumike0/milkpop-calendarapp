@@ -1,92 +1,83 @@
-import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function SharePage() {
-  const [username, setUsername] = useState("");
+export default function SharePage({ linkId }) {
+  const [mode, setMode] = useState("morning");
+  const [timeSlot, setTimeSlot] = useState("");
   const [dates, setDates] = useState([]);
-  const [mode, setMode] = useState("全日");
-  const [linkId, setLinkId] = useState(null);
+  const [username, setUsername] = useState("");
+  const [data, setData] = useState([]);
 
-  // 日付クリックで選択 / 解除
-  const toggleDate = (date) => {
-    const formatted = date.toISOString().split("T")[0];
-    if (dates.includes(formatted)) {
-      setDates(dates.filter((d) => d !== formatted));
-    } else {
-      setDates([...dates, formatted]);
+  useEffect(() => {
+    if (linkId) {
+      axios.get(`/api/shared/${linkId}`).then((res) => setData(res.data));
     }
-  };
+  }, [linkId]);
 
-  // 保存処理
   const handleSave = async () => {
-    if (!username || dates.length === 0) {
-      alert("名前と日付を選択してください");
-      return;
-    }
-    try {
-      const res = await axios.post("/api/shared", {
-        username,
-        dates,
-        mode,
-      });
-      setLinkId(res.data.linkId);
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
-    }
+    if (!username || dates.length === 0) return alert("名前と日付を選んでください");
+
+    await axios.post(`/api/shared/${linkId}`, {
+      username,
+      mode,
+      timeSlot: mode === "custom" ? parseInt(timeSlot, 10) : null,
+      dates,
+    });
+
+    const res = await axios.get(`/api/shared/${linkId}`);
+    setData(res.data);
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有スケジュール作成</h2>
+    <div>
+      <h2>共有スケジュール</h2>
+      <input
+        type="text"
+        placeholder="名前"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-      {/* 名前入力 */}
       <div>
-        <label>名前: </label>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <label><input type="radio" value="morning" checked={mode==="morning"} onChange={()=>setMode("morning")} /> 朝</label>
+        <label><input type="radio" value="afternoon" checked={mode==="afternoon"} onChange={()=>setMode("afternoon")} /> 昼</label>
+        <label><input type="radio" value="evening" checked={mode==="evening"} onChange={()=>setMode("evening")} /> 夜</label>
+        <label><input type="radio" value="allday" checked={mode==="allday"} onChange={()=>setMode("allday")} /> 全日</label>
+        <label><input type="radio" value="custom" checked={mode==="custom"} onChange={()=>setMode("custom")} /> 時間指定</label>
       </div>
 
-      {/* カレンダー */}
-      <div style={{ margin: "20px 0" }}>
-        <Calendar onClickDay={toggleDate} />
-        <p>選択済みの日付: {dates.join(", ") || "なし"}</p>
-      </div>
-
-      {/* 時間帯選択 */}
-      <div>
-        <label>時間帯: </label>
-        <select value={mode} onChange={(e) => setMode(e.target.value)}>
-          <option value="全日">全日</option>
-          <option value="朝">朝</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
+      {mode === "custom" && (
+        <select value={timeSlot} onChange={(e)=>setTimeSlot(e.target.value)}>
+          <option value="">時間を選択</option>
+          {Array.from({ length: 24 }, (_, i) => i+1).map((h)=>(
+            <option key={h} value={h}>{h}:00</option>
+          ))}
         </select>
-      </div>
-
-      {/* 保存ボタン */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={handleSave}>保存して共有リンク発行</button>
-      </div>
-
-      {/* 共有リンク表示 */}
-      {linkId && (
-        <div style={{ marginTop: "20px" }}>
-          <p>✅ 共有リンクを発行しました:</p>
-          <a
-            href={`/shared/${linkId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {window.location.origin}/shared/{linkId}
-          </a>
-        </div>
       )}
+
+      <button onClick={handleSave}>保存</button>
+
+      <h3>登録一覧</h3>
+      <table border="1">
+        <thead>
+          <tr><th>日付</th><th>時間帯</th><th>ユーザー</th></tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i}>
+              <td>{row.schedule_date}</td>
+              <td>
+                {row.mode === "morning" && "朝"}
+                {row.mode === "afternoon" && "昼"}
+                {row.mode === "evening" && "夜"}
+                {row.mode === "allday" && "全日"}
+                {row.mode === "custom" && `${row.time_slot}:00`}
+              </td>
+              <td>{row.username}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
