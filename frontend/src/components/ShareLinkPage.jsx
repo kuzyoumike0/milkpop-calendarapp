@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import "./ShareLinkPage.css"; // スタイルを別ファイルで定義
+import "./ShareLinkPage.css";
 
 export default function ShareLinkPage() {
-  const { linkId } = useParams(); // URLからリンクID取得
+  const { linkId } = useParams();
   const [username, setUsername] = useState("");
   const [date, setDate] = useState("");
   const [timeslot, setTimeslot] = useState("終日");
   const [schedules, setSchedules] = useState([]);
 
-  // 日付フォーマット補助
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  // 初期表示：今日の日付をセット
+  // 今日の日付を初期値に設定
   useEffect(() => {
-    setDate(formatDate(new Date()));
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    setDate(`${yyyy}-${mm}-${dd}`);
   }, []);
 
-  // 予定を取得
+  // 予定取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get(`/api/share/${linkId}`);
@@ -37,7 +33,7 @@ export default function ShareLinkPage() {
     fetchSchedules();
   }, [linkId]);
 
-  // 予定を登録
+  // 予定登録
   const handleRegister = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -51,11 +47,25 @@ export default function ShareLinkPage() {
       });
       setUsername("");
       setTimeslot("終日");
-      fetchSchedules(); // 登録後に再取得
+      fetchSchedules();
     } catch (err) {
       console.error("予定登録に失敗:", err);
       alert("予定登録に失敗しました");
     }
+  };
+
+  // 日付ごとにグループ化
+  const grouped = schedules.reduce((acc, s) => {
+    if (!acc[s.date]) acc[s.date] = [];
+    acc[s.date].push(s);
+    return acc;
+  }, {});
+
+  // 日付を「○月○日（曜）」形式に変換
+  const formatJapaneseDate = (isoDate) => {
+    const d = new Date(isoDate + "T00:00:00");
+    const options = { month: "numeric", day: "numeric", weekday: "short" };
+    return d.toLocaleDateString("ja-JP", options);
   };
 
   return (
@@ -75,10 +85,7 @@ export default function ShareLinkPage() {
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-        >
+        <select value={timeslot} onChange={(e) => setTimeslot(e.target.value)}>
           <option value="終日">終日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
@@ -91,38 +98,41 @@ export default function ShareLinkPage() {
       {schedules.length === 0 ? (
         <p>まだ予定は登録されていません。</p>
       ) : (
-        <div>
-          {/* PC表示: テーブル */}
-          <table className="schedule-table">
-            <thead>
-              <tr>
-                <th>名前</th>
-                <th>日付</th>
-                <th>時間帯</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.username}</td>
-                  <td>{s.date}</td>
-                  <td>{s.timeslot}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        Object.keys(grouped)
+          .sort()
+          .map((d) => (
+            <div key={d} className="date-section">
+              <h4>{formatJapaneseDate(d)}</h4>
 
-          {/* スマホ表示: カード */}
-          <div className="schedule-cards">
-            {schedules.map((s) => (
-              <div key={s.id} className="schedule-card">
-                <p><strong>名前:</strong> {s.username}</p>
-                <p><strong>日付:</strong> {s.date}</p>
-                <p><strong>時間帯:</strong> {s.timeslot}</p>
+              {/* PC: テーブル */}
+              <table className="schedule-table">
+                <thead>
+                  <tr>
+                    <th>名前</th>
+                    <th>時間帯</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grouped[d].map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.username}</td>
+                      <td>{s.timeslot}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* スマホ: カード */}
+              <div className="schedule-cards">
+                {grouped[d].map((s) => (
+                  <div key={s.id} className="schedule-card">
+                    <p><strong>名前:</strong> {s.username}</p>
+                    <p><strong>時間帯:</strong> {s.timeslot}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))
       )}
     </div>
   );
