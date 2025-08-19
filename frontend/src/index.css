@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ここからは追加のデザイン調整 */
+/* カスタムスタイル */
 body {
   font-family: 'Helvetica Neue', Arial, sans-serif;
   background-color: #fefefe;
