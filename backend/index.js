@@ -1,80 +1,65 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 8080;
-
-app.use(cors());
 app.use(bodyParser.json());
 
-// === PostgreSQL 設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT || 5432,
-      }
-);
+// === PostgreSQL 接続設定 ===
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:password@db:5432/mydb",
+});
+
+// === 静的ファイル（React ビルド済み）を配信 ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // === API ===
 
-// 共有リンク発行（予定まとめて登録）
+// スケジュール共有リンク作成
 app.post("/api/sharelink", async (req, res) => {
   try {
-    const { dates, category, startTime, endTime, username = "anonymous" } = req.body;
+    const { dates, category, startTime, endTime, username } = req.body;
     const linkId = uuidv4();
 
     for (const d of dates) {
       await pool.query(
-        `INSERT INTO schedules (linkId, username, date, category, startTime, endTime)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [linkId, username, d, category, startTime, endTime]
+        `INSERT INTO schedules (date, username, category, starttime, endtime, linkid)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [d, username, category, startTime, endTime, linkId]
       );
     }
 
     res.json({ linkId });
   } catch (err) {
-    console.error("Error in /api/sharelink", err);
-    res.status(500).json({ error: "DB insert failed" });
+    console.error("共有リンク作成失敗:", err);
+    res.status(500).json({ error: "共有リンク作成失敗" });
   }
 });
 
-// 共有ページ取得
-app.get("/api/share/:linkId", async (req, res) => {
+// 共有リンクから予定を取得
+app.get("/api/shared/:linkId", async (req, res) => {
   try {
     const { linkId } = req.params;
     const result = await pool.query(
-      `SELECT id, username, date, category, startTime, endTime
-       FROM schedules
-       WHERE linkId = $1
-       ORDER BY date ASC`,
+      "SELECT date, username, category, starttime, endtime FROM schedules WHERE linkid = $1 ORDER BY date ASC",
       [linkId]
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("Error in /api/share/:linkId", err);
-    res.status(500).json({ error: "DB fetch failed" });
+    console.error("共有リンク取得失敗:", err);
+    res.status(500).json({ error: "共有リンク取得失敗" });
   }
 });
 
-// React のビルド済みファイルを配信
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-
+// React のルーティング対応（フロントでの /share/:id ページ用）
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-app.listen(port, () => {
-  console.log(`Backend running on port ${port}`);
+// === サーバー起動 ===
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`サーバー起動中: http://localhost:${PORT}`);
 });
