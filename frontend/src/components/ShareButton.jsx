@@ -1,10 +1,10 @@
 import React from "react";
 
 export default function ShareButton({ link }) {
+  if (!link) return null;
   return (
-    <div className="mt-4">
-      <p>共有リンク:</p>
-      <a href={link} className="text-[#004CA0] underline">{link}</a>
+    <div>
+      <p>共有リンク: <a href={link}>{link}</a></p>
     </div>
   );
 }
