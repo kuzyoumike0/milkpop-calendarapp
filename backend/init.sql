@@ -1,13 +1,12 @@
-CREATE TABLE IF NOT EXISTS shared_links (
-  id TEXT PRIMARY KEY,
-  created_at TIMESTAMP DEFAULT NOW()
-);
+DROP TABLE IF EXISTS schedules;
 
-CREATE TABLE IF NOT EXISTS shared_schedules (
+CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
-  link_id TEXT NOT NULL REFERENCES shared_links(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
-  title TEXT NOT NULL,
   username TEXT NOT NULL,
-  time_info TEXT NOT NULL
+  title TEXT NOT NULL,
+  date DATE NOT NULL,
+  category TEXT NOT NULL,
+  start_time TEXT,
+  end_time TEXT,
+  linkId TEXT NOT NULL
 );
