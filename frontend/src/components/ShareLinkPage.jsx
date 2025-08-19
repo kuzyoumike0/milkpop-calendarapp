@@ -1,37 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 export default function ShareLinkPage() {
-  const [linkId, setLinkId] = useState("");
-  const [shareUrl, setShareUrl] = useState("");
+  const { linkId } = useParams();
+  const [title, setTitle] = useState("");
+  const [dates, setDates] = useState([]);
+  const [timeSlot, setTimeSlot] = useState("");
+  const [mode, setMode] = useState("");
 
-  const handleCreateLink = async () => {
-    try {
-      const res = await axios.post("/api/create-link");
-      setLinkId(res.data.linkId);
-
-      const url = `${window.location.origin}/share/${res.data.linkId}`;
-      setShareUrl(url);
-    } catch (err) {
-      console.error("リンク作成失敗:", err);
-      alert("リンク作成に失敗しました");
-    }
-  };
+  useEffect(() => {
+    axios
+      .get(`/api/schedules/${linkId}`)
+      .then((res) => {
+        setTitle(res.data.title);
+        setDates(res.data.dates);
+        setTimeSlot(res.data.timeSlot);
+        setMode(res.data.mode);
+      })
+      .catch((err) => {
+        console.error("取得失敗:", err);
+      });
+  }, [linkId]);
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>共有リンク発行ページ</h2>
-      <p>ここで共有リンクを作成し、他の人とスケジュールを共有できます。</p>
+      <h2>共有スケジュール</h2>
 
-      <button onClick={handleCreateLink}>共有リンクを作成</button>
+      {title && <h3>📌 タイトル: {title}</h3>}
+      {timeSlot && <p>🕒 時間帯: {timeSlot}</p>}
+      {mode && <p>📅 モード: {mode === "range" ? "範囲選択" : "複数選択"}</p>}
 
-      {shareUrl && (
-        <div style={{ marginTop: "20px" }}>
-          <p>発行された共有リンク:</p>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
-        </div>
+      <h4>選択された日付</h4>
+      {dates.length > 0 ? (
+        <ul>
+          {dates.map((d, idx) => (
+            <li key={idx}>{d}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>日付が登録されていません</p>
       )}
     </div>
   );
