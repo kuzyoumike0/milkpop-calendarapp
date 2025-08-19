@@ -1,8 +1,9 @@
--- links テーブル
+-- 既存テーブルを削除（安全に CASCADE）
 DROP TABLE IF EXISTS responses CASCADE;
 DROP TABLE IF EXISTS schedules CASCADE;
 DROP TABLE IF EXISTS links CASCADE;
 
+-- links テーブル
 CREATE TABLE links (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
