@@ -2,10 +2,10 @@ DROP TABLE IF EXISTS schedules;
 
 CREATE TABLE schedules (
   id SERIAL PRIMARY KEY,
-  linkId TEXT NOT NULL,
+  linkid TEXT NOT NULL,
   date DATE NOT NULL,
   username TEXT,
   category TEXT,
-  startTime TEXT,
-  endTime TEXT
+  starttime TEXT,
+  endtime TEXT
 );
