@@ -4,12 +4,11 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function SharePage() {
-  const [title, setTitle] = useState(""); // タイトル
-  const [selectedDates, setSelectedDates] = useState([]); // 複数選択日付
-  const [shareLink, setShareLink] = useState(""); // 生成されたリンク
+  const [title, setTitle] = useState(""); 
+  const [selectedDates, setSelectedDates] = useState([]); 
+  const [shareLink, setShareLink] = useState(""); 
   const [message, setMessage] = useState("");
 
-  // 日付を YYYY-MM-DD 形式に整形
   const formatDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -17,19 +16,34 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // カレンダーで日付クリック
+  // 日付クリック
   const handleDateClick = (date) => {
     const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) {
-      // 選択解除
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+    if (selectedDates.find((d) => d.date === dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d.date !== dateStr));
     } else {
-      // 新規追加
-      setSelectedDates([...selectedDates, dateStr]);
+      setSelectedDates([...selectedDates, { date: dateStr, start: "01:00", end: "24:00" }]);
     }
   };
 
-  // リンク作成処理
+  // 時間プルダウン生成
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let i = 1; i <= 24; i++) {
+      const hour = String(i).padStart(2, "0") + ":00";
+      options.push(<option key={hour} value={hour}>{hour}</option>);
+    }
+    return options;
+  };
+
+  // 時間変更
+  const handleTimeChange = (dateStr, field, value) => {
+    setSelectedDates(selectedDates.map((d) =>
+      d.date === dateStr ? { ...d, [field]: value } : d
+    ));
+  };
+
+  // リンク作成
   const handleCreateLink = async () => {
     if (!title.trim()) {
       setMessage("❌ タイトルを入力してください");
@@ -41,10 +55,15 @@ export default function SharePage() {
     }
 
     try {
-      const res = await axios.post("/api/create-link", {
+      const payload = {
         title,
-        dates: selectedDates,
-      });
+        dates: selectedDates.map((d) => ({
+          date: d.date,
+          timeslot: `${d.start}-${d.end}`,
+        })),
+      };
+
+      const res = await axios.post("/api/create-link", payload);
       const url = `${window.location.origin}/link/${res.data.linkId}`;
       setShareLink(url);
       setMessage("✅ リンクを作成しました");
@@ -54,11 +73,10 @@ export default function SharePage() {
     }
   };
 
-  // 選択済み日付をカレンダー上でハイライト表示
   const tileClassName = ({ date }) => {
     const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) {
-      return "selected-date"; // CSS クラスで装飾
+    if (selectedDates.find((d) => d.date === dateStr)) {
+      return "selected-date";
     }
     return null;
   };
@@ -67,7 +85,6 @@ export default function SharePage() {
     <div style={{ padding: "20px" }}>
       <h2>📅 共有リンク作成</h2>
 
-      {/* タイトル入力 */}
       <div style={{ marginBottom: "10px" }}>
         <label>タイトル: </label>
         <input
@@ -79,26 +96,43 @@ export default function SharePage() {
         />
       </div>
 
-      {/* カレンダー（複数日選択 & ハイライト表示対応） */}
       <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
 
-      {/* リンク作成ボタン */}
+      {/* 選択済み日付ごとの時間選択 */}
+      {selectedDates.length > 0 && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>⏰ 時間設定</h3>
+          {selectedDates.map((d) => (
+            <div key={d.date} style={{ marginBottom: "10px" }}>
+              <strong>{d.date}</strong>　
+              開始:
+              <select
+                value={d.start}
+                onChange={(e) => handleTimeChange(d.date, "start", e.target.value)}
+              >
+                {generateTimeOptions()}
+              </select>
+              終了:
+              <select
+                value={d.end}
+                onChange={(e) => handleTimeChange(d.date, "end", e.target.value)}
+              >
+                {generateTimeOptions()}
+              </select>
+            </div>
+          ))}
+        </div>
+      )}
+
       <button
         onClick={handleCreateLink}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-        }}
+        style={{ marginTop: "20px", padding: "10px 20px", fontSize: "16px" }}
       >
         🔗 共有リンクを作成
       </button>
 
-      {/* メッセージ */}
       {message && <p style={{ marginTop: "10px" }}>{message}</p>}
 
-      {/* 共有リンクを絶対に表示 */}
       {shareLink && (
         <div style={{ marginTop: "15px" }}>
           <p>
@@ -110,7 +144,6 @@ export default function SharePage() {
         </div>
       )}
 
-      {/* 選択済み日付のスタイル */}
       <style>{`
         .selected-date {
           background: #4caf50 !important;
