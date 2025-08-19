@@ -1,33 +1,20 @@
--- schedules: 登録された日程（タイトル・日付・時間帯）
+-- === schedules: 日程情報（共有リンクごと） ===
 CREATE TABLE IF NOT EXISTS schedules (
     id SERIAL PRIMARY KEY,
-    share_id TEXT NOT NULL,
+    linkId TEXT NOT NULL,
     title TEXT NOT NULL,
-    date DATE NOT NULL,
-    mode TEXT NOT NULL,         -- "range" or "multiple"
-    start_time TIME,            -- 時間帯指定（任意）
-    end_time TIME,              -- 時間帯指定（任意）
-    created_at TIMESTAMP DEFAULT NOW()
+    date TEXT NOT NULL,
+    timeSlot TEXT NOT NULL
 );
 
--- share_links: 共有リンク発行管理
-CREATE TABLE IF NOT EXISTS share_links (
-    id SERIAL PRIMARY KEY,
-    share_id TEXT UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- responses: ユーザーの出欠回答（名前＋○×）
+-- === responses: 出欠回答 ===
 CREATE TABLE IF NOT EXISTS responses (
     id SERIAL PRIMARY KEY,
-    share_id TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
-    username TEXT NOT NULL,
-    date DATE NOT NULL,
-    status TEXT NOT NULL CHECK (status IN ('◯','×')),
-    created_at TIMESTAMP DEFAULT NOW()
+    linkId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    responses JSONB NOT NULL
 );
 
--- インデックス
-CREATE INDEX IF NOT EXISTS idx_schedules_shareid ON schedules (share_id);
-CREATE INDEX IF NOT EXISTS idx_responses_shareid ON responses (share_id);
+-- インデックス最適化
+CREATE INDEX IF NOT EXISTS idx_schedules_linkId ON schedules(linkId);
+CREATE INDEX IF NOT EXISTS idx_responses_linkId ON responses(linkId);
