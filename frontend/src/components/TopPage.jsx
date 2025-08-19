@@ -5,53 +5,25 @@ export default function TopPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>カレンダーアプリへようこそ</h1>
-      <p style={styles.subtitle}>どちらのページに移動しますか？</p>
-      <div style={styles.buttonContainer}>
-        <button style={styles.button} onClick={() => navigate("/personal")}>
-          個人用ページ
+    <div style={{ padding: "20px" }}>
+      <h1>みんなのカレンダー</h1>
+      <p>個人スケジュールの登録や、共有リンクで予定をみんなと共有できます。</p>
+
+      <div style={{ marginTop: "20px" }}>
+        <button
+          style={{ padding: "10px 20px", marginRight: "10px" }}
+          onClick={() => navigate("/personal")}
+        >
+          個人スケジュール
         </button>
-        <button style={styles.button} onClick={() => navigate("/share")}>
-          共有ページ
+
+        <button
+          style={{ padding: "10px 20px" }}
+          onClick={() => navigate("/share")}
+        >
+          共有リンク発行
         </button>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100vh",
-    background: "#f9f9f9",
-    fontFamily: "sans-serif",
-  },
-  title: {
-    fontSize: "2.5rem",
-    marginBottom: "10px",
-    color: "#333",
-  },
-  subtitle: {
-    fontSize: "1.2rem",
-    marginBottom: "30px",
-    color: "#666",
-  },
-  buttonContainer: {
-    display: "flex",
-    gap: "20px",
-  },
-  button: {
-    padding: "12px 24px",
-    fontSize: "1rem",
-    borderRadius: "8px",
-    border: "none",
-    cursor: "pointer",
-    background: "#4CAF50",
-    color: "white",
-    transition: "0.3s",
-  },
-};
