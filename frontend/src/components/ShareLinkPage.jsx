@@ -1,70 +1,141 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { id } = useParams();
-  const [schedules, setSchedules] = useState([]);
+  const { linkId } = useParams();
+  const [linkData, setLinkData] = useState(null);
+  const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`/api/link/${id}`).then((res) => {
-      setSchedules(res.data);
-    });
-  }, [id]);
+    const fetchLink = async () => {
+      try {
+        const res = await axios.get(`/api/link/${linkId}`);
+        setLinkData(res.data.link);
+        setResponses(res.data.responses || {});
+      } catch (err) {
+        console.error("リンク読み込みエラー:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLink();
+  }, [linkId]);
 
-  const respond = async (scheduleId, answer) => {
-    if (!username) {
+  const handleResponse = async (date, timeslot, value) => {
+    if (!username.trim()) {
       alert("名前を入力してください");
       return;
     }
-    await axios.post("/api/respond", { scheduleId, username, answer });
-    const res = await axios.get(`/api/link/${id}`);
-    setSchedules(res.data);
+    try {
+      await axios.post(`/api/respond/${linkId}`, {
+        username,
+        date,
+        timeslot,
+        value,
+      });
+      setResponses((prev) => {
+        const key = `${date}_${timeslot}`;
+        return {
+          ...prev,
+          [key]: [...(prev[key] || []), { username, value }],
+        };
+      });
+    } catch (err) {
+      console.error("回答送信エラー:", err);
+    }
   };
 
-  // 日付ごとにまとめる
-  const grouped = schedules.reduce((acc, cur) => {
-    const key = cur.date;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(cur);
-    return acc;
-  }, {});
+  if (loading) return <p>⏳ 読み込み中...</p>;
+  if (!linkData) return <p>❌ リンクが存在しません</p>;
+
+  // === 日付・時間帯ごとにグループ化して表示 ===
+  const groupedSchedules = {};
+  linkData.schedules.forEach((s) => {
+    if (!groupedSchedules[s.date]) groupedSchedules[s.date] = [];
+    groupedSchedules[s.date].push(s);
+  });
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>📅 共有スケジュール</h2>
-      <input
-        placeholder="あなたの名前"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
+      <h2>📅 {linkData.title}</h2>
 
-      <table border="1" style={{ marginTop: "20px", width: "100%" }}>
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>ユーザー</th>
-            <th>可否</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(grouped).map(([date, rows]) =>
-            rows.map((r, i) => (
-              <tr key={r.id + i}>
-                <td>{date}</td>
-                <td>{r.username || "-"}</td>
-                <td>{r.answer === null ? "-" : r.answer ? "◯" : "×"}</td>
-                <td>
-                  <button onClick={() => respond(r.id, true)}>◯</button>
-                  <button onClick={() => respond(r.id, false)}>×</button>
-                </td>
+      {/* 名前入力 */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>あなたの名前: </label>
+        <input
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="例: 山田太郎"
+          style={{ padding: "5px", width: "200px" }}
+        />
+      </div>
+
+      {Object.entries(groupedSchedules).map(([date, slots]) => (
+        <div
+          key={date}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            padding: "10px",
+            marginBottom: "15px",
+          }}
+        >
+          <h3>{date}</h3>
+          <table
+            border="1"
+            cellPadding="5"
+            style={{ borderCollapse: "collapse", width: "100%" }}
+          >
+            <thead>
+              <tr>
+                <th>時間帯</th>
+                <th>回答</th>
+                <th>操作</th>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {slots.map((s, idx) => {
+                const key = `${s.date}_${s.timeslot}`;
+                return (
+                  <tr key={idx}>
+                    <td>{s.timeslot}</td>
+                    <td>
+                      {(responses[key] || []).map((r, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            marginRight: "10px",
+                            color: r.value === "○" ? "green" : "red",
+                          }}
+                        >
+                          {r.username} ({r.value})
+                        </span>
+                      ))}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleResponse(s.date, s.timeslot, "○")}
+                        style={{ marginRight: "5px" }}
+                      >
+                        ○
+                      </button>
+                      <button
+                        onClick={() => handleResponse(s.date, s.timeslot, "×")}
+                      >
+                        ×
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }
