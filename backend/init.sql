@@ -1,11 +1,7 @@
--- schedules テーブルを作成（存在しなければ）
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
-  link_id TEXT NOT NULL,
-  username TEXT NOT NULL,
+  link_id VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
   schedule_date DATE NOT NULL,
-  mode TEXT NOT NULL
+  mode VARCHAR(50) NOT NULL
 );
-
--- インデックス（検索高速化）
-CREATE INDEX IF NOT EXISTS idx_schedules_link_id ON schedules (link_id);
