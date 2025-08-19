@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const cors = require("cors");
 
-const app = express();   // ← ここで最初にappを定義
+const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -31,7 +31,6 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
-      memo TEXT,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
@@ -66,9 +65,9 @@ app.post("/api/schedule", async (req, res) => {
       const inserted = [];
       for (const d of dates) {
         const result = await pool.query(
-          `INSERT INTO schedules (title, memo, start_date, end_date, timeslot, range_mode, linkid)
-           VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-          [title, null, d, d, timeslot, range_mode, linkid]
+          `INSERT INTO schedules (title, start_date, end_date, timeslot, range_mode, linkid)
+           VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+          [title, d, d, timeslot, range_mode, linkid]
         );
         inserted.push(result.rows[0]);
       }
@@ -76,9 +75,9 @@ app.post("/api/schedule", async (req, res) => {
     } else {
       // 範囲選択
       const result = await pool.query(
-        `INSERT INTO schedules (title, memo, start_date, end_date, timeslot, range_mode, linkid)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-        [title, null, start_date, end_date, timeslot, range_mode, linkid]
+        `INSERT INTO schedules (title, start_date, end_date, timeslot, range_mode, linkid)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+        [title, start_date, end_date, timeslot, range_mode, linkid]
       );
       return res.json({ success: true, schedule: result.rows[0], url: `/share/${linkid}` });
     }
@@ -97,7 +96,10 @@ app.get("/api/schedules", async (req, res) => {
 // === 共有リンクから取得 ===
 app.get("/api/share/:linkid", async (req, res) => {
   const { linkid } = req.params;
-  const result = await pool.query("SELECT * FROM schedules WHERE linkid=$1 ORDER BY start_date ASC", [linkid]);
+  const result = await pool.query(
+    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY start_date ASC",
+    [linkid]
+  );
   res.json(result.rows);
 });
 
