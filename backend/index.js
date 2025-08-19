@@ -72,17 +72,30 @@ app.post("/api/create-link", async (req, res) => {
       title,
     ]);
 
+    const specialSlots = ["全日", "昼", "夜"];
+
     for (const d of dates) {
       const dateValue = typeof d === "string" ? d : d.date;
-      let timeslot = d.timeslot || "全日";
+      const timeslot = d.timeslot;
 
-      // ✅ 開始 < 終了を保証
-      if (timeslot.includes("-")) {
+      if (!timeslot) {
+        return res.status(400).json({
+          error: `時間帯が未指定です (日付: ${dateValue})`,
+        });
+      }
+
+      if (!specialSlots.includes(timeslot)) {
+        if (!timeslot.includes("-")) {
+          return res.status(400).json({
+            error: `無効な時間帯: ${timeslot}`,
+          });
+        }
+
         const [start, end] = timeslot.split("-");
         if (start >= end) {
-          return res
-            .status(400)
-            .json({ error: `無効な時間帯: ${timeslot}` });
+          return res.status(400).json({
+            error: `無効な時間帯: ${timeslot} （開始は終了より前でなければなりません）`,
+          });
         }
       }
 
