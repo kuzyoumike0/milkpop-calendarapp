@@ -2,8 +2,7 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY frontend/ ./
 RUN npm run build
 
@@ -11,8 +10,7 @@ RUN npm run build
 FROM node:18 AS backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
-ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN npm install
+RUN npm install --legacy-peer-deps
 COPY backend/ ./
 
 # 最終ステージ
