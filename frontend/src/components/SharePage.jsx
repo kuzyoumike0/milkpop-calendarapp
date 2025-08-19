@@ -11,11 +11,11 @@ const socket = io(SOCKET_URL);
 export default function SharePage() {
   const { linkId } = useParams();
   const [schedules, setSchedules] = useState([]);
-  const [selectedDates, setSelectedDates] = useState([new Date()]);
+  const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
   const [username, setUsername] = useState("");
   const [timeSlot, setTimeSlot] = useState("全日");
   const [status, setStatus] = useState("◯");
-  const [mode, setMode] = useState("single"); // "single" | "range" | "multiple"
+  const [mode, setMode] = useState("range"); // 初期値は範囲選択
 
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
@@ -24,11 +24,12 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
+  // 初期ロード
   useEffect(() => {
-    axios
-      .get(`/api/schedules/${linkId}`)
-      .then((res) => setSchedules(res.data))
-      .catch((err) => console.error("取得失敗:", err));
+    axios.get(`/api/schedules/${linkId}`).then((res) => setSchedules(res.data));
+
+    // 現在のモード取得
+    axios.get(`/api/mode/${linkId}`).then((res) => setMode(res.data.mode));
 
     socket.emit("join", linkId);
 
@@ -36,17 +37,30 @@ export default function SharePage() {
       setSchedules(data);
     });
 
+    socket.on("updateMode", (newMode) => {
+      setMode(newMode);
+    });
+
     return () => {
       socket.off("updateSchedules");
+      socket.off("updateMode");
     };
   }, [linkId]);
 
+  // モード切替
+  const handleModeChange = async (newMode) => {
+    try {
+      await axios.post("/api/mode", { linkId, mode: newMode });
+    } catch (err) {
+      console.error("モード変更失敗:", err);
+    }
+  };
+
+  // 保存処理
   const handleSave = async () => {
     let datesToSave = [];
 
-    if (mode === "single") {
-      datesToSave = [selectedDates];
-    } else if (mode === "range") {
+    if (mode === "range") {
       const [start, end] = selectedDates;
       let cur = new Date(start);
       while (cur <= end) {
@@ -91,18 +105,9 @@ export default function SharePage() {
         <label>
           <input
             type="radio"
-            value="single"
-            checked={mode === "single"}
-            onChange={(e) => setMode(e.target.value)}
-          />
-          単日
-        </label>
-        <label>
-          <input
-            type="radio"
             value="range"
             checked={mode === "range"}
-            onChange={(e) => setMode(e.target.value)}
+            onChange={() => handleModeChange("range")}
           />
           範囲選択
         </label>
@@ -111,7 +116,7 @@ export default function SharePage() {
             type="radio"
             value="multiple"
             checked={mode === "multiple"}
-            onChange={(e) => setMode(e.target.value)}
+            onChange={() => handleModeChange("multiple")}
           />
           複数選択
         </label>
