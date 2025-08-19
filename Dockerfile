@@ -22,8 +22,9 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドソースコードコピー
-COPY backend/ ./
+# バックエンドソースコードと init.sql をコピー
+COPY backend/ ./                # ← ここで index.js などをコピー
+COPY backend/init.sql ./init.sql # ← init.sql を必ずコピー
 
 # フロントのビルド済みファイルを backend/public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
