@@ -1,31 +1,33 @@
--- 既存テーブルを削除（依存関係も含めて完全削除）
-DROP TABLE IF EXISTS participants CASCADE;
-DROP TABLE IF EXISTS schedule_items CASCADE;
-DROP TABLE IF EXISTS schedules CASCADE;
-
--- スケジュール本体（共有リンク単位）
+-- schedules: 登録された日程（タイトル・日付・時間帯）
 CREATE TABLE IF NOT EXISTS schedules (
-  id UUID PRIMARY KEY,
-  title TEXT NOT NULL,
-  linkId UUID NOT NULL UNIQUE
+    id SERIAL PRIMARY KEY,
+    share_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    date DATE NOT NULL,
+    mode TEXT NOT NULL,         -- "range" or "multiple"
+    start_time TIME,            -- 時間帯指定（任意）
+    end_time TIME,              -- 時間帯指定（任意）
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- スケジュールに属する日付・時間帯の候補
-CREATE TABLE IF NOT EXISTS schedule_items (
-  id UUID PRIMARY KEY,
-  scheduleId UUID REFERENCES schedules(id) ON DELETE CASCADE,
-  date DATE NOT NULL,
-  timeslot TEXT NOT NULL,  -- 全日 / 昼 / 夜 / custom
-  starttime INT,
-  endtime INT
+-- share_links: 共有リンク発行管理
+CREATE TABLE IF NOT EXISTS share_links (
+    id SERIAL PRIMARY KEY,
+    share_id TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 参加者の回答
-CREATE TABLE IF NOT EXISTS participants (
-  id UUID PRIMARY KEY,
-  scheduleId UUID REFERENCES schedules(id) ON DELETE CASCADE,
-  username TEXT NOT NULL,
-  date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
-  status TEXT NOT NULL      -- ◯ / × など
+-- responses: ユーザーの出欠回答（名前＋○×）
+CREATE TABLE IF NOT EXISTS responses (
+    id SERIAL PRIMARY KEY,
+    share_id TEXT NOT NULL REFERENCES share_links(share_id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    date DATE NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('◯','×')),
+    created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- インデックス
+CREATE INDEX IF NOT EXISTS idx_schedules_shareid ON schedules (share_id);
+CREATE INDEX IF NOT EXISTS idx_responses_shareid ON responses (share_id);
