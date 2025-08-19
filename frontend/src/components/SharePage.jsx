@@ -1,113 +1,65 @@
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import axios from "axios";
 
 export default function SharePage() {
   const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
-  const [mode, setMode] = useState("multiple"); // "range" または "multiple"
-  const [shareLink, setShareLink] = useState("");
-
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const handleDateChange = (value) => {
-    if (mode === "range") {
-      if (Array.isArray(value)) {
-        const [start, end] = value;
-        if (start && end) {
-          let d = new Date(start);
-          const newDates = [];
-          while (d <= end) {
-            newDates.push(formatDate(d));
-            d.setDate(d.getDate() + 1);
-          }
-          setDates(newDates);
-        }
-      }
-    } else {
-      const newDates = Array.isArray(value) ? value.map(formatDate) : [formatDate(value)];
-      setDates(newDates);
-    }
-  };
+  const [link, setLink] = useState("");
+  const [error, setError] = useState("");
 
   const handleCreateLink = async () => {
-    if (!title || dates.length === 0) {
-      alert("タイトルと日付を選択してください");
+    if (!title.trim()) {
+      setError("タイトルを入力してください");
       return;
     }
-
+    setError("");
     try {
-      const res = await axios.post("/api/schedule-link", {
-        title,
-        dates,
-        mode,
+      const res = await fetch("/api/create-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
       });
-      const { linkId } = res.data;
-      setShareLink(`${window.location.origin}/share/${linkId}`);
+      if (!res.ok) throw new Error("リンク作成失敗");
+
+      const data = await res.json();
+      if (data.linkId) {
+        const newLink = `${window.location.origin}/links/${data.linkId}`;
+        setLink(newLink);
+      } else {
+        setError("リンクIDが返ってきませんでした");
+      }
     } catch (err) {
-      console.error("リンク発行失敗:", err);
-      alert("リンク発行に失敗しました");
+      console.error(err);
+      setError("サーバーエラーが発生しました");
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有リンク作成</h2>
-
-      <div style={{ marginBottom: "10px" }}>
-        <label>タイトル: </label>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="イベント名を入力"
-        />
-      </div>
+    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+      <h1>共有リンク発行</h1>
 
       <div style={{ marginBottom: "10px" }}>
         <label>
+          タイトル：
           <input
-            type="radio"
-            value="multiple"
-            checked={mode === "multiple"}
-            onChange={() => setMode("multiple")}
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="例: 飲み会日程調整"
+            style={{ marginLeft: "10px", padding: "4px" }}
           />
-          複数選択
-        </label>
-        <label style={{ marginLeft: "15px" }}>
-          <input
-            type="radio"
-            value="range"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
         </label>
       </div>
 
-      <Calendar
-        onChange={handleDateChange}
-        selectRange={mode === "range"}
-        value={mode === "range" ? [] : null}
-        tileClassName={({ date }) =>
-          dates.includes(formatDate(date)) ? "selected-date" : ""
-        }
-      />
+      <button onClick={handleCreateLink} style={{ padding: "6px 12px" }}>
+        共有リンクを作成
+      </button>
 
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={handleCreateLink}>共有リンク発行</button>
-      </div>
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {shareLink && (
+      {link && (
         <div style={{ marginTop: "20px" }}>
-          <p>✅ 共有リンクが発行されました:</p>
-          <a href={shareLink} target="_blank" rel="noreferrer">
-            {shareLink}
+          <p>共有リンクが発行されました：</p>
+          <a href={link} target="_blank" rel="noopener noreferrer">
+            {link}
           </a>
         </div>
       )}
