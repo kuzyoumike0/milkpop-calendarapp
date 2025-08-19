@@ -22,7 +22,9 @@ export default function ShareLinkPage() {
         {events.length > 0 ? (
           events.map((event) => (
             <li key={event.id} style={styles.eventItem}>
-              {event.date} - {event.title}（by {event.username}）
+              <strong>{event.date}</strong> - {event.title}（{event.time_info}）
+              <br />
+              <span style={styles.user}>by {event.username}</span>
             </li>
           ))
         ) : (
@@ -39,5 +41,6 @@ const styles = {
   subtitle: { textAlign: "center", fontSize: "1rem", marginBottom: "20px", color: "#666" },
   eventList: { listStyle: "none", padding: 0, marginTop: "20px" },
   eventItem: { padding: "10px", background: "#f1f1f1", borderRadius: "6px", marginBottom: "8px" },
+  user: { fontSize: "0.9rem", color: "#555" },
   noEvent: { color: "#888", fontStyle: "italic" },
 };
