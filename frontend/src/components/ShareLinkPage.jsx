@@ -33,12 +33,12 @@ export default function ShareLinkPage() {
       return;
     }
     try {
-      await axios.post("/api/respond", {
-        linkId,
+      await axios.post("/api/participant", {
+        scheduleId: linkId,
         date,
         timeslot,
         username,
-        choice,
+        status: choice, // ◯ or ×
       });
 
       setResponses((prev) => {
@@ -67,11 +67,13 @@ export default function ShareLinkPage() {
       return;
     }
     try {
-      await axios.post("/api/delete-response", {
-        linkId,
-        date,
-        timeslot,
-        username,
+      await axios.delete("/api/participant", {
+        data: {
+          scheduleId: linkId,
+          date,
+          timeslot,
+          username,
+        },
       });
 
       setResponses((prev) =>
@@ -166,7 +168,7 @@ export default function ShareLinkPage() {
                           r.username === username ? "bold" : "normal",
                       }}
                     >
-                      {r.username}: {r.choice}
+                      {r.username}: {r.choice || r.status}
                     </div>
                   ))}
                 </td>
