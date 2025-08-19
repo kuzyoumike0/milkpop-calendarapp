@@ -1,137 +1,118 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ShareLinkPage() {
-  const { linkId } = useParams();
-  const [events, setEvents] = useState([]);
+  const { linkId } = useParams(); // URLからリンクID取得
   const [username, setUsername] = useState("");
-  const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({ date: "", category: "allDay", startTime: "01:00", endTime: "00:00" });
+  const [date, setDate] = useState("");
+  const [timeslot, setTimeslot] = useState("終日");
+  const [schedules, setSchedules] = useState([]);
 
+  // 日付フォーマット補助
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // 初期表示：今日の日付をセット
   useEffect(() => {
-    axios
-      .get(`/api/shared/${linkId}`)
-      .then((res) => setEvents(res.data))
-      .catch((err) => console.error("共有リンク取得失敗:", err));
-  }, [linkId]);
+    setDate(formatDate(new Date()));
+  }, []);
 
-  const handleDelete = async (id) => {
+  // 予定を取得
+  const fetchSchedules = async () => {
     try {
-      await axios.delete(`/api/shared/${linkId}/${id}`, {
-        data: { username },
-      });
-      setEvents(events.filter((e) => e.id !== id));
+      const res = await axios.get(`/api/share/${linkId}`);
+      setSchedules(res.data);
     } catch (err) {
-      console.error("削除失敗:", err);
-      alert("削除できません（本人以外の可能性）");
+      console.error("予定取得に失敗:", err);
     }
   };
 
-  const handleEdit = (event) => {
-    setEditingId(event.id);
-    setEditData({
-      date: event.date,
-      category: event.category,
-      startTime: event.starttime || "01:00",
-      endTime: event.endtime || "00:00",
-    });
-  };
+  useEffect(() => {
+    fetchSchedules();
+  }, [linkId]);
 
-  const handleSave = async () => {
+  // 予定を登録
+  const handleRegister = async () => {
+    if (!username.trim()) {
+      alert("名前を入力してください");
+      return;
+    }
     try {
-      const res = await axios.put(`/api/shared/${linkId}/${editingId}`, {
-        ...editData,
+      await axios.post(`/api/share/${linkId}`, {
         username,
+        date,
+        timeslot,
       });
-
-      setEvents(events.map((e) => (e.id === editingId ? res.data : e)));
-      setEditingId(null);
+      setUsername("");
+      setTimeslot("終日");
+      fetchSchedules(); // 登録後に再取得
     } catch (err) {
-      console.error("編集失敗:", err);
-      alert("編集できません（本人以外の可能性）");
+      console.error("予定登録に失敗:", err);
+      alert("予定登録に失敗しました");
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有された予定</h2>
+    <div className="container" style={{ padding: "20px" }}>
+      <h2>共有スケジュール</h2>
 
-      <div>
-        <label>あなたの名前: </label>
+      {/* 入力フォーム */}
+      <div style={{ marginBottom: "15px" }}>
         <input
           type="text"
+          placeholder="名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="自分の名前を入力"
+          style={{ marginRight: "10px", padding: "5px" }}
         />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ marginRight: "10px", padding: "5px" }}
+        />
+        <select
+          value={timeslot}
+          onChange={(e) => setTimeslot(e.target.value)}
+          style={{ marginRight: "10px", padding: "5px" }}
+        >
+          <option value="終日">終日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
+        <button onClick={handleRegister} style={{ padding: "5px 10px" }}>
+          登録
+        </button>
       </div>
 
-      {events.length === 0 ? (
-        <p>予定はありません</p>
+      {/* 登録済み予定一覧 */}
+      <h3>登録済み予定</h3>
+      {schedules.length === 0 ? (
+        <p>まだ予定は登録されていません。</p>
       ) : (
-        <ul>
-          {events.map((e) => (
-            <li key={e.id}>
-              {editingId === e.id ? (
-                <div>
-                  📅 <input
-                    type="date"
-                    value={editData.date}
-                    onChange={(ev) => setEditData({ ...editData, date: ev.target.value })}
-                  />
-                  🏷 <select
-                    value={editData.category}
-                    onChange={(ev) => setEditData({ ...editData, category: ev.target.value })}
-                  >
-                    <option value="allDay">終日</option>
-                    <option value="day">昼</option>
-                    <option value="night">夜</option>
-                    <option value="custom">時間帯指定</option>
-                  </select>
-                  {editData.category === "custom" && (
-                    <>
-                      <select
-                        value={editData.startTime}
-                        onChange={(ev) => setEditData({ ...editData, startTime: ev.target.value })}
-                      >
-                        {Array.from({ length: 24 }).map((_, i) => (
-                          <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
-                            {i}:00
-                          </option>
-                        ))}
-                      </select>
-                      〜
-                      <select
-                        value={editData.endTime}
-                        onChange={(ev) => setEditData({ ...editData, endTime: ev.target.value })}
-                      >
-                        {Array.from({ length: 24 }).map((_, i) => (
-                          <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
-                            {i}:00
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
-                  <button onClick={handleSave}>保存</button>
-                  <button onClick={() => setEditingId(null)}>キャンセル</button>
-                </div>
-              ) : (
-                <div>
-                  📅 {e.date} — 👤 {e.username} — 🏷 {e.category}
-                  {e.category === "custom" && `（${e.starttime}～${e.endtime}）`}
-                  {username && e.username === username && (
-                    <>
-                      <button style={{ marginLeft: "10px" }} onClick={() => handleEdit(e)}>編集</button>
-                      <button style={{ marginLeft: "10px", color: "red" }} onClick={() => handleDelete(e.id)}>削除</button>
-                    </>
-                  )}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+        <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th>名前</th>
+              <th>日付</th>
+              <th>時間帯</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s) => (
+              <tr key={s.id}>
+                <td>{s.username}</td>
+                <td>{s.date}</td>
+                <td>{s.timeslot}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
