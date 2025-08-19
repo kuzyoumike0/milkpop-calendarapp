@@ -8,10 +8,11 @@ export default function ShareLinkPage() {
   const [date, setDate] = useState("");
   const [timeslot, setTimeslot] = useState("終日");
   const [comment, setComment] = useState("");
+  const [token, setToken] = useState(""); // 🔑 パスワード（トークン）
   const [schedules, setSchedules] = useState([]);
-  const [editId, setEditId] = useState(null); // 編集中の予定ID
+  const [editId, setEditId] = useState(null);
 
-  // 今日の日付
+  // 今日の日付をデフォルトに設定
   useEffect(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -20,6 +21,7 @@ export default function ShareLinkPage() {
     setDate(`${yyyy}-${mm}-${dd}`);
   }, []);
 
+  // スケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get(`/api/share/${linkId}`);
@@ -33,20 +35,22 @@ export default function ShareLinkPage() {
     fetchSchedules();
   }, [linkId]);
 
+  // 登録 or 更新
   const handleRegister = async () => {
-    if (!username.trim()) {
-      alert("名前を入力してください");
+    if (!username.trim() || !token.trim()) {
+      alert("名前とパスワードを入力してください");
       return;
     }
 
     try {
       if (editId) {
-        // 編集モード
+        // 更新
         await axios.put(`/api/schedule/${editId}`, {
           username,
           date,
           timeslot,
           comment,
+          token,
         });
       } else {
         // 新規登録
@@ -55,30 +59,34 @@ export default function ShareLinkPage() {
           date,
           timeslot,
           comment,
+          token,
         });
       }
 
-      // リセット
-      setUsername("");
+      // 入力欄リセット
+      setEditId(null);
       setTimeslot("終日");
       setComment("");
-      setEditId(null);
       fetchSchedules();
     } catch (err) {
+      alert(err.response?.data?.error || "登録/更新失敗");
       console.error("登録/更新失敗:", err);
     }
   };
 
+  // 削除
   const handleDelete = async (id) => {
     if (!window.confirm("この予定を削除しますか？")) return;
     try {
-      await axios.delete(`/api/schedule/${id}`);
+      await axios.delete(`/api/schedule/${id}`, { params: { token } });
       fetchSchedules();
     } catch (err) {
+      alert(err.response?.data?.error || "削除失敗");
       console.error("削除失敗:", err);
     }
   };
 
+  // 編集モード開始
   const handleEdit = (schedule) => {
     setEditId(schedule.id);
     setUsername(schedule.username);
@@ -87,12 +95,14 @@ export default function ShareLinkPage() {
     setComment(schedule.comment || "");
   };
 
+  // 日付を日本語フォーマットに変換
   const formatJapaneseDate = (isoDate) => {
     const d = new Date(isoDate + "T00:00:00");
     const options = { month: "numeric", day: "numeric", weekday: "short" };
     return d.toLocaleDateString("ja-JP", options);
   };
 
+  // 日付ごとにグループ化
   const grouped = schedules.reduce((acc, s) => {
     if (!acc[s.date]) acc[s.date] = [];
     acc[s.date].push(s);
@@ -111,6 +121,13 @@ export default function ShareLinkPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="border p-2 rounded flex-1"
+        />
+        <input
+          type="password"
+          placeholder="パスワード"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          className="border p-2 rounded"
         />
         <input
           type="date"
@@ -146,7 +163,6 @@ export default function ShareLinkPage() {
           <button
             onClick={() => {
               setEditId(null);
-              setUsername("");
               setTimeslot("終日");
               setComment("");
             }}
@@ -157,7 +173,7 @@ export default function ShareLinkPage() {
         )}
       </div>
 
-      {/* 一覧 */}
+      {/* スケジュール一覧 */}
       {Object.keys(grouped).length === 0 ? (
         <p>まだ予定は登録されていません。</p>
       ) : (
@@ -168,6 +184,8 @@ export default function ShareLinkPage() {
               <h3 className="text-lg font-semibold mb-2">
                 {formatJapaneseDate(d)}
               </h3>
+
+              {/* PC表示: テーブル */}
               <table className="hidden md:table w-full border-collapse border">
                 <thead>
                   <tr className="bg-gray-100">
@@ -184,25 +202,29 @@ export default function ShareLinkPage() {
                       <td className="border p-2">{s.timeslot}</td>
                       <td className="border p-2">{s.comment || "-"}</td>
                       <td className="border p-2 space-x-2">
-                        <button
-                          onClick={() => handleEdit(s)}
-                          className="bg-yellow-500 text-white px-2 py-1 rounded"
-                        >
-                          編集
-                        </button>
-                        <button
-                          onClick={() => handleDelete(s.id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded"
-                        >
-                          削除
-                        </button>
+                        {s.username === username && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(s)}
+                              className="bg-yellow-500 text-white px-2 py-1 rounded"
+                            >
+                              編集
+                            </button>
+                            <button
+                              onClick={() => handleDelete(s.id)}
+                              className="bg-red-500 text-white px-2 py-1 rounded"
+                            >
+                              削除
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              {/* スマホ用カード */}
+              {/* モバイル表示: カード */}
               <div className="md:hidden">
                 {grouped[d].map((s) => (
                   <div
@@ -218,20 +240,22 @@ export default function ShareLinkPage() {
                     <p>
                       <strong>コメント:</strong> {s.comment || "-"}
                     </p>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => handleEdit(s)}
-                        className="bg-yellow-500 text-white px-3 py-1 rounded"
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => handleDelete(s.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded"
-                      >
-                        削除
-                      </button>
-                    </div>
+                    {s.username === username && (
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="bg-yellow-500 text-white px-3 py-1 rounded"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => handleDelete(s.id)}
+                          className="bg-red-500 text-white px-3 py-1 rounded"
+                        >
+                          削除
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
