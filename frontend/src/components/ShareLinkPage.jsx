@@ -81,6 +81,15 @@ export default function ShareLinkPage() {
     }
   };
 
+  // マトリクス用のデータ整形
+  const users = [...new Set(schedules.map((s) => s.username))];
+  const dates = [...new Set(schedules.map((s) => s.date))].sort();
+
+  const getCellValue = (date, user) => {
+    const entry = schedules.find((s) => s.date === date && s.username === user);
+    return entry ? entry.timeslot : "";
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>共有スケジュールページ</h2>
@@ -185,26 +194,32 @@ export default function ShareLinkPage() {
         登録
       </button>
 
-      {/* 登録一覧 */}
-      <h3 style={{ marginTop: "20px" }}>登録一覧</h3>
-      <table border="1" style={{ borderCollapse: "collapse", width: "100%" }}>
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>名前</th>
-            <th>時間帯</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((s, i) => (
-            <tr key={i}>
-              <td>{s.date}</td>
-              <td>{s.username}</td>
-              <td>{s.timeslot}</td>
+      {/* マトリクス表 */}
+      <h3 style={{ marginTop: "20px" }}>登録一覧（マトリクス形式）</h3>
+      <div style={{ overflowX: "auto" }}>
+        <table border="1" style={{ borderCollapse: "collapse", minWidth: "600px" }}>
+          <thead>
+            <tr>
+              <th>日付</th>
+              {users.map((u, i) => (
+                <th key={i}>{u}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {dates.map((d, i) => (
+              <tr key={i}>
+                <td>{d}</td>
+                {users.map((u, j) => (
+                  <td key={j} style={{ textAlign: "center" }}>
+                    {getCellValue(d, u) || "―"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
