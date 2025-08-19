@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import { io } from "socket.io-client";
+
+// 開発と本番でURLを切り替え
+const SOCKET_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://あなたのRailwayドメイン.up.railway.app"
+    : "http://localhost:8080";
+
+const socket = io(SOCKET_URL);
 
 export default function ShareLinkPage() {
   const { linkId } = useParams();
@@ -9,7 +18,7 @@ export default function ShareLinkPage() {
   const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
 
-  // 初期ロード
+  // データ取得
   useEffect(() => {
     axios
       .get(`/api/schedules/${linkId}`)
@@ -19,14 +28,24 @@ export default function ShareLinkPage() {
         setResponses(res.data.responses || {});
       })
       .catch((err) => console.error("取得失敗:", err));
+
+    socket.emit("join", linkId);
+
+    socket.on("updateResponses", (data) => {
+      setResponses(data);
+    });
+
+    return () => {
+      socket.off("updateResponses");
+    };
   }, [linkId]);
 
-  // 保存処理
-  const handleSave = async (date, status) => {
+  const handleResponse = async (date, status) => {
     if (!username) {
       alert("名前を入力してください");
       return;
     }
+
     try {
       await axios.post("/api/response", {
         linkId,
@@ -34,25 +53,27 @@ export default function ShareLinkPage() {
         date,
         status,
       });
-
-      // フロント側を即時更新
-      setResponses((prev) => {
-        const copy = { ...prev };
-        if (!copy[date]) copy[date] = {};
-        copy[date][username] = status;
-        return copy;
-      });
+      // 自分はサーバーのSocket更新で反映される
     } catch (err) {
       console.error("保存失敗:", err);
+      alert("保存に失敗しました");
     }
   };
 
+  // 登録されている全ユーザーを列ヘッダに出す
+  const allUsers = Array.from(
+    new Set(
+      Object.values(responses)
+        .map((r) => Object.keys(r))
+        .flat()
+    )
+  );
+
   return (
     <div style={{ padding: "20px" }}>
-      <h2>共有スケジュール</h2>
-      <h3>📌 {title}</h3>
+      <h2>共有スケジュール: {title}</h2>
 
-      <div>
+      <div style={{ marginBottom: "10px" }}>
         <label>名前: </label>
         <input
           value={username}
@@ -61,41 +82,45 @@ export default function ShareLinkPage() {
         />
       </div>
 
-      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", marginTop: "20px" }}>
+      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th>日付</th>
-            <th>参加者ごとの回答</th>
-            <th>自分の回答</th>
+            {allUsers.map((u, idx) => (
+              <th key={idx}>{u}</th>
+            ))}
+            {username && !allUsers.includes(username) && <th>{username}</th>}
           </tr>
         </thead>
         <tbody>
           {dates.map((d, idx) => (
             <tr key={idx}>
               <td>{d}</td>
-              <td>
-                {responses[d]
-                  ? Object.entries(responses[d]).map(([user, status], i) => (
-                      <div key={i}>
-                        {user}: {status}
-                      </div>
-                    ))
-                  : "未回答"}
-              </td>
-              <td>
-                <select
-                  onChange={(e) => handleSave(d, e.target.value)}
-                  value={(responses[d] && responses[d][username]) || ""}
-                >
-                  <option value="">選択</option>
-                  <option value="◯">◯</option>
-                  <option value="✕">✕</option>
-                </select>
-              </td>
+              {allUsers.map((u, i) => (
+                <td key={i}>{responses[d]?.[u] || ""}</td>
+              ))}
+              {username && !allUsers.includes(username) && (
+                <td>
+                  <select
+                    onChange={(e) => handleResponse(d, e.target.value)}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      -
+                    </option>
+                    <option value="◯">◯</option>
+                    <option value="✕">✕</option>
+                  </select>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
       </table>
+
+      <p style={{ marginTop: "10px" }}>
+        ※名前を入力して、各日付に◯か✕を選択してください
+      </p>
     </div>
   );
 }
