@@ -1,17 +1,13 @@
--- schedules テーブル（個人スケジュール）
 CREATE TABLE IF NOT EXISTS schedules (
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
-    date DATE NOT NULL,
-    timeslot TEXT NOT NULL,
-    linkId TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (username, date, timeslot, linkId) -- 同じ日×時間帯×ユーザーは1件に制限
+  id SERIAL PRIMARY KEY,
+  linkId TEXT NOT NULL,
+  username TEXT NOT NULL,
+  date TEXT NOT NULL,
+  timeslot TEXT NOT NULL,
+  UNIQUE(linkId, username, date, timeslot)
 );
 
--- shared_links テーブル（共有リンク）
-CREATE TABLE IF NOT EXISTS shared_links (
-    id SERIAL PRIMARY KEY,
-    linkId TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS links (
+  linkId TEXT PRIMARY KEY,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
