@@ -1,19 +1,16 @@
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
-  memo TEXT,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
   timeslot TEXT NOT NULL,
-  mode TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  range_mode TEXT NOT NULL,
   linkid TEXT
 );
 
 CREATE TABLE IF NOT EXISTS responses (
   id SERIAL PRIMARY KEY,
-  schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
+  schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
   username TEXT NOT NULL,
-  response TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  response TEXT NOT NULL
 );
