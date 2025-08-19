@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS schedules (
   timeslot TEXT NOT NULL
 );
 
--- 共有リンクテーブル
+-- リンクテーブル
 CREATE TABLE IF NOT EXISTS links (
   linkId TEXT PRIMARY KEY,
   title TEXT NOT NULL,
