@@ -49,7 +49,6 @@ const pool = new Pool(
 // === init.sql を自動実行（最初の1回だけ） ===
 async function initDB() {
   try {
-    // schedules テーブルが存在するか確認
     const result = await pool.query(
       "SELECT to_regclass('public.schedules') as exists"
     );
@@ -68,7 +67,7 @@ async function initDB() {
   }
 }
 
-// === スケジュール保存 & 共有リンク発行 ===
+// === 共有スケジュール作成 & リンク発行 ===
 app.post("/api/shared", async (req, res) => {
   const { username, mode, dates } = req.body;
 
@@ -86,14 +85,14 @@ app.post("/api/shared", async (req, res) => {
       );
     }
 
-    res.json({ message: "保存完了", linkId });
+    res.json({ message: "共有スケジュール作成完了", linkId });
   } catch (err) {
     console.error("DB保存エラー:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// === 共有リンクから予定取得 ===
+// === 共有スケジュール取得 ===
 app.get("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
 
@@ -114,7 +113,7 @@ app.get("/api/shared/:linkId", async (req, res) => {
   }
 });
 
-// === 共有リンクに予定を追記 ===
+// === 共有スケジュール追記 ===
 app.post("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
   const { username, mode, dates } = req.body;
@@ -135,32 +134,6 @@ app.post("/api/shared/:linkId", async (req, res) => {
   } catch (err) {
     console.error("DB追記エラー:", err);
     res.status(500).json({ error: "追記に失敗しました" });
-  }
-});
-
-// === 共有リンクから予定を削除 ===
-app.delete("/api/shared/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  const { username, date } = req.body;
-
-  if (!username || !date) {
-    return res.status(400).json({ error: "必要な情報が不足しています" });
-  }
-
-  try {
-    const result = await pool.query(
-      "DELETE FROM schedules WHERE link_id = $1 AND username = $2 AND schedule_date = $3 RETURNING *",
-      [linkId, username, date]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "対象データが見つかりません" });
-    }
-
-    res.json({ message: "削除完了" });
-  } catch (err) {
-    console.error("DB削除エラー:", err);
-    res.status(500).json({ error: "削除に失敗しました" });
   }
 });
 
