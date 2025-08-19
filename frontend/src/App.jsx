@@ -1,31 +1,31 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import PersonalPage from "./components/PersonalPage";
+import LinkPage from "./components/LinkPage";
 import SharePage from "./components/SharePage";
 import ShareLinkPage from "./components/ShareLinkPage";
-import LinkPage from "./components/LinkPage";
+
+const Navbar = () => (
+  <div style={{ background: "#004CA0", padding: "10px", color: "white" }}>
+    <h1 style={{ display: "inline", marginRight: "20px", color: "#FDB9C8" }}>MilkPOP Calendar</h1>
+    <Link to="/" style={{ marginRight: "15px", color: "white" }}>トップ</Link>
+    <Link to="/register" style={{ marginRight: "15px", color: "white" }}>日程登録</Link>
+    <Link to="/personal" style={{ marginRight: "15px", color: "white" }}>個人日程</Link>
+  </div>
+);
 
 export default function App() {
   return (
     <Router>
-      <header className="bg-black text-white p-4 flex justify-between">
-        <h1 className="text-2xl font-bold text-[#FDB9C8]">MilkPOP Calendar</h1>
-        <nav className="flex space-x-4">
-          <Link to="/">トップ</Link>
-          <Link to="/personal">個人スケジュール</Link>
-          <Link to="/share">日程登録</Link>
-        </nav>
-      </header>
-      <main className="p-4 bg-[#fefefe] min-h-screen">
-        <Routes>
-          <Route path="/" element={<TopPage />} />
-          <Route path="/personal" element={<PersonalPage />} />
-          <Route path="/share" element={<SharePage />} />
-          <Route path="/share/:linkid" element={<ShareLinkPage />} />
-          <Route path="/link" element={<LinkPage />} />
-        </Routes>
-      </main>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<TopPage />} />
+        <Route path="/register" element={<LinkPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
+        <Route path="/share/:linkid" element={<SharePage />} />
+        <Route path="/links" element={<ShareLinkPage />} />
+      </Routes>
     </Router>
   );
 }
