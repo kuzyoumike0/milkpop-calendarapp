@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
+const fs = require("fs");
 const helmet = require("helmet");
 const { v4: uuidv4 } = require("uuid");
 
@@ -44,6 +45,17 @@ const pool = new Pool(
         port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       }
 );
+
+// === DB初期化処理 ===
+async function initDB() {
+  try {
+    const sql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf-8");
+    await pool.query(sql);
+    console.log("✅ init.sql executed successfully");
+  } catch (err) {
+    console.error("❌ Failed to execute init.sql:", err);
+  }
+}
 
 // === スケジュール保存 & 共有リンク発行 ===
 app.post("/api/shared", async (req, res) => {
@@ -148,6 +160,7 @@ app.get("*", (req, res) => {
 });
 
 // === サーバー起動 ===
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
+  await initDB(); // 起動時に init.sql を流す
 });
