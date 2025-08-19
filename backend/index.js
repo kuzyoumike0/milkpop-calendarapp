@@ -1,51 +1,31 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const path = require("path");
 const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
-const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// ミドルウェア
-app.use(cors());
+// PostgreSQL 接続
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+});
+
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// === PostgreSQL 接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "db",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: 5432,
-      }
-);
+// === API ===
+// （ここに /api/schedules などのエンドポイントがある想定）
 
-// === 静的ファイルを必ず配信 ===
-const buildPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(buildPath));
+// === フロントエンド静的ファイル配信 ===
+const frontendPath = path.join(__dirname, "public");
+app.use(express.static(frontendPath));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(buildPath, "index.html"));
-});
-
-// === API例 ===
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-// === 全てのルートをReactにフォールバック ===
 app.get("*", (req, res) => {
-  res.sendFile(path.join(buildPath, "index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
