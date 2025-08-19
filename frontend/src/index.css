@@ -14,3 +14,11 @@
   color: black !important;
   border-radius: 9999px;
 }
+/* 複数選択モードで選択した日 */
+.selected-day {
+  background-color: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold;
+  border-radius: 9999px;
+  box-shadow: 0 0 5px rgba(253, 185, 200, 0.8);
+}
