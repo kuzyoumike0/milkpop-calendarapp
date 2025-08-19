@@ -1,8 +1,8 @@
--- 古いテーブルを削除（単数形・間違いを消す）
+-- 古いテーブル（間違っているもの）を削除
 DROP TABLE IF EXISTS schedule;
 DROP TABLE IF EXISTS schedules;
 
--- 正しいテーブルを作成
+-- 新しいテーブルを作成
 CREATE TABLE schedules (
   id SERIAL PRIMARY KEY,
   username TEXT NOT NULL,
