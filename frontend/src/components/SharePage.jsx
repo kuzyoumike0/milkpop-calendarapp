@@ -1,191 +1,188 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function SharePage() {
-  const [mode, setMode] = useState("range"); // range | multi
-  const [rangeDates, setRangeDates] = useState([null, null]);
-  const [multiDates, setMultiDates] = useState([]);
-
-  const [category, setCategory] = useState("終日"); // 区分: 終日 | 昼 | 夜 | 時間帯
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("multiple"); // multiple / range
+  const [category, setCategory] = useState("終日");
   const [startTime, setStartTime] = useState("01:00");
   const [endTime, setEndTime] = useState("00:00");
+  const [shareUrl, setShareUrl] = useState("");
+  const navigate = useNavigate();
 
-  // 時間リスト（01:00 ~ 00:00）
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = (i + 1) % 24; // 1時から0時
-    return `${hour.toString().padStart(2, "0")}:00`;
-  });
-
-  // 範囲選択時の日付リスト
-  const generateRange = () => {
-    if (!rangeDates[0] || !rangeDates[1]) return [];
-    const start = new Date(rangeDates[0]);
-    const end = new Date(rangeDates[1]);
-    const dates = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(d.toISOString().split("T")[0]);
-    }
-    return dates;
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 複数選択クリック
-  const handleMultiClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    if (multiDates.includes(dateStr)) {
-      setMultiDates(multiDates.filter((d) => d !== dateStr));
+  // カレンダー選択
+  const handleDateChange = (value) => {
+    if (selectionMode === "range") {
+      const [start, end] = value;
+      if (start && end) {
+        const dates = [];
+        let current = new Date(start);
+        while (current <= end) {
+          dates.push(formatDate(new Date(current)));
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(dates);
+      }
     } else {
-      setMultiDates([...multiDates, dateStr]);
+      // multiple mode
+      const dateStr = formatDate(value);
+      setSelectedDates((prev) =>
+        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+      );
     }
-  };
-
-  // 日付強調
-  const tileClassName = ({ date }) => {
-    const dateStr = date.toISOString().split("T")[0];
-    if (mode === "multi" && multiDates.includes(dateStr)) {
-      return "selected-date";
-    }
-    return null;
   };
 
   // 共有リンク発行
-  const handleShare = async () => {
-    const dates = mode === "range" ? generateRange() : multiDates;
-    if (dates.length === 0) {
+  const createShareLink = async () => {
+    if (selectedDates.length === 0) {
       alert("日程を選択してください");
       return;
     }
-
-    const res = await fetch("/api/sharelink", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dates,
+    try {
+      const res = await axios.post("/api/sharelink", {
+        dates: selectedDates,
         category,
         startTime: category === "時間帯" ? startTime : null,
         endTime: category === "時間帯" ? endTime : null,
-      }),
-    });
-
-    const data = await res.json();
-    if (data.linkId) {
-      alert(`共有リンク: ${window.location.origin}/share/${data.linkId}`);
+        username: "guest",
+      });
+      const url = `${window.location.origin}/share/${res.data.linkId}`;
+      setShareUrl(url);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンクの発行に失敗しました");
     }
   };
 
-  return (
-    <div>
-      <h2>日程の選択</h2>
+  // 時刻プルダウン（1時〜0時）
+  const renderTimeOptions = () => {
+    const times = [];
+    for (let h = 1; h <= 24; h++) {
+      const label = `${String(h % 24).padStart(2, "0")}:00`;
+      times.push(<option key={label} value={label}>{label}</option>);
+    }
+    return times;
+  };
 
-      {/* 範囲選択 or 複数選択 */}
-      <div>
+  return (
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4">予定を共有する</h2>
+
+      {/* 選択モード */}
+      <div className="mb-4">
         <label>
           <input
             type="radio"
-            value="range"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
+            name="mode"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          /> 複数日選択
         </label>
-        <label>
+        <label className="ml-4">
           <input
             type="radio"
-            value="multi"
-            checked={mode === "multi"}
-            onChange={() => setMode("multi")}
-          />
-          複数選択
+            name="mode"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          /> 範囲選択
         </label>
       </div>
 
-      {mode === "range" && (
-        <Calendar selectRange={true} onChange={setRangeDates} value={rangeDates} />
-      )}
+      {/* カレンダー */}
+      <Calendar
+        selectRange={selectionMode === "range"}
+        onChange={handleDateChange}
+      />
+      <p className="mt-2">選択日: {selectedDates.join(", ")}</p>
 
-      {mode === "multi" && (
-        <Calendar
-          selectRange={false}
-          onClickDay={handleMultiClick}
-          tileClassName={tileClassName}
-        />
-      )}
-
-      <h2>区分の選択</h2>
-      <div>
+      {/* 区分 */}
+      <div className="mt-4">
         <label>
           <input
             type="radio"
+            name="category"
             value="終日"
             checked={category === "終日"}
             onChange={() => setCategory("終日")}
-          />
-          終日
+          /> 終日
         </label>
-        <label>
+        <label className="ml-4">
           <input
             type="radio"
+            name="category"
             value="昼"
             checked={category === "昼"}
             onChange={() => setCategory("昼")}
-          />
-          昼（13:00〜18:00）
+          /> 昼（13:00〜18:00）
         </label>
-        <label>
+        <label className="ml-4">
           <input
             type="radio"
+            name="category"
             value="夜"
             checked={category === "夜"}
             onChange={() => setCategory("夜")}
-          />
-          夜（21:00〜00:00）
+          /> 夜（21:00〜00:00）
         </label>
-        <label>
+        <label className="ml-4">
           <input
             type="radio"
+            name="category"
             value="時間帯"
             checked={category === "時間帯"}
             onChange={() => setCategory("時間帯")}
-          />
-          時間帯を指定
+          /> 時間帯指定
         </label>
       </div>
 
       {/* 時間帯プルダウン */}
       {category === "時間帯" && (
-        <div>
-          <label>
-            開始:
+        <div className="mt-2 flex gap-4">
+          <div>
+            開始時刻:
             <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
+              {renderTimeOptions()}
             </select>
-          </label>
-          <label>
-            終了:
+          </div>
+          <div>
+            終了時刻:
             <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
+              {renderTimeOptions()}
             </select>
-          </label>
+          </div>
         </div>
       )}
 
-      <button onClick={handleShare}>共有リンクを発行</button>
+      {/* 共有リンク発行 */}
+      <button
+        onClick={createShareLink}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+      >
+        共有リンクを発行
+      </button>
 
-      <style jsx>{`
-        .selected-date {
-          background: #4caf50 !important;
-          color: white !important;
-          border-radius: 50%;
-        }
-      `}</style>
+      {/* URL 表示 */}
+      {shareUrl && (
+        <div className="mt-4">
+          <p>共有リンク:</p>
+          <a href={shareUrl} className="text-blue-600 underline" target="_blank" rel="noreferrer">
+            {shareUrl}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
