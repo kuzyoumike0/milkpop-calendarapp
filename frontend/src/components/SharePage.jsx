@@ -6,12 +6,10 @@ import axios from "axios";
 export default function SharePage() {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("multiple"); // multiple or range
   const [shareLink, setShareLink] = useState("");
   const [message, setMessage] = useState("");
-
-  const [startTime, setStartTime] = useState("18:00");
-  const [endTime, setEndTime] = useState("21:00");
-  const [specialSlot, setSpecialSlot] = useState(""); // 全日・昼・夜
+  const [timeslot, setTimeslot] = useState("全日");
 
   const formatDate = (date) => {
     const yyyy = date.getFullYear();
@@ -20,15 +18,30 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  const handleDateClick = (date) => {
-    const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-    } else {
-      setSelectedDates([...selectedDates, dateStr]);
+  // 日付選択（モードに応じて処理）
+  const handleDateSelect = (date) => {
+    if (mode === "multiple") {
+      const dateStr = formatDate(date);
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      } else {
+        setSelectedDates([...selectedDates, dateStr]);
+      }
+    } else if (mode === "range" && Array.isArray(date)) {
+      const [start, end] = date;
+      if (start && end) {
+        const range = [];
+        let current = new Date(start);
+        while (current <= end) {
+          range.push(formatDate(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(range);
+      }
     }
   };
 
+  // リンク作成
   const handleCreateLink = async () => {
     if (!title.trim()) {
       setMessage("❌ タイトルを入力してください");
@@ -38,22 +51,11 @@ export default function SharePage() {
       setMessage("❌ 日付を選択してください");
       return;
     }
-
-    // specialSlotが選ばれていればそれを優先
-    let timeslot = "";
-    if (specialSlot) {
-      timeslot = specialSlot;
-    } else {
-      timeslot = `${startTime}-${endTime}`;
-    }
-
     try {
       const res = await axios.post("/api/create-link", {
         title,
-        dates: selectedDates.map((d) => ({
-          date: d,
-          timeslot,
-        })),
+        dates: selectedDates,
+        timeslot,
       });
       const url = `${window.location.origin}/link/${res.data.linkId}`;
       setShareLink(url);
@@ -66,22 +68,15 @@ export default function SharePage() {
 
   const tileClassName = ({ date }) => {
     const dateStr = formatDate(date);
-    if (selectedDates.includes(dateStr)) {
-      return "selected-date";
-    }
+    if (selectedDates.includes(dateStr)) return "selected-date";
     return null;
   };
-
-  // 時間リスト（1:00～24:00）
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const h = String(i + 1).padStart(2, "0");
-    return `${h}:00`;
-  });
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>📅 共有リンク作成</h2>
 
+      {/* タイトル */}
       <div style={{ marginBottom: "10px" }}>
         <label>タイトル: </label>
         <input
@@ -93,48 +88,49 @@ export default function SharePage() {
         />
       </div>
 
-      {/* カレンダー */}
-      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
+      {/* モード切替 */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          <input
+            type="radio"
+            value="multiple"
+            checked={mode === "multiple"}
+            onChange={() => setMode("multiple")}
+          />
+          複数日クリック
+        </label>
+        <label style={{ marginLeft: "15px" }}>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          範囲選択
+        </label>
+      </div>
 
-      {/* 特別枠 or 時間帯選択 */}
-      <div style={{ marginTop: "15px" }}>
+      {/* 時間帯プルダウン */}
+      <div style={{ marginBottom: "10px" }}>
         <label>時間帯: </label>
         <select
-          value={specialSlot}
-          onChange={(e) => {
-            setSpecialSlot(e.target.value);
-          }}
-          style={{ marginRight: "10px" }}
+          value={timeslot}
+          onChange={(e) => setTimeslot(e.target.value)}
+          style={{ padding: "5px" }}
         >
-          <option value="">カスタム時間を選択</option>
           <option value="全日">全日（終日）</option>
-          <option value="昼">昼（12:00-18:00）</option>
-          <option value="夜">夜（18:00-24:00）</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
         </select>
-
-        {!specialSlot && (
-          <>
-            <select
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-            ～
-            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
       </div>
+
+      {/* カレンダー */}
+      <Calendar
+        selectRange={mode === "range"}
+        onChange={handleDateSelect}
+        onClickDay={mode === "multiple" ? handleDateSelect : undefined}
+        tileClassName={tileClassName}
+      />
 
       <button
         onClick={handleCreateLink}
@@ -142,7 +138,6 @@ export default function SharePage() {
           marginTop: "20px",
           padding: "10px 20px",
           fontSize: "16px",
-          cursor: "pointer",
         }}
       >
         🔗 共有リンクを作成
