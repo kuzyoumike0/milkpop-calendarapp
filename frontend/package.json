@@ -8,7 +8,9 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "react-calendar": "^4.8.0",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "@craco/craco": "^7.1.0"
   },
   "scripts": {
     "start": "craco start",
@@ -33,17 +35,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@craco/craco": "^7.1.0"
   }
-  "dependencies": {
-  "axios": "^1.6.2",
-  "react": "^18.2.0",
-  "react-dom": "^18.2.0",
-  "react-scripts": "5.0.1",
-  "react-calendar": "^4.8.0",
-  "socket.io-client": "^4.7.2",
-  "node-polyfill-webpack-plugin": "^2.0.1"
-}
 }
