@@ -7,20 +7,26 @@ export default function SharePage() {
   const [schedule, setSchedule] = useState(null);
   const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
+  const [allResponses, setAllResponses] = useState([]); // 全ユーザーの回答
 
-  // データ取得
+  // スケジュール取得
   useEffect(() => {
     axios.get(`/api/schedule/${linkid}`).then((res) => {
       setSchedule(res.data);
     });
+    fetchResponses();
   }, [linkid]);
+
+  const fetchResponses = async () => {
+    const res = await axios.get(`/api/share/${linkid}`);
+    setAllResponses(res.data); // [{ username, responses }]
+  };
 
   if (!schedule) return <div className="text-center mt-10">読み込み中...</div>;
 
   const dates = [];
   let current = new Date(schedule.start_date);
   const end = new Date(schedule.end_date);
-
   while (current <= end) {
     dates.push(new Date(current));
     current.setDate(current.getDate() + 1);
@@ -28,25 +34,27 @@ export default function SharePage() {
 
   const timeslots = schedule.timeslot ? schedule.timeslot.split(",") : [];
 
-  // 回答を保存
+  // 自分の選択を変更
+  const handleSelect = (date, slot, value) => {
+    setResponses({
+      ...responses,
+      [`${date}_${slot}`]: value,
+    });
+  };
+
+  // 保存
   const handleSave = async () => {
     try {
       await axios.post(`/api/share/${linkid}`, {
         username,
         responses,
       });
+      await fetchResponses(); // 最新データを取得して即反映
       alert("保存しました！");
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
     }
-  };
-
-  const handleSelect = (date, slot, value) => {
-    setResponses({
-      ...responses,
-      [`${date}_${slot}`]: value,
-    });
   };
 
   return (
@@ -73,41 +81,49 @@ export default function SharePage() {
           <thead>
             <tr className="bg-[#004CA0] text-white">
               <th className="border border-gray-700 p-2">日付</th>
-              {timeslots.map((slot) => (
-                <th key={slot} className="border border-gray-700 p-2">
-                  {slot}
+              <th className="border border-gray-700 p-2">時間帯</th>
+              {allResponses.map((r) => (
+                <th key={r.username} className="border border-gray-700 p-2">
+                  {r.username}
                 </th>
               ))}
+              <th className="border border-gray-700 p-2">自分の入力</th>
             </tr>
           </thead>
           <tbody>
             {dates.map((date) => {
               const dStr = date.toISOString().slice(0, 10);
-              return (
-                <tr key={dStr}>
+              return timeslots.map((slot) => (
+                <tr key={`${dStr}_${slot}`}>
                   <td className="border border-gray-700 p-2 text-center">
                     {dStr}
                   </td>
-                  {timeslots.map((slot) => (
+                  <td className="border border-gray-700 p-2 text-center">
+                    {slot}
+                  </td>
+                  {allResponses.map((r) => (
                     <td
-                      key={`${dStr}_${slot}`}
+                      key={`${r.username}_${dStr}_${slot}`}
                       className="border border-gray-700 p-2 text-center"
                     >
-                      <select
-                        value={responses[`${dStr}_${slot}`] || ""}
-                        onChange={(e) =>
-                          handleSelect(dStr, slot, e.target.value)
-                        }
-                        className="p-2 rounded text-black"
-                      >
-                        <option value="">-</option>
-                        <option value="〇">〇</option>
-                        <option value="✖">✖</option>
-                      </select>
+                      {r.responses[`${dStr}_${slot}`] || "-"}
                     </td>
                   ))}
+                  <td className="border border-gray-700 p-2 text-center">
+                    <select
+                      value={responses[`${dStr}_${slot}`] || ""}
+                      onChange={(e) =>
+                        handleSelect(dStr, slot, e.target.value)
+                      }
+                      className="p-2 rounded text-black"
+                    >
+                      <option value="">-</option>
+                      <option value="〇">〇</option>
+                      <option value="✖">✖</option>
+                    </select>
+                  </td>
                 </tr>
-              );
+              ));
             })}
           </tbody>
         </table>
