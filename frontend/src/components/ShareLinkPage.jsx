@@ -15,6 +15,8 @@ export default function ShareLinkPage() {
   const [username, setUsername] = useState("");
   const [schedules, setSchedules] = useState([]);
 
+  const timeSlots = ["朝", "昼", "夜", "全日"];
+
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -92,6 +94,41 @@ export default function ShareLinkPage() {
     }
   };
 
+  // 削除処理（自分の名前だけ）
+  const handleDelete = async (s) => {
+    if (s.username !== username) {
+      alert("自分の予定だけ削除できます");
+      return;
+    }
+    if (!window.confirm(`${s.date} [${s.timeslot}] の予定を削除しますか？`)) return;
+    try {
+      await axios.delete("/api/schedule", {
+        data: {
+          username: s.username,
+          date: s.date,
+          timeslot: s.timeslot,
+          linkId,
+        },
+      });
+      fetchSchedules();
+    } catch (err) {
+      console.error(err);
+      alert("削除に失敗しました");
+    }
+  };
+
+  // === 一覧を日付ごとにまとめて整形 ===
+  const grouped = {};
+  schedules.forEach((s) => {
+    if (!grouped[s.date]) {
+      grouped[s.date] = {};
+      timeSlots.forEach((ts) => (grouped[s.date][ts] = []));
+    }
+    grouped[s.date][s.timeslot].push(s);
+  });
+
+  const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>共有スケジュール</h2>
@@ -156,25 +193,53 @@ export default function ShareLinkPage() {
           value={timeSlot}
           onChange={(e) => setTimeSlot(e.target.value)}
         >
-          <option value="全日">全日</option>
-          <option value="朝">朝</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
+          {timeSlots.map((ts) => (
+            <option key={ts} value={ts}>{ts}</option>
+          ))}
         </select>
       </div>
 
       {/* 登録ボタン */}
       <button onClick={handleSave}>登録</button>
 
-      {/* 一覧表示 */}
-      <h3>登録済み</h3>
-      <ul>
-        {schedules.map((s, i) => (
-          <li key={i}>
-            {s.date} [{s.timeslot}] {s.username}
-          </li>
-        ))}
-      </ul>
+      {/* 一覧表示 (表形式) */}
+      <h3>登録済み一覧</h3>
+      <div className="schedule-table-wrapper">
+        <table className="schedule-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              {timeSlots.map((ts) => (
+                <th key={ts}>{ts}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sortedDates.map((d) => (
+              <tr key={d}>
+                <td>{d}</td>
+                {timeSlots.map((ts) => (
+                  <td key={ts}>
+                    {grouped[d][ts].map((s, i) => (
+                      <span key={i} className="user-chip">
+                        {s.username}
+                        {s.username === username && (
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDelete(s)}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
