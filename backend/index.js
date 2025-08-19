@@ -1,36 +1,15 @@
-// backend/index.js
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const { Pool } = require("pg");
-const path = require("path");
-const helmet = require("helmet");
 const { v4: uuidv4 } = require("uuid");
-const fs = require("fs");
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
-
-// === ミドルウェア ===
 app.use(cors());
 app.use(bodyParser.json());
 
-// === CSP (Google Fonts対応) ===
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-    },
-  })
-);
-
-// === PostgreSQL 接続 ===
+// === PostgreSQL 接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -38,136 +17,95 @@ const pool = new Pool(
         ssl: { rejectUnauthorized: false },
       }
     : {
-        host: process.env.DB_HOST || "db",
+        host: process.env.DB_HOST || "localhost",
         user: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "mydb",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+        database: process.env.DB_NAME || "calendar",
+        port: process.env.DB_PORT || 5432,
       }
 );
 
-// === 起動時に init.sql を流す（1回目だけ CREATE TABLE IF NOT EXISTS） ===
-(async () => {
-  try {
-    const initSql = fs.readFileSync(path.join(__dirname, "init.sql"), "utf8");
-    await pool.query(initSql);
-    console.log("✅ init.sql を実行しました");
-  } catch (err) {
-    console.error("❌ init.sql 実行エラー:", err);
-  }
-})();
+// === DB初期化 ===
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id SERIAL PRIMARY KEY,
+      username TEXT NOT NULL,
+      date DATE NOT NULL,
+      timeslot TEXT NOT NULL,
+      linkId TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (username, date, timeslot, linkId)
+    );
+  `);
 
-// === スケジュール保存 & 共有リンク発行 ===
-app.post("/api/shared", async (req, res) => {
-  const { username, mode, timeSlot, dates } = req.body;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS shared_links (
+      id SERIAL PRIMARY KEY,
+      linkId TEXT UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+}
+initDB();
 
-  if (!username || !dates || dates.length === 0) {
-    return res.status(400).json({ error: "必要な情報が不足しています" });
-  }
+// === API ===
 
+// 共有リンク作成
+app.post("/api/create-link", async (req, res) => {
   try {
     const linkId = uuidv4();
-
-    for (const d of dates) {
-      await pool.query(
-        `INSERT INTO schedules (link_id, username, schedule_date, mode, time_slot)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [linkId, username, d, mode, timeSlot || null]
-      );
-    }
-
-    res.json({ message: "保存完了", linkId });
+    await pool.query("INSERT INTO shared_links (linkId) VALUES ($1)", [linkId]);
+    res.json({ linkId });
   } catch (err) {
-    console.error("DB保存エラー:", err);
-    res.status(500).json({ error: "保存に失敗しました" });
+    console.error(err);
+    res.status(500).json({ error: "リンク作成失敗" });
   }
 });
 
-// === 共有リンクから予定取得 ===
-app.get("/api/shared/:linkId", async (req, res) => {
-  const { linkId } = req.params;
+// 個人スケジュール登録 (UPSERT)
+app.post("/api/schedule", async (req, res) => {
+  const { username, date, timeslot, linkId } = req.body;
+  try {
+    await pool.query(
+      `
+      INSERT INTO schedules (username, date, timeslot, linkId)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (username, date, timeslot, linkId)
+      DO UPDATE SET username = EXCLUDED.username
+    `,
+      [username, date, timeslot, linkId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "スケジュール登録失敗" });
+  }
+});
 
+// 個人スケジュール取得
+app.get("/api/schedules/:linkId", async (req, res) => {
+  const { linkId } = req.params;
   try {
     const result = await pool.query(
-      `SELECT username, schedule_date, mode, time_slot
-       FROM schedules
-       WHERE link_id = $1
-       ORDER BY schedule_date ASC, time_slot ASC NULLS LAST, username ASC`,
+      "SELECT username, date, timeslot FROM schedules WHERE linkId = $1 ORDER BY date, timeslot",
       [linkId]
     );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが見つかりません" });
-    }
-
     res.json(result.rows);
   } catch (err) {
-    console.error("DB取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
+    console.error(err);
+    res.status(500).json({ error: "取得失敗" });
   }
 });
 
-// === 共有リンクに予定を追記 ===
-app.post("/api/shared/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  const { username, mode, timeSlot, dates } = req.body;
-
-  if (!username || !dates || dates.length === 0) {
-    return res.status(400).json({ error: "必要な情報が不足しています" });
-  }
-
-  try {
-    for (const d of dates) {
-      await pool.query(
-        `INSERT INTO schedules (link_id, username, schedule_date, mode, time_slot)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [linkId, username, d, mode, timeSlot || null]
-      );
-    }
-
-    res.json({ message: "追記完了" });
-  } catch (err) {
-    console.error("DB追記エラー:", err);
-    res.status(500).json({ error: "追記に失敗しました" });
-  }
-});
-
-// === 共有リンクから予定を削除 ===
-app.delete("/api/shared/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  const { username, date, timeSlot } = req.body;
-
-  if (!username || !date) {
-    return res.status(400).json({ error: "必要な情報が不足しています" });
-  }
-
-  try {
-    const result = await pool.query(
-      `DELETE FROM schedules
-       WHERE link_id = $1 AND username = $2 AND schedule_date = $3
-       AND (time_slot = $4 OR ($4 IS NULL AND time_slot IS NULL))
-       RETURNING *`,
-      [linkId, username, date, timeSlot || null]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "対象データが見つかりません" });
-    }
-
-    res.json({ message: "削除完了" });
-  } catch (err) {
-    console.error("DB削除エラー:", err);
-    res.status(500).json({ error: "削除に失敗しました" });
-  }
-});
-
-// === React ビルドファイル配信 ===
-app.use(express.static(path.join(__dirname, "public")));
+// === 本番用: Reactビルド配信 ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-// === サーバー起動 ===
+// === 起動 ===
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
