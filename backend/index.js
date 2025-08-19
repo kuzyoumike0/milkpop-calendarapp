@@ -3,7 +3,6 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
@@ -32,23 +31,6 @@ const pool = new Pool(
           : 5432,
       }
 );
-
-// ===============================
-// 起動時に init.sql を流す
-// ===============================
-async function initDB() {
-  try {
-    const initSql = fs.readFileSync(
-      path.join(__dirname, "init.sql"),
-      "utf-8"
-    );
-    await pool.query(initSql);
-    console.log("✅ Database initialized (init.sql executed)");
-  } catch (err) {
-    console.error("❌ Failed to initialize DB:", err);
-  }
-}
-initDB();
 
 // ===============================
 // API ルート
@@ -96,12 +78,19 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// 共有リンクから予定取得
+// 共有リンクから予定取得（日付＋時間帯順でソート）
 app.get("/api/share/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
     const result = await pool.query(
-      "SELECT * FROM schedules WHERE linkId = $1",
+      `SELECT * FROM schedules 
+       WHERE linkId = $1
+       ORDER BY date ASC,
+         CASE timeslot
+           WHEN '終日' THEN 1
+           WHEN '昼'   THEN 2
+           WHEN '夜'   THEN 3
+         END ASC`,
       [linkId]
     );
     res.json(result.rows);
