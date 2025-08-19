@@ -1,134 +1,123 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import io from "socket.io-client";
+import axios from "axios";
 
-const socket = io(); // サーバーと同じオリジンに接続
+const socket = io(); // 同一オリジンに接続
 
 export default function ShareLinkPage() {
-  const { linkId } = useParams();
+  const { id } = useParams(); // URLのlinkId
+  const [username, setUsername] = useState("");
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState([]);
-  const [username, setUsername] = useState("");
-  const [myChoices, setMyChoices] = useState({});
 
-  // データ取得
+  // ===== データ取得 =====
   const fetchData = async () => {
     try {
-      const res = await axios.get(`/api/link/${linkId}`);
-      setSchedules(res.data.schedules || []);
-      setResponses(res.data.responses || []);
+      const res = await axios.get(`/api/link/${id}`);
+      setSchedules(res.data.schedules);
+      setResponses(res.data.responses);
     } catch (err) {
-      console.error("データ取得失敗:", err);
+      console.error("取得失敗:", err);
     }
   };
 
   useEffect(() => {
     fetchData();
-    socket.emit("joinLink", linkId);
-    socket.on("responseUpdated", (data) => {
-      if (data.linkId === linkId) {
-        fetchData();
-      }
-    });
-    return () => {
-      socket.off("responseUpdated");
-    };
-  }, [linkId]);
+    socket.emit("join", id);
 
-  // 登録処理
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    socket.on("update", (data) => {
+      fetchData();
+    });
+
+    return () => {
+      socket.off("update");
+    };
+  }, [id]);
+
+  // ===== 保存処理 =====
+  const handleSave = async (answer) => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
     try {
-      for (const sch of schedules) {
-        if (myChoices[sch.id]) {
-          await axios.post("/api/respond", {
-            linkId,
-            date: sch.date,
-            timemode: sch.timemode,
-            username,
-            response: myChoices[sch.id],
-          });
-        }
-      }
-      setMyChoices({});
+      await axios.post("/api/respond", {
+        linkId: id,
+        username,
+        answer,
+      });
     } catch (err) {
       console.error("登録失敗:", err);
     }
   };
 
+  // ===== 表示用：ある人の回答を取得 =====
+  const getAnswer = (uname) => {
+    const r = responses.find((r) => r.username === uname);
+    return r ? r.answer : "";
+  };
+
+  // ===== 表示用：登録済みユーザー一覧 =====
+  const uniqueUsers = [...new Set(responses.map((r) => r.username))];
+
   return (
     <div style={{ padding: "20px" }}>
-      <h2>共有スケジュール</h2>
+      <h2>共有スケジュール回答ページ</h2>
+      <p>リンクID: {id}</p>
 
-      {/* 名前入力 */}
-      <div style={{ marginBottom: "15px" }}>
-        <label>名前: </label>
+      <div style={{ marginBottom: "10px" }}>
         <input
           type="text"
+          placeholder="名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={{ padding: "5px" }}
         />
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>タイトル</th>
-              <th>時間帯</th>
-              <th>あなたの回答</th>
-              <th>他の回答</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((sch) => {
-              const filtered = responses.filter(
-                (r) => r.date === sch.date && r.timemode === sch.timemode
-              );
-              return (
-                <tr key={sch.id}>
-                  <td>{new Date(sch.date).toLocaleDateString()}</td>
-                  <td>{sch.title}</td>
-                  <td>
-                    {sch.timemode === "時間指定"
-                      ? `${sch.starthour}:00 - ${sch.endhour}:00`
-                      : sch.timemode}
-                  </td>
-                  <td>
-                    <select
-                      value={myChoices[sch.id] || ""}
-                      onChange={(e) =>
-                        setMyChoices({ ...myChoices, [sch.id]: e.target.value })
-                      }
-                    >
-                      <option value="">未選択</option>
-                      <option value="○">○</option>
-                      <option value="✕">✕</option>
-                    </select>
-                  </td>
-                  <td>
-                    {filtered.map((r, idx) => (
-                      <div key={idx}>
-                        {r.username}: {r.response}
-                      </div>
-                    ))}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <h3>登録された日程</h3>
+      {schedules.length === 0 && <p>まだ日程がありません。</p>}
+      <ul>
+        {schedules.map((s, i) => (
+          <li key={i}>
+            {s.date} {s.title} [{s.timemode}]
+            {s.timemode === "時間指定" && ` ${s.starthour}時〜${s.endhour}時`}
+            <div>
+              <select
+                onChange={(e) => handleSave(e.target.value)}
+                defaultValue=""
+                style={{ marginTop: "5px" }}
+              >
+                <option value="" disabled>
+                  回答を選択
+                </option>
+                <option value="〇">〇</option>
+                <option value="×">×</option>
+              </select>
+            </div>
+          </li>
+        ))}
+      </ul>
 
-        <button
-          type="submit"
-          style={{ marginTop: "15px", padding: "8px 15px", cursor: "pointer" }}
-        >
-          登録
-        </button>
-      </form>
+      <h3>参加者の回答一覧</h3>
+      {uniqueUsers.length === 0 && <p>まだ回答がありません。</p>}
+      <table border="1" cellPadding="5">
+        <thead>
+          <tr>
+            <th>名前</th>
+            <th>回答</th>
+          </tr>
+        </thead>
+        <tbody>
+          {uniqueUsers.map((uname, i) => (
+            <tr key={i}>
+              <td>{uname}</td>
+              <td>{getAnswer(uname)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
