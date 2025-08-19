@@ -3,15 +3,17 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
-// === PostgreSQL接続設定 ===
+// === PostgreSQL 接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -19,148 +21,102 @@ const pool = new Pool(
         ssl: { rejectUnauthorized: false },
       }
     : {
-        user: process.env.DB_USER || "postgres",
         host: process.env.DB_HOST || "localhost",
-        database: process.env.DB_NAME || "calendar",
+        user: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "password",
-        port: process.env.DB_PORT || 5432,
+        database: process.env.DB_NAME || "calendar",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
       }
 );
 
-// === DB初期化 ===
+// === DB初期化（init.sql を実行） ===
 async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS links (
-      id TEXT PRIMARY KEY,
-      title TEXT
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      link_id TEXT REFERENCES links(id),
-      date TEXT,
-      timeslot TEXT
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS responses (
-      id SERIAL PRIMARY KEY,
-      link_id TEXT REFERENCES links(id),
-      date TEXT,
-      timeslot TEXT,
-      username TEXT,
-      choice TEXT
-    );
-  `);
+  try {
+    const sql = fs.readFileSync(path.join(__dirname, "init.sql")).toString();
+    await pool.query(sql);
+    console.log("✅ Database initialized with init.sql");
+  } catch (err) {
+    console.error("❌ Failed to initialize database:", err);
+  }
 }
 initDB();
 
 // === API ===
 
-// リンク作成
+// 共有リンク作成
 app.post("/api/create-link", async (req, res) => {
-  const { title, schedules } = req.body;
-  if (!title || !schedules || schedules.length === 0) {
-    return res.status(400).json({ error: "タイトルとスケジュールが必要です" });
-  }
-
-  const id = uuidv4();
-
   try {
-    await pool.query("INSERT INTO links (id, title) VALUES ($1, $2)", [id, title]);
+    const { title, schedules } = req.body;
+    const linkId = uuidv4();
+
+    await pool.query("INSERT INTO links (id, title) VALUES ($1, $2)", [
+      linkId,
+      title,
+    ]);
 
     for (const s of schedules) {
       await pool.query(
         "INSERT INTO schedules (link_id, date, timeslot) VALUES ($1, $2, $3)",
-        [id, s.date, s.timeslot]
+        [linkId, s.date, s.timeslot]
       );
     }
 
-    res.json({ linkId: id });
+    res.json({ linkId });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "リンク作成失敗" });
+    console.error("Error creating link:", err);
+    res.status(500).json({ error: "Failed to create link" });
   }
 });
 
-// リンク情報 + 回答一覧取得
-app.get("/api/links/:id", async (req, res) => {
-  const { id } = req.params;
-
+// リンクから候補一覧取得
+app.get("/api/link/:linkId", async (req, res) => {
   try {
-    const linkResult = await pool.query("SELECT * FROM links WHERE id=$1", [id]);
-    if (linkResult.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
-    }
-    const link = linkResult.rows[0];
-
-    const schedulesResult = await pool.query(
-      "SELECT date, timeslot FROM schedules WHERE link_id=$1 ORDER BY date, timeslot",
-      [id]
+    const { linkId } = req.params;
+    const linkRes = await pool.query("SELECT * FROM links WHERE id=$1", [
+      linkId,
+    ]);
+    const schedulesRes = await pool.query(
+      "SELECT * FROM schedules WHERE link_id=$1 ORDER BY date, timeslot",
+      [linkId]
     );
-
-    const responsesResult = await pool.query(
-      "SELECT date, timeslot, username, choice FROM responses WHERE link_id=$1",
-      [id]
+    const responsesRes = await pool.query(
+      "SELECT * FROM responses WHERE link_id=$1",
+      [linkId]
     );
-
-    // responses を { "date|timeslot": { username: choice } } 形式に整形
-    const responses = {};
-    for (const r of responsesResult.rows) {
-      const key = `${r.date}|${r.timeslot}`;
-      if (!responses[key]) responses[key] = {};
-      responses[key][r.username] = r.choice;
-    }
 
     res.json({
-      title: link.title,
-      schedules: schedulesResult.rows,
-      responses,
+      link: linkRes.rows[0],
+      schedules: schedulesRes.rows,
+      responses: responsesRes.rows,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "リンク取得失敗" });
+    console.error("Error fetching link:", err);
+    res.status(500).json({ error: "Failed to fetch link" });
   }
 });
 
-// 回答登録（上書き）
-app.post("/api/links/:id/schedules", async (req, res) => {
-  const { id } = req.params;
-  const { username, choices } = req.body;
-
-  if (!username || !choices) {
-    return res.status(400).json({ error: "ユーザー名と回答が必要です" });
-  }
-
+// 回答登録（◯ ×）
+app.post("/api/respond", async (req, res) => {
   try {
-    // 既存回答を削除して再登録
-    await pool.query("DELETE FROM responses WHERE link_id=$1 AND username=$2", [id, username]);
-
-    for (const key of Object.keys(choices)) {
-      const [date, timeslot] = key.split("|");
-      const choice = choices[key];
-      await pool.query(
-        "INSERT INTO responses (link_id, date, timeslot, username, choice) VALUES ($1, $2, $3, $4, $5)",
-        [id, date, timeslot, username, choice]
-      );
-    }
-
+    const { linkId, date, timeslot, username, choice } = req.body;
+    await pool.query(
+      `INSERT INTO responses (link_id, date, timeslot, username, choice)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [linkId, date, timeslot, username, choice]
+    );
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "回答保存失敗" });
+    console.error("Error saving response:", err);
+    res.status(500).json({ error: "Failed to save response" });
   }
 });
 
-// === 静的ファイル（Reactビルド後） ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// フロントエンドを返す
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// === サーバー起動 ===
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
