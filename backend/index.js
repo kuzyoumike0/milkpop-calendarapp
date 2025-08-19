@@ -2,27 +2,23 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
-const path = require("path");
 const http = require("http");
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
+const path = require("path");
 const cors = require("cors");
 
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
-app.use(cors());
-app.use(bodyParser.json());
-
-// ===== PostgreSQL 接続設定 =====
+// === DB接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? { rejectUnauthorized: false }
+            : false,
       }
     : {
-        host: process.env.DB_HOST || "localhost",
+        host: process.env.DB_HOST || "db",
         user: process.env.DB_USER || "postgres",
         password: process.env.DB_PASSWORD || "password",
         database: process.env.DB_NAME || "mydb",
@@ -30,52 +26,109 @@ const pool = new Pool(
       }
 );
 
-// ===== DB初期化 =====
+// === アプリ初期化 ===
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.use(cors());
+app.use(bodyParser.json());
+
+// === DB初期化 ===
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
       linkid TEXT,
-      date TEXT NOT NULL,
-      title TEXT NOT NULL,
-      timemode TEXT NOT NULL,
-      starthour TEXT,
-      endhour TEXT
+      date DATE,
+      timemode TEXT,
+      starthour INT,
+      endhour INT,
+      title TEXT
     );
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS sharelinks (
-      linkid TEXT PRIMARY KEY,
-      created_at TIMESTAMP DEFAULT NOW()
+    CREATE TABLE IF NOT EXISTS responses (
+      id SERIAL PRIMARY KEY,
+      scheduleid INT REFERENCES schedules(id) ON DELETE CASCADE,
+      name TEXT,
+      status TEXT
     );
   `);
 }
 initDB();
 
-// ===== Socket.IO =====
-io.on("connection", (socket) => {
-  console.log("ユーザー接続:", socket.id);
-  socket.on("disconnect", () => {
-    console.log("切断:", socket.id);
-  });
-});
-
-// ===== API: スケジュール登録 =====
-app.post("/api/schedules", async (req, res) => {
+// === 共有リンク作成 ===
+app.post("/api/create-link", async (req, res) => {
   try {
-    const { dates, title, timemode, starthour, endhour } = req.body;
-    if (!dates || dates.length === 0) {
-      return res.status(400).json({ error: "日付が必要です" });
+    const { schedules } = req.body;
+    const linkid = uuidv4();
+
+    for (const s of schedules) {
+      await pool.query(
+        `INSERT INTO schedules (linkid, date, timemode, starthour, endhour, title)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [linkid, s.date, s.timemode, s.starthour, s.endhour, s.title]
+      );
     }
 
-    const linkid = "global"; // 共有リンク発行前は共通領域に保存
+    res.json({ linkid });
+  } catch (err) {
+    console.error("リンク作成エラー:", err);
+    res.status(500).json({ error: "リンク作成に失敗しました" });
+  }
+});
 
-    for (const d of dates) {
+// === スケジュール取得 ===
+app.get("/api/share/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC`,
+      [linkid]
+    );
+
+    const schedules = [];
+    for (const row of result.rows) {
+      const resp = await pool.query(
+        `SELECT name, status FROM responses WHERE scheduleid=$1`,
+        [row.id]
+      );
+      schedules.push({
+        ...row,
+        responses: resp.rows,
+      });
+    }
+
+    res.json(schedules);
+  } catch (err) {
+    console.error("取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
+
+// === 出欠登録 ===
+app.post("/api/share/:linkid/respond", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const { scheduleId, name, status } = req.body;
+
+    // 同じ人が既に回答していたら更新、なければ追加
+    const existing = await pool.query(
+      `SELECT * FROM responses WHERE scheduleid=$1 AND name=$2`,
+      [scheduleId, name]
+    );
+
+    if (existing.rows.length > 0) {
       await pool.query(
-        `INSERT INTO schedules (linkid, date, title, timemode, starthour, endhour)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [linkid, d, title, timemode, starthour, endhour]
+        `UPDATE responses SET status=$1 WHERE scheduleid=$2 AND name=$3`,
+        [status, scheduleId, name]
+      );
+    } else {
+      await pool.query(
+        `INSERT INTO responses (scheduleid, name, status) VALUES ($1,$2,$3)`,
+        [scheduleId, name, status]
       );
     }
 
@@ -87,66 +140,14 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// ===== API: 登録済みスケジュール取得 =====
-app.get("/api/schedules", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT * FROM schedules WHERE linkid = 'global' ORDER BY date`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// ===== API: 共有リンク発行 =====
-app.post("/api/share", async (req, res) => {
-  try {
-    const linkId = uuidv4();
-
-    await pool.query(
-      `INSERT INTO sharelinks (linkid) VALUES ($1)`,
-      [linkId]
-    );
-
-    // 既存の global スケジュールをコピー
-    await pool.query(
-      `UPDATE schedules SET linkid = $1 WHERE linkid = 'global'`,
-      [linkId]
-    );
-
-    io.emit("update");
-    res.json({ linkId });
-  } catch (err) {
-    console.error("リンク発行エラー:", err);
-    res.status(500).json({ error: "リンク発行に失敗しました" });
-  }
-});
-
-// ===== API: 特定リンクのスケジュール取得 =====
-app.get("/api/share/:linkid", async (req, res) => {
-  try {
-    const { linkid } = req.params;
-    const result = await pool.query(
-      `SELECT * FROM schedules WHERE linkid = $1 ORDER BY date`,
-      [linkid]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("共有リンク取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// ===== 静的ファイル配信 (React) =====
+// === 静的ファイル配信（フロントエンドビルド済み） ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
-// ===== サーバー起動 =====
+// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`サーバー起動: http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
