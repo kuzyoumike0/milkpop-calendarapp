@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import Holidays from "date-holidays";
+
+const hd = new Holidays("JP"); // 日本の祝日
 
 export default function PersonalPage() {
   const [date, setDate] = useState(new Date());
@@ -30,10 +33,34 @@ export default function PersonalPage() {
     });
   };
 
+  // 日付ごとの祝日情報
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (holiday) {
+        return <p className="text-red-500 text-xs">{holiday[0].name}</p>;
+      }
+    }
+    return null;
+  };
+
+  // 祝日の見た目
+  const tileClassName = ({ date, view }) => {
+    if (view === "month" && hd.isHoliday(date)) {
+      return "bg-red-100";
+    }
+    return null;
+  };
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[#004CA0]">個人スケジュール</h2>
-      <Calendar onChange={setDate} value={date} />
+      <Calendar
+        onChange={setDate}
+        value={date}
+        tileContent={tileContent}
+        tileClassName={tileClassName}
+      />
       <div className="mt-4">
         <input className="border p-2 w-full" placeholder="タイトル" value={title} onChange={e=>setTitle(e.target.value)} />
         <textarea className="border p-2 w-full mt-2" placeholder="メモ" value={memo} onChange={e=>setMemo(e.target.value)} />
