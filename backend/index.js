@@ -28,6 +28,8 @@ const pool = new Pool(
       }
 );
 
+// === API エンドポイント ===
+
 // 共有スケジュール取得
 app.get("/api/shared", async (req, res) => {
   try {
@@ -36,7 +38,6 @@ app.get("/api/shared", async (req, res) => {
       "SELECT * FROM schedules WHERE date = $1 ORDER BY timeslot",
       [date]
     );
-    // ✅ rows だけ返すように変更（フロントで map できる）
     res.json(result.rows);
   } catch (err) {
     console.error("❌ Error fetching shared schedules:", err);
@@ -56,5 +57,15 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
+// === React ビルド済みファイルを配信 ===
+const frontendPath = path.join(__dirname, "public"); // Dockerfileでコピー済み
+app.use(express.static(frontendPath));
+
+// React Router 対応: API以外のリクエストは index.html を返す
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// サーバー起動
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
