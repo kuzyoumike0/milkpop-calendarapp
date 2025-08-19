@@ -1,63 +1,81 @@
 import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 export default function SharePage() {
+  const [date, setDate] = useState(new Date());
+  const [timeSlot, setTimeSlot] = useState("全日");
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
-  const [error, setError] = useState("");
 
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // 共有リンク発行処理
   const handleCreateLink = async () => {
-    if (!title.trim()) {
-      setError("タイトルを入力してください");
+    if (!title) {
+      alert("タイトルを入力してください");
       return;
     }
-    setError("");
-    try {
-      const res = await fetch("/api/create-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
-      });
-      if (!res.ok) throw new Error("リンク作成失敗");
 
-      const data = await res.json();
-      if (data.linkId) {
-        const newLink = `${window.location.origin}/links/${data.linkId}`;
-        setLink(newLink);
-      } else {
-        setError("リンクIDが返ってきませんでした");
-      }
+    try {
+      const res = await axios.post("/api/createLink", {
+        date: formatDate(date),
+        timeSlot,
+        title,
+      });
+      setLink(`${window.location.origin}/links/${res.data.linkId}`);
     } catch (err) {
-      console.error(err);
-      setError("サーバーエラーが発生しました");
+      console.error("リンク作成エラー:", err);
+      alert("リンク作成に失敗しました");
     }
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h1>共有リンク発行</h1>
+    <div style={{ padding: "20px" }}>
+      <h2>共有リンク発行</h2>
 
+      {/* タイトル入力 */}
       <div style={{ marginBottom: "10px" }}>
-        <label>
-          タイトル：
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="例: 飲み会日程調整"
-            style={{ marginLeft: "10px", padding: "4px" }}
-          />
-        </label>
+        <label>タイトル: </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="イベント名を入力"
+          style={{ width: "200px" }}
+        />
       </div>
 
-      <button onClick={handleCreateLink} style={{ padding: "6px 12px" }}>
-        共有リンクを作成
-      </button>
+      {/* カレンダー */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>日付: </label>
+        <Calendar onChange={setDate} value={date} />
+      </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* 時間帯 */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>時間帯: </label>
+        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
+          <option value="全日">全日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
+      </div>
 
+      {/* リンク発行ボタン */}
+      <button onClick={handleCreateLink}>共有リンクを発行</button>
+
+      {/* 発行結果 */}
       {link && (
         <div style={{ marginTop: "20px" }}>
-          <p>共有リンクが発行されました：</p>
+          <p>共有リンクが発行されました 🎉</p>
           <a href={link} target="_blank" rel="noopener noreferrer">
             {link}
           </a>
