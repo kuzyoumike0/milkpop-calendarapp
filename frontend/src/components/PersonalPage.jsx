@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import Holidays from "date-holidays";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -9,18 +10,40 @@ export default function PersonalPage() {
   const [dates, setDates] = useState(new Date());
   const [timeslot, setTimeslot] = useState("終日");
 
+  // 日本の祝日を取得
+  const hd = new Holidays("JP");
+  const holidays = hd.getHolidays(new Date().getFullYear()).map(h => h.date);
+
+  // 祝日判定
+  const isHoliday = (date) => {
+    const ymd = date.toISOString().split("T")[0];
+    return holidays.includes(ymd);
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h2>個人日程登録</h2>
       <input placeholder="タイトル" value={title} onChange={(e) => setTitle(e.target.value)} />
       <br />
       <textarea placeholder="メモ" value={memo} onChange={(e) => setMemo(e.target.value)} />
-      <h3>カレンダー</h3>
+      <h3>カレンダー（祝日対応）</h3>
       <Calendar
         selectRange={mode === "range"}
         onChange={setDates}
         value={dates}
+        tileClassName={({ date, view }) =>
+          view === "month" && isHoliday(date) ? "holiday" : null
+        }
       />
+      <style>
+        {`
+          .holiday {
+            background: #FDB9C8 !important;
+            color: #fff !important;
+            border-radius: 50%;
+          }
+        `}
+      </style>
       <div>
         <label>
           <input type="radio" checked={mode === "range"} onChange={() => setMode("range")} />
