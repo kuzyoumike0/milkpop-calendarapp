@@ -11,12 +11,14 @@ export default function LinkPage() {
   const [timeslot, setTimeslot] = useState("終日");
   const [shareUrl, setShareUrl] = useState("");
 
+  // 日付クリック
   const handleDateChange = (value) => {
     if (rangeMode === "範囲選択") {
       setDateRange(value);
     } else {
       const dateStr = value.toISOString().slice(0, 10);
       if (multiDates.find(d => d.toISOString().slice(0, 10) === dateStr)) {
+        // 既に選択されていたら解除
         setMultiDates(multiDates.filter(d => d.toISOString().slice(0, 10) !== dateStr));
       } else {
         setMultiDates([...multiDates, value]);
@@ -24,6 +26,7 @@ export default function LinkPage() {
     }
   };
 
+  // 登録処理
   const handleSubmit = async () => {
     try {
       let start_date, end_date, dates = [];
@@ -63,6 +66,7 @@ export default function LinkPage() {
         日程登録
       </h2>
 
+      {/* タイトル */}
       <input
         className="w-full p-3 text-black rounded-xl shadow focus:ring-4 focus:ring-[#FDB9C8]"
         placeholder="タイトルを入力"
@@ -77,16 +81,17 @@ export default function LinkPage() {
           value={rangeMode === "範囲選択" ? dateRange : null}
           selectRange={rangeMode === "範囲選択"}
           tileClassName={({ date }) => {
+            const dateStr = date.toISOString().slice(0, 10);
             if (rangeMode === "複数選択" &&
-              multiDates.find(d => d.toDateString() === date.toDateString())) {
-              return "bg-[#FDB9C8] text-black rounded-full font-bold";
+                multiDates.find(d => d.toISOString().slice(0, 10) === dateStr)) {
+              return "selected-day";
             }
             return "";
           }}
         />
       </div>
 
-      {/* モード切替 */}
+      {/* 選択モード */}
       <div className="flex space-x-6 justify-center text-gray-300">
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
@@ -126,7 +131,7 @@ export default function LinkPage() {
         共有リンク発行
       </button>
 
-      {/* 共有リンク */}
+      {/* 共有URL */}
       {shareUrl && (
         <div className="bg-[#222] p-4 rounded-2xl shadow text-center animate-fade-in">
           <p className="text-gray-300 mb-2">共有URL:</p>
