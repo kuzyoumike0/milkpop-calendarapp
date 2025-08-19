@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function ShareLinkPage() {
   const { linkId } = useParams();
   const [title, setTitle] = useState("");
-  const [schedules, setSchedules] = useState([]); // [{date, timeslot}]
+  const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({}); // { "2025-08-20-昼": "◯" }
   const [message, setMessage] = useState("");
 
   // データ取得
@@ -15,52 +15,53 @@ export default function ShareLinkPage() {
     const fetchData = async () => {
       try {
         const res = await axios.get(`/api/link/${linkId}`);
-        setTitle(res.data.title || "");
-
-        // schedules が存在するかチェック
-        if (res.data.schedules && Array.isArray(res.data.schedules)) {
-          // 日付でソート
-          const sorted = res.data.schedules.sort(
-            (a, b) => new Date(a.date) - new Date(b.date)
-          );
-          setSchedules(sorted);
-        } else {
-          setSchedules([]);
-        }
+        setTitle(res.data.title);
+        setSchedules(res.data.schedules || []);
+        setResponses(res.data.responses || []);
       } catch (err) {
-        console.error("データ取得エラー:", err);
-        setMessage("❌ データ取得に失敗しました");
+        console.error("リンク取得エラー:", err);
+        setMessage("❌ リンクの読み込みに失敗しました");
       }
     };
     fetchData();
   }, [linkId]);
 
   // 回答送信
-  const handleSubmit = async () => {
+  const handleRespond = async (date, timeslot, choice) => {
     if (!username.trim()) {
-      setMessage("❌ ユーザー名を入力してください");
+      setMessage("❌ 名前を入力してください");
       return;
     }
     try {
       await axios.post("/api/respond", {
         linkId,
+        date,
+        timeslot,
         username,
-        responses,
+        choice,
       });
+      setResponses([
+        ...responses,
+        { username, date, timeslot, choice },
+      ]);
       setMessage("✅ 回答を送信しました");
     } catch (err) {
-      console.error("送信エラー:", err);
-      setMessage("❌ 送信に失敗しました");
+      console.error("回答送信エラー:", err);
+      setMessage("❌ 回答送信に失敗しました");
     }
+  };
+
+  // 特定の日付に対する回答まとめ
+  const getResponsesForDate = (date) => {
+    return responses.filter((r) => r.date === date);
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>📅 共有ページ</h2>
-      <h3>{title}</h3>
+      <h2>📅 共有スケジュール: {title}</h2>
 
-      {/* ユーザー名 */}
-      <div style={{ marginBottom: "10px" }}>
+      {/* ユーザー名入力 */}
+      <div style={{ marginBottom: "15px" }}>
         <label>名前: </label>
         <input
           type="text"
@@ -71,62 +72,59 @@ export default function ShareLinkPage() {
         />
       </div>
 
-      {/* 日程リスト */}
-      <table border="1" cellPadding="5" style={{ borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>時間帯</th>
-            <th>選択</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.length > 0 ? (
-            schedules.map((s, idx) => {
-              const key = `${s.date}-${s.timeslot}`;
-              return (
-                <tr key={idx}>
-                  <td>{s.date}</td>
-                  <td>
-                    {s.timeslot === "custom"
-                      ? `${s.starttime}:00 - ${s.endtime}:00`
-                      : s.timeslot}
-                  </td>
-                  <td>
-                    <select
-                      value={responses[key] || ""}
-                      onChange={(e) =>
-                        setResponses({ ...responses, [key]: e.target.value })
-                      }
-                    >
-                      <option value="">未選択</option>
-                      <option value="◯">◯</option>
-                      <option value="×">×</option>
-                    </select>
-                  </td>
-                </tr>
-              );
-            })
-          ) : (
+      {/* 日付一覧 */}
+      {schedules.length > 0 ? (
+        <table
+          border="1"
+          cellPadding="8"
+          style={{ borderCollapse: "collapse", width: "100%" }}
+        >
+          <thead>
             <tr>
-              <td colSpan="3">📭 登録された日程はありません</td>
+              <th>日付</th>
+              <th>時間帯</th>
+              <th>参加可否</th>
+              <th>回答一覧</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {schedules.map((s, idx) => (
+              <tr key={idx}>
+                <td>{s.date}</td>
+                <td>
+                  {s.timeslot === "custom"
+                    ? `${s.starttime}:00 - ${s.endtime}:00`
+                    : s.timeslot}
+                </td>
+                <td>
+                  <button
+                    onClick={() => handleRespond(s.date, s.timeslot, "◯")}
+                    style={{ marginRight: "5px" }}
+                  >
+                    ◯
+                  </button>
+                  <button
+                    onClick={() => handleRespond(s.date, s.timeslot, "×")}
+                  >
+                    ×
+                  </button>
+                </td>
+                <td>
+                  {getResponsesForDate(s.date).map((r, i) => (
+                    <div key={i}>
+                      {r.username}: {r.choice}
+                    </div>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>日付が登録されていません。</p>
+      )}
 
-      <button
-        onClick={handleSubmit}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          fontSize: "16px",
-          cursor: "pointer",
-        }}
-      >
-        ✅ 回答送信
-      </button>
-
+      {/* メッセージ */}
       {message && <p style={{ marginTop: "10px" }}>{message}</p>}
     </div>
   );
