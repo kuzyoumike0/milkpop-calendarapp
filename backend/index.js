@@ -115,6 +115,32 @@ app.post("/api/shared/:linkId", async (req, res) => {
   }
 });
 
+// === 共有リンクから予定を削除 ===
+app.delete("/api/shared/:linkId", async (req, res) => {
+  const { linkId } = req.params;
+  const { username, date } = req.body;
+
+  if (!username || !date) {
+    return res.status(400).json({ error: "必要な情報が不足しています" });
+  }
+
+  try {
+    const result = await pool.query(
+      "DELETE FROM schedules WHERE link_id = $1 AND username = $2 AND schedule_date = $3 RETURNING *",
+      [linkId, username, date]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "対象データが見つかりません" });
+    }
+
+    res.json({ message: "削除完了" });
+  } catch (err) {
+    console.error("DB削除エラー:", err);
+    res.status(500).json({ error: "削除に失敗しました" });
+  }
+});
+
 // === React ビルドファイル配信 ===
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
