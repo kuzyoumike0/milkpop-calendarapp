@@ -3,37 +3,20 @@
   "version": "1.4.1",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "axios": "^1.6.2",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "react-calendar": "^4.8.0",
-    "socket.io-client": "^4.7.2",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "@craco/craco": "^7.1.0"
+    "react": "^18.2.0",
+    "react-calendar": "^4.8.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3",
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.7.2"
   },
   "scripts": {
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
     "eject": "craco eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   }
 }
