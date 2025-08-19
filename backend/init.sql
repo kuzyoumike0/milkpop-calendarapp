@@ -2,15 +2,18 @@ CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   memo TEXT,
-  date DATE NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
   timeslot TEXT NOT NULL,
-  range_mode TEXT NOT NULL,
-  username TEXT,
+  mode TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   linkid TEXT
 );
 
-CREATE TABLE IF NOT EXISTS holidays (
+CREATE TABLE IF NOT EXISTS responses (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  date DATE NOT NULL UNIQUE
+  schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  response TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
