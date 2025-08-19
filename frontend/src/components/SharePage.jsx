@@ -2,210 +2,135 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 export default function SharePage() {
-  const [selectMode, setSelectMode] = useState("single"); // single, range, multiple
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [newEvent, setNewEvent] = useState("");
+  const [dates, setDates] = useState([]); // 複数日対応
+  const [mode, setMode] = useState("single"); // single / multiple
   const [username, setUsername] = useState("");
-  const [timeMode, setTimeMode] = useState("preset"); // preset or custom
-  const [preset, setPreset] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
-  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("終日");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [shareLink, setShareLink] = useState("");
 
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const handleCalendarChange = (value) => {
-    if (selectMode === "single") {
-      setSelectedDate(value);
-    } else if (selectMode === "range") {
-      setSelectedDate(value); // [start, end]
-    } else if (selectMode === "multiple") {
-      setSelectedDates(Array.isArray(value) ? value : [value]);
-    }
-  };
-
-  // イベント登録 & 共有リンク発行
-  const handleAddEvent = (e) => {
-    e.preventDefault();
-    if (!newEvent.trim() || !username.trim()) return;
-
-    let dates = [];
-    if (selectMode === "single") {
-      dates = [formatDate(selectedDate)];
-    } else if (selectMode === "range") {
-      const [start, end] = selectedDate;
-      let cur = new Date(start);
-      while (cur <= end) {
-        dates.push(formatDate(cur));
-        cur.setDate(cur.getDate() + 1);
+  // 日付選択ハンドラ
+  const handleDateChange = (d) => {
+    if (mode === "single") {
+      setDates([d]);
+    } else {
+      // multiple
+      const exists = dates.find(
+        (x) => new Date(x).toDateString() === d.toDateString()
+      );
+      if (exists) {
+        setDates(dates.filter((x) => new Date(x).toDateString() !== d.toDateString()));
+      } else {
+        setDates([...dates, d]);
       }
-    } else if (selectMode === "multiple") {
-      dates = selectedDates.map((d) => formatDate(d));
     }
-
-    const timeInfo =
-      timeMode === "preset"
-        ? preset
-        : `${startTime}-${endTime}`;
-
-    axios
-      .post("/api/shared", {
-        dates,
-        title: newEvent,
-        username,
-        timeInfo,
-      })
-      .then((res) => {
-        const linkId = res.data.linkId;
-        navigate(`/sharelink/${linkId}`);
-      })
-      .catch((err) => console.error("イベント登録エラー:", err));
   };
 
-  // 時刻リスト生成
-  const timeOptions = Array.from({ length: 24 }, (_, h) =>
-    `${String(h).padStart(2, "0")}:00`
-  );
+  // 予定登録 & 共有リンク発行
+  const handleShare = async () => {
+    if (!username || !title || dates.length === 0) {
+      alert("入力が不足しています");
+      return;
+    }
+
+    const formattedDates = dates.map((d) =>
+      d.toISOString().split("T")[0]
+    );
+
+    try {
+      const res = await axios.post("/api/shared", {
+        username,
+        title,
+        dates: formattedDates,
+        category,
+        startTime: startTime || null,
+        endTime: endTime || null,
+      });
+      setShareLink(`${window.location.origin}/share/${res.data.linkId}`);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンクの作成に失敗しました");
+    }
+  };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>共有ページ</h1>
-      <p style={styles.subtitle}>複数日をまとめて共有リンクに登録できます</p>
+    <div style={{ padding: "20px" }}>
+      <h2>共有ページ</h2>
 
-      {/* ユーザー名 */}
-      <input
-        type="text"
-        placeholder="ユーザー名"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        style={styles.input}
-      />
+      <div>
+        <label>名前: </label>
+        <input value={username} onChange={(e) => setUsername(e.target.value)} />
+      </div>
 
-      {/* カレンダー選択モード */}
-      <div style={styles.section}>
+      <div>
+        <label>予定タイトル: </label>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+
+      <div>
+        <label>モード: </label>
         <label>
           <input
             type="radio"
-            value="single"
-            checked={selectMode === "single"}
-            onChange={() => setSelectMode("single")}
+            checked={mode === "single"}
+            onChange={() => setMode("single")}
           />
-          単一日
+          単日
         </label>
         <label>
           <input
             type="radio"
-            value="range"
-            checked={selectMode === "range"}
-            onChange={() => setSelectMode("range")}
+            checked={mode === "multiple"}
+            onChange={() => setMode("multiple")}
           />
-          範囲
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={selectMode === "multiple"}
-            onChange={() => setSelectMode("multiple")}
-          />
-          複数日
+          複数選択
         </label>
       </div>
 
       <Calendar
-        selectRange={selectMode === "range"}
-        onChange={handleCalendarChange}
-        value={selectedDate}
+        onClickDay={handleDateChange}
+        value={dates}
+        selectRange={false}
       />
 
-      {/* 区分設定 */}
-      <div style={styles.section}>
-        <label>
-          <input
-            type="radio"
-            value="preset"
-            checked={timeMode === "preset"}
-            onChange={() => setTimeMode("preset")}
-          />
-          区分（終日/昼/夜）
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="custom"
-            checked={timeMode === "custom"}
-            onChange={() => setTimeMode("custom")}
-          />
-          時間指定
-        </label>
+      <div>
+        <label>区分: </label>
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="終日">終日</option>
+          <option value="昼">昼（13:00-18:00）</option>
+          <option value="夜">夜（21:00-0:00）</option>
+          <option value="時間指定">時間指定</option>
+        </select>
       </div>
 
-      {timeMode === "preset" ? (
-        <select
-          value={preset}
-          onChange={(e) => setPreset(e.target.value)}
-          style={styles.input}
-        >
-          <option value="allday">終日</option>
-          <option value="daytime">昼</option>
-          <option value="night">夜</option>
-        </select>
-      ) : (
-        <div style={styles.section}>
-          <select
+      {category === "時間指定" && (
+        <div>
+          <label>開始: </label>
+          <input
+            type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            style={styles.input}
-          >
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          〜
-          <select
+          />
+          <label>終了: </label>
+          <input
+            type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            style={styles.input}
-          >
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
+          />
         </div>
       )}
 
-      {/* 予定追加フォーム */}
-      <form style={styles.form} onSubmit={handleAddEvent}>
-        <input
-          type="text"
-          placeholder="予定を入力"
-          value={newEvent}
-          onChange={(e) => setNewEvent(e.target.value)}
-          style={styles.input}
-        />
-        <button type="submit" style={styles.addButton}>
-          共有リンクを発行
-        </button>
-      </form>
+      <button onClick={handleShare}>共有リンクを発行</button>
+
+      {shareLink && (
+        <div>
+          <p>共有リンク: <a href={shareLink}>{shareLink}</a></p>
+        </div>
+      )}
     </div>
   );
 }
-
-const styles = {
-  container: { maxWidth: "800px", margin: "0 auto", padding: "20px", fontFamily: "sans-serif" },
-  title: { textAlign: "center", fontSize: "2rem", marginBottom: "10px", color: "#333" },
-  subtitle: { textAlign: "center", fontSize: "1rem", marginBottom: "20px", color: "#666" },
-  section: { margin: "15px 0", display: "flex", gap: "15px", justifyContent: "center" },
-  input: { padding: "8px", fontSize: "1rem", border: "1px solid #ccc", borderRadius: "6px" },
-  form: { display: "flex", justifyContent: "center", margin: "20px 0", gap: "10px" },
-  addButton: { padding: "8px 16px", background: "#2196F3", color: "white", border: "none", borderRadius: "6px" },
-};
