@@ -3,19 +3,20 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 function ShareLinkPage() {
-  const { id } = useParams(); // /share/:id のパラメータ
+  const { id } = useParams(); // /share/:id
   const [title, setTitle] = useState("");
-  const [schedules, setSchedules] = useState([]);
+  const [schedules, setSchedules] = useState([]); // [{date, timeslot}]
+  const [responses, setResponses] = useState({}); // { "2025-08-19|昼": { "Alice": "◯", "Bob": "×" } }
   const [username, setUsername] = useState("");
-  const [choices, setChoices] = useState({}); // { "2025-08-19|昼": "◯" }
+  const [choices, setChoices] = useState({});
 
   useEffect(() => {
-    // リンク先の情報を取得
     axios
       .get(`/api/links/${id}`)
       .then((res) => {
         setTitle(res.data.title);
         setSchedules(res.data.schedules || []);
+        setResponses(res.data.responses || {}); // サーバーが回答一覧を返す
       })
       .catch((err) => console.error(err));
   }, [id]);
@@ -32,11 +33,21 @@ function ShareLinkPage() {
         choices,
       });
       alert("回答を保存しました！");
+      window.location.reload(); // 再取得して更新
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
     }
   };
+
+  // すべてのユーザー名を収集
+  const allUsers = Array.from(
+    new Set(
+      Object.values(responses)
+        .flatMap((resp) => Object.keys(resp))
+        .concat(username ? [username] : [])
+    )
+  );
 
   return (
     <div style={{ padding: "1rem" }}>
@@ -56,7 +67,9 @@ function ShareLinkPage() {
           <tr>
             <th>日付</th>
             <th>時間帯</th>
-            <th>可否</th>
+            {allUsers.map((u) => (
+              <th key={u}>{u}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -66,18 +79,24 @@ function ShareLinkPage() {
               <tr key={idx}>
                 <td>{s.date}</td>
                 <td>{s.timeslot}</td>
-                <td>
-                  <select
-                    value={choices[key] || ""}
-                    onChange={(e) =>
-                      handleChoiceChange(s.date, s.timeslot, e.target.value)
-                    }
-                  >
-                    <option value="">未選択</option>
-                    <option value="◯">◯</option>
-                    <option value="×">×</option>
-                  </select>
-                </td>
+                {allUsers.map((u) => (
+                  <td key={u}>
+                    {u === username ? (
+                      <select
+                        value={choices[key] || responses[key]?.[u] || ""}
+                        onChange={(e) =>
+                          handleChoiceChange(s.date, s.timeslot, e.target.value)
+                        }
+                      >
+                        <option value="">未選択</option>
+                        <option value="◯">◯</option>
+                        <option value="×">×</option>
+                      </select>
+                    ) : (
+                      responses[key]?.[u] || ""
+                    )}
+                  </td>
+                ))}
               </tr>
             );
           })}
@@ -91,4 +110,4 @@ function ShareLinkPage() {
   );
 }
 
-export default ShareLinkPage;  // ✅ デフォルトエクスポート
+export default ShareLinkPage;
