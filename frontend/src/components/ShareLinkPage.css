@@ -1,72 +1,140 @@
-.selected-day {
-  background: #4caf50 !important;
-  color: white !important;
-  border-radius: 50% !important;
-}
+import React, { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
-.schedule-table-wrapper {
-  overflow-x: auto;
-}
+export default function ShareLinkPage() {
+  const { linkId } = useParams();
+  const [link, setLink] = useState(null);
+  const [mode, setMode] = useState("multi"); // multi or range
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [rangeValue, setRangeValue] = useState(null);
+  const [username, setUsername] = useState("");
+  const [timeslot, setTimeslot] = useState("終日");
 
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
-.schedule-table th,
-.schedule-table td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: left;
-  vertical-align: top;
-}
+  // リンク情報取得
+  useEffect(() => {
+    axios.get(`/api/links/${linkId}`).then((res) => setLink(res.data));
+  }, [linkId]);
 
-.user-chip {
-  display: inline-block;
-  background: #e0f7fa;
-  margin: 2px;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-size: 0.9em;
-}
+  // 複数選択モード: クリックでトグル
+  const handleClickDay = (value) => {
+    if (mode !== "multi") return;
+    const fd = formatDate(value);
+    setSelectedDates((prev) =>
+      prev.includes(fd) ? prev.filter((d) => d !== fd) : [...prev, fd]
+    );
+  };
 
-.delete-btn {
-  margin-left: 4px;
-  background: transparent;
-  border: none;
-  color: red;
-  cursor: pointer;
-}
+  // 範囲選択モード: rangeValue が変わったら配列に変換
+  useEffect(() => {
+    if (mode === "range" && rangeValue && Array.isArray(rangeValue)) {
+      const [start, end] = rangeValue;
+      if (!start || !end) return;
+      let dates = [];
+      let cur = new Date(start);
+      while (cur <= end) {
+        dates.push(formatDate(cur));
+        cur.setDate(cur.getDate() + 1);
+      }
+      setSelectedDates(dates);
+    }
+  }, [rangeValue, mode]);
 
-@media (max-width: 600px) {
-  .schedule-table thead {
-    display: none;
-  }
-  .schedule-table, .schedule-table tbody, .schedule-table tr, .schedule-table td {
-    display: block;
-    width: 100%;
-  }
-  .schedule-table tr {
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 6px;
-  }
-  .schedule-table td {
-    border: none;
-    padding: 4px 0;
-  }
-  .schedule-table td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    display: inline-block;
-    width: 60px;
-  }
-  /* frontend/src/index.css など */
-.selected-day {
-  background: #1976d2 !important;
-  color: white !important;
-  border-radius: 50%;
-}
+  // 登録
+  const handleSubmit = async () => {
+    if (!username || selectedDates.length === 0) {
+      alert("名前と日付を入力してください");
+      return;
+    }
+    try {
+      await axios.post(`/api/schedules/${linkId}`, {
+        username,
+        dates: selectedDates,
+        timeslot,
+      });
+      alert("登録しました！");
+      setSelectedDates([]);
+    } catch (err) {
+      console.error(err);
+      alert("登録失敗");
+    }
+  };
 
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>共有リンク: {link?.title || "読み込み中..."}</h2>
+
+      <div>
+        <label>
+          名前:
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ marginLeft: 10 }}
+          />
+        </label>
+      </div>
+
+      <div>
+        <label>
+          時間帯:
+          <select
+            value={timeslot}
+            onChange={(e) => setTimeslot(e.target.value)}
+            style={{ marginLeft: 10 }}
+          >
+            <option value="終日">終日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
+        </label>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <label>
+          <input
+            type="radio"
+            checked={mode === "multi"}
+            onChange={() => setMode("multi")}
+          />
+          複数選択モード
+        </label>
+        <label style={{ marginLeft: 20 }}>
+          <input
+            type="radio"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          範囲選択モード
+        </label>
+      </div>
+
+      <Calendar
+        selectRange={mode === "range"}
+        onClickDay={handleClickDay}
+        onChange={setRangeValue}
+      />
+
+      <div style={{ marginTop: 20 }}>
+        <h4>選択済み日付:</h4>
+        <ul>
+          {selectedDates.map((d) => (
+            <li key={d}>{d}</li>
+          ))}
+        </ul>
+      </div>
+
+      <button onClick={handleSubmit}>登録する</button>
+    </div>
+  );
 }
