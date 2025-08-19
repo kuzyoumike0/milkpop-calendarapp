@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import io from "socket.io-client";
+
+const socket = io();
 
 export default function SharePage() {
   const [date, setDate] = useState(new Date());
@@ -9,60 +12,124 @@ export default function SharePage() {
   const [timeMode, setTimeMode] = useState("終日");
   const [startHour, setStartHour] = useState("1");
   const [endHour, setEndHour] = useState("24");
-  const [linkUrl, setLinkUrl] = useState(null);
+  const [selectionMode, setSelectionMode] = useState("single"); // single | range
+  const [schedules, setSchedules] = useState([]);
+  const [shareLink, setShareLink] = useState("");
 
-  // 日付フォーマット
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+  // ===== データ取得 =====
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("/api/schedules");
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("取得失敗:", err);
+    }
   };
 
-  // 共有リンク発行
-  const handleCreateLink = async () => {
+  useEffect(() => {
+    fetchData();
+    socket.on("update", () => {
+      fetchData();
+    });
+    return () => {
+      socket.off("update");
+    };
+  }, []);
+
+  // ===== 日程登録 =====
+  const handleRegister = async () => {
     if (!title) {
       alert("タイトルを入力してください");
       return;
     }
+
+    let selectedDates = [];
+    if (selectionMode === "range" && Array.isArray(date)) {
+      const [start, end] = date;
+      let d = new Date(start);
+      while (d <= end) {
+        selectedDates.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+      }
+    } else {
+      selectedDates = Array.isArray(date) ? date : [date];
+    }
+
     try {
-      const res = await axios.post("/api/create-link", {
-        date: formatDate(date),
+      await axios.post("/api/schedules", {
+        dates: selectedDates.map((d) =>
+          d.toISOString().split("T")[0]
+        ),
         title,
         timemode: timeMode,
-        starthour: timeMode === "時間指定" ? parseInt(startHour) : null,
-        endhour: timeMode === "時間指定" ? parseInt(endHour) : null,
+        starthour: startHour,
+        endhour: endHour,
       });
-      setLinkUrl(`${window.location.origin}/link/${res.data.linkId}`);
+      setTitle("");
+      setTimeMode("終日");
+      setStartHour("1");
+      setEndHour("24");
     } catch (err) {
-      console.error("リンク作成失敗:", err);
-      alert("リンク作成に失敗しました");
+      console.error("登録失敗:", err);
+    }
+  };
+
+  // ===== 共有リンク発行 =====
+  const handleShare = async () => {
+    try {
+      const res = await axios.post("/api/share");
+      setShareLink(`${window.location.origin}/share/${res.data.linkId}`);
+    } catch (err) {
+      console.error("リンク発行失敗:", err);
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>共有リンク発行</h2>
+      <h2>共有リンク発行ページ</h2>
 
-      {/* カレンダー */}
-      <div style={{ marginBottom: "15px" }}>
-        <Calendar onChange={setDate} value={date} />
+      {/* ラジオボタンでモード切替 */}
+      <div style={{ marginBottom: "10px" }}>
+        <label>
+          <input
+            type="radio"
+            value="single"
+            checked={selectionMode === "single"}
+            onChange={() => setSelectionMode("single")}
+          />
+          複数選択
+        </label>
+        <label style={{ marginLeft: "10px" }}>
+          <input
+            type="radio"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          範囲選択
+        </label>
       </div>
 
+      {/* カレンダー */}
+      <Calendar
+        onChange={setDate}
+        value={date}
+        selectRange={selectionMode === "range"}
+      />
+
       {/* タイトル入力 */}
-      <div style={{ marginBottom: "15px" }}>
-        <label>タイトル: </label>
+      <div style={{ marginTop: "10px" }}>
         <input
           type="text"
+          placeholder="タイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           style={{ padding: "5px", width: "250px" }}
         />
       </div>
 
-      {/* 時間モード */}
-      <div style={{ marginBottom: "15px" }}>
-        <label>時間帯: </label>
+      {/* 時間帯選択 */}
+      <div style={{ marginTop: "10px" }}>
         <select
           value={timeMode}
           onChange={(e) => setTimeMode(e.target.value)}
@@ -73,56 +140,71 @@ export default function SharePage() {
           <option value="夜">夜</option>
           <option value="時間指定">時間指定</option>
         </select>
+
+        {timeMode === "時間指定" && (
+          <span>
+            <select
+              value={startHour}
+              onChange={(e) => setStartHour(e.target.value)}
+              style={{ marginLeft: "10px" }}
+            >
+              {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
+                <option key={h} value={h}>
+                  {h}時
+                </option>
+              ))}
+            </select>
+            〜
+            <select
+              value={endHour}
+              onChange={(e) => setEndHour(e.target.value)}
+              style={{ marginLeft: "10px" }}
+            >
+              {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
+                <option key={h} value={h}>
+                  {h}時
+                </option>
+              ))}
+            </select>
+          </span>
+        )}
       </div>
 
-      {/* 時間指定のときだけプルダウン表示 */}
-      {timeMode === "時間指定" && (
-        <div style={{ marginBottom: "15px" }}>
-          <label>開始: </label>
-          <select
-            value={startHour}
-            onChange={(e) => setStartHour(e.target.value)}
-            style={{ padding: "5px", marginRight: "10px" }}
-          >
-            {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
-              <option key={h} value={h}>
-                {h}時
-              </option>
-            ))}
-          </select>
-
-          <label>終了: </label>
-          <select
-            value={endHour}
-            onChange={(e) => setEndHour(e.target.value)}
-            style={{ padding: "5px" }}
-          >
-            {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
-              <option key={h} value={h}>
-                {h}時
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* ボタン */}
+      {/* 登録ボタン */}
       <button
-        onClick={handleCreateLink}
-        style={{ padding: "8px 15px", cursor: "pointer" }}
+        onClick={handleRegister}
+        style={{ marginTop: "10px", padding: "5px 10px" }}
       >
-        共有リンク発行
+        登録
       </button>
 
-      {/* 発行済みリンク表示 */}
-      {linkUrl && (
-        <div style={{ marginTop: "20px" }}>
-          <p>共有リンク:</p>
-          <a href={linkUrl} target="_blank" rel="noopener noreferrer">
-            {linkUrl}
-          </a>
-        </div>
-      )}
+      {/* 共有リンク */}
+      <div style={{ marginTop: "20px" }}>
+        <button
+          onClick={handleShare}
+          style={{ padding: "5px 10px" }}
+        >
+          共有リンクを発行
+        </button>
+        {shareLink && (
+          <p>
+            <a href={shareLink} target="_blank" rel="noopener noreferrer">
+              {shareLink}
+            </a>
+          </p>
+        )}
+      </div>
+
+      {/* 登録済み日程一覧 */}
+      <h3>登録済み日程</h3>
+      <ul>
+        {schedules.map((s, i) => (
+          <li key={i}>
+            {s.date} {s.title} [{s.timemode}]
+            {s.timemode === "時間指定" && ` ${s.starthour}時〜${s.endhour}時`}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
