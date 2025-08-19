@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 export default function ShareLinkPage() {
-  const [mode, setMode] = useState("multi"); // "multi" or "range"
+  const { linkId } = useParams();
+  const [mode, setMode] = useState("multi");
   const [selectedDates, setSelectedDates] = useState([]);
   const [range, setRange] = useState(null);
+  const [username, setUsername] = useState("");
+  const [timeSlot, setTimeSlot] = useState("終日");
 
   const formatDate = (d) => {
     const yyyy = d.getFullYear();
@@ -38,27 +43,57 @@ export default function ShareLinkPage() {
     }
   };
 
+  const handleRegister = async () => {
+    if (!username || selectedDates.length === 0) {
+      alert("名前と日付を入力してください");
+      return;
+    }
+    try {
+      await axios.post(`/api/schedules/${linkId}`, {
+        username,
+        dates: selectedDates,
+        timeslot: timeSlot,
+      });
+      alert("登録しました！");
+      setSelectedDates([]);
+    } catch (err) {
+      console.error(err);
+      alert("登録に失敗しました");
+    }
+  };
+
   return (
     <div style={{ padding: 20 }}>
-      <h2>カレンダー複数日選択</h2>
+      <h2>共有カレンダー</h2>
+
       <label>
+        名前:{" "}
         <input
-          type="radio"
-          value="multi"
-          checked={mode === "multi"}
-          onChange={() => setMode("multi")}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-        複数日選択
       </label>
-      <label>
-        <input
-          type="radio"
-          value="range"
-          checked={mode === "range"}
-          onChange={() => setMode("range")}
-        />
-        範囲選択
-      </label>
+
+      <div>
+        <label>
+          <input
+            type="radio"
+            value="multi"
+            checked={mode === "multi"}
+            onChange={() => setMode("multi")}
+          />
+          複数日選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          範囲選択
+        </label>
+      </div>
 
       <Calendar
         onClickDay={handleClickDay}
@@ -70,6 +105,17 @@ export default function ShareLinkPage() {
         }
       />
 
+      <div style={{ marginTop: 10 }}>
+        <label>
+          時間帯:{" "}
+          <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
+            <option value="終日">終日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
+        </label>
+      </div>
+
       <div style={{ marginTop: 20 }}>
         <h3>選択した日付:</h3>
         <ul>
@@ -78,6 +124,8 @@ export default function ShareLinkPage() {
           ))}
         </ul>
       </div>
+
+      <button onClick={handleRegister}>まとめて登録</button>
     </div>
   );
 }
