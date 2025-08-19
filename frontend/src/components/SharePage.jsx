@@ -1,136 +1,103 @@
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import axios from "axios";
 
 export default function SharePage() {
-  const [dates, setDates] = useState([]); // 複数日対応
-  const [mode, setMode] = useState("single"); // single / multiple
-  const [username, setUsername] = useState("");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("終日");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [shareLink, setShareLink] = useState("");
+  const [mode, setMode] = useState("range"); // range | multi
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
 
-  // 日付選択ハンドラ
-  const handleDateChange = (d) => {
-    if (mode === "single") {
-      setDates([d]);
+  // 範囲選択で日付リストを作る
+  const generateRange = () => {
+    if (!startDate || !endDate) return [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  };
+
+  const handleDateClick = (date) => {
+    if (selectedDates.includes(date)) {
+      setSelectedDates(selectedDates.filter(d => d !== date));
     } else {
-      // multiple
-      const exists = dates.find(
-        (x) => new Date(x).toDateString() === d.toDateString()
-      );
-      if (exists) {
-        setDates(dates.filter((x) => new Date(x).toDateString() !== d.toDateString()));
-      } else {
-        setDates([...dates, d]);
-      }
+      setSelectedDates([...selectedDates, date]);
     }
   };
 
-  // 予定登録 & 共有リンク発行
   const handleShare = async () => {
-    if (!username || !title || dates.length === 0) {
-      alert("入力が不足しています");
+    const dates =
+      mode === "range" ? generateRange() : selectedDates;
+
+    if (dates.length === 0) {
+      alert("日程を選択してください");
       return;
     }
 
-    const formattedDates = dates.map((d) =>
-      d.toISOString().split("T")[0]
-    );
-
-    try {
-      const res = await axios.post("/api/shared", {
-        username,
-        title,
-        dates: formattedDates,
-        category,
-        startTime: startTime || null,
-        endTime: endTime || null,
-      });
-      setShareLink(`${window.location.origin}/share/${res.data.linkId}`);
-    } catch (err) {
-      console.error(err);
-      alert("共有リンクの作成に失敗しました");
+    const res = await fetch("/api/sharelink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dates, category: "終日" }) // categoryは別のUIから渡す
+    });
+    const data = await res.json();
+    if (data.linkId) {
+      alert(`共有リンク: ${window.location.origin}/share/${data.linkId}`);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有ページ</h2>
+    <div>
+      <h2>日程の選択</h2>
+      <label>
+        <input
+          type="radio"
+          value="range"
+          checked={mode === "range"}
+          onChange={() => setMode("range")}
+        />
+        範囲選択
+      </label>
+      <label>
+        <input
+          type="radio"
+          value="multi"
+          checked={mode === "multi"}
+          onChange={() => setMode("multi")}
+        />
+        複数選択
+      </label>
 
-      <div>
-        <label>名前: </label>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} />
-      </div>
-
-      <div>
-        <label>予定タイトル: </label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </div>
-
-      <div>
-        <label>モード: </label>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "single"}
-            onChange={() => setMode("single")}
-          />
-          単日
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "multiple"}
-            onChange={() => setMode("multiple")}
-          />
-          複数選択
-        </label>
-      </div>
-
-      <Calendar
-        onClickDay={handleDateChange}
-        value={dates}
-        selectRange={false}
-      />
-
-      <div>
-        <label>区分: </label>
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="終日">終日</option>
-          <option value="昼">昼（13:00-18:00）</option>
-          <option value="夜">夜（21:00-0:00）</option>
-          <option value="時間指定">時間指定</option>
-        </select>
-      </div>
-
-      {category === "時間指定" && (
+      {mode === "range" && (
         <div>
-          <label>開始: </label>
           <input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
           />
-          <label>終了: </label>
+          ～
           <input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
           />
+        </div>
+      )}
+
+      {mode === "multi" && (
+        <div>
+          {/* 本当はカレンダーUIが良いですが、ここでは日付入力を簡易に */}
+          <input
+            type="date"
+            onChange={(e) => handleDateClick(e.target.value)}
+          />
+          <div>
+            選択済み: {selectedDates.join(", ")}
+          </div>
         </div>
       )}
 
       <button onClick={handleShare}>共有リンクを発行</button>
-
-      {shareLink && (
-        <div>
-          <p>共有リンク: <a href={shareLink}>{shareLink}</a></p>
-        </div>
-      )}
     </div>
   );
 }
