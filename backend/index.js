@@ -1,22 +1,20 @@
-// 予定を削除（本人のみ）
-app.delete("/api/schedule/:id", async (req, res) => {
+// 共有リンク発行 API
+app.post("/api/shared", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { username } = req.body; // フロントから送る
+    const { username, title, dates, category, startTime, endTime } = req.body;
+    const linkId = uuidv4();
 
-    // 本人の予定だけ削除
-    const result = await pool.query(
-      `DELETE FROM schedules WHERE id = $1 AND username = $2 RETURNING *`,
-      [id, username]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(403).json({ error: "削除できません（本人以外）" });
+    for (const d of dates) {
+      await pool.query(
+        `INSERT INTO schedules (username, title, date, category, start_time, end_time, linkId)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [username, title, d, category, startTime, endTime, linkId]
+      );
     }
 
-    res.json({ success: true });
+    res.json({ linkId });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to delete schedule" });
+    res.status(500).json({ error: "Failed to create share link" });
   }
 });
