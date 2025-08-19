@@ -5,10 +5,11 @@ import axios from "axios";
 
 export default function SharePage() {
   const [title, setTitle] = useState(""); // タイトル
-  const [selectedDates, setSelectedDates] = useState([]); // 選択済み日付（複数）
+  const [selectedDates, setSelectedDates] = useState([]); // 複数選択日付
+  const [shareLink, setShareLink] = useState(""); // 生成されたリンク
   const [message, setMessage] = useState("");
 
-  // 日付を YYYY-MM-DD に整形
+  // 日付を YYYY-MM-DD 形式に整形
   const formatDate = (date) => {
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -16,14 +17,14 @@ export default function SharePage() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // カレンダーで日付をクリック
+  // カレンダーで日付クリック
   const handleDateClick = (date) => {
     const dateStr = formatDate(date);
     if (selectedDates.includes(dateStr)) {
-      // クリック済みなら解除
+      // 選択解除
       setSelectedDates(selectedDates.filter((d) => d !== dateStr));
     } else {
-      // 新規選択
+      // 新規追加
       setSelectedDates([...selectedDates, dateStr]);
     }
   };
@@ -44,13 +45,22 @@ export default function SharePage() {
         title,
         dates: selectedDates,
       });
-      setMessage(
-        `✅ リンク作成成功: https://your-domain.com/link/${res.data.linkId}`
-      );
+      const url = `${window.location.origin}/link/${res.data.linkId}`;
+      setShareLink(url);
+      setMessage("✅ リンクを作成しました");
     } catch (err) {
       console.error("リンク作成エラー:", err);
       setMessage("❌ リンク作成に失敗しました");
     }
+  };
+
+  // 選択済み日付をカレンダー上でハイライト表示
+  const tileClassName = ({ date }) => {
+    const dateStr = formatDate(date);
+    if (selectedDates.includes(dateStr)) {
+      return "selected-date"; // CSS クラスで装飾
+    }
+    return null;
   };
 
   return (
@@ -69,22 +79,8 @@ export default function SharePage() {
         />
       </div>
 
-      {/* カレンダー（複数日クリック選択対応） */}
-      <Calendar onClickDay={handleDateClick} />
-
-      {/* 選択済み日程の表示 */}
-      <div style={{ marginTop: "10px" }}>
-        <h4>選択済み日程:</h4>
-        {selectedDates.length > 0 ? (
-          <ul>
-            {selectedDates.map((d) => (
-              <li key={d}>{d}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>（まだ日付が選択されていません）</p>
-        )}
-      </div>
+      {/* カレンダー（複数日選択 & ハイライト表示対応） */}
+      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
 
       {/* リンク作成ボタン */}
       <button
@@ -99,8 +95,29 @@ export default function SharePage() {
         🔗 共有リンクを作成
       </button>
 
-      {/* メッセージ表示 */}
+      {/* メッセージ */}
       {message && <p style={{ marginTop: "10px" }}>{message}</p>}
+
+      {/* 共有リンクを絶対に表示 */}
+      {shareLink && (
+        <div style={{ marginTop: "15px" }}>
+          <p>
+            ✅ 共有リンク:{" "}
+            <a href={shareLink} target="_blank" rel="noopener noreferrer">
+              {shareLink}
+            </a>
+          </p>
+        </div>
+      )}
+
+      {/* 選択済み日付のスタイル */}
+      <style>{`
+        .selected-date {
+          background: #4caf50 !important;
+          color: white !important;
+          border-radius: 50%;
+        }
+      `}</style>
     </div>
   );
 }
