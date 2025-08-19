@@ -1,7 +1,6 @@
--- init.sql
--- 既存テーブルを削除しないで、必要なときだけ追加
-
--- schedules テーブルが存在しなければ作成
+-- ============================
+-- Schedules テーブル作成
+-- ============================
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   link_id VARCHAR(255) NOT NULL,
@@ -10,42 +9,26 @@ CREATE TABLE IF NOT EXISTS schedules (
   mode VARCHAR(50) NOT NULL
 );
 
--- 既存テーブルにカラムがなければ追加（Postgres 15以降）
+-- ============================
+-- カラム追加（存在しなければ追加）
+-- ============================
+ALTER TABLE schedules ADD COLUMN IF NOT EXISTS time_slot VARCHAR(50);
+
+-- ============================
+-- カラム型変更（存在すれば変更）
+-- ============================
 DO $$
 BEGIN
-  -- link_id
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name='schedules' AND column_name='link_id'
-  ) THEN
-    ALTER TABLE schedules ADD COLUMN link_id VARCHAR(255) NOT NULL;
-  END IF;
-
-  -- username
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name='schedules' AND column_name='username'
-  ) THEN
-    ALTER TABLE schedules ADD COLUMN username VARCHAR(255) NOT NULL;
-  END IF;
-
-  -- schedule_date
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name='schedules' AND column_name='schedule_date'
-  ) THEN
-    ALTER TABLE schedules ADD COLUMN schedule_date DATE NOT NULL;
-  END IF;
-
-  -- mode
-  IF NOT EXISTS (
+  -- mode を VARCHAR(100) に変更
+  IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name='schedules' AND column_name='mode'
   ) THEN
-    ALTER TABLE schedules ADD COLUMN mode VARCHAR(50) NOT NULL;
+    ALTER TABLE schedules ALTER COLUMN mode TYPE VARCHAR(100);
   END IF;
 END$$;
 
--- インデックスを保証
-CREATE INDEX IF NOT EXISTS idx_schedules_link_id ON schedules(link_id);
-CREATE INDEX IF NOT EXISTS idx_schedules_date ON schedules(schedule_date);
+-- ============================
+-- カラム削除（存在すれば削除）
+-- ============================
+ALTER TABLE schedules DROP COLUMN IF EXISTS old_column;
