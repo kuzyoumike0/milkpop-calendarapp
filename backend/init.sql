@@ -1,12 +1,15 @@
+-- スケジュールテーブル
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
-  linkid TEXT NOT NULL,
+  linkId TEXT NOT NULL,
   username TEXT NOT NULL,
-  date DATE NOT NULL,
+  date TEXT NOT NULL,
   timeslot TEXT NOT NULL
 );
 
+-- 共有リンクテーブル
 CREATE TABLE IF NOT EXISTS links (
-  linkid TEXT PRIMARY KEY,
-  created_at TIMESTAMP DEFAULT NOW()
+  linkId TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
