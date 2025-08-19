@@ -61,11 +61,11 @@ export default function ShareLinkPage() {
     return acc;
   }, {});
 
-  // 日付を「○月○日（曜）」形式に変換
+  // 日付を「M月D日(曜)」に変換
   const formatJapaneseDate = (isoDate) => {
     const d = new Date(isoDate + "T00:00:00");
     const options = { month: "numeric", day: "numeric", weekday: "short" };
-    return d.toLocaleDateString("ja-JP", options);
+    return d.toLocaleDateString("ja-JP", options); // 例: 8/19(火)
   };
 
   return (
