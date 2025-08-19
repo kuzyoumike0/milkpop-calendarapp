@@ -1,29 +1,26 @@
--- schedules テーブル
-DROP TABLE IF EXISTS schedules CASCADE;
-CREATE TABLE schedules (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- UUIDに修正
-    linkId UUID NOT NULL,
-    date DATE NOT NULL,
-    timeslot TEXT NOT NULL,
-    startTime TIME,
-    endTime TIME
+-- スケジュール本体
+CREATE TABLE IF NOT EXISTS schedules (
+  id UUID PRIMARY KEY,        -- uuidに変更
+  title TEXT NOT NULL,
+  linkId UUID NOT NULL
 );
 
--- responses テーブル
-DROP TABLE IF EXISTS responses;
-CREATE TABLE responses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE, -- ここをUUIDに修正
-    linkId UUID NOT NULL,
-    date DATE NOT NULL,
-    timeslot TEXT NOT NULL,
-    username TEXT NOT NULL,
-    choice TEXT NOT NULL
+-- スケジュール項目
+CREATE TABLE IF NOT EXISTS schedule_items (
+  id UUID PRIMARY KEY,
+  scheduleId UUID REFERENCES schedules(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  timeslot TEXT NOT NULL,
+  starttime INT,
+  endtime INT
 );
 
--- links テーブル
-DROP TABLE IF EXISTS links;
-CREATE TABLE links (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL
+-- 参加者回答
+CREATE TABLE IF NOT EXISTS participants (
+  id UUID PRIMARY KEY,
+  scheduleId UUID REFERENCES schedules(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  date DATE NOT NULL,
+  timeslot TEXT NOT NULL,
+  status TEXT NOT NULL
 );
