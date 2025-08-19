@@ -3,14 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "axios": "^1.6.0",
-    "react": "^18.2.0",
-    "react-calendar": "^4.0.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.18.0"
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.2.2",
+    "@testing-library/user-event": "^14.6.1",
+    "axios": "^1.6.7",
+    "react": "^18.3.1",
+    "react-calendar": "^4.8.0",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.22.3",
+    "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+    "start": "PORT=3000 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   }
 }
