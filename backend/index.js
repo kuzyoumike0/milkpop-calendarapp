@@ -1,4 +1,25 @@
-// 共有リンク作成
+const express = require("express");
+const bodyParser = require("body-parser");
+const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+app.use(bodyParser.json());
+
+// DB接続設定
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:password@db:5432/mydb",
+});
+
+// Reactビルドを提供
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// =========================
+// 共有リンクAPI
+// =========================
 app.post("/api/shared", async (req, res) => {
   const { dates, username, category, startTime, endTime } = req.body;
 
@@ -7,10 +28,8 @@ app.post("/api/shared", async (req, res) => {
   }
 
   try {
-    // 新しい linkId を発行
     const linkId = uuidv4();
 
-    // すべての選択日を DB に保存
     for (const d of dates) {
       await pool.query(
         `INSERT INTO schedules (linkId, date, username, category, startTime, endTime)
@@ -26,7 +45,6 @@ app.post("/api/shared", async (req, res) => {
   }
 });
 
-// 共有リンクから予定を取得
 app.get("/api/shared/:linkId", async (req, res) => {
   const { linkId } = req.params;
   try {
@@ -39,4 +57,13 @@ app.get("/api/shared/:linkId", async (req, res) => {
     console.error("共有リンク取得エラー:", err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
+});
+
+// React の index.html を返す (SPA 対応)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
