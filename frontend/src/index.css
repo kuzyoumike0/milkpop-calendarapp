@@ -2,23 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* カスタムデザイン */
+/* === 共通テーマ色 === */
+:root {
+  --brand-pink: #FDB9C8;
+  --brand-blue: #004CA0;
+  --brand-black: #0d0d0d;
+}
+
+/* === 全体背景とフォント === */
 body {
-  @apply bg-brandBlack text-white font-sans;
+  @apply bg-[color:var(--brand-black)] text-white font-sans;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* === 共通カードデザイン === */
 .card {
-  @apply bg-gray-900 rounded-2xl shadow-lg p-6 mb-4;
+  @apply bg-neutral-900 rounded-2xl shadow-lg p-6 mb-6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .card-title {
-  @apply text-brandPink text-xl font-bold mb-2;
+  @apply text-2xl font-bold mb-4;
+  color: var(--brand-pink);
 }
-
 .card-content {
-  @apply text-gray-300 text-sm;
+  @apply text-gray-300;
 }
 
+/* === ボタンデザイン === */
 .btn {
-  @apply bg-brandPink text-brandBlack font-semibold px-4 py-2 rounded-xl shadow hover:bg-pink-400 transition;
+  @apply px-4 py-2 rounded-xl font-semibold transition-colors;
+  background-color: var(--brand-blue);
+  color: white;
+}
+.btn:hover {
+  background-color: var(--brand-pink);
+  color: black;
+}
+
+/* === リンクデザイン === */
+a {
+  color: var(--brand-pink);
+  text-decoration: underline;
+}
+a:hover {
+  color: var(--brand-blue);
+}
+
+/* === カレンダー調整 (react-calendar) === */
+.react-calendar {
+  @apply bg-neutral-800 text-white rounded-xl p-3 w-full;
+}
+.react-calendar__tile {
+  @apply text-sm rounded-md transition;
+}
+.react-calendar__tile:hover {
+  @apply bg-[color:var(--brand-pink)] text-black;
+}
+.react-calendar__tile--active {
+  background-color: var(--brand-blue) !important;
+  color: white !important;
+}
+.react-calendar__month-view__days__day--weekend {
+  color: var(--brand-pink);
 }
