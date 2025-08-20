@@ -4,58 +4,76 @@ import CustomCalendar from "./CustomCalendar";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [rangeMode, setRangeMode] = useState("range");
   const [dates, setDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
-  const [link, setLink] = useState("");
+  const [rangeMode, setRangeMode] = useState("multiple");
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [shareUrl, setShareUrl] = useState("");
 
   const handleSubmit = async () => {
-    if (dates.length === 0) return alert("日程を選択してください");
-    const start_date = dates[0].format("YYYY-MM-DD");
-    const end_date = dates[dates.length - 1].format("YYYY-MM-DD");
+    if (!title || dates.length === 0) return alert("タイトルと日程を入力してください");
 
     try {
+      const start_date = dates[0];
+      const end_date = dates.length > 1 ? dates[dates.length - 1] : dates[0];
+
       const res = await axios.post("/api/schedule", {
-        title, start_date, end_date, timeslot, range_mode: rangeMode
+        title,
+        start_date,
+        end_date,
+        timeslot: timeSlot,
+        range_mode: rangeMode,
       });
-      setLink(res.data.link);
+      setShareUrl(window.location.origin + res.data.link);
     } catch (err) {
-      alert("登録失敗");
+      alert("登録に失敗しました");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>MilkPOP Calendar</header>
-      <h2 style={styles.title}>日程登録ページ</h2>
+    <div style={{ backgroundColor: "#000", color: "white", minHeight: "100vh", padding: "20px" }}>
+      <header style={{ background: "#004CA0", padding: "15px", fontSize: "20px", fontWeight: "bold" }}>MilkPOP Calendar</header>
+      <h2 style={{ color: "#FDB9C8" }}>日程登録ページ</h2>
+
       <input
+        type="text"
         placeholder="タイトル"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        style={styles.input}
+        style={{ padding: "10px", margin: "10px 0", width: "100%" }}
       />
-      <div style={styles.radioGroup}>
-        <label><input type="radio" value="range" checked={rangeMode==="range"} onChange={()=>setRangeMode("range")} /> 範囲選択</label>
-        <label><input type="radio" value="multiple" checked={rangeMode==="multiple"} onChange={()=>setRangeMode("multiple")} /> 複数選択</label>
+
+      {/* カレンダー */}
+      <CustomCalendar rangeMode={rangeMode} dates={dates} setDates={setDates} />
+
+      {/* モード選択 */}
+      <div>
+        <label>
+          <input type="radio" value="range" checked={rangeMode === "range"} onChange={() => setRangeMode("range")} />
+          範囲選択
+        </label>
+        <label>
+          <input type="radio" value="multiple" checked={rangeMode === "multiple"} onChange={() => setRangeMode("multiple")} />
+          複数選択
+        </label>
       </div>
-      <CustomCalendar rangeMode={rangeMode} onChange={setDates} />
-      <select value={timeslot} onChange={(e)=>setTimeslot(e.target.value)} style={styles.input}>
-        <option>全日</option>
-        <option>昼</option>
-        <option>夜</option>
+
+      {/* 時間帯 */}
+      <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} style={{ margin: "10px 0", padding: "10px" }}>
+        <option value="全日">全日</option>
+        <option value="昼">昼</option>
+        <option value="夜">夜</option>
       </select>
-      <button onClick={handleSubmit} style={styles.button}>リンク発行</button>
-      {link && <p style={styles.link}>共有リンク: <a href={link}>{link}</a></p>}
+
+      <button onClick={handleSubmit} style={{ background: "#FDB9C8", color: "#000", padding: "10px 20px", border: "none", borderRadius: "8px" }}>
+        登録
+      </button>
+
+      {shareUrl && (
+        <div style={{ marginTop: "20px" }}>
+          <p>共有リンク:</p>
+          <a href={shareUrl} style={{ color: "#FDB9C8" }} target="_blank" rel="noopener noreferrer">{shareUrl}</a>
+        </div>
+      )}
     </div>
   );
 }
-
-const styles = {
-  container: { padding: "20px", background: "#000", minHeight: "100vh", color: "#FDB9C8" },
-  header: { fontSize: "24px", fontWeight: "bold", color: "#004CA0", marginBottom: "20px" },
-  title: { fontSize: "20px", marginBottom: "10px" },
-  input: { display:"block", margin:"10px 0", padding:"8px", borderRadius:"6px" },
-  radioGroup: { display:"flex", gap:"20px", margin:"10px 0" },
-  button: { padding:"10px 20px", background:"#FDB9C8", border:"none", borderRadius:"8px", fontWeight:"bold" },
-  link: { marginTop:"15px", color:"#FDB9C8" }
-};
