@@ -1,11 +1,12 @@
-import Header from "./Header";
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { ja } from "date-fns/locale";
+import ja from "date-fns/locale/ja";   // ← 修正
 import { format } from "date-fns";
-import "./CalendarStyle.css"; // デザイン拡張用（後述）
+import "./CalendarStyle.css";
+import Header from "./Header";
+
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
