@@ -1,172 +1,121 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { format } from "date-fns";
-import ja from "date-fns/locale/ja";
-import "./CalendarStyle.css";
-import Header from "./Header";
+import Holidays from "date-holidays";
+
+// === 日本の祝日設定 ===
+const hd = new Holidays("JP");
 
 export default function LinkPage() {
-  const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeSlot, setTimeSlot] = useState("全日");
-  const [shareUrl, setShareUrl] = useState("");
-  const [schedules, setSchedules] = useState([]);
-  const [holidays, setHolidays] = useState({});
+  const { linkId } = useParams();
+  const [schedules, setSchedules] = useState([]); // 登録済みスケジュール
+  const [selectedDates, setSelectedDates] = useState([]); // カレンダーで選択した日付
+  const [username, setUsername] = useState("");
 
+  // === 共有スケジュール取得 ===
   useEffect(() => {
-    const year = new Date().getFullYear();
     axios
-      .get(`https://holidays-jp.github.io/api/v1/${year}/date.json`)
-      .then((res) => setHolidays(res.data))
-      .catch(() => setHolidays({}));
-  }, []);
-
-  const handleDateChange = (value) => {
-    if (rangeMode === "multiple") {
-      setDates(Array.isArray(value) ? value : [value]);
-    } else if (rangeMode === "range") {
-      if (Array.isArray(value) && value.length === 2) {
-        const [start, end] = value;
-        let cur = new Date(start);
-        const range = [];
-        while (cur <= end) {
-          range.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setDates(range);
-      }
-    }
-  };
-
-  const handleSave = async () => {
-    if (!title || dates.length === 0) {
-      alert("タイトルと日程を入力してください");
-      return;
-    }
-
-    try {
-      const res = await axios.post("/api/schedules", {
-        title,
-        dates: dates.map((d) => format(d, "yyyy-MM-dd", { locale: ja })),
-        range_mode: rangeMode,
-        timeslot: timeSlot,
+      .get(`/api/share/${linkId}`)
+      .then((res) => {
+        setSchedules(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch((err) => {
+        console.error("API error:", err);
+        setSchedules([]); // エラー時も配列にする
       });
-      setShareUrl(`${window.location.origin}/share/${res.data.linkId}`);
-      fetchSchedules();
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
+  }, [linkId]);
+
+  // === 日付クリックで複数選択 ===
+  const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+    } else {
+      setSelectedDates([...selectedDates, dateStr]);
     }
   };
 
-  const fetchSchedules = async () => {
-    try {
-      const res = await axios.get("/api/schedules");
-      setSchedules(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
-
+  // === カレンダータイルの表示（祝日は赤、選択済みは青） ===
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const ymd = format(date, "yyyy-MM-dd", { locale: ja });
-      if (holidays[ymd] || date.getDay() === 0) {
-        return "holiday";
+      const dateStr = date.toISOString().split("T")[0];
+      if (hd.isHoliday(date)) {
+        return "text-red-500 font-bold"; // 祝日赤字
+      }
+      if (selectedDates.includes(dateStr)) {
+        return "bg-blue-500 text-white rounded-full"; // 選択済み青
       }
     }
     return null;
   };
 
-  return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
+  // === 参加登録処理 ===
+  const handleSubmit = async () => {
+    if (!username || selectedDates.length === 0) {
+      alert("名前と日付を入力してください。");
+      return;
+    }
 
-      <div className="p-6 bg-[#004CA0] rounded-2xl shadow-lg max-w-2xl mx-auto">
+    const selections = selectedDates.map((d) => ({
+      date: d,
+      timeslot: "全日",
+      status: "◯",
+    }));
+
+    try {
+      await axios.post(`/api/share/${linkId}`, { username, selections });
+      alert("登録しました！");
+      setSelectedDates([]);
+    } catch (err) {
+      console.error("Error saving selections:", err);
+      alert("登録に失敗しました");
+    }
+  };
+
+  return (
+    <div className="p-4 text-white">
+      <h1 className="text-2xl font-bold mb-4">共有スケジュール</h1>
+
+      {/* カレンダー */}
+      <Calendar
+        onClickDay={handleDateClick}
+        value={selectedDates.map((d) => new Date(d))}
+        tileClassName={tileClassName}
+      />
+
+      {/* 入力欄 */}
+      <div className="mt-4">
         <input
           type="text"
-          placeholder="タイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg text-black"
+          placeholder="名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="border p-2 rounded text-black"
         />
-
-        <div className="flex gap-4 mb-4">
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            複数選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={rangeMode === "range"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-        </div>
-
-        <Calendar
-          onChange={handleDateChange}
-          selectRange={rangeMode === "range"}
-          tileClassName={tileClassName}
-          value={dates}
-          locale="ja-JP"
-        />
-
-        <div className="mt-4">
-          <label className="block mb-2">時間帯を選択:</label>
-          <select
-            value={timeSlot}
-            onChange={(e) => setTimeSlot(e.target.value)}
-            className="p-2 rounded-lg text-black"
-          >
-            <option value="全日">全日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            <option value="時間指定">1時〜0時</option>
-          </select>
-        </div>
-
         <button
-          onClick={handleSave}
-          className="mt-6 w-full p-3 rounded-xl bg-[#FDB9C8] text-black font-bold hover:opacity-80"
+          onClick={handleSubmit}
+          className="ml-2 bg-green-600 px-4 py-2 rounded"
         >
-          共有リンク発行
+          登録
         </button>
-
-        {shareUrl && (
-          <div className="mt-4">
-            <p className="mb-2">発行された共有リンク:</p>
-            <a href={shareUrl} className="underline text-[#FDB9C8]">
-              {shareUrl}
-            </a>
-          </div>
-        )}
       </div>
 
+      {/* 登録済みスケジュール一覧 */}
       <div className="mt-8 max-w-3xl mx-auto">
         <h2 className="text-xl font-bold mb-4">登録済みスケジュール</h2>
         <ul className="space-y-2">
-          {schedules.map((s, idx) => (
-            <li key={idx} className="bg-gray-800 p-3 rounded-lg">
-              <strong>{s.title}</strong> ({s.timeslot})<br />
-              {Array.isArray(s.dates) ? s.dates.join(", ") : s.date}
-            </li>
-          ))}
+          {schedules.length > 0 ? (
+            schedules.map((s, idx) => (
+              <li key={idx} className="bg-gray-800 p-3 rounded-lg">
+                <strong>{s.title}</strong> ({s.timeslot})<br />
+                {s.date}
+              </li>
+            ))
+          ) : (
+            <li className="text-gray-400">スケジュールはまだありません。</li>
+          )}
         </ul>
       </div>
     </div>
