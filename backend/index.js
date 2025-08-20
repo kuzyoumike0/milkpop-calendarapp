@@ -33,128 +33,103 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
       memo TEXT,
-      dates TEXT[] NOT NULL,
+      date DATE NOT NULL,
       timeslot TEXT NOT NULL,
       range_mode TEXT NOT NULL,
-      linkId TEXT
-    );
+      linkid TEXT
+    )
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS personal (
+    CREATE TABLE IF NOT EXISTS shared_schedules (
       id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      memo TEXT,
-      dates TEXT[] NOT NULL,
-      timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS share_responses (
-      id SERIAL PRIMARY KEY,
-      linkId TEXT NOT NULL,
+      linkid TEXT NOT NULL,
       username TEXT NOT NULL,
-      dates TEXT[] NOT NULL,
+      date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL
-    );
+      status TEXT NOT NULL
+    )
   `);
 }
-initDB();
+initDB().catch((err) => console.error("DB init error:", err));
 
-// === API ===
-
-// 個人スケジュール登録
+// === API: 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
-  const { title, memo, dates, timeslot, range_mode } = req.body;
   try {
-    await pool.query(
-      "INSERT INTO personal (title, memo, dates, timeslot, range_mode) VALUES ($1,$2,$3,$4,$5)",
-      [title, memo, dates, timeslot, range_mode]
-    );
-    res.json({ message: "保存しました" });
+    const { title, memo, dates, timeslot, range_mode } = req.body;
+    for (const date of dates) {
+      await pool.query(
+        "INSERT INTO schedules (title, memo, date, timeslot, range_mode) VALUES ($1,$2,$3,$4,$5)",
+        [title, memo, date, timeslot, range_mode]
+      );
+    }
+    res.json({ success: true });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "保存に失敗しました" });
+    console.error("Error inserting personal schedule:", err);
+    res.status(500).json({ error: "Failed to save schedule" });
   }
 });
 
-// 個人スケジュール取得
-app.get("/api/personal", async (req, res) => {
+// === API: スケジュール登録 & 共有リンク発行 ===
+app.post("/api/schedule", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM personal ORDER BY id DESC");
-    res.json(result.rows);
+    const { title, dates, timeslot, range_mode } = req.body;
+    const linkid = uuidv4();
+
+    for (const date of dates) {
+      await pool.query(
+        "INSERT INTO schedules (title, date, timeslot, range_mode, linkid) VALUES ($1,$2,$3,$4,$5)",
+        [title, date, timeslot, range_mode, linkid]
+      );
+    }
+    res.json({ success: true, link: `/share/${linkid}` });
   } catch (err) {
-    res.status(500).json({ error: "取得に失敗しました" });
+    console.error("Error inserting schedule:", err);
+    res.status(500).json({ error: "Failed to create schedule" });
   }
 });
 
-// 日程スケジュール登録（共有リンク発行）
-app.post("/api/schedules", async (req, res) => {
-  const { title, dates, timeslot, range_mode } = req.body;
-  const linkId = uuidv4();
+// === API: 共有スケジュール取得 ===
+app.get("/api/share/:linkid", async (req, res) => {
   try {
-    await pool.query(
-      "INSERT INTO schedules (title, dates, timeslot, range_mode, linkId) VALUES ($1,$2,$3,$4,$5)",
-      [title, dates, timeslot, range_mode, linkId]
-    );
-    res.json({ message: "保存しました", linkId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "リンク作成に失敗しました" });
-  }
-});
-
-// 登録済みスケジュール一覧
-app.get("/api/schedules", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM schedules ORDER BY id DESC");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// 共有スケジュール保存
-app.post("/api/share/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  const { username, dates, timeslot, range_mode } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO share_responses (linkId, username, dates, timeslot, range_mode) VALUES ($1,$2,$3,$4,$5)",
-      [linkId, username, dates, timeslot, range_mode]
-    );
-    res.json({ message: "保存しました" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "保存に失敗しました" });
-  }
-});
-
-// 共有スケジュール取得
-app.get("/api/share/:linkId", async (req, res) => {
-  const { linkId } = req.params;
-  try {
+    const { linkid } = req.params;
     const result = await pool.query(
-      "SELECT * FROM share_responses WHERE linkId=$1 ORDER BY id DESC",
-      [linkId]
+      "SELECT * FROM schedules WHERE linkid = $1 ORDER BY date ASC",
+      [linkid]
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: "取得に失敗しました" });
+    console.error("Error fetching share schedule:", err);
+    res.status(500).json({ error: "Failed to fetch shared schedule" });
   }
 });
 
-// === フロントエンド配信 ===
-const buildPath = path.join(__dirname, "../frontend/build");
+// === API: 共有スケジュールに参加者登録 ===
+app.post("/api/share/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const { username, selections } = req.body;
+
+    for (const sel of selections) {
+      await pool.query(
+        "INSERT INTO shared_schedules (linkid, username, date, timeslot, status) VALUES ($1,$2,$3,$4,$5)",
+        [linkid, username, sel.date, sel.timeslot, sel.status]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error saving shared schedule:", err);
+    res.status(500).json({ error: "Failed to save selections" });
+  }
+});
+
+// === フロントエンド配信設定 ===
+const buildPath = path.join(__dirname, "public");
 const indexPath = path.join(buildPath, "index.html");
 
-// 起動前に必ず存在確認
 if (!fs.existsSync(indexPath)) {
-  console.error("❌ Frontend build not found. Run 'npm run build' inside /frontend first.");
-  process.exit(1); // ファイルがなければ即終了
+  console.error("❌ Frontend build not found. Check Dockerfile frontend build step.");
+  process.exit(1);
 }
 
 app.use(express.static(buildPath));
@@ -165,5 +140,5 @@ app.get("*", (req, res) => {
 // === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
