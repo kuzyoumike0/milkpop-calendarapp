@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import useHolidays from "../hooks/useHolidays";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -9,8 +10,8 @@ export default function PersonalPage() {
   const [date, setDate] = useState([]);
   const [timeSlot, setTimeSlot] = useState("全日");
   const [events, setEvents] = useState([]);
+  const holidays = useHolidays();
 
-  // DBから予定を取得
   const fetchEvents = async () => {
     const res = await axios.get("/api/personal");
     setEvents(res.data);
@@ -20,7 +21,6 @@ export default function PersonalPage() {
     fetchEvents();
   }, []);
 
-  // 保存処理
   const handleSave = async () => {
     await axios.post("/api/personal", {
       title,
@@ -28,11 +28,7 @@ export default function PersonalPage() {
       dates: Array.isArray(date) ? date : [date],
       timeslot: timeSlot,
     });
-
-    // 保存後すぐ反映
     fetchEvents();
-
-    // 入力フォームリセット
     setTitle("");
     setMemo("");
     setDate([]);
@@ -56,35 +52,28 @@ export default function PersonalPage() {
         onChange={(e) => setMemo(e.target.value)}
       />
 
-      <Calendar onChange={setDate} value={date} selectRange={true} />
+      <Calendar
+        onChange={setDate}
+        value={date}
+        selectRange={true}
+        tileClassName={({ date }) => {
+          const yyyy = date.getFullYear();
+          const mm = String(date.getMonth() + 1).padStart(2, "0");
+          const dd = String(date.getDate()).padStart(2, "0");
+          const key = `${yyyy}-${mm}-${dd}`;
+          return holidays[key] ? "text-red-500 font-bold" : "";
+        }}
+      />
 
       <div className="mt-2">
         <label className="mr-2">
-          <input
-            type="radio"
-            value="全日"
-            checked={timeSlot === "全日"}
-            onChange={(e) => setTimeSlot(e.target.value)}
-          />
-          全日
+          <input type="radio" value="全日" checked={timeSlot==="全日"} onChange={(e)=>setTimeSlot(e.target.value)} /> 全日
         </label>
         <label className="mr-2">
-          <input
-            type="radio"
-            value="昼"
-            checked={timeSlot === "昼"}
-            onChange={(e) => setTimeSlot(e.target.value)}
-          />
-          昼
+          <input type="radio" value="昼" checked={timeSlot==="昼"} onChange={(e)=>setTimeSlot(e.target.value)} /> 昼
         </label>
         <label>
-          <input
-            type="radio"
-            value="夜"
-            checked={timeSlot === "夜"}
-            onChange={(e) => setTimeSlot(e.target.value)}
-          />
-          夜
+          <input type="radio" value="夜" checked={timeSlot==="夜"} onChange={(e)=>setTimeSlot(e.target.value)} /> 夜
         </label>
       </div>
 
