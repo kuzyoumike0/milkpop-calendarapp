@@ -1,36 +1,23 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 export default function SharePage() {
-  const { linkId } = useParams(); // URLからlinkIdを取得
+  const { linkId } = useParams();
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState([]);
-  const [selected, setSelected] = useState({});
   const [username, setUsername] = useState("");
+  const [selected, setSelected] = useState({});
 
-  // 📌 日程を取得
+  // スケジュールとレスポンスを取得
   useEffect(() => {
-    if (!linkId) return;
-    axios
-      .get(`/api/schedules/${linkId}`)
-      .then((res) => {
-        // 日付昇順でソート
-        const sorted = [...res.data].sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
-        );
-        setSchedules(sorted);
-      })
-      .catch((err) => console.error(err));
-
-    // レスポンスも取得
+    axios.get(`/api/schedules/${linkId}`).then((res) => setSchedules(res.data));
     axios
       .get(`/api/responses/${linkId}`)
-      .then((res) => setResponses(Array.isArray(res.data) ? res.data : []))
-      .catch((err) => console.error(err));
+      .then((res) => setResponses(Array.isArray(res.data) ? res.data : []));
   }, [linkId]);
 
-  // 📌 保存処理
+  // 保存
   const handleSave = async () => {
     try {
       await Promise.all(
@@ -42,93 +29,96 @@ export default function SharePage() {
           })
         )
       );
-
       // 再取得
       const res = await axios.get(`/api/responses/${linkId}`);
       setResponses(Array.isArray(res.data) ? res.data : []);
-      alert("保存しました ✅");
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
     }
   };
 
+  // scheduleId -> { username: response }
+  const responseMap = {};
+  responses.forEach((r) => {
+    if (!responseMap[r.username]) responseMap[r.username] = {};
+    responseMap[r.username][r.scheduleid] = r.response;
+  });
+
+  const allUsers = [...new Set(responses.map((r) => r.username))];
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <header className="text-center text-3xl font-bold text-[#FDB9C8] mb-6">
-        MilkPOP Calendar - 出欠登録
+      <header className="text-center text-2xl font-bold mb-6">
+        共有スケジュール
       </header>
 
-      <div className="max-w-4xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
-        {/* ユーザー名入力 */}
+      <div className="mb-4 space-x-2">
         <input
           type="text"
-          placeholder="名前を入力"
+          placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-xl text-black"
+          className="p-2 text-black rounded"
         />
-
-        {/* 登録された日程一覧 */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-center bg-white text-black rounded-xl shadow">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="p-2">日付</th>
-                <th className="p-2">時間帯</th>
-                <th className="p-2">出欠</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.map((s) => (
-                <tr key={s.id} className="border-b">
-                  <td className="p-2">{s.date}</td>
-                  <td className="p-2">{s.timeslot}</td>
-                  <td className="p-2">
-                    <select
-                      value={selected[s.id] || ""}
-                      onChange={(e) =>
-                        setSelected((prev) => ({
-                          ...prev,
-                          [s.id]: e.target.value,
-                        }))
-                      }
-                      className="p-2 border rounded-lg"
-                    >
-                      <option value="">選択してください</option>
-                      <option value="◯">◯</option>
-                      <option value="✕">✕</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 保存ボタン */}
         <button
           onClick={handleSave}
-          className="w-full py-3 bg-[#FDB9C8] text-black rounded-xl font-bold hover:bg-pink-400"
+          className="px-4 py-2 bg-pink-400 text-black font-bold rounded"
         >
           保存
         </button>
+      </div>
 
-        {/* 登録済みレスポンス */}
-        <div className="bg-gray-900 p-4 rounded-xl mt-6">
-          <h2 className="font-bold mb-2">登録済みの出欠</h2>
-          {responses.length > 0 ? (
-            <ul className="space-y-1">
-              {responses.map((r) => (
-                <li key={r.id}>
-                  {r.date} ({r.timeslot}) - {r.username}: {r.response}
-                </li>
+      {/* 📌 出欠テーブル */}
+      <div className="overflow-x-auto">
+        <table className="w-full border border-gray-700 text-center">
+          <thead className="bg-gray-800">
+            <tr>
+              <th className="border border-gray-700 px-2 py-1">日付</th>
+              <th className="border border-gray-700 px-2 py-1">時間帯</th>
+              {allUsers.map((u) => (
+                <th
+                  key={u}
+                  className="border border-gray-700 px-2 py-1 text-pink-300"
+                >
+                  {u}
+                </th>
               ))}
-            </ul>
-          ) : (
-            <p className="text-gray-400">まだ登録がありません</p>
-          )}
-        </div>
+              <th className="border border-gray-700 px-2 py-1">あなた</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s) => (
+              <tr key={s.id}>
+                <td className="border border-gray-700 px-2 py-1">{s.date}</td>
+                <td className="border border-gray-700 px-2 py-1">
+                  {s.timeslot}
+                </td>
+                {allUsers.map((u) => (
+                  <td
+                    key={u}
+                    className="border border-gray-700 px-2 py-1"
+                  >
+                    {responseMap[u]?.[s.id] || "-"}
+                  </td>
+                ))}
+                <td className="border border-gray-700 px-2 py-1">
+                  <select
+                    value={selected[s.id] || ""}
+                    onChange={(e) =>
+                      setSelected({ ...selected, [s.id]: e.target.value })
+                    }
+                    className="text-black rounded px-1"
+                  >
+                    <option value="">-</option>
+                    <option value="〇">〇</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
