@@ -1,154 +1,167 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
-const path = require("path");
-const cors = require("cors");
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
-const app = express();
-app.use(bodyParser.json());
-app.use(cors());
+export default function PersonalPage() {
+  const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
+  const [dates, setDates] = useState([]);
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [schedules, setSchedules] = useState([]);
+  const [editId, setEditId] = useState(null);
 
-// === DB接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "localhost",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "calendar",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
-
-// === DB初期化 ===
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      dates TEXT[] NOT NULL,
-      timeslot TEXT NOT NULL,
-      linkid TEXT UNIQUE,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS responses (
-      id SERIAL PRIMARY KEY,
-      linkid TEXT NOT NULL,
-      username TEXT NOT NULL,
-      answers JSONB NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS personal_schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      memo TEXT,
-      dates TEXT[] NOT NULL,
-      timeslot TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
-}
-initDB();
-
-// === 個人スケジュール保存 ===
-app.post("/api/personal", async (req, res) => {
-  const { title, memo, dates, timeslot } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO personal_schedules (title, memo, dates, timeslot) VALUES ($1,$2,$3,$4)",
-      [title, memo, dates, timeslot]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error("個人スケジュール保存エラー:", err);
-    res.status(500).json({ error: "保存失敗" });
-  }
-});
-
-// === 個人スケジュール一覧取得 ===
-app.get("/api/personal", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM personal_schedules ORDER BY created_at DESC"
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("個人スケジュール取得エラー:", err);
-    res.status(500).json({ error: "取得失敗" });
-  }
-});
-
-// === 共有スケジュール作成 ===
-app.post("/api/schedules", async (req, res) => {
-  const { title, dates, timeslot } = req.body;
-  const linkid = uuidv4();
-  try {
-    await pool.query(
-      "INSERT INTO schedules (title, dates, timeslot, linkid) VALUES ($1,$2,$3,$4)",
-      [title, dates, timeslot, linkid]
-    );
-    res.json({ linkid });
-  } catch (err) {
-    console.error("共有スケジュール保存エラー:", err);
-    res.status(500).json({ error: "保存失敗" });
-  }
-});
-
-// === 共有スケジュール取得 ===
-app.get("/api/schedule/:linkid", async (req, res) => {
-  const { linkid } = req.params;
-  try {
-    const schedulesRes = await pool.query(
-      "SELECT * FROM schedules WHERE linkid = $1",
-      [linkid]
-    );
-    if (schedulesRes.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
+  // 複数日選択
+  const toggleDate = (d) => {
+    const dateStr = d.toISOString().split("T")[0];
+    if (dates.includes(dateStr)) {
+      setDates(dates.filter((x) => x !== dateStr));
+    } else {
+      setDates([...dates, dateStr]);
     }
-    const responsesRes = await pool.query(
-      "SELECT username, answers FROM responses WHERE linkid = $1 ORDER BY created_at ASC",
-      [linkid]
-    );
-    res.json({
-      schedules: schedulesRes.rows,
-      responses: responsesRes.rows,
-    });
-  } catch (err) {
-    console.error("共有スケジュール取得エラー:", err);
-    res.status(500).json({ error: "取得失敗" });
-  }
-});
+  };
 
-// === 回答保存 ===
-app.post("/api/share/:linkid/response", async (req, res) => {
-  const { linkid } = req.params;
-  const { username, answers } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO responses (linkid, username, answers) VALUES ($1,$2,$3)",
-      [linkid, username, answers]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error("回答保存エラー:", err);
-    res.status(500).json({ error: "保存失敗" });
-  }
-});
+  const fetchSchedules = async () => {
+    const res = await axios.get("/api/personal");
+    setSchedules(res.data);
+  };
 
-// === 静的ファイル配信 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
-});
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
-});
+  const handleSave = async () => {
+    if (!title || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
+
+    if (editId) {
+      // 更新
+      await axios.put(`/api/personal/${editId}`, {
+        title,
+        memo,
+        dates,
+        timeslot: timeSlot,
+      });
+      setEditId(null);
+    } else {
+      // 新規
+      await axios.post("/api/personal", {
+        title,
+        memo,
+        dates,
+        timeslot: timeSlot,
+      });
+    }
+
+    setTitle("");
+    setMemo("");
+    setDates([]);
+    setTimeSlot("全日");
+    fetchSchedules();
+  };
+
+  const handleEdit = (s) => {
+    setEditId(s.id);
+    setTitle(s.title);
+    setMemo(s.memo || "");
+    setDates(s.dates);
+    setTimeSlot(s.timeslot);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("本当に削除しますか？")) return;
+    await axios.delete(`/api/personal/${id}`);
+    fetchSchedules();
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center p-6">
+      <div className="card w-full max-w-2xl">
+        <h2 className="text-xl font-bold mb-4 text-white">📝 個人スケジュール</h2>
+
+        <input
+          type="text"
+          placeholder="タイトル"
+          className="w-full p-2 mb-2 rounded bg-black/40 text-white"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          placeholder="メモ"
+          className="w-full p-2 mb-2 rounded bg-black/40 text-white"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+        />
+
+        <Calendar
+          onClickDay={toggleDate}
+          tileClassName={({ date }) =>
+            dates.includes(date.toISOString().split("T")[0])
+              ? "bg-[#FDB9C8] text-black rounded-lg"
+              : ""
+          }
+        />
+
+        <div className="mt-3 flex gap-2">
+          <select
+            className="p-2 rounded bg-black/40 text-white"
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+          >
+            <option value="全日">全日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 rounded bg-[#FDB9C8] text-black font-bold hover:bg-[#fda5b7] transition"
+          >
+            {editId ? "更新" : "保存"}
+          </button>
+        </div>
+      </div>
+
+      {/* 一覧表示 */}
+      <div className="card w-full max-w-4xl mt-6">
+        <h3 className="text-lg font-bold text-white mb-2">📊 登録済みスケジュール</h3>
+        <table className="w-full text-center border-collapse">
+          <thead>
+            <tr className="bg-black/40 text-white">
+              <th className="p-2 border border-white/20">タイトル</th>
+              <th className="p-2 border border-white/20">日付</th>
+              <th className="p-2 border border-white/20">時間帯</th>
+              <th className="p-2 border border-white/20">メモ</th>
+              <th className="p-2 border border-white/20">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s) => (
+              <tr key={s.id} className="hover:bg-white/10 text-white">
+                <td className="p-2 border border-white/20">{s.title}</td>
+                <td className="p-2 border border-white/20">{s.dates.join(", ")}</td>
+                <td className="p-2 border border-white/20">{s.timeslot}</td>
+                <td className="p-2 border border-white/20">{s.memo}</td>
+                <td className="p-2 border border-white/20 flex gap-2 justify-center">
+                  <button
+                    onClick={() => handleEdit(s)}
+                    className="px-3 py-1 bg-yellow-400 text-black rounded hover:bg-yellow-300 transition"
+                  >
+                    編集
+                  </button>
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-400 transition"
+                  >
+                    削除
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
