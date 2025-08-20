@@ -1,21 +1,32 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
 import ShareLinkPage from "./components/ShareLinkPage";
 
-
-export default function App() {
+function App() {
   return (
-    <Routes>
-      {/* 最初にトップページ */}
-      <Route path="/" element={<TopPage />} />
-      <Route path="/link" element={<LinkPage />} />
-      <Route path="/personal" element={<PersonalPage />} />
-      <Route path="/share/:linkid" element={<SharePage />} />
-      <Route path="/sharelink" element={<ShareLinkPage />} />
-    </Routes>
+    <Router>
+      <Routes>
+        {/* トップページ */}
+        <Route path="/" element={<TopPage />} />
+
+        {/* 日程登録ページ */}
+        <Route path="/link" element={<LinkPage />} />
+
+        {/* 個人日程登録ページ */}
+        <Route path="/personal" element={<PersonalPage />} />
+
+        {/* 共有ページ（登録したスケジュールの回答用） */}
+        <Route path="/share/:linkid" element={<SharePage />} />
+
+        {/* 共有リンクページ（発行されたリンクを表示） */}
+        <Route path="/sharelink/:linkid" element={<ShareLinkPage />} />
+      </Routes>
+    </Router>
   );
 }
+
+export default App;
