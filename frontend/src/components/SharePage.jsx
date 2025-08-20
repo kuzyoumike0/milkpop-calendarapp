@@ -20,7 +20,7 @@ export default function SharePage() {
   }, []);
 
   const handleAnswerChange = (date, value) => {
-    setAnswers({ ...answers, [date]: value });
+    setAnswers((prev) => ({ ...prev, [date]: value }));
   };
 
   const handleSave = async () => {
@@ -28,6 +28,7 @@ export default function SharePage() {
       username,
       answers,
     });
+    setAnswers({});
     fetchData();
   };
 
@@ -61,49 +62,6 @@ export default function SharePage() {
               <td className="border px-2">{d}</td>
               <td className="border px-2">
                 <select
+                  value={answers[d] || ""}
                   onChange={(e) => handleAnswerChange(d, e.target.value)}
-                  className="bg-gray-800 text-white p-1"
-                >
-                  <option value="">選択</option>
-                  <option value="〇">〇</option>
-                  <option value="✖">✖</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <button
-        onClick={handleSave}
-        className="bg-[#004CA0] text-white px-6 py-2 rounded-2xl hover:bg-blue-900"
-      >
-        保存
-      </button>
-
-      <h3 className="mt-6 text-xl font-bold">回答一覧</h3>
-      <table className="table-auto border-collapse border border-gray-600 w-full">
-        <thead>
-          <tr className="bg-gray-800">
-            <th className="border px-2">ユーザー</th>
-            {schedule.dates.map((d, i) => (
-              <th key={i} className="border px-2">{d}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {responses.map((r, i) => (
-            <tr key={i}>
-              <td className="border px-2">{r.username}</td>
-              {schedule.dates.map((d, j) => (
-                <td key={j} className="border px-2">
-                  {r.answers[d] || "-"}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+                  className="bg-gray
