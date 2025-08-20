@@ -21,3 +21,8 @@ body {
 .table-cell {
   @apply bg-[#222] border border-[#333] p-2;
 }
+
+.react-calendar__tile.text-red-500 {
+  color: #ff0000 !important;
+  font-weight: bold;
+}
