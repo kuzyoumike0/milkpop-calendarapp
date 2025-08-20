@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { holidays } from "../utils/holidays";
+import { useHolidays } from "../hooks/useHolidays";
 
 export default function PersonalPage() {
   const [dates, setDates] = useState([]);
@@ -10,6 +10,7 @@ export default function PersonalPage() {
   const [memo, setMemo] = useState("");
   const [timeslot, setTimeslot] = useState("全日");
   const [rangeMode, setRangeMode] = useState("multiple");
+  const holidays = useHolidays();
 
   const toggleDate = (date) => {
     const iso = date.toISOString().split("T")[0];
@@ -43,25 +44,6 @@ export default function PersonalPage() {
         onChange={(e) => setMemo(e.target.value)}
       />
 
-      <div className="mb-3">
-        <label className="mr-4">
-          <input
-            type="radio"
-            checked={rangeMode === "multiple"}
-            onChange={() => setRangeMode("multiple")}
-          />{" "}
-          複数選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={rangeMode === "range"}
-            onChange={() => setRangeMode("range")}
-          />{" "}
-          範囲選択
-        </label>
-      </div>
-
       <Calendar
         onClickDay={toggleDate}
         tileClassName={({ date }) => {
@@ -76,16 +58,6 @@ export default function PersonalPage() {
         }}
         locale="ja-JP"
       />
-
-      <select
-        className="w-full mt-4 p-2 bg-gray-800 rounded"
-        value={timeslot}
-        onChange={(e) => setTimeslot(e.target.value)}
-      >
-        <option value="全日">全日</option>
-        <option value="昼">昼</option>
-        <option value="夜">夜</option>
-      </select>
 
       <button
         onClick={handleSubmit}
