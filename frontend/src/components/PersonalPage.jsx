@@ -1,67 +1,140 @@
 import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import CustomCalendar from "./CustomCalendar";
 
 export default function PersonalPage() {
+  const [date, setDate] = useState(new Date());
+  const [rangeMode, setRangeMode] = useState("multiple"); // "multiple" or "range"
+  const [selectedDates, setSelectedDates] = useState([]);
   const [username, setUsername] = useState("");
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeSlot, setTimeSlot] = useState("全日");
+  const [timeslot, setTimeslot] = useState("全日");
 
+  // 日付クリック処理
+  const handleDateClick = (value) => {
+    if (rangeMode === "multiple") {
+      // 複数日選択モード
+      if (selectedDates.some((d) => d.toDateString() === value.toDateString())) {
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== value.toDateString()));
+      } else {
+        setSelectedDates([...selectedDates, value]);
+      }
+    } else if (rangeMode === "range") {
+      // 範囲選択モード
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
+        setSelectedDates([value]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0];
+        const end = value;
+        const range = [];
+        let current = new Date(start);
+        while (current <= end) {
+          range.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(range);
+      }
+    }
+  };
+
+  // 登録処理
   const handleSubmit = async () => {
-    if (!username || dates.length === 0) return alert("名前と日程を入力してください");
+    if (!username || selectedDates.length === 0) {
+      alert("名前と日程を入力してください");
+      return;
+    }
 
     try {
-      const start_date = dates[0];
-      const end_date = dates.length > 1 ? dates[dates.length - 1] : dates[0];
+      const start_date = selectedDates[0].toISOString().split("T")[0];
+      const end_date = selectedDates[selectedDates.length - 1].toISOString().split("T")[0];
 
       await axios.post("/api/personal", {
         username,
-        title,
-        memo,
         start_date,
         end_date,
-        timeslot: timeSlot,
+        timeslot,
         range_mode: rangeMode,
       });
-      alert("保存しました！");
+
+      alert("登録しました！");
     } catch (err) {
-      alert("保存に失敗しました");
+      console.error("登録エラー:", err);
+      alert("登録に失敗しました");
     }
   };
 
   return (
-    <div style={{ backgroundColor: "#000", color: "white", minHeight: "100vh", padding: "20px" }}>
-      <header style={{ background: "#004CA0", padding: "15px", fontSize: "20px", fontWeight: "bold" }}>MilkPOP Calendar</header>
-      <h2 style={{ color: "#FDB9C8" }}>個人スケジュール登録</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">個人スケジュール登録</h2>
 
-      <input type="text" placeholder="名前" value={username} onChange={(e) => setUsername(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%" }} />
-      <input type="text" placeholder="タイトル" value={title} onChange={(e) => setTitle(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%" }} />
-      <textarea placeholder="メモ" value={memo} onChange={(e) => setMemo(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%", height: "80px" }} />
+      {/* 名前入力 */}
+      <input
+        type="text"
+        placeholder="名前を入力"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="border p-2 mb-4 w-full"
+      />
 
-      <CustomCalendar rangeMode={rangeMode} dates={dates} setDates={setDates} />
+      {/* カレンダー */}
+      <Calendar
+        onClickDay={handleDateClick}
+        value={date}
+        onChange={setDate}
+      />
 
-      <div>
+      <div className="mt-2">
+        {selectedDates.length > 0 ? (
+          <p>
+            選択した日付:{" "}
+            {selectedDates.map((d) => d.toISOString().split("T")[0]).join(", ")}
+          </p>
+        ) : (
+          <p>日付をクリックしてください</p>
+        )}
+      </div>
+
+      {/* 範囲/複数選択モード切り替え */}
+      <div className="mt-4">
         <label>
-          <input type="radio" value="range" checked={rangeMode === "range"} onChange={() => setRangeMode("range")} />
-          範囲選択
+          <input
+            type="radio"
+            value="multiple"
+            checked={rangeMode === "multiple"}
+            onChange={(e) => setRangeMode(e.target.value)}
+          />
+          複数日選択
         </label>
-        <label>
-          <input type="radio" value="multiple" checked={rangeMode === "multiple"} onChange={() => setRangeMode("multiple")} />
-          複数選択
+        <label className="ml-4">
+          <input
+            type="radio"
+            value="range"
+            checked={rangeMode === "range"}
+            onChange={(e) => setRangeMode(e.target.value)}
+          />
+          範囲選択
         </label>
       </div>
 
-      <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} style={{ margin: "10px 0", padding: "10px" }}>
-        <option value="全日">全日</option>
-        <option value="昼">昼</option>
-        <option value="夜">夜</option>
-      </select>
+      {/* 時間帯プルダウン */}
+      <div className="mt-4">
+        <select
+          value={timeslot}
+          onChange={(e) => setTimeslot(e.target.value)}
+          className="border p-2"
+        >
+          <option value="全日">全日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
+      </div>
 
-      <button onClick={handleSubmit} style={{ background: "#FDB9C8", color: "#000", padding: "10px 20px", border: "none", borderRadius: "8px" }}>
-        保存
+      {/* 登録ボタン */}
+      <button
+        onClick={handleSubmit}
+        className="bg-[#004CA0] text-white px-4 py-2 mt-4 rounded-lg shadow"
+      >
+        登録
       </button>
     </div>
   );
