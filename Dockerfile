@@ -1,16 +1,19 @@
-# ===== ベースイメージ =====
+# ====== フロントエンド ビルドステージ ======
 FROM node:18 AS builder
 
 WORKDIR /app
 
-# --- フロントエンドの依存関係インストール＆ビルド ---
+# 依存関係インストール
 COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
 RUN npm install
-COPY frontend/ ./
+
+# ソースコピー & ビルド
+COPY frontend/ ./ 
 RUN npm run build
 
-# ===== 本番用イメージ =====
+
+# ====== 本番ランタイム ======
 FROM node:18
 
 WORKDIR /app
@@ -20,15 +23,16 @@ COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-# --- ソースコピー（バックエンドの中身を /app/backend にコピー） ---
-COPY backend/ /app/backend/
-COPY --from=builder /app/frontend/build /app/frontend/build
+# --- バックエンドソースコピー ---
+COPY backend/ ./backend/
 
-# 作業ディレクトリを backend に設定
-WORKDIR /app/backend
+# --- フロントのビルド成果物をコピー ---
+COPY --from=builder /app/frontend/build ./frontend/build
 
-# --- 環境変数設定 ---
+# --- 環境変数 ---
 ENV NODE_ENV=production
+ENV PORT=8080
 
-# --- サーバー起動 ---
+# --- サーバ起動 ---
+WORKDIR /app/backend
 CMD ["node", "index.js"]
