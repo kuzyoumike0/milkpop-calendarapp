@@ -46,7 +46,8 @@ async function initDB() {
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL
+      range_mode TEXT NOT NULL,
+      memo TEXT
     );
   `);
 
@@ -61,7 +62,7 @@ async function initDB() {
 }
 initDB();
 
-// === API: 日程登録（共有用） ===
+// === API: 共有スケジュール登録 ===
 app.post("/api/schedule", async (req, res) => {
   try {
     const { title, start_date, end_date, timeslot, range_mode } = req.body;
@@ -82,23 +83,45 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
+// === API: 共有スケジュール一覧 ===
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT * FROM schedules ORDER BY start_date ASC`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("共有スケジュール取得エラー:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
 // === API: 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
   try {
-    const { username, start_date, end_date, timeslot, range_mode } = req.body;
+    const { username, start_date, end_date, timeslot, range_mode, memo } = req.body;
     if (!username || !start_date || !end_date || !timeslot || !range_mode) {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
     await pool.query(
-      `INSERT INTO personal_schedules (username, start_date, end_date, timeslot, range_mode)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [username, start_date, end_date, timeslot, range_mode]
+      `INSERT INTO personal_schedules (username, start_date, end_date, timeslot, range_mode, memo)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [username, start_date, end_date, timeslot, range_mode, memo || ""]
     );
     res.json({ success: true });
   } catch (err) {
     console.error("個人スケジュール登録エラー:", err);
     res.status(500).json({ error: "登録失敗" });
+  }
+});
+
+// === API: 個人スケジュール一覧 ===
+app.get("/api/personal", async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT * FROM personal_schedules ORDER BY start_date ASC`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("個人スケジュール取得エラー:", err);
+    res.status(500).json({ error: "取得失敗" });
   }
 });
 
@@ -138,10 +161,9 @@ app.post("/api/response", async (req, res) => {
 });
 
 // === 静的ファイル提供 ===
-// Dockerfileで build → backend/public にコピーしてあるのでこちらを見る
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 // === サーバー起動 ===
