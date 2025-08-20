@@ -2,9 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* グローバル背景 */
+/* === グローバルスタイル === */
 body {
-  background-color: #0A0A0A; /* 高級感のある黒 */
-  color: #ffffff;
-  font-family: "Noto Sans JP", sans-serif;
+  @apply bg-brandBlack text-white font-sans;
+}
+
+/* カード風の共通デザイン */
+.card {
+  @apply bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6;
+}
+.card-title {
+  @apply text-brandPink font-bold mb-3 text-lg;
+}
+.card-content {
+  @apply text-gray-300;
 }
