@@ -34,7 +34,7 @@ async function initDB() {
       date DATE NOT NULL,
       timeslot TEXT NOT NULL,
       range_mode TEXT NOT NULL,
-      linkid TEXT,
+      linkid TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
@@ -81,11 +81,14 @@ app.post("/api/schedules", async (req, res) => {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
+    // linkid が指定されていなければ自動生成
+    const useLinkId = linkid || uuidv4();
+
     for (const d of dates) {
       await pool.query(
         `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
          VALUES ($1, $2, $3, $4, $5)`,
-        [title, d, timeslot, range_mode, linkid || null]
+        [title, d, timeslot, range_mode, useLinkId]
       );
     }
 
@@ -102,15 +105,25 @@ app.post("/api/schedules", async (req, res) => {
 // === スケジュール取得 (共有用) ===
 app.get("/api/schedules", async (req, res) => {
   try {
-    const result = await pool.query(`
+    const { linkid } = req.query;
+
+    let query = `
       SELECT s.*, 
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
                       FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
       LEFT JOIN share_responses r ON s.id = r.schedule_id
-      GROUP BY s.id
-      ORDER BY s.date, s.timeslot
-    `);
+    `;
+    const params = [];
+
+    if (linkid) {
+      query += ` WHERE s.linkid = $1`;
+      params.push(linkid);
+    }
+
+    query += ` GROUP BY s.id ORDER BY s.date, s.timeslot`;
+
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error("取得エラー:", err);
@@ -176,7 +189,7 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// === 共有スケジュールへの出欠保存 ===
+// === 共有スケジュールへの出欠保存（同じユーザーは更新扱い） ===
 app.post("/api/share-responses", async (req, res) => {
   try {
     const { username, responses } = req.body;
@@ -215,7 +228,6 @@ app.post("/api/share-responses", async (req, res) => {
 });
 
 // === 静的ファイル (Reactビルド) ===
-// 必ず backend/public にコピーされたファイルを使う
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("*", (req, res) => {
