@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import DatePicker from "react-multi-date-picker";
+import "react-multi-date-picker/styles/colors/purple.css";
 
 export default function SharePage() {
   const { linkid } = useParams();
@@ -11,41 +11,26 @@ export default function SharePage() {
   const [responses, setResponses] = useState({});
   const [rangeMode, setRangeMode] = useState("multiple");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [savedResponses, setSavedResponses] = useState([]);
 
-  // === 日程取得 ===
+  // === 日程と応答をロード ===
   useEffect(() => {
     axios.get(`/api/share/${linkid}`).then((res) => {
-      const sorted = res.data.sort((a, b) =>
-        new Date(a.start_date) - new Date(b.start_date)
+      const sorted = res.data.sort(
+        (a, b) => new Date(a.start_date) - new Date(b.start_date)
       );
       setSchedule(sorted);
     });
-  }, [linkid]);
 
-  // === カレンダークリック ===
-  const handleDateClick = (value) => {
-    if (rangeMode === "multiple") {
-      if (selectedDates.some((d) => d.toDateString() === value.toDateString())) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== value.toDateString()));
-      } else {
-        setSelectedDates([...selectedDates, value]);
-      }
-    } else if (rangeMode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length === 2) {
-        setSelectedDates([value]);
-      } else if (selectedDates.length === 1) {
-        const start = selectedDates[0];
-        const end = value;
-        const range = [];
-        let current = new Date(start);
-        while (current <= end) {
-          range.push(new Date(current));
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(range);
-      }
-    }
-  };
+    axios.get(`/api/responses/${linkid}`).then((res) => {
+      setSavedResponses(res.data);
+      const initial = {};
+      res.data.forEach((r) => {
+        initial[r.schedule_id] = r.response;
+      });
+      setResponses(initial);
+    });
+  }, [linkid]);
 
   // === 応答変更 ===
   const handleResponseChange = (id, value) => {
@@ -67,6 +52,9 @@ export default function SharePage() {
           response: responses[schedule_id],
         });
       }
+      // 即時更新
+      const res = await axios.get(`/api/responses/${linkid}`);
+      setSavedResponses(res.data);
       alert("保存しました");
     } catch (err) {
       console.error("保存失敗:", err);
@@ -78,23 +66,29 @@ export default function SharePage() {
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">共有スケジュール</h2>
 
-      {/* カレンダー */}
-      <Calendar
-        onClickDay={handleDateClick}
+      {/* === カレンダーUI === */}
+      <DatePicker
+        multiple={rangeMode === "multiple"}
+        range={rangeMode === "range"}
         value={selectedDates}
+        onChange={setSelectedDates}
+        format="YYYY-MM-DD"
+        className="purple"
       />
       <div className="mt-2">
-        {selectedDates.length > 0 ? (
+        {selectedDates?.length > 0 ? (
           <p>
             選択した日付:{" "}
-            {selectedDates.map((d) => d.toISOString().split("T")[0]).join(", ")}
+            {Array.isArray(selectedDates)
+              ? selectedDates.map((d) => d.format("YYYY-MM-DD")).join(", ")
+              : selectedDates.format("YYYY-MM-DD")}
           </p>
         ) : (
           <p>日付をクリックしてください</p>
         )}
       </div>
 
-      {/* 範囲/複数切替 */}
+      {/* === 範囲/複数切替 === */}
       <div className="mt-4">
         <label>
           <input
@@ -116,7 +110,7 @@ export default function SharePage() {
         </label>
       </div>
 
-      {/* 名前入力 */}
+      {/* === 名前入力 === */}
       <input
         type="text"
         placeholder="名前を入力"
@@ -125,7 +119,7 @@ export default function SharePage() {
         className="border p-2 my-4 w-full"
       />
 
-      {/* 日程一覧 */}
+      {/* === 日程一覧 === */}
       <table className="w-full border-collapse border">
         <thead>
           <tr className="bg-[#004CA0] text-white">
@@ -159,13 +153,25 @@ export default function SharePage() {
         </tbody>
       </table>
 
-      {/* 保存ボタン */}
+      {/* === 保存ボタン === */}
       <button
         onClick={handleSave}
         className="bg-[#FDB9C8] text-black px-4 py-2 mt-4 rounded-lg shadow hover:bg-[#004CA0] hover:text-white"
       >
         保存
       </button>
+
+      {/* === 登録済み応答表示 === */}
+      <div className="mt-6">
+        <h3 className="text-xl font-bold">登録済みの回答</h3>
+        <ul className="list-disc ml-6">
+          {savedResponses.map((r, idx) => (
+            <li key={idx}>
+              {r.username} → {r.schedule_id}: {r.response}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
