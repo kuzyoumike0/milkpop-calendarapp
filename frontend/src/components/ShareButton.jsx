@@ -1,14 +1,11 @@
 import React from "react";
 
-export default function ShareButton({ url }) {
-  const tweet = () => {
-    const text = encodeURIComponent("日程を共有しました！ MilkPOP Calendar");
-    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${text}`, "_blank");
-  };
-
+export default function ShareButton({ link }) {
   return (
-    <button onClick={tweet} className="bg-[#004CA0] text-white px-4 py-2 rounded">
-      Twitterで共有
-    </button>
+    link ? (
+      <p style={{ marginTop:"15px" }}>
+        共有リンク: <a href={link} target="_blank" rel="noreferrer">{link}</a>
+      </p>
+    ) : null
   );
 }
