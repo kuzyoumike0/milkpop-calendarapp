@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Header from "./Header";
+import Footer from "./Footer";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -94,6 +95,8 @@ export default function PersonalPage() {
           保存
         </button>
       </main>
+
+      <Footer />
     </div>
   );
 }
