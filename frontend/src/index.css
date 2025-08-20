@@ -2,18 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === グローバル背景とフォント === */
+/* カスタムデザイン */
 body {
   @apply bg-brandBlack text-white font-sans;
 }
 
-/* === カード風デザイン === */
 .card {
-  @apply bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6;
+  @apply bg-gray-900 rounded-2xl shadow-lg p-6 mb-4;
 }
+
 .card-title {
-  @apply text-brandPink font-bold mb-3 text-lg;
+  @apply text-brandPink text-xl font-bold mb-2;
 }
+
 .card-content {
-  @apply text-gray-300;
+  @apply text-gray-300 text-sm;
+}
+
+.btn {
+  @apply bg-brandPink text-brandBlack font-semibold px-4 py-2 rounded-xl shadow hover:bg-pink-400 transition;
 }
