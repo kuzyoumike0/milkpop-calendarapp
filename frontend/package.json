@@ -42,5 +42,6 @@
     "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.32"
-  }
+  },
+  "homepage": "."
 }
