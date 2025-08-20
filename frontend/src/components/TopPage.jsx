@@ -4,47 +4,50 @@ import { motion } from "framer-motion";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a] flex flex-col items-center justify-center px-4">
-      {/* バナー */}
-      <header className="w-full text-center py-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-wide drop-shadow-lg">
-          MilkPOP Calendar
-        </h1>
-      </header>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white px-4">
+      {/* タイトル */}
+      <motion.h1
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-[#FDB9C8] to-[#004CA0]"
+      >
+        MilkPOP Calendar
+      </motion.h1>
 
-      {/* カードコンテナ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full mt-8">
-        {/* 日程登録ページカード */}
+      {/* カードリンク */}
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* 日程登録ページ */}
         <motion.div
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.98 }}
-          className="rounded-2xl p-8 backdrop-blur-md bg-white/10 border border-white/20 shadow-lg flex flex-col items-center justify-center text-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl rounded-2xl p-6 w-72 text-center"
         >
-          <h2 className="text-2xl font-bold text-white mb-4">日程登録ページ</h2>
-          <p className="text-gray-300 mb-6">
-            複数日程や範囲を選んで、共有リンクを発行できます。
+          <h2 className="text-2xl font-semibold mb-4">日程登録ページ</h2>
+          <p className="mb-6 text-sm text-gray-300">
+            新しいイベントを登録して、共有リンクを発行できます。
           </p>
           <Link
             to="/link"
-            className="px-6 py-3 rounded-xl bg-[#FDB9C8] hover:bg-[#eaa1b0] text-black font-semibold shadow-md transition"
+            className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] text-white font-bold shadow-md"
           >
             開く
           </Link>
         </motion.div>
 
-        {/* 個人スケジュールページカード */}
+        {/* 個人スケジュールページ */}
         <motion.div
-          whileHover={{ scale: 1.05, y: -5 }}
-          whileTap={{ scale: 0.98 }}
-          className="rounded-2xl p-8 backdrop-blur-md bg-white/10 border border-white/20 shadow-lg flex flex-col items-center justify-center text-center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="backdrop-blur-lg bg-white/10 border border-white/20 shadow-xl rounded-2xl p-6 w-72 text-center"
         >
-          <h2 className="text-2xl font-bold text-white mb-4">個人スケジュールページ</h2>
-          <p className="text-gray-300 mb-6">
-            メモや時間帯を指定して、自分用スケジュールを登録できます。
+          <h2 className="text-2xl font-semibold mb-4">個人スケジュール</h2>
+          <p className="mb-6 text-sm text-gray-300">
+            あなたの予定を登録して、いつでも確認できます。
           </p>
           <Link
             to="/personal"
-            className="px-6 py-3 rounded-xl bg-[#004CA0] hover:bg-[#003680] text-white font-semibold shadow-md transition"
+            className="inline-block px-6 py-3 rounded-xl bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white font-bold shadow-md"
           >
             開く
           </Link>
