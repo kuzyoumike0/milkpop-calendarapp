@@ -7,9 +7,13 @@ import useHolidays from "../hooks/useHolidays";
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [date, setDate] = useState([]);
-  const [timeSlot, setTimeSlot] = useState("全日");
+  const [dates, setDates] = useState([]);
+  const [mode, setMode] = useState("range"); // カレンダー選択モード
+  const [timeType, setTimeType] = useState("終日");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("01:00");
   const [events, setEvents] = useState([]);
+
   const holidays = useHolidays();
 
   const fetchEvents = async () => {
@@ -21,18 +25,66 @@ export default function PersonalPage() {
     fetchEvents();
   }, []);
 
+  // カレンダー選択処理
+  const handleDateChange = (value) => {
+    if (mode === "range") {
+      setDates(value);
+    } else {
+      if (!Array.isArray(dates)) setDates([]);
+      const exists = dates.find((d) => d.toDateString() === value.toDateString());
+      if (exists) {
+        setDates(dates.filter((d) => d.toDateString() !== value.toDateString()));
+      } else {
+        setDates([...dates, value]);
+      }
+    }
+  };
+
+  // 時刻リスト
+  const timeOptions = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
+  // 保存処理
   const handleSave = async () => {
+    const formattedDates = Array.isArray(dates)
+      ? dates.map((d) => {
+          if (d instanceof Date) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
+          }
+          return d;
+        })
+      : [];
+
+    // 時間バリデーション
+    let timeslot = timeType;
+    if (timeType === "時間指定") {
+      if (startTime >= endTime) {
+        alert("終了時刻は開始時刻より後にしてください");
+        return;
+      }
+      timeslot = `${startTime}〜${endTime}`;
+    }
+
     await axios.post("/api/personal", {
       title,
       memo,
-      dates: Array.isArray(date) ? date : [date],
-      timeslot: timeSlot,
+      dates: formattedDates,
+      timeslot,
     });
+
     fetchEvents();
+
+    // 入力リセット
     setTitle("");
     setMemo("");
-    setDate([]);
-    setTimeSlot("全日");
+    setDates([]);
+    setTimeType("終日");
+    setStartTime("00:00");
+    setEndTime("01:00");
   };
 
   return (
@@ -52,10 +104,33 @@ export default function PersonalPage() {
         onChange={(e) => setMemo(e.target.value)}
       />
 
+      {/* カレンダー選択モード切替 */}
+      <div className="mb-2">
+        <label className="mr-4">
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />{" "}
+          範囲選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="multi"
+            checked={mode === "multi"}
+            onChange={() => setMode("multi")}
+          />{" "}
+          複数選択
+        </label>
+      </div>
+
+      {/* カレンダー */}
       <Calendar
-        onChange={setDate}
-        value={date}
-        selectRange={true}
+        onChange={handleDateChange}
+        value={dates}
+        selectRange={mode === "range"}
         tileClassName={({ date }) => {
           const yyyy = date.getFullYear();
           const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -65,16 +140,48 @@ export default function PersonalPage() {
         }}
       />
 
-      <div className="mt-2">
-        <label className="mr-2">
-          <input type="radio" value="全日" checked={timeSlot==="全日"} onChange={(e)=>setTimeSlot(e.target.value)} /> 全日
+      {/* 時間帯プルダウン */}
+      <div className="mt-4">
+        <label className="mr-4">
+          <select
+            className="text-black p-2 rounded"
+            value={timeType}
+            onChange={(e) => setTimeType(e.target.value)}
+          >
+            <option value="終日">終日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+            <option value="時間指定">時間指定</option>
+          </select>
         </label>
-        <label className="mr-2">
-          <input type="radio" value="昼" checked={timeSlot==="昼"} onChange={(e)=>setTimeSlot(e.target.value)} /> 昼
-        </label>
-        <label>
-          <input type="radio" value="夜" checked={timeSlot==="夜"} onChange={(e)=>setTimeSlot(e.target.value)} /> 夜
-        </label>
+
+        {timeType === "時間指定" && (
+          <div className="mt-2 space-x-2">
+            <select
+              className="text-black p-2 rounded"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <span>〜</span>
+            <select
+              className="text-black p-2 rounded"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <button
