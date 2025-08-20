@@ -6,14 +6,13 @@ import ShareButton from "./ShareButton";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [timeslot, setTimeslot] = useState("全日");
   const [rangeMode, setRangeMode] = useState("範囲選択");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
   const [shareUrl, setShareUrl] = useState("");
 
-  // 日付選択処理
   const handleDateChange = (value) => {
     if (rangeMode === "範囲選択") {
       if (Array.isArray(value)) {
@@ -24,10 +23,10 @@ export default function LinkPage() {
           temp.push(new Date(cur));
           cur.setDate(cur.getDate() + 1);
         }
-        setDates(temp);
+        setSelectedDates(temp);
       }
     } else if (rangeMode === "複数選択") {
-      setDates((prev) =>
+      setSelectedDates((prev) =>
         prev.find((d) => d.toDateString() === value.toDateString())
           ? prev.filter((d) => d.toDateString() !== value.toDateString())
           : [...prev, value]
@@ -35,12 +34,11 @@ export default function LinkPage() {
     }
   };
 
-  // 共有リンク発行
   const handleSubmit = async () => {
     try {
       const res = await axios.post("/api/schedules/share", {
         title,
-        dates: dates.map((d) => d.toISOString().split("T")[0]),
+        dates: selectedDates.map((d) => d.toISOString().split("T")[0]),
         timeslot,
         startTime,
         endTime,
@@ -60,7 +58,6 @@ export default function LinkPage() {
       </header>
 
       <div className="max-w-3xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
-        {/* タイトル入力 */}
         <input
           type="text"
           placeholder="タイトルを入力"
@@ -69,7 +66,6 @@ export default function LinkPage() {
           className="w-full p-3 rounded-xl text-black"
         />
 
-        {/* 日程選択モード */}
         <div className="flex space-x-4">
           <label>
             <input
@@ -91,16 +87,13 @@ export default function LinkPage() {
           </label>
         </div>
 
-        {/* カレンダー */}
         <div className="bg-white rounded-xl p-4">
           <Calendar
             selectRange={rangeMode === "範囲選択"}
             onChange={handleDateChange}
-            value={rangeMode === "範囲選択" ? null : undefined}
           />
         </div>
 
-        {/* 時間帯選択 */}
         <div className="space-y-2">
           <label className="block">時間帯:</label>
           <select
@@ -133,7 +126,6 @@ export default function LinkPage() {
           )}
         </div>
 
-        {/* 登録ボタン */}
         <button
           onClick={handleSubmit}
           className="w-full py-3 bg-[#FDB9C8] text-black rounded-xl font-bold hover:bg-pink-400"
@@ -141,7 +133,6 @@ export default function LinkPage() {
           保存 & 共有リンク発行
         </button>
 
-        {/* 共有リンク表示 */}
         {shareUrl && <ShareButton url={shareUrl} />}
       </div>
     </div>
