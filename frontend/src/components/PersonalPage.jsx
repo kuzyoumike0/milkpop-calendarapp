@@ -57,16 +57,10 @@ export default function PersonalPage() {
           MilkPOP Calendar
         </h1>
         <nav className="flex gap-4">
-          <Link
-            to="/personal"
-            className="text-white hover:text-[#FDB9C8] transition"
-          >
+          <Link to="/personal" className="text-white hover:text-[#FDB9C8] transition">
             個人スケジュール
           </Link>
-          <Link
-            to="/link"
-            className="text-white hover:text-[#FDB9C8] transition"
-          >
+          <Link to="/link" className="text-white hover:text-[#FDB9C8] transition">
             共有スケジュール
           </Link>
         </nav>
@@ -75,7 +69,7 @@ export default function PersonalPage() {
       {/* メイン */}
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="backdrop-blur-lg bg-white/20 border border-white/30 
-                        rounded-2xl shadow-2xl p-8 w-full max-w-2xl text-black">
+                        rounded-2xl shadow-2xl p-8 w-full max-w-2xl">
           <h2 className="text-2xl font-bold mb-6 text-center text-white drop-shadow">
             📝 個人スケジュール登録
           </h2>
@@ -85,7 +79,7 @@ export default function PersonalPage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-2 rounded-lg mb-4 bg-white/60 border border-gray-300"
+            className="w-full p-2 rounded-lg mb-4 bg-white/60 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FDB9C8]"
           />
 
           {/* メモ */}
@@ -93,7 +87,7 @@ export default function PersonalPage() {
           <textarea
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
-            className="w-full p-2 rounded-lg mb-4 bg-white/60 border border-gray-300"
+            className="w-full p-2 rounded-lg mb-4 bg-white/60 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FDB9C8]"
           />
 
           {/* カレンダー */}
@@ -115,7 +109,7 @@ export default function PersonalPage() {
           <select
             value={timeslot}
             onChange={(e) => setTimeslot(e.target.value)}
-            className="w-full p-2 rounded-lg mb-6 bg-white/60 border border-gray-300"
+            className="w-full p-2 rounded-lg mb-6 bg-white/60 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FDB9C8]"
           >
             <option value="全日">全日</option>
             <option value="昼">昼</option>
