@@ -1,28 +1,20 @@
--- === schedules: 共有スケジュール ===
+-- スケジュールテーブル
 CREATE TABLE IF NOT EXISTS schedules (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
-  range_mode TEXT NOT NULL,
-  linkid UUID NOT NULL
+  memo TEXT,                -- 個人スケジュール用のメモ欄
+  date DATE NOT NULL,
+  timeslot TEXT NOT NULL,   -- 終日 / 昼 / 夜 / 時間指定
+  range_mode TEXT NOT NULL, -- 複数日 or 範囲選択
+  linkid TEXT,              -- 共有リンクID
+  link_title TEXT           -- 共有リンクタイトル
 );
 
--- === personal_schedules: 個人スケジュール ===
-CREATE TABLE IF NOT EXISTS personal_schedules (
-  id SERIAL PRIMARY KEY,
-  username TEXT NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
-  range_mode TEXT NOT NULL
-);
-
--- === responses: 共有スケジュールへの応答（◯✕） ===
+-- 回答テーブル
 CREATE TABLE IF NOT EXISTS responses (
   id SERIAL PRIMARY KEY,
+  schedule_id INT REFERENCES schedules(id) ON DELETE CASCADE,
   username TEXT NOT NULL,
-  schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
-  response TEXT NOT NULL
+  response TEXT NOT NULL,
+  UNIQUE(schedule_id, username)
 );
