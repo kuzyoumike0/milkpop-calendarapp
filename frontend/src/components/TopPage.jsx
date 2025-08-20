@@ -5,18 +5,20 @@ import Header from "./Header";
 export default function TopPage() {
   return (
     <div className="top-page relative z-10">
+      {/* 共通ヘッダー */}
       <Header />
 
-      {/* ロゴ画像（トップページのみ中央配置） */}
-      <div className="flex justify-center mt-8 mb-6">
+      {/* トップページ専用 ロゴ画像 */}
+      <div className="flex justify-center mt-6 mb-10">
         <img
           src="/logo.png"
           alt="MilkPOP Logo"
-          className="h-12 w-auto drop-shadow-2xl"
+          className="h-28 w-auto drop-shadow-2xl"
         />
       </div>
 
-      <main className="flex flex-col items-center justify-center py-8 px-6 relative z-10">
+      {/* メインコンテンツ */}
+      <main className="flex flex-col items-center justify-center px-6 relative z-10">
         <div className="bg-white/10 rounded-2xl shadow-xl p-10 text-center max-w-2xl backdrop-blur-md">
           <h2 className="text-3xl font-bold mb-6">
             ようこそ、MilkPOP Calendar へ
