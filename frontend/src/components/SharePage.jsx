@@ -36,6 +36,14 @@ export default function SharePage() {
     fetchSharedData();
   };
 
+  // === ユーザー別一覧作成 ===
+  const users = [...new Set(data.responses.map((r) => r.username))];
+  const responseMap = {};
+  data.responses.forEach((r) => {
+    if (!responseMap[r.username]) responseMap[r.username] = {};
+    responseMap[r.username][r.schedule_id] = r.response;
+  });
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">共有ページ</h2>
@@ -59,7 +67,9 @@ export default function SharePage() {
         }}
       />
 
-      <table className="w-full border text-center mt-6">
+      {/* 個別選択テーブル */}
+      <h3 className="text-xl mt-6 mb-2">予定に対する回答</h3>
+      <table className="w-full border text-center">
         <thead>
           <tr>
             <th>日付</th>
@@ -95,6 +105,37 @@ export default function SharePage() {
       >
         保存
       </button>
+
+      {/* ユーザーごとの〇✖一覧 */}
+      <h3 className="text-xl mt-8 mb-2">全員分の一覧</h3>
+      <div className="overflow-x-auto">
+        <table className="w-full border text-center">
+          <thead>
+            <tr>
+              <th>ユーザー</th>
+              {data.schedules.map((s) => (
+                <th key={s.id}>
+                  {s.date} <br /> {s.timeslot}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u}>
+                <td className="font-bold">{u}</td>
+                {data.schedules.map((s) => (
+                  <td key={s.id}>
+                    {responseMap[u] && responseMap[u][s.id]
+                      ? responseMap[u][s.id]
+                      : "-"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
