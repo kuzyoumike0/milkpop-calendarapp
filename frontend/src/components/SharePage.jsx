@@ -38,7 +38,7 @@ export default function SharePage() {
     }
   };
 
-  // scheduleId -> { username: response }
+  // responseMap: usernameごとに scheduleId → response
   const responseMap = {};
   responses.forEach((r) => {
     if (!responseMap[r.username]) responseMap[r.username] = {};
@@ -53,7 +53,8 @@ export default function SharePage() {
         共有スケジュール
       </header>
 
-      <div className="mb-4 space-x-2">
+      {/* 名前入力 */}
+      <div className="mb-4">
         <input
           type="text"
           placeholder="あなたの名前"
@@ -61,12 +62,6 @@ export default function SharePage() {
           onChange={(e) => setUsername(e.target.value)}
           className="p-2 text-black rounded"
         />
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-pink-400 text-black font-bold rounded"
-        >
-          保存
-        </button>
       </div>
 
       {/* 📌 出欠テーブル */}
@@ -75,7 +70,6 @@ export default function SharePage() {
           <thead className="bg-gray-800">
             <tr>
               <th className="border border-gray-700 px-2 py-1">日付</th>
-              <th className="border border-gray-700 px-2 py-1">時間帯</th>
               {allUsers.map((u) => (
                 <th
                   key={u}
@@ -91,14 +85,8 @@ export default function SharePage() {
             {schedules.map((s) => (
               <tr key={s.id}>
                 <td className="border border-gray-700 px-2 py-1">{s.date}</td>
-                <td className="border border-gray-700 px-2 py-1">
-                  {s.timeslot}
-                </td>
                 {allUsers.map((u) => (
-                  <td
-                    key={u}
-                    className="border border-gray-700 px-2 py-1"
-                  >
+                  <td key={u} className="border border-gray-700 px-2 py-1">
                     {responseMap[u]?.[s.id] || "-"}
                   </td>
                 ))}
@@ -119,6 +107,16 @@ export default function SharePage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 保存ボタン */}
+      <div className="mt-6 text-center">
+        <button
+          onClick={handleSave}
+          className="px-6 py-3 bg-pink-400 text-black font-bold rounded hover:bg-pink-500"
+        >
+          保存
+        </button>
       </div>
     </div>
   );
