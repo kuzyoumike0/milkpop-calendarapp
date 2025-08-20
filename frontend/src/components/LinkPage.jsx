@@ -1,203 +1,194 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
+  const [rangeMode, setRangeMode] = useState("multiple");
   const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("range");
-  const [timeMode, setTimeMode] = useState("preset"); // "preset" or "custom"
-  const [preset, setPreset] = useState("all"); // "all", "day", "night"
-  const [startTime, setStartTime] = useState("01:00");
-  const [endTime, setEndTime] = useState("24:00");
+  const [startTime, setStartTime] = useState("allday");
+  const [endTime, setEndTime] = useState("");
   const [link, setLink] = useState("");
-  const [holidays, setHolidays] = useState([]);
 
-  // 祝日取得
-  useEffect(() => {
-    axios.get("/api/holidays").then((res) => setHolidays(res.data));
-  }, []);
+  // 時間プリセット
+  const presets = [
+    { value: "allday", label: "終日" },
+    { value: "day", label: "昼 (9:00〜18:00)" },
+    { value: "night", label: "夜 (18:00〜23:00)" },
+  ];
 
-  const holidayDates = holidays.map((h) => h.date);
+  // 時刻リスト（1時〜0時）
+  const hours = Array.from({ length: 24 }, (_, i) => i + 1).map(
+    (h) => `${h}:00`
+  );
 
+  // 日付変更
   const handleDateChange = (value) => {
     if (rangeMode === "range") {
       setDates(value);
     } else {
-      setDates((prev) =>
-        prev.some((d) => d.getTime() === value.getTime())
-          ? prev.filter((d) => d.getTime() !== value.getTime())
-          : [...prev, value]
-      );
+      setDates(value instanceof Date ? [value] : value);
     }
   };
 
-  // 1時〜24時までのリスト
-  const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String((i + 1) % 24).padStart(2, "0")}:00`
-  );
-
+  // 登録処理
   const handleSubmit = async () => {
-    let s = startTime;
-    let e = endTime;
-
-    // プリセットの場合は時間帯を変換
-    if (timeMode === "preset") {
-      if (preset === "all") {
-        s = "01:00";
-        e = "24:00";
-      } else if (preset === "day") {
-        s = "09:00";
-        e = "18:00";
-      } else if (preset === "night") {
-        s = "18:00";
-        e = "24:00";
-      }
-    }
-
-    if (s >= e) {
-      alert("終了時刻は開始時刻より後にしてください。");
+    if (!title || dates.length === 0 || !startTime || !endTime) {
+      alert("タイトル・日付・時間を入力してください");
       return;
     }
-
-    const formattedDates =
-      rangeMode === "range"
-        ? Array.from(
-            { length: (dates[1] - dates[0]) / (1000 * 60 * 60 * 24) + 1 },
-            (_, i) => {
-              const d = new Date(dates[0]);
-              d.setDate(d.getDate() + i);
-              return d.toISOString().split("T")[0];
-            }
-          )
-        : dates.map((d) => d.toISOString().split("T")[0]);
-
-    const res = await axios.post("/api/schedule", {
-      title,
-      range_mode: rangeMode,
-      dates: formattedDates,
-      start_time: s,
-      end_time: e,
-    });
-    setLink(window.location.origin + res.data.link); // 即時URL表示
+    try {
+      const res = await axios.post("/api/schedule", {
+        title,
+        range_mode: rangeMode,
+        dates: Array.isArray(dates)
+          ? dates.map((d) => d.toISOString().split("T")[0])
+          : [dates.toISOString().split("T")[0]],
+        start_time: startTime,
+        end_time: endTime,
+      });
+      setLink(res.data.link);
+    } catch (err) {
+      alert("リンク作成に失敗しました");
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">日程登録</h2>
-      <input
-        className="w-full mb-3 p-2 text-black rounded"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      {/* タイトル */}
+      <h1 className="text-3xl font-bold text-center text-[#FDB9C8] mb-8">
+        共有スケジュール登録
+      </h1>
 
-      {/* モード切替 */}
-      <div className="mb-4 space-x-6">
-        <label>
-          <input
-            type="radio"
-            value="range"
-            checked={rangeMode === "range"}
-            onChange={(e) => setRangeMode(e.target.value)}
-          />
-          範囲選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={rangeMode === "multiple"}
-            onChange={(e) => setRangeMode(e.target.value)}
-          />
-          複数選択
-        </label>
-      </div>
+      {/* カード */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
+        {/* タイトル入力 */}
+        <label className="block mb-2 text-gray-300">タイトル</label>
+        <input
+          type="text"
+          className="w-full p-2 rounded-lg border border-gray-600 bg-black text-white mb-4"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-      {/* カレンダー */}
-      <Calendar
-        onChange={handleDateChange}
-        selectRange={rangeMode === "range"}
-        value={dates}
-        tileClassName={({ date }) =>
-          holidayDates.includes(date.toISOString().split("T")[0])
-            ? "text-red-500 font-bold"
-            : ""
-        }
-      />
+        {/* 範囲選択/複数選択 */}
+        <label className="block mb-2 text-gray-300">選択モード</label>
+        <div className="flex gap-4 mb-4">
+          <label className="text-gray-300">
+            <input
+              type="radio"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />
+            範囲選択
+          </label>
+          <label className="text-gray-300">
+            <input
+              type="radio"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />
+            複数選択
+          </label>
+        </div>
 
-      {/* 時間選択 */}
-      <div className="mt-6">
-        <label className="block mb-2 text-[#FDB9C8]">時間指定モード</label>
-        <select
-          className="w-full p-2 text-black rounded mb-4"
-          value={timeMode}
-          onChange={(e) => setTimeMode(e.target.value)}
-        >
-          <option value="preset">プリセット（終日・昼・夜）</option>
-          <option value="custom">カスタム（開始〜終了）</option>
-        </select>
+        {/* カレンダー */}
+        <Calendar
+          onChange={handleDateChange}
+          value={dates}
+          selectRange={rangeMode === "range"}
+          tileClassName={({ date }) =>
+            dates.some(
+              (d) =>
+                new Date(d).toDateString() === new Date(date).toDateString()
+            )
+              ? "bg-[#FDB9C8] text-black rounded-full"
+              : ""
+          }
+          className="rounded-lg border border-gray-600 bg-black text-white p-2 mb-4"
+        />
 
-        {timeMode === "preset" ? (
-          <select
-            className="w-full p-2 text-black rounded"
-            value={preset}
-            onChange={(e) => setPreset(e.target.value)}
-          >
-            <option value="all">終日</option>
-            <option value="day">昼 (09:00〜18:00)</option>
-            <option value="night">夜 (18:00〜24:00)</option>
-          </select>
-        ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 text-[#FDB9C8]">開始時刻</label>
-              <select
-                className="w-full p-2 text-black rounded"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              >
-                {timeOptions.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 text-[#FDB9C8]">終了時刻</label>
-              <select
-                className="w-full p-2 text-black rounded"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              >
-                {timeOptions.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* 時間帯選択 */}
+        <label className="block mb-2 text-gray-300">時間帯</label>
+        <div className="flex flex-wrap gap-4 mb-4">
+          {presets.map((p) => (
+            <label key={p.value} className="text-gray-300">
+              <input
+                type="radio"
+                value={p.value}
+                checked={startTime === p.value}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  if (e.target.value === "allday") setEndTime("23:59");
+                  if (e.target.value === "day") setEndTime("18:00");
+                  if (e.target.value === "night") setEndTime("23:00");
+                }}
+              />
+              {p.label}
+            </label>
+          ))}
+        </div>
+
+        {/* 開始/終了時刻 */}
+        <div className="flex gap-4 mb-6">
+          <div className="flex-1">
+            <label className="block mb-2 text-gray-300">開始時刻</label>
+            <select
+              className="w-full p-2 rounded-lg border border-gray-600 bg-black text-white"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            >
+              <option value="">選択してください</option>
+              {hours.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
           </div>
+          <div className="flex-1">
+            <label className="block mb-2 text-gray-300">終了時刻</label>
+            <select
+              className="w-full p-2 rounded-lg border border-gray-600 bg-black text-white"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            >
+              <option value="">選択してください</option>
+              {hours.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 発行ボタン */}
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-[#004CA0] hover:bg-[#003580] text-white py-2 rounded-xl font-bold shadow-lg transition"
+        >
+          共有リンクを発行
+        </button>
+
+        {/* 発行済みリンク表示 */}
+        {link && (
+          <p className="mt-4 text-center text-gray-300">
+            共有リンク:{" "}
+            <a
+              href={link}
+              className="text-[#FDB9C8] underline break-all"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {window.location.origin + link}
+            </a>
+          </p>
         )}
       </div>
-
-      <button
-        className="mt-6 w-full bg-[#004CA0] text-white py-2 rounded-2xl hover:bg-[#FDB9C8] hover:text-black shadow-lg"
-        onClick={handleSubmit}
-      >
-        共有リンクを発行
-      </button>
-
-      {link && (
-        <p className="mt-4">
-          発行されたリンク:{" "}
-          <a href={link} className="text-[#FDB9C8] font-semibold">
-            {link}
-          </a>
-        </p>
-      )}
     </div>
   );
 }
