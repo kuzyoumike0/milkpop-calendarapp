@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
@@ -9,8 +9,7 @@ import ShareLinkPage from "./components/ShareLinkPage";
 
 function App() {
   return (
-    // basename="/" は不要！ Railway のルート直下なので消す
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<TopPage />} />
@@ -20,7 +19,7 @@ function App() {
           <Route path="sharelink/:linkid" element={<ShareLinkPage />} />
         </Route>
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
