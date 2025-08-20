@@ -9,18 +9,17 @@ export default function SharePage() {
   const [responses, setResponses] = useState({});
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("multiple");
+  const [timeSlot, setTimeSlot] = useState("全日");
 
   // 初期データ取得
   useEffect(() => {
     axios.get("/api/shared").then((res) => setSchedules(res.data));
   }, []);
 
-  // プルダウン変更
   const handleChange = (id, value) => {
     setResponses((prev) => ({ ...prev, [id]: value }));
   };
 
-  // 保存処理（カレンダー選択結果を即時反映）
   const handleSave = () => {
     const newEntries = [];
     if (rangeMode === "multiple" && Array.isArray(dates)) {
@@ -28,7 +27,7 @@ export default function SharePage() {
         newEntries.push({
           id: `temp-${d}`,
           date: d.toISOString().split("T")[0],
-          timeslot: "全日",
+          timeslot: timeSlot,
         });
       });
     } else if (rangeMode === "range" && Array.isArray(dates)) {
@@ -38,18 +37,17 @@ export default function SharePage() {
         newEntries.push({
           id: `temp-${current.toISOString()}`,
           date: current.toISOString().split("T")[0],
-          timeslot: "全日",
+          timeslot: timeSlot,
         });
         current.setDate(current.getDate() + 1);
       }
     }
 
-    // 即時反映（テーブル更新）
+    // 即時反映
     setSchedules((prev) => [...prev, ...newEntries]);
 
-    // サーバー保存
     axios
-      .post("/api/shared/responses", { responses, dates })
+      .post("/api/shared/responses", { responses, dates, timeSlot })
       .then(() => alert("保存しました！"));
   };
 
@@ -62,7 +60,7 @@ export default function SharePage() {
           共有スケジュール
         </h2>
 
-        {/* カレンダー選択 */}
+        {/* カレンダー */}
         <div className="mb-6">
           <label className="block mb-2">日程選択</label>
           <CalendarWrapper mode={rangeMode} value={dates} onChange={setDates} />
@@ -90,6 +88,20 @@ export default function SharePage() {
             />
             複数選択
           </label>
+        </div>
+
+        {/* 時間帯選択 */}
+        <div className="mb-6">
+          <label className="block mb-2">時間帯</label>
+          <select
+            className="w-full px-4 py-2 rounded-xl text-black"
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+          >
+            <option value="全日">全日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+          </select>
         </div>
 
         {/* テーブル */}
