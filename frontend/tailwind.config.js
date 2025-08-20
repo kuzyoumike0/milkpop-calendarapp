@@ -1,6 +1,7 @@
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",  // ← これ重要
+    "./src/**/*.{js,jsx,ts,tsx}", // ← これでsrc配下の全コンポーネントを監視
+    "./public/index.html",
   ],
   theme: {
     extend: {},
