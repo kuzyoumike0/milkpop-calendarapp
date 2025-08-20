@@ -1,24 +1,84 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+  background-color: #111;
+  color: #fff;
+}
 
-/* カスタム: react-calendar の装飾 */
+/* カレンダー本体 */
 .react-calendar {
   width: 100%;
-  background: white;
-  border-radius: 0.75rem;
-  padding: 1rem;
+  max-width: 800px;
+  background: #000;
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  font-family: inherit;
+  color: #fff;
+  padding: 10px;
 }
-.react-calendar__tile--active {
-  background: #FDB9C8 !important;
-  color: black !important;
-  border-radius: 9999px;
+
+/* ナビゲーションバー */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
-/* 複数選択モードで選択した日 */
-.selected-day {
-  background-color: #FDB9C8 !important;
-  color: black !important;
+.react-calendar__navigation button {
+  color: #FDB9C8;
+  background: transparent;
+  border: none;
   font-weight: bold;
-  border-radius: 9999px;
-  box-shadow: 0 0 5px rgba(253, 185, 200, 0.8);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.react-calendar__navigation button:hover {
+  color: #004CA0;
+}
+
+/* 曜日ラベル */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #FDB9C8;
+}
+
+/* 日付セル */
+.react-calendar__tile {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.react-calendar__tile:hover {
+  background: rgba(253, 185, 200, 0.2);
+  border: 1px solid #FDB9C8;
+}
+
+/* 選択日 */
+.react-calendar__tile--active {
+  background: #004CA0 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* 今日 */
+.react-calendar__tile--now {
+  border: 1px solid #FDB9C8;
+}
+
+/* 範囲選択（開始/終了） */
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd {
+  background: #FDB9C8 !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* 範囲選択（中間） */
+.react-calendar__tile--range {
+  background: rgba(253, 185, 200, 0.4) !important;
+  color: #fff !important;
 }
