@@ -57,8 +57,7 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
       schedule_id INT NOT NULL,
-      response TEXT NOT NULL,
-      UNIQUE(username, schedule_id)
+      response TEXT NOT NULL
     );
   `);
 }
@@ -88,8 +87,7 @@ app.post("/api/schedule", async (req, res) => {
 // === API: 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
   try {
-    const { username, title, memo, start_date, end_date, timeslot, range_mode } =
-      req.body;
+    const { username, title, memo, start_date, end_date, timeslot, range_mode } = req.body;
     if (!username || !start_date || !end_date || !timeslot || !range_mode) {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
@@ -106,39 +104,14 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
-// === API: 個人スケジュール取得 ===
-app.get("/api/personal", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT * FROM personal_schedules ORDER BY start_date ASC`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("個人スケジュール取得エラー:", err);
-    res.status(500).json({ error: "取得失敗" });
-  }
-});
-
-// === API: 共有リンクで日程 + 回答取得 ===
+// === API: 共有リンクで日程取得 ===
 app.get("/api/share/:linkid", async (req, res) => {
   try {
     const { linkid } = req.params;
-
     const result = await pool.query(
-      `
-      SELECT s.id as schedule_id, s.title, s.start_date, s.end_date, s.timeslot, s.range_mode, s.linkid,
-             COALESCE(json_agg(
-               json_build_object('username', r.username, 'response', r.response)
-             ) FILTER (WHERE r.id IS NOT NULL), '[]') as responses
-      FROM schedules s
-      LEFT JOIN responses r ON s.id = r.schedule_id
-      WHERE s.linkid = $1
-      GROUP BY s.id
-      ORDER BY s.start_date ASC
-      `,
+      `SELECT * FROM schedules WHERE linkid = $1`,
       [linkid]
     );
-
     res.json(result.rows);
   } catch (err) {
     console.error("共有リンク取得エラー:", err);
@@ -146,7 +119,7 @@ app.get("/api/share/:linkid", async (req, res) => {
   }
 });
 
-// === API: 応答保存（〇✖ 上書き対応） ===
+// === API: 応答保存（〇✖） ===
 app.post("/api/response", async (req, res) => {
   try {
     const { username, schedule_id, response } = req.body;
@@ -155,15 +128,10 @@ app.post("/api/response", async (req, res) => {
     }
 
     await pool.query(
-      `
-      INSERT INTO responses (username, schedule_id, response)
-      VALUES ($1,$2,$3)
-      ON CONFLICT (username, schedule_id)
-      DO UPDATE SET response = EXCLUDED.response
-      `,
+      `INSERT INTO responses (username, schedule_id, response)
+       VALUES ($1,$2,$3)`,
       [username, schedule_id, response]
     );
-
     res.json({ success: true });
   } catch (err) {
     console.error("応答保存エラー:", err);
@@ -171,10 +139,10 @@ app.post("/api/response", async (req, res) => {
   }
 });
 
-// === 静的ファイル提供（React build） ===
-app.use(express.static(path.join(__dirname, "public")));
+// === 静的ファイル提供 ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 // === サーバー起動 ===
