@@ -7,14 +7,13 @@ body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   color: #333;
 
-  /* かわいいパステル調ハニカム背景（全ページ共通） */
+  /* かわいいパステル調ハニカム背景（縦線なし） */
   background-color: #fff0f5; /* 薄ピンクベース */
   background-image:
     linear-gradient(30deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
-    linear-gradient(150deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
-    linear-gradient(90deg, #004CA0 2%, transparent 2%, transparent 98%, #004CA0 98%, #004CA0);
+    linear-gradient(150deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8);
   background-size: 60px 104px;
-  background-position: 0 0, 0 0, 0 0;
+  background-position: 0 0, 0 0;
 }
 
 /* ===== ヘッダーバナー ===== */
