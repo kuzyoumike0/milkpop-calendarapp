@@ -1,32 +1,30 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
-import PersonalPage from "./components/PersonalPage";
 import LinkPage from "./components/LinkPage";
+import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
 import ShareLinkPage from "./components/ShareLinkPage";
-import Banner from "./components/Banner";
 
-function App() {
+export default function App() {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col">
-        {/* 共通バナー */}
-        <Banner />
+      <Routes>
+        {/* 最初に表示するトップページ */}
+        <Route path="/" element={<TopPage />} />
 
-        {/* ページコンテンツ */}
-        <main className="flex-1 flex justify-center items-center p-6">
-          <Routes>
-            <Route path="/" element={<TopPage />} />
-            <Route path="/personal" element={<PersonalPage />} />
-            <Route path="/link" element={<LinkPage />} />
-            <Route path="/share/:linkid" element={<SharePage />} />
-            <Route path="/sharelink" element={<ShareLinkPage />} />
-          </Routes>
-        </main>
-      </div>
+        {/* 日程登録ページ */}
+        <Route path="/link" element={<LinkPage />} />
+
+        {/* 個人日程登録ページ */}
+        <Route path="/personal" element={<PersonalPage />} />
+
+        {/* 共有ページ（一覧） */}
+        <Route path="/share" element={<ShareLinkPage />} />
+
+        {/* 共有リンクの個別ページ */}
+        <Route path="/share/:linkid" element={<SharePage />} />
+      </Routes>
     </Router>
   );
 }
-
-export default App;
