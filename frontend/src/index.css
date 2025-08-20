@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 背景：黒ベース＋流れるグラデーション */
-body {
+/* トップページ専用背景 */
+.top-page {
   @apply min-h-screen text-white;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   background: linear-gradient(135deg, #000 0%, #0a0a0a 40%, #111 100%);
@@ -12,7 +12,7 @@ body {
 }
 
 /* 動くグラデーションのオーバーレイ */
-body::before {
+.top-page::before {
   content: "";
   position: fixed;
   top: -50%;
@@ -25,8 +25,8 @@ body::before {
   z-index: 0;
 }
 
-/* ハニカム風のパターン */
-body::after {
+/* ハニカム風の模様 */
+.top-page::after {
   content: "";
   position: fixed;
   top: 0;
