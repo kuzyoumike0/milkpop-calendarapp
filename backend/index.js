@@ -59,13 +59,17 @@ app.get("/api/holidays", async (req, res) => {
 
 // === 共有スケジュール登録 ===
 app.post("/api/schedule", async (req, res) => {
-  const { title, range_mode, dates, timeslot } = req.body;
+  const { title, range_mode, dates, start_time, end_time } = req.body;
   const linkid = uuidv4();
+
+  if (start_time >= end_time) {
+    return res.status(400).json({ error: "終了時刻は開始時刻より後にしてください。" });
+  }
 
   try {
     await pool.query(
-      "INSERT INTO schedules (linkid, title, range_mode, dates, timeslot) VALUES ($1,$2,$3,$4,$5)",
-      [linkid, title, range_mode, dates, timeslot]
+      "INSERT INTO schedules (linkid, title, range_mode, dates, start_time, end_time) VALUES ($1,$2,$3,$4,$5,$6)",
+      [linkid, title, range_mode, dates, start_time, end_time]
     );
     res.json({ link: `/share/${linkid}` });
   } catch (err) {
@@ -75,11 +79,16 @@ app.post("/api/schedule", async (req, res) => {
 
 // === 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
-  const { title, memo, range_mode, dates, timeslot } = req.body;
+  const { title, memo, range_mode, dates, start_time, end_time } = req.body;
+
+  if (start_time >= end_time) {
+    return res.status(400).json({ error: "終了時刻は開始時刻より後にしてください。" });
+  }
+
   try {
     await pool.query(
-      "INSERT INTO personal_schedules (title, memo, range_mode, dates, timeslot) VALUES ($1,$2,$3,$4,$5)",
-      [title, memo, range_mode, dates, timeslot]
+      "INSERT INTO personal_schedules (title, memo, range_mode, dates, start_time, end_time) VALUES ($1,$2,$3,$4,$5,$6)",
+      [title, memo, range_mode, dates, start_time, end_time]
     );
     res.json({ success: true });
   } catch (err) {
