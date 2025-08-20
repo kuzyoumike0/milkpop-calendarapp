@@ -1,17 +1,18 @@
 import React from "react";
 
 export default function ShareButton({ link }) {
-  const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.origin + link);
-    alert("リンクをコピーしました！");
-  };
-
+  if (!link) return null;
   return (
-    <button
-      onClick={handleCopy}
-      className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700"
-    >
-      共有リンクをコピー
-    </button>
+    <div className="mt-4">
+      <p>共有リンク:</p>
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 underline"
+      >
+        {link}
+      </a>
+    </div>
   );
 }
