@@ -7,7 +7,11 @@ WORKDIR /app
 COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
 RUN npm install
-COPY frontend/ ./
+
+# フロントのソースコード（public/ も含む）
+COPY frontend/ ./ 
+
+# ✅ _redirects が public/ に入っていれば build/ にコピーされる
 RUN npm run build
 
 # ===== 本番用イメージ =====
@@ -20,12 +24,15 @@ COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-# --- ソースコピー ---
-COPY backend/ /app/backend
-COPY --from=builder /app/frontend/build /app/frontend/build
+# --- ソースコピー（バックエンド + フロントビルド済みファイル） ---
+COPY backend/ ./backend/
+COPY --from=builder /app/frontend/build ./frontend/build
 
+# バックエンドの作業ディレクトリをセット
 WORKDIR /app/backend
 
+# --- 環境変数設定 ---
 ENV NODE_ENV=production
 
+# --- サーバー起動 ---
 CMD ["node", "index.js"]
