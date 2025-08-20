@@ -5,14 +5,13 @@ export default function SharePage() {
   const [answers, setAnswers] = useState({});
 
   const handleSave = () => {
-    // 保存処理
     console.log("保存:", username, answers);
   };
 
   return (
     <div>
       <div className="header">MilkPOP Calendar</div>
-      <div className="flex flex-col items-center mt-8">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="card w-11/12 md:w-3/4">
           <h2 className="text-xl font-bold mb-4">共有スケジュール</h2>
           <input
