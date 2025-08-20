@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+
+const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
+const HOLIDAY_CALENDAR_ID = "japanese__ja@holiday.calendar.google.com";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -9,6 +12,23 @@ export default function LinkPage() {
   const [rangeMode, setRangeMode] = useState("multiple");
   const [timeslot, setTimeslot] = useState("終日");
   const [link, setLink] = useState("");
+  const [holidays, setHolidays] = useState([]);
+
+  // === 祝日データ取得 ===
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      const year = new Date().getFullYear();
+      const res = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${HOLIDAY_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}&timeMin=${year}-01-01T00:00:00Z&timeMax=${year}-12-31T23:59:59Z&singleEvents=true&orderBy=startTime`
+      );
+      const data = await res.json();
+      if (data.items) {
+        const holidayList = data.items.map((item) => item.start.date);
+        setHolidays(holidayList);
+      }
+    };
+    fetchHolidays();
+  }, []);
 
   const handleDateChange = (value) => {
     if (rangeMode === "range") {
@@ -22,7 +42,6 @@ export default function LinkPage() {
     const formattedDates = Array.isArray(dates)
       ? dates.map((d) => d.toISOString().split("T")[0])
       : [dates.toISOString().split("T")[0]];
-
     const res = await axios.post("/api/schedule", {
       title,
       dates: formattedDates,
@@ -64,7 +83,10 @@ export default function LinkPage() {
         onChange={handleDateChange}
         value={dates}
         selectRange={rangeMode === "range"}
-        tileClassName="hover:bg-[#FDB9C8]"
+        tileClassName={({ date }) => {
+          const day = date.toISOString().split("T")[0];
+          return holidays.includes(day) ? "!text-red-600 font-bold" : "";
+        }}
       />
       <div className="mt-4">
         <select
