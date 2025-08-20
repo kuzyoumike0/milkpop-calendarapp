@@ -10,8 +10,8 @@ export default function SharePage() {
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("multiple");
   const [timeSlot, setTimeSlot] = useState("全日");
-  const [startTime, setStartTime] = useState("01:00");
-  const [endTime, setEndTime] = useState("23:59");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("18:00");
 
   useEffect(() => {
     axios.get("/api/shared").then((res) => setSchedules(res.data));
@@ -22,24 +22,15 @@ export default function SharePage() {
   };
 
   const handleSave = () => {
-    // バリデーション（開始 < 終了）
-    if (timeSlot === "時間指定") {
-      if (startTime >= endTime) {
-        alert("開始時刻は終了時刻より前にしてください。");
-        return;
-      }
-    }
-
     const newEntries = [];
     if (rangeMode === "multiple" && Array.isArray(dates)) {
       dates.forEach((d) => {
         newEntries.push({
-          id: `temp-${d}-${timeSlot}`,
+          id: `temp-${d}`,
           date: d.toISOString().split("T")[0],
-          timeslot:
-            timeSlot === "時間指定"
-              ? `${startTime}〜${endTime}`
-              : timeSlot,
+          timeslot: timeSlot,
+          start_time: timeSlot === "時間指定" ? startTime : null,
+          end_time: timeSlot === "時間指定" ? endTime : null,
         });
       });
     } else if (rangeMode === "range" && Array.isArray(dates)) {
@@ -47,12 +38,11 @@ export default function SharePage() {
       const end = new Date(dates[1]);
       while (current <= end) {
         newEntries.push({
-          id: `temp-${current.toISOString()}-${timeSlot}`,
+          id: `temp-${current.toISOString()}`,
           date: current.toISOString().split("T")[0],
-          timeslot:
-            timeSlot === "時間指定"
-              ? `${startTime}〜${endTime}`
-              : timeSlot,
+          timeslot: timeSlot,
+          start_time: timeSlot === "時間指定" ? startTime : null,
+          end_time: timeSlot === "時間指定" ? endTime : null,
         });
         current.setDate(current.getDate() + 1);
       }
@@ -71,16 +61,14 @@ export default function SharePage() {
       .then(() => alert("保存しました！"));
   };
 
-  const timeOptions = [];
-  for (let h = 1; h <= 24; h++) {
-    const hour = String(h % 24).padStart(2, "0");
-    timeOptions.push(`${hour}:00`);
-  }
+  const timeOptions = Array.from({ length: 24 }, (_, i) => {
+    const hour = i.toString().padStart(2, "0");
+    return `${hour}:00`;
+  });
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Header />
-
       <main className="flex-1 container mx-auto px-6 py-10">
         <h2 className="text-3xl font-extrabold mb-6 text-[#FDB9C8]">
           共有スケジュール
@@ -131,12 +119,13 @@ export default function SharePage() {
           </select>
         </div>
 
+        {/* 時間指定プルダウン */}
         {timeSlot === "時間指定" && (
-          <div className="mb-6 flex gap-4">
+          <div className="flex gap-4 mb-6">
             <div>
-              <label className="block mb-1">開始</label>
+              <label className="block mb-2">開始時刻</label>
               <select
-                className="px-4 py-2 rounded-xl text-black"
+                className="px-3 py-2 rounded-lg text-black"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
               >
@@ -148,9 +137,9 @@ export default function SharePage() {
               </select>
             </div>
             <div>
-              <label className="block mb-1">終了</label>
+              <label className="block mb-2">終了時刻</label>
               <select
-                className="px-4 py-2 rounded-xl text-black"
+                className="px-3 py-2 rounded-lg text-black"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
               >
@@ -173,6 +162,8 @@ export default function SharePage() {
               <tr className="bg-[#FDB9C8] text-black">
                 <th className="p-2">日付</th>
                 <th className="p-2">時間帯</th>
+                <th className="p-2">開始</th>
+                <th className="p-2">終了</th>
                 <th className="p-2">選択</th>
               </tr>
             </thead>
@@ -181,6 +172,8 @@ export default function SharePage() {
                 <tr key={s.id} className="border-b border-gray-700">
                   <td className="p-2">{s.date}</td>
                   <td className="p-2">{s.timeslot}</td>
+                  <td className="p-2">{s.start_time || "-"}</td>
+                  <td className="p-2">{s.end_time || "-"}</td>
                   <td className="p-2">
                     <select
                       className="px-3 py-1 rounded-lg text-black"
@@ -205,7 +198,6 @@ export default function SharePage() {
           保存
         </button>
       </main>
-
       <Footer />
     </div>
   );
