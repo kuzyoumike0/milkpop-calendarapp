@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "./Header";
 
 export default function TopPage() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const [shareId, setShareId] = useState("");
 
   const handleGoLink = () => {
@@ -11,23 +11,23 @@ export default function TopPage() {
       alert("共有リンクIDを入力してください");
       return;
     }
-    history.push(`/share/${shareId}`);
+    navigate(`/share/${shareId}`);
   };
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header /> {/* 共通バナー */}
+      <Header />
 
       <div className="p-6 flex flex-col items-center space-y-6">
         <button
-          onClick={() => history.push("/link")}
+          onClick={() => navigate("/link")}
           className="w-72 p-4 rounded-2xl bg-[#004CA0] text-white font-bold shadow-lg hover:opacity-80"
         >
           日程登録ページへ
         </button>
 
         <button
-          onClick={() => history.push("/personal")}
+          onClick={() => navigate("/personal")}
           className="w-72 p-4 rounded-2xl bg-[#FDB9C8] text-black font-bold shadow-lg hover:opacity-80"
         >
           個人日程登録ページへ
