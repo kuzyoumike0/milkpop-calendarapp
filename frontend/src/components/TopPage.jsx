@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { PencilSquareIcon, UsersIcon } from "@heroicons/react/24/outline"; // ← アイコン追加
+import { PencilSquareIcon, UsersIcon } from "@heroicons/react/24/outline";
 
 export default function TopPage() {
   return (
@@ -32,7 +32,8 @@ export default function TopPage() {
           ようこそ 👋
         </h2>
 
-        <div className="flex flex-col gap-10 w-full max-w-xl">
+        {/* PCでは横並び、スマホでは縦並び */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-4xl">
           {/* 個人用カード */}
           <Link
             to="/personal"
