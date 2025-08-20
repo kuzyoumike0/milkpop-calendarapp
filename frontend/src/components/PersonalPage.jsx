@@ -3,23 +3,23 @@ import axios from "axios";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-export default function LinkPage() {
+export default function PersonalPage() {
   const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
   const [dates, setDates] = useState([]);
-  const [link, setLink] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [timeType, setTimeType] = useState("all"); // all, day, night, custom
+  const [startTime, setStartTime] = useState("1");
+  const [endTime, setEndTime] = useState("2");
+  const [mode, setMode] = useState("multiple");
 
   // 日付選択処理
   const handleDateChange = (value) => {
     if (mode === "multiple") {
-      // 複数選択モード
       const dateStr = value.toISOString().split("T")[0];
       setDates((prev) =>
         prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
       );
     } else {
-      // 範囲選択モード
       if (Array.isArray(value)) {
         const [start, end] = value;
         if (start && end) {
@@ -35,28 +35,33 @@ export default function LinkPage() {
     }
   };
 
-  // 共有リンク発行
-  const generateLink = async () => {
-    if (!title || dates.length === 0) {
-      alert("タイトルと日程を入力してください");
+  // 保存処理
+  const saveSchedule = async () => {
+    if (!title || !memo || dates.length === 0) {
+      alert("タイトル・メモ・日程を入力してください");
       return;
     }
-    setLoading(true);
     try {
-      const res = await axios.post("/api/schedules", { title, dates });
-      setLink(`${window.location.origin}/share/${res.data.linkid}`);
+      await axios.post("/api/personal", {
+        title,
+        memo,
+        dates,
+        timeType,
+        startTime: timeType === "custom" ? startTime : null,
+        endTime: timeType === "custom" ? endTime : null,
+      });
+      alert("保存しました！");
     } catch (err) {
-      alert("リンク発行に失敗しました");
+      alert("保存に失敗しました");
       console.error(err);
     }
-    setLoading(false);
   };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">日程登録ページ</h1>
+      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">個人スケジュール登録</h1>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
         <label className="block text-[#FDB9C8] mb-2">タイトル</label>
         <input
@@ -67,7 +72,18 @@ export default function LinkPage() {
         />
       </div>
 
-      {/* モード切り替え */}
+      {/* メモ */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
+        <label className="block text-[#FDB9C8] mb-2">メモ</label>
+        <textarea
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+          rows="3"
+        ></textarea>
+      </div>
+
+      {/* モード切替 */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
         <label className="block text-[#FDB9C8] mb-2">選択モード</label>
         <div className="flex gap-6 text-white">
@@ -110,37 +126,56 @@ export default function LinkPage() {
         </div>
       </div>
 
-      {/* リンク発行ボタン */}
+      {/* 時間帯 */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
+        <label className="block text-[#FDB9C8] mb-2">時間帯</label>
+        <select
+          value={timeType}
+          onChange={(e) => setTimeType(e.target.value)}
+          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8] mb-3"
+        >
+          <option value="all">終日</option>
+          <option value="day">昼</option>
+          <option value="night">夜</option>
+          <option value="custom">時間指定</option>
+        </select>
+
+        {timeType === "custom" && (
+          <div className="flex gap-4">
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="flex-1 p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}時
+                </option>
+              ))}
+            </select>
+            <span className="text-white flex items-center">〜</span>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="flex-1 p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}時
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* 保存ボタン */}
       <button
-        onClick={generateLink}
-        disabled={loading}
+        onClick={saveSchedule}
         className="w-full bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-3 px-6 rounded-xl transition"
       >
-        {loading ? "発行中..." : "共有リンクを発行"}
+        保存
       </button>
-
-      {/* 発行されたリンク表示 */}
-      {link && (
-        <div className="mt-8 bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-[#FDB9C8] mb-2">発行されたリンク</h2>
-          <div className="flex items-center justify-between">
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 underline break-all"
-            >
-              {link}
-            </a>
-            <button
-              onClick={() => navigator.clipboard.writeText(link)}
-              className="ml-3 bg-[#FDB9C8] text-black font-bold py-2 px-4 rounded-xl hover:bg-[#004CA0] hover:text-white transition"
-            >
-              コピー
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
