@@ -6,20 +6,20 @@ import { motion } from "framer-motion";
 export default function TopPage() {
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col text-white">
-      {/* 背景（お洒落な黒 + 光の演出） */}
+      {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#1a1a1a]">
-        {/* 左上に青の光、右下にピンクの光 */}
-        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-[#004CA0]/40 rounded-full blur-[160px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-[#FDB9C8]/40 rounded-full blur-[160px]" />
+        {/* 光のアクセント（サイズをレスポンシブ対応） */}
+        <div className="absolute top-[-10%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#004CA0]/40 rounded-full blur-[120px] md:blur-[160px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#FDB9C8]/40 rounded-full blur-[120px] md:blur-[160px]" />
       </div>
 
       {/* バナー */}
       <header className="bg-black/50 backdrop-blur-md border-b border-white/10 fixed top-0 left-0 right-0 z-50">
-        <div className="container mx-auto flex justify-between items-center px-8 py-4">
-          <h1 className="text-2xl font-extrabold tracking-wide text-[#FDB9C8] drop-shadow-lg">
+        <div className="container mx-auto flex justify-between items-center px-4 md:px-8 py-4">
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-wide text-[#FDB9C8] drop-shadow-lg">
             MilkPOP Calendar
           </h1>
-          <nav className="space-x-6 font-medium">
+          <nav className="space-x-4 md:space-x-6 font-medium text-sm md:text-base">
             <Link to="/link" className="hover:text-[#FDB9C8] transition-colors">
               日程登録
             </Link>
@@ -34,12 +34,12 @@ export default function TopPage() {
       </header>
 
       {/* Hero セクション */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 relative z-10">
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16 relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent drop-shadow-lg"
+          className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent drop-shadow-lg"
         >
           スケジュールをもっとスマートに
         </motion.h2>
@@ -48,62 +48,27 @@ export default function TopPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="text-gray-300 text-lg max-w-2xl mb-12 leading-relaxed"
+          className="text-gray-300 text-base md:text-lg max-w-xl md:max-w-2xl mb-10 leading-relaxed"
         >
           MilkPOP Calendar で予定を登録し、仲間とシェア。  
           シンプルで美しいカレンダー体験を。
         </motion.p>
 
         {/* カードグリッド */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 max-w-5xl w-full">
           {/* 日程登録カード */}
           <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
+            whileHover={{ scale: 1.03, y: -6 }}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             <Link
               to="/link"
-              className="block rounded-2xl p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#FDB9C8]/60 transition"
+              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#FDB9C8]/60 transition"
             >
-              <h3 className="text-2xl font-semibold text-[#FDB9C8] mb-4">
+              <h3 className="text-xl md:text-2xl font-semibold text-[#FDB9C8] mb-3 md:mb-4">
                 日程登録ページ
               </h3>
-              <p className="text-gray-200 leading-relaxed">
-                カレンダーUIで複数日や範囲を選択して共有リンクを発行。  
-                仲間と予定を簡単にシェアできます。
-              </p>
-            </Link>
-          </motion.div>
-
-          {/* 個人スケジュールカード */}
-          <motion.div
-            whileHover={{ scale: 1.05, y: -8 }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-          >
-            <Link
-              to="/personal"
-              className="block rounded-2xl p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#004CA0]/60 transition"
-            >
-              <h3 className="text-2xl font-semibold text-[#004CA0] mb-4">
-                個人スケジュール登録ページ
-              </h3>
-              <p className="text-gray-200 leading-relaxed">
-                タイトル・メモ・時間帯を登録して、  
-                あなた専用のカレンダーを作りましょう。
-              </p>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* フッター */}
-      <footer className="bg-black/50 backdrop-blur-md text-gray-400 text-center py-6 text-sm border-t border-white/10 relative z-10">
-        © 2025 MilkPOP Calendar. All rights reserved.
-      </footer>
-    </div>
-  );
-}
+              <p className="text-gray-200 text-sm md:text-base leading-relaxed">
+                カレンダーUIで複
