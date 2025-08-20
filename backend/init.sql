@@ -4,9 +4,9 @@ CREATE TABLE IF NOT EXISTS schedules (
   title TEXT NOT NULL,
   date DATE NOT NULL,
   timeslot TEXT NOT NULL,          -- 全日 / 昼 / 夜 / 時間指定
-  start_time TEXT,                 -- 時間指定開始 (任意)
-  end_time TEXT,                   -- 時間指定終了 (任意)
-  range_mode TEXT NOT NULL,        -- 範囲選択 or 複数選択
+  start_time TEXT,                 -- 時間指定開始
+  end_time TEXT,                   -- 時間指定終了
+  range_mode TEXT NOT NULL,        -- 範囲選択 / 複数選択
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
