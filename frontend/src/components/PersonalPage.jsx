@@ -1,30 +1,137 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function PersonalPage() {
-  const [schedules, setSchedules] = useState([]);
+  const [dates, setDates] = useState([]); // 複数選択用
+  const [range, setRange] = useState([null, null]); // 範囲選択用
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [username, setUsername] = useState("");
+  const [timeslot, setTimeslot] = useState("全日");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    axios.get("/api/schedules").then(res => setSchedules(res.data));
-  }, []);
+  // 複数選択モード用
+  const handleDateClick = (date) => {
+    if (mode === "multiple") {
+      const dateStr = date.toISOString().split("T")[0];
+      if (dates.includes(dateStr)) {
+        setDates(dates.filter((d) => d !== dateStr));
+      } else {
+        setDates([...dates, dateStr]);
+      }
+    }
+  };
+
+  // 範囲選択モード用
+  const handleRangeChange = (rangeVal) => {
+    if (mode === "range") {
+      setRange(rangeVal);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload =
+        mode === "range"
+          ? {
+              username,
+              start_date: range[0]?.toISOString().split("T")[0],
+              end_date: range[1]?.toISOString().split("T")[0],
+              timeslot,
+              range_mode: "range",
+            }
+          : {
+              username,
+              start_date: dates[0],
+              end_date: dates[dates.length - 1],
+              timeslot,
+              range_mode: "multiple",
+            };
+
+      await axios.post("/api/personal", payload);
+      alert("個人スケジュールを登録しました！");
+    } catch (err) {
+      console.error("登録失敗:", err);
+      alert("登録に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto bg-[#111] p-6 rounded-2xl shadow-lg space-y-6">
-      <h2 className="text-2xl font-bold text-[#FDB9C8]">個人スケジュール一覧</h2>
-      <ul className="space-y-4">
-        {schedules.map(s => (
-          <li key={s.id} className="bg-[#222] p-4 rounded-xl shadow-md">
-            <div className="font-bold text-lg text-[#FDB9C8]">{s.title}</div>
-            <div className="text-sm text-gray-300">
-              {s.start_date} ~ {s.end_date} [{s.timeslot}]
-            </div>
-            {s.memo && <div className="mt-1 text-gray-400">{s.memo}</div>}
-          </li>
-        ))}
-      </ul>
-      {schedules.length === 0 && (
-        <p className="text-gray-400">まだスケジュールが登録されていません。</p>
-      )}
+    <div className="max-w-2xl mx-auto bg-[#111] text-white p-6 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">
+        個人スケジュール登録
+      </h2>
+
+      {/* 名前入力 */}
+      <input
+        type="text"
+        placeholder="お名前を入力"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full p-2 mb-4 rounded bg-black border border-gray-700"
+      />
+
+      {/* モード切替 */}
+      <div className="flex space-x-4 mb-4">
+        <label>
+          <input
+            type="radio"
+            checked={mode === "multiple"}
+            onChange={() => setMode("multiple")}
+          />{" "}
+          複数選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />{" "}
+          範囲選択
+        </label>
+      </div>
+
+      {/* カレンダー */}
+      <Calendar
+        selectRange={mode === "range"}
+        onClickDay={handleDateClick}
+        onChange={handleRangeChange}
+        value={mode === "range" ? range : null}
+        tileClassName={({ date }) => {
+          const dateStr = date.toISOString().split("T")[0];
+          if (dates.includes(dateStr)) {
+            return "bg-[#FDB9C8] text-black rounded-full";
+          }
+          return "";
+        }}
+      />
+
+      {/* 時間帯プルダウン */}
+      <select
+        value={timeslot}
+        onChange={(e) => setTimeslot(e.target.value)}
+        className="w-full p-2 mt-4 rounded bg-black border border-gray-700"
+      >
+        <option value="全日">全日</option>
+        <option value="昼">昼</option>
+        <option value="夜">夜</option>
+      </select>
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="w-full mt-6 py-2 bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold rounded-lg transition"
+      >
+        {loading ? "登録中..." : "スケジュール登録"}
+      </button>
     </div>
   );
 }
