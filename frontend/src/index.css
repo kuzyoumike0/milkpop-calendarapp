@@ -131,6 +131,15 @@ li {
   border-radius: 8px;
   border-left: 4px solid #004CA0;
 }
+/* 祝日用スタイル */
+.holiday-date {
+  background: #FDB9C8 !important;
+  color: #000 !important;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.9);
+}
+
 
 /* リンク表示 */
 a {
