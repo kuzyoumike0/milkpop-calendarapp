@@ -1,157 +1,105 @@
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import "./CalendarCustom.css"; // index.css に統合してもOK
 
-export default function PersonalPage() {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [timeslot, setTimeslot] = useState("全日");
-  const [rangeMode, setRangeMode] = useState("multiple"); // "multiple" or "range"
-  const [dates, setDates] = useState([]);
+export default function SharePage({ linkId }) {
   const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState({});
+  const [username, setUsername] = useState("");
 
-  // === DBから即時反映 ===
+  // === スケジュール取得 ===
   const fetchSchedules = async () => {
-    const res = await axios.get("/api/schedules");
-    setSchedules(res.data);
-  };
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
-
-  // === カレンダー選択ハンドラ ===
-  const handleDateChange = (value) => {
-    if (rangeMode === "range") {
-      if (Array.isArray(value)) {
-        const [start, end] = value;
-        if (start && end) {
-          const datesInRange = [];
-          let current = new Date(start);
-          while (current <= end) {
-            datesInRange.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-          }
-          setDates(datesInRange);
-        } else {
-          setDates([]);
-        }
-      }
-    } else {
-      setDates(Array.isArray(value) ? value : [value]);
+    try {
+      const res = await axios.get(`/api/share/${linkId}`);
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("共有スケジュール取得失敗:", err);
     }
   };
 
-  // === スケジュール登録 ===
-  const handleSubmit = async () => {
-    if (!title || dates.length === 0) return alert("タイトルと日程を入力してください");
-
-    await axios.post("/api/schedules", {
-      title,
-      memo,
-      dates: dates.map((d) => d.toISOString().split("T")[0]),
-      timeslot,
-    });
-
-    setTitle("");
-    setMemo("");
-    setDates([]);
+  useEffect(() => {
     fetchSchedules();
+  }, [linkId]);
+
+  // === 回答変更 ===
+  const handleResponseChange = (scheduleId, value) => {
+    setResponses((prev) => ({
+      ...prev,
+      [scheduleId]: value,
+    }));
+  };
+
+  // === 保存処理 ===
+  const handleSave = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
+    try {
+      await axios.post(`/api/share/${linkId}/responses`, {
+        username,
+        responses,
+      });
+      await fetchSchedules(); // 即時反映
+    } catch (err) {
+      alert("保存に失敗しました");
+      console.error(err);
+    }
   };
 
   return (
-    <div className="page">
-      <h2 className="banner">個人日程登録</h2>
+    <div className="p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-4 text-[#004CA0]">
+        共有スケジュール
+      </h2>
 
-      <div className="form-section">
-        <input
-          type="text"
-          placeholder="タイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="input"
-        />
-        <textarea
-          placeholder="メモ"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="input"
-        />
+      <input
+        className="border p-2 mb-4 w-full rounded"
+        placeholder="あなたの名前を入力"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-        <div className="radio-group">
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            複数日選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={rangeMode === "range"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-        </div>
-
-        <Calendar
-          selectRange={rangeMode === "range"}
-          onChange={handleDateChange}
-          value={dates}
-          locale="ja-JP"
-        />
-
-        <div className="radio-group">
-          <label>
-            <input
-              type="radio"
-              value="全日"
-              checked={timeslot === "全日"}
-              onChange={(e) => setTimeslot(e.target.value)}
-            />
-            全日
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="昼"
-              checked={timeslot === "昼"}
-              onChange={(e) => setTimeslot(e.target.value)}
-            />
-            昼
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="夜"
-              checked={timeslot === "夜"}
-              onChange={(e) => setTimeslot(e.target.value)}
-            />
-            夜
-          </label>
-        </div>
-
-        <button className="button" onClick={handleSubmit}>
-          登録
-        </button>
-      </div>
-
-      <div className="list">
-        <h3>登録済み日程</h3>
-        <ul>
-          {schedules.map((s, i) => (
-            <li key={i}>
-              {s.title} ({s.timeslot}) {s.dates.join(", ")}
-            </li>
+      <table className="w-full border-collapse text-center shadow">
+        <thead>
+          <tr className="bg-[#FDB9C8] text-black">
+            <th className="border p-2">日付</th>
+            <th className="border p-2">時間帯</th>
+            <th className="border p-2">タイトル</th>
+            <th className="border p-2">参加可否</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.map((s) => (
+            <tr key={s.id}>
+              <td className="border p-2">
+                {Array.isArray(s.dates) ? s.dates.join(", ") : s.date}
+              </td>
+              <td className="border p-2">{s.timeslot}</td>
+              <td className="border p-2">{s.title}</td>
+              <td className="border p-2">
+                <select
+                  value={responses[s.id] || ""}
+                  onChange={(e) =>
+                    handleResponseChange(s.id, e.target.value)
+                  }
+                  className="border p-1 rounded"
+                >
+                  <option value="">未選択</option>
+                  <option value="〇">〇</option>
+                  <option value="✕">✕</option>
+                </select>
+              </td>
+            </tr>
           ))}
-        </ul>
-      </div>
+        </tbody>
+      </table>
+
+      <button
+        onClick={handleSave}
+        className="mt-4 px-6 py-2 bg-[#004CA0] text-white rounded-lg shadow hover:bg-[#003580]"
+      >
+        保存
+      </button>
     </div>
   );
 }
