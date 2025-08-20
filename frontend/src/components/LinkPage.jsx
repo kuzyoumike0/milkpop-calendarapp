@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import DatePicker from "react-multi-date-picker";
-import "react-multi-date-picker/styles/colors/purple.css";
 import axios from "axios";
+import "../custom-purple.css"; // オリジナルテーマ
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -91,7 +91,7 @@ export default function LinkPage() {
               value={dates}
               onChange={setDates}
               format="YYYY-MM-DD"
-              className="purple"
+              className="custom-purple"
             />
           )}
         </div>
@@ -119,7 +119,12 @@ export default function LinkPage() {
         {link && (
           <p className="mt-4">
             共有リンク:{" "}
-            <a href={link} target="_blank" rel="noreferrer" className="underline text-[#FDB9C8]">
+            <a
+              href={link}
+              target="_blank"
+              rel="noreferrer"
+              className="underline text-[#FDB9C8]"
+            >
               {link}
             </a>
           </p>
