@@ -9,85 +9,58 @@ export default function SharePage() {
   const [username, setUsername] = useState("");
   const [answers, setAnswers] = useState({});
 
-  // データ取得
   const fetchData = async () => {
-    try {
-      const res = await axios.get(`/api/schedule/${linkid}`);
-      setSchedule(res.data.schedules[0]);
-      setResponses(res.data.responses);
-    } catch (err) {
-      console.error("❌ データ取得失敗:", err);
-    }
+    const res = await axios.get(`/api/schedule/${linkid}`);
+    setSchedule(res.data.schedules[0]);
+    setResponses(res.data.responses);
   };
 
   useEffect(() => {
     fetchData();
-  }, [linkid]);
+  }, []);
 
-  // 回答変更
   const handleAnswerChange = (date, value) => {
     setAnswers((prev) => ({ ...prev, [date]: value }));
   };
 
-  // 保存処理
   const handleSave = async () => {
-    if (!username.trim()) {
-      alert("名前を入力してください");
-      return;
-    }
-    try {
-      await axios.post(`/api/share/${linkid}/response`, {
-        username,
-        answers,
-      });
-      setAnswers({});
-      fetchData();
-      alert("✅ 回答を保存しました");
-    } catch (err) {
-      console.error("❌ 保存失敗:", err);
-      alert("保存に失敗しました");
-    }
+    await axios.post(`/api/share/${linkid}/response`, { username, answers });
+    fetchData(); // 即時反映
   };
 
   if (!schedule) return <p>読み込み中...</p>;
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">
-        共有スケジュール: {schedule.title}
-      </h2>
+    <div className="max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">{schedule.title}</h2>
+      <input
+        className="w-full mb-3 p-2 text-black rounded"
+        placeholder="あなたの名前"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-      {/* 名前入力 */}
-      <div className="mb-4">
-        <label className="mr-2">名前: </label>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="p-2 rounded bg-gray-800 text-white"
-        />
-      </div>
-
-      {/* 自分の回答欄 */}
-      <table className="table-auto border-collapse border border-gray-600 w-full mb-6">
-        <thead>
-          <tr className="bg-gray-800 text-white">
-            <th className="border px-2 py-1">日付</th>
-            <th className="border px-2 py-1">自分の回答</th>
+      {/* 日程 × 回答 */}
+      <table className="w-full border border-gray-600 text-center">
+        <thead className="bg-[#004CA0] text-white">
+          <tr>
+            <th className="p-2">日付</th>
+            <th className="p-2">回答</th>
           </tr>
         </thead>
         <tbody>
-          {schedule.dates.map((d, i) => (
-            <tr key={i}>
-              <td className="border px-2 py-1">{d}</td>
-              <td className="border px-2 py-1">
+          {schedule.dates.map((date) => (
+            <tr key={date} className="border-b border-gray-600">
+              <td className="p-2">{date}</td>
+              <td className="p-2">
                 <select
-                  value={answers[d] || ""}
-                  onChange={(e) => handleAnswerChange(d, e.target.value)}
-                  className="bg-gray-700 text-white p-1 rounded"
+                  className="text-black rounded"
+                  value={answers[date] || ""}
+                  onChange={(e) => handleAnswerChange(date, e.target.value)}
                 >
-                  <option value="">未選択</option>
+                  <option value="">未回答</option>
                   <option value="○">○</option>
-                  <option value="✕">✕</option>
+                  <option value="✖">✖</option>
                 </select>
               </td>
             </tr>
@@ -96,39 +69,32 @@ export default function SharePage() {
       </table>
 
       <button
+        className="mt-6 w-full bg-[#FDB9C8] text-black py-2 rounded-2xl hover:bg-[#004CA0] hover:text-white"
         onClick={handleSave}
-        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
       >
         保存
       </button>
 
-      {/* 回答一覧 */}
-      <h3 className="text-xl font-semibold mt-8 mb-2">全員の回答一覧</h3>
-      <table className="table-auto border-collapse border border-gray-600 w-full">
-        <thead>
-          <tr className="bg-gray-800 text-white">
-            <th className="border px-2 py-1">ユーザー</th>
-            {schedule.dates.map((d, i) => (
-              <th key={i} className="border px-2 py-1">
-                {d}
-              </th>
+      {/* 全員分の回答一覧 */}
+      <h3 className="text-xl mt-8 mb-2 text-[#FDB9C8]">みんなの回答</h3>
+      <table className="w-full border border-gray-600 text-center">
+        <thead className="bg-gray-800">
+          <tr>
+            <th className="p-2">名前</th>
+            {schedule.dates.map((d) => (
+              <th key={d} className="p-2">{d}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {responses.map((r, i) => {
-            const ans = r.answers || {};
-            return (
-              <tr key={i}>
-                <td className="border px-2 py-1">{r.username}</td>
-                {schedule.dates.map((d, j) => (
-                  <td key={j} className="border px-2 py-1 text-center">
-                    {ans[d] || "-"}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+          {responses.map((r, idx) => (
+            <tr key={idx} className="border-b border-gray-600">
+              <td className="p-2">{r.username}</td>
+              {schedule.dates.map((d) => (
+                <td key={d} className="p-2">{r.answers[d] || "-"}</td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
