@@ -3,9 +3,9 @@
   --rmdp-primary: #FDB9C8;       /* メインカラー（ピンク） */
   --rmdp-secondary: #004CA0;     /* サブカラー（ネイビー） */
   --rmdp-background: #000000;    /* 背景は黒 */
-  --rmdp-hover: #FDB9C8;         /* ホバー時もピンク */
-  --rmdp-selected: #FDB9C8;      /* 選択中もピンク */
-  --rmdp-text: #ffffff;          /* 文字色 */
+  --rmdp-hover: #FDB9C8;
+  --rmdp-selected: #FDB9C8;
+  --rmdp-text: #ffffff;
 }
 
 .rmdp-day.rmdp-selected,
