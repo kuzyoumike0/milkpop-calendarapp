@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -8,6 +9,7 @@ export default function PersonalPage() {
   const [mode, setMode] = useState("multiple"); // "multiple" or "range"
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeDates, setRangeDates] = useState([null, null]);
+  const [saved, setSaved] = useState(null);
 
   // 日付を yyyy-mm-dd に整形
   const formatDate = (date) => {
@@ -30,6 +32,36 @@ export default function PersonalPage() {
   // 範囲選択モード
   const handleRangeChange = (range) => {
     setRangeDates(range);
+  };
+
+  // 保存処理
+  const handleSave = async () => {
+    let dates = [];
+
+    if (mode === "multiple") {
+      dates = selectedDates;
+    } else if (mode === "range" && rangeDates[0] && rangeDates[1]) {
+      // 開始〜終了を配列化
+      const start = new Date(rangeDates[0]);
+      const end = new Date(rangeDates[1]);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(formatDate(new Date(d)));
+      }
+    }
+
+    try {
+      const res = await axios.post("/api/schedule", {
+        title,
+        memo,
+        dates,
+        timeslot: "personal" // 個人用の識別
+      });
+      setSaved({ title, memo, dates });
+      alert("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
+    }
   };
 
   return (
@@ -111,7 +143,19 @@ export default function PersonalPage() {
             )}
           </div>
 
-          <button className="btn-main mt-4">登録する</button>
+          <button onClick={handleSave} className="btn-main mt-4">
+            登録する
+          </button>
+
+          {/* 保存結果を表示 */}
+          {saved && (
+            <div className="mt-6 text-sm">
+              <h3 className="font-bold mb-2">登録済みスケジュール</h3>
+              <p>タイトル: {saved.title}</p>
+              <p>メモ: {saved.memo}</p>
+              <p>日付: {saved.dates.join(", ")}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
