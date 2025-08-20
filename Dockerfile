@@ -7,7 +7,7 @@ WORKDIR /app/frontend
 # 依存関係インストール用に package.json をコピー
 COPY frontend/package*.json ./
 
-# ajv v6 系を強制的に解決するために --legacy-peer-deps で install
+# ajv v6 + ajv-keywords v3 を固定解決 (--legacy-peer-deps)
 RUN npm install --legacy-peer-deps
 
 # ソースコードをコピーしてビルド
