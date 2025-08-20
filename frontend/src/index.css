@@ -2,19 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体の黒背景と文字色 */
+/* 全体の背景と文字色 */
 body {
   @apply text-white;
 }
 
-/* 背景アニメーション＋六角形パターン */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
 
-  /* グラデーション背景 */
+  /* 動くグラデーション背景 */
   background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
@@ -29,10 +28,10 @@ html::before {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.05) 1px, transparent 1px),
-    radial-gradient(circle at 60% 60%, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 60px 104px; /* 六角形の幅・高さ */
-  background-position: 0 0, 30px 52px; /* ハニカムのズレで六角形パターンを作る */
-  z-index: 0;
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.08) 1px, transparent 1px),
+    radial-gradient(circle at 60% 60%, rgba(255,255,255,0.08) 1px, transparent 1px);
+  background-size: 60px 104px;
+  background-position: 0 0, 30px 52px;
+  z-index: 1;
   pointer-events: none;
 }
