@@ -12,9 +12,13 @@ export default function App() {
       <div className="bg-black text-white min-h-screen">
         {/* === 共通バナー === */}
         <header className="bg-[#111] border-b border-[#333] p-4 flex justify-between items-center shadow-md">
-          <h1 className="text-2xl font-extrabold tracking-wide text-[#FDB9C8]">
-            MilkPOP Calendar
-          </h1>
+          <div className="flex items-center space-x-2">
+            {/* ファビコンをバナーにも表示 */}
+            <img src="/favicon.ico" alt="logo" className="w-8 h-8" />
+            <h1 className="text-2xl font-extrabold tracking-wide text-[#FDB9C8]">
+              MilkPOP Calendar
+            </h1>
+          </div>
           <nav className="space-x-6">
             <Link to="/" className="hover:text-[#FDB9C8] transition">
               トップ
