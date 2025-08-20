@@ -7,11 +7,11 @@ body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   color: #333;
 
-  /* かわいいパステル調ハニカム背景（縦線なし） */
+  /* ふんわりかわいいハニカム背景 */
   background-color: #fff0f5; /* 薄ピンクベース */
   background-image:
-    linear-gradient(30deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
-    linear-gradient(150deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8);
+    linear-gradient(30deg, rgba(253,185,200,0.25) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.25) 87.5%, rgba(253,185,200,0.25)),
+    linear-gradient(150deg, rgba(253,185,200,0.25) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.25) 87.5%, rgba(253,185,200,0.25));
   background-size: 60px 104px;
   background-position: 0 0, 0 0;
 }
