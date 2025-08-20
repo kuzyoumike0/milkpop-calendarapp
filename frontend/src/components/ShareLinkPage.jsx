@@ -3,11 +3,14 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import Header from "./Header";
 import Footer from "./Footer";
+import CalendarWrapper from "./CalendarWrapper";
 
 export default function ShareLinkPage() {
   const { linkId } = useParams();
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState({});
+  const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
 
   useEffect(() => {
     axios.get(`/api/share/${linkId}`).then((res) => setSchedules(res.data));
@@ -19,7 +22,7 @@ export default function ShareLinkPage() {
 
   const handleSave = () => {
     axios
-      .post(`/api/share/${linkId}/responses`, { responses })
+      .post(`/api/share/${linkId}/responses`, { responses, dates })
       .then(() => alert("保存しました！"));
   };
 
@@ -32,6 +35,37 @@ export default function ShareLinkPage() {
           共有リンクスケジュール
         </h2>
 
+        {/* カレンダー選択 */}
+        <div className="mb-6">
+          <label className="block mb-2">日程選択</label>
+          <CalendarWrapper mode={rangeMode} value={dates} onChange={setDates} />
+        </div>
+
+        {/* モード切替 */}
+        <div className="mb-6 flex gap-4">
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={() => setRangeMode("range")}
+            />
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={() => setRangeMode("multiple")}
+            />
+            複数選択
+          </label>
+        </div>
+
+        {/* 既存の共有スケジュール一覧 */}
         {schedules.length === 0 ? (
           <p>このリンクにはまだ日程が登録されていません。</p>
         ) : (
