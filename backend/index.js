@@ -43,8 +43,6 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS personal_schedules (
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
-      title TEXT,
-      memo TEXT,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
@@ -56,7 +54,7 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS responses (
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
-      schedule_id INT NOT NULL,
+      schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
       response TEXT NOT NULL
     );
   `);
@@ -87,15 +85,15 @@ app.post("/api/schedule", async (req, res) => {
 // === API: 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
   try {
-    const { username, title, memo, start_date, end_date, timeslot, range_mode } = req.body;
+    const { username, start_date, end_date, timeslot, range_mode } = req.body;
     if (!username || !start_date || !end_date || !timeslot || !range_mode) {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
     await pool.query(
-      `INSERT INTO personal_schedules (username, title, memo, start_date, end_date, timeslot, range_mode)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [username, title, memo, start_date, end_date, timeslot, range_mode]
+      `INSERT INTO personal_schedules (username, start_date, end_date, timeslot, range_mode)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [username, start_date, end_date, timeslot, range_mode]
     );
     res.json({ success: true });
   } catch (err) {
@@ -140,9 +138,9 @@ app.post("/api/response", async (req, res) => {
 });
 
 // === 静的ファイル提供 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // === サーバー起動 ===
