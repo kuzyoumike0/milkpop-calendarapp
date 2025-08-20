@@ -1,125 +1,179 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import Holidays from "date-holidays";
+import { ja } from "date-fns/locale";
+import { format } from "date-fns";
+import "./CalendarStyle.css";
 
-const hd = new Holidays("JP"); // 🇯🇵 日本の祝日
-
-export default function SharePage() {
-  const { linkId } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [responses, setResponses] = useState([]);
+export default function SharePage({ match }) {
+  const { linkId } = match.params;
   const [username, setUsername] = useState("");
-  const [answer, setAnswer] = useState("◯");
+  const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [responses, setResponses] = useState([]);
+  const [holidays, setHolidays] = useState({});
 
-  // === スケジュール取得 ===
+  // 日本の祝日データ
   useEffect(() => {
-    if (!linkId) return;
+    const year = new Date().getFullYear();
     axios
-      .get(`/api/schedules/${linkId}`)
-      .then((res) => {
-        setSchedule(res.data.schedule);
-        setResponses(res.data.responses);
-      })
-      .catch((err) => console.error("共有スケジュール取得失敗:", err));
-  }, [linkId]);
+      .get(`https://holidays-jp.github.io/api/v1/${year}/date.json`)
+      .then((res) => setHolidays(res.data))
+      .catch(() => setHolidays({}));
+  }, []);
 
-  // === 回答送信（同じユーザー名なら更新扱い） ===
-  const handleSubmit = async () => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
-    try {
-      await axios.post(`/api/schedules/${linkId}/response`, {
-        username,
-        answer,
-      });
-      // 即時反映
-      const res = await axios.get(`/api/schedules/${linkId}`);
-      setSchedule(res.data.schedule);
-      setResponses(res.data.responses);
-    } catch (err) {
-      console.error("回答送信失敗:", err);
-      alert("送信に失敗しました");
+  // カレンダー選択
+  const handleDateChange = (value) => {
+    if (rangeMode === "multiple") {
+      const newDates = Array.isArray(value) ? value : [value];
+      setDates(newDates);
+    } else if (rangeMode === "range") {
+      if (Array.isArray(value) && value.length === 2) {
+        const [start, end] = value;
+        let cur = new Date(start);
+        const range = [];
+        while (cur <= end) {
+          range.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+        setDates(range);
+      }
     }
   };
 
-  // === カレンダー表示（祝日 + 登録日） ===
+  // 回答保存
+  const handleSave = async () => {
+    if (!username || dates.length === 0) {
+      alert("名前と日程を入力してください");
+      return;
+    }
+
+    try {
+      await axios.post(`/api/share/${linkId}`, {
+        username,
+        dates: dates.map((d) => format(d, "yyyy-MM-dd")),
+        range_mode: rangeMode,
+        timeslot: timeSlot,
+      });
+      setDates([]);
+      fetchResponses();
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    }
+  };
+
+  // 回答取得
+  const fetchResponses = async () => {
+    try {
+      const res = await axios.get(`/api/share/${linkId}`);
+      setResponses(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchResponses();
+  }, [linkId]);
+
+  // 祝日・日曜は赤
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      if (hd.isHoliday(date)) {
-        return "holiday"; // 祝日は赤
-      }
-      if (
-        schedule?.dates.some(
-          (d) => new Date(d).toDateString() === date.toDateString()
-        )
-      ) {
-        return "selected-day"; // 登録日を強調
+      const ymd = format(date, "yyyy-MM-dd");
+      if (holidays[ymd] || date.getDay() === 0) {
+        return "holiday";
       }
     }
     return null;
   };
 
-  if (!schedule) {
-    return <p>読み込み中...</p>;
-  }
-
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-[#004CA0]">
-        共有スケジュール: {schedule.title}
-      </h2>
+    <div className="min-h-screen bg-black text-white p-6">
+      <header className="text-center text-3xl font-bold mb-6 text-[#FDB9C8]">
+        MilkPOP Calendar - 共有スケジュール
+      </header>
 
-      <Calendar
-        tileClassName={tileClassName}
-        value={schedule.dates.map((d) => new Date(d))}
-      />
-
-      <p className="mt-4 font-semibold">時間帯: {schedule.timeslot}</p>
-
-      <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">出欠登録</h3>
+      <div className="bg-[#004CA0] p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
         <input
-          className="border p-2 mb-2 w-full rounded"
+          type="text"
           placeholder="名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-3 mb-4 rounded-lg text-black"
         />
-        <select
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          className="border p-2 rounded w-full mb-2"
-        >
-          <option value="◯">◯ 出席</option>
-          <option value="✖">✖ 欠席</option>
-          <option value="△">△ 未定</option>
-        </select>
+
+        <div className="flex gap-4 mb-4">
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />
+            複数選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />
+            範囲選択
+          </label>
+        </div>
+
+        <Calendar
+          onChange={handleDateChange}
+          selectRange={rangeMode === "range"}
+          tileClassName={tileClassName}
+          value={dates}
+          locale={ja}
+        />
+
+        <div className="mt-4">
+          <label className="block mb-2">時間帯を選択:</label>
+          <select
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+            className="p-2 rounded-lg text-black"
+          >
+            <option value="全日">全日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+            <option value="時間指定">1時〜0時</option>
+          </select>
+        </div>
+
         <button
-          onClick={handleSubmit}
-          className="px-6 py-2 bg-[#FDB9C8] text-black rounded-lg shadow hover:bg-[#e0a5b4]"
+          onClick={handleSave}
+          className="mt-6 w-full p-3 rounded-xl bg-[#FDB9C8] text-black font-bold hover:opacity-80"
         >
-          登録 / 更新
+          保存
         </button>
       </div>
 
-      <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">回答一覧</h3>
-        <table className="w-full border">
+      <div className="mt-8 max-w-4xl mx-auto">
+        <h2 className="text-xl font-bold mb-4">回答一覧</h2>
+        <table className="w-full border-collapse border border-gray-500">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">名前</th>
-              <th className="border p-2">回答</th>
+            <tr className="bg-gray-700">
+              <th className="border border-gray-500 p-2">名前</th>
+              <th className="border border-gray-500 p-2">日程</th>
+              <th className="border border-gray-500 p-2">時間帯</th>
             </tr>
           </thead>
           <tbody>
-            {responses.map((r, i) => (
-              <tr key={i}>
-                <td className="border p-2">{r.username}</td>
-                <td className="border p-2">{r.answer}</td>
+            {responses.map((r, idx) => (
+              <tr key={idx} className="bg-gray-800">
+                <td className="border border-gray-500 p-2">{r.username}</td>
+                <td className="border border-gray-500 p-2">
+                  {Array.isArray(r.dates) ? r.dates.join(", ") : r.date}
+                </td>
+                <td className="border border-gray-500 p-2">{r.timeslot}</td>
               </tr>
             ))}
           </tbody>
