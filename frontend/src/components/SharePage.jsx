@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import ja from "date-fns/locale/ja";   // ← 修正
 import { format } from "date-fns";
+import ja from "date-fns/locale/ja";
 import "./CalendarStyle.css";
 import Header from "./Header";
-
 
 export default function SharePage({ match }) {
   const { linkId } = match.params;
@@ -17,7 +16,6 @@ export default function SharePage({ match }) {
   const [responses, setResponses] = useState([]);
   const [holidays, setHolidays] = useState({});
 
-  // 日本の祝日データ
   useEffect(() => {
     const year = new Date().getFullYear();
     axios
@@ -26,11 +24,9 @@ export default function SharePage({ match }) {
       .catch(() => setHolidays({}));
   }, []);
 
-  // カレンダー選択
   const handleDateChange = (value) => {
     if (rangeMode === "multiple") {
-      const newDates = Array.isArray(value) ? value : [value];
-      setDates(newDates);
+      setDates(Array.isArray(value) ? value : [value]);
     } else if (rangeMode === "range") {
       if (Array.isArray(value) && value.length === 2) {
         const [start, end] = value;
@@ -45,7 +41,6 @@ export default function SharePage({ match }) {
     }
   };
 
-  // 回答保存
   const handleSave = async () => {
     if (!username || dates.length === 0) {
       alert("名前と日程を入力してください");
@@ -55,7 +50,7 @@ export default function SharePage({ match }) {
     try {
       await axios.post(`/api/share/${linkId}`, {
         username,
-        dates: dates.map((d) => format(d, "yyyy-MM-dd")),
+        dates: dates.map((d) => format(d, "yyyy-MM-dd", { locale: ja })),
         range_mode: rangeMode,
         timeslot: timeSlot,
       });
@@ -67,7 +62,6 @@ export default function SharePage({ match }) {
     }
   };
 
-  // 回答取得
   const fetchResponses = async () => {
     try {
       const res = await axios.get(`/api/share/${linkId}`);
@@ -81,10 +75,9 @@ export default function SharePage({ match }) {
     fetchResponses();
   }, [linkId]);
 
-  // 祝日・日曜は赤
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const ymd = format(date, "yyyy-MM-dd");
+      const ymd = format(date, "yyyy-MM-dd", { locale: ja });
       if (holidays[ymd] || date.getDay() === 0) {
         return "holiday";
       }
@@ -93,12 +86,10 @@ export default function SharePage({ match }) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <header className="text-center text-3xl font-bold mb-6 text-[#FDB9C8]">
-        MilkPOP Calendar - 共有スケジュール
-      </header>
+    <div className="min-h-screen bg-black text-white">
+      <Header />
 
-      <div className="bg-[#004CA0] p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
+      <div className="p-6 bg-[#004CA0] rounded-2xl shadow-lg max-w-2xl mx-auto">
         <input
           type="text"
           placeholder="名前を入力"
@@ -133,7 +124,7 @@ export default function SharePage({ match }) {
           selectRange={rangeMode === "range"}
           tileClassName={tileClassName}
           value={dates}
-          locale={ja}
+          locale="ja-JP"
         />
 
         <div className="mt-4">
