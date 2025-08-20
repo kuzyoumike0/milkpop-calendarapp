@@ -4,9 +4,16 @@ import { motion } from "framer-motion";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-black flex flex-col text-white">
+    <div className="min-h-screen flex flex-col text-white relative overflow-hidden">
+      {/* 背景演出 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a]" />
+      {/* 左上に青の光 */}
+      <div className="absolute top-[-15%] left-[-15%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-[#004CA0]/20 rounded-full blur-[120px]" />
+      {/* 右下にピンクの光 */}
+      <div className="absolute bottom-[-15%] right-[-15%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-[#FDB9C8]/20 rounded-full blur-[120px]" />
+
       {/* バナー */}
-      <header className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
+      <header className="bg-black/60 backdrop-blur-md border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto flex justify-between items-center px-4 md:px-8 py-4">
           <h1 className="text-xl md:text-2xl font-extrabold tracking-wide text-[#FDB9C8]">
             MilkPOP Calendar
@@ -26,7 +33,7 @@ export default function TopPage() {
       </header>
 
       {/* Hero セクション */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16">
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16 relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -56,7 +63,7 @@ export default function TopPage() {
           >
             <Link
               to="/link"
-              className="block rounded-2xl p-6 md:p-10 bg-[#111]/80 border border-gray-700 shadow-lg hover:shadow-2xl hover:border-[#FDB9C8] transition"
+              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg hover:shadow-2xl hover:border-[#FDB9C8] transition"
             >
               <h3 className="text-xl md:text-2xl font-semibold text-[#FDB9C8] mb-3 md:mb-4">
                 日程登録ページ
@@ -76,7 +83,7 @@ export default function TopPage() {
           >
             <Link
               to="/personal"
-              className="block rounded-2xl p-6 md:p-10 bg-[#111]/80 border border-gray-700 shadow-lg hover:shadow-2xl hover:border-[#004CA0] transition"
+              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg hover:shadow-2xl hover:border-[#004CA0] transition"
             >
               <h3 className="text-xl md:text-2xl font-semibold text-[#004CA0] mb-3 md:mb-4">
                 個人スケジュール登録ページ
@@ -90,7 +97,7 @@ export default function TopPage() {
       </section>
 
       {/* フッター */}
-      <footer className="bg-black border-t border-gray-800 text-gray-500 text-center py-4 md:py-6 text-xs md:text-sm">
+      <footer className="bg-black/70 backdrop-blur-md border-t border-gray-800 text-gray-400 text-center py-4 md:py-6 text-xs md:text-sm relative z-10">
         © 2025 MilkPOP Calendar. All rights reserved.
       </footer>
     </div>
