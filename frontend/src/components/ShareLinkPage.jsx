@@ -1,46 +1,42 @@
 import React from "react";
-import { Link } from "react-router-dom";
 
 export default function ShareLinkPage({ link }) {
-  if (!link) return null;
+  const shareUrl = `${window.location.origin}/share/${link}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    alert("リンクをコピーしました！");
+  };
 
   return (
-    <div className="flex justify-center mt-10">
-      <div className="backdrop-blur-md bg-white/20 border border-white/30 shadow-lg rounded-2xl p-6 max-w-lg text-center">
-        <h2 className="text-2xl font-bold text-[#004CA0] mb-4">
+    <div className="flex flex-col items-center mt-10">
+      <div className="backdrop-blur-lg bg-white/20 border border-white/30 shadow-2xl rounded-2xl p-6 w-full max-w-md text-center">
+        <h2 className="text-xl font-bold text-white mb-4 drop-shadow">
           ✅ 共有リンクが発行されました
         </h2>
-        <p className="text-gray-100 mb-6">
-          下のボタンからコピーしたり、そのままページに移動できます。
-        </p>
 
-        {/* リンクURLのコピー部分 */}
-        <div className="flex items-center justify-between bg-black/30 rounded-xl px-4 py-2 text-sm text-white shadow-inner">
-          <span className="truncate">
-            {`${window.location.origin}/share/${link}`}
-          </span>
+        {/* リンク部分 */}
+        <div className="flex items-center justify-between gap-2 bg-black/30 text-white px-4 py-2 rounded-lg shadow-inner">
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate underline hover:text-[#FDB9C8] transition text-sm"
+          >
+            {shareUrl}
+          </a>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(
-                `${window.location.origin}/share/${link}`
-              );
-              alert("リンクをコピーしました！");
-            }}
-            className="ml-3 px-3 py-1 rounded-lg bg-[#FDB9C8] hover:bg-[#e39aa8] text-black font-semibold shadow-md transition"
+            onClick={handleCopy}
+            className="px-3 py-1 text-xs rounded-lg bg-[#FDB9C8] text-black font-bold shadow hover:bg-[#fda5b7] transition"
           >
             コピー
           </button>
         </div>
 
-        {/* 移動ボタン */}
-        <div className="mt-6">
-          <Link
-            to={`/share/${link}`}
-            className="inline-block px-6 py-3 rounded-xl bg-[#004CA0] text-white font-bold shadow-md hover:bg-[#003380] transition"
-          >
-            ページへ移動
-          </Link>
-        </div>
+        {/* 補足メッセージ */}
+        <p className="mt-3 text-sm text-gray-200">
+          このリンクを参加者に共有してください
+        </p>
       </div>
     </div>
   );
