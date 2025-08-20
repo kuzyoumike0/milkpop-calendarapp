@@ -11,35 +11,50 @@ export default function SharePage() {
   const [selectedDates, setSelectedDates] = useState([]);
   const [timeslot, setTimeslot] = useState("全日");
   const [rangeMode, setRangeMode] = useState("複数");
-  const [shareLink, setShareLink] = useState("");
+  const [rangeStart, setRangeStart] = useState(null);
+  const [shareLink, setShareLink] = useState(null);
 
-  // ✅ 日付クリックで配列管理
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-    if (selectedDates.includes(dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-    } else {
-      setSelectedDates([...selectedDates, dateStr]);
+
+    if (rangeMode === "複数") {
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      } else {
+        setSelectedDates([...selectedDates, dateStr]);
+      }
+    } else if (rangeMode === "範囲") {
+      if (!rangeStart) {
+        setRangeStart(date);
+        setSelectedDates([dateStr]);
+      } else {
+        const start = new Date(Math.min(rangeStart, date));
+        const end = new Date(Math.max(rangeStart, date));
+        const dates = [];
+        let current = new Date(start);
+        while (current <= end) {
+          dates.push(current.toISOString().split("T")[0]);
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(dates);
+        setRangeStart(null);
+      }
     }
   };
 
-  // ✅ 祝日赤表示 & 選択日を青にする
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const dateStr = date.toISOString().split("T")[0];
-      if (hd.isHoliday(date)) {
-        return "text-red-500 font-bold"; // 祝日
-      }
-      if (selectedDates.includes(dateStr)) {
-        return "bg-blue-500 text-white rounded-full"; // 選択済み
-      }
+      if (hd.isHoliday(date)) return "text-red-500 font-bold";
+      if (selectedDates.includes(dateStr))
+        return "bg-blue-500 text-white rounded-full";
     }
     return null;
   };
 
   const handleSubmit = async () => {
     if (!title || selectedDates.length === 0) {
-      alert("タイトルと日付を入力してください。");
+      alert("タイトルと日付を入力してください");
       return;
     }
     try {
@@ -49,10 +64,10 @@ export default function SharePage() {
         timeslot,
         range_mode: rangeMode,
       });
-      setShareLink(res.data.link);
+      setShareLink(window.location.origin + res.data.link);
     } catch (err) {
-      console.error("Error creating share schedule:", err);
-      alert("登録に失敗しました");
+      console.error("Error creating schedule:", err);
+      alert("作成に失敗しました");
     }
   };
 
@@ -68,7 +83,6 @@ export default function SharePage() {
         className="border p-2 rounded text-black block mb-2"
       />
 
-      {/* ✅ value を削除 */}
       <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
 
       <div className="mt-4">
@@ -88,7 +102,11 @@ export default function SharePage() {
         <label className="mr-2">選択モード:</label>
         <select
           value={rangeMode}
-          onChange={(e) => setRangeMode(e.target.value)}
+          onChange={(e) => {
+            setRangeMode(e.target.value);
+            setSelectedDates([]);
+            setRangeStart(null);
+          }}
           className="text-black p-1 rounded"
         >
           <option value="複数">複数選択</option>
@@ -98,16 +116,20 @@ export default function SharePage() {
 
       <button
         onClick={handleSubmit}
-        className="mt-4 bg-blue-600 px-4 py-2 rounded"
+        className="mt-4 bg-green-600 px-4 py-2 rounded"
       >
-        登録 & 共有リンク作成
+        リンク発行
       </button>
 
       {shareLink && (
         <div className="mt-4">
           <p>共有リンク:</p>
-          <a href={shareLink} className="text-blue-400 underline">
-            {window.location.origin}
+          <a
+            href={shareLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 underline"
+          >
             {shareLink}
           </a>
         </div>
