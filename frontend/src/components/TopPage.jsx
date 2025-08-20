@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { PencilSquareIcon, UsersIcon } from "@heroicons/react/24/outline"; // ← アイコン追加
 
 export default function TopPage() {
   return (
@@ -35,23 +36,29 @@ export default function TopPage() {
           {/* 個人用カード */}
           <Link
             to="/personal"
-            className="w-full px-10 py-14 rounded-3xl font-bold text-2xl shadow-2xl
-              backdrop-blur-xl bg-white/10 border border-white/20 text-white 
-              hover:bg-[#FDB9C8]/50 hover:text-black hover:scale-105 
-              transition transform duration-300"
+            className="group relative w-full px-10 py-14 rounded-3xl font-bold text-2xl shadow-2xl
+              backdrop-blur-xl bg-gradient-to-br from-pink-200/20 to-pink-500/20 
+              border border-white/20 text-white hover:from-pink-400/40 hover:to-pink-600/40 
+              hover:scale-105 transition transform duration-500 overflow-hidden"
           >
-            📝 個人スケジュール
+            <div className="flex items-center justify-center gap-4">
+              <PencilSquareIcon className="w-10 h-10 text-pink-300 group-hover:text-pink-100 transition" />
+              <span>個人スケジュール</span>
+            </div>
           </Link>
 
           {/* 共有用カード */}
           <Link
             to="/link"
-            className="w-full px-10 py-14 rounded-3xl font-bold text-2xl shadow-2xl
-              backdrop-blur-xl bg-white/10 border border-white/20 text-white 
-              hover:bg-[#004CA0]/60 hover:text-white hover:scale-105 
-              transition transform duration-300"
+            className="group relative w-full px-10 py-14 rounded-3xl font-bold text-2xl shadow-2xl
+              backdrop-blur-xl bg-gradient-to-br from-blue-200/20 to-blue-500/20 
+              border border-white/20 text-white hover:from-blue-400/40 hover:to-blue-600/40 
+              hover:scale-105 transition transform duration-500 overflow-hidden"
           >
-            🤝 共有スケジュール
+            <div className="flex items-center justify-center gap-4">
+              <UsersIcon className="w-10 h-10 text-blue-300 group-hover:text-blue-100 transition" />
+              <span>共有スケジュール</span>
+            </div>
           </Link>
         </div>
       </main>
