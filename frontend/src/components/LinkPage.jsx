@@ -96,4 +96,18 @@ export default function LinkPage() {
       <div className="mt-8 max-w-3xl mx-auto">
         <h2 className="text-xl font-bold mb-4">登録済みスケジュール</h2>
         <ul className="space-y-2">
-          {schedules.length > 0 ?
+          {schedules.length > 0 ? (
+            schedules.map((s, idx) => (
+              <li key={idx} className="bg-gray-800 p-3 rounded-lg">
+                <strong>{s.title}</strong> ({s.timeslot})<br />
+                {s.date}
+              </li>
+            ))
+          ) : (
+            <li className="text-gray-400">スケジュールはまだありません。</li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
