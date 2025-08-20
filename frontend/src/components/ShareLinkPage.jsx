@@ -24,6 +24,11 @@ export default function ShareLinkPage() {
   };
 
   const handleSave = () => {
+    if (timeSlot === "時間指定" && startTime >= endTime) {
+      alert("開始時刻は終了時刻より前にしてください。");
+      return;
+    }
+
     const newEntries = [];
     if (rangeMode === "multiple" && Array.isArray(dates)) {
       dates.forEach((d) => {
