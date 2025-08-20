@@ -1,31 +1,18 @@
--- === schedules: 共有用スケジュール ===
+-- schedules テーブル
 CREATE TABLE IF NOT EXISTS schedules (
     id SERIAL PRIMARY KEY,
-    linkid TEXT NOT NULL,
     title TEXT NOT NULL,
-    range_mode TEXT NOT NULL,         -- "range" or "multiple"
-    dates DATE[] NOT NULL,
-    start_time TEXT NOT NULL,         -- "HH:MM"
-    end_time TEXT NOT NULL,           -- "HH:MM"
+    dates TEXT[] NOT NULL,
+    linkid TEXT UNIQUE NOT NULL,
+    start_time TEXT,
+    end_time TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- === personal_schedules: 個人用スケジュール ===
-CREATE TABLE IF NOT EXISTS personal_schedules (
-    id SERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
-    memo TEXT,
-    range_mode TEXT NOT NULL,
-    dates DATE[] NOT NULL,
-    start_time TEXT NOT NULL,
-    end_time TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- === responses: 共有回答 ===
+-- responses テーブル
 CREATE TABLE IF NOT EXISTS responses (
     id SERIAL PRIMARY KEY,
-    linkid TEXT NOT NULL,
+    linkid TEXT NOT NULL REFERENCES schedules(linkid) ON DELETE CASCADE,
     username TEXT NOT NULL,
     answers JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
