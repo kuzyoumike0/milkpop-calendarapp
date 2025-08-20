@@ -4,157 +4,101 @@ import axios from "axios";
 
 export default function SharePage() {
   const { linkid } = useParams();
-  const [data, setData] = useState(null);
+  const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [selection, setSelection] = useState({});
+  const [answers, setAnswers] = useState({});
 
-  // === データ取得 ===
-  useEffect(() => {
-    axios.get(`/api/schedule/${linkid}`).then((res) => {
-      setData(res.data);
-      setResponses(res.data.responses || []);
-    });
-  }, [linkid]);
-
-  // === 回答保存 ===
-  const handleSave = async () => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
-    await axios.post(`/api/schedule/${linkid}/response`, {
-      username,
-      answers: selection, // backendはanswersを期待
-    });
+  const fetchData = async () => {
     const res = await axios.get(`/api/schedule/${linkid}`);
-    setResponses(res.data.responses || []);
+    setSchedules(res.data.schedules);
+    setResponses(res.data.responses);
   };
 
-  // === プルダウン用 ===
-  const renderSelect = (scheduleId) => (
-    <select
-      className="p-1 rounded text-black"
-      value={selection[scheduleId] || ""}
-      onChange={(e) =>
-        setSelection({ ...selection, [scheduleId]: e.target.value })
-      }
-    >
-      <option value="">-</option>
-      <option value="○">○</option>
-      <option value="✖">✖</option>
-    </select>
-  );
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // === 回答マッピング ===
-  const responseMap = {};
-  responses.forEach((r) => {
-    if (!responseMap[r.username]) responseMap[r.username] = {};
-    const ans = r.answers || {};
-    Object.keys(ans).forEach((k) => {
-      responseMap[r.username][k] = ans[k];
+  const handleSelect = (date, value) => {
+    setAnswers({ ...answers, [date]: value });
+  };
+
+  const handleSubmit = async () => {
+    await axios.post(`/api/share/${linkid}/response`, {
+      username,
+      answers,
     });
-  });
-
-  const users = Object.keys(responseMap);
-
-  // === 出欠率計算 ===
-  const calcStats = (scheduleId) => {
-    const total = users.length;
-    if (total === 0) return { rate: "-", count: "0/0" };
-    const oks = users.filter((u) => responseMap[u][scheduleId] === "○").length;
-    return {
-      rate: `${Math.round((oks / total) * 100)}%`,
-      count: `${oks}/${total}`,
-    };
+    fetchData();
   };
 
   return (
-    <>
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">共有ページ</h2>
-
+    <div className="max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-[#004CA0]">共有スケジュール</h2>
       <input
-        className="p-2 mb-4 w-full text-black rounded"
+        type="text"
         placeholder="名前を入力"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        className="border p-2 w-full mb-4 rounded"
       />
-
-      {/* 予定に対する回答入力 */}
-      <h3 className="text-xl mt-6 mb-2 text-[#004CA0]">予定に対する回答</h3>
-      <table className="w-full border text-center border-[#333]">
-        <thead className="bg-[#004CA0] text-white">
+      <table className="table-auto w-full border">
+        <thead className="bg-[#FDB9C8]">
           <tr>
-            <th className="p-2">日付</th>
-            <th className="p-2">時間帯</th>
-            <th className="p-2">回答</th>
+            <th className="border px-2 py-1">日付</th>
+            <th className="border px-2 py-1">判定</th>
           </tr>
         </thead>
         <tbody>
-          {(data?.schedules || []).map((s) => (
-            <tr key={s.id} className="bg-[#111] border-b border-[#333]">
-              <td className="p-2">{(s.dates || []).join(", ")}</td>
-              <td className="p-2">{s.timeslot}</td>
-              <td className="p-2">{renderSelect(s.id)}</td>
-            </tr>
-          ))}
+          {schedules.map((s, i) =>
+            s.dates.map((d, j) => (
+              <tr key={`${i}-${j}`}>
+                <td className="border px-2 py-1">{d} ({s.timeslot})</td>
+                <td className="border px-2 py-1">
+                  <select
+                    value={answers[d] || ""}
+                    onChange={(e) => handleSelect(d, e.target.value)}
+                    className="border p-1 rounded"
+                  >
+                    <option value="">未選択</option>
+                    <option value="〇">〇</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
-
-      <button onClick={handleSave} className="mt-4 btn-accent">
+      <button
+        onClick={handleSubmit}
+        className="bg-[#004CA0] text-white px-6 py-2 mt-6 rounded shadow hover:scale-105"
+      >
         保存
       </button>
 
-      {/* ユーザーごとの〇✖一覧 */}
-      <h3 className="text-xl mt-8 mb-2 text-[#004CA0]">全員分の一覧</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full border text-center border-[#333]">
-          <thead className="bg-[#004CA0] text-white">
+      <div className="mt-6">
+        <h3 className="text-lg font-bold mb-2">登録済み回答</h3>
+        <table className="table-auto w-full border">
+          <thead className="bg-black text-white">
             <tr>
-              <th className="p-2">ユーザー</th>
-              {(data?.schedules || []).map((s) => (
-                <th key={s.id} className="p-2">
-                  {(s.dates || []).join(", ")} <br /> {s.timeslot}
-                </th>
-              ))}
+              <th className="border px-2 py-1">ユーザー</th>
+              <th className="border px-2 py-1">回答</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
-              <tr key={u} className="bg-[#111] border-b border-[#333]">
-                <td className="p-2 font-bold">{u}</td>
-                {(data?.schedules || []).map((s) => (
-                  <td
-                    key={s.id}
-                    className={`p-2 ${
-                      responseMap[u][s.id] === "○"
-                        ? "text-green-400"
-                        : responseMap[u][s.id] === "✖"
-                        ? "text-red-400"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {responseMap[u][s.id] || "-"}
-                  </td>
-                ))}
+            {responses.map((r, i) => (
+              <tr key={i}>
+                <td className="border px-2 py-1">{r.username}</td>
+                <td className="border px-2 py-1">
+                  {Object.entries(r.answers).map(([d, v]) => (
+                    <span key={d}>{d}: {v}　</span>
+                  ))}
+                </td>
               </tr>
             ))}
-            <tr className="bg-[#222] text-yellow-400 font-bold">
-              <td className="p-2">出欠率 / 人数</td>
-              {(data?.schedules || []).map((s) => {
-                const stats = calcStats(s.id);
-                return (
-                  <td key={s.id} className="p-2">
-                    {stats.rate}
-                    <br />
-                    {stats.count}
-                  </td>
-                );
-              })}
-            </tr>
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }
