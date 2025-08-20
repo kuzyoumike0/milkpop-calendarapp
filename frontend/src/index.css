@@ -2,75 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===== 全体フォント設定 ===== */
+/* === 共通ハニカム背景 + グラスモーフィズム === */
 body {
-  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  color: #333;
-
-  /* 大きめでふんわりしたかわいいハニカム背景（全ページ共通） */
-  background-color: #fff0f5; /* 薄ピンクベース */
-  background-image:
-    linear-gradient(30deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15)),
-    linear-gradient(150deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15));
-  background-size: 120px 208px;
-  background-position: 0 0, 0 0;
-}
-
-/* ===== ヘッダーバナー ===== */
-.header {
-  background: linear-gradient(90deg, rgba(253,185,200,0.85), rgba(0,76,160,0.85));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  @apply min-h-screen flex justify-center items-center;
+  background-color: #000000;
+  background-image: 
+    radial-gradient(circle at 0 0, #FDB9C8 2%, transparent 20%),
+    radial-gradient(circle at 25px 43px, #004CA0 2%, transparent 20%);
+  background-size: 100px 86px;
   color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 1rem 2rem;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  border-radius: 0 0 1rem 1rem;
+  font-family: "Poppins", "Noto Sans JP", sans-serif;
 }
 
-/* ===== ボタンデザイン ===== */
-.btn-main {
-  background: rgba(0,76,160,0.85);
-  color: white;
-  border-radius: 1rem;
-  padding: 0.5rem 1.2rem;
-  font-weight: 600;
-  transition: 0.3s;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.btn-main:hover {
-  background: rgba(253,185,200,0.85);
-  color: #000;
-}
-
-/* ===== グラスモーフィズムカード ===== */
-.card, .react-calendar {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.3);
-  margin: 1rem 0;
-  color: #333;
-}
-
-/* ===== カレンダー調整 ===== */
-.react-calendar__tile--now {
-  background: rgba(253,185,200,0.9) !important;
-  color: black !important;
-  border-radius: 50%;
-  font-weight: bold;
-}
-.react-calendar__tile--active {
-  background: rgba(0,76,160,0.9) !important;
-  color: white !important;
-  border-radius: 50%;
-}
-.react-calendar__month-view__days__day--weekend {
-  color: #E63946 !important;
+/* カード共通デザイン */
+.card {
+  @apply backdrop-blur-lg bg-white/20 border border-white/30 rounded-2xl shadow-xl p-6;
 }
