@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Header from "./Header";
+import Footer from "./Footer";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -97,6 +98,8 @@ export default function LinkPage() {
           </p>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
