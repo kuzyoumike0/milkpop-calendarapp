@@ -3,21 +3,21 @@ import { Link } from "react-router-dom";
 
 export default function TopPage() {
   return (
-    <div className="text-center">
-      <h2 className="text-3xl font-bold mb-6 text-[#004CA0]">ようこそ！</h2>
-      <p className="mb-8">MilkPOP Calendarへようこそ。スケジュールを登録・共有してみましょう。</p>
-      <div className="flex justify-center space-x-6">
+    <div className="flex flex-col items-center justify-center text-center space-y-6">
+      <h2 className="text-3xl font-bold text-[#FDB9C8]">ようこそ！</h2>
+      <p className="text-lg">日程を登録して共有したり、個人スケジュールを管理できます。</p>
+      <div className="space-x-4">
         <Link
           to="/link"
-          className="bg-[#FDB9C8] text-black px-6 py-3 rounded-2xl shadow hover:scale-105"
+          className="bg-[#004CA0] text-white px-6 py-3 rounded-2xl shadow hover:bg-blue-900"
         >
-          日程登録ページ
+          日程登録ページへ
         </Link>
         <Link
           to="/personal"
-          className="bg-[#004CA0] text-white px-6 py-3 rounded-2xl shadow hover:scale-105"
+          className="bg-[#FDB9C8] text-black px-6 py-3 rounded-2xl shadow hover:bg-pink-400"
         >
-          個人スケジュール
+          個人スケジュールへ
         </Link>
       </div>
     </div>
