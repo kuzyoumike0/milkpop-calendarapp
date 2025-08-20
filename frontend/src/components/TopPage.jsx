@@ -6,22 +6,21 @@ import { motion } from "framer-motion";
 export default function TopPage() {
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col text-white">
-      {/* 背景 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0a0a1a] to-[#1a1a1a]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#004CA0_0%,transparent_40%),radial-gradient(circle_at_bottom_right,#FDB9C8_0%,transparent_40%)] opacity-40" />
+      {/* 背景（お洒落な黒 + 光の演出） */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#1a1a1a]">
+        {/* 左上に青の光、右下にピンクの光 */}
+        <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-[#004CA0]/40 rounded-full blur-[160px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-[#FDB9C8]/40 rounded-full blur-[160px]" />
       </div>
 
       {/* バナー */}
-      <header className="bg-black/40 backdrop-blur-md border-b border-white/10 fixed top-0 left-0 right-0 z-50">
+      <header className="bg-black/50 backdrop-blur-md border-b border-white/10 fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto flex justify-between items-center px-8 py-4">
           <h1 className="text-2xl font-extrabold tracking-wide text-[#FDB9C8] drop-shadow-lg">
             MilkPOP Calendar
           </h1>
           <nav className="space-x-6 font-medium">
-            <Link
-              to="/link"
-              className="hover:text-[#FDB9C8] transition-colors"
-            >
+            <Link to="/link" className="hover:text-[#FDB9C8] transition-colors">
               日程登録
             </Link>
             <Link
@@ -102,7 +101,7 @@ export default function TopPage() {
       </section>
 
       {/* フッター */}
-      <footer className="bg-black/40 backdrop-blur-md text-gray-400 text-center py-6 text-sm border-t border-white/10 relative z-10">
+      <footer className="bg-black/50 backdrop-blur-md text-gray-400 text-center py-6 text-sm border-t border-white/10 relative z-10">
         © 2025 MilkPOP Calendar. All rights reserved.
       </footer>
     </div>
