@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import useHolidays from "../hooks/useHolidays";
 
 export default function SharePage() {
   const { linkid } = useParams();
   const [data, setData] = useState({ schedules: [], responses: [] });
   const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({});
+  const [date, setDate] = useState([]);
+  const holidays = useHolidays();
 
   const fetchSharedData = async () => {
     const res = await axios.get(`/api/shared/${linkid}`);
@@ -28,8 +33,7 @@ export default function SharePage() {
       response: responses[sid],
     }));
     await axios.post("/api/shared", { responses: payload });
-
-    fetchSharedData(); // 即反映
+    fetchSharedData();
   };
 
   return (
@@ -42,7 +46,20 @@ export default function SharePage() {
         onChange={(e) => setUsername(e.target.value)}
       />
 
-      <table className="w-full border text-center">
+      <Calendar
+        onChange={setDate}
+        value={date}
+        selectRange={true}
+        tileClassName={({ date }) => {
+          const yyyy = date.getFullYear();
+          const mm = String(date.getMonth() + 1).padStart(2, "0");
+          const dd = String(date.getDate()).padStart(2, "0");
+          const key = `${yyyy}-${mm}-${dd}`;
+          return holidays[key] ? "text-red-500 font-bold" : "";
+        }}
+      />
+
+      <table className="w-full border text-center mt-6">
         <thead>
           <tr>
             <th>日付</th>
