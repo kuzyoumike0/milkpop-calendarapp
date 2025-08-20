@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 export default function TopPage() {
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col text-white">
-      {/* 背景（グラデーション + 粒子風） */}
+      {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0a0a1a] to-[#1a1a1a]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#004CA0_0%,transparent_40%),radial-gradient(circle_at_bottom_right,#FDB9C8_0%,transparent_40%)] opacity-40" />
       </div>
@@ -36,20 +36,33 @@ export default function TopPage() {
 
       {/* Hero セクション */}
       <section className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-28 pb-16 relative z-10">
-        <h2 className="text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent drop-shadow-lg">
+        <motion.h2
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent drop-shadow-lg"
+        >
           スケジュールをもっとスマートに
-        </h2>
-        <p className="text-gray-300 text-lg max-w-2xl mb-12 leading-relaxed">
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, delay: 0.3 }}
+          className="text-gray-300 text-lg max-w-2xl mb-12 leading-relaxed"
+        >
           MilkPOP Calendar で予定を登録し、仲間とシェア。  
           シンプルで美しいカレンダー体験を。
-        </p>
+        </motion.p>
 
         {/* カードグリッド */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl w-full">
           {/* 日程登録カード */}
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            transition={{ type: "spring", stiffness: 250 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
           >
             <Link
               to="/link"
@@ -68,7 +81,9 @@ export default function TopPage() {
           {/* 個人スケジュールカード */}
           <motion.div
             whileHover={{ scale: 1.05, y: -8 }}
-            transition={{ type: "spring", stiffness: 250 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
           >
             <Link
               to="/personal"
