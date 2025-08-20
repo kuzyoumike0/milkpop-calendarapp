@@ -31,47 +31,82 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
-      date DATE NOT NULL,
+      memo TEXT,
+      "date" DATE NOT NULL,
       timeslot TEXT NOT NULL,
       range_mode TEXT NOT NULL,
       linkid TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS personal_schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      memo TEXT,
-      date DATE NOT NULL,
-      timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    )
+    );
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_links (
-      id SERIAL PRIMARY KEY,
-      linkid TEXT UNIQUE NOT NULL,
-      title TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    )
+      linkid TEXT PRIMARY KEY,
+      title TEXT NOT NULL
+    );
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS share_responses (
       id SERIAL PRIMARY KEY,
-      schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+      schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
       username TEXT NOT NULL,
-      response TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE (schedule_id, username)
-    )
+      response TEXT NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_share_responses_unique
+    ON share_responses(schedule_id, username);
   `);
 }
 initDB();
+
+// === 個人スケジュール登録 ===
+app.post("/api/personal-schedules", async (req, res) => {
+  try {
+    const { title, memo, dates, timeslot, range_mode } = req.body;
+    if (!title || !dates || !timeslot || !range_mode) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    for (const d of dates) {
+      await pool.query(
+        `INSERT INTO schedules (title, memo, "date", timeslot, range_mode, linkid)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [title, memo || "", d, timeslot, range_mode, "personal"]
+      );
+    }
+
+    const result = await pool.query(`
+      SELECT id, title, memo, "date", timeslot, range_mode
+      FROM schedules
+      WHERE linkid = 'personal'
+      ORDER BY "date", timeslot
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("個人登録エラー:", err);
+    res.status(500).json({ error: "登録に失敗しました" });
+  }
+});
+
+// === 個人スケジュール取得 ===
+app.get("/api/personal-schedules", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, title, memo, "date", timeslot, range_mode
+      FROM schedules
+      WHERE linkid = 'personal'
+      ORDER BY "date", timeslot
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("個人取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
 
 // === スケジュール登録 (共有用) ===
 app.post("/api/schedules", async (req, res) => {
@@ -81,10 +116,9 @@ app.post("/api/schedules", async (req, res) => {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
-    // linkid が指定されていなければ新規生成
     const useLinkId = linkid || uuidv4();
 
-    // share_links に存在しない場合は登録
+    // share_links 登録
     await pool.query(
       `INSERT INTO share_links (linkid, title)
        VALUES ($1, $2)
@@ -94,21 +128,21 @@ app.post("/api/schedules", async (req, res) => {
 
     for (const d of dates) {
       await pool.query(
-        `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
+        `INSERT INTO schedules (title, "date", timeslot, range_mode, linkid)
          VALUES ($1, $2, $3, $4, $5)`,
         [title, d, timeslot, range_mode, useLinkId]
       );
     }
 
-    const result = await pool.query(
-      `SELECT s.*, l.title AS link_title
-       FROM schedules s
-       LEFT JOIN share_links l ON s.linkid = l.linkid
-       ORDER BY s.date, s.timeslot`
-    );
+    const result = await pool.query(`
+      SELECT s.id, s.title, s."date", s.timeslot, s.range_mode, s.linkid, l.title AS link_title
+      FROM schedules s
+      LEFT JOIN share_links l ON s.linkid = l.linkid
+      ORDER BY s."date", s.timeslot
+    `);
     res.json(result.rows);
   } catch (err) {
-    console.error("登録エラー:", err);
+    console.error("共有登録エラー:", err);
     res.status(500).json({ error: "登録に失敗しました" });
   }
 });
@@ -119,7 +153,7 @@ app.get("/api/schedules", async (req, res) => {
     const { linkid } = req.query;
 
     let query = `
-      SELECT s.*, l.title AS link_title,
+      SELECT s.id, s.title, s."date", s.timeslot, s.range_mode, s.linkid, l.title AS link_title,
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
                       FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
@@ -133,7 +167,7 @@ app.get("/api/schedules", async (req, res) => {
       params.push(linkid);
     }
 
-    query += ` GROUP BY s.id, l.title ORDER BY s.date, s.timeslot`;
+    query += ` GROUP BY s.id, l.title ORDER BY s."date", s.timeslot`;
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -143,65 +177,7 @@ app.get("/api/schedules", async (req, res) => {
   }
 });
 
-// === 個人スケジュール登録 ===
-app.post("/api/personal", async (req, res) => {
-  try {
-    const { title, memo, dates, timeslot, range_mode } = req.body;
-    if (!title || !dates || !timeslot || !range_mode) {
-      return res.status(400).json({ error: "必須項目が不足しています" });
-    }
-
-    for (const d of dates) {
-      await pool.query(
-        `INSERT INTO personal_schedules (title, memo, date, timeslot, range_mode)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [title, memo || "", d, timeslot, range_mode]
-      );
-    }
-
-    const result = await pool.query(
-      `SELECT * FROM personal_schedules ORDER BY date, timeslot`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("個人スケジュール登録エラー:", err);
-    res.status(500).json({ error: "登録に失敗しました" });
-  }
-});
-
-// === 個人スケジュール取得 ===
-app.get("/api/personal", async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT * FROM personal_schedules ORDER BY date, timeslot`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// === 共有リンク発行 ===
-app.post("/api/share", async (req, res) => {
-  try {
-    const { title } = req.body;
-    if (!title) return res.status(400).json({ error: "タイトル必須" });
-
-    const linkid = uuidv4();
-    await pool.query(
-      `INSERT INTO share_links (linkid, title) VALUES ($1, $2)`,
-      [linkid, title]
-    );
-
-    res.json({ link: `/share/${linkid}` });
-  } catch (err) {
-    console.error("リンク作成エラー:", err);
-    res.status(500).json({ error: "リンク作成に失敗しました" });
-  }
-});
-
-// === 共有スケジュールへの出欠保存（同じユーザーは更新扱い） ===
+// === 出欠保存 ===
 app.post("/api/share-responses", async (req, res) => {
   try {
     const { username, responses } = req.body;
@@ -211,41 +187,39 @@ app.post("/api/share-responses", async (req, res) => {
 
     for (const scheduleId of Object.keys(responses)) {
       const response = responses[scheduleId];
-      if (!response) continue;
-
       await pool.query(
         `INSERT INTO share_responses (schedule_id, username, response)
          VALUES ($1, $2, $3)
          ON CONFLICT (schedule_id, username)
-         DO UPDATE SET response = EXCLUDED.response, created_at = NOW()`,
+         DO UPDATE SET response = EXCLUDED.response`,
         [scheduleId, username, response]
       );
     }
 
     const result = await pool.query(`
-      SELECT s.*, l.title AS link_title,
+      SELECT s.id, s.title, s."date", s.timeslot, s.range_mode, s.linkid, l.title AS link_title,
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
                       FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
       LEFT JOIN share_responses r ON s.id = r.schedule_id
       LEFT JOIN share_links l ON s.linkid = l.linkid
       GROUP BY s.id, l.title
-      ORDER BY s.date, s.timeslot
+      ORDER BY s."date", s.timeslot
     `);
-
     res.json(result.rows);
   } catch (err) {
-    console.error("出欠保存エラー:", err);
+    console.error("保存エラー:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// === 静的ファイル (Reactビルド) ===
-app.use(express.static(path.join(__dirname, "public")));
+// === 静的ファイル配信（本番用） ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
+// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`サーバー起動: http://localhost:${PORT}`);
