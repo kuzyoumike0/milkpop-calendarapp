@@ -1,3 +1,7 @@
+<div className="min-h-screen bg-red-500">
+  こんにちは
+</div>
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
