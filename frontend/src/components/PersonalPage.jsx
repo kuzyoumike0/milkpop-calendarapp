@@ -86,7 +86,6 @@ export default function PersonalPage() {
       end_time: e,
     });
 
-    // 保存したら一覧更新
     fetchList();
     alert("保存しました！");
   };
@@ -99,7 +98,7 @@ export default function PersonalPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto px-2">
       <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">個人日程登録</h2>
       <input
         className="w-full mb-3 p-2 text-black rounded"
@@ -215,23 +214,27 @@ export default function PersonalPage() {
       <h3 className="text-xl font-bold mt-10 mb-4 text-[#FDB9C8]">
         保存した個人スケジュール
       </h3>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {list.map((item) => (
           <div
             key={item.id}
-            className="p-4 bg-gray-900 rounded-2xl shadow-md border border-gray-700"
+            className="p-4 bg-gray-900 rounded-2xl shadow-lg border border-gray-700 flex flex-col justify-between"
           >
-            <h4 className="text-lg font-semibold text-[#FDB9C8]">
+            <h4 className="text-lg font-semibold text-[#FDB9C8] mb-2 truncate">
               {item.title}
             </h4>
             {item.memo && (
-              <p className="text-sm text-gray-300 mb-2">{item.memo}</p>
+              <p className="text-sm text-gray-300 mb-2 line-clamp-3">
+                {item.memo}
+              </p>
             )}
-            <p className="text-gray-400 text-sm">
-              日付: {item.dates.join(", ")}
+            <p className="text-gray-400 text-sm mb-1">
+              <span className="font-semibold text-white">日付:</span>{" "}
+              {item.dates.join(", ")}
             </p>
             <p className="text-gray-400 text-sm">
-              時間帯: {getTimeLabel(item.start_time, item.end_time)}
+              <span className="font-semibold text-white">時間帯:</span>{" "}
+              {getTimeLabel(item.start_time, item.end_time)}
             </p>
           </div>
         ))}
