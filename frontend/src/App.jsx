@@ -8,7 +8,6 @@ import PersonalPage from "./components/PersonalPage";
 function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // メニューリンクをまとめる
   const menuItems = [
     { to: "/", label: "トップ" },
     { to: "/link", label: "日程登録" },
@@ -87,9 +86,10 @@ function Layout({ children }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
                 >
+                  {/* 🔴 一時的に赤ボタンに変更 */}
                   <Link
                     to={item.to}
-                    className="block w-full text-center px-4 py-3 rounded-2xl bg-gradient-to-r from-[#004CA0]/40 to-[#FDB9C8]/40 text-white font-semibold shadow-lg border border-white/10 hover:scale-105 hover:from-[#004CA0]/60 hover:to-[#FDB9C8]/60 transition transform"
+                    className="block w-full text-center px-4 py-3 rounded-2xl bg-red-500 text-white font-bold"
                     onClick={() => setMenuOpen(false)}
                   >
                     {item.label}
