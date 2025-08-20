@@ -10,24 +10,16 @@ import ShareLinkPage from "./components/ShareLinkPage";
 function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          {/* トップページ */}
+      <Routes>
+        {/* Layout で全ページをラップ */}
+        <Route element={<Layout />}>
           <Route path="/" element={<TopPage />} />
-
-          {/* 日程登録ページ */}
           <Route path="/link" element={<LinkPage />} />
-
-          {/* 個人日程登録ページ */}
           <Route path="/personal" element={<PersonalPage />} />
-
-          {/* 共有ページ（登録したスケジュールの回答用） */}
           <Route path="/share/:linkid" element={<SharePage />} />
-
-          {/* 共有リンクページ（発行されたリンクを表示） */}
           <Route path="/sharelink/:linkid" element={<ShareLinkPage />} />
-        </Routes>
-      </Layout>
+        </Route>
+      </Routes>
     </Router>
   );
 }
