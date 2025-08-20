@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import { holidays } from "../utils/holidays";
 
 export default function LinkPage() {
   const [dates, setDates] = useState([]);
@@ -56,9 +57,16 @@ export default function LinkPage() {
 
       <Calendar
         onClickDay={toggleDate}
-        tileClassName={({ date }) =>
-          dates.includes(date.toISOString().split("T")[0]) ? "bg-green-600 text-white rounded-full" : ""
-        }
+        tileClassName={({ date }) => {
+          const iso = date.toISOString().split("T")[0];
+          if (dates.includes(iso)) {
+            return "bg-green-600 text-white rounded-full";
+          }
+          if (holidays.includes(iso)) {
+            return "text-red-500 font-bold";
+          }
+          return "";
+        }}
         locale="ja-JP"
       />
 
