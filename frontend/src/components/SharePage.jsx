@@ -30,6 +30,16 @@ export default function SharePage() {
 
   if (!schedule) return <p>読み込み中...</p>;
 
+  // 時間帯ラベル判定
+  const getTimeLabel = () => {
+    const s = schedule.start_time;
+    const e = schedule.end_time;
+    if (s === "01:00" && e === "24:00") return "終日";
+    if (s === "09:00" && e === "18:00") return "昼";
+    if (s === "18:00" && e === "24:00") return "夜";
+    return `${s} 〜 ${e}`;
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* タイトル */}
@@ -37,12 +47,10 @@ export default function SharePage() {
         {schedule.title}
       </h2>
 
-      {/* 時間帯 */}
+      {/* 時間帯ラベル */}
       <p className="mb-6 text-gray-300">
         時間帯:{" "}
-        <span className="text-[#004CA0] font-semibold">
-          {schedule.start_time} 〜 {schedule.end_time}
-        </span>
+        <span className="text-[#004CA0] font-semibold">{getTimeLabel()}</span>
       </p>
 
       {/* 名前入力 */}
