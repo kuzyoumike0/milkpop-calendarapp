@@ -2,16 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* デフォルト背景を黒に */
 body {
   @apply bg-black text-white;
-}
-
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  display: flex;           /* これを追加 */
-  justify-content: center; /* 横方向の中央寄せ */
-  align-items: center;     /* 縦方向の中央寄せ */
-  background: linear-gradient(to bottom right, #000000, #0d0d0d, #1a1a1a);
-  color: white;
 }
