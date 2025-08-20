@@ -13,7 +13,7 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# buildしたReactを backend の public/ に配置
+# React build を public に配置（index.html を含む）
 COPY --from=frontend-build /app/frontend/build ./public
 
 ENV PORT=8080
