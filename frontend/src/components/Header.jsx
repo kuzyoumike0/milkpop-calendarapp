@@ -1,24 +1,14 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Header() {
-  const location = useLocation();
-  const isTopPage = location.pathname === "/";
-
   return (
     <header className="w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-black shadow-lg p-4 flex justify-between items-center">
-      {/* 左上 ロゴ部分 */}
+      {/* 左上 ロゴテキスト */}
       <div className="flex flex-col items-start">
         <h1 className="text-2xl font-extrabold tracking-wide drop-shadow-lg">
           MilkPOP Calendar
         </h1>
-        {isTopPage && (
-          <img
-            src="/logo.png"
-            alt="MilkPOP Logo"
-            className="h-12 mt-1 drop-shadow-xl"
-          />
-        )}
       </div>
 
       {/* 右上 ナビゲーション */}
