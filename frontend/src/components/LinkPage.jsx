@@ -7,12 +7,11 @@ export default function LinkPage() {
   const [title, setTitle] = useState("");
   const [selectionMode, setSelectionMode] = useState("multiple"); // multiple or range
   const [dates, setDates] = useState([]);
-  const [timeMode, setTimeMode] = useState("all"); // all, day, night, custom
+  const [timeMode, setTimeMode] = useState("all");
   const [startTime, setStartTime] = useState("01:00");
   const [endTime, setEndTime] = useState("02:00");
-  const [link, setLink] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
 
-  // カレンダー選択
   const handleDateChange = (value) => {
     if (selectionMode === "multiple") {
       setDates((prev) => {
@@ -31,8 +30,7 @@ export default function LinkPage() {
     }
   };
 
-  // 登録
-  const handleSubmit = async () => {
+  const handleSave = async () => {
     const formatDate = (d) => {
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -48,19 +46,20 @@ export default function LinkPage() {
     const res = await axios.post("/api/schedules", {
       title,
       dates: selectedDates,
-      start_time: timeMode === "custom" ? startTime : timeMode,
+      timeMode,
+      start_time: timeMode === "custom" ? startTime : null,
       end_time: timeMode === "custom" ? endTime : null,
     });
 
-    setLink(`${window.location.origin}/share/${res.data.linkid}`);
+    setShareUrl(`${window.location.origin}/share/${res.data.linkid}`);
   };
 
   return (
     <div className="p-6">
       <div className="card">
-        <h2 className="card-title">📅 日程登録</h2>
+        <h2 className="card-title">📌 日程登録ページ</h2>
 
-        {/* タイトル */}
+        {/* タイトル入力 */}
         <div className="mb-4">
           <label className="block mb-1 text-gray-300">タイトル</label>
           <input
@@ -111,7 +110,7 @@ export default function LinkPage() {
           />
         </div>
 
-        {/* 時間帯プルダウン */}
+        {/* 時間帯 */}
         <div className="mb-4">
           <label className="block mb-1 text-gray-300">時間帯</label>
           <select
@@ -163,16 +162,16 @@ export default function LinkPage() {
           </div>
         )}
 
-        {/* 送信ボタン */}
-        <button onClick={handleSubmit} className="btn w-full">
-          共有リンクを発行
+        {/* 共有リンク発行 */}
+        <button onClick={handleSave} className="btn w-full">
+          共有リンク発行
         </button>
 
-        {/* 発行リンク */}
-        {link && (
-          <div className="mt-4 p-2 bg-gray-800 rounded text-center">
-            <a href={link} className="text-brandPink underline">
-              {link}
+        {shareUrl && (
+          <div className="mt-4 p-3 rounded bg-gray-900 text-gray-200 break-all">
+            共有リンク:{" "}
+            <a href={shareUrl} className="text-pink-400 underline">
+              {shareUrl}
             </a>
           </div>
         )}
