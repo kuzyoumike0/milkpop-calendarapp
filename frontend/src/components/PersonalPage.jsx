@@ -12,13 +12,36 @@ export default function PersonalPage() {
   const [selectedDates, setSelectedDates] = useState([]);
   const [timeslot, setTimeslot] = useState("全日");
   const [rangeMode, setRangeMode] = useState("複数");
+  const [rangeStart, setRangeStart] = useState(null);
 
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-    if (selectedDates.includes(dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-    } else {
-      setSelectedDates([...selectedDates, dateStr]);
+
+    if (rangeMode === "複数") {
+      // トグル追加/削除
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      } else {
+        setSelectedDates([...selectedDates, dateStr]);
+      }
+    } else if (rangeMode === "範囲") {
+      if (!rangeStart) {
+        // 開始日を設定
+        setRangeStart(date);
+        setSelectedDates([dateStr]);
+      } else {
+        // 終了日を選んだら範囲を作成
+        const start = new Date(Math.min(rangeStart, date));
+        const end = new Date(Math.max(rangeStart, date));
+        const dates = [];
+        let current = new Date(start);
+        while (current <= end) {
+          dates.push(current.toISOString().split("T")[0]);
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(dates);
+        setRangeStart(null); // リセット
+      }
     }
   };
 
@@ -49,6 +72,7 @@ export default function PersonalPage() {
       setTitle("");
       setMemo("");
       setSelectedDates([]);
+      setRangeStart(null);
     } catch (err) {
       console.error("Error saving personal schedule:", err);
       alert("登録に失敗しました");
@@ -93,7 +117,11 @@ export default function PersonalPage() {
         <label className="mr-2">選択モード:</label>
         <select
           value={rangeMode}
-          onChange={(e) => setRangeMode(e.target.value)}
+          onChange={(e) => {
+            setRangeMode(e.target.value);
+            setSelectedDates([]);
+            setRangeStart(null);
+          }}
           className="text-black p-1 rounded"
         >
           <option value="複数">複数選択</option>
