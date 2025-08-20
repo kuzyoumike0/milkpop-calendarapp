@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import axios from "axios";
 
 const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
 const HOLIDAY_CALENDAR_ID = "japanese__ja@holiday.calendar.google.com";
 
-export default function PersonalPage() {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeslot, setTimeslot] = useState("終日");
-  const [saved, setSaved] = useState([]);
+export default function SharePage() {
+  const { linkid } = useParams();
+  const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState([]);
+  const [username, setUsername] = useState("");
+  const [answers, setAnswers] = useState({});
   const [holidays, setHolidays] = useState([]);
 
   // === 祝日データ取得 ===
@@ -31,99 +31,108 @@ export default function PersonalPage() {
     fetchHolidays();
   }, []);
 
-  const handleDateChange = (value) => {
-    if (rangeMode === "range") {
-      setDates(value);
-    } else {
-      setDates(Array.isArray(value) ? value : [value]);
-    }
+  const fetchData = async () => {
+    const res = await axios.get(`/api/schedule/${linkid}`);
+    setSchedules(res.data.schedules);
+    setResponses(res.data.responses);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSelect = (date, value) => {
+    setAnswers({ ...answers, [date]: value });
   };
 
   const handleSubmit = async () => {
-    const formattedDates = Array.isArray(dates)
-      ? dates.map((d) => d.toISOString().split("T")[0])
-      : [dates.toISOString().split("T")[0]];
-    await axios.post("/api/personal", {
-      title,
-      memo,
-      dates: formattedDates,
-      timeslot,
-      range_mode: rangeMode,
+    await axios.post(`/api/share/${linkid}/response`, {
+      username,
+      answers,
     });
-    setSaved([...saved, { title, memo, dates: formattedDates, timeslot }]);
+    fetchData();
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-[#004CA0]">個人スケジュール</h2>
+    <div className="max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-[#004CA0]">共有スケジュール</h2>
       <input
         type="text"
-        placeholder="タイトル"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        placeholder="名前を入力"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         className="border p-2 w-full mb-4 rounded"
       />
-      <textarea
-        placeholder="メモ"
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-        className="border p-2 w-full mb-4 rounded"
-      />
-      <div className="mb-4">
-        <label className="mr-4">
-          <input
-            type="radio"
-            checked={rangeMode === "multiple"}
-            onChange={() => setRangeMode("multiple")}
-          />
-          複数選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={rangeMode === "range"}
-            onChange={() => setRangeMode("range")}
-          />
-          範囲選択
-        </label>
-      </div>
-      <Calendar
-        onChange={handleDateChange}
-        value={dates}
-        selectRange={rangeMode === "range"}
-        tileClassName={({ date }) => {
-          const day = date.toISOString().split("T")[0];
-          return holidays.includes(day) ? "!text-red-600 font-bold" : "";
-        }}
-      />
-      <div className="mt-4">
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="border p-2 rounded w-full"
-        >
-          <option>終日</option>
-          <option>昼</option>
-          <option>夜</option>
-          <option>1時から0時</option>
-        </select>
-      </div>
+
+      <table className="table-auto w-full border">
+        <thead className="bg-[#FDB9C8]">
+          <tr>
+            <th className="border px-2 py-1">日付</th>
+            <th className="border px-2 py-1">判定</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.map((s, i) =>
+            s.dates.map((d, j) => (
+              <tr key={`${i}-${j}`}>
+                <td
+                  className={`border px-2 py-1 ${
+                    holidays.includes(d) ? "text-red-600 font-bold" : ""
+                  }`}
+                >
+                  {d} ({s.timeslot})
+                </td>
+                <td className="border px-2 py-1">
+                  <select
+                    value={answers[d] || ""}
+                    onChange={(e) => handleSelect(d, e.target.value)}
+                    className="border p-1 rounded"
+                  >
+                    <option value="">未選択</option>
+                    <option value="〇">〇</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
       <button
         onClick={handleSubmit}
         className="bg-[#004CA0] text-white px-6 py-2 mt-6 rounded shadow hover:scale-105"
       >
-        登録
+        保存
       </button>
+
       <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">登録済み一覧</h3>
-        <ul>
-          {saved.map((s, i) => (
-            <li key={i} className="border-b py-2">
-              {s.title} ({s.timeslot}) - {s.dates.join(", ")} <br />
-              <span className="text-sm text-gray-600">{s.memo}</span>
-            </li>
-          ))}
-        </ul>
+        <h3 className="text-lg font-bold mb-2">登録済み回答</h3>
+        <table className="table-auto w-full border">
+          <thead className="bg-black text-white">
+            <tr>
+              <th className="border px-2 py-1">ユーザー</th>
+              <th className="border px-2 py-1">回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {responses.map((r, i) => (
+              <tr key={i}>
+                <td className="border px-2 py-1">{r.username}</td>
+                <td className="border px-2 py-1">
+                  {Object.entries(r.answers).map(([d, v]) => (
+                    <span
+                      key={d}
+                      className={holidays.includes(d) ? "text-red-600 font-bold" : ""}
+                    >
+                      {d}: {v}　
+                    </span>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
