@@ -2,8 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
-const cors = require("cors");
 const path = require("path");
+const cors = require("cors");
 
 const app = express();
 app.use(bodyParser.json());
@@ -30,96 +30,105 @@ async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
+      linkid TEXT NOT NULL,
       title TEXT NOT NULL,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL,
-      linkid TEXT UNIQUE NOT NULL
+      range_mode TEXT NOT NULL DEFAULT 'range',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS votes (
+    CREATE TABLE IF NOT EXISTS shares (
       id SERIAL PRIMARY KEY,
       linkid TEXT NOT NULL,
       username TEXT NOT NULL,
-      votes JSONB NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
+      responses JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
 initDB();
 
-// === API: スケジュール登録 ===
-app.post("/api/schedule", async (req, res) => {
-  const { title, start_date, end_date, timeslot, range_mode } = req.body;
-  const linkid = uuidv4();
+// === API ===
 
+// スケジュール登録（リンク発行）
+app.post("/api/schedule", async (req, res) => {
   try {
+    const { title, start_date, end_date, timeslot, range_mode } = req.body;
+    const linkid = uuidv4();
+
     await pool.query(
-      `INSERT INTO schedules (title, start_date, end_date, timeslot, range_mode, linkid)
+      `INSERT INTO schedules (linkid, title, start_date, end_date, timeslot, range_mode) 
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [title, start_date, end_date, timeslot, range_mode, linkid]
+      [linkid, title, start_date, end_date, timeslot, range_mode || "range"]
     );
-    res.json({ link: `/share/${linkid}` });
+
+    res.json({ linkid, url: `/share/${linkid}` });
   } catch (err) {
     console.error("スケジュール登録エラー:", err);
-    res.status(500).json({ error: "登録に失敗しました" });
+    res.status(500).json({ error: "スケジュール登録に失敗しました" });
   }
 });
 
-// === API: スケジュール取得 ===
+// スケジュール取得
 app.get("/api/schedule/:linkid", async (req, res) => {
-  const { linkid } = req.params;
   try {
-    const scheduleRes = await pool.query(
-      `SELECT * FROM schedules WHERE linkid = $1`,
+    const { linkid } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE linkid=$1 ORDER BY start_date ASC",
       [linkid]
     );
-    const schedule = scheduleRes.rows[0];
-    if (!schedule) return res.status(404).json({ error: "スケジュールが見つかりません" });
-
-    const votesRes = await pool.query(
-      `SELECT username, votes FROM votes WHERE linkid = $1 ORDER BY id ASC`,
-      [linkid]
-    );
-
-    const records = votesRes.rows.map((r) => ({
-      username: r.username,
-      votes: r.votes,
-    }));
-
-    res.json({ schedule, records });
+    res.json(result.rows);
   } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
+    console.error("スケジュール取得エラー:", err);
+    res.status(500).json({ error: "スケジュール取得に失敗しました" });
   }
 });
 
-// === API: 投票保存 ===
-app.post("/api/vote/:linkid", async (req, res) => {
-  const { linkid } = req.params;
-  const { username, votes } = req.body;
-
+// 共有スケジュールへの回答保存
+app.post("/api/share/:linkid", async (req, res) => {
   try {
+    const { linkid } = req.params;
+    const { username, responses } = req.body;
+
     await pool.query(
-      `INSERT INTO votes (linkid, username, votes)
-       VALUES ($1, $2, $3)`,
-      [linkid, username, votes]
+      `INSERT INTO shares (linkid, username, responses) VALUES ($1, $2, $3)`,
+      [linkid, username, JSON.stringify(responses)]
     );
-    res.json({ success: true });
+
+    const result = await pool.query(
+      "SELECT * FROM shares WHERE linkid=$1 ORDER BY created_at ASC",
+      [linkid]
+    );
+    res.json(result.rows);
   } catch (err) {
-    console.error("投票保存エラー:", err);
-    res.status(500).json({ error: "投票保存に失敗しました" });
+    console.error("共有スケジュール保存エラー:", err);
+    res.status(500).json({ error: "共有スケジュール保存に失敗しました" });
   }
 });
 
-// === React (フロント) の静的ファイルを配信 ===
-const frontendPath = path.join(__dirname, "../frontend/build");
+// 回答取得
+app.get("/api/share/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM shares WHERE linkid=$1 ORDER BY created_at ASC",
+      [linkid]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("共有スケジュール取得エラー:", err);
+    res.status(500).json({ error: "共有スケジュール取得に失敗しました" });
+  }
+});
+
+// === React のビルドを配信 ===
+const frontendPath = path.join(__dirname, "public");
 app.use(express.static(frontendPath));
 
-// フロントのルーティングをすべて React に任せる
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
