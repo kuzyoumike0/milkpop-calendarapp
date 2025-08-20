@@ -2,17 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体の黒背景と文字色 */
-body {
-  @apply bg-black text-white;
-}
-
-/* 背景グラデーションを適用＋高さを保証 */
 html, body, #root {
-  height: 100%;     /* ← これ重要 */
-  width: 100%;      /* 横幅も保証 */
+  height: 100%;      /* ← ここ必須 */
+  width: 100%;
   margin: 0;
   padding: 0;
+  display: flex;              /* これを入れると確実 */
+  justify-content: center;    /* 横中央 */
+  align-items: center;        /* 縦中央 */
   background: linear-gradient(to bottom right, #000000, #0d0d0d, #1a1a1a);
   color: white;
 }
