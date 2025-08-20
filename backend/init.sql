@@ -1,15 +1,24 @@
--- schedules: 共有用スケジュール
-CREATE TABLE IF NOT EXISTS schedules (
+-- 個人スケジュール（共有なし）
+CREATE TABLE IF NOT EXISTS personal_schedules (
   id SERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   memo TEXT,
-  dates DATE[] NOT NULL,
+  date DATE NOT NULL,
   timeslot TEXT NOT NULL,
-  linkid TEXT UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- responses: 回答
+-- 共有スケジュール（共有リンク付き）
+CREATE TABLE IF NOT EXISTS schedules (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  linkid TEXT NOT NULL,
+  date DATE NOT NULL,
+  timeslot TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 共有ページの回答（○✕）
 CREATE TABLE IF NOT EXISTS responses (
   id SERIAL PRIMARY KEY,
   linkid TEXT NOT NULL,
