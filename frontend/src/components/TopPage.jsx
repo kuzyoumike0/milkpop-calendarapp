@@ -5,11 +5,9 @@ import { motion } from "framer-motion";
 export default function TopPage() {
   return (
     <div className="min-h-screen flex flex-col text-white relative overflow-hidden">
-      {/* 背景演出 */}
+      {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a]" />
-      {/* 左上に青の光 */}
       <div className="absolute top-[-15%] left-[-15%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-[#004CA0]/20 rounded-full blur-[120px]" />
-      {/* 右下にピンクの光 */}
       <div className="absolute bottom-[-15%] right-[-15%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-[#FDB9C8]/20 rounded-full blur-[120px]" />
 
       {/* バナー */}
@@ -32,7 +30,7 @@ export default function TopPage() {
         </div>
       </header>
 
-      {/* Hero セクション */}
+      {/* Hero */}
       <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16 relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: -30 }}
@@ -52,9 +50,8 @@ export default function TopPage() {
           MilkPOP Calendar で予定を登録し、仲間とシェア。 シンプルで美しいカレンダー体験を。
         </motion.p>
 
-        {/* カードグリッド */}
+        {/* カード */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 max-w-5xl w-full">
-          {/* 日程登録カード */}
           <motion.div
             whileHover={{ scale: 1.03, y: -6 }}
             initial={{ opacity: 0, y: 30 }}
@@ -74,7 +71,6 @@ export default function TopPage() {
             </Link>
           </motion.div>
 
-          {/* 個人スケジュールカード */}
           <motion.div
             whileHover={{ scale: 1.03, y: -6 }}
             initial={{ opacity: 0, y: 30 }}
