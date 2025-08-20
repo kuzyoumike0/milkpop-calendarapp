@@ -15,7 +15,7 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# フロントエンドのビルド済みファイルをバックエンドにコピー
+# フロントエンドのビルド済みファイルを backend/public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 # 環境変数とポート
