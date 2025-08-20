@@ -13,6 +13,7 @@ export default function SharePage() {
   const [rangeMode, setRangeMode] = useState("複数");
   const [shareLink, setShareLink] = useState("");
 
+  // ✅ 日付クリックで配列管理
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     if (selectedDates.includes(dateStr)) {
@@ -22,14 +23,15 @@ export default function SharePage() {
     }
   };
 
+  // ✅ 祝日赤表示 & 選択日を青にする
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const dateStr = date.toISOString().split("T")[0];
       if (hd.isHoliday(date)) {
-        return "text-red-500 font-bold";
+        return "text-red-500 font-bold"; // 祝日
       }
       if (selectedDates.includes(dateStr)) {
-        return "bg-blue-500 text-white rounded-full";
+        return "bg-blue-500 text-white rounded-full"; // 選択済み
       }
     }
     return null;
@@ -66,11 +68,8 @@ export default function SharePage() {
         className="border p-2 rounded text-black block mb-2"
       />
 
-      <Calendar
-        onClickDay={handleDateClick}
-        value={selectedDates.map((d) => new Date(d))}
-        tileClassName={tileClassName}
-      />
+      {/* ✅ value を削除 */}
+      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
 
       <div className="mt-4">
         <label className="mr-2">時間帯:</label>
@@ -108,7 +107,8 @@ export default function SharePage() {
         <div className="mt-4">
           <p>共有リンク:</p>
           <a href={shareLink} className="text-blue-400 underline">
-            {window.location.origin}{shareLink}
+            {window.location.origin}
+            {shareLink}
           </a>
         </div>
       )}
