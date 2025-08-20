@@ -25,6 +25,30 @@ export default function LinkPage() {
     fetchSchedules();
   }, []);
 
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // カレンダー選択
+  const handleDateChange = (value) => {
+    if (rangeMode === "range") {
+      setDates(value);
+    } else {
+      if (value instanceof Date) {
+        const formatted = formatDate(value);
+        setDates((prev) =>
+          prev.includes(formatted)
+            ? prev.filter((d) => d !== formatted)
+            : [...prev, formatted]
+        );
+      }
+    }
+  };
+
   // 登録処理
   const handleRegister = async () => {
     if (!title || dates.length === 0) {
@@ -34,7 +58,9 @@ export default function LinkPage() {
     try {
       await axios.post("/api/schedules", {
         title,
-        dates: Array.isArray(dates) ? dates.map((d) => formatDate(d)) : [formatDate(dates)],
+        dates: Array.isArray(dates)
+          ? dates.map((d) => (d instanceof Date ? formatDate(d) : d))
+          : [formatDate(dates)],
         timeslot: timeSlot,
         range_mode: rangeMode,
       });
@@ -42,7 +68,6 @@ export default function LinkPage() {
       setDates([]);
       setTimeSlot("全日");
       setRangeMode("multiple");
-      // 即時反映
       fetchSchedules();
     } catch (err) {
       console.error("登録エラー:", err);
@@ -60,23 +85,6 @@ export default function LinkPage() {
       setShareUrl(window.location.origin + res.data.link);
     } catch (err) {
       console.error("リンク作成エラー:", err);
-    }
-  };
-
-  // 日付フォーマット
-  const formatDate = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  // カレンダー選択
-  const handleDateChange = (value) => {
-    if (rangeMode === "range") {
-      setDates(value);
-    } else {
-      setDates(value instanceof Date ? [value] : value);
     }
   };
 
@@ -129,10 +137,10 @@ export default function LinkPage() {
 
         {/* カレンダー */}
         <Calendar
-          onChange={handleDateChange}
-          value={dates}
+          onChange={rangeMode === "range" ? handleDateChange : undefined}
+          onClickDay={rangeMode === "multiple" ? handleDateChange : undefined}
+          value={rangeMode === "range" ? dates : null}
           selectRange={rangeMode === "range"}
-          allowMultiple={rangeMode === "multiple" ? true : undefined}
           className="mb-4 rounded-lg shadow-md"
         />
 
