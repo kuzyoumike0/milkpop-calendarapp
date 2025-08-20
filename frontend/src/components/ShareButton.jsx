@@ -1,11 +1,17 @@
 import React from "react";
 
-export default function ShareButton({ url }) {
+export default function ShareButton({ link }) {
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.origin + link);
+    alert("リンクをコピーしました！");
+  };
+
   return (
-    url ? (
-      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: "10px", padding: "10px 20px", background: "#004CA0", color: "white", borderRadius: "8px", textDecoration: "none" }}>
-        共有ページを開く
-      </a>
-    ) : null
+    <button
+      onClick={handleCopy}
+      className="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700"
+    >
+      共有リンクをコピー
+    </button>
   );
 }
