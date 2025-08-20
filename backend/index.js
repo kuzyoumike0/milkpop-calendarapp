@@ -54,12 +54,14 @@ async function initDB() {
   console.log("✅ DB initialized");
 }
 
-// === ヘルスチェック ===
+// === APIルート ===
+
+// ヘルスチェック
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// === 個人用スケジュール保存 ===
+// 個人用スケジュール保存
 app.post("/api/personal", async (req, res) => {
   const { title, memo, dates, timeslot, range_mode } = req.body;
 
@@ -76,7 +78,7 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
-// === 共有スケジュール保存 & リンク発行 ===
+// 共有スケジュール保存 & リンク発行
 app.post("/api/schedule", async (req, res) => {
   const { title, dates, timeslot, range_mode } = req.body;
   const linkid = uuidv4();
@@ -94,7 +96,7 @@ app.post("/api/schedule", async (req, res) => {
   }
 });
 
-// === 共有リンクからスケジュール取得 ===
+// 共有リンクからスケジュール取得
 app.get("/api/schedule/:linkid", async (req, res) => {
   const { linkid } = req.params;
 
@@ -123,7 +125,7 @@ app.get("/api/schedule/:linkid", async (req, res) => {
   }
 });
 
-// === 回答保存 ===
+// 回答保存
 app.post("/api/share/:linkid/response", async (req, res) => {
   const { linkid } = req.params;
   const { username, answers } = req.body;
@@ -147,11 +149,13 @@ app.post("/api/share/:linkid/response", async (req, res) => {
   }
 });
 
-// === 静的ファイル配信 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// === 静的ファイル配信 (React build) ===
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
 
+// React Router 対応: どのルートでも index.html を返す
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // === サーバー起動 ===
