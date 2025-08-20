@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 body {
-  @apply bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a] text-white;
+  @apply bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a] text-white antialiased;
 }
