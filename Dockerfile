@@ -20,11 +20,11 @@ COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-# --- ソースコピー（バックエンド + フロントビルド済みファイル） ---
-COPY backend/ .               # ← backend の中身を /app/backend にコピー
-COPY --from=builder /app/frontend/build ./frontend/build
+# --- ソースコピー（バックエンドの中身を /app/backend にコピー） ---
+COPY backend/ /app/backend/
+COPY --from=builder /app/frontend/build /app/frontend/build
 
-# バックエンドの作業ディレクトリをセット
+# 作業ディレクトリを backend に設定
 WORKDIR /app/backend
 
 # --- 環境変数設定 ---
