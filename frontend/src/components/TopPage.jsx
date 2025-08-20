@@ -8,7 +8,6 @@ export default function TopPage() {
     <div className="min-h-screen relative overflow-hidden flex flex-col text-white">
       {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#1a1a1a]">
-        {/* 光のアクセント（サイズをレスポンシブ対応） */}
         <div className="absolute top-[-10%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#004CA0]/40 rounded-full blur-[120px] md:blur-[160px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#FDB9C8]/40 rounded-full blur-[120px] md:blur-[160px]" />
       </div>
@@ -50,8 +49,7 @@ export default function TopPage() {
           transition={{ duration: 1.2, delay: 0.3 }}
           className="text-gray-300 text-base md:text-lg max-w-xl md:max-w-2xl mb-10 leading-relaxed"
         >
-          MilkPOP Calendar で予定を登録し、仲間とシェア。  
-          シンプルで美しいカレンダー体験を。
+          MilkPOP Calendar で予定を登録し、仲間とシェア。 シンプルで美しいカレンダー体験を。
         </motion.p>
 
         {/* カードグリッド */}
@@ -71,4 +69,37 @@ export default function TopPage() {
                 日程登録ページ
               </h3>
               <p className="text-gray-200 text-sm md:text-base leading-relaxed">
-                カレンダーUIで複
+                カレンダーUIで複数日や範囲を選択して共有リンクを発行。仲間と予定を簡単にシェアできます。
+              </p>
+            </Link>
+          </motion.div>
+
+          {/* 個人スケジュールカード */}
+          <motion.div
+            whileHover={{ scale: 1.03, y: -6 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+          >
+            <Link
+              to="/personal"
+              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#004CA0]/60 transition"
+            >
+              <h3 className="text-xl md:text-2xl font-semibold text-[#004CA0] mb-3 md:mb-4">
+                個人スケジュール登録ページ
+              </h3>
+              <p className="text-gray-200 text-sm md:text-base leading-relaxed">
+                タイトル・メモ・時間帯を登録して、あなた専用のカレンダーを作りましょう。
+              </p>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* フッター */}
+      <footer className="bg-black/50 backdrop-blur-md text-gray-400 text-center py-4 md:py-6 text-xs md:text-sm border-t border-white/10 relative z-10">
+        © 2025 MilkPOP Calendar. All rights reserved.
+      </footer>
+    </div>
+  );
+}
