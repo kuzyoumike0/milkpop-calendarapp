@@ -1,132 +1,108 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
 export default function SharePage() {
   const { linkid } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [votes, setVotes] = useState({});
+  const [schedules, setSchedules] = useState([]);
   const [username, setUsername] = useState("");
-  const [records, setRecords] = useState([]);
+  const [responses, setResponses] = useState({}); // { schedule_id: "〇" or "✖" }
 
-  // データ取得
+  // 共有スケジュール取得
+  const fetchSchedules = async () => {
+    try {
+      const res = await axios.get(`/api/share/${linkid}`);
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("共有スケジュール取得失敗:", err);
+    }
+  };
+
   useEffect(() => {
-    axios.get(`/api/schedule/${linkid}`).then((res) => {
-      setSchedule(res.data.schedule);
-      setRecords(res.data.records || []);
-    });
+    fetchSchedules();
   }, [linkid]);
 
-  // 投票変更
-  const handleVoteChange = (date, value) => {
-    setVotes({ ...votes, [date]: value });
-  };
-
-  // 保存
+  // 保存処理
   const handleSave = async () => {
     if (!username) {
-      alert("名前を入力してください");
+      alert("ユーザー名を入力してください");
       return;
     }
+
     try {
-      await axios.post(`/api/vote/${linkid}`, {
-        username,
-        votes,
-      });
-      const res = await axios.get(`/api/schedule/${linkid}`);
-      setRecords(res.data.records || []);
-      setVotes({});
+      const promises = Object.entries(responses).map(([schedule_id, response]) =>
+        axios.post("/api/response", {
+          username,
+          schedule_id,
+          response,
+        })
+      );
+      await Promise.all(promises);
+
+      alert("回答を保存しました ✅");
+      // 保存直後に表示更新
+      fetchSchedules();
     } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
+      console.error("回答保存失敗:", err);
     }
   };
 
-  if (!schedule) return <p className="text-white">読み込み中...</p>;
-
-  // 日付一覧を生成
-  const dates = [];
-  const start = new Date(schedule.start_date);
-  const end = new Date(schedule.end_date);
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dates.push(d.toISOString().split("T")[0]);
-  }
-
   return (
-    <div className="max-w-5xl mx-auto bg-[#111] text-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold text-[#FDB9C8] mb-6">
-        共有スケジュール
-      </h2>
+    <div className="min-h-screen bg-black text-white p-6">
+      <header className="text-center text-3xl font-bold mb-6 text-[#FDB9C8]">
+        MilkPOP Calendar - 共有スケジュール
+      </header>
 
-      {/* タイトル */}
-      <div className="mb-4 text-center">
-        <h3 className="text-xl font-semibold">{schedule.title}</h3>
-        <p className="text-gray-400">({schedule.timeslot})</p>
-      </div>
-
-      {/* 名前入力 */}
-      <div className="mb-6 flex space-x-4">
+      <div className="bg-[#004CA0] rounded-2xl p-6 shadow-lg mb-6">
         <input
           type="text"
-          placeholder="名前を入力"
+          placeholder="ユーザー名を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="flex-1 p-2 rounded bg-black border border-gray-600 focus:ring-2 focus:ring-[#FDB9C8]"
+          className="w-full p-2 mb-4 rounded text-black"
         />
-        <button
-          onClick={handleSave}
-          className="px-6 py-2 rounded bg-[#FDB9C8] text-black font-bold hover:bg-[#e79fb0] transition"
-        >
-          保存
-        </button>
-      </div>
 
-      {/* 表形式 */}
-      <div className="overflow-x-auto">
-        <table className="w-full border border-gray-700 text-center">
-          <thead className="bg-[#222]">
-            <tr>
-              <th className="p-2 border border-gray-600">名前</th>
-              {dates.map((d) => (
-                <th key={d} className="p-2 border border-gray-600">
-                  {d}
-                </th>
-              ))}
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-[#FDB9C8] text-black">
+              <th className="p-2">タイトル</th>
+              <th className="p-2">開始日</th>
+              <th className="p-2">終了日</th>
+              <th className="p-2">時間帯</th>
+              <th className="p-2">回答</th>
             </tr>
           </thead>
           <tbody>
-            {/* 既存の回答 */}
-            {records.map((r, i) => (
-              <tr key={i}>
-                <td className="p-2 border border-gray-700">{r.username}</td>
-                {dates.map((d) => (
-                  <td key={d} className="p-2 border border-gray-700">
-                    {r.votes[d] || "-"}
-                  </td>
-                ))}
-              </tr>
-            ))}
-            {/* 入力中の行 */}
-            <tr className="bg-[#1a1a1a]">
-              <td className="p-2 border border-gray-700 font-semibold">
-                {username || "あなた"}
-              </td>
-              {dates.map((d) => (
-                <td key={d} className="p-2 border border-gray-700">
+            {schedules.map((s) => (
+              <tr key={s.id} className="border-b border-gray-700">
+                <td className="p-2">{s.title}</td>
+                <td className="p-2">{s.start_date}</td>
+                <td className="p-2">{s.end_date}</td>
+                <td className="p-2">{s.timeslot}</td>
+                <td className="p-2">
                   <select
-                    value={votes[d] || ""}
-                    onChange={(e) => handleVoteChange(d, e.target.value)}
-                    className="p-1 rounded bg-black border border-gray-600"
+                    value={responses[s.id] || ""}
+                    onChange={(e) =>
+                      setResponses({ ...responses, [s.id]: e.target.value })
+                    }
+                    className="p-1 rounded text-black"
                   >
-                    <option value="">-</option>
+                    <option value="">未回答</option>
                     <option value="〇">〇</option>
                     <option value="✖">✖</option>
                   </select>
                 </td>
-              ))}
-            </tr>
+              </tr>
+            ))}
           </tbody>
         </table>
+
+        <button
+          onClick={handleSave}
+          className="mt-4 bg-[#FDB9C8] text-black px-4 py-2 rounded-xl font-bold"
+        >
+          保存
+        </button>
       </div>
     </div>
   );
