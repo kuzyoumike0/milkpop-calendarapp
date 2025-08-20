@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Header from "./Header";
+import Footer from "./Footer";
 
 export default function TopPage() {
   return (
@@ -32,9 +33,7 @@ export default function TopPage() {
         </div>
       </main>
 
-      <footer className="bg-[#004CA0] text-center py-3 text-sm text-white">
-        © 2025 MilkPOP Calendar
-      </footer>
+      <Footer />
     </div>
   );
 }
