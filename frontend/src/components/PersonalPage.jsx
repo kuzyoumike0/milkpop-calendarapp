@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import ja from "date-fns/locale/ja";   // ← 修正
 import { format } from "date-fns";
+import ja from "date-fns/locale/ja";
 import "./CalendarStyle.css";
 import Header from "./Header";
-
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -17,7 +16,6 @@ export default function PersonalPage() {
   const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState({});
 
-  // 祝日取得
   useEffect(() => {
     const year = new Date().getFullYear();
     axios
@@ -26,11 +24,9 @@ export default function PersonalPage() {
       .catch(() => setHolidays({}));
   }, []);
 
-  // カレンダー選択
   const handleDateChange = (value) => {
     if (rangeMode === "multiple") {
-      const newDates = Array.isArray(value) ? value : [value];
-      setDates(newDates);
+      setDates(Array.isArray(value) ? value : [value]);
     } else if (rangeMode === "range") {
       if (Array.isArray(value) && value.length === 2) {
         const [start, end] = value;
@@ -45,7 +41,6 @@ export default function PersonalPage() {
     }
   };
 
-  // 保存
   const handleSave = async () => {
     if (!title || dates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -56,7 +51,7 @@ export default function PersonalPage() {
       await axios.post("/api/personal", {
         title,
         memo,
-        dates: dates.map((d) => format(d, "yyyy-MM-dd")),
+        dates: dates.map((d) => format(d, "yyyy-MM-dd", { locale: ja })),
         range_mode: rangeMode,
         timeslot: timeSlot,
       });
@@ -70,7 +65,6 @@ export default function PersonalPage() {
     }
   };
 
-  // 登録済み取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get("/api/personal");
@@ -84,10 +78,9 @@ export default function PersonalPage() {
     fetchSchedules();
   }, []);
 
-  // 赤表示
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const ymd = format(date, "yyyy-MM-dd");
+      const ymd = format(date, "yyyy-MM-dd", { locale: ja });
       if (holidays[ymd] || date.getDay() === 0) {
         return "holiday";
       }
@@ -141,7 +134,7 @@ export default function PersonalPage() {
           selectRange={rangeMode === "range"}
           tileClassName={tileClassName}
           value={dates}
-          locale={ja}
+          locale="ja-JP"
         />
 
         <div className="mt-4">
