@@ -11,142 +11,107 @@ export default function SharePage() {
 
   // データ取得
   const fetchData = async () => {
-    try {
-      const res = await axios.get(`/api/schedule/${linkid}`);
-      if (res.data.schedules.length > 0) {
-        // 日付順ソート
-        const sorted = [...res.data.schedules[0].dates].sort();
-        setSchedule({ ...res.data.schedules[0], dates: sorted });
-      }
-      setResponses(res.data.responses);
-    } catch (err) {
-      console.error("データ取得エラー:", err);
-    }
+    const res = await axios.get(`/api/schedule/${linkid}`);
+    setSchedule(res.data.schedules[0]);
+    setResponses(res.data.responses);
   };
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  // 選択変更
+  // 回答変更
   const handleAnswerChange = (date, value) => {
     setAnswers((prev) => ({ ...prev, [date]: value }));
   };
 
-  // 保存
+  // 保存処理
   const handleSave = async () => {
-    try {
-      await axios.post(`/api/share/${linkid}/response`, {
-        username,
-        answers,
-      });
-      setUsername("");
-      setAnswers({});
-      await fetchData(); // 即時反映
-    } catch (err) {
-      console.error("保存エラー:", err);
-      alert("保存に失敗しました");
-    }
+    await axios.post(`/api/share/${linkid}/response`, {
+      username,
+      answers,
+    });
+    fetchData(); // 保存後に即反映
   };
 
+  if (!schedule) return <p className="text-white">読み込み中...</p>;
+
   return (
-    <div className="flex flex-col items-center text-center">
-      <h1 className="text-3xl font-bold text-white mt-6 mb-6">
-        日程共有ページ
-      </h1>
+    <div className="max-w-4xl mx-auto mt-10 p-6 backdrop-blur-lg bg-white/10 rounded-2xl shadow-xl">
+      <h2 className="text-2xl font-bold text-white text-center mb-6">
+        共有スケジュール: {schedule.title}
+      </h2>
 
-      {/* スケジュール情報 */}
-      {schedule && (
-        <div className="backdrop-blur-md bg-white/20 border border-white/30 shadow-lg rounded-2xl p-6 w-full max-w-4xl">
-          <h2 className="text-2xl font-semibold text-[#FDB9C8] mb-4">
-            {schedule.title}
-          </h2>
+      {/* 名前入力 */}
+      <div className="mb-6 text-center">
+        <input
+          type="text"
+          placeholder="あなたの名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-white/30 bg-black/30 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FDB9C8]"
+        />
+      </div>
 
-          {/* ユーザー名入力 */}
-          <input
-            type="text"
-            placeholder="あなたの名前を入力"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-3 rounded-lg border border-gray-300 mb-4"
-          />
-
-          {/* 回答フォーム（テーブル形式） */}
-          <table className="w-full border-collapse mb-4">
-            <thead>
-              <tr className="bg-[#004CA0]/80 text-white">
-                <th className="px-4 py-2">日付</th>
-                <th className="px-4 py-2">回答</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedule.dates.map((date) => (
-                <tr
-                  key={date}
-                  className="border-b border-white/30 hover:bg-white/10"
-                >
-                  <td className="px-4 py-2 text-white">{date}</td>
-                  <td className="px-4 py-2">
-                    <select
-                      value={answers[date] || ""}
-                      onChange={(e) => handleAnswerChange(date, e.target.value)}
-                      className="p-2 rounded-lg border border-gray-300"
-                    >
-                      <option value="">未選択</option>
-                      <option value="〇">〇</option>
-                      <option value="✖">✖</option>
-                    </select>
-                  </td>
-                </tr>
+      {/* テーブル表示 */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-white text-center shadow-md">
+          <thead>
+            <tr className="bg-[#004CA0]/70">
+              <th className="p-3 border border-white/20">ユーザー</th>
+              {schedule.dates.map((d, idx) => (
+                <th key={idx} className="p-3 border border-white/20">
+                  {d}
+                </th>
               ))}
-            </tbody>
-          </table>
-
-          {/* 保存ボタン */}
-          <button
-            onClick={handleSave}
-            className="px-6 py-3 rounded-xl bg-[#FDB9C8] text-black font-bold shadow-md hover:bg-[#e89cac] transition"
-          >
-            保存
-          </button>
-        </div>
-      )}
-
-      {/* 回答一覧 */}
-      {responses.length > 0 && (
-        <div className="backdrop-blur-md bg-white/10 border border-white/30 shadow-lg rounded-2xl p-6 w-full max-w-4xl mt-6 overflow-x-auto">
-          <h3 className="text-xl font-semibold text-[#004CA0] mb-4">
-            回答一覧
-          </h3>
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-[#FDB9C8]/80 text-black">
-                <th className="px-4 py-2">ユーザー</th>
-                {schedule?.dates.map((date) => (
-                  <th key={date} className="px-4 py-2">
-                    {date}
-                  </th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* 既存回答 */}
+            {responses.map((res, i) => (
+              <tr
+                key={i}
+                className="hover:bg-white/10 transition border-b border-white/10"
+              >
+                <td className="p-2 font-semibold">{res.username}</td>
+                {schedule.dates.map((d, idx) => (
+                  <td key={idx} className="p-2">
+                    {res.answers[d] || "-"}
+                  </td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {responses.map((res, idx) => (
-                <tr
-                  key={idx}
-                  className="border-b border-white/30 hover:bg-white/10"
-                >
-                  <td className="px-4 py-2 text-white">{res.username}</td>
-                  {schedule?.dates.map((date) => (
-                    <td key={date} className="px-4 py-2 text-white">
-                      {res.answers[date] || "-"}
-                    </td>
-                  ))}
-                </tr>
+            ))}
+
+            {/* 自分の回答 */}
+            <tr className="bg-black/30">
+              <td className="p-2 font-semibold text-[#FDB9C8]">あなた</td>
+              {schedule.dates.map((d, idx) => (
+                <td key={idx} className="p-2">
+                  <select
+                    value={answers[d] || ""}
+                    onChange={(e) => handleAnswerChange(d, e.target.value)}
+                    className="px-2 py-1 rounded-lg bg-white/20 text-black"
+                  >
+                    <option value="">-</option>
+                    <option value="◯">◯</option>
+                    <option value="✕">✕</option>
+                  </select>
+                </td>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 保存ボタン */}
+      <div className="text-center mt-6">
+        <button
+          onClick={handleSave}
+          className="px-6 py-3 rounded-xl font-bold bg-[#FDB9C8] text-black shadow-md hover:bg-[#fda5b7] transition"
+        >
+          保存
+        </button>
+      </div>
     </div>
   );
 }
