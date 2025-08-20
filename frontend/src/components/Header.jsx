@@ -3,13 +3,11 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
   return (
-    <header className="w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-black shadow-lg p-4 flex justify-between items-center">
+    <header className="w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-black shadow-md p-4 flex justify-between items-center fixed top-0 left-0 z-20">
       {/* 左上 ロゴテキスト */}
-      <div className="flex flex-col items-start">
-        <h1 className="text-2xl font-extrabold tracking-wide drop-shadow-lg">
-          MilkPOP Calendar
-        </h1>
-      </div>
+      <h1 className="text-xl sm:text-2xl font-extrabold tracking-wide drop-shadow-lg text-white">
+        MilkPOP Calendar
+      </h1>
 
       {/* 右上 ナビゲーション */}
       <nav className="space-x-6 text-white font-semibold">
