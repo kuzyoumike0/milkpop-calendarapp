@@ -137,10 +137,10 @@ app.post("/api/response", async (req, res) => {
   }
 });
 
-// === 静的ファイル提供 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// === 静的ファイル提供（React build） ===
+app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // === サーバー起動 ===
