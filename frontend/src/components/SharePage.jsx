@@ -10,8 +10,9 @@ export default function SharePage() {
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("multiple");
   const [timeSlot, setTimeSlot] = useState("全日");
+  const [startTime, setStartTime] = useState("01:00");
+  const [endTime, setEndTime] = useState("23:59");
 
-  // 初期データ取得
   useEffect(() => {
     axios.get("/api/shared").then((res) => setSchedules(res.data));
   }, []);
@@ -25,9 +26,12 @@ export default function SharePage() {
     if (rangeMode === "multiple" && Array.isArray(dates)) {
       dates.forEach((d) => {
         newEntries.push({
-          id: `temp-${d}`,
+          id: `temp-${d}-${timeSlot}`,
           date: d.toISOString().split("T")[0],
-          timeslot: timeSlot,
+          timeslot:
+            timeSlot === "時間指定"
+              ? `${startTime}〜${endTime}`
+              : timeSlot,
         });
       });
     } else if (rangeMode === "range" && Array.isArray(dates)) {
@@ -35,21 +39,36 @@ export default function SharePage() {
       const end = new Date(dates[1]);
       while (current <= end) {
         newEntries.push({
-          id: `temp-${current.toISOString()}`,
+          id: `temp-${current.toISOString()}-${timeSlot}`,
           date: current.toISOString().split("T")[0],
-          timeslot: timeSlot,
+          timeslot:
+            timeSlot === "時間指定"
+              ? `${startTime}〜${endTime}`
+              : timeSlot,
         });
         current.setDate(current.getDate() + 1);
       }
     }
 
-    // 即時反映
     setSchedules((prev) => [...prev, ...newEntries]);
 
     axios
-      .post("/api/shared/responses", { responses, dates, timeSlot })
+      .post("/api/shared/responses", {
+        responses,
+        dates,
+        timeSlot,
+        startTime,
+        endTime,
+      })
       .then(() => alert("保存しました！"));
   };
+
+  // 時間リスト生成 (01:00〜00:00)
+  const timeOptions = [];
+  for (let h = 1; h <= 24; h++) {
+    const hour = String(h % 24).padStart(2, "0");
+    timeOptions.push(`${hour}:00`);
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -101,8 +120,42 @@ export default function SharePage() {
             <option value="全日">全日</option>
             <option value="昼">昼</option>
             <option value="夜">夜</option>
+            <option value="時間指定">時間指定</option>
           </select>
         </div>
+
+        {timeSlot === "時間指定" && (
+          <div className="mb-6 flex gap-4">
+            <div>
+              <label className="block mb-1">開始</label>
+              <select
+                className="px-4 py-2 rounded-xl text-black"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1">終了</label>
+              <select
+                className="px-4 py-2 rounded-xl text-black"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* テーブル */}
         {schedules.length === 0 ? (
