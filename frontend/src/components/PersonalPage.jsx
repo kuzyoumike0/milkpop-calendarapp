@@ -1,162 +1,182 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import Holidays from "date-holidays";
 import axios from "axios";
+import { ja } from "date-fns/locale";
+import { format } from "date-fns";
+import "./CalendarStyle.css"; // holiday スタイル用
 
 export default function PersonalPage() {
-  const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
+  const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
   const [timeSlot, setTimeSlot] = useState("全日");
   const [schedules, setSchedules] = useState([]);
 
-  const hd = new Holidays("JP"); // 日本の祝日対応
-
-  // === スケジュール取得 ===
+  // 日本の祝日を取得して赤表示
+  const [holidays, setHolidays] = useState({});
   useEffect(() => {
-    axios.get("/api/personal").then((res) => setSchedules(res.data));
+    const year = new Date().getFullYear();
+    axios
+      .get(`https://holidays-jp.github.io/api/v1/${year}/date.json`)
+      .then((res) => setHolidays(res.data))
+      .catch(() => setHolidays({}));
   }, []);
 
-  // === 選択変更 ===
+  // カレンダー選択
   const handleDateChange = (value) => {
     if (rangeMode === "multiple") {
-      setDates((prev) => {
-        const exists = prev.some((d) => d.getTime() === value.getTime());
-        return exists ? prev.filter((d) => d.getTime() !== value.getTime()) : [...prev, value];
-      });
-    } else {
-      setDates(value); // 範囲モードは配列として返る
+      const newDates = Array.isArray(value) ? value : [value];
+      setDates(newDates);
+    } else if (rangeMode === "range") {
+      if (Array.isArray(value) && value.length === 2) {
+        const [start, end] = value;
+        let cur = new Date(start);
+        const range = [];
+        while (cur <= end) {
+          range.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+        setDates(range);
+      }
     }
   };
 
-  // === 登録 ===
-  const handleSubmit = async () => {
+  // 保存
+  const handleSave = async () => {
     if (!title || dates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
     }
-    const selectedDates =
-      rangeMode === "range"
-        ? getDatesBetween(dates[0], dates[1])
-        : dates;
 
-    await axios.post("/api/personal", {
-      title,
-      memo,
-      dates: selectedDates,
-      timeslot: timeSlot,
-      range_mode: rangeMode,
-      username: "me", // ユーザー名（仮）
-    });
-
-    // 即時反映
-    const res = await axios.get("/api/personal");
-    setSchedules(res.data);
-
-    // 入力リセット
-    setTitle("");
-    setMemo("");
-    setDates([]);
-    setTimeSlot("全日");
-  };
-
-  // === 範囲の配列化 ===
-  const getDatesBetween = (start, end) => {
-    const arr = [];
-    let cur = new Date(start);
-    while (cur <= end) {
-      arr.push(new Date(cur));
-      cur.setDate(cur.getDate() + 1);
+    try {
+      await axios.post("/api/personal", {
+        title,
+        memo,
+        dates: dates.map((d) => format(d, "yyyy-MM-dd")),
+        range_mode: rangeMode,
+        timeslot: timeSlot,
+      });
+      setTitle("");
+      setMemo("");
+      setDates([]);
+      fetchSchedules();
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
     }
-    return arr;
   };
 
-  // === 祝日判定 ===
+  // 登録済みのスケジュール取得
+  const fetchSchedules = async () => {
+    try {
+      const res = await axios.get("/api/personal");
+      setSchedules(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  // 日曜と祝日を赤表示
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      if (hd.isHoliday(date)) return "holiday";
-      if (dates.some((d) => d.getTime() === date.getTime())) return "selected-day";
+      const ymd = format(date, "yyyy-MM-dd");
+      if (holidays[ymd] || date.getDay() === 0) {
+        return "holiday";
+      }
     }
     return null;
   };
 
   return (
-    <div className="page">
-      <header>MilkPOP Calendar</header>
+    <div className="min-h-screen bg-black text-white p-6">
+      <header className="text-center text-3xl font-bold mb-6 text-[#FDB9C8]">
+        MilkPOP Calendar - 個人スケジュール
+      </header>
 
-      <div className="container">
-        <h2>個人日程登録</h2>
+      <div className="bg-[#004CA0] p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-3 mb-4 rounded-lg text-black"
+        />
 
-        <label>タイトル</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
+        <textarea
+          placeholder="メモを入力"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          className="w-full p-3 mb-4 rounded-lg text-black"
+        />
 
-        <label>メモ</label>
-        <input value={memo} onChange={(e) => setMemo(e.target.value)} />
-
-        <label>日程選択モード</label>
-        <div>
+        <div className="flex gap-4 mb-4">
           <label>
             <input
               type="radio"
               value="multiple"
               checked={rangeMode === "multiple"}
-              onChange={() => setRangeMode("multiple")}
+              onChange={(e) => setRangeMode(e.target.value)}
             />
             複数選択
           </label>
-          <label style={{ marginLeft: "10px" }}>
+          <label>
             <input
               type="radio"
               value="range"
               checked={rangeMode === "range"}
-              onChange={() => setRangeMode("range")}
+              onChange={(e) => setRangeMode(e.target.value)}
             />
             範囲選択
           </label>
         </div>
 
         <Calendar
-          onClickDay={handleDateChange}
-          value={dates}
+          onChange={handleDateChange}
           selectRange={rangeMode === "range"}
           tileClassName={tileClassName}
+          value={dates}
+          locale={ja}
         />
 
-        <label>時間帯</label>
-        <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}>
-          <option value="全日">全日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
-          <option value="custom">開始時刻〜終了時刻</option>
-        </select>
+        <div className="mt-4">
+          <label className="block mb-2">時間帯を選択:</label>
+          <select
+            value={timeSlot}
+            onChange={(e) => setTimeSlot(e.target.value)}
+            className="p-2 rounded-lg text-black"
+          >
+            <option value="全日">全日</option>
+            <option value="昼">昼</option>
+            <option value="夜">夜</option>
+            <option value="時間指定">1時〜0時</option>
+          </select>
+        </div>
 
-        <button onClick={handleSubmit} style={{ marginTop: "10px", background: "#004CA0", color: "white", padding: "10px 20px" }}>
-          登録
+        <button
+          onClick={handleSave}
+          className="mt-6 w-full p-3 rounded-xl bg-[#FDB9C8] text-black font-bold hover:opacity-80"
+        >
+          保存
         </button>
+      </div>
 
-        <h3>登録済みスケジュール</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>タイトル</th>
-              <th>メモ</th>
-              <th>日程</th>
-              <th>時間帯</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((s) => (
-              <tr key={s.id}>
-                <td>{s.title}</td>
-                <td>{s.memo}</td>
-                <td>{s.dates.join(", ")}</td>
-                <td>{s.timeslot}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-8 max-w-3xl mx-auto">
+        <h2 className="text-xl font-bold mb-4">登録済みスケジュール</h2>
+        <ul className="space-y-2">
+          {schedules.map((s, idx) => (
+            <li key={idx} className="bg-gray-800 p-3 rounded-lg">
+              <strong>{s.title}</strong> ({s.timeslot})<br />
+              {s.memo && <em>{s.memo}</em>}<br />
+              {Array.isArray(s.dates) ? s.dates.join(", ") : s.date}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
