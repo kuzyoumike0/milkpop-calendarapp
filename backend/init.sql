@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS schedules (
     title TEXT NOT NULL,
     range_mode TEXT NOT NULL,         -- "range" or "multiple"
     dates DATE[] NOT NULL,
-    timeslot TEXT NOT NULL,           -- "all", "day", "night", or "custom"
+    start_time TEXT NOT NULL,         -- "HH:MM"
+    end_time TEXT NOT NULL,           -- "HH:MM"
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -16,7 +17,8 @@ CREATE TABLE IF NOT EXISTS personal_schedules (
     memo TEXT,
     range_mode TEXT NOT NULL,
     dates DATE[] NOT NULL,
-    timeslot TEXT NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
