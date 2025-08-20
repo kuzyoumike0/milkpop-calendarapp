@@ -1,9 +1,5 @@
 import React from "react";
 
 export default function App() {
-  return (
-    <div>
-      こんにちは
-    </div>
-  );
+  return <h1 style={{ color: "red" }}>こんにちは React!</h1>;
 }
