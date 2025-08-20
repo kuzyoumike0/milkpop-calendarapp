@@ -1,102 +1,111 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "../index.css";
 import axios from "axios";
-import Holidays from "date-holidays";
-
-const hd = new Holidays("JP");
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("終日");
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [link, setLink] = useState(null);
+  const [rangeMode, setRangeMode] = useState("range"); // "range" or "multi"
+  const [timeSlot, setTimeSlot] = useState("終日");
+  const [shareUrl, setShareUrl] = useState("");
 
-  const handleChange = (selected) => {
-    if (Array.isArray(selected)) {
-      const [start, end] = selected;
-      const range = [];
-      let current = new Date(start);
-      while (current <= end) {
-        range.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-      setDates(range);
-      setRangeMode("range");
-    } else {
-      const exists = dates.find(
-        (d) => d.toDateString() === selected.toDateString()
+  const handleDateChange = (selected) => {
+    if (rangeMode === "range") {
+      setDates(
+        Array.isArray(selected)
+          ? [selected[0], selected[1]]
+          : [selected]
       );
-      if (exists) {
-        setDates(dates.filter((d) => d.toDateString() !== selected.toDateString()));
-      } else {
-        setDates([...dates, selected]);
-      }
-      setRangeMode("multiple");
+    } else {
+      setDates(Array.isArray(selected) ? selected : [selected]);
     }
   };
 
   const handleSubmit = async () => {
-    if (!title || dates.length === 0) return;
-    const res = await axios.post("/api/link", {
-      title,
-      dates: dates.map((d) => d.toISOString().slice(0, 10)),
-      timeslot,
-      range_mode: rangeMode,
-    });
-    setLink(res.data.link);
-    setTitle("");
-    setDates([]);
-    setTimeslot("終日");
+    try {
+      const res = await axios.post("/api/share", {
+        title,
+        dates,
+        timeslot: timeSlot,
+        range_mode: rangeMode,
+      });
+      setShareUrl(window.location.origin + res.data.url);
+    } catch (err) {
+      alert("共有リンク作成失敗");
+      console.error(err);
+    }
   };
 
   return (
-    <div className="page">
-      <h2>日程登録（共有リンク）</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">日程登録ページ</h2>
+
       <input
-        type="text"
-        placeholder="タイトル"
+        className="border p-2 mb-3 w-full"
+        placeholder="タイトルを入力"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <Calendar
-        onClickDay={handleChange}
-        selectRange={true}
-        tileClassName={({ date }) => {
-          let classes = [];
-          if (dates.some((d) => d.toDateString() === date.toDateString())) {
-            classes.push("selected-date");
-          }
-          if (hd.isHoliday(date)) {
-            classes.push("holiday-date");
-          }
-          return classes;
-        }}
-      />
-      <div className="options">
+
+      <div className="mb-4">
+        <label className="mr-4">
+          <input
+            type="radio"
+            value="range"
+            checked={rangeMode === "range"}
+            onChange={(e) => setRangeMode(e.target.value)}
+          />
+          範囲選択
+        </label>
         <label>
-          時間帯:
-          <select value={timeslot} onChange={(e) => setTimeslot(e.target.value)}>
-            <option value="終日">終日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            {Array.from({ length: 24 }, (_, i) => (
-              <option key={i} value={`${i}:00`}>
-                {i}:00
-              </option>
-            ))}
-          </select>
+          <input
+            type="radio"
+            value="multi"
+            checked={rangeMode === "multi"}
+            onChange={(e) => setRangeMode(e.target.value)}
+          />
+          複数選択
         </label>
       </div>
-      <button onClick={handleSubmit}>リンク発行</button>
 
-      {link && (
-        <div>
-          <p>共有リンクが発行されました:</p>
-          <a href={link} target="_blank" rel="noreferrer">
-            {link}
+      <Calendar
+        selectRange={rangeMode === "range"}
+        onChange={handleDateChange}
+        value={dates}
+        locale="ja-JP"
+      />
+
+      <div className="mt-4">
+        <select
+          value={timeSlot}
+          onChange={(e) => setTimeSlot(e.target.value)}
+          className="border p-2"
+        >
+          <option value="終日">終日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+          <option value="時間指定">時間指定（開始〜終了）</option>
+        </select>
+      </div>
+
+      <button
+        onClick={handleSubmit}
+        className="mt-4 px-4 py-2 bg-pink-400 text-white rounded"
+      >
+        共有リンク作成
+      </button>
+
+      {shareUrl && (
+        <div className="mt-4">
+          <p>共有リンクが作成されました:</p>
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            {shareUrl}
           </a>
         </div>
       )}
