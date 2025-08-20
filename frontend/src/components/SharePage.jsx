@@ -44,6 +44,16 @@ export default function SharePage() {
     responseMap[r.username][r.schedule_id] = r.response;
   });
 
+  // === セル色付け用 ===
+  const renderCell = (value) => {
+    if (value === "〇") {
+      return <span className="text-green-500 font-bold">〇</span>;
+    } else if (value === "✖") {
+      return <span className="text-red-500 font-bold">✖</span>;
+    }
+    return "-";
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">共有ページ</h2>
@@ -110,11 +120,11 @@ export default function SharePage() {
       <h3 className="text-xl mt-8 mb-2">全員分の一覧</h3>
       <div className="overflow-x-auto">
         <table className="w-full border text-center">
-          <thead>
+          <thead className="bg-[#004CA0] text-white">
             <tr>
-              <th>ユーザー</th>
+              <th className="p-2">ユーザー</th>
               {data.schedules.map((s) => (
-                <th key={s.id}>
+                <th key={s.id} className="p-2">
                   {s.date} <br /> {s.timeslot}
                 </th>
               ))}
@@ -122,13 +132,15 @@ export default function SharePage() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u}>
-                <td className="font-bold">{u}</td>
+              <tr key={u} className="border-t">
+                <td className="font-bold p-2 bg-[#111]">{u}</td>
                 {data.schedules.map((s) => (
-                  <td key={s.id}>
-                    {responseMap[u] && responseMap[u][s.id]
-                      ? responseMap[u][s.id]
-                      : "-"}
+                  <td key={s.id} className="p-2">
+                    {renderCell(
+                      responseMap[u] && responseMap[u][s.id]
+                        ? responseMap[u][s.id]
+                        : "-"
+                    )}
                   </td>
                 ))}
               </tr>
