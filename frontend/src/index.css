@@ -4,19 +4,47 @@
 
 /* 全体背景と文字色 */
 html, body, #root {
-  height: 100%;      /* 高さを全画面に */
-  width: 100%;       /* 横幅も全画面に */
+  height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
 
-  /* 黒ベースの高級感あるグラデーション背景 */
-  background: linear-gradient(to bottom right, #000000, #0d0d0d, #1a1a1a);
-  color: white;
+  /* 背景を黒ベースのアニメーション付きグラデーション */
+  background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
 
-  /* 中央寄せのためのflex設定 */
+  /* 幾何学模様のオーバーレイ */
+  position: relative;
+  overflow: hidden;
+
+  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* 幾何学パターンを ::before 疑似要素で描画 */
+html::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+  background-size: 40px 40px;  /* 格子サイズ */
+  z-index: 0; /* 背景に置く */
+}
+
+/* コンテンツは模様の上に */
+#root > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* アニメーション定義 */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* テキストやボタンのスムースなトランジション */
