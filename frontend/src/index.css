@@ -2,28 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体背景と文字色 */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-
-  /* 黒ベースのアニメーション付きグラデーション */
   background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
-
-  position: relative;
-  overflow: hidden;
-
   color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* 六角形（ハニカム）模様のオーバーレイ */
 html::before {
   content: "";
   position: absolute;
@@ -32,25 +21,17 @@ html::before {
     linear-gradient(120deg, rgba(255,255,255,0.05) 1px, transparent 1px),
     linear-gradient(60deg, rgba(255,255,255,0.05) 1px, transparent 1px),
     linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 35px 60px; /* 六角形のサイズ感 */
-  background-position: 0 0, 0 0, 0 0;
+  background-size: 35px 60px;
   z-index: 0;
 }
 
-/* コンテンツは模様の上に */
 #root > * {
   position: relative;
   z-index: 1;
 }
 
-/* グラデーションアニメーション */
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
-}
-
-/* テキストやボタンのスムースなトランジション */
-* {
-  transition: all 0.3s ease-in-out;
 }
