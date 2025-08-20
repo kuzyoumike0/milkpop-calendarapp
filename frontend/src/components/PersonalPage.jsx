@@ -8,7 +8,8 @@ export default function PersonalPage() {
   const [memo, setMemo] = useState("");
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("range");
-  const [timeslot, setTimeslot] = useState("all");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("18:00");
   const [holidays, setHolidays] = useState([]);
 
   useEffect(() => {
@@ -29,7 +30,16 @@ export default function PersonalPage() {
     }
   };
 
+  const timeOptions = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
   const handleSubmit = async () => {
+    if (startTime >= endTime) {
+      alert("終了時刻は開始時刻より後にしてください。");
+      return;
+    }
+
     const formattedDates =
       rangeMode === "range"
         ? Array.from(
@@ -47,7 +57,8 @@ export default function PersonalPage() {
       memo,
       range_mode: rangeMode,
       dates: formattedDates,
-      timeslot,
+      start_time: startTime,
+      end_time: endTime,
     });
     alert("保存しました！");
   };
@@ -69,8 +80,8 @@ export default function PersonalPage() {
       />
 
       {/* モード切替 */}
-      <div className="mb-4">
-        <label className="mr-4">
+      <div className="mb-4 space-x-6">
+        <label>
           <input
             type="radio"
             value="range"
@@ -102,22 +113,40 @@ export default function PersonalPage() {
         }
       />
 
-      {/* 時間帯 */}
-      <div className="mt-4">
-        <select
-          className="w-full p-2 text-black rounded"
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-        >
-          <option value="all">終日</option>
-          <option value="day">昼</option>
-          <option value="night">夜</option>
-          <option value="custom">開始〜終了を指定</option>
-        </select>
+      {/* 開始時刻・終了時刻 */}
+      <div className="grid grid-cols-2 gap-4 mt-6">
+        <div>
+          <label className="block mb-1 text-[#FDB9C8]">開始時刻</label>
+          <select
+            className="w-full p-2 text-black rounded"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          >
+            {timeOptions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block mb-1 text-[#FDB9C8]">終了時刻</label>
+          <select
+            className="w-full p-2 text-black rounded"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          >
+            {timeOptions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <button
-        className="mt-6 w-full bg-[#004CA0] text-white py-2 rounded-2xl hover:bg-[#FDB9C8] hover:text-black"
+        className="mt-6 w-full bg-[#FDB9C8] text-black py-2 rounded-2xl hover:bg-[#004CA0] hover:text-white shadow-lg"
         onClick={handleSubmit}
       >
         保存
