@@ -7,34 +7,39 @@ body {
   @apply text-white;
 }
 
-/* 背景アニメーション＋六角形パターン */
+/* 背景（動くグラデーション） */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-
-  /* アニメーション付きグラデーション */
-  background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
   color: white;
   position: relative;
   overflow: hidden;
+
+  background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
 }
 
 /* 六角形パターン（ハニカム模様） */
-html::before {
+html::after {
   content: "";
   position: absolute;
   inset: 0;
   background-image:
     radial-gradient(circle at 10% 10%, rgba(255,255,255,0.05) 1px, transparent 1px),
     radial-gradient(circle at 60% 60%, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 60px 104px;         /* 六角形の幅・高さ */
-  background-position: 0 0, 30px 52px; /* 六角形がズレて連続するように配置 */
-  z-index: 0;
-  pointer-events: none; /* 背景なのでクリック操作を邪魔しない */
+  background-size: 60px 104px;
+  background-position: 0 0, 30px 52px;
+  z-index: 1;
+  pointer-events: none; /* 背景クリックを邪魔しない */
+}
+
+/* コンテンツは背景より上に置く */
+#root > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* グラデーションの動きを定義 */
