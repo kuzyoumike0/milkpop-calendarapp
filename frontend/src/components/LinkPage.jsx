@@ -8,14 +8,13 @@ export default function LinkPage() {
   const [url, setUrl] = useState("");
 
   const handleRegister = () => {
-    // 仮実装：リンク発行
     setUrl("https://example.com/share/xxxxxx");
   };
 
   return (
     <div>
       <div className="header">MilkPOP Calendar</div>
-      <div className="flex flex-col items-center mt-8">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="card w-11/12 md:w-2/3">
           <h2 className="text-xl font-bold mb-4">日程登録</h2>
           <input
@@ -25,11 +24,7 @@ export default function LinkPage() {
             onChange={(e) => setTitle(e.target.value)}
             className="w-full p-2 mb-4 rounded-lg border"
           />
-          <Calendar
-            selectRange={true}
-            onChange={setDates}
-            value={dates}
-          />
+          <Calendar selectRange={true} onChange={setDates} value={dates} />
           <button onClick={handleRegister} className="btn-main mt-4">
             共有リンク発行
           </button>
