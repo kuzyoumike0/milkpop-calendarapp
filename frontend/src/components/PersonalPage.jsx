@@ -6,6 +6,7 @@ import axios from "axios";
 import "../custom-purple.css"; // オリジナルテーマ
 
 export default function PersonalPage() {
+  const [username, setUsername] = useState("");
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [rangeMode, setRangeMode] = useState("range"); // range or multiple
@@ -16,40 +17,47 @@ export default function PersonalPage() {
 
   // 登録処理
   const handleSave = async () => {
-    let selectedDates = [];
+    let startDate = null;
+    let endDate = null;
+
     if (rangeMode === "range") {
       if (Array.isArray(date)) {
-        let d = new Date(date[0]);
-        let end = new Date(date[1]);
-        while (d <= end) {
-          selectedDates.push(new Date(d));
-          d.setDate(d.getDate() + 1);
-        }
+        startDate = date[0]
+          ? new Date(date[0]).toISOString().split("T")[0]
+          : null;
+        endDate = date[1]
+          ? new Date(date[1]).toISOString().split("T")[0]
+          : null;
       } else {
-        selectedDates = [date];
+        startDate = new Date(date).toISOString().split("T")[0];
+        endDate = startDate;
       }
     } else {
-      selectedDates = dates;
+      if (dates.length > 0) {
+        startDate = new Date(dates[0]).toISOString().split("T")[0];
+        endDate = new Date(
+          dates[dates.length - 1]
+        ).toISOString().split("T")[0];
+      }
+    }
+
+    if (!username || !startDate || !endDate) {
+      alert("ユーザー名と日付を入力してください");
+      return;
     }
 
     await axios.post("/api/personal", {
-      title,
-      memo,
-      dates: selectedDates.map((d) =>
-        typeof d === "string"
-          ? d
-          : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-              2,
-              "0"
-            )}-${String(d.getDate()).padStart(2, "0")}`
-      ),
+      username,
+      start_date: startDate,
+      end_date: endDate,
       timeslot,
+      range_mode: rangeMode,
     });
 
     fetchSchedules();
   };
 
-  // データ取得
+  // 登録済みデータ取得
   const fetchSchedules = async () => {
     const res = await axios.get("/api/personal");
     setSchedules(res.data);
@@ -66,6 +74,13 @@ export default function PersonalPage() {
       </header>
 
       <div className="bg-[#004CA0] rounded-2xl p-6 shadow-lg mb-6">
+        <input
+          type="text"
+          placeholder="ユーザー名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-2 mb-4 rounded text-black"
+        />
         <input
           type="text"
           placeholder="タイトル"
@@ -141,8 +156,9 @@ export default function PersonalPage() {
         <ul>
           {schedules.map((s, i) => (
             <li key={i} className="mb-2">
-              <span className="text-[#FDB9C8]">{s.title}</span> - {s.memo} (
-              {s.date} {s.timeslot})
+              👤 {s.username} - <span className="text-[#FDB9C8]">{s.title}</span>{" "}
+              {s.memo ? `(${s.memo})` : ""} [{s.start_date} ~ {s.end_date}{" "}
+              {s.timeslot}]
             </li>
           ))}
         </ul>
