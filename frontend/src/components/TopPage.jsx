@@ -26,31 +26,30 @@ export default function TopPage() {
       </header>
 
       {/* メイン */}
-      <main className="flex flex-1 flex-col items-center justify-center text-center px-4">
+      <main className="flex flex-1 flex-col items-center justify-center text-center px-4 mt-16">
         <h2 className="text-4xl font-bold text-white drop-shadow mb-12">
           ようこそ 👋
         </h2>
 
-        {/* リンクボタンを中央に配置 */}
-        <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
-          {/* 個人用 */}
+        <div className="flex flex-col gap-10 w-full max-w-lg">
+          {/* 個人用カード */}
           <Link
             to="/personal"
-            className="px-12 py-6 rounded-2xl font-bold text-lg shadow-2xl 
-              backdrop-blur-lg bg-white/10 border border-white/20 
-              text-white hover:bg-[#FDB9C8]/40 hover:scale-105 
-              hover:text-black transition transform duration-300"
+            className="w-full px-8 py-12 rounded-3xl font-bold text-2xl shadow-2xl
+              backdrop-blur-xl bg-white/10 border border-white/20 text-white 
+              hover:bg-[#FDB9C8]/40 hover:text-black hover:scale-105 
+              transition transform duration-300"
           >
             📝 個人スケジュール
           </Link>
 
-          {/* 共有用 */}
+          {/* 共有用カード */}
           <Link
             to="/link"
-            className="px-12 py-6 rounded-2xl font-bold text-lg shadow-2xl 
-              backdrop-blur-lg bg-white/10 border border-white/20 
-              text-white hover:bg-[#004CA0]/50 hover:scale-105 
-              hover:text-white transition transform duration-300"
+            className="w-full px-8 py-12 rounded-3xl font-bold text-2xl shadow-2xl
+              backdrop-blur-xl bg-white/10 border border-white/20 text-white 
+              hover:bg-[#004CA0]/50 hover:text-white hover:scale-105 
+              transition transform duration-300"
           >
             🤝 共有スケジュール
           </Link>
