@@ -3,9 +3,7 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const fs = require("fs");
 const cors = require("cors");
-const fetch = require("node-fetch");
 
 const app = express();
 app.use(bodyParser.json());
@@ -16,7 +14,7 @@ const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }, // RailwayではSSL必須
+        ssl: { rejectUnauthorized: false },
       }
     : {
         host: process.env.DB_HOST || "localhost",
@@ -29,124 +27,115 @@ const pool = new Pool(
 
 // === DB初期化 ===
 async function initDB() {
-  try {
-    const initSQL = path.join(__dirname, "init.sql");
-    const sql = fs.readFileSync(initSQL).toString();
-    await pool.query(sql);
-    console.log("✅ Database initialized");
-  } catch (err) {
-    console.error("❌ DB初期化エラー:", err);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      dates TEXT[] NOT NULL,
+      start_time TEXT,
+      end_time TEXT,
+      linkid TEXT UNIQUE NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS responses (
+      id SERIAL PRIMARY KEY,
+      linkid TEXT NOT NULL,
+      username TEXT NOT NULL,
+      answers JSONB NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 }
-initDB();
+initDB().catch((err) => console.error("DB初期化失敗:", err));
 
-// === Google日本の祝日取得 API ===
-app.get("/api/holidays", async (req, res) => {
-  try {
-    const year = new Date().getFullYear();
-    const url = `https://www.googleapis.com/calendar/v3/calendars/japanese__ja@holiday.calendar.google.com/events?key=${process.env.GOOGLE_API_KEY}&timeMin=${year}-01-01T00:00:00Z&timeMax=${year}-12-31T23:59:59Z`;
-    const response = await fetch(url);
-    const data = await response.json();
-    const holidays = data.items.map((item) => ({
-      date: item.start.date,
-      name: item.summary,
-    }));
-    res.json(holidays);
-  } catch (err) {
-    res.status(500).json({ error: "祝日取得エラー", detail: err.message });
+// === API ===
+
+// スケジュール登録 & 共有リンク発行
+app.post("/api/schedules", async (req, res) => {
+  const { title, dates, start_time, end_time } = req.body;
+  if (!title || !dates || dates.length === 0) {
+    return res.status(400).json({ error: "タイトルと日程は必須です" });
   }
-});
+  if (start_time && end_time) {
+    // 終了時刻は開始時刻より後にする
+    if (parseInt(start_time) >= parseInt(end_time)) {
+      return res.status(400).json({ error: "終了時刻は開始時刻より後にしてください" });
+    }
+  }
 
-// === 共有スケジュール登録 ===
-app.post("/api/schedule", async (req, res) => {
-  const { title, range_mode, dates, start_time, end_time } = req.body;
   const linkid = uuidv4();
-
-  if (start_time >= end_time) {
-    return res.status(400).json({ error: "終了時刻は開始時刻より後にしてください。" });
-  }
-
   try {
     await pool.query(
-      "INSERT INTO schedules (linkid, title, range_mode, dates, start_time, end_time) VALUES ($1,$2,$3,$4,$5,$6)",
-      [linkid, title, range_mode, dates, start_time, end_time]
+      `INSERT INTO schedules (title, dates, start_time, end_time, linkid)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [title, dates, start_time || null, end_time || null, linkid]
     );
-    res.json({ link: `/share/${linkid}` });
+    res.json({ linkid });
   } catch (err) {
-    res.status(500).json({ error: "スケジュール登録失敗", detail: err.message });
+    console.error("共有リンク発行失敗:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// === 個人スケジュール登録 ===
-app.post("/api/personal", async (req, res) => {
-  const { title, memo, range_mode, dates, start_time, end_time } = req.body;
-
-  if (start_time >= end_time) {
-    return res.status(400).json({ error: "終了時刻は開始時刻より後にしてください。" });
-  }
-
-  try {
-    await pool.query(
-      "INSERT INTO personal_schedules (title, memo, range_mode, dates, start_time, end_time) VALUES ($1,$2,$3,$4,$5,$6)",
-      [title, memo, range_mode, dates, start_time, end_time]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "個人スケジュール登録失敗", detail: err.message });
-  }
-});
-
-// === 個人スケジュール取得 ===
-app.get("/api/personal", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT id, title, memo, range_mode, dates, start_time, end_time, created_at FROM personal_schedules ORDER BY created_at DESC"
-    );
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: "個人スケジュール取得失敗", detail: err.message });
-  }
-});
-
-// === 共有スケジュール取得 ===
+// スケジュール取得
 app.get("/api/schedule/:linkid", async (req, res) => {
   const { linkid } = req.params;
   try {
-    const schedulesRes = await pool.query("SELECT * FROM schedules WHERE linkid=$1", [linkid]);
+    const schedulesRes = await pool.query(
+      "SELECT * FROM schedules WHERE linkid = $1",
+      [linkid]
+    );
+
     if (schedulesRes.rows.length === 0) {
       return res.status(404).json({ error: "リンクが存在しません" });
     }
+
     const responsesRes = await pool.query(
-      "SELECT username, answers FROM responses WHERE linkid=$1 ORDER BY created_at ASC",
+      "SELECT username, answers FROM responses WHERE linkid = $1 ORDER BY created_at ASC",
       [linkid]
     );
-    res.json({ schedules: schedulesRes.rows, responses: responsesRes.rows });
+
+    res.json({
+      schedules: schedulesRes.rows,
+      responses: responsesRes.rows,
+    });
   } catch (err) {
-    res.status(500).json({ error: "取得失敗", detail: err.message });
+    console.error("スケジュール取得失敗:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// === 回答保存 ===
+// 回答登録
 app.post("/api/share/:linkid/response", async (req, res) => {
   const { linkid } = req.params;
   const { username, answers } = req.body;
+  if (!username || !answers) {
+    return res.status(400).json({ error: "名前と回答は必須です" });
+  }
+
   try {
     await pool.query(
-      "INSERT INTO responses (linkid, username, answers) VALUES ($1,$2,$3)",
+      `INSERT INTO responses (linkid, username, answers)
+       VALUES ($1, $2, $3)`,
       [linkid, username, answers]
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "回答保存失敗", detail: err.message });
+    console.error("回答登録失敗:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// === 静的ファイル配信 ===
+// === フロントエンド提供 ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 // === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ サーバー起動: http://localhost:${PORT}`);
+});
