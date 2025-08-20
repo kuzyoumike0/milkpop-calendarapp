@@ -1,169 +1,144 @@
 import React, { useState } from "react";
+import axios from "axios";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import axios from "axios";
 
-export default function PersonalPage() {
+export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeMode, setTimeMode] = useState("終日");
-  const [startHour, setStartHour] = useState("");
-  const [endHour, setEndHour] = useState("");
-  const [saved, setSaved] = useState(false);
+  const [dates, setDates] = useState([]);
+  const [link, setLink] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
 
-  // 時間リスト生成 (1時〜0時)
-  const hours = Array.from({ length: 24 }, (_, i) => (i === 0 ? "0" : i));
-
-  const handleCalendarChange = (value) => {
-    if (rangeMode === "multiple") {
-      const dates = Array.isArray(value) ? value : [value];
-      setSelectedDates(dates);
+  // 日付選択処理
+  const handleDateChange = (value) => {
+    if (mode === "multiple") {
+      // 複数選択モード
+      const dateStr = value.toISOString().split("T")[0];
+      setDates((prev) =>
+        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+      );
     } else {
+      // 範囲選択モード
       if (Array.isArray(value)) {
-        setSelectedDates(value);
+        const [start, end] = value;
+        if (start && end) {
+          const newDates = [];
+          const current = new Date(start);
+          while (current <= end) {
+            newDates.push(current.toISOString().split("T")[0]);
+            current.setDate(current.getDate() + 1);
+          }
+          setDates(newDates);
+        }
       }
     }
   };
 
-  const handleSave = async () => {
-    try {
-      await axios.post("/api/personal", {
-        title,
-        memo,
-        dates: selectedDates,
-        timeMode,
-        startHour,
-        endHour,
-      });
-      setSaved(true);
-    } catch (err) {
-      alert("保存に失敗しました");
+  // 共有リンク発行
+  const generateLink = async () => {
+    if (!title || dates.length === 0) {
+      alert("タイトルと日程を入力してください");
+      return;
     }
+    setLoading(true);
+    try {
+      const res = await axios.post("/api/schedules", { title, dates });
+      setLink(`${window.location.origin}/share/${res.data.linkid}`);
+    } catch (err) {
+      alert("リンク発行に失敗しました");
+      console.error(err);
+    }
+    setLoading(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">
-        個人日程登録ページ
-      </h1>
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">日程登録ページ</h1>
 
-      {/* 入力フォームカード */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-8">
-        {/* タイトル入力 */}
+      {/* タイトル入力 */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
         <label className="block text-[#FDB9C8] mb-2">タイトル</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 mb-4 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
         />
-
-        {/* メモ入力 */}
-        <label className="block text-[#FDB9C8] mb-2">メモ</label>
-        <textarea
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="w-full p-3 mb-4 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-        />
-
-        {/* モード選択 */}
-        <div className="mb-4">
-          <label className="block text-[#FDB9C8] mb-2">選択モード</label>
-          <div className="flex gap-6 text-gray-300">
-            <label>
-              <input
-                type="radio"
-                value="multiple"
-                checked={rangeMode === "multiple"}
-                onChange={(e) => setRangeMode(e.target.value)}
-                className="mr-2"
-              />
-              複数選択
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="range"
-                checked={rangeMode === "range"}
-                onChange={(e) => setRangeMode(e.target.value)}
-                className="mr-2"
-              />
-              範囲選択
-            </label>
-          </div>
-        </div>
-
-        {/* カレンダー */}
-        <div className="mb-6">
-          <Calendar
-            selectRange={rangeMode === "range"}
-            onChange={handleCalendarChange}
-            value={selectedDates}
-          />
-        </div>
-
-        {/* 時間帯プルダウン */}
-        <div className="mb-4">
-          <label className="block text-[#FDB9C8] mb-2">時間帯</label>
-          <select
-            value={timeMode}
-            onChange={(e) => setTimeMode(e.target.value)}
-            className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-          >
-            <option value="終日">終日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            <option value="時間指定">時間指定</option>
-          </select>
-        </div>
-
-        {/* 時間指定時のみ表示 */}
-        {timeMode === "時間指定" && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-300 mb-2">開始時刻</label>
-              <select
-                value={startHour}
-                onChange={(e) => setStartHour(e.target.value)}
-                className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-              >
-                <option value="">選択</option>
-                {hours.map((h) => (
-                  <option key={h} value={h}>{`${h}時`}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-gray-300 mb-2">終了時刻</label>
-              <select
-                value={endHour}
-                onChange={(e) => setEndHour(e.target.value)}
-                className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-              >
-                <option value="">選択</option>
-                {hours.map((h) => (
-                  <option key={h} value={h}>{`${h}時`}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* 保存ボタン */}
+      {/* モード切り替え */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
+        <label className="block text-[#FDB9C8] mb-2">選択モード</label>
+        <div className="flex gap-6 text-white">
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={mode === "multiple"}
+              onChange={(e) => setMode(e.target.value)}
+            />{" "}
+            複数選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="range"
+              checked={mode === "range"}
+              onChange={(e) => setMode(e.target.value)}
+            />{" "}
+            範囲選択
+          </label>
+        </div>
+      </div>
+
+      {/* カレンダー */}
+      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
+        <label className="block text-[#FDB9C8] mb-2">日程選択</label>
+        <Calendar
+          selectRange={mode === "range"}
+          onClickDay={mode === "multiple" ? handleDateChange : undefined}
+          onChange={mode === "range" ? handleDateChange : undefined}
+          tileClassName={({ date }) =>
+            dates.includes(date.toISOString().split("T")[0])
+              ? "bg-[#FDB9C8] text-black rounded-xl"
+              : null
+          }
+        />
+        <div className="mt-3 text-gray-400">
+          {dates.length > 0 ? dates.join(", ") : "未選択"}
+        </div>
+      </div>
+
+      {/* リンク発行ボタン */}
       <button
-        onClick={handleSave}
+        onClick={generateLink}
+        disabled={loading}
         className="w-full bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-3 px-6 rounded-xl transition"
       >
-        保存する
+        {loading ? "発行中..." : "共有リンクを発行"}
       </button>
 
-      {/* 保存済みメッセージ */}
-      {saved && (
-        <div className="mt-6 p-4 bg-gray-900 border border-gray-700 rounded-xl text-center">
-          <p className="text-[#FDB9C8] font-bold">保存しました！</p>
+      {/* 発行されたリンク表示 */}
+      {link && (
+        <div className="mt-8 bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-[#FDB9C8] mb-2">発行されたリンク</h2>
+          <div className="flex items-center justify-between">
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-300 underline break-all"
+            >
+              {link}
+            </a>
+            <button
+              onClick={() => navigator.clipboard.writeText(link)}
+              className="ml-3 bg-[#FDB9C8] text-black font-bold py-2 px-4 rounded-xl hover:bg-[#004CA0] hover:text-white transition"
+            >
+              コピー
+            </button>
+          </div>
         </div>
       )}
     </div>
