@@ -12,7 +12,7 @@ body {
   background-image:
     linear-gradient(30deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15)),
     linear-gradient(150deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15));
-  background-size: 120px 208px; /* 六角形をさらに大きめ */
+  background-size: 120px 208px; /* 六角形を大きめにしてゆったり感 */
   background-position: 0 0, 0 0;
 }
 
@@ -48,7 +48,7 @@ body {
 
 /* ===== グラスモーフィズムカード ===== */
 .card, .react-calendar {
-  background: rgba(255, 255, 255, 0.25); /* 半透明 */
+  background: rgba(255, 255, 255, 0.25); /* 半透明ガラス */
   border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0,0,0,0.2);
