@@ -2,36 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全体の黒背景と文字色 */
+body {
+  @apply text-white;
+}
+
+/* 背景アニメーション＋六角形パターン */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+
+  /* グラデーション背景 */
   background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
   background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+  animation: gradientShift 20s ease infinite;
   color: white;
+  position: relative;
+  overflow: hidden;
 }
 
+/* 六角形パターン（ハニカム） */
 html::before {
   content: "";
   position: absolute;
   inset: 0;
   background-image: 
-    linear-gradient(120deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(60deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 35px 60px;
-  z-index: 0;
-}
-
-#root > * {
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.05) 1px, transparent 1px),
+    radial-gradient(circle at 60% 60%, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 60px 104px; /* 六角形の幅・高さ */
+  background-position: 0 0, 30px 52px; /* ハニカムのズレで六角形パターンを作る */
+  z-index:
