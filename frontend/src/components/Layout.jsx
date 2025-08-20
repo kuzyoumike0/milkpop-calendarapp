@@ -7,7 +7,7 @@ export default function Layout({ children }) {
       {/* 共通ヘッダー */}
       <Header />
 
-      {/* ページごとの内容 */}
+      {/* ページごとの内容（ヘッダー分の余白を確保） */}
       <div className="pt-20 px-4 relative z-10">
         {children}
       </div>
