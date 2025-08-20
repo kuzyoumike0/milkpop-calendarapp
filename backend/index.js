@@ -67,7 +67,7 @@ async function initDB() {
       username TEXT NOT NULL,
       response TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE (schedule_id, username) -- 同じユーザー名で重複回答不可
+      UNIQUE (schedule_id, username)
     )
   `);
 }
@@ -176,7 +176,7 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// === 共有スケジュールへの出欠保存（同じユーザーは更新扱い） ===
+// === 共有スケジュールへの出欠保存 ===
 app.post("/api/share-responses", async (req, res) => {
   try {
     const { username, responses } = req.body;
@@ -197,7 +197,6 @@ app.post("/api/share-responses", async (req, res) => {
       );
     }
 
-    // 即時反映: レスポンス付きスケジュール一覧を返す
     const result = await pool.query(`
       SELECT s.*, 
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
@@ -216,9 +215,11 @@ app.post("/api/share-responses", async (req, res) => {
 });
 
 // === 静的ファイル (Reactビルド) ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// 必ず backend/public にコピーされたファイルを使う
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
