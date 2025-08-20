@@ -16,7 +16,7 @@ export default function TopPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />  {/* ← 共通バナー */}
+      <Header /> {/* 共通バナー */}
 
       <div className="p-6 flex flex-col items-center space-y-6">
         <button
