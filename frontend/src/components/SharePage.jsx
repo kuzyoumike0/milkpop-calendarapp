@@ -54,6 +54,15 @@ export default function SharePage() {
     return "-";
   };
 
+  // === 出欠率計算 ===
+  const calcRate = (scheduleId) => {
+    const res = data.responses.filter((r) => r.schedule_id == scheduleId);
+    if (res.length === 0) return "-";
+    const okCount = res.filter((r) => r.response === "〇").length;
+    const rate = Math.round((okCount / res.length) * 100);
+    return `${rate}%`;
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">共有ページ</h2>
@@ -77,7 +86,7 @@ export default function SharePage() {
         }}
       />
 
-      {/* 個別選択テーブル */}
+      {/* 個別回答入力 */}
       <h3 className="text-xl mt-6 mb-2">予定に対する回答</h3>
       <table className="w-full border text-center">
         <thead>
@@ -145,6 +154,13 @@ export default function SharePage() {
                 ))}
               </tr>
             ))}
+            {/* 出欠率行 */}
+            <tr className="border-t bg-[#222] text-yellow-400 font-bold">
+              <td>出欠率</td>
+              {data.schedules.map((s) => (
+                <td key={s.id}>{calcRate(s.id)}</td>
+              ))}
+            </tr>
           </tbody>
         </table>
       </div>
