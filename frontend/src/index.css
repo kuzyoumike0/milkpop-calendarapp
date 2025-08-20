@@ -1,84 +1,143 @@
+/* === 全体レイアウト === */
 body {
   margin: 0;
-  font-family: "Segoe UI", "Hiragino Sans", sans-serif;
-  background-color: #111;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #000; /* 高級感のある黒 */
   color: #fff;
 }
 
-/* カレンダー本体 */
+/* ページ共通 */
+.page {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #111;
+  border-radius: 16px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
+}
+
+/* 見出し */
+h1, h2, h3 {
+  text-align: center;
+  color: #FDB9C8;
+  margin-bottom: 1.5rem;
+}
+
+/* 入力フォーム */
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  border: 1px solid #004CA0;
+  background: #000;
+  color: #fff;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 80px;
+}
+
+/* ボタン */
+button {
+  display: inline-block;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 1rem;
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(253, 185, 200, 0.8);
+}
+
+/* === React-Calendar のスタイル調整 === */
 .react-calendar {
   width: 100%;
-  max-width: 800px;
-  background: #000;
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  background: #111;
+  border: none;
   font-family: inherit;
-  color: #fff;
+  line-height: 1.125em;
+  border-radius: 12px;
   padding: 10px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
 }
 
-/* ナビゲーションバー */
-.react-calendar__navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
 .react-calendar__navigation button {
   color: #FDB9C8;
-  background: transparent;
-  border: none;
-  font-weight: bold;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-.react-calendar__navigation button:hover {
-  color: #004CA0;
+  min-width: 44px;
+  background: none;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
 }
 
-/* 曜日ラベル */
 .react-calendar__month-view__weekdays {
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
+  font-size: 0.8rem;
+  color: #004CA0;
+}
+
+.react-calendar__tile {
+  max-width: initial !important;
+  padding: 10px 6px;
+  background: none;
+  text-align: center;
+  line-height: 16px;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.react-calendar__tile:hover {
+  background: rgba(253, 185, 200, 0.2);
+}
+
+/* 選択済み日付を強調 */
+.selected-date {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
+}
+
+/* 今日の日付 */
+.react-calendar__tile--now {
+  background: rgba(253, 185, 200, 0.2);
+  border-radius: 50%;
+  font-weight: bold;
   color: #FDB9C8;
 }
 
-/* 日付セル */
-.react-calendar__tile {
+/* 登録済みスケジュールリスト */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: #222;
   padding: 10px;
+  margin: 6px 0;
   border-radius: 8px;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.react-calendar__tile:hover {
-  background: rgba(253, 185, 200, 0.2);
-  border: 1px solid #FDB9C8;
+  border-left: 4px solid #004CA0;
 }
 
-/* 選択日 */
-.react-calendar__tile--active {
-  background: #004CA0 !important;
-  color: #fff !important;
-  font-weight: bold;
+/* リンク表示 */
+a {
+  color: #FDB9C8;
+  text-decoration: none;
 }
 
-/* 今日 */
-.react-calendar__tile--now {
-  border: 1px solid #FDB9C8;
-}
-
-/* 範囲選択（開始/終了） */
-.react-calendar__tile--rangeStart,
-.react-calendar__tile--rangeEnd {
-  background: #FDB9C8 !important;
-  color: #000 !important;
-  font-weight: bold;
-}
-
-/* 範囲選択（中間） */
-.react-calendar__tile--range {
-  background: rgba(253, 185, 200, 0.4) !important;
-  color: #fff !important;
+a:hover {
+  text-decoration: underline;
 }
