@@ -2,36 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体の背景と文字色 */
+/* フォント */
 body {
-  @apply text-white;
-}
-
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-
-  /* 動くグラデーション背景 */
-  background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  background: #000000; /* 高級感のある黒背景 */
   color: white;
-  position: relative;
-  overflow: hidden;
 }
 
-/* 六角形パターン（ハニカム） */
-html::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.08) 1px, transparent 1px),
-    radial-gradient(circle at 60% 60%, rgba(255,255,255,0.08) 1px, transparent 1px);
-  background-size: 60px 104px;
-  background-position: 0 0, 30px 52px;
-  z-index: 1;
-  pointer-events: none;
+/* バナー */
+.header {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+/* ボタン */
+.btn-main {
+  background: #004CA0;
+  color: white;
+  border-radius: 1rem;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  transition: 0.3s;
+}
+.btn-main:hover {
+  background: #FDB9C8;
+  color: black;
+}
+
+/* カレンダー */
+.react-calendar {
+  background: #1a1a1a;
+  border: none;
+  border-radius: 1rem;
+  color: white;
+  padding: 1rem;
+}
+.react-calendar__tile--now {
+  background: #FDB9C8 !important;
+  color: black !important;
+  border-radius: 50%;
+}
+.react-calendar__tile--active {
+  background: #004CA0 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+.react-calendar__month-view__days__day--weekend {
+  color: #FDB9C8 !important; /* 土日祝赤 */
 }
