@@ -10,18 +10,47 @@ export default function SharePage() {
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("multiple");
 
+  // 初期データ取得
   useEffect(() => {
     axios.get("/api/shared").then((res) => setSchedules(res.data));
   }, []);
 
+  // プルダウン変更
   const handleChange = (id, value) => {
     setResponses((prev) => ({ ...prev, [id]: value }));
   };
 
+  // 保存処理（カレンダー選択結果を即時反映）
   const handleSave = () => {
-    axios.post("/api/shared/responses", { responses, dates }).then(() => {
-      alert("保存しました！");
-    });
+    const newEntries = [];
+    if (rangeMode === "multiple" && Array.isArray(dates)) {
+      dates.forEach((d) => {
+        newEntries.push({
+          id: `temp-${d}`,
+          date: d.toISOString().split("T")[0],
+          timeslot: "全日",
+        });
+      });
+    } else if (rangeMode === "range" && Array.isArray(dates)) {
+      let current = new Date(dates[0]);
+      const end = new Date(dates[1]);
+      while (current <= end) {
+        newEntries.push({
+          id: `temp-${current.toISOString()}`,
+          date: current.toISOString().split("T")[0],
+          timeslot: "全日",
+        });
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    // 即時反映（テーブル更新）
+    setSchedules((prev) => [...prev, ...newEntries]);
+
+    // サーバー保存
+    axios
+      .post("/api/shared/responses", { responses, dates })
+      .then(() => alert("保存しました！"));
   };
 
   return (
@@ -63,7 +92,7 @@ export default function SharePage() {
           </label>
         </div>
 
-        {/* 既存の共有スケジュール一覧 */}
+        {/* テーブル */}
         {schedules.length === 0 ? (
           <p>まだ共有された日程はありません。</p>
         ) : (
