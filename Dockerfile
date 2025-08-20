@@ -1,36 +1,33 @@
-# ================================
-# フロントエンドビルドステージ
-# ================================
-FROM node:18 AS frontend-build
+# ===== ベースイメージ =====
+FROM node:18 AS builder
+
+WORKDIR /app
+
+# --- フロントエンドの依存関係インストール＆ビルド ---
+COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
-
-# 依存関係だけコピーして先にインストール（キャッシュ効率化）
-COPY frontend/package*.json ./
 RUN npm install
-
-# ソース全体をコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
-# ================================
-# バックエンドステージ
-# ================================
+# ===== 本番用イメージ =====
 FROM node:18
-WORKDIR /app/backend
 
-# バックエンド依存関係インストール
-COPY backend/package*.json ./
+WORKDIR /app
+
+# --- バックエンド依存関係 ---
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
 RUN npm install
 
-# バックエンドソースをコピー
-COPY backend/ ./
+# --- ソースコピー（バックエンド + フロントビルド済みファイル） ---
+COPY backend/ ./backend/
+COPY --from=builder /app/frontend/build ./frontend/build
 
-# フロントエンドのビルド成果物をコピー
-COPY --from=frontend-build /app/frontend/build ../frontend/build
+WORKDIR /app/backend
 
-# 環境変数とポート設定
-ENV PORT=8080
-EXPOSE 8080
+# --- 環境変数設定 ---
+ENV NODE_ENV=production
 
-# サーバー起動
+# --- サーバー起動 ---
 CMD ["node", "index.js"]
