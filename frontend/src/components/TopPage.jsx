@@ -5,17 +5,11 @@ import { motion } from "framer-motion";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col text-white">
-      {/* 背景 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#1a1a1a]">
-        <div className="absolute top-[-10%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#004CA0]/40 rounded-full blur-[120px] md:blur-[160px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-[#FDB9C8]/40 rounded-full blur-[120px] md:blur-[160px]" />
-      </div>
-
+    <div className="min-h-screen bg-black flex flex-col text-white">
       {/* バナー */}
-      <header className="bg-black/50 backdrop-blur-md border-b border-white/10 fixed top-0 left-0 right-0 z-50">
+      <header className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
         <div className="container mx-auto flex justify-between items-center px-4 md:px-8 py-4">
-          <h1 className="text-xl md:text-2xl font-extrabold tracking-wide text-[#FDB9C8] drop-shadow-lg">
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-wide text-[#FDB9C8]">
             MilkPOP Calendar
           </h1>
           <nav className="space-x-4 md:space-x-6 font-medium text-sm md:text-base">
@@ -33,12 +27,12 @@ export default function TopPage() {
       </header>
 
       {/* Hero セクション */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16 relative z-10">
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 md:px-6 pt-24 md:pt-28 pb-12 md:pb-16">
         <motion.h2
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent drop-shadow-lg"
+          className="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-6 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] bg-clip-text text-transparent"
         >
           スケジュールをもっとスマートに
         </motion.h2>
@@ -63,12 +57,12 @@ export default function TopPage() {
           >
             <Link
               to="/link"
-              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#FDB9C8]/60 transition"
+              className="block rounded-2xl p-6 md:p-10 bg-[#111]/80 border border-gray-700 shadow-lg hover:shadow-2xl hover:border-[#FDB9C8] transition"
             >
               <h3 className="text-xl md:text-2xl font-semibold text-[#FDB9C8] mb-3 md:mb-4">
                 日程登録ページ
               </h3>
-              <p className="text-gray-200 text-sm md:text-base leading-relaxed">
+              <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                 カレンダーUIで複数日や範囲を選択して共有リンクを発行。仲間と予定を簡単にシェアできます。
               </p>
             </Link>
@@ -83,12 +77,12 @@ export default function TopPage() {
           >
             <Link
               to="/personal"
-              className="block rounded-2xl p-6 md:p-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:shadow-2xl hover:border-[#004CA0]/60 transition"
+              className="block rounded-2xl p-6 md:p-10 bg-[#111]/80 border border-gray-700 shadow-lg hover:shadow-2xl hover:border-[#004CA0] transition"
             >
               <h3 className="text-xl md:text-2xl font-semibold text-[#004CA0] mb-3 md:mb-4">
                 個人スケジュール登録ページ
               </h3>
-              <p className="text-gray-200 text-sm md:text-base leading-relaxed">
+              <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                 タイトル・メモ・時間帯を登録して、あなた専用のカレンダーを作りましょう。
               </p>
             </Link>
@@ -97,7 +91,7 @@ export default function TopPage() {
       </section>
 
       {/* フッター */}
-      <footer className="bg-black/50 backdrop-blur-md text-gray-400 text-center py-4 md:py-6 text-xs md:text-sm border-t border-white/10 relative z-10">
+      <footer className="bg-black border-t border-gray-800 text-gray-500 text-center py-4 md:py-6 text-xs md:text-sm">
         © 2025 MilkPOP Calendar. All rights reserved.
       </footer>
     </div>
