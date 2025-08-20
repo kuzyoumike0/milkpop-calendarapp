@@ -2,14 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 全体背景と文字色 */
 html, body, #root {
-  height: 100%;      /* ← ここ必須 */
-  width: 100%;
+  height: 100%;      /* 高さを全画面に */
+  width: 100%;       /* 横幅も全画面に */
   margin: 0;
   padding: 0;
-  display: flex;              /* これを入れると確実 */
-  justify-content: center;    /* 横中央 */
-  align-items: center;        /* 縦中央 */
+
+  /* 黒ベースの高級感あるグラデーション背景 */
   background: linear-gradient(to bottom right, #000000, #0d0d0d, #1a1a1a);
   color: white;
+
+  /* 中央寄せのためのflex設定 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* テキストやボタンのスムースなトランジション */
+* {
+  transition: all 0.3s ease-in-out;
 }
