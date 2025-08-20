@@ -32,12 +32,13 @@ export default function TopPage() {
           ようこそ 👋
         </h2>
 
-        {/* PCは横並び / スマホは縦並び */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-4xl">
+        {/* 背景を暗くするラッパー */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-4xl 
+                        bg-black/40 rounded-3xl p-10 backdrop-blur-sm shadow-2xl">
           {/* 個人用カード */}
           <Link
             to="/personal"
-            className="group relative w-full px-10 py-14 rounded-3xl font-bold text-2xl
+            className="group relative w-full px-10 py-14 rounded-2xl font-bold text-2xl
               shadow-xl backdrop-blur-md bg-white/10 border border-white/20 
               text-white hover:bg-pink-400/20 hover:border-pink-200/40 
               hover:scale-105 transition transform duration-500"
@@ -51,7 +52,7 @@ export default function TopPage() {
           {/* 共有用カード */}
           <Link
             to="/link"
-            className="group relative w-full px-10 py-14 rounded-3xl font-bold text-2xl
+            className="group relative w-full px-10 py-14 rounded-2xl font-bold text-2xl
               shadow-xl backdrop-blur-md bg-white/10 border border-white/20 
               text-white hover:bg-blue-400/20 hover:border-blue-200/40 
               hover:scale-105 transition transform duration-500"
