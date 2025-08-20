@@ -1,3 +1,11 @@
+body {
+  @apply bg-black text-white min-h-screen flex justify-center items-center;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  overflow-x: hidden;
+  background-color: #000;
+}
+
+/* 背景ハニカムタイル */
 body::before {
   content: "";
   position: fixed;
@@ -10,18 +18,17 @@ body::before {
     <svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'>\
       <defs>\
         <linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'>\
-          <stop offset='0%' stop-color='%23FDB9C8' stop-opacity='0.2'/>\
-          <stop offset='100%' stop-color='%23004CA0' stop-opacity='0.2'/>\
+          <stop offset='0%' stop-color='%23FDB9C8' stop-opacity='0.25'/>\
+          <stop offset='100%' stop-color='%23004CA0' stop-opacity='0.25'/>\
         </linearGradient>\
       </defs>\
       <polygon points='70,10 130,40 130,100 70,130 10,100 10,40' \
         fill='url(%23grad)' \
-        stroke='rgba(255,255,255,0.2)' stroke-width='1'/>\
+        stroke='rgba(255,255,255,0.15)' stroke-width='1'/>\
     </svg>");
     
-  background-size: 120px 140px;
-  opacity: 0.8; /* 全体の透け具合 */
+  background-size: 120px 140px; /* 六角形の大きさ */
+  background-repeat: repeat;   /* 敷き詰める */
+  opacity: 0.6;                /* 全体の透け具合 */
   z-index: -2;
-  backdrop-filter: blur(4px) saturate(120%);
-  -webkit-backdrop-filter: blur(4px) saturate(120%);
 }
