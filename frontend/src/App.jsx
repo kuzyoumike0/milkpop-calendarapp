@@ -9,15 +9,14 @@ import ShareLinkPage from "./components/ShareLinkPage";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
-        {/* Layoutで全ページ共通UI（ヘッダー等）をラップ */}
-        <Route element={<Layout />}>
-          <Route path="/" element={<TopPage />} />
-          <Route path="/link" element={<LinkPage />} />
-          <Route path="/personal" element={<PersonalPage />} />
-          <Route path="/share/:linkid" element={<SharePage />} />
-          <Route path="/sharelink/:linkid" element={<ShareLinkPage />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<TopPage />} />
+          <Route path="link" element={<LinkPage />} />
+          <Route path="personal" element={<PersonalPage />} />
+          <Route path="share/:linkid" element={<SharePage />} />
+          <Route path="sharelink/:linkid" element={<ShareLinkPage />} />
         </Route>
       </Routes>
     </Router>
