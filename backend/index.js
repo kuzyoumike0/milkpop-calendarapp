@@ -3,7 +3,6 @@ const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
-const fetch = require("node-fetch");
 
 const app = express();
 app.use(bodyParser.json());
@@ -46,11 +45,12 @@ app.get("/api/holidays", async (req, res) => {
   const year = new Date().getFullYear();
   const url = `https://www.googleapis.com/calendar/v3/calendars/ja.japanese%23holiday%40group.v.calendar.google.com/events?key=${process.env.GOOGLE_API_KEY}&timeMin=${year}-01-01T00:00:00Z&timeMax=${year}-12-31T23:59:59Z&singleEvents=true&orderBy=startTime`;
   try {
-    const response = await fetch(url);
+    const response = await fetch(url); // ✅ Node18以降は標準で使える
     const data = await response.json();
     const holidays = data.items.map((h) => h.start.date);
     res.json(holidays);
   } catch (e) {
+    console.error("Holiday fetch error:", e);
     res.json([]);
   }
 });
@@ -79,17 +79,21 @@ app.post("/api/personal", async (req, res) => {
 // === 個人スケジュール取得 ===
 app.get("/api/personal", async (req, res) => {
   const result = await pool.query("SELECT * FROM personal_schedules ORDER BY id DESC");
-  res.json(result.rows.map((r) => ({
-    title: r.title,
-    memo: r.memo,
-    dates: r.dates,
-    timeslot: r.timeslot,
-  })));
+  res.json(
+    result.rows.map((r) => ({
+      title: r.title,
+      memo: r.memo,
+      dates: r.dates,
+      timeslot: r.timeslot,
+    }))
+  );
 });
 
-app.use(express.static("../frontend/build"));
+// === フロントエンド静的ファイル配信 ===
+const path = require("path");
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile("index.html", { root: "../frontend/build" });
+  res.sendFile("index.html", { root: path.join(__dirname, "../frontend/build") });
 });
 
 const PORT = process.env.PORT || 8080;
