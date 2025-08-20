@@ -4,8 +4,10 @@
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json をコピーして依存関係をインストール
+# 依存関係インストール用に package.json をコピー
 COPY frontend/package*.json ./
+
+# ajv v6 系を強制的に解決するために --legacy-peer-deps で install
 RUN npm install --legacy-peer-deps
 
 # ソースコードをコピーしてビルド
@@ -23,7 +25,7 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 
-# backend ソースコードコピー
+# backend ソースコードをコピー
 COPY backend/ ./
 
 # frontend のビルド成果物を public に配置
