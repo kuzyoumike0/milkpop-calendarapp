@@ -13,7 +13,7 @@ export default function TopPage() {
         <img
           src="/logo.png"
           alt="MilkPOP Logo"
-          className="h-28 w-auto drop-shadow-2xl"
+          className="h-10 w-auto drop-shadow-2xl"
         />
       </div>
 
