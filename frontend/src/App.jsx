@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
@@ -11,6 +11,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* "/" に来たら必ず TopPage */}
         <Route path="/" element={<Layout />}>
           <Route index element={<TopPage />} />
           <Route path="link" element={<LinkPage />} />
