@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
@@ -6,140 +6,105 @@ import axios from "axios";
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
-  const [rangeMode, setRangeMode] = useState("範囲選択");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const [date, setDate] = useState([]);
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [events, setEvents] = useState([]);
 
-  const handleDateChange = (value) => {
-    if (rangeMode === "範囲選択") {
-      if (Array.isArray(value)) {
-        const [start, end] = value;
-        let temp = [];
-        let cur = new Date(start);
-        while (cur <= end) {
-          temp.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setSelectedDates(temp);
-      }
-    } else if (rangeMode === "複数選択") {
-      setSelectedDates((prev) =>
-        prev.find((d) => d.toDateString() === value.toDateString())
-          ? prev.filter((d) => d.toDateString() !== value.toDateString())
-          : [...prev, value]
-      );
-    }
+  // DBから予定を取得
+  const fetchEvents = async () => {
+    const res = await axios.get("/api/personal");
+    setEvents(res.data);
   };
 
-  const handleSubmit = async () => {
-    try {
-      await axios.post("/api/schedules/personal", {
-        title,
-        memo,
-        dates: selectedDates.map((d) => d.toISOString().split("T")[0]),
-        timeslot,
-        startTime,
-        endTime,
-        rangeMode,
-      });
-      alert("保存しました！");
-    } catch (err) {
-      alert("保存に失敗しました");
-      console.error(err);
-    }
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // 保存処理
+  const handleSave = async () => {
+    await axios.post("/api/personal", {
+      title,
+      memo,
+      dates: Array.isArray(date) ? date : [date],
+      timeslot: timeSlot,
+    });
+
+    // 保存後すぐ反映
+    fetchEvents();
+
+    // 入力フォームリセット
+    setTitle("");
+    setMemo("");
+    setDate([]);
+    setTimeSlot("全日");
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <header className="text-center text-3xl font-bold text-[#FDB9C8] mb-6">
-        MilkPOP Calendar - 個人日程登録
-      </header>
+    <div className="p-6 text-white bg-black min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">個人日程登録</h1>
 
-      <div className="max-w-3xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
-        <input
-          type="text"
-          placeholder="タイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 rounded-xl text-black"
-        />
+      <input
+        className="p-2 mb-2 w-full text-black rounded"
+        placeholder="タイトル"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <textarea
+        className="p-2 mb-2 w-full text-black rounded"
+        placeholder="メモ"
+        value={memo}
+        onChange={(e) => setMemo(e.target.value)}
+      />
 
-        <textarea
-          placeholder="メモを入力"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="w-full p-3 rounded-xl text-black"
-        />
+      <Calendar onChange={setDate} value={date} selectRange={true} />
 
-        <div className="flex space-x-4">
-          <label>
-            <input
-              type="radio"
-              value="範囲選択"
-              checked={rangeMode === "範囲選択"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="複数選択"
-              checked={rangeMode === "複数選択"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            複数選択
-          </label>
-        </div>
-
-        <div className="bg-white rounded-xl p-4">
-          <Calendar
-            selectRange={rangeMode === "範囲選択"}
-            onChange={handleDateChange}
+      <div className="mt-2">
+        <label className="mr-2">
+          <input
+            type="radio"
+            value="全日"
+            checked={timeSlot === "全日"}
+            onChange={(e) => setTimeSlot(e.target.value)}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block">時間帯:</label>
-          <select
-            value={timeslot}
-            onChange={(e) => setTimeslot(e.target.value)}
-            className="p-2 text-black rounded-lg"
-          >
-            <option value="全日">全日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            <option value="時間指定">時間指定</option>
-          </select>
-
-          {timeslot === "時間指定" && (
-            <div className="flex space-x-2">
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="p-2 text-black rounded-lg"
-              />
-              <span className="self-center">〜</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="p-2 text-black rounded-lg"
-              />
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="w-full py-3 bg-[#FDB9C8] text-black rounded-xl font-bold hover:bg-pink-400"
-        >
-          保存
-        </button>
+          全日
+        </label>
+        <label className="mr-2">
+          <input
+            type="radio"
+            value="昼"
+            checked={timeSlot === "昼"}
+            onChange={(e) => setTimeSlot(e.target.value)}
+          />
+          昼
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="夜"
+            checked={timeSlot === "夜"}
+            onChange={(e) => setTimeSlot(e.target.value)}
+          />
+          夜
+        </label>
       </div>
+
+      <button
+        onClick={handleSave}
+        className="mt-4 bg-[#004CA0] hover:bg-[#FDB9C8] text-white px-4 py-2 rounded-xl"
+      >
+        保存
+      </button>
+
+      <h2 className="text-xl mt-6 mb-2">登録済み日程</h2>
+      <ul className="space-y-2">
+        {events.map((ev, i) => (
+          <li key={i} className="p-2 bg-[#222] rounded-xl">
+            <p className="font-bold">{ev.title}</p>
+            <p>{ev.memo}</p>
+            <p>{ev.date}（{ev.timeslot}）</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
