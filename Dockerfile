@@ -13,3 +13,10 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/build ../frontend/build
+
+# Railway が使うポートを明示
+ENV PORT=8080
+EXPOSE 8080
+
+# バックエンドサーバーを起動
+CMD ["node", "index.js"]
