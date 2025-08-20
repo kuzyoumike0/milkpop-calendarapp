@@ -7,7 +7,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<TopPage />} />
-        {/* 他ページは今後追加 */}
+        {/* 今後 LinkPage / PersonalPage など追加予定 */}
       </Routes>
     </Router>
   );
