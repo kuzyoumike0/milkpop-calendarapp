@@ -2,10 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ===============================
-   カスタムスタイル (全体共通)
-   =============================== */
-
+/* 背景を黒ベースに高級感デザイン */
 body {
   @apply bg-gradient-to-br from-black via-[#0d0d0d] to-[#1a1a1a] text-white antialiased;
   font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
