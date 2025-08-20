@@ -2,19 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === 共通ハニカム背景 + グラスモーフィズム === */
 body {
-  @apply min-h-screen flex justify-center items-center;
-  background-color: #000000;
-  background-image: 
-    radial-gradient(circle at 0 0, #FDB9C8 2%, transparent 20%),
-    radial-gradient(circle at 25px 43px, #004CA0 2%, transparent 20%);
-  background-size: 100px 86px;
-  color: white;
-  font-family: "Poppins", "Noto Sans JP", sans-serif;
+  @apply bg-black text-white min-h-screen flex justify-center items-center;
+  background-color: #000;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  overflow-x: hidden;
 }
 
-/* カード共通デザイン */
-.card {
-  @apply backdrop-blur-lg bg-white/20 border border-white/30 rounded-2xl shadow-xl p-6;
+/* ハニカム背景 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(120deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(60deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 80px 140px;  /* 大きめ */
+  opacity: 0.2;  /* かなり薄く */
+  z-index: -2;
+}
+
+/* グラスモーフィズム共通 */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+}
+
+/* タイトルを見やすくする */
+h1, h2, h3 {
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
