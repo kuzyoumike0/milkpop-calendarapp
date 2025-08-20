@@ -4,7 +4,7 @@ import Header from "./Header";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen relative z-10">
+    <div className="top-page relative z-10">
       <Header />
 
       <main className="flex flex-col items-center justify-center py-16 px-6 relative z-10">
