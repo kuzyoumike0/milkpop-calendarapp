@@ -2,42 +2,69 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import PageLayout from "./PageLayout";
 
 export default function SharePage() {
-  const { linkId } = useParams();
-  const [username, setUsername] = useState("");
   const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState([]);
+  const [responses, setResponses] = useState([]); // 初期値を [] に修正
+  const [username, setUsername] = useState("");
+  const [selected, setSelected] = useState({});
   const [rangeMode, setRangeMode] = useState("範囲選択");
   const [selectedDates, setSelectedDates] = useState([]);
 
-  const fetchData = async () => {
+  // 📌 DBからスケジュール取得
+  useEffect(() => {
+    axios
+      .get("/api/schedules")
+      .then((res) => {
+        setSchedules(res.data || []);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  // 📌 DBから回答取得
+  useEffect(() => {
+    axios
+      .get("/api/responses")
+      .then((res) => {
+        setResponses(res.data || []); // null の場合も [] にする
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const handleResponseChange = (scheduleId, value) => {
+    setSelected((prev) => ({ ...prev, [scheduleId]: value }));
+  };
+
+  const handleSave = async () => {
     try {
-      const res = await axios.get(`/api/schedules/${linkId}`);
-      setSchedules(res.data.schedules);
-      setResponses(res.data.responses);
+      await Promise.all(
+        Object.entries(selected).map(([scheduleId, response]) =>
+          axios.post("/api/responses", {
+            scheduleId,
+            username,
+            response,
+          })
+        )
+      );
+      const res = await axios.get("/api/responses");
+      setResponses(res.data || []);
     } catch (err) {
       console.error(err);
+      alert("保存に失敗しました");
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [linkId]);
-
   const handleDateChange = (value) => {
-    if (rangeMode === "範囲選択") {
-      if (Array.isArray(value)) {
-        const [start, end] = value;
-        let temp = [];
-        let cur = new Date(start);
-        while (cur <= end) {
-          temp.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setSelectedDates(temp);
+    if (rangeMode === "範囲選択" && Array.isArray(value)) {
+      const [start, end] = value;
+      let temp = [];
+      let cur = new Date(start);
+      while (cur <= end) {
+        temp.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
       }
+      setSelectedDates(temp);
     } else if (rangeMode === "複数選択") {
       setSelectedDates((prev) =>
         prev.find((d) => d.toDateString() === value.toDateString())
@@ -47,34 +74,21 @@ export default function SharePage() {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      await axios.post(`/api/schedules/${linkId}/respond`, {
-        username,
-        dates: selectedDates.map((d) => d.toISOString().split("T")[0]),
-      });
-      fetchData();
-    } catch (err) {
-      alert("保存に失敗しました");
-      console.error(err);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <header className="text-center text-3xl font-bold text-[#FDB9C8] mb-6">
-        MilkPOP Calendar - 共有スケジュール
-      </header>
+    <PageLayout>
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg space-y-6">
+        <h2 className="text-2xl font-bold text-[#004CA0]">共有スケジュール</h2>
 
-      <div className="max-w-4xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
+        {/* ユーザー名入力 */}
         <input
           type="text"
-          placeholder="あなたの名前を入力"
+          placeholder="名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-xl text-black"
+          className="w-full p-3 border rounded-lg text-black"
         />
 
+        {/* カレンダー UI */}
         <div className="flex space-x-4">
           <label>
             <input
@@ -96,42 +110,105 @@ export default function SharePage() {
           </label>
         </div>
 
-        <div className="bg-white rounded-xl p-4">
+        <div className="bg-gray-50 p-4 rounded-lg">
           <Calendar
             selectRange={rangeMode === "範囲選択"}
             onChange={handleDateChange}
           />
         </div>
 
+        {/* スケジュール一覧 + 回答 */}
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-[#004CA0] text-white">
+              <th className="border border-gray-300 px-2 py-1">日付</th>
+              <th className="border border-gray-300 px-2 py-1">タイトル</th>
+              <th className="border border-gray-300 px-2 py-1">時間帯</th>
+              <th className="border border-gray-300 px-2 py-1">回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules && schedules.length > 0 ? (
+              schedules.map((s) => (
+                <tr key={s.id}>
+                  <td className="border border-gray-300 px-2 py-1">{s.date}</td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {s.title}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    {s.timeslot}
+                  </td>
+                  <td className="border border-gray-300 px-2 py-1">
+                    <select
+                      value={selected[s.id] || ""}
+                      onChange={(e) =>
+                        handleResponseChange(s.id, e.target.value)
+                      }
+                      className="p-1 rounded border text-black"
+                    >
+                      <option value="">選択</option>
+                      <option value="〇">〇</option>
+                      <option value="✖">✖</option>
+                    </select>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="4"
+                  className="text-center text-gray-500 py-3 border"
+                >
+                  登録されたスケジュールはありません
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
         <button
           onClick={handleSave}
-          className="w-full py-3 bg-[#FDB9C8] text-black rounded-xl font-bold hover:bg-pink-400"
+          className="w-full py-3 bg-[#FDB9C8] text-black rounded-lg font-bold hover:bg-pink-400"
         >
           保存
         </button>
 
-        {/* 即時反映テーブル */}
-        <table className="w-full bg-black text-white border border-gray-600 mt-6 rounded-xl overflow-hidden">
-          <thead className="bg-[#FDB9C8] text-black">
-            <tr>
-              <th className="p-2">日付</th>
-              <th className="p-2">時間帯</th>
-              <th className="p-2">ユーザー</th>
-              <th className="p-2">回答</th>
-            </tr>
-          </thead>
-          <tbody>
-            {responses.map((r, i) => (
-              <tr key={i} className="border-t border-gray-700">
-                <td className="p-2">{r.date}</td>
-                <td className="p-2">{r.timeslot}</td>
-                <td className="p-2">{r.username}</td>
-                <td className="p-2">{r.response}</td>
+        {/* 回答一覧 */}
+        <div className="bg-gray-100 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2">回答一覧</h3>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-300 px-2 py-1">ユーザー</th>
+                <th className="border border-gray-300 px-2 py-1">回答</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {responses && responses.length > 0 ? (
+                responses.map((r) => (
+                  <tr key={r.id}>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {r.username}
+                    </td>
+                    <td className="border border-gray-300 px-2 py-1">
+                      {r.response}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="2"
+                    className="text-center text-gray-500 py-3 border"
+                  >
+                    まだ回答はありません
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
