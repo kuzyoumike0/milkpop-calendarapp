@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 
 export default function TopPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
       {/* タイトル */}
       <motion.h1
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-[#FDB9C8] to-[#004CA0]"
+        className="text-5xl font-extrabold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-center"
       >
         MilkPOP Calendar
       </motion.h1>
