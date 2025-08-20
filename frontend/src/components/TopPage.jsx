@@ -1,21 +1,57 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 
 export default function TopPage() {
+  const history = useHistory();
+  const [shareId, setShareId] = useState("");
+
+  const handleGoLink = () => {
+    if (!shareId) {
+      alert("共有リンクIDを入力してください");
+      return;
+    }
+    history.push(`/share/${shareId}`);
+  };
+
   return (
-    <div style={{ textAlign: "center", padding: "20px", backgroundColor: "#000", color: "#fff", minHeight: "100vh" }}>
-      <header style={{ background: "#004CA0", padding: "15px", color: "white", fontSize: "24px", fontWeight: "bold" }}>
+    <div className="min-h-screen bg-black text-white p-6">
+      {/* バナー */}
+      <header className="text-center text-4xl font-extrabold mb-10 text-[#FDB9C8]">
         MilkPOP Calendar
       </header>
-      <h1 style={{ marginTop: "40px", color: "#FDB9C8" }}>ようこそ！</h1>
-      <p>スケジュール共有アプリへようこそ</p>
-      <div style={{ marginTop: "30px" }}>
-        <Link to="/link" style={{ margin: "10px", padding: "15px 25px", background: "#FDB9C8", color: "#000", borderRadius: "8px", textDecoration: "none" }}>
-          日程登録ページ
-        </Link>
-        <Link to="/personal" style={{ margin: "10px", padding: "15px 25px", background: "#004CA0", color: "#fff", borderRadius: "8px", textDecoration: "none" }}>
-          個人スケジュール
-        </Link>
+
+      {/* メインコンテンツ */}
+      <div className="flex flex-col items-center space-y-6">
+        <button
+          onClick={() => history.push("/link")}
+          className="w-72 p-4 rounded-2xl bg-[#004CA0] text-white font-bold shadow-lg hover:opacity-80"
+        >
+          日程登録ページへ
+        </button>
+
+        <button
+          onClick={() => history.push("/personal")}
+          className="w-72 p-4 rounded-2xl bg-[#FDB9C8] text-black font-bold shadow-lg hover:opacity-80"
+        >
+          個人日程登録ページへ
+        </button>
+
+        <div className="bg-gray-800 p-6 rounded-2xl shadow-lg w-80">
+          <h2 className="text-lg font-bold mb-2">共有ページに移動</h2>
+          <input
+            type="text"
+            placeholder="共有リンクIDを入力"
+            value={shareId}
+            onChange={(e) => setShareId(e.target.value)}
+            className="w-full p-3 mb-4 rounded-lg text-black"
+          />
+          <button
+            onClick={handleGoLink}
+            className="w-full p-3 rounded-xl bg-[#FDB9C8] text-black font-bold hover:opacity-80"
+          >
+            移動
+          </button>
+        </div>
       </div>
     </div>
   );
