@@ -1,11 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
-  @apply bg-black text-white min-h-screen flex justify-center items-center;
+  @apply bg-black text-white min-h-screen;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   overflow-x: hidden;
+  position: relative;
   background-color: #000;
 }
 
-/* 背景ハニカムタイル */
+/* 全ページ共通 背景ハニカム */
 body::before {
   content: "";
   position: fixed;
@@ -27,8 +32,9 @@ body::before {
         stroke='rgba(255,255,255,0.15)' stroke-width='1'/>\
     </svg>");
     
-  background-size: 120px 140px; /* 六角形の大きさ */
-  background-repeat: repeat;   /* 敷き詰める */
+  background-size: 120px 140px; /* 六角形のサイズ */
+  background-repeat: repeat;   /* タイル状に敷き詰め */
   opacity: 0.6;                /* 全体の透け具合 */
-  z-index: -2;
+  z-index: -1;
+  pointer-events: none;        /* 背景クリック無効 */
 }
