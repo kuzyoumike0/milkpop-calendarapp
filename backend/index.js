@@ -34,7 +34,7 @@ async function initDB() {
       memo TEXT,
       date DATE NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT NOT NULL,
+      range_mode TEXT,
       linkid TEXT
     )
   `);
@@ -52,15 +52,19 @@ initDB();
 
 // === 個人スケジュール ===
 app.get("/api/personal", async (req, res) => {
-  const result = await pool.query("SELECT * FROM schedules WHERE linkid IS NULL ORDER BY date ASC");
+  const result = await pool.query(
+    "SELECT * FROM schedules WHERE linkid IS NULL ORDER BY date ASC"
+  );
   res.json(result.rows);
 });
 
 app.post("/api/personal", async (req, res) => {
   const { title, memo, dates, timeslot } = req.body;
+
   for (let d of dates) {
     await pool.query(
-      "INSERT INTO schedules (title, memo, date, timeslot, range_mode) VALUES ($1,$2,$3,$4,$5)",
+      `INSERT INTO schedules (title, memo, date, timeslot, range_mode)
+       VALUES ($1,$2,$3,$4,$5)`,
       [title, memo, d, timeslot, "multi"]
     );
   }
@@ -71,45 +75,61 @@ app.post("/api/personal", async (req, res) => {
 app.post("/api/schedules", async (req, res) => {
   const { title, dates, timeslot } = req.body;
   const linkid = uuidv4();
+
   for (let d of dates) {
     await pool.query(
-      "INSERT INTO schedules (title, date, timeslot, range_mode, linkid) VALUES ($1,$2,$3,$4,$5)",
+      `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
+       VALUES ($1,$2,$3,$4,$5)`,
       [title, d, timeslot, "multi", linkid]
     );
   }
+
   res.json({ link: `/share/${linkid}` });
 });
 
+// === 共有スケジュール取得 ===
 app.get("/api/schedules/:linkid", async (req, res) => {
   const { linkid } = req.params;
-  const result = await pool.query("SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC", [linkid]);
+  const result = await pool.query(
+    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
+    [linkid]
+  );
   res.json(result.rows);
 });
 
 // === 共有ページ回答 ===
 app.get("/api/shared/:linkid", async (req, res) => {
   const { linkid } = req.params;
-  const schedules = await pool.query("SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC", [linkid]);
-  const responses = await pool.query("SELECT * FROM shared_responses");
+  const schedules = await pool.query(
+    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
+    [linkid]
+  );
+  const responses = await pool.query(
+    "SELECT * FROM shared_responses ORDER BY id ASC"
+  );
   res.json({ schedules: schedules.rows, responses: responses.rows });
 });
 
 app.post("/api/shared", async (req, res) => {
   const { responses } = req.body;
+
   for (let r of responses) {
     await pool.query(
-      "INSERT INTO shared_responses (schedule_id, username, response) VALUES ($1,$2,$3)",
+      `INSERT INTO shared_responses (schedule_id, username, response)
+       VALUES ($1,$2,$3)`,
       [r.schedule_id, r.username, r.response]
     );
   }
+
   res.json({ success: true });
 });
 
-// === 静的ファイル（フロントエンド） ===
+// === フロントエンド静的ファイル ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
+// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
