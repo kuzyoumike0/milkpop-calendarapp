@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import useHolidays from "../hooks/useHolidays";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -10,8 +11,10 @@ export default function LinkPage() {
   const [schedules, setSchedules] = useState([]);
   const [link, setLink] = useState("");
 
+  const holidays = useHolidays();
+
   const fetchSchedules = async () => {
-    const res = await axios.get("/api/personal"); // 自分用一覧
+    const res = await axios.get("/api/personal");
     setSchedules(res.data);
   };
 
@@ -25,7 +28,6 @@ export default function LinkPage() {
       dates: Array.isArray(date) ? date : [date],
       timeslot: timeSlot,
     });
-
     setLink(res.data.link);
     fetchSchedules();
   };
@@ -40,7 +42,18 @@ export default function LinkPage() {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      <Calendar onChange={setDate} value={date} selectRange={true} />
+      <Calendar
+        onChange={setDate}
+        value={date}
+        selectRange={true}
+        tileClassName={({ date }) => {
+          const yyyy = date.getFullYear();
+          const mm = String(date.getMonth() + 1).padStart(2, "0");
+          const dd = String(date.getDate()).padStart(2, "0");
+          const key = `${yyyy}-${mm}-${dd}`;
+          return holidays[key] ? "text-red-500 font-bold" : "";
+        }}
+      />
 
       <div className="mt-2">
         <label><input type="radio" value="全日" checked={timeSlot==="全日"} onChange={(e)=>setTimeSlot(e.target.value)} /> 全日</label>
