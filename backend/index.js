@@ -59,6 +59,16 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS share_responses (
+      id SERIAL PRIMARY KEY,
+      schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+      username TEXT NOT NULL,
+      response TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
 }
 initDB();
 
@@ -154,6 +164,41 @@ app.post("/api/share", async (req, res) => {
   } catch (err) {
     console.error("リンク作成エラー:", err);
     res.status(500).json({ error: "リンク作成に失敗しました" });
+  }
+});
+
+// === 共有スケジュールへの出欠保存 ===
+app.post("/api/share-responses", async (req, res) => {
+  try {
+    const { username, responses } = req.body;
+    if (!username || !responses) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    for (const scheduleId of Object.keys(responses)) {
+      const response = responses[scheduleId];
+      if (!response) continue;
+
+      await pool.query(
+        `INSERT INTO share_responses (schedule_id, username, response)
+         VALUES ($1, $2, $3)`,
+        [scheduleId, username, response]
+      );
+    }
+
+    // 即時反映: スケジュール一覧にレスポンスをJOINして返す
+    const result = await pool.query(`
+      SELECT s.*, json_agg(json_build_object('username', r.username, 'response', r.response)) AS responses
+      FROM schedules s
+      LEFT JOIN share_responses r ON s.id = r.schedule_id
+      GROUP BY s.id
+      ORDER BY s.date, s.timeslot
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("出欠保存エラー:", err);
+    res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
