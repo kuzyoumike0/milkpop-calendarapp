@@ -10,7 +10,7 @@ export default function PersonalPage() {
   return (
     <div>
       <div className="header">MilkPOP Calendar</div>
-      <div className="flex flex-col items-center mt-8">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="card w-11/12 md:w-2/3">
           <h2 className="text-xl font-bold mb-4">個人スケジュール登録</h2>
           <input
@@ -26,11 +26,7 @@ export default function PersonalPage() {
             onChange={(e) => setMemo(e.target.value)}
             className="w-full p-2 mb-4 rounded-lg border"
           />
-          <Calendar
-            selectRange={true}
-            onChange={setDates}
-            value={dates}
-          />
+          <Calendar selectRange={true} onChange={setDates} value={dates} />
           <button className="btn-main mt-4">登録する</button>
         </div>
       </div>
