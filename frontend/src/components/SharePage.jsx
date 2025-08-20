@@ -2,21 +2,30 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
-export default function SharePage({ linkId }) {
-  const [schedules, setSchedules] = useState([]);
+export default function SharePage() {
+  const { linkId } = useParams();
   const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({});
+  const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [rangeMode, setRangeMode] = useState("範囲選択");
   const [selectedDates, setSelectedDates] = useState([]);
 
-  // 共有スケジュール取得
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(`/api/schedules/${linkId}`);
+      setSchedules(res.data.schedules);
+      setResponses(res.data.responses);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    if (!linkId) return;
-    axios.get(`/api/shared/${linkId}`).then((res) => setSchedules(res.data));
+    fetchData();
   }, [linkId]);
 
-  // 日付選択処理
   const handleDateChange = (value) => {
     if (rangeMode === "範囲選択") {
       if (Array.isArray(value)) {
@@ -38,18 +47,13 @@ export default function SharePage({ linkId }) {
     }
   };
 
-  // 回答保存
-  const handleSave = async (scheduleId) => {
+  const handleSave = async () => {
     try {
-      await axios.post("/api/shared/responses", {
-        scheduleId,
+      await axios.post(`/api/schedules/${linkId}/respond`, {
         username,
-        response: responses[scheduleId] || "✖",
+        dates: selectedDates.map((d) => d.toISOString().split("T")[0]),
       });
-
-      // 即更新
-      const res = await axios.get(`/api/shared/${linkId}`);
-      setSchedules(res.data);
+      fetchData();
     } catch (err) {
       alert("保存に失敗しました");
       console.error(err);
@@ -59,20 +63,18 @@ export default function SharePage({ linkId }) {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <header className="text-center text-3xl font-bold text-[#FDB9C8] mb-6">
-        MilkPOP Calendar - 共有日程
+        MilkPOP Calendar - 共有スケジュール
       </header>
 
       <div className="max-w-4xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
-        {/* ユーザー名 */}
         <input
           type="text"
-          placeholder="あなたの名前"
+          placeholder="あなたの名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="w-full p-3 rounded-xl text-black"
         />
 
-        {/* モード切替 */}
         <div className="flex space-x-4">
           <label>
             <input
@@ -94,7 +96,6 @@ export default function SharePage({ linkId }) {
           </label>
         </div>
 
-        {/* カレンダー */}
         <div className="bg-white rounded-xl p-4">
           <Calendar
             selectRange={rangeMode === "範囲選択"}
@@ -102,46 +103,30 @@ export default function SharePage({ linkId }) {
           />
         </div>
 
-        {/* 登録済みスケジュール表示 */}
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-800">
+        <button
+          onClick={handleSave}
+          className="w-full py-3 bg-[#FDB9C8] text-black rounded-xl font-bold hover:bg-pink-400"
+        >
+          保存
+        </button>
+
+        {/* 即時反映テーブル */}
+        <table className="w-full bg-black text-white border border-gray-600 mt-6 rounded-xl overflow-hidden">
+          <thead className="bg-[#FDB9C8] text-black">
+            <tr>
               <th className="p-2">日付</th>
               <th className="p-2">時間帯</th>
-              <th className="p-2">あなたの回答</th>
-              <th className="p-2">保存</th>
+              <th className="p-2">ユーザー</th>
+              <th className="p-2">回答</th>
             </tr>
           </thead>
           <tbody>
-            {schedules.map((s) => (
-              <tr key={s.id} className="border-t border-gray-700">
-                <td className="p-2">{s.date}</td>
-                <td className="p-2">
-                  {s.timeslot === "時間指定"
-                    ? `${s.start_time}〜${s.end_time}`
-                    : s.timeslot}
-                </td>
-                <td className="p-2">
-                  <select
-                    value={responses[s.id] || ""}
-                    onChange={(e) =>
-                      setResponses({ ...responses, [s.id]: e.target.value })
-                    }
-                    className="p-2 text-black rounded-lg"
-                  >
-                    <option value="">選択</option>
-                    <option value="〇">〇</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </td>
-                <td className="p-2">
-                  <button
-                    onClick={() => handleSave(s.id)}
-                    className="px-3 py-1 bg-[#FDB9C8] text-black rounded-lg"
-                  >
-                    保存
-                  </button>
-                </td>
+            {responses.map((r, i) => (
+              <tr key={i} className="border-t border-gray-700">
+                <td className="p-2">{r.date}</td>
+                <td className="p-2">{r.timeslot}</td>
+                <td className="p-2">{r.username}</td>
+                <td className="p-2">{r.response}</td>
               </tr>
             ))}
           </tbody>
