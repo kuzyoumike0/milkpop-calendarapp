@@ -13,24 +13,19 @@ export default function PersonalPage() {
   const [timeslot, setTimeslot] = useState("全日");
   const [rangeMode, setRangeMode] = useState("複数");
   const [rangeStart, setRangeStart] = useState(null);
+  const [schedules, setSchedules] = useState([]);
 
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-
     if (rangeMode === "複数") {
-      // トグル追加/削除
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, dateStr]);
-      }
+      setSelectedDates((prev) =>
+        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+      );
     } else if (rangeMode === "範囲") {
       if (!rangeStart) {
-        // 開始日を設定
         setRangeStart(date);
         setSelectedDates([dateStr]);
       } else {
-        // 終了日を選んだら範囲を作成
         const start = new Date(Math.min(rangeStart, date));
         const end = new Date(Math.max(rangeStart, date));
         const dates = [];
@@ -40,7 +35,7 @@ export default function PersonalPage() {
           current.setDate(current.getDate() + 1);
         }
         setSelectedDates(dates);
-        setRangeStart(null); // リセット
+        setRangeStart(null);
       }
     }
   };
@@ -49,8 +44,7 @@ export default function PersonalPage() {
     if (view === "month") {
       const dateStr = date.toISOString().split("T")[0];
       if (hd.isHoliday(date)) return "text-red-500 font-bold";
-      if (selectedDates.includes(dateStr))
-        return "bg-blue-500 text-white rounded-full";
+      if (selectedDates.includes(dateStr)) return "bg-blue-500 text-white rounded-full";
     }
     return null;
   };
@@ -68,20 +62,19 @@ export default function PersonalPage() {
         timeslot,
         range_mode: rangeMode,
       });
-      alert("登録しました！");
+      setSchedules([...schedules, { title, memo, dates: selectedDates, timeslot }]);
       setTitle("");
       setMemo("");
       setSelectedDates([]);
-      setRangeStart(null);
     } catch (err) {
-      console.error("Error saving personal schedule:", err);
-      alert("登録に失敗しました");
+      console.error("Error saving schedule:", err);
+      alert("保存に失敗しました");
     }
   };
 
   return (
     <div className="p-4 text-white">
-      <h1 className="text-2xl font-bold mb-4">個人スケジュール登録</h1>
+      <h1 className="text-2xl font-bold mb-4">個人日程登録</h1>
 
       <input
         type="text"
@@ -90,7 +83,6 @@ export default function PersonalPage() {
         onChange={(e) => setTitle(e.target.value)}
         className="border p-2 rounded text-black block mb-2"
       />
-
       <textarea
         placeholder="メモ"
         value={memo}
@@ -102,11 +94,7 @@ export default function PersonalPage() {
 
       <div className="mt-4">
         <label className="mr-2">時間帯:</label>
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="text-black p-1 rounded"
-        >
+        <select value={timeslot} onChange={(e) => setTimeslot(e.target.value)} className="text-black p-1 rounded">
           <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
@@ -129,12 +117,21 @@ export default function PersonalPage() {
         </select>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="mt-4 bg-green-600 px-4 py-2 rounded"
-      >
-        登録
+      <button onClick={handleSubmit} className="mt-4 bg-blue-600 px-4 py-2 rounded">
+        保存
       </button>
+
+      <div className="mt-8 max-w-3xl mx-auto">
+        <h2 className="text-xl font-bold mb-4">登録済みスケジュール</h2>
+        <ul className="space-y-2">
+          {schedules.map((s, idx) => (
+            <li key={idx} className="bg-gray-800 p-3 rounded-lg">
+              <strong>{s.title}</strong> ({s.timeslot})<br />
+              {Array.isArray(s.dates) ? s.dates.join(", ") : s.date}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
