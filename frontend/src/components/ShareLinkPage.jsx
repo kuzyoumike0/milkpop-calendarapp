@@ -7,12 +7,16 @@ export default function ShareLinkPage() {
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
+  const [linkTitle, setLinkTitle] = useState("");
 
   // 即時反映: linkidごとのスケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get(`/api/schedules?linkid=${linkid}`);
       setSchedules(res.data);
+      if (res.data.length > 0) {
+        setLinkTitle(res.data[0].link_title || "");
+      }
     } catch (err) {
       console.error("取得エラー:", err);
     }
@@ -38,7 +42,7 @@ export default function ShareLinkPage() {
         username,
         responses,
       });
-      setSchedules(res.data);
+      setSchedules(res.data.filter((s) => s.linkid === linkid));
       setResponses({});
     } catch (err) {
       console.error("保存エラー:", err);
@@ -57,9 +61,13 @@ export default function ShareLinkPage() {
         </nav>
       </header>
 
-      {/* ユーザー名入力 */}
+      {/* 共有リンクタイトル */}
       <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
-        <h2 className="text-2xl mb-4">共有リンクページ</h2>
+        <h2 className="text-2xl mb-4">
+          共有リンクページ {linkTitle && `: ${linkTitle}`}
+        </h2>
+
+        {/* ユーザー名入力 */}
         <input
           className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
           type="text"
