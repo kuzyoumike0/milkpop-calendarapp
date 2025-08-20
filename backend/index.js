@@ -81,8 +81,16 @@ app.post("/api/schedules", async (req, res) => {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
-    // linkid が指定されていなければ自動生成
+    // linkid が指定されていなければ新規生成
     const useLinkId = linkid || uuidv4();
+
+    // share_links に存在しない場合は登録
+    await pool.query(
+      `INSERT INTO share_links (linkid, title)
+       VALUES ($1, $2)
+       ON CONFLICT (linkid) DO NOTHING`,
+      [useLinkId, title]
+    );
 
     for (const d of dates) {
       await pool.query(
@@ -93,7 +101,10 @@ app.post("/api/schedules", async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT * FROM schedules ORDER BY date, timeslot`
+      `SELECT s.*, l.title AS link_title
+       FROM schedules s
+       LEFT JOIN share_links l ON s.linkid = l.linkid
+       ORDER BY s.date, s.timeslot`
     );
     res.json(result.rows);
   } catch (err) {
@@ -108,11 +119,12 @@ app.get("/api/schedules", async (req, res) => {
     const { linkid } = req.query;
 
     let query = `
-      SELECT s.*, 
+      SELECT s.*, l.title AS link_title,
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
                       FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
       LEFT JOIN share_responses r ON s.id = r.schedule_id
+      LEFT JOIN share_links l ON s.linkid = l.linkid
     `;
     const params = [];
 
@@ -121,7 +133,7 @@ app.get("/api/schedules", async (req, res) => {
       params.push(linkid);
     }
 
-    query += ` GROUP BY s.id ORDER BY s.date, s.timeslot`;
+    query += ` GROUP BY s.id, l.title ORDER BY s.date, s.timeslot`;
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -211,12 +223,13 @@ app.post("/api/share-responses", async (req, res) => {
     }
 
     const result = await pool.query(`
-      SELECT s.*, 
+      SELECT s.*, l.title AS link_title,
              COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
                       FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
       LEFT JOIN share_responses r ON s.id = r.schedule_id
-      GROUP BY s.id
+      LEFT JOIN share_links l ON s.linkid = l.linkid
+      GROUP BY s.id, l.title
       ORDER BY s.date, s.timeslot
     `);
 
@@ -229,7 +242,6 @@ app.post("/api/share-responses", async (req, res) => {
 
 // === 静的ファイル (Reactビルド) ===
 app.use(express.static(path.join(__dirname, "public")));
-
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
