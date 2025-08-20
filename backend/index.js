@@ -52,9 +52,82 @@ initDB();
 
 // === API ===
 
-// スケジュール作成（共有リンク発行）
+// スケジュール作成
 app.post("/api/schedule", async (req, res) => {
   try {
     const { title, memo, dates, timeslot } = req.body;
     const linkid = uuidv4();
-    await pool.q
+    await pool.query(
+      `INSERT INTO schedules (title, memo, dates, timeslot, linkid)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [title, memo, dates, timeslot, linkid]
+    );
+    res.json({ success: true, link: `/share/${linkid}` });
+  } catch (err) {
+    console.error("❌ スケジュール作成エラー:", err);
+    res.status(500).json({ error: "スケジュール作成に失敗しました" });
+  }
+});
+
+// スケジュール取得
+app.get("/api/schedule/:linkid", async (req, res) => {
+  const { linkid } = req.params;
+  try {
+    const schedulesRes = await pool.query(
+      "SELECT * FROM schedules WHERE linkid = $1",
+      [linkid]
+    );
+
+    if (schedulesRes.rows.length === 0) {
+      return res.status(404).json({ error: "リンクが存在しません" });
+    }
+
+    const responsesRes = await pool.query(
+      "SELECT username, answers FROM responses WHERE linkid = $1 ORDER BY created_at ASC",
+      [linkid]
+    );
+
+    res.json({
+      schedules: schedulesRes.rows,
+      responses: responsesRes.rows,
+    });
+  } catch (err) {
+    console.error("❌ スケジュール取得エラー:", err);
+    res.status(500).json({ error: "データ取得に失敗しました" });
+  }
+});
+
+// 回答保存
+app.post("/api/share/:linkid/response", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const { username, answers } = req.body;
+
+    await pool.query(
+      "INSERT INTO responses (linkid, username, answers) VALUES ($1, $2, $3)",
+      [linkid, username, answers]
+    );
+
+    const updated = await pool.query(
+      "SELECT username, answers FROM responses WHERE linkid = $1 ORDER BY created_at ASC",
+      [linkid]
+    );
+
+    res.json({ success: true, responses: updated.rows });
+  } catch (err) {
+    console.error("❌ 回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存に失敗しました" });
+  }
+});
+
+// === 静的ファイル ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+// === サーバ起動 ===
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
