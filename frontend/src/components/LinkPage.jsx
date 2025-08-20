@@ -1,49 +1,54 @@
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import DatePicker from "react-multi-date-picker";
+import Calendar from "react-multi-date-picker";
+import "react-multi-date-picker/styles/colors/purple.css";
 import axios from "axios";
-import "../custom-purple.css";
+import Holidays from "date-holidays";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [rangeMode, setRangeMode] = useState("range");
-  const [date, setDate] = useState(new Date());
   const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
   const [timeslot, setTimeslot] = useState("全日");
-  const [link, setLink] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
 
-  const handleSave = async () => {
-    let selectedDates = [];
-    if (rangeMode === "range") {
-      if (Array.isArray(date)) {
-        let d = new Date(date[0]);
-        let end = new Date(date[1]);
-        while (d <= end) {
-          selectedDates.push(new Date(d));
-          d.setDate(d.getDate() + 1);
-        }
-      } else {
-        selectedDates = [date];
-      }
-    } else {
-      selectedDates = dates;
+  const hd = new Holidays("JP");
+
+  const handleSubmit = async () => {
+    if (!title || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
     }
 
-    const res = await axios.post("/api/schedule", {
-      title,
-      start_date: selectedDates[0]
-        ? selectedDates[0].toISOString().split("T")[0]
-        : null,
-      end_date: selectedDates[selectedDates.length - 1]
-        ? selectedDates[selectedDates.length - 1].toISOString().split("T")[0]
-        : null,
-      timeslot,
-      range_mode: rangeMode,
-    });
+    try {
+      const start_date = dates[0].format("YYYY-MM-DD");
+      const end_date = dates[dates.length - 1].format("YYYY-MM-DD");
 
-    // ✅ 修正: url ではなく link を参照
-    setLink(res.data.link);
+      const res = await axios.post("/api/schedule", {
+        title,
+        start_date,
+        end_date,
+        timeslot,
+        range_mode: rangeMode,
+      });
+
+      setShareUrl(window.location.origin + res.data.link);
+    } catch (err) {
+      console.error("日程登録エラー:", err);
+    }
+  };
+
+  // 祝日赤字
+  const highlightHoliday = ({ date }) => {
+    const d = new Date(date.year, date.month - 1, date.day);
+    if (hd.isHoliday(d)) {
+      return {
+        style: {
+          color: "red",
+          fontWeight: "bold",
+        },
+      };
+    }
+    return {};
   };
 
   return (
@@ -52,51 +57,48 @@ export default function LinkPage() {
         MilkPOP Calendar - 日程登録
       </header>
 
-      <div className="bg-[#004CA0] rounded-2xl p-6 shadow-lg mb-6">
+      <div className="bg-[#004CA0] rounded-2xl p-6 shadow-lg">
         <input
           type="text"
-          placeholder="タイトル"
+          placeholder="タイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full p-2 mb-4 rounded text-black"
         />
 
-        <div className="flex gap-4 mb-4">
+        {/* ラジオボタン切替 */}
+        <div className="mb-4">
+          <label className="mr-4">
+            <input
+              type="radio"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={() => setRangeMode("multiple")}
+            />
+            複数選択
+          </label>
           <label>
             <input
               type="radio"
               value="range"
               checked={rangeMode === "range"}
               onChange={() => setRangeMode("range")}
-            />{" "}
+            />
             範囲選択
           </label>
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={() => setRangeMode("multiple")}
-            />{" "}
-            複数選択
-          </label>
         </div>
 
-        <div className="mb-4">
-          {rangeMode === "range" ? (
-            <Calendar onChange={setDate} value={date} selectRange />
-          ) : (
-            <DatePicker
-              multiple
-              value={dates}
-              onChange={setDates}
-              format="YYYY-MM-DD"
-              className="custom-purple"
-            />
-          )}
-        </div>
+        <Calendar
+          multiple={rangeMode === "multiple"}
+          range={rangeMode === "range"}
+          value={dates}
+          onChange={setDates}
+          mapDays={highlightHoliday}
+          className="purple"
+        />
 
-        <div className="mb-4">
+        {/* 時間帯 */}
+        <div className="mt-4">
           <select
             value={timeslot}
             onChange={(e) => setTimeslot(e.target.value)}
@@ -105,29 +107,33 @@ export default function LinkPage() {
             <option value="全日">全日</option>
             <option value="昼">昼</option>
             <option value="夜">夜</option>
-            <option value="時間指定">時間指定</option>
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i} value={`${i}:00`}>
+                {i}:00
+              </option>
+            ))}
           </select>
         </div>
 
         <button
-          onClick={handleSave}
-          className="bg-[#FDB9C8] text-black px-4 py-2 rounded-xl font-bold"
+          onClick={handleSubmit}
+          className="mt-4 bg-[#FDB9C8] text-black px-4 py-2 rounded-xl font-bold"
         >
-          リンク発行
+          共有リンク発行
         </button>
 
-        {link && (
-          <p className="mt-4">
-            ✅ 共有リンク:{" "}
+        {shareUrl && (
+          <div className="mt-4">
+            <p>共有リンク:</p>
             <a
-              href={link}
+              href={shareUrl}
               target="_blank"
               rel="noreferrer"
-              className="underline text-[#FDB9C8]"
+              className="text-[#FDB9C8] underline"
             >
-              {link}
+              {shareUrl}
             </a>
-          </p>
+          </div>
         )}
       </div>
     </div>
