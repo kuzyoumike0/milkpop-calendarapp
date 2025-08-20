@@ -3,19 +3,49 @@ import { Link } from "react-router-dom";
 
 export default function TopPage() {
   return (
-    <div className="flex flex-col items-center gap-6 p-6">
-      <h1 className="text-3xl font-bold text-brandPink">MilkPOP Calendar</h1>
+    <div className="min-h-screen bg-[color:var(--brand-black)] flex flex-col items-center py-12 px-4">
+      {/* バナー */}
+      <header className="w-full max-w-3xl mb-8 text-center">
+        <h1 className="text-4xl font-bold text-[color:var(--brand-pink)] drop-shadow-md">
+          MilkPOP Calendar
+        </h1>
+        <p className="text-gray-400 mt-2">みんなで予定を共有できるお洒落なカレンダー</p>
+      </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
-        <Link to="/link" className="card hover:shadow-xl transition">
-          <h2 className="card-title">日程登録ページ</h2>
-          <p className="card-content">共有用のスケジュールを登録できます。</p>
-        </Link>
+      {/* カードメニュー */}
+      <div className="w-full max-w-3xl space-y-6">
+        {/* 日程登録ページ */}
+        <div className="card text-center">
+          <h2 className="card-title">共有スケジュール登録</h2>
+          <p className="card-content mb-4">
+            共有用のカレンダーに予定を登録して、リンクを発行できます。
+          </p>
+          <Link to="/link" className="btn inline-block">
+            共有カレンダー登録へ
+          </Link>
+        </div>
 
-        <Link to="/personal" className="card hover:shadow-xl transition">
-          <h2 className="card-title">個人スケジュールページ</h2>
-          <p className="card-content">自分用の予定を管理できます。</p>
-        </Link>
+        {/* 個人スケジュールページ */}
+        <div className="card text-center">
+          <h2 className="card-title">個人スケジュール登録</h2>
+          <p className="card-content mb-4">
+            自分専用のカレンダーに予定やメモを登録できます。
+          </p>
+          <Link to="/personal" className="btn inline-block">
+            個人カレンダー登録へ
+          </Link>
+        </div>
+
+        {/* 共有リンクページ */}
+        <div className="card text-center">
+          <h2 className="card-title">共有スケジュール確認</h2>
+          <p className="card-content mb-4">
+            発行されたリンクからみんなの予定をまとめて確認できます。
+          </p>
+          <Link to="/share" className="btn inline-block">
+            共有スケジュール確認へ
+          </Link>
+        </div>
       </div>
     </div>
   );
