@@ -8,8 +8,8 @@ export default function TopPage() {
       {/* 共通ヘッダー */}
       <Header />
 
-      {/* ロゴ画像（トップページ専用） */}
-      <div className="flex justify-center mt-12 mb-8">
+      {/* ヘッダー高さ分余白を入れる */}
+      <div className="mt-24 flex justify-center mb-10">
         <img
           src="/logo.png"
           alt="MilkPOP Logo"
@@ -45,7 +45,7 @@ export default function TopPage() {
         </div>
       </main>
 
-      {/* フッター（任意） */}
+      {/* フッター */}
       <footer className="text-gray-400 text-sm text-center py-6 opacity-60">
         © 2025 MilkPOP Calendar
       </footer>
