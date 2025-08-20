@@ -2,7 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* デフォルト背景を黒に */
+/* 全体の黒背景と文字色を指定 */
 body {
   @apply bg-black text-white;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(to bottom right, #000000, #0d0d0d, #1a1a1a);
+  color: white;
 }
