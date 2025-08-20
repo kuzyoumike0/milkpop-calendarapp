@@ -1,10 +1,8 @@
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}", // ← これでsrc配下の全コンポーネントを監視
+    "./src/**/*.{js,jsx,ts,tsx}", 
     "./public/index.html",
   ],
-  theme: {
-    extend: {},
-  },
+  theme: { extend: {} },
   plugins: [],
 };
