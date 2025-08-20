@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     title TEXT NOT NULL,
     range_mode TEXT NOT NULL,         -- "range" or "multiple"
     dates DATE[] NOT NULL,
-    timeslot TEXT NOT NULL,           -- "all", "day", "night", or custom
+    timeslot TEXT NOT NULL,           -- "all", "day", "night", or "custom"
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
