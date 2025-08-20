@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Header from "./Header";
 import Footer from "./Footer";
+import CalendarWrapper from "./CalendarWrapper";
 
 export default function SharePage() {
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState({});
+  const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
 
   useEffect(() => {
-    // 共有スケジュールを取得
     axios.get("/api/shared").then((res) => setSchedules(res.data));
   }, []);
 
@@ -17,7 +19,7 @@ export default function SharePage() {
   };
 
   const handleSave = () => {
-    axios.post("/api/shared/responses", { responses }).then(() => {
+    axios.post("/api/shared/responses", { responses, dates }).then(() => {
       alert("保存しました！");
     });
   };
@@ -31,6 +33,37 @@ export default function SharePage() {
           共有スケジュール
         </h2>
 
+        {/* カレンダー選択 */}
+        <div className="mb-6">
+          <label className="block mb-2">日程選択</label>
+          <CalendarWrapper mode={rangeMode} value={dates} onChange={setDates} />
+        </div>
+
+        {/* モード切替 */}
+        <div className="mb-6 flex gap-4">
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={() => setRangeMode("range")}
+            />
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={() => setRangeMode("multiple")}
+            />
+            複数選択
+          </label>
+        </div>
+
+        {/* 既存の共有スケジュール一覧 */}
         {schedules.length === 0 ? (
           <p>まだ共有された日程はありません。</p>
         ) : (
