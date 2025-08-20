@@ -7,8 +7,10 @@ export default function LinkPage() {
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("range");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const [timeMode, setTimeMode] = useState("preset"); // "preset" or "custom"
+  const [preset, setPreset] = useState("all"); // "all", "day", "night"
+  const [startTime, setStartTime] = useState("01:00");
+  const [endTime, setEndTime] = useState("24:00");
   const [link, setLink] = useState("");
   const [holidays, setHolidays] = useState([]);
 
@@ -31,13 +33,30 @@ export default function LinkPage() {
     }
   };
 
-  // 時刻リスト (00:00〜23:00, 1時間刻み)
+  // 1時〜24時までのリスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
+    `${String((i + 1) % 24).padStart(2, "0")}:00`
   );
 
   const handleSubmit = async () => {
-    if (startTime >= endTime) {
+    let s = startTime;
+    let e = endTime;
+
+    // プリセットの場合は時間帯を変換
+    if (timeMode === "preset") {
+      if (preset === "all") {
+        s = "01:00";
+        e = "24:00";
+      } else if (preset === "day") {
+        s = "09:00";
+        e = "18:00";
+      } else if (preset === "night") {
+        s = "18:00";
+        e = "24:00";
+      }
+    }
+
+    if (s >= e) {
       alert("終了時刻は開始時刻より後にしてください。");
       return;
     }
@@ -58,10 +77,10 @@ export default function LinkPage() {
       title,
       range_mode: rangeMode,
       dates: formattedDates,
-      start_time: startTime,
-      end_time: endTime,
+      start_time: s,
+      end_time: e,
     });
-    setLink(window.location.origin + res.data.link);
+    setLink(window.location.origin + res.data.link); // 即時URL表示
   };
 
   return (
@@ -108,36 +127,60 @@ export default function LinkPage() {
         }
       />
 
-      {/* 開始時刻・終了時刻 */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <div>
-          <label className="block mb-1 text-[#FDB9C8]">開始時刻</label>
+      {/* 時間選択 */}
+      <div className="mt-6">
+        <label className="block mb-2 text-[#FDB9C8]">時間指定モード</label>
+        <select
+          className="w-full p-2 text-black rounded mb-4"
+          value={timeMode}
+          onChange={(e) => setTimeMode(e.target.value)}
+        >
+          <option value="preset">プリセット（終日・昼・夜）</option>
+          <option value="custom">カスタム（開始〜終了）</option>
+        </select>
+
+        {timeMode === "preset" ? (
           <select
             className="w-full p-2 text-black rounded"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            value={preset}
+            onChange={(e) => setPreset(e.target.value)}
           >
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
+            <option value="all">終日</option>
+            <option value="day">昼 (09:00〜18:00)</option>
+            <option value="night">夜 (18:00〜24:00)</option>
           </select>
-        </div>
-        <div>
-          <label className="block mb-1 text-[#FDB9C8]">終了時刻</label>
-          <select
-            className="w-full p-2 text-black rounded"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          >
-            {timeOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1 text-[#FDB9C8]">開始時刻</label>
+              <select
+                className="w-full p-2 text-black rounded"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block mb-1 text-[#FDB9C8]">終了時刻</label>
+              <select
+                className="w-full p-2 text-black rounded"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       <button
@@ -150,7 +193,7 @@ export default function LinkPage() {
       {link && (
         <p className="mt-4">
           発行されたリンク:{" "}
-          <a href={link} className="text-[#FDB9C8]">
+          <a href={link} className="text-[#FDB9C8] font-semibold">
             {link}
           </a>
         </p>
