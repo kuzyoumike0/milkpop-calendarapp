@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
+import Header from "./Header";
 
 export default function TopPage() {
   const history = useHistory();
@@ -14,14 +15,10 @@ export default function TopPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      {/* バナー */}
-      <header className="text-center text-4xl font-extrabold mb-10 text-[#FDB9C8]">
-        MilkPOP Calendar
-      </header>
+    <div className="min-h-screen bg-black text-white">
+      <Header />  {/* ← 共通バナー */}
 
-      {/* メインコンテンツ */}
-      <div className="flex flex-col items-center space-y-6">
+      <div className="p-6 flex flex-col items-center space-y-6">
         <button
           onClick={() => history.push("/link")}
           className="w-72 p-4 rounded-2xl bg-[#004CA0] text-white font-bold shadow-lg hover:opacity-80"
