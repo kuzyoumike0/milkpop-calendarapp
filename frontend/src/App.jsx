@@ -11,7 +11,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Layout で全ページをラップ */}
         <Route element={<Layout />}>
           <Route path="/" element={<TopPage />} />
           <Route path="/link" element={<LinkPage />} />
