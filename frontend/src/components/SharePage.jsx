@@ -1,139 +1,70 @@
-import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
-import Holidays from "date-holidays";
-
-const hd = new Holidays("JP");
 
 export default function SharePage() {
-  const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
-  const [rangeMode, setRangeMode] = useState("複数");
-  const [rangeStart, setRangeStart] = useState(null);
-  const [shareLink, setShareLink] = useState(null);
+  const { linkid } = useParams();
+  const [schedules, setSchedules] = useState([]);
+  const [username, setUsername] = useState("");
+  const [selections, setSelections] = useState([]);
 
-  const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
+  useEffect(() => {
+    axios.get(`/api/share/${linkid}`).then((res) => setSchedules(res.data));
+  }, [linkid]);
 
-    if (rangeMode === "複数") {
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, dateStr]);
-      }
-    } else if (rangeMode === "範囲") {
-      if (!rangeStart) {
-        setRangeStart(date);
-        setSelectedDates([dateStr]);
-      } else {
-        const start = new Date(Math.min(rangeStart, date));
-        const end = new Date(Math.max(rangeStart, date));
-        const dates = [];
-        let current = new Date(start);
-        while (current <= end) {
-          dates.push(current.toISOString().split("T")[0]);
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(dates);
-        setRangeStart(null);
-      }
+  const toggleSelect = (date, timeslot) => {
+    const key = `${date}-${timeslot}`;
+    if (selections.find((s) => `${s.date}-${s.timeslot}` === key)) {
+      setSelections(selections.filter((s) => `${s.date}-${s.timeslot}` !== key));
+    } else {
+      setSelections([...selections, { date, timeslot, status: "○" }]);
     }
-  };
-
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const dateStr = date.toISOString().split("T")[0];
-      if (hd.isHoliday(date)) return "text-red-500 font-bold";
-      if (selectedDates.includes(dateStr))
-        return "bg-blue-500 text-white rounded-full";
-    }
-    return null;
   };
 
   const handleSubmit = async () => {
-    if (!title || selectedDates.length === 0) {
-      alert("タイトルと日付を入力してください");
-      return;
-    }
-    try {
-      const res = await axios.post("/api/schedule", {
-        title,
-        dates: selectedDates,
-        timeslot,
-        range_mode: rangeMode,
-      });
-      setShareLink(window.location.origin + res.data.link);
-    } catch (err) {
-      console.error("Error creating schedule:", err);
-      alert("作成に失敗しました");
-    }
+    await axios.post(`/api/share/${linkid}`, { username, selections });
+    alert("登録しました！");
   };
 
   return (
-    <div className="p-4 text-white">
-      <h1 className="text-2xl font-bold mb-4">日程登録（共有リンク発行）</h1>
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <h1 className="text-2xl font-bold mb-4">共有スケジュール</h1>
 
       <input
-        type="text"
-        placeholder="タイトル"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="border p-2 rounded text-black block mb-2"
+        className="w-full p-2 mb-3 bg-gray-800 rounded"
+        placeholder="ユーザー名"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
       />
 
-      <Calendar onClickDay={handleDateClick} tileClassName={tileClassName} />
-
-      <div className="mt-4">
-        <label className="mr-2">時間帯:</label>
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="text-black p-1 rounded"
-        >
-          <option value="全日">全日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
-        </select>
-      </div>
-
-      <div className="mt-4">
-        <label className="mr-2">選択モード:</label>
-        <select
-          value={rangeMode}
-          onChange={(e) => {
-            setRangeMode(e.target.value);
-            setSelectedDates([]);
-            setRangeStart(null);
-          }}
-          className="text-black p-1 rounded"
-        >
-          <option value="複数">複数選択</option>
-          <option value="範囲">範囲選択</option>
-        </select>
-      </div>
+      <ul className="space-y-3">
+        {schedules.map((s, idx) => (
+          <li key={idx} className="p-3 bg-gray-800 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span>
+                <strong>{s.title}</strong> ({s.timeslot}) {s.date}
+              </span>
+              <button
+                onClick={() => toggleSelect(s.date, s.timeslot)}
+                className={`px-3 py-1 rounded ${
+                  selections.find((sel) => sel.date === s.date && sel.timeslot === s.timeslot)
+                    ? "bg-blue-600"
+                    : "bg-gray-600"
+                }`}
+              >
+                ○/✕
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
 
       <button
         onClick={handleSubmit}
-        className="mt-4 bg-green-600 px-4 py-2 rounded"
+        className="mt-6 w-full py-3 bg-blue-600 rounded-lg hover:bg-blue-500"
       >
-        リンク発行
+        登録する
       </button>
-
-      {shareLink && (
-        <div className="mt-4">
-          <p>共有リンク:</p>
-          <a
-            href={shareLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 underline"
-          >
-            {shareLink}
-          </a>
-        </div>
-      )}
     </div>
   );
 }
