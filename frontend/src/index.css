@@ -2,40 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 背景：黒ベース＋流れるグラデーション */
 body {
-  @apply bg-black text-white min-h-screen;
+  @apply min-h-screen text-white;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  overflow-x: hidden;
+  background: linear-gradient(135deg, #000 0%, #0a0a0a 40%, #111 100%);
   position: relative;
-  background-color: #000;
-  z-index: 1; /* 背景ハニカムより上に配置 */
+  overflow-x: hidden;
 }
 
-/* 全ページ共通 背景ハニカム */
+/* 動くグラデーションのオーバーレイ */
 body::before {
+  content: "";
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 180deg, #FDB9C8, #004CA0, #FDB9C8);
+  animation: rotateBG 20s linear infinite;
+  opacity: 0.15;
+  z-index: 0;
+}
+
+/* ハニカム風のパターン */
+body::after {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-
   background-image: url("data:image/svg+xml;utf8,\
     <svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'>\
-      <defs>\
-        <linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'>\
-          <stop offset='0%' stop-color='%23FDB9C8' stop-opacity='0.25'/>\
-          <stop offset='100%' stop-color='%23004CA0' stop-opacity='0.25'/>\
-        </linearGradient>\
-      </defs>\
-      <polygon points='70,10 130,40 130,100 70,130 10,100 10,40' \
-        fill='url(%23grad)' \
-        stroke='rgba(255,255,255,0.15)' stroke-width='1'/>\
+      <polygon points='70,0 140,40 140,120 70,160 0,120 0,40' \
+      stroke='%23FDB9C8' stroke-width='1' fill='none' opacity='0.25'/>\
     </svg>");
-    
-  background-size: 120px 140px; /* 六角形のサイズ */
-  background-repeat: repeat;   /* タイル状に敷き詰め */
-  opacity: 0.6;                /* 全体の透け具合 */
-  z-index: 0;                  /* bodyの下 */
-  pointer-events: none;        /* 背景クリック無効 */
+  background-size: 140px 160px;
+  opacity: 0.08;
+  z-index: 0;
+}
+
+/* 回転アニメーション */
+@keyframes rotateBG {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
