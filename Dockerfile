@@ -24,6 +24,7 @@ RUN npm install
 COPY backend/ ./backend/
 COPY --from=builder /app/frontend/build ./frontend/build
 
+# バックエンドの作業ディレクトリをセット
 WORKDIR /app/backend
 
 # --- 環境変数設定 ---
