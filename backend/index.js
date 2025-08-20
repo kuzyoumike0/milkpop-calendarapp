@@ -32,104 +32,71 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
       memo TEXT,
-      date DATE NOT NULL,
+      dates TEXT[] NOT NULL,
       timeslot TEXT NOT NULL,
-      range_mode TEXT,
-      linkid TEXT
-    )
+      range_mode TEXT NOT NULL,
+      linkid TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS shared_responses (
+    CREATE TABLE IF NOT EXISTS personal_schedules (
       id SERIAL PRIMARY KEY,
-      schedule_id INT NOT NULL,
-      username TEXT NOT NULL,
-      response TEXT NOT NULL
-    )
+      title TEXT NOT NULL,
+      memo TEXT,
+      dates TEXT[] NOT NULL,
+      timeslot TEXT NOT NULL,
+      range_mode TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 initDB();
 
-// === 個人スケジュール ===
+// === 個人スケジュールAPI ===
 app.get("/api/personal", async (req, res) => {
-  const result = await pool.query(
-    "SELECT * FROM schedules WHERE linkid IS NULL ORDER BY date ASC"
-  );
+  const result = await pool.query("SELECT * FROM personal_schedules ORDER BY created_at DESC");
   res.json(result.rows);
 });
 
 app.post("/api/personal", async (req, res) => {
-  const { title, memo, dates, timeslot } = req.body;
-
-  for (let d of dates) {
-    await pool.query(
-      `INSERT INTO schedules (title, memo, date, timeslot, range_mode)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [title, memo, d, timeslot, "multi"]
-    );
-  }
+  const { title, memo, dates, timeslot, range_mode } = req.body;
+  await pool.query(
+    `INSERT INTO personal_schedules (title, memo, dates, timeslot, range_mode) 
+     VALUES ($1, $2, $3, $4, $5)`,
+    [title, memo, dates, timeslot, range_mode]
+  );
   res.json({ success: true });
 });
 
-// === 共有スケジュール作成 ===
-app.post("/api/schedules", async (req, res) => {
-  const { title, dates, timeslot } = req.body;
+// === 共有スケジュール登録API ===
+app.post("/api/schedule", async (req, res) => {
+  const { title, dates, timeslot, range_mode } = req.body;
   const linkid = uuidv4();
-
-  for (let d of dates) {
-    await pool.query(
-      `INSERT INTO schedules (title, date, timeslot, range_mode, linkid)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [title, d, timeslot, "multi", linkid]
-    );
-  }
-
-  res.json({ link: `/share/${linkid}` });
+  await pool.query(
+    `INSERT INTO schedules (title, dates, timeslot, range_mode, linkid) 
+     VALUES ($1, $2, $3, $4, $5)`,
+    [title, dates, timeslot, range_mode, linkid]
+  );
+  res.json({ linkid });
 });
 
-// === 共有スケジュール取得 ===
-app.get("/api/schedules/:linkid", async (req, res) => {
-  const { linkid } = req.params;
+// === 共有リンク一覧API ===
+app.get("/api/share-links", async (req, res) => {
   const result = await pool.query(
-    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
-    [linkid]
+    "SELECT title, linkid, created_at FROM schedules ORDER BY created_at DESC"
   );
   res.json(result.rows);
 });
 
-// === 共有ページ回答 ===
-app.get("/api/shared/:linkid", async (req, res) => {
-  const { linkid } = req.params;
-  const schedules = await pool.query(
-    "SELECT * FROM schedules WHERE linkid=$1 ORDER BY date ASC",
-    [linkid]
-  );
-  const responses = await pool.query(
-    "SELECT * FROM shared_responses ORDER BY id ASC"
-  );
-  res.json({ schedules: schedules.rows, responses: responses.rows });
-});
-
-app.post("/api/shared", async (req, res) => {
-  const { responses } = req.body;
-
-  for (let r of responses) {
-    await pool.query(
-      `INSERT INTO shared_responses (schedule_id, username, response)
-       VALUES ($1,$2,$3)`,
-      [r.schedule_id, r.username, r.response]
-    );
-  }
-
-  res.json({ success: true });
-});
-
-// === フロントエンド静的ファイル ===
+// === 静的ファイル提供（本番用） ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
-// === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
