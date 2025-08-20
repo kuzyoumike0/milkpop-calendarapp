@@ -9,7 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// === DB接続設定 ===
+// === DB接続 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -30,23 +30,23 @@ async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
-      link_id TEXT NOT NULL,
       title TEXT NOT NULL,
       memo TEXT,
       dates DATE[] NOT NULL,
-      timeslot TEXT NOT NULL
-    );
+      timeslot TEXT NOT NULL,
+      range_mode TEXT NOT NULL,
+      link_id TEXT UNIQUE
+    )
   `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS responses (
       id SERIAL PRIMARY KEY,
-      link_id TEXT NOT NULL,
-      schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+      schedule_id INTEGER REFERENCES schedules(id) ON DELETE CASCADE,
       username TEXT NOT NULL,
-      response TEXT NOT NULL,
-      UNIQUE(link_id, schedule_id, username)
-    );
+      answer TEXT NOT NULL,
+      UNIQUE(schedule_id, username)
+    )
   `);
 }
 initDB();
@@ -54,62 +54,68 @@ initDB();
 // === スケジュール登録 ===
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, memo, dates, timeslot } = req.body;
+    const { title, memo, dates, timeslot, rangeMode } = req.body;
     const linkId = uuidv4();
 
-    const inserted = await pool.query(
-      `INSERT INTO schedules (link_id, title, memo, dates, timeslot)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [linkId, title, memo || "", dates, timeslot]
+    const result = await pool.query(
+      `INSERT INTO schedules (title, memo, dates, timeslot, range_mode, link_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [title, memo || "", dates, timeslot, rangeMode, linkId]
     );
 
-    res.json({ linkId, schedule: inserted.rows[0] });
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error("スケジュール登録失敗:", err);
-    res.status(500).json({ error: "スケジュール登録に失敗しました" });
+    console.error("スケジュール登録エラー:", err);
+    res.status(500).json({ error: "登録失敗" });
   }
 });
 
-// === 共有リンクのスケジュール取得 ===
-app.get("/api/share/:linkId", async (req, res) => {
+// === スケジュール取得 ===
+app.get("/api/schedules", async (req, res) => {
   try {
-    const { linkId } = req.params;
-    const result = await pool.query(
-      `SELECT id, title, memo, unnest(dates) AS date, timeslot
-       FROM schedules WHERE link_id = $1 ORDER BY date ASC`,
-      [linkId]
-    );
+    const result = await pool.query(`
+      SELECT s.*, 
+        COALESCE(
+          json_agg(json_build_object('username', r.username, 'answer', r.answer))
+          FILTER (WHERE r.id IS NOT NULL), '[]'
+        ) as responses
+      FROM schedules s
+      LEFT JOIN responses r ON s.id = r.schedule_id
+      GROUP BY s.id
+      ORDER BY MIN(s.dates)
+    `);
+
     res.json(result.rows);
   } catch (err) {
-    console.error("共有スケジュール取得失敗:", err);
-    res.status(500).json({ error: "共有スケジュール取得に失敗しました" });
+    console.error("スケジュール取得エラー:", err);
+    res.status(500).json({ error: "取得失敗" });
   }
 });
 
-// === 共有スケジュール回答保存 ===
-app.post("/api/share/:linkId/responses", async (req, res) => {
+// === 応答登録/更新 ===
+app.post("/api/responses", async (req, res) => {
   try {
-    const { linkId } = req.params;
     const { username, responses } = req.body;
 
-    for (const [scheduleId, response] of Object.entries(responses)) {
+    for (const [scheduleId, answer] of Object.entries(responses)) {
       await pool.query(
-        `INSERT INTO responses (link_id, schedule_id, username, response)
-         VALUES ($1, $2, $3, $4)
-         ON CONFLICT (link_id, schedule_id, username)
-         DO UPDATE SET response = $4`,
-        [linkId, scheduleId, username, response]
+        `INSERT INTO responses (schedule_id, username, answer)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (schedule_id, username)
+         DO UPDATE SET answer = EXCLUDED.answer`,
+        [scheduleId, username, answer]
       );
     }
 
     res.json({ success: true });
   } catch (err) {
-    console.error("回答保存失敗:", err);
-    res.status(500).json({ error: "回答保存に失敗しました" });
+    console.error("応答登録エラー:", err);
+    res.status(500).json({ error: "保存失敗" });
   }
 });
 
-// === 静的ファイル提供（Railway本番用） ===
+// === 静的ファイル (フロント) ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
@@ -118,5 +124,5 @@ app.get("*", (req, res) => {
 // === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`サーバー起動: http://localhost:${PORT}`);
 });
