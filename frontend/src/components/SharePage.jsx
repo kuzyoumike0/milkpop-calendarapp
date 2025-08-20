@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
+import Header from "./Header";
+import Footer from "./Footer";
 
 export default function SharePage() {
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState({});
 
   useEffect(() => {
-    // 共有スケジュール取得
+    // 共有スケジュールを取得
     axios.get("/api/shared").then((res) => setSchedules(res.data));
   }, []);
 
@@ -23,28 +24,8 @@ export default function SharePage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* バナー */}
-      <header className="bg-[#004CA0] py-4 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center px-6">
-          <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
-          <nav className="space-x-4">
-            <Link
-              to="/link"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              日程登録
-            </Link>
-            <Link
-              to="/personal"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              個人スケジュール
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
-      {/* メイン */}
       <main className="flex-1 container mx-auto px-6 py-10">
         <h2 className="text-3xl font-extrabold mb-6 text-[#FDB9C8]">
           共有スケジュール
@@ -90,6 +71,8 @@ export default function SharePage() {
           保存
         </button>
       </main>
+
+      <Footer />
     </div>
   );
 }
