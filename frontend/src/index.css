@@ -2,28 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体の文字色 */
+/* 黒ベースの背景と文字色 */
 body {
   @apply text-white;
 }
 
-/* 背景（動くグラデーション） */
+/* アニメーション付き背景 */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  color: white;
-  position: relative;
-  overflow: hidden;
-
   background: linear-gradient(-45deg, #000000, #0d0d0d, #1a1a1a, #111111);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
+  color: white;
+  position: relative;
+  overflow: hidden;
 }
 
-/* 六角形パターン（ハニカム模様） */
-html::after {
+/* 六角形パターン（ハニカム） */
+html::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -32,17 +31,11 @@ html::after {
     radial-gradient(circle at 60% 60%, rgba(255,255,255,0.05) 1px, transparent 1px);
   background-size: 60px 104px;
   background-position: 0 0, 30px 52px;
-  z-index: 1;
-  pointer-events: none; /* 背景クリックを邪魔しない */
+  z-index: 0;
+  pointer-events: none;
 }
 
-/* コンテンツは背景より上に置く */
-#root > * {
-  position: relative;
-  z-index: 2;
-}
-
-/* グラデーションの動きを定義 */
+/* 背景グラデーションのアニメーション */
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
