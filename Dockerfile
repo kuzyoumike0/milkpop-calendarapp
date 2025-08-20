@@ -1,36 +1,37 @@
-# ==============================
+# =============================
 # 1. フロントエンドビルドステージ
-# ==============================
+# =============================
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# package.json をコピーして依存関係インストール
+# package.json をコピーして依存関係をインストール
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-# フロントソースをコピーしてビルド
+# ソースコードをコピーしてビルド
 COPY frontend/ ./
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
-# ==============================
+# =============================
 # 2. バックエンドステージ
-# ==============================
+# =============================
 FROM node:18
 WORKDIR /app/backend
 
-# バックエンド依存関係インストール
+# backend の依存関係をインストール
 COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドソースをコピー
+# backend ソースコードコピー
 COPY backend/ ./
 
-# フロントのビルド成果物を backend/public にコピー
+# frontend のビルド成果物を public に配置
 COPY --from=frontend-build /app/frontend/build ./public
 
-# 環境変数とポート設定
+# =============================
+# 3. 環境設定 & 起動
+# =============================
 ENV PORT=8080
 EXPOSE 8080
-
-# アプリ起動
 CMD ["node", "index.js"]
