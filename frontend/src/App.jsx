@@ -1,9 +1,17 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TopPage from "./components/TopPage";
+import LinkPage from "./components/LinkPage";
+import PersonalPage from "./components/PersonalPage";
 
 export default function App() {
   return (
-    <h1 className="text-5xl font-extrabold text-white drop-shadow-lg tracking-wide text-center">
-      こんにちは React + Tailwind!
-    </h1>
+    <Router>
+      <Routes>
+        <Route path="/" element={<TopPage />} />
+        <Route path="/link" element={<LinkPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
+      </Routes>
+    </Router>
   );
 }
