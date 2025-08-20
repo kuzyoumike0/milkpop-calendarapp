@@ -13,7 +13,7 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# 🚩 build成果物を backend/public にコピー（これが重要）
+# 🚩 build成果物を backend/public にコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 ENV PORT=8080
