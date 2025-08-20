@@ -5,158 +5,152 @@ import axios from "axios";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [rangeMode, setRangeMode] = useState("range");
-  const [dates, setDates] = useState([]); // 選択日
-  const [timeSlot, setTimeSlot] = useState("終日");
+  const [dates, setDates] = useState([]); // 複数選択保持
+  const [range, setRange] = useState([null, null]); // 範囲選択保持
+  const [mode, setMode] = useState("range"); // range or multi
+  const [timeslot, setTimeslot] = useState("終日");
   const [shareUrl, setShareUrl] = useState("");
 
-  // カレンダー日付クリック
-  const handleDateChange = (value) => {
-    if (rangeMode === "range") {
-      if (Array.isArray(value)) {
-        setDates(value);
-      }
-    } else if (rangeMode === "multiple") {
-      const dateStr = value.toDateString();
-      if (dates.find((d) => d.toDateString() === dateStr)) {
-        setDates(dates.filter((d) => d.toDateString() !== dateStr));
-      } else {
-        setDates([...dates, value]);
-      }
-    }
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
   };
 
-  // 選択判定
-  const tileClassName = ({ date }) => {
-    if (rangeMode === "multiple") {
-      return dates.find((d) => d.toDateString() === date.toDateString())
-        ? "bg-[#FDB9C8] text-white rounded-full"
-        : "";
-    }
-    if (rangeMode === "range" && dates.length === 2) {
-      const [start, end] = dates;
-      if (date >= start && date <= end) {
-        return "bg-[#004CA0] text-white rounded-full";
+  // 日付クリック
+  const handleDateChange = (value) => {
+    if (mode === "multi") {
+      const dateStr = formatDate(value);
+      if (dates.includes(dateStr)) {
+        setDates(dates.filter((d) => d !== dateStr));
+      } else {
+        setDates([...dates, dateStr]);
       }
+    } else {
+      setRange(value);
     }
-    return "";
   };
 
   // 登録
   const handleSubmit = async () => {
-    if (!title || dates.length === 0) {
-      alert("タイトルと日程を入力してください");
-      return;
-    }
-
-    let start_date, end_date;
-    if (rangeMode === "range" && dates.length === 2) {
-      start_date = dates[0].toISOString().split("T")[0];
-      end_date = dates[1].toISOString().split("T")[0];
-    } else if (rangeMode === "multiple") {
-      const sorted = [...dates].sort((a, b) => a - b);
-      start_date = sorted[0].toISOString().split("T")[0];
-      end_date = sorted[sorted.length - 1].toISOString().split("T")[0];
-    }
-
     try {
+      let start_date, end_date;
+      if (mode === "multi") {
+        start_date = dates[0];
+        end_date = dates[dates.length - 1];
+      } else {
+        start_date = formatDate(range[0]);
+        end_date = formatDate(range[1]);
+      }
+
       const res = await axios.post("/api/schedule", {
         title,
         start_date,
         end_date,
-        timeslot: timeSlot,
-        range_mode: rangeMode,
+        timeslot,
+        range_mode: mode,
       });
       setShareUrl(window.location.origin + res.data.url);
     } catch (err) {
-      console.error(err);
-      alert("登録に失敗しました");
+      alert("登録失敗: " + err.message);
     }
   };
 
+  // カレンダータイルに装飾
+  const tileClassName = ({ date }) => {
+    const dateStr = formatDate(date);
+    if (mode === "multi" && dates.includes(dateStr)) {
+      return "bg-[#FDB9C8] text-black rounded-full";
+    }
+    if (
+      mode === "range" &&
+      range[0] &&
+      range[1] &&
+      date >= range[0] &&
+      date <= range[1]
+    ) {
+      return "bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white rounded-lg";
+    }
+    return "";
+  };
+
   return (
-    <div className="max-w-3xl mx-auto bg-[#111] text-white p-6 rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-bold text-[#FDB9C8] mb-6">
-        日程登録ページ
-      </h2>
+    <div className="max-w-3xl mx-auto bg-[#111] text-white p-8 rounded-2xl shadow-xl space-y-6">
+      <h2 className="text-2xl font-bold text-[#FDB9C8]">📅 日程登録ページ</h2>
 
-      {/* タイトル */}
-      <div className="mb-4">
-        <label className="block mb-2 font-semibold">タイトル</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-2 rounded bg-black border border-gray-600 focus:ring-2 focus:ring-[#FDB9C8]"
-        />
-      </div>
+      {/* タイトル入力 */}
+      <input
+        type="text"
+        placeholder="タイトルを入力"
+        className="w-full p-3 rounded-lg bg-black border border-[#FDB9C8] focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-      {/* モード選択 */}
-      <div className="mb-4">
-        <label className="block mb-2 font-semibold">モード選択</label>
-        <div className="flex space-x-6">
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={rangeMode === "range"}
-              onChange={() => setRangeMode("range")}
-            />
-            範囲選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={() => setRangeMode("multiple")}
-            />
-            複数選択
-          </label>
-        </div>
+      {/* モード切替 */}
+      <div className="flex gap-6 items-center">
+        <label>
+          <input
+            type="radio"
+            name="mode"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />
+          <span className="ml-2">範囲選択</span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="mode"
+            value="multi"
+            checked={mode === "multi"}
+            onChange={() => setMode("multi")}
+          />
+          <span className="ml-2">複数選択</span>
+        </label>
       </div>
 
       {/* カレンダー */}
-      <div className="mb-6">
+      <div className="bg-black p-4 rounded-xl border border-[#004CA0]">
         <Calendar
           onChange={handleDateChange}
-          value={rangeMode === "range" ? dates : null}
-          selectRange={rangeMode === "range"}
+          value={mode === "range" ? range : null}
+          selectRange={mode === "range"}
           tileClassName={tileClassName}
         />
       </div>
 
-      {/* 時間帯 */}
-      <div className="mb-6">
-        <label className="block mb-2 font-semibold">時間帯</label>
-        <select
-          value={timeSlot}
-          onChange={(e) => setTimeSlot(e.target.value)}
-          className="w-full p-2 rounded bg-black border border-gray-600 focus:ring-2 focus:ring-[#004CA0]"
-        >
-          <option value="終日">終日</option>
-          <option value="昼">昼</option>
-          <option value="夜">夜</option>
-        </select>
-      </div>
+      {/* 時間帯プルダウン */}
+      <select
+        value={timeslot}
+        onChange={(e) => setTimeslot(e.target.value)}
+        className="w-full p-3 rounded-lg bg-black border border-[#FDB9C8] focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+      >
+        <option>終日</option>
+        <option>昼</option>
+        <option>夜</option>
+      </select>
 
       {/* 登録ボタン */}
       <button
         onClick={handleSubmit}
-        className="w-full py-2 rounded bg-[#FDB9C8] text-black font-bold hover:bg-[#e79fb0] transition"
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white font-bold shadow-lg hover:scale-105 transition"
       >
-        登録して共有リンクを発行
+        共有リンク発行
       </button>
 
-      {/* 発行されたリンク */}
+      {/* 発行されたリンク表示 */}
       {shareUrl && (
-        <div className="mt-4 p-3 bg-[#222] rounded-lg text-center">
-          <p>共有リンクが発行されました:</p>
+        <div className="p-4 bg-black border border-[#FDB9C8] rounded-lg text-center">
+          共有リンク:{" "}
           <a
             href={shareUrl}
-            className="text-[#FDB9C8] underline break-all"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
+            className="text-[#FDB9C8] underline"
           >
             {shareUrl}
           </a>
