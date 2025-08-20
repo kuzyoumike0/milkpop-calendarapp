@@ -5,9 +5,9 @@
 /* ===== 全体フォント設定 ===== */
 body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  color: white;
+  color: #333;
 
-  /* かわいいパステル調ハニカム背景 */
+  /* かわいいパステル調ハニカム背景（全ページ共通） */
   background-color: #fff0f5; /* 薄ピンクベース */
   background-image:
     linear-gradient(30deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
