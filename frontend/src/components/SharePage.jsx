@@ -68,4 +68,72 @@ export default function SharePage() {
 
         {/* 予定一覧に対して〇✖選択 */}
         {schedule && (
-          <div className="w-full m
+          <div className="w-full max-w-3xl mb-6">
+            <table className="w-full border border-gray-700 rounded-lg overflow-hidden">
+              <thead className="bg-[#004CA0]/80">
+                <tr>
+                  <th className="p-2 border">日付</th>
+                  <th className="p-2 border">回答</th>
+                </tr>
+              </thead>
+              <tbody>
+                {schedule.dates?.map((date, idx) => (
+                  <tr key={idx} className="text-center">
+                    <td className="p-2 border">{date}</td>
+                    <td className="p-2 border">
+                      <select
+                        value={answers[date] || ""}
+                        onChange={(e) =>
+                          handleAnswerChange(date, e.target.value)
+                        }
+                        className="p-1 rounded text-black"
+                      >
+                        <option value="">未選択</option>
+                        <option value="〇">〇</option>
+                        <option value="✖">✖</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <button
+          onClick={handleSave}
+          className="px-6 py-2 bg-[#FDB9C8] text-black rounded-lg font-bold hover:bg-[#004CA0] hover:text-white transition"
+        >
+          保存
+        </button>
+
+        {/* 全員分の回答一覧 */}
+        <div className="mt-8 w-full max-w-3xl">
+          <h3 className="text-xl font-bold mb-4">回答一覧</h3>
+          <table className="w-full border border-gray-700 rounded-lg overflow-hidden">
+            <thead className="bg-[#FDB9C8]/80 text-black">
+              <tr>
+                <th className="p-2 border">ユーザー</th>
+                <th className="p-2 border">回答</th>
+              </tr>
+            </thead>
+            <tbody>
+              {responses.map((r, idx) => (
+                <tr key={idx} className="text-center">
+                  <td className="p-2 border">{r.username}</td>
+                  <td className="p-2 border">
+                    {Object.entries(r.answers).map(([date, ans]) => (
+                      <div key={date}>
+                        {date}: {ans}
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  );
+}
