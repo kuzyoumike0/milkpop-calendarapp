@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
 import PersonalPage from "./components/PersonalPage";
@@ -35,7 +36,6 @@ function Layout({ children }) {
             className="md:hidden text-white focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            {/* 三本線アイコン */}
             <svg
               className="w-7 h-7"
               fill="none"
@@ -62,32 +62,41 @@ function Layout({ children }) {
           </button>
         </div>
 
-        {/* モバイルメニュー */}
-        {menuOpen && (
-          <div className="md:hidden bg-black/80 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-4">
-            <Link
-              to="/"
-              className="block text-gray-200 hover:text-[#FDB9C8] transition"
-              onClick={() => setMenuOpen(false)}
+        {/* モバイルメニュー (アニメーション付き) */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              key="mobile-menu"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="md:hidden bg-black/80 backdrop-blur-md border-t border-white/10 px-6 py-4 space-y-4"
             >
-              トップ
-            </Link>
-            <Link
-              to="/link"
-              className="block text-gray-200 hover:text-[#FDB9C8] transition"
-              onClick={() => setMenuOpen(false)}
-            >
-              日程登録
-            </Link>
-            <Link
-              to="/personal"
-              className="block text-gray-200 hover:text-[#FDB9C8] transition"
-              onClick={() => setMenuOpen(false)}
-            >
-              個人スケジュール
-            </Link>
-          </div>
-        )}
+              <Link
+                to="/"
+                className="block text-gray-200 hover:text-[#FDB9C8] transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                トップ
+              </Link>
+              <Link
+                to="/link"
+                className="block text-gray-200 hover:text-[#FDB9C8] transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                日程登録
+              </Link>
+              <Link
+                to="/personal"
+                className="block text-gray-200 hover:text-[#FDB9C8] transition"
+                onClick={() => setMenuOpen(false)}
+              >
+                個人スケジュール
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ページ内容 */}
