@@ -9,9 +9,9 @@ import ShareLinkPage from "./components/ShareLinkPage";
 
 function App() {
   return (
+    // basename="/" は不要！ Railway のルート直下なので消す
     <Router>
       <Routes>
-        {/* "/" に来たら必ず TopPage */}
         <Route path="/" element={<Layout />}>
           <Route index element={<TopPage />} />
           <Route path="link" element={<LinkPage />} />
