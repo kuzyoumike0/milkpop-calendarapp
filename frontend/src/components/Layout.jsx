@@ -1,15 +1,16 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 import Header from "./Header";
 
-export default function Layout({ children }) {
+export default function Layout() {
   return (
     <div className="min-h-screen bg-black text-white font-sans relative">
       {/* 共通ヘッダー */}
       <Header />
 
-      {/* ページごとの内容（ヘッダー分の余白を確保） */}
+      {/* ページごとの内容をここに差し込む */}
       <div className="pt-20 px-4 relative z-10">
-        {children}
+        <Outlet />
       </div>
     </div>
   );
