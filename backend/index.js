@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const cors = require("cors");
 
-const app = express(); // ★ 必須
+const app = express(); // ← これが必須
 
 app.use(bodyParser.json());
 app.use(cors());
