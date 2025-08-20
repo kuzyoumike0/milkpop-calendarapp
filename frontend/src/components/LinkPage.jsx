@@ -1,159 +1,149 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeslot, setTimeslot] = useState("全日");
-  const [link, setLink] = useState("");
+  const [rangeMode, setRangeMode] = useState("multiple"); // "range" or "multiple"
+  const [schedules, setSchedules] = useState([]); // ← 初期値を [] に修正
+  const navigate = useNavigate();
 
-  const handleDateChange = (value) => {
-    if (rangeMode === "range") {
-      setDates(value);
-    } else {
-      setDates(value);
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // 予定一覧取得
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const res = await axios.get("/api/schedule");
+        // res.data.schedules が配列ならそれを使う
+        setSchedules(res.data.schedules || []);
+      } catch (err) {
+        console.error("予定取得に失敗:", err);
+        setSchedules([]);
+      }
+    };
+    fetchSchedules();
+  }, []);
+
+  // カレンダー変更
+  const handleCalendarChange = (value) => {
+    if (rangeMode === "range" && Array.isArray(value)) {
+      const [start, end] = value;
+      if (start && end) {
+        let current = new Date(start);
+        const datesArr = [];
+        while (current <= end) {
+          datesArr.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setDates(datesArr);
+      }
+    } else if (rangeMode === "multiple") {
+      setDates((prev) => {
+        const exists = prev.find((d) => d.getTime() === value.getTime());
+        if (exists) {
+          return prev.filter((d) => d.getTime() !== value.getTime());
+        } else {
+          return [...prev, value];
+        }
+      });
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      let formattedDates = [];
-      if (rangeMode === "range" && dates.length === 2) {
-        const start = new Date(dates[0]);
-        const end = new Date(dates[1]);
-        const temp = [];
-        while (start <= end) {
-          temp.push(new Date(start).toISOString().split("T")[0]);
-          start.setDate(start.getDate() + 1);
-        }
-        formattedDates = temp;
-      } else if (rangeMode === "multiple") {
-        formattedDates = dates.map((d) =>
-          new Date(d).toISOString().split("T")[0]
-        );
-      }
+  // リンク発行
+  const handleCreateLink = async () => {
+    if (!title.trim() || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
 
-      const payload = {
+    try {
+      const formattedDates = dates.map((d) => formatDate(d));
+      const res = await axios.post("/api/share", {
         title,
         dates: formattedDates,
-        timeslot,
         range_mode: rangeMode,
-      };
+      });
 
-      const res = await axios.post("/api/schedule", payload);
-      setLink(window.location.origin + res.data.link);
+      const { linkid } = res.data;
+      alert(`共有リンクを作成しました: ${window.location.origin}/share/${linkid}`);
+      navigate(`/share/${linkid}`);
     } catch (err) {
-      alert("共有リンク発行に失敗しました");
+      console.error("共有リンク作成失敗:", err);
+      alert("共有リンクの作成に失敗しました");
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">日程登録</h2>
+    <div className="p-6 max-w-2xl mx-auto text-white">
+      <h2 className="text-2xl font-bold mb-4 text-pink-400">日程登録ページ</h2>
 
       <div className="mb-4">
         <label className="block mb-1">タイトル</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-2 rounded bg-gray-800 text-white"
+          className="p-2 w-full bg-gray-800 rounded"
         />
       </div>
 
       <div className="mb-4">
-        <label className="block mb-2">選択モード</label>
-        <div className="space-x-6 flex">
-          <label
-            className={`px-3 py-1 rounded-2xl cursor-pointer ${
-              rangeMode === "multiple"
-                ? "bg-pink-500 text-black"
-                : "bg-gray-700"
-            }`}
-          >
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={() => setRangeMode("multiple")}
-              className="hidden"
-            />
-            複数日選択
-          </label>
-          <label
-            className={`px-3 py-1 rounded-2xl cursor-pointer ${
-              rangeMode === "range" ? "bg-blue-500 text-white" : "bg-gray-700"
-            }`}
-          >
-            <input
-              type="radio"
-              value="range"
-              checked={rangeMode === "range"}
-              onChange={() => setRangeMode("range")}
-              className="hidden"
-            />
-            範囲選択
-          </label>
-        </div>
+        <label className="block mb-2">選択モード:</label>
+        <label className="mr-4">
+          <input
+            type="radio"
+            checked={rangeMode === "range"}
+            onChange={() => setRangeMode("range")}
+          />{" "}
+          範囲選択
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={rangeMode === "multiple"}
+            onChange={() => setRangeMode("multiple")}
+          />{" "}
+          複数選択
+        </label>
       </div>
 
-      <Calendar
-        onChange={handleDateChange}
-        selectRange={rangeMode === "range"}
-        value={dates}
-        locale="ja-JP"
-      />
-
-      {/* 選択済み日付をタグ表示 */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {rangeMode === "multiple" &&
-          dates.map((d, i) => (
-            <span
-              key={i}
-              className="bg-[#FDB9C8] text-black px-3 py-1 rounded-full"
-            >
-              {new Date(d).toLocaleDateString("ja-JP")}
-            </span>
-          ))}
-        {rangeMode === "range" && dates.length === 2 && (
-          <span className="bg-[#004CA0] text-white px-3 py-1 rounded-full">
-            {new Date(dates[0]).toLocaleDateString("ja-JP")} 〜{" "}
-            {new Date(dates[1]).toLocaleDateString("ja-JP")}
-          </span>
-        )}
+      <div className="mb-4">
+        <Calendar
+          onChange={handleCalendarChange}
+          selectRange={rangeMode === "range"}
+        />
       </div>
 
-      <div className="mt-4">
-        <label className="block mb-2">時間帯</label>
-        <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="p-2 rounded bg-gray-800 text-white"
+      <div className="mb-4">
+        <button
+          onClick={handleCreateLink}
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded"
         >
-          <option>全日</option>
-          <option>昼</option>
-          <option>夜</option>
-          <option>1時から0時</option>
-        </select>
+          共有リンク発行
+        </button>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="mt-6 bg-[#004CA0] text-white px-6 py-2 rounded-2xl hover:bg-blue-900"
-      >
-        共有リンクを発行
-      </button>
-
-      {link && (
-        <div className="mt-4">
-          <p>共有リンク:</p>
-          <a href={link} className="text-blue-400 underline">
-            {link}
-          </a>
-        </div>
-      )}
+      <h3 className="text-xl font-bold mb-2">既存のスケジュール一覧</h3>
+      <ul className="bg-gray-800 rounded p-2">
+        {Array.isArray(schedules) && schedules.length > 0 ? (
+          schedules.map((s, i) => (
+            <li key={i} className="border-b border-gray-700 py-1">
+              {s.title} ({s.dates?.join(", ")})
+            </li>
+          ))
+        ) : (
+          <li className="text-gray-400">スケジュールがありません</li>
+        )}
+      </ul>
     </div>
   );
 }
