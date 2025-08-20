@@ -6,58 +6,63 @@ export default function PersonalPage() {
   const [username, setUsername] = useState("");
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [rangeMode, setRangeMode] = useState("range");
   const [dates, setDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
-  const [saved, setSaved] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple");
+  const [timeSlot, setTimeSlot] = useState("全日");
 
   const handleSubmit = async () => {
-    if (dates.length === 0) return alert("日程を選択してください");
-    const start_date = dates[0].format("YYYY-MM-DD");
-    const end_date = dates[dates.length - 1].format("YYYY-MM-DD");
+    if (!username || dates.length === 0) return alert("名前と日程を入力してください");
 
     try {
+      const start_date = dates[0];
+      const end_date = dates.length > 1 ? dates[dates.length - 1] : dates[0];
+
       await axios.post("/api/personal", {
-        username, title, memo, start_date, end_date, timeslot, range_mode: rangeMode
+        username,
+        title,
+        memo,
+        start_date,
+        end_date,
+        timeslot: timeSlot,
+        range_mode: rangeMode,
       });
-      setSaved([...saved, { username, title, memo, start_date, end_date, timeslot }]);
+      alert("保存しました！");
     } catch (err) {
-      alert("保存失敗");
+      alert("保存に失敗しました");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>MilkPOP Calendar</header>
-      <h2 style={styles.title}>個人スケジュール登録</h2>
-      <input placeholder="名前" value={username} onChange={(e)=>setUsername(e.target.value)} style={styles.input}/>
-      <input placeholder="タイトル" value={title} onChange={(e)=>setTitle(e.target.value)} style={styles.input}/>
-      <textarea placeholder="メモ" value={memo} onChange={(e)=>setMemo(e.target.value)} style={styles.input}/>
-      <div style={styles.radioGroup}>
-        <label><input type="radio" value="range" checked={rangeMode==="range"} onChange={()=>setRangeMode("range")} /> 範囲選択</label>
-        <label><input type="radio" value="multiple" checked={rangeMode==="multiple"} onChange={()=>setRangeMode("multiple")} /> 複数選択</label>
+    <div style={{ backgroundColor: "#000", color: "white", minHeight: "100vh", padding: "20px" }}>
+      <header style={{ background: "#004CA0", padding: "15px", fontSize: "20px", fontWeight: "bold" }}>MilkPOP Calendar</header>
+      <h2 style={{ color: "#FDB9C8" }}>個人スケジュール登録</h2>
+
+      <input type="text" placeholder="名前" value={username} onChange={(e) => setUsername(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%" }} />
+      <input type="text" placeholder="タイトル" value={title} onChange={(e) => setTitle(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%" }} />
+      <textarea placeholder="メモ" value={memo} onChange={(e) => setMemo(e.target.value)} style={{ padding: "10px", margin: "5px 0", width: "100%", height: "80px" }} />
+
+      <CustomCalendar rangeMode={rangeMode} dates={dates} setDates={setDates} />
+
+      <div>
+        <label>
+          <input type="radio" value="range" checked={rangeMode === "range"} onChange={() => setRangeMode("range")} />
+          範囲選択
+        </label>
+        <label>
+          <input type="radio" value="multiple" checked={rangeMode === "multiple"} onChange={() => setRangeMode("multiple")} />
+          複数選択
+        </label>
       </div>
-      <CustomCalendar rangeMode={rangeMode} onChange={setDates} />
-      <select value={timeslot} onChange={(e)=>setTimeslot(e.target.value)} style={styles.input}>
-        <option>全日</option>
-        <option>昼</option>
-        <option>夜</option>
+
+      <select value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} style={{ margin: "10px 0", padding: "10px" }}>
+        <option value="全日">全日</option>
+        <option value="昼">昼</option>
+        <option value="夜">夜</option>
       </select>
-      <button onClick={handleSubmit} style={styles.button}>保存</button>
-      <ul>
-        {saved.map((s,i)=>(
-          <li key={i}>{s.username} | {s.title} | {s.memo} | {s.start_date}~{s.end_date} ({s.timeslot})</li>
-        ))}
-      </ul>
+
+      <button onClick={handleSubmit} style={{ background: "#FDB9C8", color: "#000", padding: "10px 20px", border: "none", borderRadius: "8px" }}>
+        保存
+      </button>
     </div>
   );
 }
-
-const styles = {
-  container: { padding: "20px", background: "#000", minHeight: "100vh", color: "#FDB9C8" },
-  header: { fontSize: "24px", fontWeight: "bold", color: "#004CA0", marginBottom: "20px" },
-  title: { fontSize: "20px", marginBottom: "10px" },
-  input: { display:"block", width:"100%", margin:"10px 0", padding:"8px", borderRadius:"6px" },
-  radioGroup: { display:"flex", gap:"20px", margin:"10px 0" },
-  button: { padding:"10px 20px", background:"#FDB9C8", border:"none", borderRadius:"8px", fontWeight:"bold" }
-};
