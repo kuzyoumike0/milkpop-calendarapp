@@ -43,6 +43,8 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS personal_schedules (
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
+      title TEXT,
+      memo TEXT,
       start_date DATE NOT NULL,
       end_date DATE NOT NULL,
       timeslot TEXT NOT NULL,
@@ -85,20 +87,34 @@ app.post("/api/schedule", async (req, res) => {
 // === API: 個人スケジュール登録 ===
 app.post("/api/personal", async (req, res) => {
   try {
-    const { username, start_date, end_date, timeslot, range_mode } = req.body;
+    const { username, title, memo, start_date, end_date, timeslot, range_mode } =
+      req.body;
     if (!username || !start_date || !end_date || !timeslot || !range_mode) {
       return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
     await pool.query(
-      `INSERT INTO personal_schedules (username, start_date, end_date, timeslot, range_mode)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [username, start_date, end_date, timeslot, range_mode]
+      `INSERT INTO personal_schedules (username, title, memo, start_date, end_date, timeslot, range_mode)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [username, title, memo, start_date, end_date, timeslot, range_mode]
     );
     res.json({ success: true });
   } catch (err) {
     console.error("個人スケジュール登録エラー:", err);
     res.status(500).json({ error: "登録失敗" });
+  }
+});
+
+// === API: 個人スケジュール取得 ===
+app.get("/api/personal", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules ORDER BY start_date ASC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("個人スケジュール取得エラー:", err);
+    res.status(500).json({ error: "取得失敗" });
   }
 });
 
