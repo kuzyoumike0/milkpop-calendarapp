@@ -4,8 +4,7 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-# ビルド失敗時に強制終了する安全装置
-RUN npm run build || { echo "❌ Frontend build failed"; exit 1; }
+RUN npm run build
 
 # ===== バックエンド =====
 FROM node:18
