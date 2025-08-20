@@ -1,4 +1,23 @@
-.react-calendar__tile.text-red-500 {
-  color: #ff0000 !important;
-  font-weight: bold;
+body {
+  @apply bg-black text-white font-sans;
+}
+
+.card {
+  @apply bg-[#111] p-4 rounded-2xl shadow-lg;
+}
+
+.btn-primary {
+  @apply bg-[#004CA0] text-white px-4 py-2 rounded-xl transition hover:bg-[#FDB9C8] hover:text-black;
+}
+
+.btn-accent {
+  @apply bg-[#FDB9C8] text-black px-4 py-2 rounded-xl transition hover:bg-[#004CA0] hover:text-white;
+}
+
+.table-header {
+  @apply bg-[#004CA0] text-white;
+}
+
+.table-cell {
+  @apply bg-[#222] border border-[#333] p-2;
 }
