@@ -39,8 +39,26 @@ export default function SharePage() {
       );
       await Promise.all(promises);
 
+      // ✅ 自分の回答を即時反映
+      setSchedules((prev) =>
+        prev.map((s) => {
+          if (responses[s.schedule_id]) {
+            const otherResponses = (s.responses || []).filter(
+              (r) => r.username !== username
+            );
+            return {
+              ...s,
+              responses: [
+                ...otherResponses,
+                { username, response: responses[s.schedule_id] },
+              ],
+            };
+          }
+          return s;
+        })
+      );
+
       alert("回答を保存しました ✅");
-      fetchSchedules(); // 即更新
     } catch (err) {
       console.error("回答保存失敗:", err);
     }
