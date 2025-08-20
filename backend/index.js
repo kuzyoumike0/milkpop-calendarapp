@@ -66,7 +66,8 @@ async function initDB() {
       schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
       username TEXT NOT NULL,
       response TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE (schedule_id, username) -- 同じユーザー名で重複回答不可
     )
   `);
 }
@@ -101,11 +102,18 @@ app.post("/api/schedules", async (req, res) => {
 // === スケジュール取得 (共有用) ===
 app.get("/api/schedules", async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT * FROM schedules ORDER BY date, timeslot`
-    );
+    const result = await pool.query(`
+      SELECT s.*, 
+             COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
+                      FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
+      FROM schedules s
+      LEFT JOIN share_responses r ON s.id = r.schedule_id
+      GROUP BY s.id
+      ORDER BY s.date, s.timeslot
+    `);
     res.json(result.rows);
   } catch (err) {
+    console.error("取得エラー:", err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
 });
@@ -144,6 +152,7 @@ app.get("/api/personal", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
+    console.error("取得エラー:", err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
 });
@@ -167,7 +176,7 @@ app.post("/api/share", async (req, res) => {
   }
 });
 
-// === 共有スケジュールへの出欠保存 ===
+// === 共有スケジュールへの出欠保存（同じユーザーは更新扱い） ===
 app.post("/api/share-responses", async (req, res) => {
   try {
     const { username, responses } = req.body;
@@ -181,14 +190,18 @@ app.post("/api/share-responses", async (req, res) => {
 
       await pool.query(
         `INSERT INTO share_responses (schedule_id, username, response)
-         VALUES ($1, $2, $3)`,
+         VALUES ($1, $2, $3)
+         ON CONFLICT (schedule_id, username)
+         DO UPDATE SET response = EXCLUDED.response, created_at = NOW()`,
         [scheduleId, username, response]
       );
     }
 
-    // 即時反映: スケジュール一覧にレスポンスをJOINして返す
+    // 即時反映: レスポンス付きスケジュール一覧を返す
     const result = await pool.query(`
-      SELECT s.*, json_agg(json_build_object('username', r.username, 'response', r.response)) AS responses
+      SELECT s.*, 
+             COALESCE(json_agg(json_build_object('username', r.username, 'response', r.response))
+                      FILTER (WHERE r.id IS NOT NULL), '[]') AS responses
       FROM schedules s
       LEFT JOIN share_responses r ON s.id = r.schedule_id
       GROUP BY s.id
