@@ -1,22 +1,41 @@
 import React, { useState } from "react";
 import axios from "axios";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
-export default function PersonalPage() {
+export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
   const [dates, setDates] = useState([]);
   const [link, setLink] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
 
-  // 日付追加（シンプル例）
-  const addDate = () => {
-    const today = new Date().toISOString().split("T")[0];
-    if (!dates.includes(today)) {
-      setDates([...dates, today]);
+  // 日付選択処理
+  const handleDateChange = (value) => {
+    if (mode === "multiple") {
+      // 複数選択モード
+      const dateStr = value.toISOString().split("T")[0];
+      setDates((prev) =>
+        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+      );
+    } else {
+      // 範囲選択モード
+      if (Array.isArray(value)) {
+        const [start, end] = value;
+        if (start && end) {
+          const newDates = [];
+          const current = new Date(start);
+          while (current <= end) {
+            newDates.push(current.toISOString().split("T")[0]);
+            current.setDate(current.getDate() + 1);
+          }
+          setDates(newDates);
+        }
+      }
     }
   };
 
-  // リンク発行
+  // 共有リンク発行
   const generateLink = async () => {
     if (!title || dates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -24,11 +43,7 @@ export default function PersonalPage() {
     }
     setLoading(true);
     try {
-      const res = await axios.post("/api/schedules", {
-        title,
-        memo,
-        dates,
-      });
+      const res = await axios.post("/api/schedules", { title, dates });
       setLink(`${window.location.origin}/share/${res.data.linkid}`);
     } catch (err) {
       alert("リンク発行に失敗しました");
@@ -39,7 +54,7 @@ export default function PersonalPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">個人スケジュール登録</h1>
+      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">日程登録ページ</h1>
 
       {/* タイトル入力 */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
@@ -52,25 +67,44 @@ export default function PersonalPage() {
         />
       </div>
 
-      {/* メモ入力 */}
+      {/* モード切り替え */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">メモ</label>
-        <textarea
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8] min-h-[100px]"
-        />
+        <label className="block text-[#FDB9C8] mb-2">選択モード</label>
+        <div className="flex gap-6 text-white">
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={mode === "multiple"}
+              onChange={(e) => setMode(e.target.value)}
+            />{" "}
+            複数選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="range"
+              checked={mode === "range"}
+              onChange={(e) => setMode(e.target.value)}
+            />{" "}
+            範囲選択
+          </label>
+        </div>
       </div>
 
-      {/* 日程追加 */}
+      {/* カレンダー */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <p className="text-gray-300 mb-2">候補日</p>
-        <button
-          onClick={addDate}
-          className="bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-2 px-4 rounded-xl transition"
-        >
-          今日を追加
-        </button>
+        <label className="block text-[#FDB9C8] mb-2">日程選択</label>
+        <Calendar
+          selectRange={mode === "range"}
+          onClickDay={mode === "multiple" ? handleDateChange : undefined}
+          onChange={mode === "range" ? handleDateChange : undefined}
+          tileClassName={({ date }) =>
+            dates.includes(date.toISOString().split("T")[0])
+              ? "bg-[#FDB9C8] text-black rounded-xl"
+              : null
+          }
+        />
         <div className="mt-3 text-gray-400">
           {dates.length > 0 ? dates.join(", ") : "未選択"}
         </div>
