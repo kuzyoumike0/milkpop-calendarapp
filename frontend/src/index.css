@@ -2,11 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* グローバル背景 */
 body {
-  @apply bg-black text-white;
-  font-family: "Helvetica Neue", sans-serif;
-}
-
-a {
-  @apply text-[#FDB9C8] hover:underline;
+  background-color: #0A0A0A; /* 高級感のある黒 */
+  color: #ffffff;
+  font-family: "Noto Sans JP", sans-serif;
 }
