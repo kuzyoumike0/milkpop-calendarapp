@@ -30,11 +30,10 @@ export default function ShareLinkPage() {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <header className="text-center text-3xl font-bold text-[#FDB9C8] mb-6">
-        MilkPOP Calendar - 共有リンクページ
+        MilkPOP Calendar - 共有リンク
       </header>
 
       <div className="max-w-3xl mx-auto bg-[#004CA0] p-6 rounded-2xl shadow-lg space-y-6">
-        {/* モード切替 */}
         <div className="flex space-x-4">
           <label>
             <input
@@ -56,7 +55,6 @@ export default function ShareLinkPage() {
           </label>
         </div>
 
-        {/* カレンダー */}
         <div className="bg-white rounded-xl p-4">
           <Calendar
             selectRange={rangeMode === "範囲選択"}
@@ -64,10 +62,9 @@ export default function ShareLinkPage() {
           />
         </div>
 
-        {/* 選択結果表示 */}
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="mb-2">選択された日程:</p>
-          <ul className="list-disc list-inside">
+        <div className="bg-gray-900 rounded-xl p-4 text-white">
+          <h2 className="text-lg font-bold mb-2">選択された日付</h2>
+          <ul>
             {selectedDates.map((d, i) => (
               <li key={i}>{d.toISOString().split("T")[0]}</li>
             ))}
