@@ -40,8 +40,7 @@ export default function SharePage() {
       await Promise.all(promises);
 
       alert("回答を保存しました ✅");
-      // 保存直後に表示更新
-      fetchSchedules();
+      fetchSchedules(); // 即更新
     } catch (err) {
       console.error("回答保存失敗:", err);
     }
@@ -70,20 +69,24 @@ export default function SharePage() {
               <th className="p-2">終了日</th>
               <th className="p-2">時間帯</th>
               <th className="p-2">回答</th>
+              <th className="p-2">参加者の回答一覧</th>
             </tr>
           </thead>
           <tbody>
             {schedules.map((s) => (
-              <tr key={s.id} className="border-b border-gray-700">
+              <tr key={s.schedule_id} className="border-b border-gray-700">
                 <td className="p-2">{s.title}</td>
                 <td className="p-2">{s.start_date}</td>
                 <td className="p-2">{s.end_date}</td>
                 <td className="p-2">{s.timeslot}</td>
                 <td className="p-2">
                   <select
-                    value={responses[s.id] || ""}
+                    value={responses[s.schedule_id] || ""}
                     onChange={(e) =>
-                      setResponses({ ...responses, [s.id]: e.target.value })
+                      setResponses({
+                        ...responses,
+                        [s.schedule_id]: e.target.value,
+                      })
                     }
                     className="p-1 rounded text-black"
                   >
@@ -91,6 +94,28 @@ export default function SharePage() {
                     <option value="〇">〇</option>
                     <option value="✖">✖</option>
                   </select>
+                </td>
+                <td className="p-2">
+                  {s.responses && s.responses.length > 0 ? (
+                    <ul>
+                      {s.responses.map((r, i) => (
+                        <li key={i}>
+                          👤 {r.username} :{" "}
+                          <span
+                            className={
+                              r.response === "〇"
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }
+                          >
+                            {r.response}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-gray-400">まだ回答なし</span>
+                  )}
                 </td>
               </tr>
             ))}
