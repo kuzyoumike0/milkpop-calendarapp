@@ -16,7 +16,7 @@ const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }, // RailwayはSSL必須
+        ssl: { rejectUnauthorized: false }, // RailwayではSSL必須
       }
     : {
         host: process.env.DB_HOST || "localhost",
@@ -93,6 +93,18 @@ app.post("/api/personal", async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "個人スケジュール登録失敗", detail: err.message });
+  }
+});
+
+// === 個人スケジュール取得 ===
+app.get("/api/personal", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, title, memo, range_mode, dates, start_time, end_time, created_at FROM personal_schedules ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "個人スケジュール取得失敗", detail: err.message });
   }
 });
 
