@@ -1,8 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";   // TailwindCSS を読み込み
+import App from "./App";
 
-/* 追加のカスタムスタイルがあればここに */
-body {
-  @apply bg-black text-white;
-}
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
