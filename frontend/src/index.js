@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";   // TailwindCSS を読み込み
+import "./index.css";   // TailwindCSS 読み込み
 import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
