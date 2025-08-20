@@ -1,111 +1,112 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import DatePicker from "react-multi-date-picker";
-import "react-multi-date-picker/styles/colors/purple.css";
 
 export default function SharePage() {
-  const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("range");
-  const [dates, setDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
-  const [link, setLink] = useState("");
   const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState({});
+  const [username, setUsername] = useState("");
 
+  // 即時反映: スケジュール取得
   const fetchSchedules = async () => {
-    const res = await axios.get("/api/schedules"); // API拡張要
-    setSchedules(res.data);
+    try {
+      const res = await axios.get("/api/schedules");
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("取得エラー:", err);
+    }
   };
 
   useEffect(() => {
     fetchSchedules();
   }, []);
 
-  const handleSubmit = async () => {
-    if (!title || dates.length === 0) return alert("入力不足です");
-    let start_date, end_date;
-    if (mode === "range") {
-      start_date = dates[0]?.format("YYYY-MM-DD");
-      end_date = dates[1]?.format("YYYY-MM-DD");
-    } else {
-      start_date = dates[0]?.format("YYYY-MM-DD");
-      end_date = dates[dates.length - 1]?.format("YYYY-MM-DD");
+  // 出欠選択変更
+  const handleChange = (scheduleId, value) => {
+    setResponses((prev) => ({ ...prev, [scheduleId]: value }));
+  };
+
+  // 保存処理
+  const handleSave = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
     }
-    const res = await axios.post("/api/schedule", {
-      title,
-      start_date,
-      end_date,
-      timeslot,
-      range_mode: mode,
-    });
-    setLink(res.data.link);
-    fetchSchedules();
+    try {
+      // ここでは responses を保存APIに送るようにする
+      // 共有スケジュールに紐付けられるようなテーブルが必要
+      await axios.post("/api/share-responses", {
+        username,
+        responses,
+      });
+      // 即時反映
+      fetchSchedules();
+    } catch (err) {
+      console.error("保存エラー:", err);
+    }
   };
 
   return (
-    <div className="p-6 text-white bg-black min-h-screen">
-      <h1 className="text-2xl mb-4">共有スケジュール登録</h1>
-      <input
-        className="p-2 text-black rounded mb-2 w-full"
-        placeholder="タイトル"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <div className="mb-2">
-        <label>
-          <input
-            type="radio"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
-        <label className="ml-4">
-          <input
-            type="radio"
-            checked={mode === "multiple"}
-            onChange={() => setMode("multiple")}
-          />
-          複数選択
-        </label>
+    <div className="min-h-screen bg-black text-white p-6">
+      {/* バナー */}
+      <header className="bg-[#004CA0] text-[#FDB9C8] text-3xl font-bold p-4 rounded-2xl shadow-lg flex justify-between">
+        <span>MilkPOP Calendar</span>
+        <nav className="space-x-4">
+          <a href="/" className="hover:underline">トップ</a>
+          <a href="/link" className="hover:underline">日程登録</a>
+          <a href="/personal" className="hover:underline">個人スケジュール</a>
+        </nav>
+      </header>
+
+      {/* ユーザー名入力 */}
+      <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl mb-4">共有スケジュール</h2>
+        <input
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          type="text"
+          placeholder="あなたの名前"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+
+        {/* スケジュール一覧 */}
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-[#004CA0] text-[#FDB9C8]">
+              <th className="p-2">タイトル</th>
+              <th className="p-2">日付</th>
+              <th className="p-2">時間帯</th>
+              <th className="p-2">可否</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s) => (
+              <tr key={s.id} className="border-b border-gray-700">
+                <td className="p-2">{s.title}</td>
+                <td className="p-2">{s.date}</td>
+                <td className="p-2">{s.timeslot}</td>
+                <td className="p-2">
+                  <select
+                    className="bg-gray-800 text-white p-1 rounded"
+                    value={responses[s.id] || ""}
+                    onChange={(e) => handleChange(s.id, e.target.value)}
+                  >
+                    <option value="">選択</option>
+                    <option value="◯">◯</option>
+                    <option value="✕">✕</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <button
+          onClick={handleSave}
+          className="mt-4 w-full bg-[#FDB9C8] text-black font-bold py-2 px-4 rounded-2xl shadow hover:bg-pink-400"
+        >
+          保存
+        </button>
       </div>
-      <DatePicker
-        value={dates}
-        onChange={setDates}
-        range={mode === "range"}
-        multiple={mode === "multiple"}
-        format="YYYY-MM-DD"
-      />
-      <select
-        className="p-2 text-black rounded mb-4 block"
-        value={timeslot}
-        onChange={(e) => setTimeslot(e.target.value)}
-      >
-        <option>全日</option>
-        <option>昼</option>
-        <option>夜</option>
-        <option>時間指定</option>
-      </select>
-      <button
-        className="bg-blue-600 px-4 py-2 rounded"
-        onClick={handleSubmit}
-      >
-        登録
-      </button>
-
-      {link && (
-        <div className="mt-4">
-          <p>共有リンク: <a href={link} className="text-pink-400">{link}</a></p>
-        </div>
-      )}
-
-      <h2 className="mt-6 text-xl">登録済みスケジュール</h2>
-      <ul>
-        {schedules.map((s) => (
-          <li key={s.id}>
-            {s.title} : {s.start_date} - {s.end_date} [{s.timeslot}]
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
