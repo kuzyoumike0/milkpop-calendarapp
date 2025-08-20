@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import Holidays from "date-holidays";
 
 export default function SharePage() {
   const { linkid } = useParams();
   const [schedules, setSchedules] = useState([]);
   const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({}); // { schedule_id: "〇" or "✖" }
+
+  const hd = new Holidays("JP"); // 日本の祝日
 
   // 共有スケジュール取得
   const fetchSchedules = async () => {
@@ -39,7 +42,7 @@ export default function SharePage() {
       );
       await Promise.all(promises);
 
-      // ✅ 自分の回答を即時反映
+      // 即時反映
       setSchedules((prev) =>
         prev.map((s) => {
           if (responses[s.schedule_id]) {
@@ -74,10 +77,17 @@ export default function SharePage() {
 
   // === すべてのユーザー名を抽出（列ヘッダ用） ===
   const allUsers = Array.from(
-    new Set(
-      grouped.flatMap((s) => s.responses.map((r) => r.username))
-    )
+    new Set(grouped.flatMap((s) => s.responses.map((r) => r.username)))
   );
+
+  // === 祝日判定関数 ===
+  const isHoliday = (dateStr) => {
+    if (!dateStr) return false;
+    // 範囲表記のときは判定不可
+    if (dateStr.includes("~")) return false;
+    const d = new Date(dateStr);
+    return hd.isHoliday(d);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -106,46 +116,54 @@ export default function SharePage() {
             </tr>
           </thead>
           <tbody>
-            {grouped.map((s) => (
-              <tr key={s.schedule_id} className="border-b border-gray-700">
-                <td className="p-2">{s.date}</td>
-                <td className="p-2">{s.timeslot}</td>
-                {allUsers.map((u, i) => {
-                  const ans = s.responses.find((r) => r.username === u);
-                  return (
-                    <td key={i} className="p-2 text-center">
-                      {ans ? (
-                        <span
-                          className={
-                            ans.response === "〇" ? "text-green-400 font-bold" : "text-red-400 font-bold"
-                          }
-                        >
-                          {ans.response}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  );
-                })}
-                <td className="p-2">
-                  <select
-                    value={responses[s.schedule_id] || ""}
-                    onChange={(e) =>
-                      setResponses({
-                        ...responses,
-                        [s.schedule_id]: e.target.value,
-                      })
-                    }
-                    className="p-1 rounded text-black"
-                  >
-                    <option value="">未回答</option>
-                    <option value="〇">〇</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {grouped.map((s) => {
+              const holiday = isHoliday(s.date);
+              return (
+                <tr key={s.schedule_id} className="border-b border-gray-700">
+                  <td className={`p-2 ${holiday ? "text-red-400 font-bold" : ""}`}>
+                    {s.date}
+                    {holiday && " 🎌"}
+                  </td>
+                  <td className="p-2">{s.timeslot}</td>
+                  {allUsers.map((u, i) => {
+                    const ans = s.responses.find((r) => r.username === u);
+                    return (
+                      <td key={i} className="p-2 text-center">
+                        {ans ? (
+                          <span
+                            className={
+                              ans.response === "〇"
+                                ? "text-green-400 font-bold"
+                                : "text-red-400 font-bold"
+                            }
+                          >
+                            {ans.response}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td className="p-2">
+                    <select
+                      value={responses[s.schedule_id] || ""}
+                      onChange={(e) =>
+                        setResponses({
+                          ...responses,
+                          [s.schedule_id]: e.target.value,
+                        })
+                      }
+                      className="p-1 rounded text-black"
+                    >
+                      <option value="">未回答</option>
+                      <option value="〇">〇</option>
+                      <option value="✖">✖</option>
+                    </select>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
