@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import ja from "date-fns/locale/ja";   // ← 修正
 import { format } from "date-fns";
+import ja from "date-fns/locale/ja";
 import "./CalendarStyle.css";
 import Header from "./Header";
-
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -15,9 +14,8 @@ export default function LinkPage() {
   const [timeSlot, setTimeSlot] = useState("全日");
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
-
-  // 日本の祝日APIから取得して赤色表示
   const [holidays, setHolidays] = useState({});
+
   useEffect(() => {
     const year = new Date().getFullYear();
     axios
@@ -26,14 +24,10 @@ export default function LinkPage() {
       .catch(() => setHolidays({}));
   }, []);
 
-  // カレンダー選択ハンドラ
   const handleDateChange = (value) => {
     if (rangeMode === "multiple") {
-      // 複数選択モード
-      const newDates = Array.isArray(value) ? value : [value];
-      setDates(newDates);
+      setDates(Array.isArray(value) ? value : [value]);
     } else if (rangeMode === "range") {
-      // 範囲選択モード
       if (Array.isArray(value) && value.length === 2) {
         const [start, end] = value;
         let cur = new Date(start);
@@ -47,7 +41,6 @@ export default function LinkPage() {
     }
   };
 
-  // スケジュール登録
   const handleSave = async () => {
     if (!title || dates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -57,7 +50,7 @@ export default function LinkPage() {
     try {
       const res = await axios.post("/api/schedules", {
         title,
-        dates: dates.map((d) => format(d, "yyyy-MM-dd")),
+        dates: dates.map((d) => format(d, "yyyy-MM-dd", { locale: ja })),
         range_mode: rangeMode,
         timeslot: timeSlot,
       });
@@ -69,7 +62,6 @@ export default function LinkPage() {
     }
   };
 
-  // 登録済みスケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get("/api/schedules");
@@ -83,10 +75,9 @@ export default function LinkPage() {
     fetchSchedules();
   }, []);
 
-  // 祝日 or 日曜日は赤色クラス
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const ymd = format(date, "yyyy-MM-dd");
+      const ymd = format(date, "yyyy-MM-dd", { locale: ja });
       if (holidays[ymd] || date.getDay() === 0) {
         return "holiday";
       }
@@ -95,12 +86,10 @@ export default function LinkPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <header className="text-center text-3xl font-bold mb-6 text-[#FDB9C8]">
-        MilkPOP Calendar - 共有スケジュール登録
-      </header>
+    <div className="min-h-screen bg-black text-white">
+      <Header />
 
-      <div className="bg-[#004CA0] p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
+      <div className="p-6 bg-[#004CA0] rounded-2xl shadow-lg max-w-2xl mx-auto">
         <input
           type="text"
           placeholder="タイトルを入力"
@@ -135,7 +124,7 @@ export default function LinkPage() {
           selectRange={rangeMode === "range"}
           tileClassName={tileClassName}
           value={dates}
-          locale={ja}
+          locale="ja-JP"
         />
 
         <div className="mt-4">
