@@ -1,7 +1,6 @@
 {/* 時間帯選択 */}
 <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
   <h2 className="text-xl font-semibold text-[#FDB9C8] mb-3">時間帯</h2>
-  <p className="text-gray-400 mb-2">予定の時間帯を選択してください</p>
   <select
     value={timeslot}
     onChange={(e) => setTimeslot(e.target.value)}
@@ -22,8 +21,8 @@
   </select>
 </div>
 
-{/* 開始時刻 / 終了時刻 */}
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+{/* 開始 / 終了 */}
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
   <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
     <h2 className="text-lg font-semibold text-[#FDB9C8] mb-2">開始時刻</h2>
     <select
