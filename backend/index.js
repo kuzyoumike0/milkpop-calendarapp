@@ -118,14 +118,26 @@ app.get("/api/personal", async (req, res) => {
   }
 });
 
-// === API: 共有リンクで日程取得 ===
+// === API: 共有リンクで日程 + 回答取得 ===
 app.get("/api/share/:linkid", async (req, res) => {
   try {
     const { linkid } = req.params;
+
     const result = await pool.query(
-      `SELECT * FROM schedules WHERE linkid = $1`,
+      `
+      SELECT s.id as schedule_id, s.title, s.start_date, s.end_date, s.timeslot, s.range_mode, s.linkid,
+             COALESCE(json_agg(
+               json_build_object('username', r.username, 'response', r.response)
+             ) FILTER (WHERE r.id IS NOT NULL), '[]') as responses
+      FROM schedules s
+      LEFT JOIN responses r ON s.id = r.schedule_id
+      WHERE s.linkid = $1
+      GROUP BY s.id
+      ORDER BY s.start_date ASC
+      `,
       [linkid]
     );
+
     res.json(result.rows);
   } catch (err) {
     console.error("共有リンク取得エラー:", err);
