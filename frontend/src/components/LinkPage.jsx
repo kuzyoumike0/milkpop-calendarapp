@@ -1,155 +1,193 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 
 export default function LinkPage() {
-  const [date, setDate] = useState(new Date());
-  const [rangeMode, setRangeMode] = useState("multiple"); // multiple or range
-  const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [timeslot, setTimeslot] = useState("全日");
-  const [shareLink, setShareLink] = useState("");
+  const [dates, setDates] = useState([]);
+  const [rangeMode, setRangeMode] = useState("multiple"); // "range" | "multiple"
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [schedules, setSchedules] = useState([]);
+  const [shareUrl, setShareUrl] = useState("");
 
-  // 日付クリック
-  const handleDateClick = (value) => {
-    if (rangeMode === "multiple") {
-      if (selectedDates.some((d) => d.toDateString() === value.toDateString())) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== value.toDateString()));
-      } else {
-        setSelectedDates([...selectedDates, value]);
-      }
-    } else if (rangeMode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length === 2) {
-        setSelectedDates([value]);
-      } else if (selectedDates.length === 1) {
-        const start = selectedDates[0];
-        const end = value;
-        const range = [];
-        let current = new Date(start);
-        while (current <= end) {
-          range.push(new Date(current));
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(range);
-      }
+  // 即時反映のための取得関数
+  const fetchSchedules = async () => {
+    try {
+      const res = await axios.get("/api/schedules");
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("取得エラー:", err);
     }
   };
 
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
   // 登録処理
-  const handleSubmit = async () => {
-    if (!title || selectedDates.length === 0) {
-      alert("タイトルと日程を入力してください");
+  const handleRegister = async () => {
+    if (!title || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
       return;
     }
-
     try {
-      const start_date = selectedDates[0].toISOString().split("T")[0];
-      const end_date = selectedDates[selectedDates.length - 1].toISOString().split("T")[0];
-
-      const res = await axios.post("/api/schedule", {
+      await axios.post("/api/schedules", {
         title,
-        start_date,
-        end_date,
-        timeslot,
+        dates: Array.isArray(dates) ? dates.map((d) => formatDate(d)) : [formatDate(dates)],
+        timeslot: timeSlot,
         range_mode: rangeMode,
       });
+      setTitle("");
+      setDates([]);
+      setTimeSlot("全日");
+      setRangeMode("multiple");
+      // 即時反映
+      fetchSchedules();
+    } catch (err) {
+      console.error("登録エラー:", err);
+    }
+  };
 
-      setShareLink(res.data.link);
+  // 共有リンク発行
+  const handleShare = async () => {
+    if (!title) {
+      alert("共有リンクを作成するにはタイトルを入力してください");
+      return;
+    }
+    try {
+      const res = await axios.post("/api/share", { title });
+      setShareUrl(window.location.origin + res.data.link);
     } catch (err) {
       console.error("リンク作成エラー:", err);
-      alert("リンク作成に失敗しました");
+    }
+  };
+
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // カレンダー選択
+  const handleDateChange = (value) => {
+    if (rangeMode === "range") {
+      setDates(value);
+    } else {
+      setDates(value instanceof Date ? [value] : value);
     }
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">共有スケジュール登録</h2>
+    <div className="min-h-screen bg-black text-white p-6">
+      {/* バナー */}
+      <header className="bg-[#004CA0] text-[#FDB9C8] text-3xl font-bold p-4 rounded-2xl shadow-lg flex justify-between">
+        <span>MilkPOP Calendar</span>
+        <nav className="space-x-4">
+          <a href="/" className="hover:underline">トップ</a>
+          <a href="/link" className="hover:underline">日程登録</a>
+          <a href="/personal" className="hover:underline">個人スケジュール</a>
+        </nav>
+      </header>
 
-      {/* タイトル */}
-      <input
-        type="text"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="border p-2 mb-4 w-full"
-      />
+      {/* 入力フォーム */}
+      <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl mb-4">日程登録</h2>
+        <input
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          type="text"
+          placeholder="タイトル"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-      {/* カレンダー */}
-      <Calendar
-        onClickDay={handleDateClick}
-        value={date}
-        onChange={setDate}
-      />
+        {/* 範囲選択 / 複数選択 */}
+        <div className="mb-3">
+          <label className="mr-4">
+            <input
+              type="radio"
+              name="rangeMode"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="rangeMode"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            複数選択
+          </label>
+        </div>
 
-      <div className="mt-2">
-        {selectedDates.length > 0 ? (
-          <p>
-            選択した日付:{" "}
-            {selectedDates.map((d) => d.toISOString().split("T")[0]).join(", ")}
-          </p>
-        ) : (
-          <p>日付をクリックしてください</p>
-        )}
-      </div>
+        {/* カレンダー */}
+        <Calendar
+          onChange={handleDateChange}
+          value={dates}
+          selectRange={rangeMode === "range"}
+          allowMultiple={rangeMode === "multiple" ? true : undefined}
+          className="mb-4 rounded-lg shadow-md"
+        />
 
-      {/* 範囲/複数切り替え */}
-      <div className="mt-4">
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={rangeMode === "multiple"}
-            onChange={(e) => setRangeMode(e.target.value)}
-          />
-          複数日選択
-        </label>
-        <label className="ml-4">
-          <input
-            type="radio"
-            value="range"
-            checked={rangeMode === "range"}
-            onChange={(e) => setRangeMode(e.target.value)}
-          />
-          範囲選択
-        </label>
-      </div>
-
-      {/* 時間帯 */}
-      <div className="mt-4">
+        {/* 時間帯選択 */}
         <select
-          value={timeslot}
-          onChange={(e) => setTimeslot(e.target.value)}
-          className="border p-2"
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          value={timeSlot}
+          onChange={(e) => setTimeSlot(e.target.value)}
         >
           <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
+          {Array.from({ length: 24 }).map((_, i) => (
+            <option key={i} value={`${i}:00-${(i + 1) % 24}:00`}>
+              {i}:00 - {(i + 1) % 24}:00
+            </option>
+          ))}
         </select>
+
+        <button
+          onClick={handleRegister}
+          className="w-full bg-[#FDB9C8] text-black font-bold py-2 px-4 rounded-2xl shadow hover:bg-pink-400 mb-2"
+        >
+          登録
+        </button>
+        <button
+          onClick={handleShare}
+          className="w-full bg-[#004CA0] text-white font-bold py-2 px-4 rounded-2xl shadow hover:bg-blue-700"
+        >
+          共有リンク発行
+        </button>
+
+        {shareUrl && (
+          <div className="mt-3 p-3 bg-gray-700 rounded">
+            共有リンク:{" "}
+            <a href={shareUrl} className="text-[#FDB9C8] underline">
+              {shareUrl}
+            </a>
+          </div>
+        )}
       </div>
 
-      {/* 登録 */}
-      <button
-        onClick={handleSubmit}
-        className="bg-[#FDB9C8] text-black px-4 py-2 mt-4 rounded-lg shadow hover:bg-[#004CA0] hover:text-white"
-      >
-        共有リンクを発行
-      </button>
-
-      {/* 発行リンク表示 */}
-      {shareLink && (
-        <div className="mt-4">
-          <p>共有リンクが発行されました:</p>
-          <a
-            href={shareLink}
-            className="text-[#004CA0] underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {window.location.origin}{shareLink}
-          </a>
-        </div>
-      )}
+      {/* 登録済みスケジュール一覧 */}
+      <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl mb-4">登録済みスケジュール</h2>
+        <ul className="space-y-2">
+          {schedules.map((s) => (
+            <li key={s.id} className="p-3 bg-gray-800 rounded">
+              <strong>{s.title}</strong>  
+              <br />
+              {s.date} - {s.timeslot} [{s.range_mode}]
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
