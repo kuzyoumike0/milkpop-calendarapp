@@ -33,4 +33,18 @@ html::before {
     radial-gradient(circle at 60% 60%, rgba(255,255,255,0.05) 1px, transparent 1px);
   background-size: 60px 104px; /* 六角形の幅・高さ */
   background-position: 0 0, 30px 52px; /* ハニカムのズレで六角形パターンを作る */
-  z-index:
+  z-index: 0;
+}
+
+/* コンテンツを前面に */
+#root > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* グラデーション動作 */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
