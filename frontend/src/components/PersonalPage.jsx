@@ -1,181 +1,183 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import axios from "axios";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
+  const [selectionMode, setSelectionMode] = useState("multiple"); // multiple or range
   const [dates, setDates] = useState([]);
-  const [timeType, setTimeType] = useState("all"); // all, day, night, custom
-  const [startTime, setStartTime] = useState("1");
-  const [endTime, setEndTime] = useState("2");
-  const [mode, setMode] = useState("multiple");
+  const [timeMode, setTimeMode] = useState("all"); // all, day, night, custom
+  const [startTime, setStartTime] = useState("01:00");
+  const [endTime, setEndTime] = useState("02:00");
 
-  // 日付選択処理
   const handleDateChange = (value) => {
-    if (mode === "multiple") {
-      const dateStr = value.toISOString().split("T")[0];
-      setDates((prev) =>
-        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
-      );
-    } else {
-      if (Array.isArray(value)) {
-        const [start, end] = value;
-        if (start && end) {
-          const newDates = [];
-          const current = new Date(start);
-          while (current <= end) {
-            newDates.push(current.toISOString().split("T")[0]);
-            current.setDate(current.getDate() + 1);
-          }
-          setDates(newDates);
+    if (selectionMode === "multiple") {
+      setDates((prev) => {
+        const already = prev.find(
+          (d) => new Date(d).toDateString() === value.toDateString()
+        );
+        if (already) {
+          return prev.filter(
+            (d) => new Date(d).toDateString() !== value.toDateString()
+          );
         }
-      }
+        return [...prev, value];
+      });
+    } else {
+      setDates(value);
     }
   };
 
-  // 保存処理
-  const saveSchedule = async () => {
-    if (!title || !memo || dates.length === 0) {
-      alert("タイトル・メモ・日程を入力してください");
-      return;
-    }
-    try {
-      await axios.post("/api/personal", {
-        title,
-        memo,
-        dates,
-        timeType,
-        startTime: timeType === "custom" ? startTime : null,
-        endTime: timeType === "custom" ? endTime : null,
-      });
-      alert("保存しました！");
-    } catch (err) {
-      alert("保存に失敗しました");
-      console.error(err);
-    }
+  const handleSubmit = async () => {
+    const formatDate = (d) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const selectedDates =
+      selectionMode === "multiple"
+        ? dates.map((d) => formatDate(d))
+        : [formatDate(dates[0]), formatDate(dates[1])];
+
+    await axios.post("/api/personal-schedules", {
+      title,
+      memo,
+      dates: selectedDates,
+      start_time: timeMode === "custom" ? startTime : timeMode,
+      end_time: timeMode === "custom" ? endTime : null,
+    });
+
+    alert("保存しました！");
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">個人スケジュール登録</h1>
+    <div className="p-6">
+      <div className="card">
+        <h2 className="card-title">📝 個人スケジュール登録</h2>
 
-      {/* タイトル */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">タイトル</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-        />
-      </div>
-
-      {/* メモ */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">メモ</label>
-        <textarea
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-          rows="3"
-        ></textarea>
-      </div>
-
-      {/* モード切替 */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">選択モード</label>
-        <div className="flex gap-6 text-white">
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={mode === "multiple"}
-              onChange={(e) => setMode(e.target.value)}
-            />{" "}
-            複数選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={mode === "range"}
-              onChange={(e) => setMode(e.target.value)}
-            />{" "}
-            範囲選択
-          </label>
+        {/* タイトル */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300">タイトル</label>
+          <input
+            type="text"
+            className="w-full p-2 rounded bg-gray-800 text-white"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
         </div>
-      </div>
 
-      {/* カレンダー */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">日程選択</label>
-        <Calendar
-          selectRange={mode === "range"}
-          onClickDay={mode === "multiple" ? handleDateChange : undefined}
-          onChange={mode === "range" ? handleDateChange : undefined}
-          tileClassName={({ date }) =>
-            dates.includes(date.toISOString().split("T")[0])
-              ? "bg-[#FDB9C8] text-black rounded-xl"
-              : null
-          }
-        />
-        <div className="mt-3 text-gray-400">
-          {dates.length > 0 ? dates.join(", ") : "未選択"}
+        {/* メモ */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300">メモ</label>
+          <textarea
+            className="w-full p-2 rounded bg-gray-800 text-white"
+            rows="3"
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
         </div>
-      </div>
 
-      {/* 時間帯 */}
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
-        <label className="block text-[#FDB9C8] mb-2">時間帯</label>
-        <select
-          value={timeType}
-          onChange={(e) => setTimeType(e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8] mb-3"
-        >
-          <option value="all">終日</option>
-          <option value="day">昼</option>
-          <option value="night">夜</option>
-          <option value="custom">時間指定</option>
-        </select>
+        {/* 選択モード */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300">選択モード</label>
+          <div className="flex gap-4 text-white">
+            <label>
+              <input
+                type="radio"
+                checked={selectionMode === "multiple"}
+                onChange={() => setSelectionMode("multiple")}
+              />{" "}
+              複数選択
+            </label>
+            <label>
+              <input
+                type="radio"
+                checked={selectionMode === "range"}
+                onChange={() => setSelectionMode("range")}
+              />{" "}
+              範囲選択
+            </label>
+          </div>
+        </div>
 
-        {timeType === "custom" && (
-          <div className="flex gap-4">
+        {/* カレンダー */}
+        <div className="mb-4">
+          <Calendar
+            selectRange={selectionMode === "range"}
+            onClickDay={handleDateChange}
+            value={dates}
+            tileClassName={({ date }) =>
+              dates.some &&
+              dates.some(
+                (d) => new Date(d).toDateString() === date.toDateString()
+              )
+                ? "bg-brandPink text-black rounded-lg"
+                : ""
+            }
+          />
+        </div>
+
+        {/* 時間帯 */}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-300">時間帯</label>
+          <select
+            className="w-full p-2 rounded bg-gray-800 text-white"
+            value={timeMode}
+            onChange={(e) => setTimeMode(e.target.value)}
+          >
+            <option value="all">終日</option>
+            <option value="day">昼</option>
+            <option value="night">夜</option>
+            <option value="custom">時間指定</option>
+          </select>
+        </div>
+
+        {/* カスタム時間 */}
+        {timeMode === "custom" && (
+          <div className="flex gap-2 mb-4">
             <select
+              className="w-1/2 p-2 rounded bg-gray-800 text-white"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="flex-1 p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
             >
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}時
-                </option>
-              ))}
+              {Array.from({ length: 24 }, (_, i) => {
+                const h = (i + 1) % 24;
+                const label = h === 0 ? "0:00" : `${h}:00`;
+                return (
+                  <option key={h} value={`${String(h).padStart(2, "0")}:00`}>
+                    {label}
+                  </option>
+                );
+              })}
             </select>
-            <span className="text-white flex items-center">〜</span>
+
             <select
+              className="w-1/2 p-2 rounded bg-gray-800 text-white"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="flex-1 p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
             >
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}時
-                </option>
-              ))}
+              {Array.from({ length: 24 }, (_, i) => {
+                const h = (i + 1) % 24;
+                const label = h === 0 ? "0:00" : `${h}:00`;
+                return (
+                  <option key={h} value={`${String(h).padStart(2, "0")}:00`}>
+                    {label}
+                  </option>
+                );
+              })}
             </select>
           </div>
         )}
-      </div>
 
-      {/* 保存ボタン */}
-      <button
-        onClick={saveSchedule}
-        className="w-full bg-[#004CA0] hover:bg-[#FDB9C8] text-white font-bold py-3 px-6 rounded-xl transition"
-      >
-        保存
-      </button>
+        {/* 保存ボタン */}
+        <button onClick={handleSubmit} className="btn w-full">
+          保存する
+        </button>
+      </div>
     </div>
   );
 }
