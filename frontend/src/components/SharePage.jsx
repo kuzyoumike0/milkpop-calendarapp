@@ -1,177 +1,117 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import { format } from "date-fns";
-import ja from "date-fns/locale/ja";
-import "./CalendarStyle.css";
-import Header from "./Header";
+import Holidays from "date-holidays";
 
-export default function SharePage({ match }) {
-  const { linkId } = match.params;
-  const [username, setUsername] = useState("");
-  const [dates, setDates] = useState([]);
-  const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeSlot, setTimeSlot] = useState("全日");
-  const [responses, setResponses] = useState([]);
-  const [holidays, setHolidays] = useState({});
+const hd = new Holidays("JP");
 
-  useEffect(() => {
-    const year = new Date().getFullYear();
-    axios
-      .get(`https://holidays-jp.github.io/api/v1/${year}/date.json`)
-      .then((res) => setHolidays(res.data))
-      .catch(() => setHolidays({}));
-  }, []);
+export default function SharePage() {
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeslot, setTimeslot] = useState("全日");
+  const [rangeMode, setRangeMode] = useState("複数");
+  const [shareLink, setShareLink] = useState("");
 
-  const handleDateChange = (value) => {
-    if (rangeMode === "multiple") {
-      setDates(Array.isArray(value) ? value : [value]);
-    } else if (rangeMode === "range") {
-      if (Array.isArray(value) && value.length === 2) {
-        const [start, end] = value;
-        let cur = new Date(start);
-        const range = [];
-        while (cur <= end) {
-          range.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setDates(range);
-      }
+  const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+    } else {
+      setSelectedDates([...selectedDates, dateStr]);
     }
   };
-
-  const handleSave = async () => {
-    if (!username || dates.length === 0) {
-      alert("名前と日程を入力してください");
-      return;
-    }
-
-    try {
-      await axios.post(`/api/share/${linkId}`, {
-        username,
-        dates: dates.map((d) => format(d, "yyyy-MM-dd", { locale: ja })),
-        range_mode: rangeMode,
-        timeslot: timeSlot,
-      });
-      setDates([]);
-      fetchResponses();
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
-    }
-  };
-
-  const fetchResponses = async () => {
-    try {
-      const res = await axios.get(`/api/share/${linkId}`);
-      setResponses(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchResponses();
-  }, [linkId]);
 
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const ymd = format(date, "yyyy-MM-dd", { locale: ja });
-      if (holidays[ymd] || date.getDay() === 0) {
-        return "holiday";
+      const dateStr = date.toISOString().split("T")[0];
+      if (hd.isHoliday(date)) {
+        return "text-red-500 font-bold";
+      }
+      if (selectedDates.includes(dateStr)) {
+        return "bg-blue-500 text-white rounded-full";
       }
     }
     return null;
   };
 
+  const handleSubmit = async () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日付を入力してください。");
+      return;
+    }
+    try {
+      const res = await axios.post("/api/schedule", {
+        title,
+        dates: selectedDates,
+        timeslot,
+        range_mode: rangeMode,
+      });
+      setShareLink(res.data.link);
+    } catch (err) {
+      console.error("Error creating share schedule:", err);
+      alert("登録に失敗しました");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <Header />
+    <div className="p-4 text-white">
+      <h1 className="text-2xl font-bold mb-4">日程登録（共有リンク発行）</h1>
 
-      <div className="p-6 bg-[#004CA0] rounded-2xl shadow-lg max-w-2xl mx-auto">
-        <input
-          type="text"
-          placeholder="名前を入力"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg text-black"
-        />
+      <input
+        type="text"
+        placeholder="タイトル"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="border p-2 rounded text-black block mb-2"
+      />
 
-        <div className="flex gap-4 mb-4">
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={rangeMode === "multiple"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            複数選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={rangeMode === "range"}
-              onChange={(e) => setRangeMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-        </div>
+      <Calendar
+        onClickDay={handleDateClick}
+        value={selectedDates.map((d) => new Date(d))}
+        tileClassName={tileClassName}
+      />
 
-        <Calendar
-          onChange={handleDateChange}
-          selectRange={rangeMode === "range"}
-          tileClassName={tileClassName}
-          value={dates}
-          locale="ja-JP"
-        />
-
-        <div className="mt-4">
-          <label className="block mb-2">時間帯を選択:</label>
-          <select
-            value={timeSlot}
-            onChange={(e) => setTimeSlot(e.target.value)}
-            className="p-2 rounded-lg text-black"
-          >
-            <option value="全日">全日</option>
-            <option value="昼">昼</option>
-            <option value="夜">夜</option>
-            <option value="時間指定">1時〜0時</option>
-          </select>
-        </div>
-
-        <button
-          onClick={handleSave}
-          className="mt-6 w-full p-3 rounded-xl bg-[#FDB9C8] text-black font-bold hover:opacity-80"
+      <div className="mt-4">
+        <label className="mr-2">時間帯:</label>
+        <select
+          value={timeslot}
+          onChange={(e) => setTimeslot(e.target.value)}
+          className="text-black p-1 rounded"
         >
-          保存
-        </button>
+          <option value="全日">全日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+        </select>
       </div>
 
-      <div className="mt-8 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-4">回答一覧</h2>
-        <table className="w-full border-collapse border border-gray-500">
-          <thead>
-            <tr className="bg-gray-700">
-              <th className="border border-gray-500 p-2">名前</th>
-              <th className="border border-gray-500 p-2">日程</th>
-              <th className="border border-gray-500 p-2">時間帯</th>
-            </tr>
-          </thead>
-          <tbody>
-            {responses.map((r, idx) => (
-              <tr key={idx} className="bg-gray-800">
-                <td className="border border-gray-500 p-2">{r.username}</td>
-                <td className="border border-gray-500 p-2">
-                  {Array.isArray(r.dates) ? r.dates.join(", ") : r.date}
-                </td>
-                <td className="border border-gray-500 p-2">{r.timeslot}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-4">
+        <label className="mr-2">選択モード:</label>
+        <select
+          value={rangeMode}
+          onChange={(e) => setRangeMode(e.target.value)}
+          className="text-black p-1 rounded"
+        >
+          <option value="複数">複数選択</option>
+          <option value="範囲">範囲選択</option>
+        </select>
       </div>
+
+      <button
+        onClick={handleSubmit}
+        className="mt-4 bg-blue-600 px-4 py-2 rounded"
+      >
+        登録 & 共有リンク作成
+      </button>
+
+      {shareLink && (
+        <div className="mt-4">
+          <p>共有リンク:</p>
+          <a href={shareLink} className="text-blue-400 underline">
+            {window.location.origin}{shareLink}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
