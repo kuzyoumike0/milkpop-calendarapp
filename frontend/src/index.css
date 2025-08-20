@@ -2,14 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* フォント */
+/* ===== 全体フォント設定 ===== */
 body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  background: #000000; /* 高級感のある黒背景 */
   color: white;
+
+  /* 固定ハニカム模様の背景 */
+  background-color: #000000; /* 黒ベース */
+  background-image:
+    linear-gradient(30deg, #1a1a1a 12%, transparent 12.5%, transparent 87%, #1a1a1a 87.5%, #1a1a1a),
+    linear-gradient(150deg, #1a1a1a 12%, transparent 12.5%, transparent 87%, #1a1a1a 87.5%, #1a1a1a),
+    linear-gradient(90deg, #333 2%, transparent 2%, transparent 98%, #333 98%, #333);
+  background-size: 60px 104px;
+  background-position: 0 0, 0 0, 0 0;
 }
 
-/* バナー */
+/* ===== ヘッダーバナー ===== */
 .header {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
@@ -18,9 +26,10 @@ body {
   padding: 1rem 2rem;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  border-radius: 0 0 1rem 1rem;
 }
 
-/* ボタン */
+/* ===== ボタンデザイン ===== */
 .btn-main {
   background: #004CA0;
   color: white;
@@ -34,7 +43,16 @@ body {
   color: black;
 }
 
-/* カレンダー */
+/* ===== カードデザイン ===== */
+.card {
+  background: #1a1a1a;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  margin: 1rem 0;
+}
+
+/* ===== カレンダー調整 ===== */
 .react-calendar {
   background: #1a1a1a;
   border: none;
@@ -53,5 +71,5 @@ body {
   border-radius: 50%;
 }
 .react-calendar__month-view__days__day--weekend {
-  color: #FDB9C8 !important; /* 土日祝赤 */
+  color: #FDB9C8 !important; /* 土日祝は赤系 */
 }
