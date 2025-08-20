@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
@@ -9,7 +9,7 @@ import ShareLinkPage from "./components/ShareLinkPage";
 
 function App() {
   return (
-    <Router basename="/">
+    <Router>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<TopPage />} />
