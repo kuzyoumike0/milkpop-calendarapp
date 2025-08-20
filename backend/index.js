@@ -51,102 +51,129 @@ async function initDB() {
 }
 initDB();
 
-// === 日程登録（共有リンク発行） ===
+// === API ===
+
+// 📌 個人スケジュール登録
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, timeslot, startTime, endTime, memo } = req.body;
-    const linkId = uuidv4();
+    const { title, memo, dates, timeslot, startTime, endTime } = req.body;
 
-    const results = [];
-    for (const d of dates) {
-      const result = await pool.query(
-        `INSERT INTO schedules (link_id, title, date, timeslot, start_time, end_time, memo)
-         VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-        [linkId, title, d, timeslot, startTime, endTime, memo || null]
-      );
-      results.push(result.rows[0]);
+    if (!dates || dates.length === 0) {
+      return res.status(400).json({ error: "日付を選択してください" });
     }
 
-    res.json({ linkId, schedules: results });
+    // バリデーション: 時間指定モード
+    if (timeslot === "時間指定" && startTime && endTime) {
+      if (startTime >= endTime) {
+        return res.status(400).json({ error: "開始時刻は終了時刻より前にしてください" });
+      }
+    }
+
+    for (let d of dates) {
+      await pool.query(
+        `INSERT INTO schedules (title, memo, date, timeslot, start_time, end_time) 
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [title, memo, d, timeslot, startTime, endTime]
+      );
+    }
+
+    res.json({ success: true });
   } catch (err) {
-    console.error("登録エラー:", err);
+    console.error("Error inserting schedule:", err);
     res.status(500).json({ error: "登録に失敗しました" });
   }
 });
 
-// === 全スケジュール取得 ===
+// 📌 共有リンク付きスケジュール登録
+app.post("/api/schedules/share", async (req, res) => {
+  try {
+    const { title, dates, timeslot, startTime, endTime } = req.body;
+
+    if (!dates || dates.length === 0) {
+      return res.status(400).json({ error: "日付を選択してください" });
+    }
+
+    // バリデーション: 時間指定モード
+    if (timeslot === "時間指定" && startTime && endTime) {
+      if (startTime >= endTime) {
+        return res.status(400).json({ error: "開始時刻は終了時刻より前にしてください" });
+      }
+    }
+
+    const linkId = uuidv4();
+
+    for (let d of dates) {
+      await pool.query(
+        `INSERT INTO schedules (link_id, title, date, timeslot, start_time, end_time) 
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [linkId, title, d, timeslot, startTime, endTime]
+      );
+    }
+
+    res.json({ linkId });
+  } catch (err) {
+    console.error("Error inserting shared schedule:", err);
+    res.status(500).json({ error: "リンク作成に失敗しました" });
+  }
+});
+
+// 📌 共有スケジュール取得
 app.get("/api/shared", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM schedules ORDER BY date ASC, start_time ASC NULLS LAST"
+      `SELECT * FROM schedules WHERE link_id IS NOT NULL ORDER BY date ASC, timeslot ASC`
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("取得エラー:", err);
+    console.error("Error fetching schedules:", err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
 });
 
-// === 共有リンクから取得 ===
-app.get("/api/share/:linkId", async (req, res) => {
+// 📌 特定リンクIDのスケジュール取得
+app.get("/api/shared/:linkId", async (req, res) => {
   try {
     const { linkId } = req.params;
     const result = await pool.query(
-      "SELECT * FROM schedules WHERE link_id=$1 ORDER BY date ASC, start_time ASC NULLS LAST",
+      `SELECT * FROM schedules WHERE link_id = $1 ORDER BY date ASC, timeslot ASC`,
       [linkId]
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("取得エラー:", err);
+    console.error("Error fetching shared schedules:", err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
 });
 
-// === 共有スケジュールへのレスポンス保存 ===
+// 📌 共有スケジュールへの回答保存
 app.post("/api/shared/responses", async (req, res) => {
   try {
-    const { responses, dates, timeSlot, startTime, endTime } = req.body;
+    const { responses } = req.body;
 
-    // responses 保存
-    for (const scheduleId in responses) {
-      const resp = responses[scheduleId];
+    for (let scheduleId in responses) {
+      const response = responses[scheduleId];
       await pool.query(
-        `INSERT INTO responses (schedule_id, username, response)
-         VALUES ($1,$2,$3)`,
-        [scheduleId, "anonymous", resp]
+        `INSERT INTO responses (schedule_id, username, response) 
+         VALUES ($1, $2, $3)`,
+        [scheduleId, "匿名ユーザー", response]
       );
     }
 
-    // 追加の日程（カレンダーで新規追加された分）も保存
-    if (dates && dates.length > 0) {
-      for (const d of dates) {
-        await pool.query(
-          `INSERT INTO schedules (title, date, timeslot, start_time, end_time, memo)
-           VALUES ($1,$2,$3,$4,$5,$6)`,
-          [
-            "共有追加",
-            d,
-            timeSlot === "時間指定" ? `${startTime}〜${endTime}` : timeSlot,
-            timeSlot === "時間指定" ? startTime : null,
-            timeSlot === "時間指定" ? endTime : null,
-            null,
-          ]
-        );
-      }
-    }
-
-    res.json({ message: "保存しました" });
+    res.json({ success: true });
   } catch (err) {
-    console.error("レスポンス保存エラー:", err);
+    console.error("Error saving responses:", err);
     res.status(500).json({ error: "保存に失敗しました" });
   }
 });
 
-// === 静的ファイル配信（フロントエンド） ===
+// === フロントエンド配信 ===
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
+// === 起動 ===
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
