@@ -7,18 +7,20 @@ body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   color: #333;
 
-  /* 大きめでふんわりしたかわいいハニカム背景 */
+  /* 大きめでふんわりしたかわいいハニカム背景（全ページ共通） */
   background-color: #fff0f5; /* 薄ピンクベース */
   background-image:
-    linear-gradient(30deg, rgba(253,185,200,0.2) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.2) 87.5%, rgba(253,185,200,0.2)),
-    linear-gradient(150deg, rgba(253,185,200,0.2) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.2) 87.5%, rgba(253,185,200,0.2));
-  background-size: 100px 174px; /* ← 六角形を大きめに */
+    linear-gradient(30deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15)),
+    linear-gradient(150deg, rgba(253,185,200,0.15) 12%, transparent 12.5%, transparent 87%, rgba(253,185,200,0.15) 87.5%, rgba(253,185,200,0.15));
+  background-size: 120px 208px; /* 六角形をさらに大きめ */
   background-position: 0 0, 0 0;
 }
 
 /* ===== ヘッダーバナー ===== */
 .header {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: linear-gradient(90deg, rgba(253,185,200,0.85), rgba(0,76,160,0.85));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
@@ -30,48 +32,45 @@ body {
 
 /* ===== ボタンデザイン ===== */
 .btn-main {
-  background: #004CA0;
+  background: rgba(0,76,160,0.85);
   color: white;
   border-radius: 1rem;
   padding: 0.5rem 1.2rem;
   font-weight: 600;
   transition: 0.3s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 .btn-main:hover {
-  background: #FDB9C8;
+  background: rgba(253,185,200,0.85);
   color: #000;
 }
 
-/* ===== カードデザイン ===== */
-.card {
-  background: rgba(255,255,255,0.85);
+/* ===== グラスモーフィズムカード ===== */
+.card, .react-calendar {
+  background: rgba(255, 255, 255, 0.25); /* 半透明 */
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
   margin: 1rem 0;
   color: #333;
 }
 
 /* ===== カレンダー調整 ===== */
-.react-calendar {
-  background: rgba(255,255,255,0.9);
-  border: none;
-  border-radius: 1rem;
-  color: #333;
-  padding: 1rem;
-}
 .react-calendar__tile--now {
-  background: #FDB9C8 !important;
+  background: rgba(253,185,200,0.9) !important;
   color: black !important;
   border-radius: 50%;
   font-weight: bold;
 }
 .react-calendar__tile--active {
-  background: #004CA0 !important;
+  background: rgba(0,76,160,0.9) !important;
   color: white !important;
   border-radius: 50%;
 }
 .react-calendar__month-view__days__day--weekend {
   color: #E63946 !important; /* 土日祝は赤っぽく */
 }
-
