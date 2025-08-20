@@ -8,6 +8,7 @@ body {
   overflow-x: hidden;
   position: relative;
   background-color: #000;
+  z-index: 1; /* 背景ハニカムより上に配置 */
 }
 
 /* 全ページ共通 背景ハニカム */
@@ -35,6 +36,6 @@ body::before {
   background-size: 120px 140px; /* 六角形のサイズ */
   background-repeat: repeat;   /* タイル状に敷き詰め */
   opacity: 0.6;                /* 全体の透け具合 */
-  z-index: -1;
+  z-index: 0;                  /* bodyの下 */
   pointer-events: none;        /* 背景クリック無効 */
 }
