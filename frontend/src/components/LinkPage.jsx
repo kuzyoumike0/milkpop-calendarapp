@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import Header from "./Header";
 import Footer from "./Footer";
+import CalendarWrapper from "./CalendarWrapper";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -36,10 +35,10 @@ export default function LinkPage() {
 
         <div className="mb-6">
           <label className="block mb-2">日程選択</label>
-          <Calendar
-            selectRange={rangeMode === "range"}
-            onChange={(value) => setDates(value)}
+          <CalendarWrapper
+            mode={rangeMode}
             value={dates}
+            onChange={setDates}
           />
         </div>
 
