@@ -57,7 +57,8 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
       schedule_id INT NOT NULL,
-      response TEXT NOT NULL
+      response TEXT NOT NULL,
+      UNIQUE(username, schedule_id)
     );
   `);
 }
@@ -145,7 +146,7 @@ app.get("/api/share/:linkid", async (req, res) => {
   }
 });
 
-// === API: 応答保存（〇✖） ===
+// === API: 応答保存（〇✖ 上書き対応） ===
 app.post("/api/response", async (req, res) => {
   try {
     const { username, schedule_id, response } = req.body;
@@ -154,10 +155,15 @@ app.post("/api/response", async (req, res) => {
     }
 
     await pool.query(
-      `INSERT INTO responses (username, schedule_id, response)
-       VALUES ($1,$2,$3)`,
+      `
+      INSERT INTO responses (username, schedule_id, response)
+      VALUES ($1,$2,$3)
+      ON CONFLICT (username, schedule_id)
+      DO UPDATE SET response = EXCLUDED.response
+      `,
       [username, schedule_id, response]
     );
+
     res.json({ success: true });
   } catch (err) {
     console.error("応答保存エラー:", err);
