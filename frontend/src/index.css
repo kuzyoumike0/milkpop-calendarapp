@@ -7,12 +7,12 @@ body {
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
   color: white;
 
-  /* 固定ハニカム模様の背景 */
-  background-color: #000000; /* 黒ベース */
+  /* かわいいパステル調ハニカム背景 */
+  background-color: #fff0f5; /* 薄ピンクベース */
   background-image:
-    linear-gradient(30deg, #1a1a1a 12%, transparent 12.5%, transparent 87%, #1a1a1a 87.5%, #1a1a1a),
-    linear-gradient(150deg, #1a1a1a 12%, transparent 12.5%, transparent 87%, #1a1a1a 87.5%, #1a1a1a),
-    linear-gradient(90deg, #333 2%, transparent 2%, transparent 98%, #333 98%, #333);
+    linear-gradient(30deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
+    linear-gradient(150deg, #FDB9C8 12%, transparent 12.5%, transparent 87%, #FDB9C8 87.5%, #FDB9C8),
+    linear-gradient(90deg, #004CA0 2%, transparent 2%, transparent 98%, #004CA0 98%, #004CA0);
   background-size: 60px 104px;
   background-position: 0 0, 0 0, 0 0;
 }
@@ -25,7 +25,7 @@ body {
   font-weight: bold;
   padding: 1rem 2rem;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   border-radius: 0 0 1rem 1rem;
 }
 
@@ -40,30 +40,32 @@ body {
 }
 .btn-main:hover {
   background: #FDB9C8;
-  color: black;
+  color: #000;
 }
 
 /* ===== カードデザイン ===== */
 .card {
-  background: #1a1a1a;
+  background: rgba(255,255,255,0.85);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   margin: 1rem 0;
+  color: #333;
 }
 
 /* ===== カレンダー調整 ===== */
 .react-calendar {
-  background: #1a1a1a;
+  background: rgba(255,255,255,0.9);
   border: none;
   border-radius: 1rem;
-  color: white;
+  color: #333;
   padding: 1rem;
 }
 .react-calendar__tile--now {
   background: #FDB9C8 !important;
   color: black !important;
   border-radius: 50%;
+  font-weight: bold;
 }
 .react-calendar__tile--active {
   background: #004CA0 !important;
@@ -71,5 +73,5 @@ body {
   border-radius: 50%;
 }
 .react-calendar__month-view__days__day--weekend {
-  color: #FDB9C8 !important; /* 土日祝は赤系 */
+  color: #E63946 !important; /* 土日祝は赤っぽく */
 }
