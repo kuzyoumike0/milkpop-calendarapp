@@ -54,7 +54,7 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS responses (
       id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
-      schedule_id INT NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+      schedule_id INT NOT NULL,
       response TEXT NOT NULL
     );
   `);
@@ -117,7 +117,7 @@ app.get("/api/share/:linkid", async (req, res) => {
   }
 });
 
-// === API: 応答保存（〇✖） ===
+// === API: 応答保存（◯✕） ===
 app.post("/api/response", async (req, res) => {
   try {
     const { username, schedule_id, response } = req.body;
@@ -137,10 +137,28 @@ app.post("/api/response", async (req, res) => {
   }
 });
 
+// === API: リンクIDで全応答取得（即時反映用） ===
+app.get("/api/responses/:linkid", async (req, res) => {
+  try {
+    const { linkid } = req.params;
+    const result = await pool.query(
+      `SELECT r.id, r.username, r.response, r.schedule_id
+       FROM responses r
+       JOIN schedules s ON r.schedule_id = s.id
+       WHERE s.linkid = $1`,
+      [linkid]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("応答取得エラー:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
 // === 静的ファイル提供 ===
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 // === サーバー起動 ===
