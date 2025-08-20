@@ -1,42 +1,37 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { LinkIcon, UserIcon } from "./Icons";
+import Header from "./Header";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* バナー */}
-      <header className="bg-[#004CA0] text-white text-center py-4 text-2xl font-bold shadow-md">
-        MilkPOP Calendar
-      </header>
+    <div className="min-h-screen bg-black text-white font-sans relative">
+      {/* 共通ヘッダー */}
+      <Header />
 
-      <main className="flex flex-col flex-grow items-center justify-center gap-8">
-        <h1 className="text-4xl font-extrabold text-[#FDB9C8] mb-10">
-          スケジュール管理をシンプルに
-        </h1>
+      {/* メインコンテンツ */}
+      <main className="flex flex-col items-center justify-center py-16 px-6">
+        <div className="bg-white/10 rounded-2xl shadow-xl p-10 text-center max-w-2xl backdrop-blur-md">
+          <h2 className="text-3xl font-bold mb-6">
+            ようこそ、MilkPOP Calendar へ
+          </h2>
+          <p className="mb-8 text-lg text-gray-200">
+            スケジュールを登録したり、みんなと共有して調整することができます。
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-4/5 max-w-4xl">
-          {/* 日程登録ページ */}
-          <Link
-            to="/link"
-            className="group p-8 rounded-2xl shadow-lg bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] hover:scale-105 hover:shadow-2xl transition transform flex flex-col items-center justify-center"
-          >
-            <div className="bg-black/30 p-4 rounded-full mb-4 group-hover:bg-black/50 transition">
-              <LinkIcon className="w-12 h-12 text-white" />
-            </div>
-            <p className="mt-2 text-xl font-semibold">日程登録ページへ</p>
-          </Link>
-
-          {/* 個人日程登録ページ */}
-          <Link
-            to="/personal"
-            className="group p-8 rounded-2xl shadow-lg bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] hover:scale-105 hover:shadow-2xl transition transform flex flex-col items-center justify-center"
-          >
-            <div className="bg-black/30 p-4 rounded-full mb-4 group-hover:bg-black/50 transition">
-              <UserIcon className="w-12 h-12 text-white" />
-            </div>
-            <p className="mt-2 text-xl font-semibold">個人日程登録ページへ</p>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link
+              to="/link"
+              className="bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white px-6 py-3 rounded-xl shadow-lg font-semibold hover:opacity-90"
+            >
+              日程登録ページへ
+            </Link>
+            <Link
+              to="/personal"
+              className="bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] text-white px-6 py-3 rounded-xl shadow-lg font-semibold hover:opacity-90"
+            >
+              個人日程登録ページへ
+            </Link>
+          </div>
         </div>
       </main>
     </div>
