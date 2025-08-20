@@ -1,115 +1,95 @@
-import React, { useEffect, useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
-import { useParams } from "react-router-dom";
-import { useHolidays } from "../hooks/useHolidays";
 
 export default function SharePage() {
-  const { linkid } = useParams();
-  const [schedule, setSchedule] = useState([]);
-  const [username, setUsername] = useState("");
-  const [selections, setSelections] = useState([]);
-  const holidays = useHolidays();
+  const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState({});
 
-  // 共有スケジュール取得
   useEffect(() => {
-    axios
-      .get(`/api/share/${linkid}`)
-      .then((res) => setSchedule(res.data))
-      .catch((err) => console.error("取得エラー:", err));
-  }, [linkid]);
+    // 共有スケジュール取得
+    axios.get("/api/shared").then((res) => setSchedules(res.data));
+  }, []);
 
-  // 日付クリック
-  const toggleSelection = (date, timeslot) => {
-    const iso = date.toISOString().split("T")[0];
-    const key = `${iso}-${timeslot}`;
-
-    if (selections.find((s) => s.key === key)) {
-      setSelections(selections.filter((s) => s.key !== key));
-    } else {
-      setSelections([...selections, { key, date: iso, timeslot, status: "⭕" }]);
-    }
+  const handleChange = (id, value) => {
+    setResponses((prev) => ({ ...prev, [id]: value }));
   };
 
-  // 登録処理
-  const handleSubmit = async () => {
-    if (!username) {
-      alert("ユーザー名を入力してください");
-      return;
-    }
-    try {
-      await axios.post(`/api/share/${linkid}`, {
-        username,
-        selections,
-      });
-      alert("参加情報を登録しました！");
-    } catch (err) {
-      console.error("登録エラー:", err);
-      alert("登録に失敗しました。");
-    }
+  const handleSave = () => {
+    axios.post("/api/shared/responses", { responses }).then(() => {
+      alert("保存しました！");
+    });
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-2xl font-bold mb-6">共有スケジュール</h1>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* バナー */}
+      <header className="bg-[#004CA0] py-4 shadow-lg">
+        <div className="container mx-auto flex justify-between items-center px-6">
+          <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
+          <nav className="space-x-4">
+            <Link
+              to="/link"
+              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+            >
+              日程登録
+            </Link>
+            <Link
+              to="/personal"
+              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+            >
+              個人スケジュール
+            </Link>
+          </nav>
+        </div>
+      </header>
 
-      {/* ユーザー名入力 */}
-      <input
-        className="w-full p-2 mb-4 bg-gray-800 rounded"
-        placeholder="あなたの名前を入力"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
+      {/* メイン */}
+      <main className="flex-1 container mx-auto px-6 py-10">
+        <h2 className="text-3xl font-extrabold mb-6 text-[#FDB9C8]">
+          共有スケジュール
+        </h2>
 
-      {/* カレンダー（祝日赤字 & 選択反映） */}
-      <Calendar
-        onClickDay={(d) => toggleSelection(d, "全日")}
-        tileClassName={({ date }) => {
-          const iso = date.toISOString().split("T")[0];
-          if (selections.some((s) => s.date === iso)) {
-            return "bg-blue-600 text-white rounded-full";
-          }
-          if (holidays.includes(iso)) {
-            return "text-red-500 font-bold";
-          }
-          return "";
-        }}
-        locale="ja-JP"
-      />
+        {schedules.length === 0 ? (
+          <p>まだ共有された日程はありません。</p>
+        ) : (
+          <table className="w-full text-center border-collapse">
+            <thead>
+              <tr className="bg-[#FDB9C8] text-black">
+                <th className="p-2">日付</th>
+                <th className="p-2">時間帯</th>
+                <th className="p-2">選択</th>
+              </tr>
+            </thead>
+            <tbody>
+              {schedules.map((s) => (
+                <tr key={s.id} className="border-b border-gray-700">
+                  <td className="p-2">{s.date}</td>
+                  <td className="p-2">{s.timeslot}</td>
+                  <td className="p-2">
+                    <select
+                      className="px-3 py-1 rounded-lg text-black"
+                      value={responses[s.id] || ""}
+                      onChange={(e) => handleChange(s.id, e.target.value)}
+                    >
+                      <option value="">選択してください</option>
+                      <option value="〇">〇</option>
+                      <option value="✖">✖</option>
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-      {/* 登録ボタン */}
-      <button
-        onClick={handleSubmit}
-        className="mt-6 w-full py-3 bg-green-600 rounded-lg hover:bg-green-500"
-      >
-        登録する
-      </button>
-
-      {/* 選択済み表示 */}
-      <div className="mt-8 max-w-3xl mx-auto">
-        <h2 className="text-xl font-bold mb-4">あなたの選択</h2>
-        <ul className="space-y-2">
-          {selections.map((s, idx) => (
-            <li key={idx} className="bg-gray-800 p-3 rounded-lg">
-              {s.date} ({s.timeslot}) → {s.status}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 共有スケジュール一覧 */}
-      <div className="mt-10 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-4">全体のスケジュール</h2>
-        <ul className="space-y-2">
-          {schedule.map((s, idx) => (
-            <li key={idx} className="bg-gray-700 p-3 rounded-lg">
-              <strong>{s.title}</strong> ({s.timeslot})<br />
-              {s.date}
-            </li>
-          ))}
-        </ul>
-      </div>
+        <button
+          onClick={handleSave}
+          className="mt-6 px-6 py-3 bg-[#FDB9C8] text-black rounded-2xl font-semibold shadow hover:bg-[#004CA0] hover:text-white transition"
+        >
+          保存
+        </button>
+      </main>
     </div>
   );
 }
