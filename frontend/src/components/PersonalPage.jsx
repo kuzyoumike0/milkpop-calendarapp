@@ -13,10 +13,17 @@ export default function PersonalPage() {
   const [startTime, setStartTime] = useState("01:00");
   const [endTime, setEndTime] = useState("24:00");
   const [holidays, setHolidays] = useState([]);
+  const [list, setList] = useState([]);
 
   useEffect(() => {
     axios.get("/api/holidays").then((res) => setHolidays(res.data));
+    fetchList();
   }, []);
+
+  const fetchList = async () => {
+    const res = await axios.get("/api/personal");
+    setList(res.data);
+  };
 
   const holidayDates = holidays.map((h) => h.date);
 
@@ -32,7 +39,6 @@ export default function PersonalPage() {
     }
   };
 
-  // 1時〜24時までのリスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String((i + 1) % 24).padStart(2, "0")}:00`
   );
@@ -79,11 +85,21 @@ export default function PersonalPage() {
       start_time: s,
       end_time: e,
     });
+
+    // 保存したら一覧更新
+    fetchList();
     alert("保存しました！");
   };
 
+  const getTimeLabel = (s, e) => {
+    if (s === "01:00" && e === "24:00") return "終日";
+    if (s === "09:00" && e === "18:00") return "昼";
+    if (s === "18:00" && e === "24:00") return "夜";
+    return `${s} 〜 ${e}`;
+  };
+
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">個人日程登録</h2>
       <input
         className="w-full mb-3 p-2 text-black rounded"
@@ -194,6 +210,32 @@ export default function PersonalPage() {
       >
         保存
       </button>
+
+      {/* 保存済み一覧 */}
+      <h3 className="text-xl font-bold mt-10 mb-4 text-[#FDB9C8]">
+        保存した個人スケジュール
+      </h3>
+      <div className="space-y-4">
+        {list.map((item) => (
+          <div
+            key={item.id}
+            className="p-4 bg-gray-900 rounded-2xl shadow-md border border-gray-700"
+          >
+            <h4 className="text-lg font-semibold text-[#FDB9C8]">
+              {item.title}
+            </h4>
+            {item.memo && (
+              <p className="text-sm text-gray-300 mb-2">{item.memo}</p>
+            )}
+            <p className="text-gray-400 text-sm">
+              日付: {item.dates.join(", ")}
+            </p>
+            <p className="text-gray-400 text-sm">
+              時間帯: {getTimeLabel(item.start_time, item.end_time)}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
