@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
 
-export default function SharePage() {
-  const { linkid } = useParams();
+export default function SharePage({ linkId }) {
   const [schedules, setSchedules] = useState([]);
-  const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({});
+  const [username, setUsername] = useState("");
 
   // スケジュール取得
   const fetchSchedules = async () => {
-    const res = await axios.get("/api/schedules", { params: { linkid } });
-    setSchedules(res.data);
+    try {
+      const res = await axios.get(`/api/share/${linkId}`);
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("共有スケジュール取得失敗:", err);
+    }
   };
 
+  // 初期ロード
   useEffect(() => {
     fetchSchedules();
-  }, [linkid]);
+  }, [linkId]);
 
-  // プルダウン変更
-  const handleChange = (scheduleId, value) => {
-    setResponses({
-      ...responses,
+  // 回答変更
+  const handleResponseChange = (scheduleId, value) => {
+    setResponses((prev) => ({
+      ...prev,
       [scheduleId]: value,
-    });
+    }));
   };
 
   // 保存処理
@@ -32,71 +35,54 @@ export default function SharePage() {
       alert("名前を入力してください");
       return;
     }
-    const payload = Object.entries(responses).map(([scheduleId, response]) => ({
-      schedule_id: scheduleId,
-      username,
-      response,
-    }));
-
-    await axios.post("/api/share-responses", payload);
-    await fetchSchedules(); // 即時反映
+    try {
+      await axios.post(`/api/share/${linkId}/responses`, {
+        username,
+        responses,
+      });
+      await fetchSchedules(); // 即時反映
+    } catch (err) {
+      alert("保存に失敗しました");
+      console.error(err);
+    }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>共有スケジュール回答ページ</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">共有スケジュール</h2>
 
-      <div>
-        <input
-          type="text"
-          placeholder="あなたの名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </div>
+      <input
+        className="border p-2 mb-3 w-full"
+        placeholder="あなたの名前を入力"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
 
-      <table
-        style={{
-          borderCollapse: "collapse",
-          width: "100%",
-          marginTop: "20px",
-          border: "1px solid #ccc",
-        }}
-      >
+      <table className="w-full border-collapse">
         <thead>
-          <tr style={{ background: "#FDB9C8", color: "#fff" }}>
-            <th style={{ padding: "8px", border: "1px solid #ccc" }}>日付</th>
-            <th style={{ padding: "8px", border: "1px solid #ccc" }}>時間帯</th>
-            <th style={{ padding: "8px", border: "1px solid #ccc" }}>出欠</th>
-            <th style={{ padding: "8px", border: "1px solid #ccc" }}>回答一覧</th>
+          <tr className="bg-gray-200">
+            <th className="border p-2">日付</th>
+            <th className="border p-2">時間帯</th>
+            <th className="border p-2">タイトル</th>
+            <th className="border p-2">参加可否</th>
           </tr>
         </thead>
         <tbody>
-          {schedules.map((s) => (
-            <tr key={s.id}>
-              <td style={{ padding: "8px", border: "1px solid #ccc" }}>
-                {s.date}
-              </td>
-              <td style={{ padding: "8px", border: "1px solid #ccc" }}>
-                {s.timeslot}
-              </td>
-              <td style={{ padding: "8px", border: "1px solid #ccc" }}>
+          {schedules.map((s, idx) => (
+            <tr key={idx}>
+              <td className="border p-2">{s.date}</td>
+              <td className="border p-2">{s.timeslot}</td>
+              <td className="border p-2">{s.title}</td>
+              <td className="border p-2">
                 <select
                   value={responses[s.id] || ""}
-                  onChange={(e) => handleChange(s.id, e.target.value)}
+                  onChange={(e) => handleResponseChange(s.id, e.target.value)}
+                  className="border p-1"
                 >
                   <option value="">未選択</option>
-                  <option value="○">○</option>
+                  <option value="〇">〇</option>
                   <option value="✕">✕</option>
                 </select>
-              </td>
-              <td style={{ padding: "8px", border: "1px solid #ccc" }}>
-                {Array.isArray(s.responses) &&
-                  s.responses.map((r, idx) => (
-                    <div key={idx}>
-                      {r.username}: {r.response}
-                    </div>
-                  ))}
               </td>
             </tr>
           ))}
@@ -104,16 +90,8 @@ export default function SharePage() {
       </table>
 
       <button
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          background: "#004CA0",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
         onClick={handleSave}
+        className="mt-4 px-4 py-2 bg-green-500 text-white rounded"
       >
         保存
       </button>
