@@ -10,15 +10,25 @@ export default function App() {
   return (
     <Router>
       <div className="bg-black text-white min-h-screen">
-        <header className="bg-[#004CA0] text-white p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">MilkPOP Calendar</h1>
-          <nav className="space-x-4">
-            <Link to="/" className="hover:text-[#FDB9C8]">トップ</Link>
-            <Link to="/link" className="hover:text-[#FDB9C8]">日程登録</Link>
-            <Link to="/personal" className="hover:text-[#FDB9C8]">個人日程</Link>
+        {/* === 共通バナー === */}
+        <header className="bg-[#111] border-b border-[#333] p-4 flex justify-between items-center shadow-md">
+          <h1 className="text-2xl font-extrabold tracking-wide text-[#FDB9C8]">
+            MilkPOP Calendar
+          </h1>
+          <nav className="space-x-6">
+            <Link to="/" className="hover:text-[#FDB9C8] transition">
+              トップ
+            </Link>
+            <Link to="/link" className="hover:text-[#FDB9C8] transition">
+              日程登録
+            </Link>
+            <Link to="/personal" className="hover:text-[#FDB9C8] transition">
+              個人日程
+            </Link>
           </nav>
         </header>
 
+        {/* === ページコンテンツ === */}
         <main className="p-6">
           <Routes>
             <Route path="/" element={<TopPage />} />
