@@ -22,6 +22,14 @@ export default function SharePage() {
   };
 
   const handleSave = () => {
+    // バリデーション（開始 < 終了）
+    if (timeSlot === "時間指定") {
+      if (startTime >= endTime) {
+        alert("開始時刻は終了時刻より前にしてください。");
+        return;
+      }
+    }
+
     const newEntries = [];
     if (rangeMode === "multiple" && Array.isArray(dates)) {
       dates.forEach((d) => {
@@ -63,7 +71,6 @@ export default function SharePage() {
       .then(() => alert("保存しました！"));
   };
 
-  // 時間リスト生成 (01:00〜00:00)
   const timeOptions = [];
   for (let h = 1; h <= 24; h++) {
     const hour = String(h % 24).padStart(2, "0");
