@@ -5,47 +5,126 @@ import axios from "axios";
 export default function ShareLinkPage() {
   const { linkid } = useParams();
   const [schedules, setSchedules] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({});
+  const [selectedResponses, setSelectedResponses] = useState({});
 
+  // === スケジュール取得 ===
   useEffect(() => {
-    axios.get(`/api/share/${linkid}`).then((res) => setSchedules(res.data));
+    axios.get(`/api/share/${linkid}`)
+      .then((res) => setSchedules(res.data))
+      .catch((err) => console.error("共有日程取得エラー:", err));
+
+    fetchResponses();
   }, [linkid]);
 
-  const handleSave = async () => {
-    for (const schedule of schedules) {
-      const response = responses[schedule.id];
-      if (!response) continue;
-      await axios.post("/api/response", {
-        username,
-        schedule_id: schedule.id,
-        response,
-      });
+  // === 登録済み応答取得 ===
+  const fetchResponses = async () => {
+    try {
+      const res = await axios.get(`/api/responses?linkid=${linkid}`);
+      setResponses(res.data);
+    } catch (err) {
+      console.error("応答取得エラー:", err);
     }
-    alert("保存しました！");
+  };
+
+  // === 変更イベント ===
+  const handleChange = (scheduleId, value) => {
+    setSelectedResponses((prev) => ({
+      ...prev,
+      [scheduleId]: value,
+    }));
+  };
+
+  // === 保存 ===
+  const handleSave = async () => {
+    try {
+      const promises = Object.entries(selectedResponses).map(
+        ([scheduleId, response]) =>
+          axios.post("/api/response", {
+            username,
+            schedule_id: scheduleId,
+            response,
+          })
+      );
+      await Promise.all(promises);
+
+      // 即時反映
+      fetchResponses();
+      alert("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
+    }
   };
 
   return (
-    <div style={{ backgroundColor: "#000", color: "white", minHeight: "100vh", padding: "20px" }}>
-      <header style={{ background: "#004CA0", padding: "15px", fontSize: "20px", fontWeight: "bold" }}>MilkPOP Calendar</header>
-      <h2 style={{ color: "#FDB9C8" }}>共有スケジュール</h2>
+    <div className="p-6 bg-[#FDB9C8] min-h-screen text-white">
+      <h1 className="text-3xl font-bold text-center mb-6">
+        共有スケジュール
+      </h1>
 
-      <input type="text" placeholder="名前" value={username} onChange={(e) => setUsername(e.target.value)} style={{ padding: "10px", margin: "10px 0", width: "100%" }} />
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="あなたの名前"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="p-2 rounded text-black w-full"
+        />
+      </div>
 
-      {schedules.map((s) => (
-        <div key={s.id} style={{ border: "1px solid #FDB9C8", padding: "10px", margin: "10px 0", borderRadius: "6px" }}>
-          <p>{s.title} ({s.start_date} ~ {s.end_date}) [{s.timeslot}]</p>
-          <select value={responses[s.id] || ""} onChange={(e) => setResponses({ ...responses, [s.id]: e.target.value })}>
-            <option value="">選択してください</option>
-            <option value="〇">〇</option>
-            <option value="✖">✖</option>
-          </select>
-        </div>
-      ))}
+      <table className="w-full bg-black/40 rounded-lg shadow-lg">
+        <thead>
+          <tr>
+            <th className="p-2">タイトル</th>
+            <th className="p-2">日付</th>
+            <th className="p-2">時間帯</th>
+            <th className="p-2">あなたの回答</th>
+            <th className="p-2">参加者の回答</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.map((sch) => (
+            <tr key={sch.id} className="text-center">
+              <td className="p-2">{sch.title}</td>
+              <td className="p-2">
+                {sch.start_date} ~ {sch.end_date}
+              </td>
+              <td className="p-2">{sch.timeslot}</td>
+              <td className="p-2">
+                <select
+                  className="text-black p-1 rounded"
+                  value={selectedResponses[sch.id] || ""}
+                  onChange={(e) => handleChange(sch.id, e.target.value)}
+                >
+                  <option value="">選択</option>
+                  <option value="〇">〇</option>
+                  <option value="✖">✖</option>
+                </select>
+              </td>
+              <td className="p-2">
+                {responses
+                  .filter((r) => r.schedule_id === sch.id)
+                  .map((r, idx) => (
+                    <div key={idx}>
+                      {r.username}: {r.response}
+                    </div>
+                  ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-      <button onClick={handleSave} style={{ background: "#FDB9C8", color: "#000", padding: "10px 20px", border: "none", borderRadius: "8px" }}>
-        保存
-      </button>
+      <div className="text-center mt-6">
+        <button
+          onClick={handleSave}
+          className="px-6 py-2 rounded-lg bg-[#004CA0] hover:bg-blue-900 transition"
+        >
+          保存する
+        </button>
+      </div>
     </div>
   );
 }
