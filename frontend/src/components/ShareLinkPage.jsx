@@ -14,9 +14,11 @@ export default function ShareLinkPage({ link }) {
           下のボタンからコピーしたり、そのままページに移動できます。
         </p>
 
-        {/* リンクURLのコピー */}
+        {/* リンクURLのコピー部分 */}
         <div className="flex items-center justify-between bg-black/30 rounded-xl px-4 py-2 text-sm text-white shadow-inner">
-          <span className="truncate">{`${window.location.origin}/share/${link}`}</span>
+          <span className="truncate">
+            {`${window.location.origin}/share/${link}`}
+          </span>
           <button
             onClick={() => {
               navigator.clipboard.writeText(
