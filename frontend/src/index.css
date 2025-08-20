@@ -1,27 +1,37 @@
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+/* 背景は黒 */
+body {
+  @apply bg-black text-white min-h-screen flex justify-center items-center;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  overflow: hidden;
+  background-color: #000;
+}
 
-  background-image: url("data:image/svg+xml;utf8,\
-    <svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'>\
-      <defs>\
-        <linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'>\
-          <stop offset='0%' stop-color='%23FDB9C8' stop-opacity='0.2'/>\
-          <stop offset='100%' stop-color='%23004CA0' stop-opacity='0.2'/>\
-        </linearGradient>\
-      </defs>\
-      <polygon points='70,10 130,40 130,100 70,130 10,100 10,40' \
-        fill='url(%23grad)' \
-        stroke='rgba(255,255,255,0.2)' stroke-width='1'/>\
-    </svg>");
-    
-  background-size: 120px 140px;
-  opacity: 0.8; /* 全体の透け具合 */
-  z-index: -2;
-  backdrop-filter: blur(4px) saturate(120%);
-  -webkit-backdrop-filter: blur(4px) saturate(120%);
+/* 中央の六角形 */
+.hexagon {
+  position: relative;
+  width: 300px;  /* 大きさ調整 */
+  aspect-ratio: 1 / 1;
+  background: rgba(255, 255, 255, 0.08);
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  font-size: 1.5rem;
+}
+
+/* グラデーションの縁取り */
+.hexagon::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  clip-path: inherit;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  z-index: -1;
+  border-radius: 12px;
 }
