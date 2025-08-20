@@ -6,7 +6,7 @@ export default function SharePage() {
   const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
 
-  // 即時反映: スケジュール取得
+  // 即時反映: 全スケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await axios.get("/api/schedules");
@@ -57,7 +57,7 @@ export default function SharePage() {
 
       {/* ユーザー名入力 */}
       <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
-        <h2 className="text-2xl mb-4">共有スケジュール</h2>
+        <h2 className="text-2xl mb-4">全共有スケジュール</h2>
         <input
           className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
           type="text"
@@ -70,7 +70,8 @@ export default function SharePage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-[#004CA0] text-[#FDB9C8]">
-              <th className="p-2">タイトル</th>
+              <th className="p-2">リンクタイトル</th>
+              <th className="p-2">予定タイトル</th>
               <th className="p-2">日付</th>
               <th className="p-2">時間帯</th>
               <th className="p-2">可否入力</th>
@@ -80,6 +81,7 @@ export default function SharePage() {
           <tbody>
             {schedules.map((s) => (
               <tr key={s.id} className="border-b border-gray-700 align-top">
+                <td className="p-2">{s.link_title || "-"}</td>
                 <td className="p-2">{s.title}</td>
                 <td className="p-2">{s.date}</td>
                 <td className="p-2">{s.timeslot}</td>
@@ -95,7 +97,7 @@ export default function SharePage() {
                   </select>
                 </td>
                 <td className="p-2">
-                  {s.responses && s.responses[0] !== null ? (
+                  {s.responses && s.responses.length > 0 ? (
                     <ul className="list-disc list-inside">
                       {s.responses.map((r, i) => (
                         <li key={i}>
