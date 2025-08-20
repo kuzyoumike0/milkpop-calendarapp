@@ -53,18 +53,31 @@ initDB();
 
 // === 日程登録（共有リンク発行） ===
 app.post("/api/schedule", async (req, res) => {
-  const { title, dates, timeslot, range_mode } = req.body;
-  if (!title || !dates || !timeslot || !range_mode) {
-    return res.status(400).json({ error: "必須項目が不足しています" });
+  try {
+    const { title, dates, timeslot, range_mode } = req.body;
+    if (!title || !dates || !timeslot || !range_mode) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    const normalizedDates = Array.isArray(dates)
+      ? dates.map((d) => new Date(d).toISOString().split("T")[0])
+      : [];
+
+    if (normalizedDates.length === 0) {
+      return res.status(400).json({ error: "日付が選択されていません" });
+    }
+
+    const linkid = uuidv4();
+    await pool.query(
+      "INSERT INTO schedules (title, dates, timeslot, range_mode, linkid) VALUES ($1, $2, $3, $4, $5)",
+      [title, normalizedDates, timeslot, range_mode, linkid]
+    );
+
+    res.json({ link: `/share/${linkid}`, linkid });
+  } catch (err) {
+    console.error("リンク発行エラー:", err);
+    res.status(500).json({ error: "リンク発行に失敗しました" });
   }
-
-  const linkid = uuidv4();
-  await pool.query(
-    "INSERT INTO schedules (title, dates, timeslot, range_mode, linkid) VALUES ($1, $2, $3, $4, $5)",
-    [title, dates, timeslot, range_mode, linkid]
-  );
-
-  res.json({ link: `/share/${linkid}`, linkid });
 });
 
 // === 個人スケジュール登録 ===
@@ -74,9 +87,13 @@ app.post("/api/personal", async (req, res) => {
     return res.status(400).json({ error: "必須項目が不足しています" });
   }
 
+  const normalizedDates = Array.isArray(dates)
+    ? dates.map((d) => new Date(d).toISOString().split("T")[0])
+    : [];
+
   await pool.query(
     "INSERT INTO schedules (title, memo, dates, timeslot, range_mode, linkid) VALUES ($1,$2,$3,$4,$5,$6)",
-    [title, memo, dates, timeslot, range_mode, uuidv4()]
+    [title, memo, normalizedDates, timeslot, range_mode, uuidv4()]
   );
 
   res.json({ success: true });
@@ -108,15 +125,24 @@ app.get("/api/schedule/:linkid", async (req, res) => {
 
 // === 回答保存 ===
 app.post("/api/share/:linkid/response", async (req, res) => {
-  const { linkid } = req.params;
-  const { username, answers } = req.body;
+  try {
+    const { linkid } = req.params;
+    const { username, answers } = req.body;
 
-  await pool.query(
-    "INSERT INTO responses (linkid, username, answers) VALUES ($1,$2,$3)",
-    [linkid, username, answers]
-  );
+    if (!username || !answers) {
+      return res.status(400).json({ error: "名前と回答は必須です" });
+    }
 
-  res.json({ success: true });
+    await pool.query(
+      "INSERT INTO responses (linkid, username, answers) VALUES ($1,$2,$3)",
+      [linkid, username, answers]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存に失敗しました" });
+  }
 });
 
 // === 静的ファイル配信 ===
