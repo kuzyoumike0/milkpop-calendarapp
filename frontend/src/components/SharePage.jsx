@@ -30,7 +30,6 @@ export default function SharePage() {
 
   if (!schedule) return <p>読み込み中...</p>;
 
-  // 時間帯ラベル判定
   const getTimeLabel = () => {
     const s = schedule.start_time;
     const e = schedule.end_time;
@@ -41,7 +40,7 @@ export default function SharePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto px-2">
       {/* タイトル */}
       <h2 className="text-3xl font-bold mb-2 text-[#FDB9C8]">
         {schedule.title}
@@ -61,33 +60,26 @@ export default function SharePage() {
         onChange={(e) => setUsername(e.target.value)}
       />
 
-      {/* 日程 × 回答 */}
-      <table className="w-full border border-gray-600 text-center mb-6">
-        <thead className="bg-[#004CA0] text-white">
-          <tr>
-            <th className="p-2">日付</th>
-            <th className="p-2">回答</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedule.dates.map((date) => (
-            <tr key={date} className="border-b border-gray-600">
-              <td className="p-2">{date}</td>
-              <td className="p-2">
-                <select
-                  className="text-black rounded"
-                  value={answers[date] || ""}
-                  onChange={(e) => handleAnswerChange(date, e.target.value)}
-                >
-                  <option value="">未回答</option>
-                  <option value="○">○</option>
-                  <option value="✖">✖</option>
-                </select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* 回答フォーム（日程ごと） */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {schedule.dates.map((date) => (
+          <div
+            key={date}
+            className="p-4 bg-gray-900 rounded-2xl shadow-lg border border-gray-700 flex flex-col"
+          >
+            <p className="font-semibold text-[#FDB9C8] mb-2">{date}</p>
+            <select
+              className="text-black rounded p-1"
+              value={answers[date] || ""}
+              onChange={(e) => handleAnswerChange(date, e.target.value)}
+            >
+              <option value="">未回答</option>
+              <option value="○">○</option>
+              <option value="✖">✖</option>
+            </select>
+          </div>
+        ))}
+      </div>
 
       <button
         className="w-full bg-[#FDB9C8] text-black py-2 rounded-2xl hover:bg-[#004CA0] hover:text-white shadow-lg"
@@ -97,27 +89,25 @@ export default function SharePage() {
       </button>
 
       {/* 全員分の回答一覧 */}
-      <h3 className="text-xl mt-10 mb-3 text-[#FDB9C8]">みんなの回答</h3>
-      <table className="w-full border border-gray-600 text-center">
-        <thead className="bg-gray-800">
-          <tr>
-            <th className="p-2">名前</th>
+      <h3 className="text-xl mt-10 mb-4 text-[#FDB9C8]">みんなの回答</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {responses.map((r, idx) => (
+          <div
+            key={idx}
+            className="p-4 bg-gray-900 rounded-2xl shadow-lg border border-gray-700"
+          >
+            <h4 className="text-lg font-semibold text-[#FDB9C8] mb-2">
+              {r.username}
+            </h4>
             {schedule.dates.map((d) => (
-              <th key={d} className="p-2">{d}</th>
+              <p key={d} className="text-gray-300 text-sm">
+                <span className="font-semibold text-white">{d}:</span>{" "}
+                {r.answers[d] || "-"}
+              </p>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {responses.map((r, idx) => (
-            <tr key={idx} className="border-b border-gray-600">
-              <td className="p-2">{r.username}</td>
-              {schedule.dates.map((d) => (
-                <td key={d} className="p-2">{r.answers[d] || "-"}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
