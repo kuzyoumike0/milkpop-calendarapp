@@ -1,143 +1,155 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import useHolidays from "../hooks/useHolidays";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
-  const [mode, setMode] = useState("range");
-  const [timeType, setTimeType] = useState("終日");
-  const [startTime, setStartTime] = useState("00:00");
-  const [endTime, setEndTime] = useState("01:00");
-  const [schedules, setSchedules] = useState([]);
-  const [link, setLink] = useState("");
+  const [dates, setDates] = useState([]); // 複数日選択または範囲選択
+  const [rangeMode, setRangeMode] = useState("multiple");
+  const [timeStart, setTimeStart] = useState("09:00");
+  const [timeEnd, setTimeEnd] = useState("18:00");
+  const [timeSlot, setTimeSlot] = useState("全日");
+  const [link, setLink] = useState(null);
 
-  const holidays = useHolidays();
-
-  const fetchSchedules = async () => {
-    const res = await axios.get("/api/personal");
-    setSchedules(res.data);
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
-
+  // 日付選択処理
   const handleDateChange = (value) => {
-    if (mode === "range") {
+    if (rangeMode === "range") {
       setDates(value);
     } else {
-      if (!Array.isArray(dates)) setDates([]);
-      const exists = dates.find((d) => d.toDateString() === value.toDateString());
-      if (exists) {
-        setDates(dates.filter((d) => d.toDateString() !== value.toDateString()));
-      } else {
-        setDates([...dates, value]);
-      }
+      setDates(value instanceof Array ? value : [value]);
     }
   };
 
-  const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
-
+  // 保存処理
   const handleSave = async () => {
-    const formattedDates = Array.isArray(dates)
-      ? dates.map((d) => {
-          if (d instanceof Date) {
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
-            return `${yyyy}-${mm}-${dd}`;
-          }
-          return d;
-        })
-      : [];
-
-    let timeslot = timeType;
-    if (timeType === "時間指定") {
-      if (startTime >= endTime) {
-        alert("終了時刻は開始時刻より後にしてください");
-        return;
-      }
-      timeslot = `${startTime}〜${endTime}`;
+    if (!title || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
+    if (timeSlot === "時間指定" && timeStart >= timeEnd) {
+      alert("開始時刻は終了時刻より前にしてください");
+      return;
     }
 
-    const res = await axios.post("/api/schedules", {
+    const payload = {
       title,
-      dates: formattedDates,
-      timeslot,
-    });
+      dates: Array.isArray(dates) ? dates : [dates],
+      range_mode: rangeMode,
+      timeslot: timeSlot === "時間指定" ? `${timeStart}〜${timeEnd}` : timeSlot,
+    };
 
-    setLink(res.data.link);
-    fetchSchedules();
+    const res = await axios.post("/api/schedule", payload);
+    setLink(`${window.location.origin}/share/${res.data.linkid}`);
   };
 
   return (
-    <div className="card">
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">日程登録</h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">日程登録ページ</h2>
+
+      {/* タイトル入力 */}
       <input
-        className="p-2 mb-2 w-full text-black rounded"
-        placeholder="タイトル"
+        className="p-2 mb-4 w-full text-black rounded"
+        placeholder="タイトルを入力"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      <div className="mb-2">
+      {/* 範囲選択/複数選択モード */}
+      <div className="mb-4">
         <label className="mr-4">
-          <input type="radio" value="range" checked={mode === "range"} onChange={() => setMode("range")} /> 範囲選択
+          <input
+            type="radio"
+            value="multiple"
+            checked={rangeMode === "multiple"}
+            onChange={() => setRangeMode("multiple")}
+          />
+          複数選択
         </label>
         <label>
-          <input type="radio" value="multi" checked={mode === "multi"} onChange={() => setMode("multi")} /> 複数選択
+          <input
+            type="radio"
+            value="range"
+            checked={rangeMode === "range"}
+            onChange={() => setRangeMode("range")}
+          />
+          範囲選択
         </label>
       </div>
 
-      <Calendar
-        onChange={handleDateChange}
-        value={dates}
-        selectRange={mode === "range"}
-        tileClassName={({ date }) => {
-          const yyyy = date.getFullYear();
-          const mm = String(date.getMonth() + 1).padStart(2, "0");
-          const dd = String(date.getDate()).padStart(2, "0");
-          const key = `${yyyy}-${mm}-${dd}`;
-          return holidays[key] ? "text-red-500 font-bold" : "";
-        }}
-      />
+      {/* カレンダー */}
+      <div className="bg-[#111] p-4 rounded-lg shadow-md inline-block">
+        <Calendar
+          onChange={handleDateChange}
+          selectRange={rangeMode === "range"}
+          value={dates}
+          locale="ja-JP"
+          calendarType="gregory"
+        />
+      </div>
 
-      <div className="mt-4">
-        <select className="text-black p-2 rounded" value={timeType} onChange={(e) => setTimeType(e.target.value)}>
-          <option value="終日">終日</option>
+      {/* 時間帯プルダウン */}
+      <div className="mt-6">
+        <label className="block mb-2 text-[#004CA0] font-bold">時間帯</label>
+        <select
+          className="p-2 text-black rounded"
+          value={timeSlot}
+          onChange={(e) => setTimeSlot(e.target.value)}
+        >
+          <option value="全日">全日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
           <option value="時間指定">時間指定</option>
         </select>
 
-        {timeType === "時間指定" && (
-          <div className="mt-2 space-x-2">
-            <select className="text-black p-2 rounded" value={startTime} onChange={(e) => setStartTime(e.target.value)}>
-              {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+        {timeSlot === "時間指定" && (
+          <div className="flex space-x-2 mt-2">
+            <select
+              className="p-2 text-black rounded"
+              value={timeStart}
+              onChange={(e) => setTimeStart(e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
+                  {i}:00
+                </option>
+              ))}
             </select>
-            <span>〜</span>
-            <select className="text-black p-2 rounded" value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-              {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+            <span className="text-white">〜</span>
+            <select
+              className="p-2 text-black rounded"
+              value={timeEnd}
+              onChange={(e) => setTimeEnd(e.target.value)}
+            >
+              {Array.from({ length: 24 }, (_, i) => (
+                <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
+                  {i}:00
+                </option>
+              ))}
             </select>
           </div>
         )}
       </div>
 
-      <button onClick={handleSave} className="mt-4 btn-primary">保存して共有リンク発行</button>
+      {/* 保存ボタン */}
+      <button onClick={handleSave} className="mt-6 btn-accent">
+        登録してリンク発行
+      </button>
 
-      {link && <p className="mt-4">共有リンク: <a href={link} className="text-[#FDB9C8] underline">{link}</a></p>}
-
-      <h3 className="text-xl mt-6 text-[#FDB9C8]">登録済み</h3>
-      <ul>
-        {schedules.map((s, i) => (
-          <li key={i}>{s.title} - {s.date} ({s.timeslot})</li>
-        ))}
-      </ul>
+      {/* 発行されたリンク表示 */}
+      {link && (
+        <div className="mt-4 p-4 bg-[#222] rounded-lg">
+          <p className="text-[#FDB9C8]">共有リンクが発行されました:</p>
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-[#004CA0]"
+          >
+            {link}
+          </a>
+        </div>
+      )}
     </div>
   );
 }
