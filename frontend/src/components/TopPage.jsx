@@ -4,7 +4,7 @@ export default function TopPage() {
   return (
     <div>
       <div className="header">MilkPOP Calendar</div>
-      <div className="flex flex-col items-center mt-8 gap-6">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="card w-11/12 md:w-2/3 text-center">
           <h2 className="text-2xl font-bold mb-4">ようこそ！</h2>
           <p className="mb-6">スケジュールを登録して、共有してみましょう。</p>
