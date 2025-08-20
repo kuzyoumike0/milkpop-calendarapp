@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import useHolidays from "../hooks/useHolidays";
 
 export default function SharePage() {
   const { linkid } = useParams();
   const [data, setData] = useState({ schedules: [], responses: [] });
   const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({});
-  const [date, setDate] = useState([]);
-  const holidays = useHolidays();
 
   const fetchSharedData = async () => {
     const res = await axios.get(`/api/shared/${linkid}`);
@@ -44,17 +39,14 @@ export default function SharePage() {
     responseMap[r.username][r.schedule_id] = r.response;
   });
 
-  // === セル色付け用 ===
+  // === セル色付け ===
   const renderCell = (value) => {
-    if (value === "〇") {
-      return <span className="text-green-500 font-bold">〇</span>;
-    } else if (value === "✖") {
-      return <span className="text-red-500 font-bold">✖</span>;
-    }
+    if (value === "〇") return <span className="text-green-500 font-bold">〇</span>;
+    if (value === "✖") return <span className="text-red-500 font-bold">✖</span>;
     return "-";
   };
 
-  // === 出欠率計算 ===
+  // === 出欠率 ===
   const calcRate = (scheduleId) => {
     const res = data.responses.filter((r) => r.schedule_id == scheduleId);
     if (res.length === 0) return "-";
@@ -73,23 +65,10 @@ export default function SharePage() {
         onChange={(e) => setUsername(e.target.value)}
       />
 
-      <Calendar
-        onChange={setDate}
-        value={date}
-        selectRange={true}
-        tileClassName={({ date }) => {
-          const yyyy = date.getFullYear();
-          const mm = String(date.getMonth() + 1).padStart(2, "0");
-          const dd = String(date.getDate()).padStart(2, "0");
-          const key = `${yyyy}-${mm}-${dd}`;
-          return holidays[key] ? "text-red-500 font-bold" : "";
-        }}
-      />
-
-      {/* 個別回答入力 */}
+      {/* 予定に対する回答入力 */}
       <h3 className="text-xl mt-6 mb-2">予定に対する回答</h3>
       <table className="w-full border text-center">
-        <thead>
+        <thead className="bg-[#004CA0] text-white">
           <tr>
             <th>日付</th>
             <th>タイトル</th>
