@@ -7,11 +7,12 @@ export default function LinkPage() {
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState([]);
   const [rangeMode, setRangeMode] = useState("multiple");
-  const [timeslot, setTimeslot] = useState("");
+  const [timeslot, setTimeslot] = useState("終日");
   const [startTime, setStartTime] = useState("1:00");
   const [endTime, setEndTime] = useState("2:00");
   const [linkUrl, setLinkUrl] = useState("");
 
+  // カレンダー選択
   const handleDateChange = (value) => {
     if (rangeMode === "range") {
       setDates(value);
@@ -20,18 +21,21 @@ export default function LinkPage() {
     }
   };
 
+  // 保存処理
   const handleSave = async () => {
-    if (new Date(`2020-01-01 ${endTime}`) <= new Date(`2020-01-01 ${startTime}`)) {
-      alert("終了時刻は開始時刻より後にしてください");
-      return;
+    if (timeslot === "時間指定") {
+      if (new Date(`2020-01-01 ${endTime}`) <= new Date(`2020-01-01 ${startTime}`)) {
+        alert("終了時刻は開始時刻より後にしてください");
+        return;
+      }
     }
 
     const res = await axios.post("/api/schedule", {
       title,
       dates,
       timeslot,
-      startTime,
-      endTime,
+      startTime: timeslot === "時間指定" ? startTime : null,
+      endTime: timeslot === "時間指定" ? endTime : null,
       rangeMode,
     });
     setLinkUrl(`${window.location.origin}/share/${res.data.linkid}`);
@@ -41,7 +45,7 @@ export default function LinkPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-[#FDB9C8] mb-6">日程登録ページ</h1>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6 mb-6">
         <label className="block text-[#FDB9C8] mb-2">タイトル</label>
         <input
@@ -77,6 +81,7 @@ export default function LinkPage() {
             範囲選択
           </label>
         </div>
+
         <Calendar
           onChange={handleDateChange}
           value={dates}
@@ -99,51 +104,53 @@ export default function LinkPage() {
           onChange={(e) => setTimeslot(e.target.value)}
           className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
         >
-          <option value="">選択してください</option>
           <option value="終日">終日</option>
           <option value="昼">昼</option>
           <option value="夜">夜</option>
+          <option value="時間指定">時間指定</option>
         </select>
       </div>
 
-      {/* 開始・終了時刻 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-[#FDB9C8] mb-2">開始時刻</h2>
-          <select
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-          >
-            {Array.from({ length: 24 }).map((_, i) => {
-              const hour = (i + 1) % 24;
-              return (
-                <option key={hour} value={`${hour}:00`}>
-                  {hour}:00
-                </option>
-              );
-            })}
-          </select>
-        </div>
+      {/* 時間指定が選ばれた場合のみ表示 */}
+      {timeslot === "時間指定" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-[#FDB9C8] mb-2">開始時刻</h2>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+            >
+              {Array.from({ length: 24 }).map((_, i) => {
+                const hour = (i + 1) % 24;
+                return (
+                  <option key={hour} value={`${hour}:00`}>
+                    {hour}:00
+                  </option>
+                );
+              })}
+            </select>
+          </div>
 
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold text-[#FDB9C8] mb-2">終了時刻</h2>
-          <select
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
-          >
-            {Array.from({ length: 24 }).map((_, i) => {
-              const hour = (i + 1) % 24;
-              return (
-                <option key={hour} value={`${hour}:00`}>
-                  {hour}:00
-                </option>
-              );
-            })}
-          </select>
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-semibold text-[#FDB9C8] mb-2">終了時刻</h2>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="w-full p-3 rounded-xl border border-gray-600 bg-black text-white focus:ring-2 focus:ring-[#FDB9C8]"
+            >
+              {Array.from({ length: 24 }).map((_, i) => {
+                const hour = (i + 1) % 24;
+                return (
+                  <option key={hour} value={`${hour}:00`}>
+                    {hour}:00
+                  </option>
+                );
+              })}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 保存ボタン */}
       <button
