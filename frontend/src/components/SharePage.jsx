@@ -31,17 +31,30 @@ export default function SharePage() {
   if (!schedule) return <p>読み込み中...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 text-[#FDB9C8]">{schedule.title}</h2>
+    <div className="max-w-4xl mx-auto">
+      {/* タイトル */}
+      <h2 className="text-3xl font-bold mb-2 text-[#FDB9C8]">
+        {schedule.title}
+      </h2>
+
+      {/* 時間帯 */}
+      <p className="mb-6 text-gray-300">
+        時間帯:{" "}
+        <span className="text-[#004CA0] font-semibold">
+          {schedule.start_time} 〜 {schedule.end_time}
+        </span>
+      </p>
+
+      {/* 名前入力 */}
       <input
-        className="w-full mb-3 p-2 text-black rounded"
-        placeholder="あなたの名前"
+        className="w-full mb-4 p-2 text-black rounded"
+        placeholder="あなたの名前を入力"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
 
       {/* 日程 × 回答 */}
-      <table className="w-full border border-gray-600 text-center">
+      <table className="w-full border border-gray-600 text-center mb-6">
         <thead className="bg-[#004CA0] text-white">
           <tr>
             <th className="p-2">日付</th>
@@ -69,14 +82,14 @@ export default function SharePage() {
       </table>
 
       <button
-        className="mt-6 w-full bg-[#FDB9C8] text-black py-2 rounded-2xl hover:bg-[#004CA0] hover:text-white"
+        className="w-full bg-[#FDB9C8] text-black py-2 rounded-2xl hover:bg-[#004CA0] hover:text-white shadow-lg"
         onClick={handleSave}
       >
         保存
       </button>
 
       {/* 全員分の回答一覧 */}
-      <h3 className="text-xl mt-8 mb-2 text-[#FDB9C8]">みんなの回答</h3>
+      <h3 className="text-xl mt-10 mb-3 text-[#FDB9C8]">みんなの回答</h3>
       <table className="w-full border border-gray-600 text-center">
         <thead className="bg-gray-800">
           <tr>
