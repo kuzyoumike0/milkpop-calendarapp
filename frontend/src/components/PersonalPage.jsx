@@ -1,111 +1,173 @@
 import React, { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import axios from "axios";
-import DatePicker from "react-multi-date-picker";
-import "react-multi-date-picker/styles/colors/purple.css";
 
 export default function PersonalPage() {
-  const [username, setUsername] = useState("");
+  const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [mode, setMode] = useState("range"); // range | multiple
   const [dates, setDates] = useState([]);
-  const [timeslot, setTimeslot] = useState("全日");
+  const [rangeMode, setRangeMode] = useState("multiple"); // "range" or "multiple"
+  const [timeSlot, setTimeSlot] = useState("全日");
   const [schedules, setSchedules] = useState([]);
 
+  // 即時反映のための取得関数
   const fetchSchedules = async () => {
-    const res = await axios.get("/api/personal"); // API拡張要
-    setSchedules(res.data);
+    try {
+      const res = await axios.get("/api/personal");
+      setSchedules(res.data);
+    } catch (err) {
+      console.error("取得エラー:", err);
+    }
   };
 
   useEffect(() => {
     fetchSchedules();
   }, []);
 
-  const handleSubmit = async () => {
-    if (!username || dates.length === 0) return alert("入力不足です");
-    let start_date, end_date;
-    if (mode === "range") {
-      start_date = dates[0]?.format("YYYY-MM-DD");
-      end_date = dates[1]?.format("YYYY-MM-DD");
-    } else {
-      start_date = dates[0]?.format("YYYY-MM-DD");
-      end_date = dates[dates.length - 1]?.format("YYYY-MM-DD");
+  // 登録処理
+  const handleRegister = async () => {
+    if (!title || dates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
     }
-    await axios.post("/api/personal", {
-      username,
-      start_date,
-      end_date,
-      timeslot,
-      range_mode: mode,
-      memo,
-    });
-    fetchSchedules();
+    try {
+      await axios.post("/api/personal", {
+        title,
+        memo,
+        dates: Array.isArray(dates) ? dates.map((d) => formatDate(d)) : [formatDate(dates)],
+        timeslot: timeSlot,
+        range_mode: rangeMode,
+      });
+      setTitle("");
+      setMemo("");
+      setDates([]);
+      setTimeSlot("全日");
+      setRangeMode("multiple");
+      // 即時反映
+      fetchSchedules();
+    } catch (err) {
+      console.error("登録エラー:", err);
+    }
+  };
+
+  // 日付フォーマット
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  // カレンダー選択ハンドラ
+  const handleDateChange = (value) => {
+    if (rangeMode === "range") {
+      setDates(value);
+    } else {
+      setDates(value instanceof Date ? [value] : value);
+    }
   };
 
   return (
-    <div className="p-6 text-white bg-black min-h-screen">
-      <h1 className="text-2xl mb-4">個人スケジュール登録</h1>
-      <input
-        className="p-2 text-black rounded mb-2 w-full"
-        placeholder="名前"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <textarea
-        className="p-2 text-black rounded mb-2 w-full"
-        placeholder="メモ"
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-      />
-      <div className="mb-2">
-        <label>
-          <input
-            type="radio"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
-        <label className="ml-4">
-          <input
-            type="radio"
-            checked={mode === "multiple"}
-            onChange={() => setMode("multiple")}
-          />
-          複数選択
-        </label>
-      </div>
-      <DatePicker
-        value={dates}
-        onChange={setDates}
-        range={mode === "range"}
-        multiple={mode === "multiple"}
-        format="YYYY-MM-DD"
-      />
-      <select
-        className="p-2 text-black rounded mb-4 block"
-        value={timeslot}
-        onChange={(e) => setTimeslot(e.target.value)}
-      >
-        <option>全日</option>
-        <option>昼</option>
-        <option>夜</option>
-        <option>時間指定</option>
-      </select>
-      <button
-        className="bg-pink-400 px-4 py-2 rounded"
-        onClick={handleSubmit}
-      >
-        登録
-      </button>
+    <div className="min-h-screen bg-black text-white p-6">
+      {/* バナー */}
+      <header className="bg-[#004CA0] text-[#FDB9C8] text-3xl font-bold p-4 rounded-2xl shadow-lg flex justify-between">
+        <span>MilkPOP Calendar</span>
+        <nav className="space-x-4">
+          <a href="/" className="hover:underline">トップ</a>
+          <a href="/link" className="hover:underline">日程登録</a>
+          <a href="/personal" className="hover:underline">個人スケジュール</a>
+        </nav>
+      </header>
 
-      <h2 className="mt-6 text-xl">登録済みスケジュール</h2>
-      <ul>
-        {schedules.map((s) => (
-          <li key={s.id}>
-            {s.username} : {s.start_date} - {s.end_date} [{s.timeslot}]
-          </li>
-        ))}
-      </ul>
+      {/* 入力フォーム */}
+      <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl mb-4">個人スケジュール登録</h2>
+        <input
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          type="text"
+          placeholder="タイトル"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          placeholder="メモ"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+        />
+
+        {/* 範囲選択 / 複数選択 */}
+        <div className="mb-3">
+          <label className="mr-4">
+            <input
+              type="radio"
+              name="rangeMode"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="rangeMode"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={(e) => setRangeMode(e.target.value)}
+            />{" "}
+            複数選択
+          </label>
+        </div>
+
+        {/* カレンダー */}
+        <Calendar
+          onChange={handleDateChange}
+          value={dates}
+          selectRange={rangeMode === "range"}
+          allowMultiple={rangeMode === "multiple" ? true : undefined}
+          className="mb-4 rounded-lg shadow-md"
+        />
+
+        {/* 時間帯選択 */}
+        <select
+          className="w-full p-2 mb-3 rounded bg-gray-800 text-white"
+          value={timeSlot}
+          onChange={(e) => setTimeSlot(e.target.value)}
+        >
+          <option value="全日">全日</option>
+          <option value="昼">昼</option>
+          <option value="夜">夜</option>
+          {/* 開始-終了時間の詳細選択 */}
+          {Array.from({ length: 24 }).map((_, i) => (
+            <option key={i} value={`${i}:00-${(i + 1) % 24}:00`}>
+              {i}:00 - {(i + 1) % 24}:00
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={handleRegister}
+          className="w-full bg-[#FDB9C8] text-black font-bold py-2 px-4 rounded-2xl shadow hover:bg-pink-400"
+        >
+          登録
+        </button>
+      </div>
+
+      {/* 登録済みスケジュール一覧 */}
+      <div className="bg-[#1a1a1a] mt-6 p-6 rounded-2xl shadow-lg">
+        <h2 className="text-2xl mb-4">登録済みスケジュール</h2>
+        <ul className="space-y-2">
+          {schedules.map((s) => (
+            <li key={s.id} className="p-3 bg-gray-800 rounded">
+              <strong>{s.title}</strong> ({s.memo})  
+              <br />
+              {s.date} - {s.timeslot} [{s.range_mode}]
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
