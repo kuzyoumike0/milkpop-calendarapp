@@ -12,7 +12,6 @@ export default function LinkPage() {
   const [endTime, setEndTime] = useState("2:00");
   const [linkUrl, setLinkUrl] = useState("");
 
-  // カレンダー選択
   const handleDateChange = (value) => {
     if (rangeMode === "range") {
       setDates(value);
@@ -21,7 +20,6 @@ export default function LinkPage() {
     }
   };
 
-  // 保存処理
   const handleSave = async () => {
     if (new Date(`2020-01-01 ${endTime}`) <= new Date(`2020-01-01 ${startTime}`)) {
       alert("終了時刻は開始時刻より後にしてください");
