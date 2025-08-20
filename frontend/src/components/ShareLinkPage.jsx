@@ -8,10 +8,10 @@ export default function ShareLinkPage() {
   const [responses, setResponses] = useState({});
   const [username, setUsername] = useState("");
 
-  // 即時反映: スケジュール取得
+  // 即時反映: linkidごとのスケジュール取得
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get("/api/schedules");
+      const res = await axios.get(`/api/schedules?linkid=${linkid}`);
       setSchedules(res.data);
     } catch (err) {
       console.error("取得エラー:", err);
@@ -38,7 +38,7 @@ export default function ShareLinkPage() {
         username,
         responses,
       });
-      setSchedules(res.data); // 即時反映
+      setSchedules(res.data);
       setResponses({});
     } catch (err) {
       console.error("保存エラー:", err);
