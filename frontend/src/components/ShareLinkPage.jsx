@@ -21,6 +21,31 @@ export default function ShareLinkPage() {
   };
 
   const handleSave = () => {
+    const newEntries = [];
+    if (rangeMode === "multiple" && Array.isArray(dates)) {
+      dates.forEach((d) => {
+        newEntries.push({
+          id: `temp-${d}`,
+          date: d.toISOString().split("T")[0],
+          timeslot: "全日",
+        });
+      });
+    } else if (rangeMode === "range" && Array.isArray(dates)) {
+      let current = new Date(dates[0]);
+      const end = new Date(dates[1]);
+      while (current <= end) {
+        newEntries.push({
+          id: `temp-${current.toISOString()}`,
+          date: current.toISOString().split("T")[0],
+          timeslot: "全日",
+        });
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    // 即時反映
+    setSchedules((prev) => [...prev, ...newEntries]);
+
     axios
       .post(`/api/share/${linkId}/responses`, { responses, dates })
       .then(() => alert("保存しました！"));
@@ -35,7 +60,7 @@ export default function ShareLinkPage() {
           共有リンクスケジュール
         </h2>
 
-        {/* カレンダー選択 */}
+        {/* カレンダー */}
         <div className="mb-6">
           <label className="block mb-2">日程選択</label>
           <CalendarWrapper mode={rangeMode} value={dates} onChange={setDates} />
@@ -65,7 +90,7 @@ export default function ShareLinkPage() {
           </label>
         </div>
 
-        {/* 既存の共有スケジュール一覧 */}
+        {/* テーブル */}
         {schedules.length === 0 ? (
           <p>このリンクにはまだ日程が登録されていません。</p>
         ) : (
