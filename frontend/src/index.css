@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全体の黒背景と文字色を指定 */
+/* 全体の黒背景と文字色 */
 body {
   @apply bg-black text-white;
 }
