@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
 import PersonalPage from "./components/PersonalPage";
@@ -9,23 +9,25 @@ import ShareLinkPage from "./components/ShareLinkPage";
 export default function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white">
-        <Routes>
-          {/* トップページ */}
-          <Route path="/" element={<TopPage />} />
+      <div className="bg-black text-white min-h-screen">
+        <header className="bg-[#004CA0] text-white p-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold">MilkPOP Calendar</h1>
+          <nav className="space-x-4">
+            <Link to="/" className="hover:text-[#FDB9C8]">トップ</Link>
+            <Link to="/link" className="hover:text-[#FDB9C8]">日程登録</Link>
+            <Link to="/personal" className="hover:text-[#FDB9C8]">個人日程</Link>
+          </nav>
+        </header>
 
-          {/* 日程登録（共有リンク発行） */}
-          <Route path="/link" element={<LinkPage />} />
-
-          {/* 個人日程登録 */}
-          <Route path="/personal" element={<PersonalPage />} />
-
-          {/* 共有ページ（参加者が入力する） */}
-          <Route path="/share/:linkId" element={<SharePage />} />
-
-          {/* 共有リンク専用ビュー（カレンダー確認） */}
-          <Route path="/sharelink/:linkId" element={<ShareLinkPage />} />
-        </Routes>
+        <main className="p-6">
+          <Routes>
+            <Route path="/" element={<TopPage />} />
+            <Route path="/link" element={<LinkPage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+            <Route path="/share/:linkid" element={<SharePage />} />
+            <Route path="/sharelink" element={<ShareLinkPage />} />
+          </Routes>
+        </main>
       </div>
     </Router>
   );
