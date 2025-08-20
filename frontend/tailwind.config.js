@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   theme: {
@@ -6,12 +5,9 @@ module.exports = {
       colors: {
         brandPink: "#FDB9C8",
         brandBlue: "#004CA0",
-        brandBlack: "#0A0A0A",
-      },
-      fontFamily: {
-        sans: ["Noto Sans JP", "sans-serif"],
-      },
-    },
+        brandBlack: "#111111"
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };
