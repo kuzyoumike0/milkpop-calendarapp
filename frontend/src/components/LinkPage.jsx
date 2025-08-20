@@ -3,6 +3,9 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
 import axios from "axios";
+import Holidays from "date-holidays";
+
+const hd = new Holidays("JP");
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -61,11 +64,16 @@ export default function LinkPage() {
       <Calendar
         onClickDay={handleChange}
         selectRange={true}
-        tileClassName={({ date }) =>
-          dates.some((d) => d.toDateString() === date.toDateString())
-            ? "selected-date"
-            : null
-        }
+        tileClassName={({ date }) => {
+          let classes = [];
+          if (dates.some((d) => d.toDateString() === date.toDateString())) {
+            classes.push("selected-date");
+          }
+          if (hd.isHoliday(date)) {
+            classes.push("holiday-date");
+          }
+          return classes;
+        }}
       />
       <div className="options">
         <label>
