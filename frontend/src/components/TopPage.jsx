@@ -4,12 +4,10 @@ import Header from "./Header";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-black text-white font-sans relative">
-      {/* 共通ヘッダー */}
+    <div className="min-h-screen relative z-10">
       <Header />
 
-      {/* メインコンテンツ */}
-      <main className="flex flex-col items-center justify-center py-16 px-6">
+      <main className="flex flex-col items-center justify-center py-16 px-6 relative z-10">
         <div className="bg-white/10 rounded-2xl shadow-xl p-10 text-center max-w-2xl backdrop-blur-md">
           <h2 className="text-3xl font-bold mb-6">
             ようこそ、MilkPOP Calendar へ
