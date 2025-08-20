@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white px-4">
       {/* タイトル */}
       <motion.h1
         initial={{ opacity: 0, y: -30 }}
