@@ -46,13 +46,13 @@ export default function SharePage() {
     return "-";
   };
 
-  // === 出欠率 ===
-  const calcRate = (scheduleId) => {
+  // === 出欠率＆人数 ===
+  const calcStats = (scheduleId) => {
     const res = data.responses.filter((r) => r.schedule_id == scheduleId);
-    if (res.length === 0) return "-";
+    if (res.length === 0) return { rate: "-", count: "-" };
     const okCount = res.filter((r) => r.response === "〇").length;
     const rate = Math.round((okCount / res.length) * 100);
-    return `${rate}%`;
+    return { rate: `${rate}%`, count: `${okCount}/${res.length}` };
   };
 
   return (
@@ -133,12 +133,17 @@ export default function SharePage() {
                 ))}
               </tr>
             ))}
-            {/* 出欠率行 */}
+            {/* 出欠率・人数行 */}
             <tr className="border-t bg-[#222] text-yellow-400 font-bold">
-              <td>出欠率</td>
-              {data.schedules.map((s) => (
-                <td key={s.id}>{calcRate(s.id)}</td>
-              ))}
+              <td>出欠率 / 人数</td>
+              {data.schedules.map((s) => {
+                const stats = calcStats(s.id);
+                return (
+                  <td key={s.id}>
+                    {stats.rate} <br /> {stats.count}
+                  </td>
+                );
+              })}
             </tr>
           </tbody>
         </table>
