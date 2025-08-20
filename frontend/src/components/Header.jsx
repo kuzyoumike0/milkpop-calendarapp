@@ -1,55 +1,31 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
 export default function Header() {
+  const history = useHistory();
+
   return (
-    <header
-      style={{
-        background: "black",
-        color: "#FDB9C8",
-        padding: "15px 30px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.3)",
-      }}
-    >
-      <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#FDB9C8" }}>
+    <header className="w-full bg-[#004CA0] text-white p-4 flex justify-between items-center shadow-md">
+      <h1
+        className="text-2xl font-extrabold cursor-pointer text-[#FDB9C8]"
+        onClick={() => history.push("/")}
+      >
         MilkPOP Calendar
       </h1>
-      <nav>
-        <Link
-          to="/"
-          style={{
-            marginRight: "20px",
-            textDecoration: "none",
-            color: "#FDB9C8",
-            fontWeight: "bold",
-          }}
-        >
-          トップ
-        </Link>
-        <Link
-          to="/link"
-          style={{
-            marginRight: "20px",
-            textDecoration: "none",
-            color: "#FDB9C8",
-            fontWeight: "bold",
-          }}
+
+      <nav className="flex gap-6">
+        <button
+          onClick={() => history.push("/link")}
+          className="hover:text-[#FDB9C8]"
         >
           日程登録
-        </Link>
-        <Link
-          to="/personal"
-          style={{
-            textDecoration: "none",
-            color: "#FDB9C8",
-            fontWeight: "bold",
-          }}
+        </button>
+        <button
+          onClick={() => history.push("/personal")}
+          className="hover:text-[#FDB9C8]"
         >
           個人スケジュール
-        </Link>
+        </button>
       </nav>
     </header>
   );
