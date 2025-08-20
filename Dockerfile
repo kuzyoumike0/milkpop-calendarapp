@@ -4,7 +4,8 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-RUN npm run build || { echo "Frontend build failed"; exit 1; }
+# ビルド失敗時に強制終了する安全装置
+RUN npm run build || { echo "❌ Frontend build failed"; exit 1; }
 
 # ===== バックエンド =====
 FROM node:18
@@ -13,8 +14,7 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# フロントエンドのビルド成果物をコピー
-# build/index.html が必ず存在する場合のみコピー
+# フロントエンド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./public
 
 ENV PORT=8080
