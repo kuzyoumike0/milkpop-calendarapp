@@ -32,14 +32,12 @@ export default function SharePage() {
       return;
     }
     try {
-      // ここでは responses を保存APIに送るようにする
-      // 共有スケジュールに紐付けられるようなテーブルが必要
-      await axios.post("/api/share-responses", {
+      const res = await axios.post("/api/share-responses", {
         username,
         responses,
       });
-      // 即時反映
-      fetchSchedules();
+      setSchedules(res.data); // 即時反映
+      setResponses({});
     } catch (err) {
       console.error("保存エラー:", err);
     }
@@ -75,12 +73,13 @@ export default function SharePage() {
               <th className="p-2">タイトル</th>
               <th className="p-2">日付</th>
               <th className="p-2">時間帯</th>
-              <th className="p-2">可否</th>
+              <th className="p-2">可否入力</th>
+              <th className="p-2">回答一覧</th>
             </tr>
           </thead>
           <tbody>
             {schedules.map((s) => (
-              <tr key={s.id} className="border-b border-gray-700">
+              <tr key={s.id} className="border-b border-gray-700 align-top">
                 <td className="p-2">{s.title}</td>
                 <td className="p-2">{s.date}</td>
                 <td className="p-2">{s.timeslot}</td>
@@ -94,6 +93,19 @@ export default function SharePage() {
                     <option value="◯">◯</option>
                     <option value="✕">✕</option>
                   </select>
+                </td>
+                <td className="p-2">
+                  {s.responses && s.responses[0] !== null ? (
+                    <ul className="list-disc list-inside">
+                      {s.responses.map((r, i) => (
+                        <li key={i}>
+                          <span className="font-bold">{r.username}</span>: {r.response}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-gray-500">まだ回答なし</span>
+                  )}
                 </td>
               </tr>
             ))}
