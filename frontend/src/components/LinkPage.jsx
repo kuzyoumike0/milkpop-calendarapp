@@ -3,7 +3,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import DatePicker from "react-multi-date-picker";
 import axios from "axios";
-import "../custom-purple.css"; // オリジナルテーマ
+import "../custom-purple.css";
 
 export default function LinkPage() {
   const [title, setTitle] = useState("");
@@ -30,20 +30,20 @@ export default function LinkPage() {
       selectedDates = dates;
     }
 
-    const res = await axios.post("/api/link", {
+    const res = await axios.post("/api/schedule", {
       title,
-      dates: selectedDates.map((d) =>
-        typeof d === "string"
-          ? d
-          : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-              2,
-              "0"
-            )}-${String(d.getDate()).padStart(2, "0")}`
-      ),
+      start_date: selectedDates[0]
+        ? selectedDates[0].toISOString().split("T")[0]
+        : null,
+      end_date: selectedDates[selectedDates.length - 1]
+        ? selectedDates[selectedDates.length - 1].toISOString().split("T")[0]
+        : null,
       timeslot,
+      range_mode: rangeMode,
     });
 
-    setLink(res.data.url);
+    // ✅ 修正: url ではなく link を参照
+    setLink(res.data.link);
   };
 
   return (
@@ -118,7 +118,7 @@ export default function LinkPage() {
 
         {link && (
           <p className="mt-4">
-            共有リンク:{" "}
+            ✅ 共有リンク:{" "}
             <a
               href={link}
               target="_blank"
