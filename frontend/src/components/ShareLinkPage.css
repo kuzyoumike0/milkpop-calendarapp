@@ -1,163 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
+.share-link-container {
+  padding: 2rem;
+  text-align: center;
+  color: white;
+  background: #1a1a1a;
+  min-height: 100vh;
+}
 
-export default function ShareLinkPage() {
-  const { linkId } = useParams();
-  const [title, setTitle] = useState("");
-  const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState([]);
-  const [username, setUsername] = useState("");
-  const [message, setMessage] = useState("");
-  const [editedResponses, setEditedResponses] = useState({}); // 編集中の回答を一時保存
+.share-link-container h1 {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
 
-  // データ取得
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`/api/link/${linkId}`);
-        setTitle(res.data.title);
-        setSchedules(res.data.schedules || []);
-        setResponses(res.data.responses || []);
-      } catch (err) {
-        console.error("リンク取得エラー:", err);
-        setMessage("❌ リンクの読み込みに失敗しました");
-      }
-    };
-    fetchData();
-  }, [linkId]);
+.share-link-container p {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
 
-  // 回答を一時保存（編集）
-  const handleEdit = (date, timeslot, value) => {
-    setEditedResponses((prev) => ({
-      ...prev,
-      [`${date}_${timeslot}`]: value,
-    }));
-  };
+.share-link-container a {
+  color: #3b82f6; /* 青色 */
+  text-decoration: underline;
+  font-size: 1.1rem;
+  word-break: break-all; /* 長いURLを折り返す */
+}
 
-  // 保存ボタンでまとめて送信
-  const handleSaveAll = async () => {
-    if (!username.trim()) {
-      setMessage("❌ 名前を入力してください");
-      return;
-    }
-
-    const updates = Object.entries(editedResponses).map(([key, choice]) => {
-      const [date, timeslot] = key.split("_");
-      return { date, timeslot, choice };
-    });
-
-    try {
-      await axios.put("/api/participant/bulk", {
-        linkId,
-        username,
-        updates,
-      });
-
-      // ローカル反映
-      setResponses((prev) => {
-        let updated = [...prev];
-        updates.forEach(({ date, timeslot, choice }) => {
-          updated = updated.filter(
-            (r) =>
-              !(r.username === username && r.date === date && r.timeslot === timeslot)
-          );
-          updated.push({ username, date, timeslot, status: choice });
-        });
-        return updated;
-      });
-
-      setEditedResponses({});
-      setMessage("✅ 回答を保存しました");
-    } catch (err) {
-      console.error("保存エラー:", err);
-      setMessage("❌ 保存に失敗しました");
-    }
-  };
-
-  // 特定の日付に対する回答まとめ
-  const getResponsesForDate = (date, timeslot) => {
-    return responses.filter((r) => r.date === date && r.timeslot === timeslot);
-  };
-
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>📅 共有スケジュール: {title}</h2>
-
-      {/* ユーザー名入力 */}
-      <div style={{ marginBottom: "15px" }}>
-        <label>名前: </label>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="あなたの名前"
-          style={{ padding: "5px" }}
-        />
-      </div>
-
-      {/* 日付一覧 */}
-      {schedules.length > 0 ? (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>時間帯</th>
-              <th>あなたの回答</th>
-              <th>全員の回答</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((s, idx) => {
-              const myResponse = responses.find(
-                (r) => r.username === username && r.date === s.date && r.timeslot === s.timeslot
-              );
-              const tempChoice = editedResponses[`${s.date}_${s.timeslot}`];
-
-              return (
-                <tr key={idx}>
-                  <td>{s.date}</td>
-                  <td>
-                    {s.timeslot === "custom"
-                      ? `${s.starttime}:00 - ${s.endtime}:00`
-                      : s.timeslot}
-                  </td>
-                  <td>
-                    <select
-                      value={tempChoice || myResponse?.status || ""}
-                      onChange={(e) => handleEdit(s.date, s.timeslot, e.target.value)}
-                    >
-                      <option value="">未回答</option>
-                      <option value="◯">◯</option>
-                      <option value="×">×</option>
-                    </select>
-                  </td>
-                  <td>
-                    {getResponsesForDate(s.date, s.timeslot).map((r, i) => (
-                      <div key={i} style={{ fontWeight: r.username === username ? "bold" : "normal" }}>
-                        {r.username}: {r.status}
-                      </div>
-                    ))}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <p>日付が登録されていません。</p>
-      )}
-
-      {/* 保存ボタン */}
-      <button
-        onClick={handleSaveAll}
-        style={{ marginTop: "15px", padding: "8px 12px", background: "green", color: "white" }}
-      >
-        保存
-      </button>
-
-      {/* メッセージ */}
-      {message && <p style={{ marginTop: "10px" }}>{message}</p>}
-    </div>
-  );
+.share-link-container a:hover {
+  color: #60a5fa;
 }
