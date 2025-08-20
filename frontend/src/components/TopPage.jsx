@@ -3,22 +3,60 @@ import { Link } from "react-router-dom";
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center space-y-6">
-      <h1 className="text-3xl font-bold">カレンダー共有アプリ</h1>
-      <div className="space-x-4">
-        <Link
-          to="/personal"
-          className="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-500"
-        >
-          個人スケジュール登録
-        </Link>
-        <Link
-          to="/link"
-          className="px-6 py-3 bg-green-600 rounded-lg hover:bg-green-500"
-        >
-          日程登録（共有リンク発行）
-        </Link>
-      </div>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* バナー */}
+      <header className="bg-[#004CA0] text-white py-4 shadow-lg">
+        <div className="container mx-auto flex justify-between items-center px-6">
+          <h1 className="text-2xl font-bold tracking-wide">
+            MilkPOP Calendar
+          </h1>
+          <nav className="space-x-4">
+            <Link
+              to="/link"
+              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+            >
+              日程登録
+            </Link>
+            <Link
+              to="/personal"
+              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+            >
+              個人スケジュール
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* メイン */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <h2 className="text-4xl font-extrabold mb-6 text-[#FDB9C8] drop-shadow">
+          ようこそ！MilkPOP Calendarへ
+        </h2>
+        <p className="text-lg mb-10 max-w-2xl">
+          日程を登録して、みんなと共有しましょう。
+          <br />
+          個人のスケジュール管理もこちらからどうぞ。
+        </p>
+        <div className="flex gap-6">
+          <Link
+            to="/link"
+            className="px-8 py-4 bg-[#004CA0] rounded-2xl text-white text-xl font-semibold shadow-lg hover:bg-[#FDB9C8] hover:text-black transition"
+          >
+            日程登録ページへ
+          </Link>
+          <Link
+            to="/personal"
+            className="px-8 py-4 bg-[#FDB9C8] rounded-2xl text-black text-xl font-semibold shadow-lg hover:bg-[#004CA0] hover:text-white transition"
+          >
+            個人スケジュールページへ
+          </Link>
+        </div>
+      </main>
+
+      {/* フッター */}
+      <footer className="bg-[#004CA0] text-center py-3 text-sm text-white">
+        © 2025 MilkPOP Calendar
+      </footer>
     </div>
   );
 }
