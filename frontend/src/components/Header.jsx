@@ -1,32 +1,26 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Header() {
-  const navigate = useNavigate();
-
   return (
-    <header className="w-full bg-[#004CA0] text-white p-4 flex justify-between items-center shadow-md">
-      <h1
-        className="text-2xl font-extrabold cursor-pointer text-[#FDB9C8]"
-        onClick={() => navigate("/")}
-      >
-        MilkPOP Calendar
-      </h1>
-
-      <nav className="flex gap-6">
-        <button
-          onClick={() => navigate("/link")}
-          className="hover:text-[#FDB9C8]"
-        >
-          日程登録
-        </button>
-        <button
-          onClick={() => navigate("/personal")}
-          className="hover:text-[#FDB9C8]"
-        >
-          個人スケジュール
-        </button>
-      </nav>
+    <header className="bg-[#004CA0] py-4 shadow-lg">
+      <div className="container mx-auto flex justify-between items-center px-6">
+        <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
+        <nav className="space-x-4">
+          <Link
+            to="/link"
+            className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+          >
+            日程登録
+          </Link>
+          <Link
+            to="/personal"
+            className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
+          >
+            個人スケジュール
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }
