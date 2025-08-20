@@ -11,7 +11,7 @@ export default function SharePage() {
 
   // === データ取得 ===
   useEffect(() => {
-    axios.get(`/api/share/${linkid}`).then((res) => {
+    axios.get(`/api/schedule/${linkid}`).then((res) => {
       setData(res.data);
       setResponses(res.data.responses || []);
     });
@@ -23,11 +23,11 @@ export default function SharePage() {
       alert("名前を入力してください");
       return;
     }
-    await axios.post(`/api/share/${linkid}/response`, {
+    await axios.post(`/api/schedule/${linkid}/response`, {
       username,
-      selection,
+      answers: selection,
     });
-    const res = await axios.get(`/api/share/${linkid}`);
+    const res = await axios.get(`/api/schedule/${linkid}`);
     setResponses(res.data.responses || []);
   };
 
@@ -50,7 +50,10 @@ export default function SharePage() {
   const responseMap = {};
   responses.forEach((r) => {
     if (!responseMap[r.username]) responseMap[r.username] = {};
-    responseMap[r.username][r.schedule_id] = r.answer;
+    // answers は JSONB で { scheduleId: "○" } の形式
+    Object.entries(r.answers || {}).forEach(([sid, ans]) => {
+      responseMap[r.username][sid] = ans;
+    });
   });
 
   const users = Object.keys(responseMap);
@@ -88,14 +91,13 @@ export default function SharePage() {
           </tr>
         </thead>
         <tbody>
-          {data &&
-            data.schedules.map((s) => (
-              <tr key={s.id} className="bg-[#111] border-b border-[#333]">
-                <td className="p-2">{s.date}</td>
-                <td className="p-2">{s.timeslot}</td>
-                <td className="p-2">{renderSelect(s.id)}</td>
-              </tr>
-            ))}
+          {(data?.schedules || []).map((s) => (
+            <tr key={s.id} className="bg-[#111] border-b border-[#333]">
+              <td className="p-2">{s.dates?.join(", ")}</td>
+              <td className="p-2">{s.timeslot}</td>
+              <td className="p-2">{renderSelect(s.id)}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -110,19 +112,18 @@ export default function SharePage() {
           <thead className="bg-[#004CA0] text-white">
             <tr>
               <th className="p-2">ユーザー</th>
-              {data &&
-                data.schedules.map((s) => (
-                  <th key={s.id} className="p-2">
-                    {s.date} <br /> {s.timeslot}
-                  </th>
-                ))}
+              {(data?.schedules || []).map((s) => (
+                <th key={s.id} className="p-2">
+                  {s.dates?.join(", ")} <br /> {s.timeslot}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u} className="bg-[#111] border-b border-[#333]">
                 <td className="p-2 font-bold">{u}</td>
-                {data.schedules.map((s) => (
+                {(data?.schedules || []).map((s) => (
                   <td
                     key={s.id}
                     className={`p-2 ${
@@ -140,17 +141,16 @@ export default function SharePage() {
             ))}
             <tr className="bg-[#222] text-yellow-400 font-bold">
               <td className="p-2">出欠率 / 人数</td>
-              {data &&
-                data.schedules.map((s) => {
-                  const stats = calcStats(s.id);
-                  return (
-                    <td key={s.id} className="p-2">
-                      {stats.rate}
-                      <br />
-                      {stats.count}
-                    </td>
-                  );
-                })}
+              {(data?.schedules || []).map((s) => {
+                const stats = calcStats(s.id);
+                return (
+                  <td key={s.id} className="p-2">
+                    {stats.rate}
+                    <br />
+                    {stats.count}
+                  </td>
+                );
+              })}
             </tr>
           </tbody>
         </table>
