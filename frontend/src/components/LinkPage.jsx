@@ -5,29 +5,24 @@ import "react-calendar/dist/Calendar.css";
 import axios from "axios";
 import Holidays from "date-holidays";
 
-// === 日本の祝日設定 ===
 const hd = new Holidays("JP");
 
 export default function LinkPage() {
   const { linkId } = useParams();
-  const [schedules, setSchedules] = useState([]); // 登録済みスケジュール
-  const [selectedDates, setSelectedDates] = useState([]); // カレンダーで選択した日付
+  const [schedules, setSchedules] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
   const [username, setUsername] = useState("");
 
-  // === 共有スケジュール取得 ===
   useEffect(() => {
     axios
       .get(`/api/share/${linkId}`)
-      .then((res) => {
-        setSchedules(Array.isArray(res.data) ? res.data : []);
-      })
+      .then((res) => setSchedules(Array.isArray(res.data) ? res.data : []))
       .catch((err) => {
         console.error("API error:", err);
-        setSchedules([]); // エラー時も配列にする
+        setSchedules([]);
       });
   }, [linkId]);
 
-  // === 日付クリックで複数選択 ===
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     if (selectedDates.includes(dateStr)) {
@@ -37,21 +32,19 @@ export default function LinkPage() {
     }
   };
 
-  // === カレンダータイルの表示（祝日は赤、選択済みは青） ===
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const dateStr = date.toISOString().split("T")[0];
       if (hd.isHoliday(date)) {
-        return "text-red-500 font-bold"; // 祝日赤字
+        return "text-red-500 font-bold";
       }
       if (selectedDates.includes(dateStr)) {
-        return "bg-blue-500 text-white rounded-full"; // 選択済み青
+        return "bg-blue-500 text-white rounded-full";
       }
     }
     return null;
   };
 
-  // === 参加登録処理 ===
   const handleSubmit = async () => {
     if (!username || selectedDates.length === 0) {
       alert("名前と日付を入力してください。");
@@ -78,14 +71,12 @@ export default function LinkPage() {
     <div className="p-4 text-white">
       <h1 className="text-2xl font-bold mb-4">共有スケジュール</h1>
 
-      {/* カレンダー */}
       <Calendar
         onClickDay={handleDateClick}
         value={selectedDates.map((d) => new Date(d))}
         tileClassName={tileClassName}
       />
 
-      {/* 入力欄 */}
       <div className="mt-4">
         <input
           type="text"
@@ -102,22 +93,7 @@ export default function LinkPage() {
         </button>
       </div>
 
-      {/* 登録済みスケジュール一覧 */}
       <div className="mt-8 max-w-3xl mx-auto">
         <h2 className="text-xl font-bold mb-4">登録済みスケジュール</h2>
         <ul className="space-y-2">
-          {schedules.length > 0 ? (
-            schedules.map((s, idx) => (
-              <li key={idx} className="bg-gray-800 p-3 rounded-lg">
-                <strong>{s.title}</strong> ({s.timeslot})<br />
-                {s.date}
-              </li>
-            ))
-          ) : (
-            <li className="text-gray-400">スケジュールはまだありません。</li>
-          )}
-        </ul>
-      </div>
-    </div>
-  );
-}
+          {schedules.length > 0 ?
