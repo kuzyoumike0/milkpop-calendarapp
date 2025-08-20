@@ -151,10 +151,10 @@ app.get("/api/share/:linkId", async (req, res) => {
 const buildPath = path.join(__dirname, "../frontend/build");
 const indexPath = path.join(buildPath, "index.html");
 
-// 起動前にチェック
+// 起動前に必ず存在確認
 if (!fs.existsSync(indexPath)) {
   console.error("❌ Frontend build not found. Run 'npm run build' inside /frontend first.");
-  process.exit(1); // ← ファイルが無ければ即終了
+  process.exit(1); // ファイルがなければ即終了
 }
 
 app.use(express.static(buildPath));
