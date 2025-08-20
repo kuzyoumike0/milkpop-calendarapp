@@ -1,33 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Header from "./Header";
 
 export default function TopPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* バナー */}
-      <header className="bg-[#004CA0] text-white py-4 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center px-6">
-          <h1 className="text-2xl font-bold tracking-wide">
-            MilkPOP Calendar
-          </h1>
-          <nav className="space-x-4">
-            <Link
-              to="/link"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              日程登録
-            </Link>
-            <Link
-              to="/personal"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              個人スケジュール
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
-      {/* メイン */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <h2 className="text-4xl font-extrabold mb-6 text-[#FDB9C8] drop-shadow">
           ようこそ！MilkPOP Calendarへ
@@ -53,7 +32,6 @@ export default function TopPage() {
         </div>
       </main>
 
-      {/* フッター */}
       <footer className="bg-[#004CA0] text-center py-3 text-sm text-white">
         © 2025 MilkPOP Calendar
       </footer>
