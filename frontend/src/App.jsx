@@ -1,7 +1,20 @@
-export default function App() {
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TopPage from "./components/TopPage";
+import PersonalPage from "./components/PersonalPage";
+import LinkPage from "./components/LinkPage";
+import SharePage from "./components/SharePage";
+
+function App() {
   return (
-    <div className="flex items-center justify-center min-h-screen relative z-10">
-      <h1 className="text-4xl font-bold">MilkPOP Calendar</h1>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<TopPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
+        <Route path="/link" element={<LinkPage />} />
+        <Route path="/share/:linkid" element={<SharePage />} />
+      </Routes>
+    </Router>
   );
 }
+
+export default App;
