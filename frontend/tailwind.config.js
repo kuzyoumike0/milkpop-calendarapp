@@ -1,6 +1,6 @@
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",   // ← ここ重要
+    "./src/**/*.{js,jsx,ts,tsx}",  // ← これ重要
   ],
   theme: {
     extend: {},
