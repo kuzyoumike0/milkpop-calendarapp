@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import Header from "./Header";
 
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
@@ -11,34 +11,13 @@ export default function PersonalPage() {
   const [rangeMode, setRangeMode] = useState("multiple");
 
   const handleSave = () => {
-    // 即時保存（バックエンド連携）
     alert("保存しました");
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* バナー */}
-      <header className="bg-[#004CA0] py-4 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center px-6">
-          <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
-          <nav className="space-x-4">
-            <Link
-              to="/link"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              日程登録
-            </Link>
-            <Link
-              to="/personal"
-              className="px-4 py-2 bg-[#FDB9C8] text-black rounded-2xl shadow hover:scale-105 transition"
-            >
-              個人スケジュール
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
-      {/* メイン */}
       <main className="flex-1 container mx-auto px-6 py-10">
         <h2 className="text-3xl font-extrabold mb-6 text-[#FDB9C8]">
           個人スケジュール登録
@@ -72,30 +51,27 @@ export default function PersonalPage() {
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block mb-2">選択モード</label>
-          <div className="flex gap-4">
-            <label>
-              <input
-                type="radio"
-                name="mode"
-                value="range"
-                checked={rangeMode === "range"}
-                onChange={() => setRangeMode("range")}
-              />
-              範囲選択
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="mode"
-                value="multiple"
-                checked={rangeMode === "multiple"}
-                onChange={() => setRangeMode("multiple")}
-              />
-              複数選択
-            </label>
-          </div>
+        <div className="mb-6 flex gap-4">
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="range"
+              checked={rangeMode === "range"}
+              onChange={() => setRangeMode("range")}
+            />
+            範囲選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="multiple"
+              checked={rangeMode === "multiple"}
+              onChange={() => setRangeMode("multiple")}
+            />
+            複数選択
+          </label>
         </div>
 
         <div className="mb-6">
