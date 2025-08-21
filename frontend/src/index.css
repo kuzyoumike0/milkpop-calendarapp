@@ -134,3 +134,31 @@ body {
   margin-top: auto; /* 下に寄せる */
   font-size: 0.9rem;
 }
+/* ヘッダー */
+.banner {
+  background: #004ca0;
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.banner .logo {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.banner nav a {
+  color: white;
+  margin-left: 16px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.banner nav a:hover {
+  color: #fdb9c8;
+}
+
