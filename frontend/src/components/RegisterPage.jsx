@@ -1,211 +1,167 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import {
-  Calendar,
-  dateFnsLocalizer,
-} from "react-big-calendar";
-import format from "date-fns/format";
-import parse from "date-fns/parse";
-import startOfWeek from "date-fns/startOfWeek";
-import getDay from "date-fns/getDay";
-import ja from "date-fns/locale/ja";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../index.css";
 
-const locales = { ja };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
-  getDay,
-  locales,
-});
+const localizer = momentLocalizer(moment);
 
 const RegisterPage = () => {
+  const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
-  const [selectedEvents, setSelectedEvents] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+  const [link, setLink] = useState(null);
 
-  // カレンダーで範囲選択
   const handleSelectSlot = ({ start, end }) => {
-    setSelectedEvents((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        start,
-        end,
-        option: "終日", // デフォルト
-        startTime: null,
-        endTime: null,
-      },
-    ]);
+    const newEvent = {
+      id: Date.now(),
+      title: title || "未設定",
+      start,
+      end,
+      option: "終日", // 初期値
+      startTime: "09:00",
+      endTime: "18:00",
+    };
+    setEvents([...events, newEvent]);
   };
 
-  // 時間帯（終日・昼・夜・時刻指定）
   const handleOptionChange = (id, value) => {
-    setSelectedEvents((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, option: value, startTime: null, endTime: null } : e
+    setEvents(
+      events.map((ev) =>
+        ev.id === id ? { ...ev, option: value } : ev
       )
     );
   };
 
-  // 時刻選択
   const handleTimeChange = (id, field, value) => {
-    setSelectedEvents((prev) =>
-      prev.map((e) => {
-        if (e.id === id) {
-          let updated = { ...e, [field]: value };
-          // 開始 >= 終了 は許可しない
-          if (
-            updated.startTime &&
-            updated.endTime &&
-            Number(updated.startTime) >= Number(updated.endTime)
-          ) {
-            updated.endTime = null;
-          }
-          return updated;
-        }
-        return e;
-      })
+    setEvents(
+      events.map((ev) =>
+        ev.id === id ? { ...ev, [field]: value } : ev
+      )
     );
   };
 
-  // 登録処理（共有リンク発行）
-  const handleSubmit = () => {
-    if (!title || selectedEvents.length === 0) {
-      alert("タイトルと日程を入力してください");
-      return;
-    }
-    const url = `${window.location.origin}/share/${Date.now()}`;
-    setShareUrl(url);
+  const generateLink = () => {
+    const uniqueId = Date.now().toString(36);
+    const url = `${window.location.origin}/share/${uniqueId}`;
+    setLink(url);
   };
-
-  // 時刻プルダウン用（1時～0時）
-  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
   return (
     <div className="page-container">
-      {/* バナー */}
-      <header className="banner">
-        <h1>MilkPOP Calendar</h1>
-        <nav>
-          <a href="/">トップ</a>
-          <a href="/personal">個人スケジュール</a>
-        </nav>
-      </header>
+      <h2 className="text-2xl font-bold text-center mb-4">
+        日程登録ページ
+      </h2>
 
-      <main className="main-content">
-        <h2>日程登録</h2>
+      {/* タイトル入力 */}
+      <div className="mb-4 text-center">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          className="p-2 border rounded text-black w-80"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
 
-        {/* タイトル入力 */}
-        <div className="form-group">
-          <label>タイトル</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
+      {/* カレンダー */}
+      <div className="calendar-container mb-6">
+        <Calendar
+          localizer={localizer}
+          selectable
+          onSelectSlot={handleSelectSlot}
+          events={events}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 500, backgroundColor: "white", color: "black" }}
+        />
+      </div>
 
-        {/* カレンダー */}
-        <div className="calendar-box">
-          <Calendar
-            localizer={localizer}
-            selectable
-            onSelectSlot={handleSelectSlot}
-            events={selectedEvents}
-            startAccessor="start"
-            endAccessor="end"
-            style={{ height: 500 }}
-            views={["month", "week", "day"]}
-            popup
-          />
-        </div>
+      {/* 選択された日程のリスト */}
+      <div className="event-list mb-6">
+        <h3 className="text-xl font-semibold mb-2">選択した日程</h3>
+        {events.length === 0 && <p>まだ選択されていません。</p>}
+        {events.map((ev) => (
+          <div
+            key={ev.id}
+            className="p-3 mb-3 bg-gray-800 rounded-lg shadow-md"
+          >
+            <p className="mb-2">
+              📅 {moment(ev.start).format("YYYY/MM/DD")} -{" "}
+              {moment(ev.end).format("YYYY/MM/DD")}
+            </p>
+            <p className="mb-2">タイトル: {ev.title}</p>
 
-        {/* 選択した日程 */}
-        <div className="event-list">
-          {selectedEvents.map((event) => (
-            <div key={event.id} className="event-item">
-              <p className="event-date">
-                {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
-                {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
-              </p>
+            {/* 時間帯オプション */}
+            <select
+              className="p-2 rounded text-black mb-2"
+              value={ev.option}
+              onChange={(e) => handleOptionChange(ev.id, e.target.value)}
+            >
+              <option value="終日">終日</option>
+              <option value="昼">昼</option>
+              <option value="夜">夜</option>
+              <option value="時刻指定">時刻指定</option>
+            </select>
 
-              {/* 時間帯 */}
-              <div className="select-box">
-                <label>時間帯:</label>
+            {/* 時刻指定が選ばれた場合 */}
+            {ev.option === "時刻指定" && (
+              <div className="flex space-x-2 mt-2">
                 <select
-                  value={event.option}
-                  onChange={(e) => handleOptionChange(event.id, e.target.value)}
+                  className="p-2 rounded text-black"
+                  value={ev.startTime}
+                  onChange={(e) =>
+                    handleTimeChange(ev.id, "startTime", e.target.value)
+                  }
                 >
-                  <option value="終日">終日</option>
-                  <option value="昼">昼</option>
-                  <option value="夜">夜</option>
-                  <option value="時刻指定">時刻指定</option>
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={`${i}:00`}>
+                      {i}:00
+                    </option>
+                  ))}
+                </select>
+                <span>〜</span>
+                <select
+                  className="p-2 rounded text-black"
+                  value={ev.endTime}
+                  onChange={(e) =>
+                    handleTimeChange(ev.id, "endTime", e.target.value)
+                  }
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={`${i}:00`}>
+                      {i}:00
+                    </option>
+                  ))}
                 </select>
               </div>
-
-              {/* 時刻指定の場合 */}
-              {event.option === "時刻指定" && (
-                <div className="time-select">
-                  <div>
-                    <label>開始</label>
-                    <select
-                      value={event.startTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(event.id, "startTime", e.target.value)
-                      }
-                    >
-                      <option value="">--</option>
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}時
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label>終了</label>
-                    <select
-                      value={event.endTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(event.id, "endTime", e.target.value)
-                      }
-                    >
-                      <option value="">--</option>
-                      {hours.map((h) => (
-                        <option
-                          key={h}
-                          value={h}
-                          disabled={
-                            event.startTime && Number(h) <= Number(event.startTime)
-                          }
-                        >
-                          {h}時
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* 登録ボタン */}
-        <div className="button-area">
-          <button onClick={handleSubmit}>登録して共有リンク発行</button>
-        </div>
-
-        {/* 共有リンク */}
-        {shareUrl && (
-          <div className="share-link">
-            <p>共有リンクが発行されました：</p>
-            <a href={shareUrl}>{shareUrl}</a>
+            )}
           </div>
+        ))}
+      </div>
+
+      {/* 共有リンク生成 */}
+      <div className="text-center">
+        <button
+          onClick={generateLink}
+          className="px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg shadow-lg"
+        >
+          共有リンクを発行
+        </button>
+        {link && (
+          <p className="mt-3">
+            発行されたリンク:{" "}
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-300"
+            >
+              {link}
+            </a>
+          </p>
         )}
-      </main>
+      </div>
     </div>
   );
 };
