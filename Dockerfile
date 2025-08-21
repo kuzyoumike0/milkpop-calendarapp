@@ -9,21 +9,23 @@ RUN npm run build
 
 # ===== バックエンド =====
 FROM node:18
+WORKDIR /app
+
+# バックエンド依存関係
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
-
-# 先に package.json だけコピーして依存解決
-COPY backend/package*.json ./
 RUN npm install
+WORKDIR /app
 
-# ソースコピー（←ここ重要！）
-COPY backend/ ./
-
-# フロントのビルド成果物を backend 内にコピー
+# ソースコピー
+COPY backend ./backend
 COPY --from=builder /app/frontend/build ./frontend/build
 
+# 環境変数
 ENV NODE_ENV=production
 
-# デバッグ: index.js が存在するか確認
-RUN echo "=== backend contents ===" && ls -R /app/backend
+# デバッグ: build の中身を確認
+RUN ls -R /app/frontend/build
 
+WORKDIR /app/backend
 CMD ["node", "index.js"]
