@@ -10,9 +10,9 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 const theme = extendTheme({
   styles: {
     global: {
+      // body の bg を設定しない → index.css が優先される
       body: {
-        bg: "transparent", // ← 黒から透明に変更！
-        color: "#333",     // ← CSSの文字色と統一
+        color: "#333", // 文字色だけ残す
       },
     },
   },
