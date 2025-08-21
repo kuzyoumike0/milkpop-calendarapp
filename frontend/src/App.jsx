@@ -1,23 +1,26 @@
-react-dom.production.min.js:188 Error
-    at c (history.ts:494:11)
-    at be (components.tsx:429:3)
-    at vl (react-dom.production.min.js:160:137)
-    at ku (react-dom.production.min.js:289:337)
-    at bs (react-dom.production.min.js:279:389)
-    at ys (react-dom.production.min.js:279:320)
-    at vs (react-dom.production.min.js:279:180)
-    at os (react-dom.production.min.js:270:88)
-    at as (react-dom.production.min.js:267:429)
-    at S (scheduler.production.min.js:13:203)
-fi @ react-dom.production.min.js:188Understand this error
-react-dom.production.min.js:282 Uncaught Error
-    at c (history.ts:494:11)
-    at be (components.tsx:429:3)
-    at vl (react-dom.production.min.js:160:137)
-    at ku (react-dom.production.min.js:289:337)
-    at bs (react-dom.production.min.js:279:389)
-    at ys (react-dom.production.min.js:279:320)
-    at vs (react-dom.production.min.js:279:180)
-    at os (react-dom.production.min.js:270:88)
-    at as (react-dom.production.min.js:267:429)
-    at S (scheduler.production.min.js:13:203)
+import React from "react";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
+import TopPage from "./components/TopPage";
+import LinkPage from "./components/LinkPage";
+import PersonalPage from "./components/PersonalPage";
+import SharePage from "./components/SharePage";
+import ShareLinkPage from "./components/ShareLinkPage";
+
+function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<TopPage />} />
+          <Route path="link" element={<LinkPage />} />
+          <Route path="personal" element={<PersonalPage />} />
+          <Route path="share/:linkid" element={<SharePage />} />
+          <Route path="sharelink/:linkid" element={<ShareLinkPage />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
+}
+
+export default App;
