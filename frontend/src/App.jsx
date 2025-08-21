@@ -16,7 +16,7 @@ function App() {
           <Link to="/" className="hover:text-[#FDB9C8]">
             トップ
           </Link>
-          <Link to="/share" className="hover:text-[#FDB9C8]">
+          <Link to="/link" className="hover:text-[#FDB9C8]">
             日程登録
           </Link>
           <Link to="/personal" className="hover:text-[#FDB9C8]">
@@ -28,10 +28,10 @@ function App() {
       {/* ページルーティング */}
       <Routes>
         <Route path="/" element={<TopPage />} />
-        <Route path="/share" element={<SharePage />} />
+        <Route path="/share/:id" element={<SharePage />} />   {/* ← 共有リンクページ */}
         <Route path="/personal" element={<PersonalPage />} />
         <Route path="/sharelink" element={<ShareLinkPage />} />
-        <Route path="/link" element={<LinkPage />} />
+        <Route path="/link" element={<LinkPage />} />          {/* ← 日程登録ページ */}
       </Routes>
     </Router>
   );
