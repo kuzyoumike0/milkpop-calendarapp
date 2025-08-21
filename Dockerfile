@@ -3,25 +3,21 @@ FROM node:18
 
 WORKDIR /app
 
-# 依存関係をキャッシュするために package.json だけ先にコピー
+# 依存関係インストール
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
-COPY frontend/tailwind.config.js ./frontend/
-COPY frontend/postcss.config.js ./frontend/
-COPY frontend/craco.config.js ./frontend/
 
-# 依存関係インストール
 WORKDIR /app/backend
 RUN npm install
 
 WORKDIR /app/frontend
 RUN npm install
 
-# 🔹 ここで全体コピー
+# 🔹 ここで一括コピー
 WORKDIR /app
 COPY . .
 
-# frontend ビルド
+# frontend build
 WORKDIR /app/frontend
 RUN npm run build
 
