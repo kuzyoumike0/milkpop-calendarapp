@@ -2,17 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Soleil フォントをローカル化 ===
-   フォントファイルは frontend/public/fonts/Soleil.woff2 に配置してください。
-   CRA/CRACO の場合、public/ 配下のファイルは url("/...") で参照します。 */
-@font-face {
-  font-family: 'Soleil';
-  src: url("/fonts/Soleil.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* === 全体のベーススタイル === */
 body {
   font-family: 'Soleil', sans-serif;
@@ -22,8 +11,6 @@ body {
   padding: 0;
   line-height: 1.6;
 }
-
-/* === 共通UIスタイル === */
 
 /* スクロールバー */
 ::-webkit-scrollbar {
