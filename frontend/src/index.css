@@ -2,18 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Soleil フォントを Base64 埋め込み === */
-@font-face {
-  font-family: 'Soleil';
-  src: url("data:font/woff2;base64,<<< BASE64文字列 >>>") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* === 全体のベーススタイル === */
 body {
-  font-family: 'Soleil', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #fdfdfd;
   color: #111;
   margin: 0;
