@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./public/index.html",
@@ -8,6 +9,10 @@ module.exports = {
       colors: {
         pink: "#FDB9C8",
         deepblue: "#004CA0",
+        luxuryblack: "#000000",
+      },
+      fontFamily: {
+        sans: ["Poppins", "Noto Sans JP", "sans-serif"],
       },
     },
   },
