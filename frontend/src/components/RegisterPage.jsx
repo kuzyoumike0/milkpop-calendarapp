@@ -22,11 +22,15 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [holidays, setHolidays] = useState({});
 
-  // ===== 日本の祝日を取得（前年・今年・翌年） =====
+  // ===== 日本の祝日を取得（前年〜+9年後 = 11年分） =====
   useEffect(() => {
     const hd = new Holidays("JP"); // 日本の祝日
     const currentYear = new Date().getFullYear();
-    const years = [currentYear - 1, currentYear, currentYear + 1];
+    const years = [];
+
+    for (let y = currentYear - 1; y <= currentYear + 9; y++) {
+      years.push(y);
+    }
 
     const holidayMap = {};
 
