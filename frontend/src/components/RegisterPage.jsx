@@ -21,9 +21,8 @@ const localizer = dateFnsLocalizer({
 
 const RegisterPage = () => {
   const [events, setEvents] = useState([]);
-  const [holidays, setHolidays] = useState(null); // ← 初期値は null に変更
+  const [holidays, setHolidays] = useState(null);
 
-  // ✅ 日本の祝日APIから自動取得
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
@@ -37,15 +36,15 @@ const RegisterPage = () => {
     fetchHolidays();
   }, []);
 
-  // ✅ セル背景と文字色を変える
+  // ✅ セル背景を変える
   const dayPropGetter = (date) => {
-    if (!holidays) return {}; // ← データ取得前は何も変更しない
+    if (!holidays) return {};
 
     const dateStr = date.toISOString().split("T")[0];
     if (holidays[dateStr]) {
       return {
         style: {
-          backgroundColor: "rgba(255, 182, 193, 0.25)", // 薄ピンク背景
+          backgroundColor: "rgba(255, 182, 193, 0.25)", // 薄ピンク
           color: "red",
           fontWeight: "bold",
         },
@@ -54,15 +53,13 @@ const RegisterPage = () => {
     return {};
   };
 
-  // ✅ 日付セルに祝日名を表示（CSSが効くように children を残す）
+  // ✅ 日付セルをラップして祝日名を追加（元クラス保持）
   const CustomDateCellWrapper = ({ value, children }) => {
-    if (!holidays) return <div>{children}</div>; // ← データ取得前は素通り
-
     const dateStr = value.toISOString().split("T")[0];
     return (
-      <div style={{ position: "relative" }}>
+      <div className="rbc-date-cell" style={{ position: "relative" }}>
         {children}
-        {holidays[dateStr] && (
+        {holidays && holidays[dateStr] && (
           <div
             style={{
               color: "red",
@@ -70,7 +67,7 @@ const RegisterPage = () => {
               position: "absolute",
               bottom: 2,
               left: 2,
-              pointerEvents: "none", // ← クリック操作に干渉しない
+              pointerEvents: "none",
             }}
           >
             {holidays[dateStr]}
