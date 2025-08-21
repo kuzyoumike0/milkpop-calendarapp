@@ -1,5 +1,5 @@
 import React from "react";
-import LinksSection from "./components/LinksSection";
+import LinksSection from "./components/LinksSection.jsx";
 
 function App() {
   const links = [
