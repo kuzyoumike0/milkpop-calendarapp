@@ -1,50 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchSchedules, addSchedule, updateSchedule } from "../api";
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
   const [title, setTitle] = useState("");
 
-  const handleAddSchedule = () => {
+  useEffect(() => {
+    fetchSchedules().then(setSchedules);
+  }, []);
+
+  const handleAddSchedule = async () => {
     if (!title) return;
-    setSchedules([
-      ...schedules,
-      {
-        id: Date.now(),
-        title,
-        timeType: "終日",
-        startTime: "01:00",
-        endTime: "02:00",
-      },
-    ]);
+
+    const newSchedule = {
+      title,
+      memo: "",
+      timeType: "終日",
+      startTime: "01:00",
+      endTime: "02:00",
+    };
+
+    const saved = await addSchedule(newSchedule);
+    setSchedules([saved, ...schedules]);
     setTitle("");
   };
 
-  const handleTimeTypeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, timeType: value } : s
-      )
-    );
+  const handleTimeTypeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: value,
+      startTime: s.start_time,
+      endTime: s.end_time,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleStartTimeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, startTime: value } : s
-      )
-    );
+  const handleStartTimeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: s.time_type,
+      startTime: value,
+      endTime: s.end_time,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleEndTimeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, endTime: value } : s
-      )
-    );
+  const handleEndTimeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: s.time_type,
+      startTime: s.start_time,
+      endTime: value,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = (i + 1) % 24; // 1時〜0時
+    const hour = (i + 1) % 24;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
 
@@ -77,10 +86,12 @@ const SharePage = () => {
             className="p-4 bg-white rounded-xl shadow-md"
           >
             <p className="font-semibold">{s.title}</p>
+            <p className="text-sm text-gray-600">{s.memo}</p>
+
             <select
-              value={s.timeType}
+              value={s.time_type}
               onChange={(e) =>
-                handleTimeTypeChange(s.id, e.target.value)
+                handleTimeTypeChange(s.id, e.target.value, s)
               }
               className="border p-2 rounded-lg mt-2"
             >
@@ -90,12 +101,12 @@ const SharePage = () => {
               <option>時間帯</option>
             </select>
 
-            {s.timeType === "時間帯" && (
+            {s.time_type === "時間帯" && (
               <div className="flex gap-2 mt-2">
                 <select
-                  value={s.startTime}
+                  value={s.start_time}
                   onChange={(e) =>
-                    handleStartTimeChange(s.id, e.target.value)
+                    handleStartTimeChange(s.id, e.target.value, s)
                   }
                   className="border p-2 rounded-lg"
                 >
@@ -107,9 +118,9 @@ const SharePage = () => {
                 </select>
                 <span>〜</span>
                 <select
-                  value={s.endTime}
+                  value={s.end_time}
                   onChange={(e) =>
-                    handleEndTimeChange(s.id, e.target.value)
+                    handleEndTimeChange(s.id, e.target.value, s)
                   }
                   className="border p-2 rounded-lg"
                 >
@@ -117,7 +128,7 @@ const SharePage = () => {
                     <option
                       key={t}
                       value={t}
-                      disabled={t <= s.startTime} // 開始時刻より後のみ選択可
+                      disabled={t <= s.start_time}
                     >
                       {t}
                     </option>
