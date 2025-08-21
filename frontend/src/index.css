@@ -4,8 +4,8 @@
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff);
-  color: #333;
+  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff) !important;
+  color: #333 !important;
   min-height: 100vh;
 }
 
@@ -76,4 +76,35 @@ body {
 .btn:hover {
   background: #ffccd8;
   transform: translateY(-2px);
+}
+
+/* カレンダー部分の上書き（react-big-calendar が黒背景を設定している場合の対処） */
+.rbc-calendar {
+  background: white !important;
+  color: #333 !important;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.rbc-toolbar button {
+  background: #004ca0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: #0060d1;
+}
+
+.rbc-event {
+  background: #fdb9c8 !important;
+  color: #004ca0 !important;
+  border: none !important;
+  border-radius: 4px;
+  padding: 2px 4px;
 }
