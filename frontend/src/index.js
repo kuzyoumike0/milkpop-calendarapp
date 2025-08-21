@@ -11,7 +11,7 @@ const theme = extendTheme({
   styles: {
     global: {
       body: {
-        // 👇 背景は CSS に任せるので削除
+        bg: "transparent", // 👈 ここをtransparentに
         color: "#333",
       },
     },
