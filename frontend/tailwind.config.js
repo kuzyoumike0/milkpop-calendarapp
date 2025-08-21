@@ -1,14 +1,16 @@
-const path = require("path");
-
+// frontend/tailwind.config.js
 module.exports = {
-  style: {
-    postcss: {
-      plugins: [require("tailwindcss"), require("autoprefixer")],
+  content: [
+    "./public/index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",  // ← src 以下を監視
+  ],
+  theme: {
+    extend: {
+      colors: {
+        pink: "#FDB9C8",
+        deepblue: "#004CA0",
+      },
     },
   },
-  webpack: {
-    alias: {
-      "@": path.resolve(__dirname, "src/"),
-    },
-  },
+  plugins: [],
 };
