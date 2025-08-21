@@ -30,6 +30,22 @@ app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from backend!" });
 });
 
+// ここに DB を使う API を追加していくイメージ
+// 例: イベント登録
+app.post("/api/events", async (req, res) => {
+  try {
+    const { title, start_date, end_date } = req.body;
+    const result = await pool.query(
+      "INSERT INTO schedules (title, start_date, end_date) VALUES ($1, $2, $3) RETURNING *",
+      [title, start_date, end_date]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ Error inserting event:", err);
+    res.status(500).json({ error: "Failed to insert event" });
+  }
+});
+
 // === フロントエンドのビルドを配信 ===
 // __dirname = backend/ ディレクトリなので ../frontend/build を指定
 const buildPath = path.join(__dirname, "../frontend/build");
