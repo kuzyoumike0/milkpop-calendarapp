@@ -3,17 +3,19 @@ FROM node:18
 
 WORKDIR /app
 
-# backend と frontend の依存関係だけ先にコピーして install キャッシュ活用
+# package.json を先にコピーしてキャッシュを効かせる
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
+# backend インストール
 WORKDIR /app/backend
 RUN npm install
 
+# frontend インストール
 WORKDIR /app/frontend
 RUN npm install
 
-# ここで全ソースをコピー（craco.config.js, tailwind.config.js も含まれる）
+# 全ソースをコピー（ここで craco.config.js, tailwind.config.js も入る）
 WORKDIR /app
 COPY . .
 
@@ -21,7 +23,7 @@ COPY . .
 WORKDIR /app/frontend
 RUN npm run build
 
-# backend に戻って起動設定
+# backend 起動用
 WORKDIR /app/backend
 
 ENV NODE_ENV=production
