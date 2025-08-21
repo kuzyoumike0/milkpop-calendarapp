@@ -1,33 +1,27 @@
-# --- ビルドステージ（フロントエンド） ---
+# ==========================
+# フロントエンドのビルド
+# ==========================
 FROM node:18 AS frontend-build
-
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
-
-COPY frontend/ ./
+COPY frontend ./
 RUN npm run build
 
-
-# --- 実行ステージ（バックエンド + 静的ファイル） ---
-FROM node:18 AS backend
-
+# ==========================
+# バックエンド
+# ==========================
+FROM node:18
 WORKDIR /app
 
-# backend の package.json をコピー
-COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
+# backend コピー
+COPY backend ./backend
 
-# backend のソースコード
-COPY backend/ ./ 
-
-# frontend のビルド成果物を backend/public に配置
-WORKDIR /app
+# フロントエンドのビルド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
-# サーバーの起動ポート
-EXPOSE 8080
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install
 
-# backend/index.js を実行
-CMD ["node", "backend/index.js"]
+CMD ["node", "index.js"]
