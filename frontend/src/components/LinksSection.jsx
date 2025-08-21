@@ -1,22 +1,23 @@
 import React from "react";
-import LinksSection from "./components/LinksSection.jsx";
 
-function App() {
-  const links = [
-    { url: "https://example.com", label: "公式サイト", description: "外部リンク" },
-    { url: "/schedule", label: "スケジュール", description: "日程を確認" },
-  ];
-
+function LinksSection({ links }) {
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="py-6 text-center text-3xl font-extrabold text-pink-300">
-        🌸 Calendar App
-      </header>
-      <main>
-        <LinksSection links={links} />
-      </main>
+    <div className="flex flex-col items-center gap-6 mt-12">
+      {links.map((link, index) => (
+        <a
+          key={index}
+          href={link.url}
+          className="w-80 p-6 bg-gradient-to-br from-[#FDB9C8]/20 to-[#004CA0]/20
+                     rounded-xl shadow-md text-center backdrop-blur-sm
+                     hover:scale-105 hover:shadow-[#FDB9C8]/40
+                     transition-all duration-300"
+        >
+          <h3 className="text-xl font-bold text-[#FDB9C8] mb-2">{link.label}</h3>
+          <p className="text-gray-300 text-sm">{link.description}</p>
+        </a>
+      ))}
     </div>
   );
 }
 
-export default App;
+export default LinksSection;
