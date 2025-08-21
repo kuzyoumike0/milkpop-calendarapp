@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 
 const app = express();
@@ -9,7 +10,6 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// === DB 接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -25,29 +25,44 @@ const pool = new Pool(
       }
 );
 
-// === APIルート例 ===
-app.get("/api/hello", (req, res) => {
-  res.json({ message: "Hello from backend!" });
-});
+// === API ===
 
-// ここに DB を使う API を追加していくイメージ
-// 例: イベント登録
+// 登録
 app.post("/api/events", async (req, res) => {
   try {
-    const { title, start_date, end_date } = req.body;
-    const result = await pool.query(
-      "INSERT INTO schedules (title, start_date, end_date) VALUES ($1, $2, $3) RETURNING *",
-      [title, start_date, end_date]
+    const { title, dates, timeOption } = req.body;
+    const id = uuidv4();
+
+    await pool.query(
+      "INSERT INTO events (id, title, dates, time_option) VALUES ($1, $2, $3, $4)",
+      [id, title, dates, timeOption]
     );
-    res.json(result.rows[0]);
+
+    res.json({ success: true, id });
   } catch (err) {
-    console.error("❌ Error inserting event:", err);
-    res.status(500).json({ error: "Failed to insert event" });
+    console.error("❌ DB Insert Error", err);
+    res.status(500).json({ error: "DB insert failed" });
   }
 });
 
-// === フロントエンドのビルドを配信 ===
-// __dirname = backend/ ディレクトリなので ../frontend/build を指定
+// 取得
+app.get("/api/events/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM events WHERE id=$1", [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ DB Select Error", err);
+    res.status(500).json({ error: "DB select failed" });
+  }
+});
+
+// === フロント配信 ===
 const buildPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(buildPath));
 
@@ -55,7 +70,6 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(buildPath, "index.html"));
 });
 
-// === サーバー起動 ===
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
