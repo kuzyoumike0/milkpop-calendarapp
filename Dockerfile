@@ -2,25 +2,25 @@ FROM node:18
 
 WORKDIR /app
 
-# ===== Backend setup =====
+# ===== Backend =====
 COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-# ===== Frontend setup =====
+# ===== Frontend =====
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-# ===== Copy the rest (ここで tailwind.config.js, postcss.config.js, index.css などが入る) =====
+# ===== Copy all sources =====
 WORKDIR /app
 COPY . .
 
-# ===== Frontend build =====
+# ===== Build Frontend =====
 WORKDIR /app/frontend
 RUN npm run build
 
-# ===== Backend start =====
+# ===== Start Backend =====
 WORKDIR /app/backend
 ENV NODE_ENV=production
 ENV PORT=3000
