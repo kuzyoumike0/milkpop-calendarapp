@@ -9,9 +9,9 @@ html, body, #root {
   height: 100%;
   font-family: "Helvetica Neue", Arial, sans-serif;
 
-  /* 背景グラデーション（少し濃いめ） */
-  background: linear-gradient(135deg, #ffd6e8, #cce0ff, #f5d6ff);
-  background-attachment: fixed;   /* 背景が一瞬白や黒になるのを防ぐ */
+  /* 背景グラデーション（華やか＆濃いめ） */
+  background: linear-gradient(135deg, #ffdde1, #e0f0ff, #f5d6ff);
+  background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
 
@@ -28,31 +28,42 @@ html, body, #root {
 }
 
 /* =========================
-   ヘッダー
+   ヘッダー（バナー）
 ========================= */
 .banner {
-  background: #004ca0;
+  background: linear-gradient(90deg, #004ca0, #0078d7);
   color: white;
-  padding: 16px;
+  padding: 20px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .banner h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  font-weight: bold;
 }
 
 .banner nav a {
   color: white;
-  margin-left: 16px;
+  margin-left: 24px;
   text-decoration: none;
   font-weight: bold;
+  font-size: 1.1rem;
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 4px;
 }
 
 .banner nav a:hover {
   color: #fdb9c8;
+  border-bottom: 2px solid #fdb9c8;
 }
 
 /* =========================
@@ -61,28 +72,33 @@ html, body, #root {
 .main-content {
   flex: 1;
   text-align: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
 }
 
 .main-content h2 {
-  font-size: 2rem;
-  margin-bottom: 16px;
+  font-size: 2.4rem;
+  margin-bottom: 20px;
   color: #004ca0;
 }
 
 .main-content p {
-  margin-bottom: 24px;
-  font-size: 1.2rem;
+  margin-bottom: 32px;
+  font-size: 1.3rem;
+  color: #444;
+  line-height: 1.6;
 }
 
 /* =========================
    画像
 ========================= */
 .logo-image {
-  width: 160px;
+  width: 840px;
+  max-width: 95%;
   height: auto;
-  margin: 16px auto;
+  margin: 24px auto;
   display: block;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
 
 /* =========================
@@ -90,31 +106,34 @@ html, body, #root {
 ========================= */
 .btn {
   display: inline-block;
-  margin: 0 10px;
-  padding: 12px 24px;
-  background: #fdb9c8;
+  margin: 0 12px;
+  padding: 14px 28px;
+  background: linear-gradient(90deg, #fdb9c8, #ffccd8);
   color: #004ca0;
   font-weight: bold;
-  border-radius: 25px;
+  border-radius: 30px;
   text-decoration: none;
   transition: background 0.3s ease, transform 0.2s ease;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .btn:hover {
-  background: #ffccd8;
-  transform: translateY(-2px);
+  background: linear-gradient(90deg, #ffccd8, #ffd6e1);
+  transform: translateY(-3px);
 }
 
 /* =========================
    フッター
 ========================= */
 .footer {
-  background: #004ca0;
+  background: linear-gradient(90deg, #004ca0, #0078d7);
   color: white;
   text-align: center;
-  padding: 12px;
+  padding: 16px;
   margin-top: auto;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  box-shadow: 0 -4px 8px rgba(0,0,0,0.2);
 }
 
 /* =========================
@@ -125,11 +144,11 @@ html, body, #root {
   border-radius: 12px;
   padding: 10px;
   color: #333 !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .rbc-toolbar {
-  background: #004ca0;
+  background: linear-gradient(90deg, #004ca0, #0078d7);
   color: white;
   padding: 8px;
   border-radius: 8px;
