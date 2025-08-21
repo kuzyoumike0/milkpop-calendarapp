@@ -1,93 +1,74 @@
 // src/components/RegisterPage.jsx
-import React, { useState } from "react";  // ← セミコロン必須
-import { Calendar, momentLocalizer } from "react-big-calendar"; // ← セミコロン必須
-import moment from "moment"; // ← セミコロン必須
-import "../index.css"; // ← セミコロン必須
+import React, { useState } from "react";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import ja from "date-fns/locale/ja";
+import { holidays } from "../holidays"; // 祝日データ
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../index.css";
 
-const localizer = momentLocalizer(moment);
+const locales = {
+  ja: ja,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 const RegisterPage = () => {
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeOption, setTimeOption] = useState("allday");
-  const [startTime, setStartTime] = useState("01:00");
-  const [endTime, setEndTime] = useState("00:00");
+  const [events, setEvents] = useState([]);
 
-  const handleSelectSlot = ({ start }) => {
-    setSelectedDates([...selectedDates, start]);
+  // ✅ 祝日セルを赤字＋背景色にする
+  const dayPropGetter = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    if (holidays[dateStr]) {
+      return {
+        style: {
+          backgroundColor: "rgba(255, 182, 193, 0.25)", // 薄ピンク
+          color: "red",
+          fontWeight: "bold",
+        },
+      };
+    }
+    return {};
   };
 
-  const handleRegister = () => {
-    if (timeOption === "custom" && startTime >= endTime) {
-      alert("開始時刻は終了時刻より前にしてください。");
-      return;
-    }
-    alert("登録が完了しました！");
+  // ✅ 日付セルに祝日名を表示
+  const CustomDateCell = ({ value }) => {
+    const dateStr = value.toISOString().split("T")[0];
+    return (
+      <div>
+        <div>{value.getDate()}</div>
+        {holidays[dateStr] && (
+          <div style={{ color: "red", fontSize: "0.75em" }}>
+            {holidays[dateStr]}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="register-page">
-      <h2 className="register-title">イベント登録</h2>
-      <input
-        type="text"
-        placeholder="イベントタイトルを入力"
-        className="title-input"
+      <h2 className="page-title">イベント登録</h2>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: 600, margin: "20px" }}
+        dayPropGetter={dayPropGetter}
+        components={{
+          dateCellWrapper: CustomDateCell,
+        }}
       />
-
-      <div className="calendar-container">
-        <Calendar
-          localizer={localizer}
-          selectable
-          onSelectSlot={handleSelectSlot}
-          style={{ height: 400 }}
-        />
-      </div>
-
-      <div className="time-options">
-        <select
-          className="time-dropdown"
-          value={timeOption}
-          onChange={(e) => setTimeOption(e.target.value)}
-        >
-          <option value="allday">終日</option>
-          <option value="day">昼</option>
-          <option value="night">夜</option>
-          <option value="custom">時間指定</option>
-        </select>
-      </div>
-
-      {timeOption === "custom" && (
-        <div className="time-range">
-          <label>開始:</label>
-          <select
-            className="time-dropdown"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          >
-            {Array.from({ length: 24 }, (_, i) => (
-              <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
-                {i}:00
-              </option>
-            ))}
-          </select>
-
-          <label>終了:</label>
-          <select
-            className="time-dropdown"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          >
-            {Array.from({ length: 24 }, (_, i) => (
-              <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
-                {i}:00
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <button className="register-button" onClick={handleRegister}>
-        登録
-      </button>
     </div>
   );
 };
