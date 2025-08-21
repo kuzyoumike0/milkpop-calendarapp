@@ -67,7 +67,7 @@ body {
 }
 
 .logo-image {
-  width: 840px;
+  width: 120px;
   height: auto;
 }
 
@@ -177,8 +177,8 @@ select {
   padding: 0.6rem;
   border: 1px solid #444;
   border-radius: 8px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
+  background: #fff;   /* 白背景 */
+  color: #000;        /* 黒文字 */
   font-size: 1rem;
 }
 
@@ -187,7 +187,8 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: #FDB9C8;
-  background: rgba(255,255,255,0.15);
+  background: #fdfdfd;  /* フォーカス時も白系 */
+  color: #000;          /* 黒文字維持 */
 }
 
 /* ===== ボタン ===== */
