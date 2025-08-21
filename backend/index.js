@@ -148,13 +148,14 @@ app.post("/api/share/:linkid/response", async (req, res) => {
 });
 
 // === 静的ファイル配信 ===
-const frontendPath = path.join(__dirname, "../frontend/build");
+const frontendPath = path.join(__dirname, "frontend/build");
 app.use(express.static(frontendPath));
 
 // React Router に対応するため catch-all を index.html にリダイレクト
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
+
 
 // === サーバー起動 ===
 const PORT = process.env.PORT || 8080;
