@@ -50,7 +50,7 @@ const RegisterPage = () => {
     );
   };
 
-  // 時刻指定の開始/終了
+  // 時刻指定
   const handleTimeChange = (id, field, value) => {
     setSelectedEvents((prev) =>
       prev.map((e) => {
@@ -70,7 +70,7 @@ const RegisterPage = () => {
     );
   };
 
-  // 登録 → 共有リンク発行
+  // 登録処理
   const handleSubmit = () => {
     if (!title || selectedEvents.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -84,34 +84,34 @@ const RegisterPage = () => {
   const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24 || 24);
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0a1f44] to-[#004CA0] text-white p-6">
       {/* バナー */}
-      <header className="bg-[#004CA0] text-white p-4 text-2xl font-bold rounded-2xl shadow-md flex justify-between items-center">
-        <span>MilkPOP Calendar</span>
-        <nav className="space-x-4 text-lg">
-          <a href="/" className="hover:text-[#FDB9C8]">トップ</a>
-          <a href="/personal" className="hover:text-[#FDB9C8]">個人スケジュール</a>
+      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold rounded-2xl shadow-lg flex justify-between items-center">
+        <span>🌸 MilkPOP Calendar</span>
+        <nav className="space-x-6 text-lg">
+          <a href="/" className="hover:underline">トップ</a>
+          <a href="/personal" className="hover:underline">個人スケジュール</a>
         </nav>
       </header>
 
-      <h1 className="text-3xl font-bold my-8 text-center text-[#004CA0]">
+      <h1 className="text-4xl font-extrabold my-10 text-center text-[#FDB9C8] drop-shadow-lg">
         日程登録
       </h1>
 
-      {/* タイトル */}
-      <div className="max-w-xl mx-auto mb-8">
-        <label className="block text-lg mb-2 font-semibold">タイトル</label>
+      {/* タイトル入力 */}
+      <div className="max-w-xl mx-auto mb-10">
+        <label className="block text-lg mb-3 font-semibold">タイトル</label>
         <input
           type="text"
-          className="w-full p-3 rounded-lg border border-gray-400 text-gray-900 focus:ring-2 focus:ring-[#FDB9C8]"
-          placeholder="例：打ち合わせ"
+          className="w-full p-4 rounded-xl border border-gray-300 text-gray-900 focus:ring-4 focus:ring-[#FDB9C8] focus:outline-none shadow-md"
+          placeholder="例：春のミーティング"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
       {/* カレンダー */}
-      <div className="max-w-5xl mx-auto bg-white text-black rounded-2xl shadow-lg p-4 mb-10">
+      <div className="max-w-5xl mx-auto bg-white text-black rounded-3xl shadow-2xl p-6 mb-12">
         <Calendar
           localizer={localizer}
           selectable
@@ -130,20 +130,20 @@ const RegisterPage = () => {
         {selectedEvents.map((event) => (
           <div
             key={event.id}
-            className="p-5 bg-white border border-[#004CA0] rounded-2xl shadow-lg"
+            className="p-6 bg-white border-l-8 border-[#FDB9C8] rounded-2xl shadow-lg text-gray-900"
           >
-            <p className="text-lg font-semibold text-[#004CA0]">
+            <p className="text-lg font-bold text-[#004CA0] mb-3">
               {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
               {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
             </p>
 
             {/* 時間帯プルダウン */}
-            <div className="mt-3">
-              <label className="mr-2 font-medium">時間帯：</label>
+            <div className="mt-2">
+              <label className="mr-3 font-medium">時間帯：</label>
               <select
                 value={event.option}
                 onChange={(e) => handleOptionChange(event.id, e.target.value)}
-                className="p-2 rounded border border-gray-400 text-gray-900"
+                className="p-2 rounded-lg border border-gray-400 text-gray-900 focus:ring-2 focus:ring-[#004CA0]"
               >
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
@@ -152,9 +152,9 @@ const RegisterPage = () => {
               </select>
             </div>
 
-            {/* 時刻指定選択時 */}
+            {/* 時刻指定 */}
             {event.option === "時刻指定" && (
-              <div className="flex gap-6 mt-3">
+              <div className="flex gap-8 mt-4">
                 <div>
                   <label className="font-medium">開始</label>
                   <select
@@ -162,7 +162,7 @@ const RegisterPage = () => {
                     onChange={(e) =>
                       handleTimeChange(event.id, "startTime", e.target.value)
                     }
-                    className="ml-2 p-1 border border-gray-400 rounded text-gray-900"
+                    className="ml-2 p-2 rounded border border-gray-400 text-gray-900"
                   >
                     <option value="">--</option>
                     {hours.map((h) => (
@@ -179,7 +179,7 @@ const RegisterPage = () => {
                     onChange={(e) =>
                       handleTimeChange(event.id, "endTime", e.target.value)
                     }
-                    className="ml-2 p-1 border border-gray-400 rounded text-gray-900"
+                    className="ml-2 p-2 rounded border border-gray-400 text-gray-900"
                   >
                     <option value="">--</option>
                     {hours.map((h) => (
@@ -202,10 +202,10 @@ const RegisterPage = () => {
       </div>
 
       {/* 登録ボタン */}
-      <div className="text-center mt-10">
+      <div className="text-center mt-12">
         <button
           onClick={handleSubmit}
-          className="bg-[#FDB9C8] text-[#004CA0] px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:opacity-80 transition"
+          className="bg-gradient-to-r from-[#FDB9C8] to-[#ff80a9] text-[#004CA0] px-10 py-4 rounded-full font-bold text-xl shadow-xl hover:scale-105 transition transform"
         >
           登録して共有リンク発行
         </button>
@@ -213,11 +213,11 @@ const RegisterPage = () => {
 
       {/* 共有リンク */}
       {shareUrl && (
-        <div className="text-center mt-8">
-          <p className="mb-3 font-medium">✅ 共有リンクが発行されました：</p>
+        <div className="text-center mt-10 bg-white text-[#004CA0] p-6 rounded-2xl shadow-lg max-w-2xl mx-auto">
+          <p className="mb-3 font-semibold">✅ 共有リンクが発行されました：</p>
           <a
             href={shareUrl}
-            className="text-[#004CA0] underline break-all text-lg font-semibold"
+            className="text-[#FDB9C8] underline break-all text-lg font-bold"
           >
             {shareUrl}
           </a>
