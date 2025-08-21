@@ -12,11 +12,11 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-# ===== Copy all sources =====
+# ===== Copy all sources (ここで index.css や tailwind.config.js も含める) =====
 WORKDIR /app
 COPY . .
 
-# ===== Build Frontend =====
+# ===== Build Frontend (Tailwind 有効化) =====
 WORKDIR /app/frontend
 RUN npm run build
 
