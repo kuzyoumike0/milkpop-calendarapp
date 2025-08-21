@@ -10,14 +10,11 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 const theme = extendTheme({
   styles: {
     global: {
-      body: {
-        // 背景は index.css に任せる
-        // bg: "white",
-        // color: "black",
-      },
+      // body の指定は不要
     },
   },
 });
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
