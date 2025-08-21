@@ -17,7 +17,7 @@ const TopPage = () => {
         <Heading
           as="h1"
           size="2xl"
-          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
+          bgGradient="linear(to-r, brandPink, brandBlue)"
           bgClip="text"
           fontWeight="bold"
           mb={6}
@@ -33,22 +33,31 @@ const TopPage = () => {
         <VStack spacing={6}>
           <Wrap spacing={4} justify="center">
             <WrapItem>
-              <ShareButton to="/" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton to="/" gradient="linear(to-r, brandPink, brandBlue)">
                 トップ
               </ShareButton>
             </WrapItem>
             <WrapItem>
-              <ShareButton to="/register" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton
+                to="/register"
+                gradient="linear(to-r, brandPink, brandBlue)"
+              >
                 日程登録
               </ShareButton>
             </WrapItem>
             <WrapItem>
-              <ShareButton to="/personal" gradient="linear(to-r, #004CA0, #FDB9C8)">
+              <ShareButton
+                to="/personal"
+                gradient="linear(to-r, brandBlue, brandPink)"
+              >
                 個人スケジュール
               </ShareButton>
             </WrapItem>
             <WrapItem>
-              <ShareButton to="/share" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton
+                to="/share"
+                gradient="linear(to-r, brandPink, brandBlue)"
+              >
                 共有ページ
               </ShareButton>
             </WrapItem>
