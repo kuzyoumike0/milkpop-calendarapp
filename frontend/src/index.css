@@ -1,18 +1,39 @@
-/* frontend/src/index.css */
-
+/* 全体共通 */
 body {
   margin: 0;
   font-family: "Raleway", sans-serif;
-  background: linear-gradient(135deg, #000000, #1a1a1a); /* 黒のグラデーション */
   color: white;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #000; /* デフォルト黒 */
+}
+
+/* トップページ専用 背景グラデーション */
+.top-page {
+  flex: 1;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 20px;
+  min-height: 100vh; /* 画面全体を覆う */
+}
+
+/* トップページ画像 */
+.top-image {
+  max-width: 840px !important;
+  width: 100% !important;
+  display: block !important;
+  margin: 20px auto !important;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* バナー */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important; /* グラデーション */
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
   color: white !important;
   padding: 25px !important;
   text-align: center !important;
@@ -38,16 +59,6 @@ body {
 .banner nav a:hover {
   color: #FDB9C8 !important;
   text-shadow: 0 0 10px rgba(253,185,200,0.8) !important;
-}
-
-/* トップページだけの画像スタイル */
-.top-image {
-  max-width: 840px !important;
-  width: 100% !important;
-  display: block !important;
-  margin: 20px auto !important;
-  border-radius: 16px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* フッター */
