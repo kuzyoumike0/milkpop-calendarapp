@@ -31,6 +31,13 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* ==== アニメーション ==== */
+@keyframes gold-shine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* ヘッダー */
 .banner {
   background: linear-gradient(
@@ -50,9 +57,11 @@ body {
 
 /* タイトル（MilkPOP Calendar） */
 .banner h1 {
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700); /* ゴールドグラデ */
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent; /* グラデ文字 */
+  -webkit-text-fill-color: transparent;
+  animation: gold-shine 6s infinite linear; /* 流れるゴールド */
   font-family: "Raleway", sans-serif !important;
   font-size: 40px !important;
   font-weight: 800 !important;
@@ -61,13 +70,15 @@ body {
   text-shadow: 
     0 0 6px rgba(255, 215, 0, 0.6),
     0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 20px rgba(253, 185, 200, 0.5); /* ゴールド×ピンクの光沢 */
+    0 0 20px rgba(253, 185, 200, 0.5);
   margin: 0 0 10px 0 !important;
   transition: all 0.3s ease;
 }
 
 .banner h1:hover {
-  color: #FDB9C8 !important; /* hover でピンク発光 */
+  -webkit-text-fill-color: #FDB9C8 !important;
+  background: none !important;
+  animation: none;
   text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
@@ -82,9 +93,11 @@ body {
 .banner nav a {
   margin: 0 20px !important;
   text-decoration: none !important;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700); /* ゴールドグラデ */
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: gold-shine 8s infinite linear;
   font-weight: 600 !important;
   font-family: "Raleway", sans-serif !important;
   font-size: 16px !important;
@@ -93,8 +106,9 @@ body {
 }
 
 .banner nav a:hover {
-  color: #FDB9C8 !important;
-  -webkit-text-fill-color: #FDB9C8 !important; /* ピンクに変化 */
+  -webkit-text-fill-color: #FDB9C8 !important;
+  background: none !important;
+  animation: none;
   text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
@@ -123,7 +137,11 @@ body {
 
   /* ゴールド文字 */
   background-clip: border-box;
-  color: #FFD700 !important;
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gold-shine 10s infinite linear;
   text-shadow: 
     0 0 6px rgba(255, 215, 0, 0.6),
     0 0 12px rgba(255, 165, 0, 0.5),
@@ -132,7 +150,9 @@ body {
 }
 
 .footer:hover {
-  color: #FDB9C8 !important;
+  -webkit-text-fill-color: #FDB9C8 !important;
+  background: none !important;
+  animation: none;
   text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
