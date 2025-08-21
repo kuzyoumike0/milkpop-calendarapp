@@ -1,16 +1,11 @@
-// frontend/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./public/index.html",
     "./src/**/*.{js,jsx,ts,tsx}"
   ],
   theme: {
-    extend: {
-      colors: {
-        brandPink: "#FDB9C8",
-        brandBlue: "#004CA0",
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };
