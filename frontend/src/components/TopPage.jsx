@@ -7,7 +7,7 @@ export default function TopPage() {
       {/* トップページ専用 ロゴ画像 */}
       <div className="flex justify-center mt-8 mb-10">
         <img
-          src="/logo.png"
+          src="/logo.png"  // ← frontend/public/logo.png に置く
           alt="MilkPOP Logo"
           className="h-40 w-auto drop-shadow-2xl"
         />
