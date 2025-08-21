@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Heading, HStack, Link as ChakraLink } from "@chakra-ui/react";
+import { Box, Heading, HStack, Button } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 
 function Layout({ children }) {
@@ -26,40 +26,49 @@ function Layout({ children }) {
           bgGradient="linear(to-r, #FDB9C8, #004CA0)"
           bgClip="text"
           fontWeight="extrabold"
-          mb={2}
+          mb={3}
         >
           MilkPOP Calendar
         </Heading>
 
-        {/* ナビゲーション */}
-        <HStack spacing={8} justify="center">
-          <ChakraLink
+        {/* ナビゲーションボタン */}
+        <HStack spacing={6} justify="center">
+          <Button
             as={RouterLink}
             to="/"
+            size="sm"
+            borderRadius="full"
+            bgGradient="linear(to-r, #FDB9C8, #004CA0)"
             color="white"
-            fontWeight="bold"
-            _hover={{ color: "#FDB9C8" }}
+            _hover={{ transform: "scale(1.05)", boxShadow: "0 0 12px #FDB9C8" }}
+            _active={{ transform: "scale(0.95)" }}
           >
             トップ
-          </ChakraLink>
-          <ChakraLink
+          </Button>
+          <Button
             as={RouterLink}
             to="/share"
+            size="sm"
+            borderRadius="full"
+            bgGradient="linear(to-r, #FDB9C8, #004CA0)"
             color="white"
-            fontWeight="bold"
-            _hover={{ color: "#FDB9C8" }}
+            _hover={{ transform: "scale(1.05)", boxShadow: "0 0 12px #FDB9C8" }}
+            _active={{ transform: "scale(0.95)" }}
           >
             日程登録
-          </ChakraLink>
-          <ChakraLink
+          </Button>
+          <Button
             as={RouterLink}
             to="/personal"
+            size="sm"
+            borderRadius="full"
+            bgGradient="linear(to-r, #004CA0, #FDB9C8)"
             color="white"
-            fontWeight="bold"
-            _hover={{ color: "#FDB9C8" }}
+            _hover={{ transform: "scale(1.05)", boxShadow: "0 0 12px #004CA0" }}
+            _active={{ transform: "scale(0.95)" }}
           >
             個人スケジュール
-          </ChakraLink>
+          </Button>
         </HStack>
       </Box>
 
