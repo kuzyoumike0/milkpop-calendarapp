@@ -3,17 +3,17 @@ FROM node:18
 
 WORKDIR /app
 
-# backend 依存関係インストール
-COPY backend/package*.json ./backend/
+# backend 依存関係
+COPY backend/package*.json backend/
 WORKDIR /app/backend
 RUN npm install
 
-# frontend 依存関係インストール
-COPY frontend/package*.json ./frontend/
+# frontend 依存関係
+COPY frontend/package*.json frontend/
 WORKDIR /app/frontend
 RUN npm install
 
-# ここで残り全部をコピー（craco.config.js含む）
+# プロジェクト全体コピー
 WORKDIR /app
 COPY . .
 
