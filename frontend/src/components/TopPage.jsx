@@ -1,7 +1,7 @@
 // frontend/src/components/TopPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import sampleImage from "../assets/sample.png"; // 画像ファイルを置くパス
+import sampleImage from "../public/logo.png"; // 好きな画像を配置してください
 
 const TopPage = () => {
   return (
@@ -19,15 +19,23 @@ const TopPage = () => {
         <h2>ようこそ、MilkPOP Calendar へ</h2>
         <p>スケジュールを登録して共有しましょう！</p>
 
-        {/* 小さめ画像 */}
+        {/* ここに画像を追加 */}
         <div>
-          <img 
-            src={sampleImage} 
-            alt="イメージ" 
-            style={{ width: "150px", height: "auto", margin: "20px auto", display: "block" }}
+          <img
+            src={sampleImage}
+            alt="イメージ"
+            style={{
+              width: "180px",   // 小さめ
+              height: "auto",
+              margin: "20px auto",
+              display: "block",
+              borderRadius: "12px", // おしゃれに角丸
+              boxShadow: "0 4px 8px rgba(0,0,0,0.1)" // 影を追加
+            }}
           />
         </div>
 
+        {/* ボタン */}
         <div className="button-group">
           <Link to="/share" className="btn">
             日程登録ページへ
