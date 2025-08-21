@@ -1,4 +1,3 @@
-// frontend/src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
@@ -7,12 +6,12 @@ import App from "./App";
 
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
-// Chakra UI のテーマ設定
+// Chakra UI のテーマ設定（bodyのbgは削除）
 const theme = extendTheme({
   styles: {
     global: {
       body: {
-        // ここは削除またはコメントアウト
+        // 背景は index.css に任せる
         // bg: "white",
         // color: "black",
       },
