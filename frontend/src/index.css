@@ -23,24 +23,23 @@ body {
 
 /* トップページ画像 */
 .top-image {
-  max-width: 840px !important;
-  width: 100% !important;
+  width: 840px !important;       /* 横幅を固定 */
+  max-width: 100% !important;    /* 画面が狭い時は縮小 */
   display: block !important;
-  margin: 20px auto !important;
+  margin: 20px auto !important;  /* 中央寄せ */
   border-radius: 16px !important;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* ヘッダー */
 .banner {
-  background: linear-gradient(180deg, #1a1a1a, #000000) !important;
+  background: linear-gradient(180deg, #1a1a1a, #000000) !important; /* 黒の縦グラデーション */
   color: #FDB9C8 !important;
   padding: 25px !important;
   text-align: center !important;
   font-size: 32px !important;
   font-weight: bold !important;
-  letter-spacing: 3px !important;
-  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
   font-family: "Raleway", sans-serif !important;
   position: relative !important;
   z-index: 10 !important;
