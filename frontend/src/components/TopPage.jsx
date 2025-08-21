@@ -21,15 +21,16 @@ const TopPage = () => {
         {/* public/logo.png を表示 */}
         <div>
           <img
-            src="/logo.png"   // ← public 配下は / から参照
+            src="/logo.png"
             alt="ロゴ"
             style={{
-              width: "840px",   // 小さめ
+              maxWidth: "840px",  // 最大280px
+              width: "80%",       // 画面幅の8割まで広がる
               height: "auto",
-              margin: "20px auto",
+              margin: "30px auto",
               display: "block",
-              borderRadius: "12px", 
-              boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+              borderRadius: "16px",
+              boxShadow: "0 6px 12px rgba(0,0,0,0.15)",
             }}
           />
         </div>
