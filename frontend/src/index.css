@@ -162,7 +162,10 @@ body {
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8) !important;
   border-top: 2px solid rgba(0,76,160,0.5) !important;
 
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  /* === ゴールド文字 === */
+  background-clip: border-box; /* 背景は通常どおり適用 */
+  color: transparent !important;
+  background-image: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -176,10 +179,11 @@ body {
 
 .footer:hover {
   -webkit-text-fill-color: #FDB9C8 !important;
-  background: none !important;
+  background-image: none !important;
   animation: none;
   text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
     0 0 24px rgba(253,185,200,0.7);
 }
+
