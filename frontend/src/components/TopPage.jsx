@@ -1,6 +1,6 @@
 // frontend/src/components/TopPage.jsx
 import React from "react";
-import logo from "../assets/logo.png";
+import logo from "../public/logo.png";
 import "../index.css";
 
 const TopPage = () => {
