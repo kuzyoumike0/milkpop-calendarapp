@@ -2,147 +2,177 @@ import React, { useState } from "react";
 import {
   Box,
   Button,
-  Heading,
-  VStack,
+  Container,
   FormControl,
   FormLabel,
+  Heading,
   Input,
   RadioGroup,
   Radio,
   Stack,
-  Select,
-  HStack,
-  Text
+  Text,
+  VStack,
+  useClipboard,
+  useToast,
 } from "@chakra-ui/react";
-import { DatePicker } from "@mantine/dates";
-import { v4 as uuidv4 } from "uuid";
-import Layout from "./Layout";
-import "dayjs/locale/ja";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 
-function RegisterPage() {
+export default function RegisterPage() {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single"); // single, range, multiple
-  const [dates, setDates] = useState([]);
-  const [timeMode, setTimeMode] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const [selectedDates, setSelectedDates] = useState([]); // 複数選択用
+  const [timeType, setTimeType] = useState("allday"); // 時間帯
   const [shareUrl, setShareUrl] = useState("");
+  const toast = useToast();
+  const { hasCopied, onCopy } = useClipboard(shareUrl);
 
-  // 保存処理（ここではリンク生成だけ）
-  const handleSave = () => {
-    const link = `${window.location.origin}/share/${uuidv4()}`;
-    setShareUrl(link);
+  // カレンダー日付選択
+  const handleDateSelect = (info) => {
+    const start = info.startStr;
+    const end = info.endStr;
+
+    // 範囲選択 or 単日追加
+    if (info.startStr !== info.endStr) {
+      setSelectedDates([`${start} ~ ${end}`]);
+    } else {
+      setSelectedDates((prev) =>
+        prev.includes(start)
+          ? prev.filter((d) => d !== start)
+          : [...prev, start]
+      );
+    }
+  };
+
+  // 登録処理
+  const handleSubmit = async () => {
+    if (!title || selectedDates.length === 0) {
+      toast({
+        title: "入力エラー",
+        description: "タイトルと日付を入力してください。",
+        status: "error",
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: selectedDates,
+          timeType,
+        }),
+      });
+
+      if (!res.ok) throw new Error("登録失敗");
+
+      const data = await res.json();
+      const url = `${window.location.origin}/share/${data.id}`;
+      setShareUrl(url);
+
+      toast({
+        title: "登録成功",
+        description: "共有リンクが発行されました。",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (err) {
+      toast({
+        title: "エラー",
+        description: "サーバーに接続できません。",
+        status: "error",
+        duration: 3000,
+      });
+    }
   };
 
   return (
-    <Layout>
-      <Box
-        bg="rgba(255,255,255,0.08)"
-        backdropFilter="blur(12px)"
-        borderRadius="2xl"
-        p={8}
-        maxW="700px"
-        w="100%"
-        border="1px solid rgba(255,255,255,0.2)"
-        boxShadow="lg"
-      >
-        <Heading size="md" mb={6} color="#FDB9C8">
+    <Container maxW="5xl" py={10}>
+      <VStack spacing={6}>
+        <Heading
+          size="2xl"
+          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
+          bgClip="text"
+        >
           日程登録ページ
         </Heading>
 
-        <VStack spacing={6} align="stretch">
-          {/* タイトル */}
-          <FormControl>
-            <FormLabel>タイトル</FormLabel>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="予定のタイトル"
-              bg="white"
-              color="black"
-            />
-          </FormControl>
+        {/* タイトル */}
+        <FormControl>
+          <FormLabel>タイトル</FormLabel>
+          <Input
+            placeholder="例: 夏祭り打ち合わせ"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </FormControl>
 
-          {/* 日程範囲選択 */}
-          <FormControl>
-            <FormLabel>日程選択モード</FormLabel>
-            <RadioGroup onChange={setMode} value={mode}>
-              <Stack direction="row">
-                <Radio value="single">単日</Radio>
-                <Radio value="range">範囲選択</Radio>
-                <Radio value="multiple">複数選択</Radio>
-              </Stack>
-            </RadioGroup>
-          </FormControl>
+        {/* カレンダー */}
+        <Box w="100%" bg="whiteAlpha.100" borderRadius="xl" p={4}>
+          <FullCalendar
+            plugins={[dayGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            selectable={true}
+            select={handleDateSelect}
+            height="auto"
+          />
+          <Text mt={2} fontSize="sm" color="gray.300">
+            → 範囲選択：ドラッグ / 複数選択：クリック
+          </Text>
+        </Box>
 
-          {/* カレンダーUI */}
-          <FormControl>
-            <FormLabel>カレンダー</FormLabel>
-            {mode === "single" && (
-              <DatePicker value={dates} onChange={setDates} locale="ja" />
-            )}
-            {mode === "range" && (
-              <DatePicker type="range" value={dates} onChange={setDates} locale="ja" />
-            )}
-            {mode === "multiple" && (
-              <DatePicker type="multiple" value={dates} onChange={setDates} locale="ja" />
-            )}
-          </FormControl>
+        {/* 時間帯選択 */}
+        <FormControl>
+          <FormLabel>時間帯</FormLabel>
+          <RadioGroup value={timeType} onChange={setTimeType}>
+            <Stack direction="row" spacing={6}>
+              <Radio value="allday">終日</Radio>
+              <Radio value="day">昼</Radio>
+              <Radio value="night">夜</Radio>
+              <Radio value="custom">時間指定</Radio>
+            </Stack>
+          </RadioGroup>
+        </FormControl>
 
-          {/* 時間帯 */}
-          <FormControl>
-            <FormLabel>時間帯</FormLabel>
-            <Select value={timeMode} onChange={(e) => setTimeMode(e.target.value)}>
-              <option value="allday">終日</option>
-              <option value="day">昼</option>
-              <option value="night">夜</option>
-              <option value="custom">指定時刻</option>
-            </Select>
-          </FormControl>
+        {/* 登録ボタン */}
+        <Button
+          size="lg"
+          borderRadius="full"
+          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
+          color="white"
+          _hover={{
+            transform: "scale(1.07)",
+            boxShadow: "0 0 15px #FDB9C8",
+          }}
+          onClick={handleSubmit}
+        >
+          登録して共有リンク発行
+        </Button>
 
-          {timeMode === "custom" && (
-            <HStack>
-              <Input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                bg="white"
-                color="black"
-              />
-              <Text>〜</Text>
-              <Input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                bg="white"
-                color="black"
-              />
-            </HStack>
-          )}
-
-          {/* 保存ボタン */}
-          <Button
-            size="lg"
-            borderRadius="full"
-            bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-            color="white"
-            onClick={handleSave}
-            _hover={{ transform: "scale(1.05)", boxShadow: "0 0 15px #FDB9C8" }}
+        {/* 共有リンク表示 */}
+        {shareUrl && (
+          <Box
+            mt={6}
+            p={4}
+            borderRadius="xl"
+            border="1px solid"
+            borderColor="whiteAlpha.400"
+            bg="whiteAlpha.100"
+            textAlign="center"
           >
-            登録して共有リンクを発行
-          </Button>
-
-          {/* 共有リンク表示 */}
-          {shareUrl && (
-            <Box mt={4}>
-              <Text fontWeight="bold">共有リンク:</Text>
-              <Text color="yellow.300">{shareUrl}</Text>
-            </Box>
-          )}
-        </VStack>
-      </Box>
-    </Layout>
+            <Text>共有リンク:</Text>
+            <Text color="cyan.300" wordBreak="break-all">
+              {shareUrl}
+            </Text>
+            <Button mt={2} size="sm" onClick={onCopy}>
+              {hasCopied ? "コピーしました" : "コピー"}
+            </Button>
+          </Box>
+        )}
+      </VStack>
+    </Container>
   );
 }
-
-export default RegisterPage;
