@@ -181,3 +181,93 @@ body {
     0 0 12px rgba(255, 165, 0, 0.5),
     0 0 18px rgba(253, 185, 200, 0.5);
 }
+
+/* ============================= */
+/* RegisterPage */
+/* ============================= */
+.register-page {
+  flex: 1;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #FFD700;
+  text-shadow:
+    0 0 6px rgba(255, 215, 0, 0.6),
+    0 0 12px rgba(255, 165, 0, 0.5),
+    0 0 18px rgba(253, 185, 200, 0.5);
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+}
+
+.register-form {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 16px;
+  padding: 25px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-family: inherit;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2) inset;
+}
+
+.calendar-placeholder {
+  border: 2px dashed rgba(255,255,255,0.7);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  background: rgba(0,0,0,0.2);
+}
+
+/* 登録ボタン */
+.submit-btn {
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  color: black;
+  width: 100%;
+  transition: all 0.3s ease;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+  text-shadow: 0 0 6px rgba(255,255,255,0.6);
+}
+
+.submit-btn:hover {
+  background: linear-gradient(90deg, #FDB9C8, #FF69B4, #FDB9C8);
+  color: white;
+  text-shadow: 0 0 10px rgba(255,255,255,0.9);
+}
