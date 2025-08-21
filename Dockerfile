@@ -1,30 +1,30 @@
 # Node.js 公式イメージ
 FROM node:18
 
-# 作業ディレクトリ
 WORKDIR /app
 
-# 依存ファイルコピー
+# backend と frontend の依存関係だけ先にコピーして install キャッシュ活用
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
-# backend 依存関係インストール
 WORKDIR /app/backend
 RUN npm install
 
-# frontend ビルド
 WORKDIR /app/frontend
 RUN npm install
-RUN npm run build
 
-# build成果物を backend で配信する
+# ここで全ソースをコピー（craco.config.js, tailwind.config.js も含まれる）
 WORKDIR /app
 COPY . .
+
+# frontend build
+WORKDIR /app/frontend
+RUN npm run build
+
+# backend に戻って起動設定
 WORKDIR /app/backend
 
-# 環境変数
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# サーバー起動
 CMD ["npm", "start"]
