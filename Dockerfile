@@ -1,4 +1,4 @@
-# ===== フロントビルド =====
+# ===== Frontend Build =====
 FROM node:18 AS builder
 WORKDIR /app/frontend
 
@@ -7,24 +7,26 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# ===== バックエンド =====
+# ===== Backend =====
 FROM node:18
 WORKDIR /app
 
-# --- バックエンド依存関係 ---
+# Install backend dependencies
 COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 
-# --- ソースコピー ---
+# Copy backend source
 COPY backend/ ./backend/
-COPY --from=builder /app/frontend/build ./frontend/build  # ← 修正！../ をやめる
+
+# Copy frontend build
+COPY --from=builder /app/frontend/build ./frontend/build
 
 WORKDIR /app/backend
 
 ENV NODE_ENV=production
 
-# デバッグ用
+# Debug: check files exist
 RUN ls -R /app
 
 CMD ["node", "index.js"]
