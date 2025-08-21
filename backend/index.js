@@ -52,6 +52,24 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
+// === スケジュール更新（時間帯変更など） ===
+app.put("/api/schedules/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { timeType, startTime, endTime } = req.body;
+    const result = await pool.query(
+      `UPDATE schedules 
+       SET time_type=$1, start_time=$2, end_time=$3
+       WHERE id=$4 RETURNING *`,
+      [timeType, startTime, endTime, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB更新エラー");
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
