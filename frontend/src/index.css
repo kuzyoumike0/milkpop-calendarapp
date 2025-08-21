@@ -67,3 +67,9 @@ body::before {
   color: #FDB9C8 !important;
   font-weight: bold;
 }
+
+/* tailwind purge 対策 */
+.hidden {
+  @apply bg-black text-white;
+}
+
