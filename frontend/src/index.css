@@ -1,179 +1,43 @@
 /* frontend/src/index.css */
 
-/* =========================
-   ページ全体の背景と文字
-========================= */
-html, body, #root {
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-
-  /* 背景グラデーション（華やか＆濃いめ） */
-  background: linear-gradient(135deg, #ffdde1, #e0f0ff, #f5d6ff);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: cover;
-
-  color: #333;
-}
-
-/* =========================
-   ページコンテナ
-========================= */
-.page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* =========================
-   ヘッダー（バナー）
-========================= */
-.banner {
-  background: linear-gradient(90deg, #004ca0, #0078d7);
+  font-family: "Raleway", sans-serif;
+  background-color: #000000; /* 高級感のある黒 */
   color: white;
-  padding: 20px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
 }
 
-.banner h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
-  font-weight: bold;
+.banner {
+  background-color: #FDB9C8 !important; /* !important 追加 */
+  color: #004CA0 !important;           /* !important 追加 */
+  padding: 20px !important;            /* !important 追加 */
+  text-align: center !important;       /* !important 追加 */
+  font-size: 28px !important;          /* !important 追加 */
+  font-weight: bold !important;        /* !important 追加 */
+}
+
+.banner nav {
+  margin-top: 10px !important;
 }
 
 .banner nav a {
-  color: white;
-  margin-left: 24px;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 1.1rem;
-  transition: color 0.3s ease, border-bottom 0.3s ease;
-  border-bottom: 2px solid transparent;
-  padding-bottom: 4px;
+  margin: 0 15px !important;
+  text-decoration: none !important;
+  color: white !important;
+  font-weight: 500 !important;
 }
 
 .banner nav a:hover {
-  color: #fdb9c8;
-  border-bottom: 2px solid #fdb9c8;
+  text-decoration: underline !important;
 }
 
-/* =========================
-   メイン部分
-========================= */
-.main-content {
-  flex: 1;
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.main-content h2 {
-  font-size: 2.4rem;
-  margin-bottom: 20px;
-  color: #004ca0;
-}
-
-.main-content p {
-  margin-bottom: 32px;
-  font-size: 1.3rem;
-  color: #444;
-  line-height: 1.6;
-}
-
-/* =========================
-   画像
-========================= */
-.logo-image {
-  width: 840px;
-  max-width: 95%;
-  height: auto;
-  margin: 24px auto;
-  display: block;
-  border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-}
-
-/* =========================
-   ボタン
-========================= */
-.btn {
-  display: inline-block;
-  margin: 0 12px;
-  padding: 14px 28px;
-  background: linear-gradient(90deg, #fdb9c8, #ffccd8);
-  color: #004ca0;
-  font-weight: bold;
-  border-radius: 30px;
-  text-decoration: none;
-  transition: background 0.3s ease, transform 0.2s ease;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.btn:hover {
-  background: linear-gradient(90deg, #ffccd8, #ffd6e1);
-  transform: translateY(-3px);
-}
-
-/* =========================
-   フッター
-========================= */
 .footer {
-  background: linear-gradient(90deg, #004ca0, #0078d7);
-  color: white;
-  text-align: center;
-  padding: 16px;
-  margin-top: auto;
-  font-size: 0.95rem;
-  box-shadow: 0 -4px 8px rgba(0,0,0,0.2);
-}
-
-/* =========================
-   カレンダー専用デザイン上書き
-========================= */
-.rbc-calendar {
-  background: #ffffff !important;
-  border-radius: 12px;
-  padding: 10px;
-  color: #333 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.rbc-toolbar {
-  background: linear-gradient(90deg, #004ca0, #0078d7);
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.rbc-toolbar button {
-  background: #fdb9c8;
-  color: #004ca0;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  margin: 0 2px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.rbc-toolbar button:hover {
-  background: #ffccd8;
-}
-
-.rbc-event {
-  background: #fdb9c8 !important;
-  color: #004ca0 !important;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-weight: bold;
+  background-color: #004CA0 !important; /* !important 追加 */
+  color: #FDB9C8 !important;           /* !important 追加 */
+  text-align: center !important;       /* !important 追加 */
+  padding: 15px !important;            /* !important 追加 */
+  position: fixed !important;          /* !important 追加 */
+  bottom: 0 !important;                /* !important 追加 */
+  width: 100% !important;              /* !important 追加 */
+  font-size: 14px !important;          /* !important 追加 */
 }
