@@ -1,9 +1,7 @@
-/* ============================= */
 /* 全体共通 */
-/* ============================= */
 body {
   margin: 0;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif; /* ポップでかわいい */
   color: white;
   min-height: 100vh;
   display: flex;
@@ -12,9 +10,7 @@ body {
   line-height: 1.6;
 }
 
-/* ============================= */
 /* トップページ専用 背景グラデーション */
-/* ============================= */
 .top-page {
   flex: 1;
   background: linear-gradient(135deg, #FDB9C8, #004CA0);
@@ -26,33 +22,32 @@ body {
   min-height: 100vh;
 }
 
-/* ============================= */
-/* ロゴ用 グラスモーフィズムカード */
-/* ============================= */
+/* ==== ロゴ用 グラスモーフィズムカード ==== */
 .logo-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 30px;
   border-radius: 20px;
+
+  /* グラスモーフィズム風の透け白背景 */
   background: rgba(255, 255, 255, 0.35);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.25);
+
   margin-bottom: 30px;
 }
 
 /* ロゴ画像 */
 .logo-image {
-  width: 840px;   /* ← 大きめに変更 */
-  max-width: 85%;
+  width: 320px;   /* 少し大きめ */
+  max-width: 90%;
   display: block;
 }
 
-/* ============================= */
 /* トップページ画像 */
-/* ============================= */
 .top-image {
   width: 840px !important;
   max-width: 100% !important;
@@ -62,23 +57,19 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* ============================= */
-/* アニメーション */
-/* ============================= */
+/* ==== アニメーション ==== */
 @keyframes gold-shine {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 
-/* ============================= */
 /* ヘッダー */
-/* ============================= */
 .banner {
   background: linear-gradient(
     180deg,
     #f5f5f5 0%,
-    #e0e0e0 15%,
+    #eaeaea 15%,
     #2b2b2b 70%,
     #000000 100%
   ) !important;
@@ -96,13 +87,13 @@ body {
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: gold-shine 6s infinite linear;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
-  font-size: 42px !important;
-  font-weight: bold !important;
-  letter-spacing: 2px !important;
-  text-transform: none !important;
-  text-shadow:
+  animation: gold-shine 6s infinite linear; 
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif !important;
+  font-size: 40px !important;
+  font-weight: 800 !important;
+  letter-spacing: 3px !important;
+  text-transform: uppercase !important;
+  text-shadow: 
     0 0 6px rgba(255, 215, 0, 0.6),
     0 0 12px rgba(255, 165, 0, 0.5),
     0 0 20px rgba(253, 185, 200, 0.5);
@@ -115,15 +106,13 @@ body {
   -webkit-text-fill-color: #FDB9C8 !important;
   background: none !important;
   animation: none;
-  text-shadow:
+  text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
     0 0 24px rgba(253,185,200,0.7);
 }
 
-/* ============================= */
 /* ナビゲーション */
-/* ============================= */
 .banner nav {
   margin-top: 14px !important;
 }
@@ -137,8 +126,8 @@ body {
   -webkit-text-fill-color: transparent;
   animation: gold-shine 8s infinite linear;
   font-weight: 600 !important;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
-  font-size: 18px !important;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif !important;
+  font-size: 16px !important;
   transition: all 0.3s ease !important;
   letter-spacing: 1px !important;
 }
@@ -147,20 +136,18 @@ body {
   -webkit-text-fill-color: #FDB9C8 !important;
   background: none !important;
   animation: none;
-  text-shadow:
+  text-shadow: 
     0 0 8px rgba(253,185,200,0.9),
     0 0 16px rgba(253,185,200,0.8),
     0 0 24px rgba(253,185,200,0.7);
 }
 
-/* ============================= */
 /* フッター */
-/* ============================= */
 .footer {
   background: linear-gradient(
     180deg,
     #f5f5f5 0%,
-    #e0e0e0 15%,
+    #eaeaea 15%,
     #2b2b2b 70%,
     #000000 100%
   ) !important;
@@ -168,106 +155,71 @@ body {
   padding: 20px !important;
   margin-top: auto !important;
   font-size: 15px !important;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif !important;
   letter-spacing: 1px !important;
   position: relative !important;
   z-index: 10 !important;
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8) !important;
   border-top: 2px solid rgba(0,76,160,0.5) !important;
 
-  color: #FFD700;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.7),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 18px rgba(253, 185, 200, 0.5);
-}
-
-/* ============================= */
-/* RegisterPage */
-/* ============================= */
-.register-page {
-  flex: 1;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  padding: 40px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.page-title {
-  font-size: 32px;
-  font-weight: bold;
-  margin-bottom: 30px;
-  color: #FFD700;
-  text-shadow:
+  /* ゴールドグラデーション文字 */
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gold-shine 10s infinite linear;
+  text-shadow: 
     0 0 6px rgba(255, 215, 0, 0.6),
     0 0 12px rgba(255, 165, 0, 0.5),
     0 0 18px rgba(253, 185, 200, 0.5);
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
 }
 
+/* ==== フォーム・ボタン共通 ==== */
 .register-form {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: 16px;
-  padding: 25px;
-  width: 100%;
-  max-width: 600px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 8px;
-  color: #fff;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  font-family: inherit;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2) inset;
-}
-
-.calendar-placeholder {
-  border: 2px dashed rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.25);
   padding: 20px;
   border-radius: 12px;
-  text-align: center;
-  color: #fff;
-  background: rgba(0,0,0,0.2);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  max-width: 640px;
+  margin: 0 auto 40px auto;
 }
 
-/* 登録ボタン */
-.submit-btn {
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 18px;
+.register-form .form-group {
+  margin-bottom: 18px;
+}
+
+.register-form label {
+  display: block;
   font-weight: bold;
-  cursor: pointer;
-  color: black;
+  margin-bottom: 6px;
+}
+
+.register-form input,
+.register-form select {
   width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+}
+
+.submit-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+  color: black;
   transition: all 0.3s ease;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
-  text-shadow: 0 0 6px rgba(255,255,255,0.6);
 }
 
 .submit-btn:hover {
   background: linear-gradient(90deg, #FDB9C8, #FF69B4, #FDB9C8);
   color: white;
-  text-shadow: 0 0 10px rgba(255,255,255,0.9);
 }
