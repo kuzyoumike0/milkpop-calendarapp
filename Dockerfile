@@ -11,16 +11,19 @@ RUN npm run build
 FROM node:18
 WORKDIR /app/backend
 
+# 先に package.json だけコピーして依存解決
 COPY backend/package*.json ./
 RUN npm install
 
-# ソースコピー
-COPY backend ./          # ← backend ディレクトリをそのままコピー
+# ソースコピー（←ここ重要！）
+COPY backend/ ./
+
+# フロントのビルド成果物を backend 内にコピー
 COPY --from=builder /app/frontend/build ./frontend/build
 
 ENV NODE_ENV=production
 
-# デバッグ: backendの中身を確認
+# デバッグ: index.js が存在するか確認
 RUN echo "=== backend contents ===" && ls -R /app/backend
 
-CMD ["node", "index.js"]  # ← backend/index.js が必ず起動される
+CMD ["node", "index.js"]
