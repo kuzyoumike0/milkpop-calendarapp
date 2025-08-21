@@ -1,152 +1,79 @@
-/* ページ背景 */
-.page-container {
-  font-family: "Segoe UI", "Hiragino Sans", "Helvetica Neue", sans-serif;
-  background: linear-gradient(to right, #fef9f9, #fff8fb, #fdf6ff);
-  min-height: 100vh;
+/* frontend/src/index.css */
+
+/* ページ全体の背景と文字 */
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff);
   color: #333;
+  min-height: 100vh;
+}
+
+/* ページコンテナ */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* バナー */
 .banner {
-  background: linear-gradient(to right, #004ca0, #3a7bd5);
+  background: #004ca0;
   color: white;
-  padding: 16px 32px;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .banner h1 {
+  margin: 0;
   font-size: 1.5rem;
-  font-weight: bold;
 }
 
 .banner nav a {
-  margin-left: 16px;
   color: white;
+  margin-left: 16px;
   text-decoration: none;
   font-weight: bold;
 }
 
 .banner nav a:hover {
-  text-decoration: underline;
+  color: #fdb9c8;
 }
 
-/* メイン */
+/* メイン部分 */
 .main-content {
-  padding: 20px;
+  flex: 1;
   text-align: center;
+  padding: 40px 20px;
 }
 
 .main-content h2 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
+  font-size: 2rem;
+  margin-bottom: 16px;
   color: #004ca0;
 }
 
-/* フォーム */
-.form-group {
-  max-width: 400px;
-  margin: 20px auto;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: bold;
-  color: #004ca0;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-}
-
-/* カレンダー */
-.calendar-box {
-  max-width: 850px;
-  margin: 20px auto;
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-/* イベント選択リスト */
-.event-list {
-  max-width: 700px;
-  margin: 30px auto;
-}
-
-.event-item {
-  background: #004ca0;
-  color: white;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  text-align: left;
-}
-
-.event-item p {
-  margin-bottom: 10px;
-}
-
-.select-box {
-  margin: 10px 0;
-}
-
-.select-box select {
-  margin-left: 10px;
-  padding: 6px;
-  border-radius: 6px;
-  border: none;
-}
-
-/* 時刻指定 */
-.time-select {
-  display: flex;
-  gap: 20px;
-  margin-top: 10px;
-}
-
-.time-select label {
-  margin-right: 6px;
+.main-content p {
+  margin-bottom: 24px;
+  font-size: 1.2rem;
 }
 
 /* ボタン */
-.button-area {
-  text-align: center;
-  margin: 30px 0;
-}
-
-.button-area button {
-  padding: 12px 30px;
-  border: none;
-  border-radius: 30px;
+.btn {
+  display: inline-block;
+  margin: 0 10px;
+  padding: 12px 24px;
   background: #fdb9c8;
   color: #004ca0;
   font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border-radius: 25px;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-.button-area button:hover {
+.btn:hover {
   background: #ffccd8;
-  transform: scale(1.05);
-}
-
-/* 共有リンク */
-.share-link {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.share-link a {
-  color: #d63384;
-  font-weight: bold;
-  text-decoration: underline;
+  transform: translateY(-2px);
 }
