@@ -10,8 +10,12 @@ const localizer = momentLocalizer(moment);
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [events, setEvents] = useState([]);
-  const [selectedSlots, setSelectedSlots] = useState([]); // 複数保持
+  const [selectedSlots, setSelectedSlots] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
+
+  // 選択モード
+  const [selectMode, setSelectMode] = useState("multiple"); // "multiple" or "range"
+  const [rangeStart, setRangeStart] = useState(null);
 
   // 時間帯 & 時刻
   const [timeRange, setTimeRange] = useState("allday");
@@ -30,11 +34,23 @@ const RegisterPage = () => {
     "2025-08-11": "山の日",
   };
 
-  // 選択処理（複数 or 範囲）
-  const handleSelectSlot = ({ start, end }) => {
-    // 単日クリックは start == end として入る
-    const range = { start, end };
-    setSelectedSlots((prev) => [...prev, range]); // 追加保持
+  // 日付クリック
+  const handleSelectDay = (date) => {
+    if (selectMode === "multiple") {
+      // 複数選択
+      setSelectedSlots((prev) => [...prev, { start: date, end: date }]);
+    } else if (selectMode === "range") {
+      if (!rangeStart) {
+        // 開始日をセット
+        setRangeStart(date);
+      } else {
+        // 範囲完了
+        const start = moment.min(moment(rangeStart), moment(date)).toDate();
+        const end = moment.max(moment(rangeStart), moment(date)).toDate();
+        setSelectedSlots((prev) => [...prev, { start, end }]);
+        setRangeStart(null); // リセット
+      }
+    }
   };
 
   // イベント保存
@@ -60,7 +76,7 @@ const RegisterPage = () => {
     });
 
     setEvents((prev) => [...prev, ...newEvents]);
-    setSelectedSlots([]); // 選択クリア
+    setSelectedSlots([]);
     setTitle("");
     setShareUrl(`${window.location.origin}/share/${Date.now()}`);
   };
@@ -81,16 +97,42 @@ const RegisterPage = () => {
     }
   };
 
-  // 祝日強調
+  // 日付セルスタイル
   const dayPropGetter = (date) => {
     const dateStr = moment(date).format("YYYY-MM-DD");
+
+    // 祝日
     if (holidays[dateStr]) {
       return {
         className: "holiday",
         "data-holiday": holidays[dateStr],
+        onClick: () => handleSelectDay(date),
       };
     }
-    return {};
+
+    // 選択済みセル
+    const isSelected = selectedSlots.some(
+      (slot) =>
+        moment(date).isSameOrAfter(moment(slot.start), "day") &&
+        moment(date).isSameOrBefore(moment(slot.end), "day")
+    );
+
+    if (isSelected) {
+      return {
+        className: "selected-day",
+        onClick: () => handleSelectDay(date),
+      };
+    }
+
+    // 範囲選択中の開始日
+    if (rangeStart && moment(date).isSame(rangeStart, "day")) {
+      return {
+        className: "selected-day",
+        onClick: () => handleSelectDay(date),
+      };
+    }
+
+    return { onClick: () => handleSelectDay(date) };
   };
 
   // 時刻プルダウン
@@ -119,13 +161,37 @@ const RegisterPage = () => {
         />
       </div>
 
+      {/* 選択モード切り替え */}
+      <div className="form-group">
+        <label>日付選択モード</label>
+        <div>
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={selectMode === "multiple"}
+              onChange={(e) => setSelectMode(e.target.value)}
+            />
+            複数選択
+          </label>
+          <label style={{ marginLeft: "1rem" }}>
+            <input
+              type="radio"
+              value="range"
+              checked={selectMode === "range"}
+              onChange={(e) => setSelectMode(e.target.value)}
+            />
+            範囲選択
+          </label>
+        </div>
+      </div>
+
       {/* カレンダー */}
       <div style={{ height: "500px", marginBottom: "1rem" }}>
         <Calendar
           localizer={localizer}
           events={events}
-          selectable
-          onSelectSlot={handleSelectSlot} // クリック＝単日、ドラッグ＝範囲
+          selectable={false} // ドラッグは使わない
           startAccessor="start"
           endAccessor="end"
           style={{ height: "100%" }}
@@ -160,7 +226,11 @@ const RegisterPage = () => {
               value={startTime}
               onChange={(e) => {
                 setStartTime(e.target.value);
-                if (moment(e.target.value, "HH:mm").isSameOrAfter(moment(endTime, "HH:mm"))) {
+                if (
+                  moment(e.target.value, "HH:mm").isSameOrAfter(
+                    moment(endTime, "HH:mm")
+                  )
+                ) {
                   const idx = times.indexOf(e.target.value);
                   if (idx < times.length - 1) {
                     setEndTime(times[idx + 1]);
@@ -177,10 +247,7 @@ const RegisterPage = () => {
           </div>
           <div>
             <label>終了時刻</label>
-            <select
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            >
+            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
               {times
                 .filter((t) =>
                   moment(t, "HH:mm").isAfter(moment(startTime, "HH:mm"))
@@ -211,8 +278,12 @@ const RegisterPage = () => {
             transition: "0.3s",
             boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.transform = "scale(1.05)")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.transform = "scale(1.0)")
+          }
         >
           ＋ 日程を登録
         </button>
