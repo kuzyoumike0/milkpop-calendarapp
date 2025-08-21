@@ -61,12 +61,7 @@ async function initDB() {
 }
 initDB().catch(console.error);
 
-// === ルート確認用 ===
-app.get("/", (req, res) => {
-  res.send("🚀 MilkPOP Calendar Backend is running!");
-});
-
-// === API例: スケジュール取得 ===
+// === API例 ===
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM schedules ORDER BY start_date ASC");
@@ -75,6 +70,13 @@ app.get("/api/schedules", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch schedules" });
   }
+});
+
+// === フロントエンド (React build) を配信 ===
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 // === サーバー起動 ===
