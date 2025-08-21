@@ -1,144 +1,90 @@
-/* 全体共通 */
+/* ==== 共通 ==== */
 body {
   margin: 0;
-  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
-    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; /* 柔らかくて可愛い */
+  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
+    "Trebuchet MS", sans-serif;
   color: white;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #000;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
   line-height: 1.6;
 }
 
-/* トップページ専用 背景グラデーション */
-.top-page {
-  flex: 1;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px;
-  min-height: 100vh;
+/* ==== カレンダー部分 ==== */
+.rbc-calendar {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
+    "Trebuchet MS", sans-serif;
+  color: #333;
 }
 
-/* ==== ロゴ用 グラスモーフィズムカード ==== */
-.logo-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-  border-radius: 20px;
-
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-
-  margin-bottom: 30px;
+.rbc-toolbar {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-weight: bold;
 }
 
-/* ロゴ画像 */
-.logo-image {
-  width: 840px; /* 少し大きめに */
-  max-width: 90%;
-  display: block;
+.rbc-toolbar button {
+  background: #ffd700;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin: 0 4px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
 }
 
-/* トップページ画像 */
-.top-image {
-  width: 840px !important;
-  max-width: 100% !important;
-  display: block !important;
-  margin: 20px auto !important;
-  border-radius: 16px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+.rbc-toolbar button:hover {
+  background: #fdb9c8;
+  color: white;
 }
 
-/* ==== アニメーション ==== */
-@keyframes gold-shine {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.rbc-off-range-bg {
+  background: #f0f0f0;
 }
 
-/* ヘッダー */
-.banner {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  padding: 25px !important;
-  text-align: center !important;
-  position: relative !important;
-  z-index: 10 !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-bottom: 2px solid rgba(253, 185, 200, 0.5) !important;
+.rbc-today {
+  background: rgba(253, 185, 200, 0.4) !important;
+  border: 2px solid #ffd700 !important;
 }
 
-/* タイトル */
-.banner h1 {
-  background: linear-gradient(90deg, #ffd700, #ffa500, #ffd700, #fff3b0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 6s infinite linear;
-  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
-    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
-  font-size: 42px !important;
-  font-weight: 900 !important;
-  letter-spacing: 2px !important;
-  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5), 0 0 20px rgba(253, 185, 200, 0.5);
-  margin: 0 0 10px 0 !important;
+.rbc-event {
+  background: linear-gradient(90deg, #ffd700, #ffa500);
+  border: none;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: #000;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* ナビゲーション */
-.banner nav a {
-  margin: 0 18px !important;
-  text-decoration: none !important;
-  background: linear-gradient(90deg, #ffd700, #ffa500, #ffd700, #fff3b0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 8s infinite linear;
-  font-weight: 600 !important;
-  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
-    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
-  font-size: 18px !important;
-  letter-spacing: 1px !important;
+/* 曜日ヘッダー */
+.rbc-header {
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 2px solid #ffd700;
+  font-weight: bold;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #333;
 }
 
-/* フッター */
-.footer {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  text-align: center !important;
-  padding: 20px !important;
-  margin-top: auto !important;
-  font-size: 16px !important;
-  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
-    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
-  letter-spacing: 1px !important;
-  position: relative !important;
-  z-index: 10 !important;
-  color: #ffd700;
-  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5), 0 0 18px rgba(253, 185, 200, 0.5);
+/* ==== プルダウン ==== */
+select {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
+    "Trebuchet MS", sans-serif;
+  color: #000;
+  margin: 4px;
 }
