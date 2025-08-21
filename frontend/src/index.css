@@ -1,12 +1,13 @@
 /* 全体共通 */
 body {
   margin: 0;
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; /* 洗練された既存フォント */
+  font-family: Georgia, "Times New Roman", serif; /* 柔らかい本文フォント */
   color: white;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #000; /* 他ページは黒背景 */
+  background-color: #000;
+  line-height: 1.6;
 }
 
 /* トップページ専用 背景グラデーション */
@@ -21,7 +22,32 @@ body {
   min-height: 100vh;
 }
 
-/* トップページ画像 */
+/* ==== ロゴ用 グラスモーフィズムカード ==== */
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  border-radius: 20px;
+
+  /* グラスモーフィズム風の白背景 */
+  background: rgba(255, 255, 255, 0.8); /* 白背景を強めに */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+
+  margin-bottom: 30px;
+}
+
+/* ロゴ画像 */
+.logo-image {
+  width: 240px;  
+  max-width: 80%;
+  display: block;
+}
+
+/* トップページ画像（任意追加用） */
 .top-image {
   width: 840px !important;       
   max-width: 100% !important;    
