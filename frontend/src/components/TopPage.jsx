@@ -14,7 +14,6 @@ const TopPage = () => {
   return (
     <Box minH="100vh" bg="black" color="white" py={10}>
       <Container maxW="container.md" textAlign="center">
-        {/* バナー */}
         <Heading
           as="h1"
           size="2xl"
@@ -30,7 +29,7 @@ const TopPage = () => {
           予定を簡単に登録・共有できるお洒落なカレンダーアプリ
         </Text>
 
-        {/* ナビゲーションボタン */}
+        {/* 共通ボタン */}
         <VStack spacing={6}>
           <Wrap spacing={4} justify="center">
             <WrapItem>
