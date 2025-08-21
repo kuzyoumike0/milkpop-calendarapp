@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 app.use(bodyParser.json());
@@ -80,6 +81,15 @@ app.delete("/api/schedules/:id", async (req, res) => {
     console.error(err);
     res.status(500).send("DB削除エラー");
   }
+});
+
+// === フロントエンドの静的ファイル配信 ===
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
+
+// React Router 対応: どのルートでも index.html を返す
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
