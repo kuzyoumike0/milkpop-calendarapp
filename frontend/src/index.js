@@ -5,20 +5,16 @@ import "./index.css";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import App from "./App";
 
-// Chakra UI
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
+// Chakra UI のテーマ設定
 const theme = extendTheme({
   styles: {
     global: {
       body: {
-        // ❌ 背景は指定しない
-        margin: 0,
-        fontFamily: "'Helvetica Neue', Arial, sans-serif",
-        color: "#333",
-      },
-      "#root": {
-        background: "transparent",
+        // ここは削除またはコメントアウト
+        // bg: "white",
+        // color: "black",
       },
     },
   },
