@@ -13,8 +13,10 @@ const RegisterPage = () => {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
 
-  // 時間帯選択
+  // 時間帯 & 時刻
   const [timeRange, setTimeRange] = useState("allday");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
 
   // 祝日データ（例）
   const holidays = {
@@ -25,9 +27,10 @@ const RegisterPage = () => {
     "2025-05-03": "憲法記念日",
     "2025-05-04": "みどりの日",
     "2025-05-05": "こどもの日",
+    "2025-08-11": "山の日",
   };
 
-  // カレンダー選択処理
+  // 範囲選択 & 複数選択
   const handleSelectSlot = ({ start, end }) => {
     const range = { start, end };
     setSelectedSlots((prev) => [...prev, range]);
@@ -37,22 +40,31 @@ const RegisterPage = () => {
   const handleAddEvent = () => {
     if (!title || selectedSlots.length === 0) return;
 
-    const newEvents = selectedSlots.map((slot) => ({
-      title: `${title} (${formatTimeRange(timeRange, slot.start, slot.end)})`,
-      start: slot.start,
-      end: slot.end,
-      allDay: timeRange === "allday",
-    }));
+    const newEvents = selectedSlots.map((slot) => {
+      let start = slot.start;
+      let end = slot.end;
+
+      if (timeRange === "custom") {
+        const dateStr = moment(start).format("YYYY-MM-DD");
+        start = moment(`${dateStr} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
+        end = moment(`${dateStr} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
+      }
+
+      return {
+        title: `${title} (${formatTimeRange(timeRange, start, end)})`,
+        start,
+        end,
+        allDay: timeRange === "allday",
+      };
+    });
 
     setEvents((prev) => [...prev, ...newEvents]);
     setSelectedSlots([]);
     setTitle("");
-
-    // 共有リンクを仮生成
     setShareUrl(`${window.location.origin}/share/${Date.now()}`);
   };
 
-  // 時間帯を文字に
+  // 時間帯ラベル
   const formatTimeRange = (range, start, end) => {
     switch (range) {
       case "allday":
@@ -62,15 +74,13 @@ const RegisterPage = () => {
       case "night":
         return "夜";
       case "custom":
-        return `${moment(start).format("HH:mm")} - ${moment(end).format(
-          "HH:mm"
-        )}`;
+        return `${moment(start).format("HH:mm")} - ${moment(end).format("HH:mm")}`;
       default:
         return "";
     }
   };
 
-  // カレンダーセルに祝日情報を付与
+  // 祝日強調
   const dayPropGetter = (date) => {
     const dateStr = moment(date).format("YYYY-MM-DD");
     if (holidays[dateStr]) {
@@ -82,16 +92,20 @@ const RegisterPage = () => {
     return {};
   };
 
+  // 時刻プルダウン（1時間刻み）
+  const times = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
   return (
     <div
       className="page-card"
       style={{
-        background: "linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15))",
+        background:
+          "linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15))",
       }}
     >
-      <h2 style={{ color: "#FDB9C8", marginBottom: "1rem" }}>
-        日程登録ページ
-      </h2>
+      <h2 style={{ color: "#FDB9C8", marginBottom: "1rem" }}>日程登録ページ</h2>
 
       {/* タイトル入力 */}
       <div className="form-group">
@@ -109,7 +123,7 @@ const RegisterPage = () => {
         <Calendar
           localizer={localizer}
           events={events}
-          selectable
+          selectable="ignoreEvents"
           onSelectSlot={handleSelectSlot}
           startAccessor="start"
           endAccessor="end"
@@ -119,51 +133,90 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 時間帯選択（カレンダーの下に移動） */}
-      <div className="form-group" style={{ marginTop: "1.5rem" }}>
-        <label>時間帯</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              value="allday"
-              checked={timeRange === "allday"}
-              onChange={(e) => setTimeRange(e.target.value)}
-            />
-            終日
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              value="day"
-              checked={timeRange === "day"}
-              onChange={(e) => setTimeRange(e.target.value)}
-            />
-            昼
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              value="night"
-              checked={timeRange === "night"}
-              onChange={(e) => setTimeRange(e.target.value)}
-            />
-            夜
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              value="custom"
-              checked={timeRange === "custom"}
-              onChange={(e) => setTimeRange(e.target.value)}
-            />
-            時間指定
-          </label>
-        </div>
+      {/* 日付区分（プルダウン） */}
+      <div className="form-group">
+        <label>日付区分</label>
+        <select
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+        >
+          <option value="allday">終日</option>
+          <option value="day">昼</option>
+          <option value="night">夜</option>
+          <option value="custom">時間帯</option>
+        </select>
       </div>
 
+      {/* custom の場合のみ表示 */}
+      {timeRange === "custom" && (
+        <div
+          className="form-group"
+          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
+        >
+          <div>
+            <label>開始時刻</label>
+            <select
+              value={startTime}
+              onChange={(e) => {
+                setStartTime(e.target.value);
+                if (moment(e.target.value, "HH:mm").isSameOrAfter(moment(endTime, "HH:mm"))) {
+                  // 終了時刻を自動的に1時間後にする
+                  const idx = times.indexOf(e.target.value);
+                  if (idx < times.length - 1) {
+                    setEndTime(times[idx + 1]);
+                  }
+                }
+              }}
+            >
+              {times.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>終了時刻</label>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            >
+              {times
+                .filter((t) =>
+                  moment(t, "HH:mm").isAfter(moment(startTime, "HH:mm"))
+                )
+                .map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* 登録ボタン */}
-      <button onClick={handleAddEvent}>日程を登録</button>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}>
+        <button
+          onClick={handleAddEvent}
+          style={{
+            fontSize: "1.2rem",
+            padding: "0.8rem 2rem",
+            borderRadius: "12px",
+            background: "linear-gradient(90deg, #FDB9C8, #004CA0)",
+            border: "none",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: "pointer",
+            transition: "0.3s",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
+        >
+          ＋ 日程を登録
+        </button>
+      </div>
 
       {/* 登録済みリスト */}
       <div style={{ marginTop: "2rem" }}>
@@ -171,8 +224,7 @@ const RegisterPage = () => {
         <ul>
           {events.map((ev, idx) => (
             <li key={idx}>
-              {ev.title}{" "}
-              ({moment(ev.start).format("MM/DD")} -{" "}
+              {ev.title} ({moment(ev.start).format("MM/DD")} -{" "}
               {moment(ev.end).format("MM/DD")})
             </li>
           ))}
