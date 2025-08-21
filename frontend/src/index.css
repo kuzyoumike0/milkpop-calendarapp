@@ -2,22 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === Soleil フォントをローカル化 === */
+/* === Soleil フォントをローカル化 ===
+   フォントファイルは frontend/public/fonts/Soleil.woff2 に配置してください。
+   CRA/CRACO の場合、public/ 配下のファイルは url("/...") で参照します。 */
 @font-face {
   font-family: 'Soleil';
-  src: url('fonts/Soleil.woff2') format('woff2'); /* ← / を外した */
+  src: url("/fonts/Soleil.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
+/* === 全体のベーススタイル === */
 body {
   font-family: 'Soleil', sans-serif;
   background-color: #fdfdfd;
+  color: #111;
   margin: 0;
   padding: 0;
+  line-height: 1.6;
 }
 
+/* === 共通UIスタイル === */
+
+/* スクロールバー */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -29,10 +37,16 @@ body {
   border-radius: 10px;
 }
 
+/* ボタン */
 .btn-primary {
   @apply bg-[#004CA0] text-white px-4 py-2 rounded-lg shadow hover:bg-[#003580];
 }
 
 .btn-danger {
-  @apply bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600;
+  @apply bg-red-500 text-white px-3 py-1 rounded-lg shadow hover:bg-red-600;
+}
+
+/* カードデザイン */
+.card {
+  @apply bg-white rounded-xl shadow-md p-4;
 }
