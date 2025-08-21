@@ -1,12 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";   // ← これ必須
+import { ChakraProvider } from "@chakra-ui/react";
 import App from "./App";
+import theme from "./theme";
 
-
+// React 18 の新しい root API
 const root = ReactDOM.createRoot(document.getElementById("root"));
+
 root.render(
   <React.StrictMode>
-    <App />
+    <ChakraProvider theme={theme}>
+      <App />
+    </ChakraProvider>
   </React.StrictMode>
 );
