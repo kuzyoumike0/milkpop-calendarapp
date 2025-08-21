@@ -24,7 +24,7 @@ const TopPage = () => {
             src="/logo.png"   // ← public 配下は / から参照
             alt="ロゴ"
             style={{
-              width: "180px",   // 小さめ
+              width: "240px",   // 小さめ
               height: "auto",
               margin: "20px auto",
               display: "block",
