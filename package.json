@@ -1,16 +1,29 @@
-{
-  "name": "calendar-app",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "start": "node backend/index.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "pg": "^8.11.3",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2",
-    "uuid": "^9.0.1"
-  }
-}
+# Node.js 公式イメージ
+FROM node:18
+
+# 作業ディレクトリを /app に設定
+WORKDIR /app
+
+# ルートに置いた package.json があるなら先にコピー
+COPY package*.json ./
+
+# backend の package.json をコピー
+COPY backend/package*.json ./backend/
+# frontend の package.json をコピー
+COPY frontend/package*.json ./frontend/
+
+# backend の依存をインストール
+WORKDIR /app/backend
+RUN npm install
+
+# frontend の依存をインストール & build
+WORKDIR /app/frontend
+RUN npm install && npm run build
+
+# 残りのソースコードをコピー
+WORKDIR /app
+COPY . .
+
+# Express サーバーを起動
+WORKDIR /app/backend
+CMD ["node", "index.js"]
