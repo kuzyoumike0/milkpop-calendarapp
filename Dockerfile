@@ -1,28 +1,23 @@
-# Node.js 公式イメージ
+# Node.js 公式
 FROM node:18
 
 WORKDIR /app
 
-# 依存関係キャッシュ用
+# 依存だけ先にコピーしてキャッシュ利用
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
-COPY frontend/tailwind.config.js ./frontend/
-COPY frontend/postcss.config.js ./frontend/
-COPY frontend/craco.config.js ./frontend/
 
-# backend install
 WORKDIR /app/backend
 RUN npm install
 
-# frontend install
 WORKDIR /app/frontend
 RUN npm install
 
-# 🔴 ここで全体コピー（CSSやsrcを含める）
+# 🔹 ここで全体をコピーする（tailwind.config.js も含まれる）
 WORKDIR /app
 COPY . .
 
-# frontend build
+# フロントをビルド
 WORKDIR /app/frontend
 RUN npm run build
 
