@@ -9,9 +9,7 @@ import ja from "date-fns/locale/ja";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
 
-const locales = {
-  ja: ja,
-};
+const locales = { ja };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -23,7 +21,7 @@ const localizer = dateFnsLocalizer({
 
 const RegisterPage = () => {
   const [events, setEvents] = useState([]);
-  const [holidays, setHolidays] = useState({});
+  const [holidays, setHolidays] = useState(null); // ← 初期値は null に変更
 
   // ✅ 日本の祝日APIから自動取得
   useEffect(() => {
@@ -41,6 +39,8 @@ const RegisterPage = () => {
 
   // ✅ セル背景と文字色を変える
   const dayPropGetter = (date) => {
+    if (!holidays) return {}; // ← データ取得前は何も変更しない
+
     const dateStr = date.toISOString().split("T")[0];
     if (holidays[dateStr]) {
       return {
@@ -56,6 +56,8 @@ const RegisterPage = () => {
 
   // ✅ 日付セルに祝日名を表示（CSSが効くように children を残す）
   const CustomDateCellWrapper = ({ value, children }) => {
+    if (!holidays) return <div>{children}</div>; // ← データ取得前は素通り
+
     const dateStr = value.toISOString().split("T")[0];
     return (
       <div style={{ position: "relative" }}>
@@ -68,6 +70,7 @@ const RegisterPage = () => {
               position: "absolute",
               bottom: 2,
               left: 2,
+              pointerEvents: "none", // ← クリック操作に干渉しない
             }}
           >
             {holidays[dateStr]}
