@@ -1,41 +1,33 @@
+// frontend/src/components/TopPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function TopPage() {
+function TopPage() {
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex justify-center mt-8 mb-10">
-        <img
-          src="/logo.png"
-          alt="MilkPOP Logo"
-          className="h-40 w-auto drop-shadow-2xl"
-        />
-      </div>
-
-      <div className="bg-white/10 rounded-2xl shadow-2xl p-10 text-center max-w-2xl backdrop-blur-md">
-        <h2 className="text-3xl font-bold mb-6 text-[#FDB9C8] drop-shadow">
-          ようこそ、MilkPOP Calendar へ
-        </h2>
-        <p className="mb-8 text-lg text-gray-200 leading-relaxed">
-          スケジュールを登録したり、みんなと共有して調整することができます。<br />
-          シンプルだけどお洒落で、使いやすいカレンダーアプリです。
+    <div className="grid md:grid-cols-2 gap-8 mt-10">
+      {/* 日程登録ページカード */}
+      <Link
+        to="/link"
+        className="p-8 bg-black/60 rounded-2xl shadow-xl hover:shadow-[#FDB9C8]/40 transition transform hover:-translate-y-1"
+      >
+        <h2 className="text-2xl font-bold text-[#FDB9C8] mb-3">日程登録ページ</h2>
+        <p className="text-gray-300">
+          自作カレンダーに日程を登録し、共有リンクを発行できます。
         </p>
+      </Link>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <Link
-            to="/link"
-            className="bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white px-6 py-3 rounded-xl shadow-lg font-semibold hover:opacity-90 transition"
-          >
-            日程登録ページへ
-          </Link>
-          <Link
-            to="/personal"
-            className="bg-gradient-to-r from-[#004CA0] to-[#FDB9C8] text-white px-6 py-3 rounded-xl shadow-lg font-semibold hover:opacity-90 transition"
-          >
-            個人日程登録ページへ
-          </Link>
-        </div>
-      </div>
+      {/* 個人スケジュールページカード */}
+      <Link
+        to="/personal"
+        className="p-8 bg-black/60 rounded-2xl shadow-xl hover:shadow-[#004CA0]/40 transition transform hover:-translate-y-1"
+      >
+        <h2 className="text-2xl font-bold text-[#004CA0] mb-3">個人スケジュール</h2>
+        <p className="text-gray-300">
+          タイトル、メモ、時間帯を入力して自分専用の予定を登録できます。
+        </p>
+      </Link>
     </div>
   );
 }
+
+export default TopPage;
