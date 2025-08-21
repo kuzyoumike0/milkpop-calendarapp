@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "react-big-calendar/lib/css/react-big-calendar.css"; 
-import "./index.css"; 
-import App from "./App";
+import "react-big-calendar/lib/css/react-big-calendar.css";  // ← 先に読み込む
+import "./index.css";  // ← 最後に読み込む（カスタムを優先）
 
+import App from "./App";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 
-// Chakra UI のテーマ設定（bodyのbgは削除）
+// Chakra UI のテーマ設定
 const theme = extendTheme({
   styles: {
     global: {
@@ -14,7 +14,6 @@ const theme = extendTheme({
     },
   },
 });
-
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
