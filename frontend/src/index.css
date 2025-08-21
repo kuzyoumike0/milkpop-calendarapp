@@ -1,80 +1,41 @@
-/* ベース設定 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Soleil フォントをローカル化 === */
+@font-face {
+  font-family: 'Soleil';
+  src: url('/fonts/Soleil.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === デフォルトのフォントを Soleil に変更 === */
 body {
+  font-family: 'Soleil', sans-serif;
+  background-color: #fdfdfd;
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #000, #004CA0);
-  background-attachment: fixed;
-  background-size: cover;
-  display: flex;
-  flex-direction: column;
 }
 
-/* ヘッダー（バナー） */
-header {
-  width: 100%;
-  padding: 1rem 2rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  color: #FDB9C8;
-  font-size: 1.5rem;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-align: center;
-  border-bottom: 2px solid #004CA0;
+/* カスタムスクロールバー（オシャレにする） */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #004CA0;
+  border-radius: 10px;
 }
 
-/* コンテンツ */
-main {
-  flex: 1;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+/* 共通ボタンのスタイル */
+.btn-primary {
+  @apply bg-[#004CA0] text-white px-4 py-2 rounded-lg shadow hover:bg-[#003580];
 }
 
-/* おしゃれなカード */
-.card {
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #004CA0;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-}
-
-/* ボタン */
-button {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border: none;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  padding: 0.75rem 1.25rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-button:hover {
-  opacity: 0.9;
-  transform: scale(1.03);
-}
-button:active {
-  transform: scale(0.97);
-}
-
-/* フッター */
-footer {
-  text-align: center;
-  padding: 1rem;
-  font-size: 0.875rem;
-  color: #bbb;
-  background: rgba(0,0,0,0.6);
-  border-top: 1px solid #004CA0;
+.btn-danger {
+  @apply bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600;
 }
