@@ -1,15 +1,47 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import ja from "date-fns/locale/ja"; // 日本語ロケール
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
+
+const locales = {
+  ja: ja,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
+  const [events, setEvents] = useState([]);
   const [timeRange, setTimeRange] = useState("all-day");
+
+  const handleSelectSlot = ({ start, end }) => {
+    const newEvent = {
+      title: title || "新しい予定",
+      start,
+      end,
+    };
+    setEvents([...events, newEvent]);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(`タイトル: ${title}\n日程: ${dates.join(", ")}\n時間帯: ${timeRange}`);
+    alert(
+      `タイトル: ${title}\n日程: ${events
+        .map((e) => format(e.start, "yyyy/MM/dd HH:mm"))
+        .join(", ")}\n時間帯: ${timeRange}`
+    );
   };
 
   return (
@@ -29,11 +61,29 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* カレンダーUI（仮配置） */}
+        {/* カレンダー */}
         <div className="form-group">
-          <label>日程選択（複数可）</label>
-          <div className="calendar-placeholder">
-            <p>🗓 カレンダーUIはここに入ります</p>
+          <label>日程を選択（クリック＆ドラッグで範囲選択）</label>
+          <div className="calendar-wrapper">
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              selectable
+              onSelectSlot={handleSelectSlot}
+              style={{ height: 500, borderRadius: "12px" }}
+              culture="ja"
+              messages={{
+                today: "今日",
+                previous: "前へ",
+                next: "次へ",
+                month: "月",
+                week: "週",
+                day: "日",
+                agenda: "予定",
+              }}
+            />
           </div>
         </div>
 
@@ -51,7 +101,7 @@ const RegisterPage = () => {
           </select>
         </div>
 
-        {/* 送信ボタン */}
+        {/* 登録ボタン */}
         <button type="submit" className="submit-btn">
           ✅ 登録する
         </button>
