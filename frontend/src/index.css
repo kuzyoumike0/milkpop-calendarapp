@@ -1,30 +1,35 @@
 /* frontend/src/index.css */
 
-
-/* ページ全体の背景と文字 */
-body {
+/* =========================
+   ページ全体の背景と文字
+========================= */
+html, body, #root {
   margin: 0;
+  padding: 0;
+  height: 100%;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(
-    135deg,
-    #ffe0e6,  /* 濃いめピンク */
-    #cce0ff,  /* 濃いめ水色 */
-    #f3d1ff   /* 濃いめ紫 */
-  );
+
+  /* 背景グラデーション（少し濃いめ） */
+  background: linear-gradient(135deg, #ffd6e8, #cce0ff, #f5d6ff);
+  background-attachment: fixed;   /* 背景が一瞬白や黒になるのを防ぐ */
+  background-repeat: no-repeat;
+  background-size: cover;
+
   color: #333;
-  min-height: 100vh;
 }
 
-
-/* ページコンテナ */
+/* =========================
+   ページコンテナ
+========================= */
 .page-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: transparent !important; /* 白塗り防止 */
 }
 
-/* バナー */
+/* =========================
+   ヘッダー
+========================= */
 .banner {
   background: #004ca0;
   color: white;
@@ -50,7 +55,9 @@ body {
   color: #fdb9c8;
 }
 
-/* メイン部分 */
+/* =========================
+   メイン部分
+========================= */
 .main-content {
   flex: 1;
   text-align: center;
@@ -68,7 +75,19 @@ body {
   font-size: 1.2rem;
 }
 
-/* ボタン */
+/* =========================
+   画像
+========================= */
+.logo-image {
+  width: 160px;
+  height: auto;
+  margin: 16px auto;
+  display: block;
+}
+
+/* =========================
+   ボタン
+========================= */
 .btn {
   display: inline-block;
   margin: 0 10px;
@@ -86,7 +105,21 @@ body {
   transform: translateY(-2px);
 }
 
-/* ===== カレンダー専用デザイン上書き ===== */
+/* =========================
+   フッター
+========================= */
+.footer {
+  background: #004ca0;
+  color: white;
+  text-align: center;
+  padding: 12px;
+  margin-top: auto;
+  font-size: 0.9rem;
+}
+
+/* =========================
+   カレンダー専用デザイン上書き
+========================= */
 .rbc-calendar {
   background: #ffffff !important;
   border-radius: 12px;
@@ -125,40 +158,3 @@ body {
   padding: 2px 6px;
   font-weight: bold;
 }
-
-.footer {
-  background: #004ca0;
-  color: white;
-  text-align: center;
-  padding: 12px;
-  margin-top: auto; /* 下に寄せる */
-  font-size: 0.9rem;
-}
-/* ヘッダー */
-.banner {
-  background: #004ca0;
-  color: white;
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.banner .logo {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: bold;
-}
-
-.banner nav a {
-  color: white;
-  margin-left: 16px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-.banner nav a:hover {
-  color: #fdb9c8;
-}
-
