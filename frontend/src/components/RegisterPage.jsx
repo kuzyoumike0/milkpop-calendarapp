@@ -31,7 +31,7 @@ const RegisterPage = () => {
       try {
         const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
         const data = await res.json();
-        setHolidays(data); // { "2025-01-01": "元日", ... }
+        setHolidays(data);
       } catch (err) {
         console.error("祝日の取得に失敗:", err);
       }
@@ -39,13 +39,13 @@ const RegisterPage = () => {
     fetchHolidays();
   }, []);
 
-  // ✅ 祝日セルを赤字＋背景色にする
+  // ✅ セル背景と文字色を変える
   const dayPropGetter = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     if (holidays[dateStr]) {
       return {
         style: {
-          backgroundColor: "rgba(255, 182, 193, 0.25)", // 薄ピンク
+          backgroundColor: "rgba(255, 182, 193, 0.25)", // 薄ピンク背景
           color: "red",
           fontWeight: "bold",
         },
@@ -54,14 +54,22 @@ const RegisterPage = () => {
     return {};
   };
 
-  // ✅ 日付セルに祝日名を表示
-  const CustomDateCell = ({ value }) => {
+  // ✅ 日付セルに祝日名を表示（CSSが効くように children を残す）
+  const CustomDateCellWrapper = ({ value, children }) => {
     const dateStr = value.toISOString().split("T")[0];
     return (
-      <div>
-        <div>{value.getDate()}</div>
+      <div style={{ position: "relative" }}>
+        {children}
         {holidays[dateStr] && (
-          <div style={{ color: "red", fontSize: "0.75em" }}>
+          <div
+            style={{
+              color: "red",
+              fontSize: "0.7em",
+              position: "absolute",
+              bottom: 2,
+              left: 2,
+            }}
+          >
             {holidays[dateStr]}
           </div>
         )}
@@ -80,7 +88,7 @@ const RegisterPage = () => {
         style={{ height: 600, margin: "20px" }}
         dayPropGetter={dayPropGetter}
         components={{
-          dateCellWrapper: CustomDateCell,
+          dateCellWrapper: CustomDateCellWrapper,
         }}
       />
     </div>
