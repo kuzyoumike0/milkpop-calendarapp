@@ -1,40 +1,6 @@
-/* 全体共通 */
-body {
-  margin: 0;
-  font-family: "Raleway", sans-serif;
-  color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #000; /* 他ページは黒背景 */
-}
-
-/* トップページ専用 背景グラデーション */
-.top-page {
-  flex: 1;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px;
-  min-height: 100vh;
-}
-
-/* トップページ画像 */
-.top-image {
-  width: 840px !important;       /* 横幅を固定 */
-  max-width: 100% !important;    /* 画面が狭い時は縮小 */
-  display: block !important;
-  margin: 20px auto !important;  /* 中央寄せ */
-  border-radius: 16px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
-}
-
 /* ヘッダー */
 .banner {
-  background-image: linear-gradient(180deg, #1a1a1a 0%, #000000 100%) !important; /* 黒の縦グラデーション */
-  background-color: transparent !important; /* 黒単色を打ち消す */
+  background: linear-gradient(180deg, #000000, #1a1a1a) !important; /* フッターと同じ黒グラデ */
   color: #FDB9C8 !important;
   padding: 25px !important;
   text-align: center !important;
@@ -45,21 +11,7 @@ body {
   position: relative !important;
   z-index: 10 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-bottom: 3px solid rgba(253,185,200,0.5) !important;
-}
-
-
-
-
-.banner::after {
-  content: "" !important;
-  position: absolute !important;
-  bottom: -3px !important;
-  left: 20% !important;
-  width: 60% !important;
-  height: 2px !important;
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
-  border-radius: 2px !important;
+  border-bottom: 2px solid rgba(253,185,200,0.5) !important;
 }
 
 .banner nav {
@@ -83,7 +35,7 @@ body {
 
 /* フッター */
 .footer {
-  background: linear-gradient(180deg, #000000, #1a1a1a) !important;
+  background: linear-gradient(180deg, #000000, #1a1a1a) !important; /* ヘッダーと同じ黒グラデ */
   color: #FDB9C8 !important;
   text-align: center !important;
   padding: 20px !important;
@@ -95,15 +47,4 @@ body {
   z-index: 10 !important;
   box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8) !important;
   border-top: 2px solid rgba(0,76,160,0.5) !important;
-}
-
-.footer::before {
-  content: "" !important;
-  position: absolute !important;
-  top: -2px !important;
-  left: 25% !important;
-  width: 50% !important;
-  height: 2px !important;
-  background: linear-gradient(90deg, #004CA0, #FDB9C8) !important;
-  border-radius: 2px !important;
 }
