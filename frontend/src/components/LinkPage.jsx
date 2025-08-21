@@ -1,4 +1,3 @@
-// frontend/src/components/LinkPage.jsx
 import React from "react";
 
 function LinkPage() {
