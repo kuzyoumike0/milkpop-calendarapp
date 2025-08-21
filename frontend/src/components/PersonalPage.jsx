@@ -1,53 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchSchedules, addSchedule, updateSchedule } from "../api";
 
 const PersonalPage = () => {
   const [schedules, setSchedules] = useState([]);
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
 
-  const handleAddSchedule = () => {
+  useEffect(() => {
+    fetchSchedules().then(setSchedules);
+  }, []);
+
+  const handleAddSchedule = async () => {
     if (!title) return;
-    setSchedules([
-      ...schedules,
-      {
-        id: Date.now(),
-        title,
-        memo,
-        timeType: "終日",
-        startTime: "01:00",
-        endTime: "02:00",
-      },
-    ]);
+
+    const newSchedule = {
+      title,
+      memo,
+      timeType: "終日",
+      startTime: "01:00",
+      endTime: "02:00",
+    };
+
+    const saved = await addSchedule(newSchedule);
+    setSchedules([saved, ...schedules]);
     setTitle("");
     setMemo("");
   };
 
-  const handleTimeTypeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, timeType: value } : s
-      )
-    );
+  const handleTimeTypeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: value,
+      startTime: s.start_time,
+      endTime: s.end_time,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleStartTimeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, startTime: value } : s
-      )
-    );
+  const handleStartTimeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: s.time_type,
+      startTime: value,
+      endTime: s.end_time,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
-  const handleEndTimeChange = (id, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.id === id ? { ...s, endTime: value } : s
-      )
-    );
+  const handleEndTimeChange = async (id, value, s) => {
+    const updated = await updateSchedule(id, {
+      timeType: s.time_type,
+      startTime: s.start_time,
+      endTime: value,
+    });
+    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
   };
 
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = (i + 1) % 24; // 1時〜0時
+    const hour = (i + 1) % 24;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
 
@@ -89,10 +97,58 @@ const PersonalPage = () => {
             <p className="text-sm text-gray-200">{s.memo}</p>
 
             <select
-              value={s.timeType}
+              value={s.time_type}
               onChange={(e) =>
-                handleTimeTypeChange(s.id, e.target.value)
+                handleTimeTypeChange(s.id, e.target.value, s)
               }
               className="border p-2 rounded-lg mt-2 text-black"
             >
               <option>終日</option>
+              <option>昼</option>
+              <option>夜</option>
+              <option>時間帯</option>
+            </select>
+
+            {s.time_type === "時間帯" && (
+              <div className="flex gap-2 mt-2">
+                <select
+                  value={s.start_time}
+                  onChange={(e) =>
+                    handleStartTimeChange(s.id, e.target.value, s)
+                  }
+                  className="border p-2 rounded-lg text-black"
+                >
+                  {timeOptions.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <span>〜</span>
+                <select
+                  value={s.end_time}
+                  onChange={(e) =>
+                    handleEndTimeChange(s.id, e.target.value, s)
+                  }
+                  className="border p-2 rounded-lg text-black"
+                >
+                  {timeOptions.map((t) => (
+                    <option
+                      key={t}
+                      value={t}
+                      disabled={t <= s.start_time}
+                    >
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default PersonalPage;
