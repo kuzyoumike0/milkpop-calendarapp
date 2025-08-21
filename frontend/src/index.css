@@ -218,3 +218,11 @@ a:hover {
   color: #fff;
   text-decoration: underline;
 }
+/* 選択済み日付セル */
+.selected-day {
+  background: rgba(0,76,160,0.4) !important;
+  border: 2px solid #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold;
+  cursor: pointer;
+}
