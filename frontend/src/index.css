@@ -45,7 +45,7 @@ body {
 
 /* ロゴ画像 */
 .logo-image {
-  width: 300px;   /* ← 大きめに変更 */
+  width: 840px;   /* ← 大きめに変更 */
   max-width: 85%;
   display: block;
 }
