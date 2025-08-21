@@ -1,237 +1,95 @@
-/* ============================= */
-/* 全体共通 */
-/* ============================= */
-body {
-  margin: 0;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  line-height: 1.6;
-}
+// src/components/RegisterPage.jsx
+import React, { useState } from "react";  // ← セミコロン必須
+import { Calendar, momentLocalizer } from "react-big-calendar"; // ← セミコロン必須
+import moment from "moment"; // ← セミコロン必須
+import "../index.css"; // ← セミコロン必須
 
-/* ============================= */
-/* トップページ専用 */
-/* ============================= */
-.top-page {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px;
-  min-height: 100vh;
-}
+const localizer = momentLocalizer(moment);
 
-/* ロゴ用 グラスモーフィズムカード */
-.logo-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-  border-radius: 20px;
+const RegisterPage = () => {
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeOption, setTimeOption] = useState("allday");
+  const [startTime, setStartTime] = useState("01:00");
+  const [endTime, setEndTime] = useState("00:00");
 
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  const handleSelectSlot = ({ start }) => {
+    setSelectedDates([...selectedDates, start]);
+  };
 
-  margin-bottom: 30px;
-}
+  const handleRegister = () => {
+    if (timeOption === "custom" && startTime >= endTime) {
+      alert("開始時刻は終了時刻より前にしてください。");
+      return;
+    }
+    alert("登録が完了しました！");
+  };
 
-/* ロゴ画像 */
-.logo-image {
-  width: 300px;   /* 少し大きめ */
-  max-width: 85%;
-  display: block;
-}
+  return (
+    <div className="register-page">
+      <h2 className="register-title">イベント登録</h2>
+      <input
+        type="text"
+        placeholder="イベントタイトルを入力"
+        className="title-input"
+      />
 
-/* トップページ画像 */
-.top-image {
-  width: 840px !important;
-  max-width: 100% !important;
-  display: block !important;
-  margin: 20px auto !important;
-  border-radius: 16px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
-}
+      <div className="calendar-container">
+        <Calendar
+          localizer={localizer}
+          selectable
+          onSelectSlot={handleSelectSlot}
+          style={{ height: 400 }}
+        />
+      </div>
 
-/* ============================= */
-/* ヘッダー・フッター */
-/* ============================= */
-@keyframes gold-shine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+      <div className="time-options">
+        <select
+          className="time-dropdown"
+          value={timeOption}
+          onChange={(e) => setTimeOption(e.target.value)}
+        >
+          <option value="allday">終日</option>
+          <option value="day">昼</option>
+          <option value="night">夜</option>
+          <option value="custom">時間指定</option>
+        </select>
+      </div>
 
-/* ヘッダー */
-.banner {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  padding: 25px !important;
-  text-align: center !important;
-  position: relative !important;
-  z-index: 10 !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-bottom: 2px solid rgba(253,185,200,0.5) !important;
-}
+      {timeOption === "custom" && (
+        <div className="time-range">
+          <label>開始:</label>
+          <select
+            className="time-dropdown"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          >
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
+                {i}:00
+              </option>
+            ))}
+          </select>
 
-.banner h1 {
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 6s infinite linear;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  font-size: 40px !important;
-  font-weight: 700 !important;
-  letter-spacing: 2px !important;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 20px rgba(253, 185, 200, 0.5);
-  margin: 0 0 10px 0 !important;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
+          <label>終了:</label>
+          <select
+            className="time-dropdown"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+          >
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i} value={`${String(i).padStart(2, "0")}:00`}>
+                {i}:00
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-/* ナビゲーション */
-.banner nav {
-  margin-top: 14px !important;
-}
+      <button className="register-button" onClick={handleRegister}>
+        登録
+      </button>
+    </div>
+  );
+};
 
-.banner nav a {
-  margin: 0 20px !important;
-  text-decoration: none !important;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 8s infinite linear;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  font-weight: 600 !important;
-  font-size: 16px !important;
-  letter-spacing: 1px !important;
-  transition: all 0.3s ease !important;
-}
-
-.banner nav a:hover {
-  -webkit-text-fill-color: #FDB9C8 !important;
-  background: none !important;
-  animation: none;
-  text-shadow:
-    0 0 8px rgba(253,185,200,0.9),
-    0 0 16px rgba(253,185,200,0.8),
-    0 0 24px rgba(253,185,200,0.7);
-}
-
-/* フッター */
-.footer {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  text-align: center !important;
-  padding: 20px !important;
-  margin-top: auto !important;
-  font-size: 15px !important;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  letter-spacing: 1px !important;
-  color: #FFD700;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.7),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 18px rgba(253, 185, 200, 0.5);
-}
-
-/* ============================= */
-/* RegisterPage 用 */
-/* ============================= */
-.register-page {
-  flex: 1;
-  padding: 40px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border-radius: 16px;
-  margin: 20px auto;
-  max-width: 1000px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-.page-title {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 20px;
-  font-weight: bold;
-}
-
-.form-group {
-  margin: 15px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.form-group input[type="text"] {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  color: black;
-}
-
-/* プルダウン共通 */
-select {
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  font-family: inherit;
-  color: black; /* 文字は黒 */
-  background: white;
-}
-
-/* custom の開始/終了時刻 */
-.time-select {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 登録ボタン */
-.submit-btn {
-  margin-top: 20px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-  color: black;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.submit-btn:hover {
-  background: #FDB9C8;
-  color: white;
-  box-shadow: 0 0 12px rgba(253, 185, 200, 0.8);
-}
+export default RegisterPage;
