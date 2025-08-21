@@ -1,50 +1,60 @@
 import React from "react";
-import { Box, Button, Heading, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Heading, Text, SimpleGrid, VStack } from "@chakra-ui/react";
 
 function TopPage() {
   return (
     <Box p={8}>
-      <Heading mb={6} textAlign="center" color="brand.pink">
+      {/* ページタイトル */}
+      <Heading mb={10} textAlign="center" color="brand.pink">
         MilkPOP Calendar
       </Heading>
 
-      <VStack spacing={6}>
-        {/* カード1 */}
+      {/* カードエリア */}
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} justifyItems="center">
+        {/* 日程登録ページ */}
         <Box
           bg="rgba(255,255,255,0.05)"
           border="1px solid"
           borderColor="brand.blue"
           borderRadius="xl"
-          p={6}
-          boxShadow="lg"
-          _hover={{ transform: "translateY(-4px)", boxShadow: "2xl" }}
-          transition="all 0.2s"
+          p={8}
           w="100%"
           maxW="400px"
+          boxShadow="lg"
+          _hover={{ transform: "translateY(-6px)", boxShadow: "2xl" }}
+          transition="all 0.3s ease"
         >
-          <Heading size="md" mb={3}>日程登録ページ</Heading>
-          <Text mb={4}>新しい日程を登録しましょう。</Text>
-          <Button colorScheme="pink" w="full">移動する</Button>
+          <VStack spacing={4} align="stretch">
+            <Heading size="md" color="brand.pink">日程登録ページ</Heading>
+            <Text fontSize="sm">新しい日程を登録しましょう。</Text>
+            <Button colorScheme="pink" size="lg" borderRadius="full">
+              移動する
+            </Button>
+          </VStack>
         </Box>
 
-        {/* カード2 */}
+        {/* 個人スケジュール */}
         <Box
           bg="rgba(255,255,255,0.05)"
           border="1px solid"
           borderColor="brand.blue"
           borderRadius="xl"
-          p={6}
-          boxShadow="lg"
-          _hover={{ transform: "translateY(-4px)", boxShadow: "2xl" }}
-          transition="all 0.2s"
+          p={8}
           w="100%"
           maxW="400px"
+          boxShadow="lg"
+          _hover={{ transform: "translateY(-6px)", boxShadow: "2xl" }}
+          transition="all 0.3s ease"
         >
-          <Heading size="md" mb={3}>個人スケジュール</Heading>
-          <Text mb={4}>あなた専用の予定を登録できます。</Text>
-          <Button colorScheme="blue" w="full">移動する</Button>
+          <VStack spacing={4} align="stretch">
+            <Heading size="md" color="brand.blue">個人スケジュール</Heading>
+            <Text fontSize="sm">あなた専用の予定を登録できます。</Text>
+            <Button colorScheme="blue" size="lg" borderRadius="full">
+              移動する
+            </Button>
+          </VStack>
         </Box>
-      </VStack>
+      </SimpleGrid>
     </Box>
   );
 }
