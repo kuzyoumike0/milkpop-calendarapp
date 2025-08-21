@@ -1,29 +1,25 @@
-# ====== フロントエンド ビルドステージ ======
+# ===== フロントビルド =====
 FROM node:18 AS builder
-
-WORKDIR /app
-
-COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
 RUN npm install
-COPY frontend/ ./ 
+COPY frontend/ ./
 RUN npm run build
 
-# ====== 本番ランタイム ======
+# ===== バックエンド =====
 FROM node:18
-
-WORKDIR /app
-
-# バックエンド依存関係
-COPY backend/package*.json ./backend/
 WORKDIR /app/backend
+
+COPY backend/package*.json ./
 RUN npm install
 
-# バックエンドソースコピー
-COPY backend ./backend
+# ソースコピー
+COPY backend/ ./
+COPY --from=builder /app/frontend/build ../frontend/build
 
-# フロントのビルド成果物をコピー
-COPY --from=builder /app/frontend/build ./frontend/build
+ENV NODE_ENV=production
 
-WORKDIR /app/backend
+RUN ls -R /app/backend   # デバッグ: index.js があるか確認
+
 CMD ["node", "index.js"]
