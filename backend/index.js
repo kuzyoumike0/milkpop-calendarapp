@@ -70,6 +70,18 @@ app.put("/api/schedules/:id", async (req, res) => {
   }
 });
 
+// === スケジュール削除 ===
+app.delete("/api/schedules/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM schedules WHERE id=$1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB削除エラー");
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
