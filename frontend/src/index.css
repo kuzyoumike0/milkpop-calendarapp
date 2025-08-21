@@ -1,9 +1,8 @@
-/* =============================
-   全体共通スタイル
-============================= */
+/* 全体共通 */
 body {
   margin: 0;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; /* 柔らかくポップ */
+  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
+    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif; /* 柔らかくて可愛い */
   color: white;
   min-height: 100vh;
   display: flex;
@@ -12,12 +11,10 @@ body {
   line-height: 1.6;
 }
 
-/* =============================
-   トップページ専用
-============================= */
+/* トップページ専用 背景グラデーション */
 .top-page {
   flex: 1;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,9 +40,10 @@ body {
   margin-bottom: 30px;
 }
 
+/* ロゴ画像 */
 .logo-image {
-  width: 280px;  /* ← 大きめに修正 */
-  max-width: 80%;
+  width: 280px; /* 少し大きめに */
+  max-width: 90%;
   display: block;
 }
 
@@ -59,18 +57,20 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* =============================
-   アニメーション
-============================= */
+/* ==== アニメーション ==== */
 @keyframes gold-shine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
-/* =============================
-   ヘッダー
-============================= */
+/* ヘッダー */
 .banner {
   background: linear-gradient(
     180deg,
@@ -84,71 +84,43 @@ body {
   position: relative !important;
   z-index: 10 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-bottom: 2px solid rgba(253,185,200,0.5) !important;
+  border-bottom: 2px solid rgba(253, 185, 200, 0.5) !important;
 }
 
-/* タイトル（クリックでトップ遷移） */
+/* タイトル */
 .banner h1 {
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background: linear-gradient(90deg, #ffd700, #ffa500, #ffd700, #fff3b0);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gold-shine 6s infinite linear;
-  font-size: 40px !important;
-  font-weight: 800 !important;
-  letter-spacing: 3px !important;
-  text-transform: uppercase !important;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 20px rgba(253, 185, 200, 0.5);
+  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
+    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  font-size: 42px !important;
+  font-weight: 900 !important;
+  letter-spacing: 2px !important;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6),
+    0 0 12px rgba(255, 165, 0, 0.5), 0 0 20px rgba(253, 185, 200, 0.5);
   margin: 0 0 10px 0 !important;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.banner h1:hover {
-  -webkit-text-fill-color: #FDB9C8 !important;
-  background: none !important;
-  animation: none;
-  text-shadow:
-    0 0 8px rgba(253,185,200,0.9),
-    0 0 16px rgba(253,185,200,0.8),
-    0 0 24px rgba(253,185,200,0.7);
 }
 
 /* ナビゲーション */
-.banner nav {
-  margin-top: 14px !important;
-}
-
 .banner nav a {
-  margin: 0 20px !important;
+  margin: 0 18px !important;
   text-decoration: none !important;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
+  background: linear-gradient(90deg, #ffd700, #ffa500, #ffd700, #fff3b0);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gold-shine 8s infinite linear;
   font-weight: 600 !important;
-  font-size: 16px !important;
-  transition: all 0.3s ease !important;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
+    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  font-size: 18px !important;
   letter-spacing: 1px !important;
 }
 
-.banner nav a:hover {
-  -webkit-text-fill-color: #FDB9C8 !important;
-  background: none !important;
-  animation: none;
-  text-shadow:
-    0 0 8px rgba(253,185,200,0.9),
-    0 0 16px rgba(253,185,200,0.8),
-    0 0 24px rgba(253,185,200,0.7);
-}
-
-/* =============================
-   フッター
-============================= */
+/* フッター */
 .footer {
   background: linear-gradient(
     180deg,
@@ -160,111 +132,13 @@ body {
   text-align: center !important;
   padding: 20px !important;
   margin-top: auto !important;
-  font-size: 15px !important;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif !important;
+  font-size: 16px !important;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue",
+    "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   letter-spacing: 1px !important;
   position: relative !important;
   z-index: 10 !important;
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-top: 2px solid rgba(0,76,160,0.5) !important;
-
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 10s infinite linear;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 18px rgba(253, 185, 200, 0.5);
-}
-
-/* =============================
-   登録ページ
-============================= */
-.register-page {
-  flex: 1;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  padding: 40px 20px;
-  min-height: 100vh;
-  color: white;
-}
-
-.register-title {
-  font-size: 28px;
-  margin-bottom: 20px;
-  text-align: center;
-  color: #FFD700;
-}
-
-.title-input {
-  display: block;
-  margin: 0 auto 20px auto;
-  padding: 12px;
-  width: 60%;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-  font-family: inherit;
-  color: #333;
-}
-
-.calendar-container {
-  margin: 20px auto;
-  max-width: 90%;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-  padding: 20px;
-}
-
-/* 時間帯プルダウン */
-.time-options {
-  margin: 20px 0;
-  text-align: center;
-  font-size: 16px;
-}
-
-.time-dropdown {
-  margin: 0 10px;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  font-size: 15px;
-  font-family: inherit;
-  color: #000;
-}
-
-/* 時間範囲 横並び */
-.time-range {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  font-size: 16px;
-  color: white;
-}
-
-/* 登録ボタン */
-.register-button {
-  display: block;
-  margin: 20px auto;
-  padding: 12px 30px;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  border: none;
-  border-radius: 25px;
-  font-size: 18px;
-  font-family: inherit;
-  font-weight: bold;
-  cursor: pointer;
-  color: #000;
-  transition: all 0.3s ease;
-}
-
-.register-button:hover {
-  background: #FDB9C8;
-  color: white;
-  box-shadow: 0 0 15px #FDB9C8;
+  color: #ffd700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.6),
+    0 0 12px rgba(255, 165, 0, 0.5), 0 0 18px rgba(253, 185, 200, 0.5);
 }
