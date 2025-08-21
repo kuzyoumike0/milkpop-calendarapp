@@ -55,6 +55,7 @@ const RegisterPage = () => {
       prev.map((e) => {
         if (e.id === id) {
           let updated = { ...e, [field]: value };
+          // 開始 >= 終了 は許可しない
           if (
             updated.startTime &&
             updated.endTime &&
@@ -125,60 +126,67 @@ const RegisterPage = () => {
         <div className="event-list">
           {selectedEvents.map((event) => (
             <div key={event.id} className="event-item">
-              <p>
+              <p className="event-date">
                 {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
                 {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
               </p>
 
               {/* 時間帯 */}
-              <select
-                value={event.option}
-                onChange={(e) => handleOptionChange(event.id, e.target.value)}
-              >
-                <option value="終日">終日</option>
-                <option value="昼">昼</option>
-                <option value="夜">夜</option>
-                <option value="時刻指定">時刻指定</option>
-              </select>
+              <div className="select-box">
+                <label>時間帯:</label>
+                <select
+                  value={event.option}
+                  onChange={(e) => handleOptionChange(event.id, e.target.value)}
+                >
+                  <option value="終日">終日</option>
+                  <option value="昼">昼</option>
+                  <option value="夜">夜</option>
+                  <option value="時刻指定">時刻指定</option>
+                </select>
+              </div>
 
               {/* 時刻指定の場合 */}
               {event.option === "時刻指定" && (
                 <div className="time-select">
-                  <label>開始</label>
-                  <select
-                    value={event.startTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(event.id, "startTime", e.target.value)
-                    }
-                  >
-                    <option value="">--</option>
-                    {hours.map((h) => (
-                      <option key={h} value={h}>
-                        {h}時
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label>開始</label>
+                    <select
+                      value={event.startTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(event.id, "startTime", e.target.value)
+                      }
+                    >
+                      <option value="">--</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  <label>終了</label>
-                  <select
-                    value={event.endTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(event.id, "endTime", e.target.value)
-                    }
-                  >
-                    <option value="">--</option>
-                    {hours.map((h) => (
-                      <option
-                        key={h}
-                        value={h}
-                        disabled={
-                          event.startTime && Number(h) <= Number(event.startTime)
-                        }
-                      >
-                        {h}時
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label>終了</label>
+                    <select
+                      value={event.endTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(event.id, "endTime", e.target.value)
+                      }
+                    >
+                      <option value="">--</option>
+                      {hours.map((h) => (
+                        <option
+                          key={h}
+                          value={h}
+                          disabled={
+                            event.startTime && Number(h) <= Number(event.startTime)
+                          }
+                        >
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               )}
             </div>
