@@ -1,44 +1,33 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
 const { v4: uuidv4 } = require("uuid");
-const path = require("path");
-const cors = require("cors");
 
-const app = express();
-app.use(bodyParser.json());
-app.use(cors());
+// POST 登録
+app.post("/api/schedules", async (req, res) => {
+  const { title, dates, timeType } = req.body;
+  const id = uuidv4();
 
-// === DB接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "localhost",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "calendar",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
-
-// === 静的ファイル配信 (Reactビルド成果物) ===
-app.use(express.static(path.join(__dirname, "public")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  try {
+    await pool.query(
+      "INSERT INTO schedules (id, title, dates, timetype) VALUES ($1, $2, $3, $4)",
+      [id, title, JSON.stringify(dates), timeType]
+    );
+    res.json({ id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB登録エラー");
+  }
 });
 
-// === APIエンドポイント例 ===
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-// サーバー起動
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// GET 参照
+app.get("/api/schedules/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM schedules WHERE id=$1", [
+      id,
+    ]);
+    if (result.rows.length === 0) return res.status(404).send("Not Found");
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB取得エラー");
+  }
 });
