@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
 const cors = require("cors");
 
 const app = express();
@@ -23,18 +25,72 @@ const pool = new Pool(
       }
 );
 
+// === DB初期化 ===
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      memo TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      all_day BOOLEAN DEFAULT false,
+      time_range TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS personal_schedules (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      memo TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE,
+      all_day BOOLEAN DEFAULT false,
+      time_range TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS share_links (
+      id SERIAL PRIMARY KEY,
+      uuid TEXT UNIQUE NOT NULL,
+      title TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  console.log("✅ Database initialized");
+}
+initDB().catch(console.error);
+
 // === ルート確認用 ===
 app.get("/", (req, res) => {
   res.send("🚀 MilkPOP Calendar Backend is running!");
 });
 
+// === API例: スケジュール取得 ===
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM schedules ORDER BY start_date ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch schedules" });
+  }
+});
+
 // === サーバー起動 ===
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  const url = `http://localhost:${PORT}`;
-  const railwayUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_URL;
-  console.log(`✅ Server running on ${url}`);
+  const railwayUrl =
+    process.env.RAILWAY_STATIC_URL ||
+    process.env.RAILWAY_PUBLIC_DOMAIN ||
+    null;
+
+  console.log(`✅ Server running on port ${PORT}`);
+
   if (railwayUrl) {
-    console.log(`🌐 Railway public URL: https://${railwayUrl}`);
+    console.log(`🌐 Railway Public URL: https://${railwayUrl}`);
+  } else {
+    console.log("⚠️ Railway Public URL is not available. Check Railway project settings.");
   }
 });
