@@ -1,159 +1,125 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  Input,
-  VStack,
-  Radio,
-  RadioGroup,
-  HStack,
-  Text,
-  useToast,
-  Link,
-  Card,
-  CardBody,
-} from "@chakra-ui/react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { v4 as uuidv4 } from "uuid";
-import { Link as RouterLink } from "react-router-dom";
+import {
+  Box,
+  Card,
+  CardBody,
+  Heading,
+  Input,
+  VStack,
+  Button,
+  RadioGroup,
+  Radio,
+  HStack,
+  Text,
+  Badge,
+} from "@chakra-ui/react";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("range"); // "range" or "multi"
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeOption, setTimeOption] = useState("allday");
-  const [shareLink, setShareLink] = useState(null);
-  const toast = useToast();
+  const [dates, setDates] = useState([]);
+  const [timeOption, setTimeOption] = useState("終日");
+  const [shareUrl, setShareUrl] = useState("");
 
-  // カレンダーに反映するイベント
-  const events = selectedDates.map((date, idx) => ({
-    id: idx.toString(),
-    title: selectionMode === "range" ? "選択中の範囲" : "選択日",
-    start: Array.isArray(date) ? date[0] : date,
-    end: Array.isArray(date) ? date[1] : date,
-    display: "background",
-    backgroundColor: selectionMode === "range" ? "#FDB9C8" : "#004CA0",
-    borderColor: "#fff",
-  }));
-
-  // 日付選択処理
-  const handleDateSelect = (info) => {
-    if (selectionMode === "range") {
-      setSelectedDates([[info.startStr, info.endStr]]);
+  // 日付クリック時 → 複数選択
+  const handleDateClick = (info) => {
+    const dateStr = info.dateStr;
+    if (dates.includes(dateStr)) {
+      setDates(dates.filter((d) => d !== dateStr));
     } else {
-      setSelectedDates((prev) => [...prev, info.startStr]);
+      setDates([...dates, dateStr]);
     }
   };
 
-  // 登録処理
-  const handleRegister = () => {
-    if (!title || selectedDates.length === 0) {
-      toast({
-        title: "入力不足",
-        description: "タイトルと日程を入力してください。",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
+  // 範囲選択時
+  const handleSelect = (info) => {
+    const range = [];
+    let cur = new Date(info.start);
+    while (cur <= info.end) {
+      range.push(cur.toISOString().split("T")[0]);
+      cur.setDate(cur.getDate() + 1);
     }
+    setDates(Array.from(new Set([...dates, ...range])));
+  };
 
-    const eventId = uuidv4();
-    setShareLink(`${window.location.origin}/share/${eventId}`);
-
-    toast({
-      title: "日程登録完了",
-      description: "共有リンクが生成されました！",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
+  // 保存処理
+  const handleSave = async () => {
+    const res = await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, dates, timeOption }),
     });
+    const data = await res.json();
+
+    if (data.id) {
+      setShareUrl(`${window.location.origin}/share/${data.id}`);
+    }
   };
 
   return (
     <Box bg="black" minH="100vh" color="white" py={10} px={6}>
-      <Card maxW="900px" mx="auto" bg="rgba(255,255,255,0.05)" boxShadow="xl" borderRadius="2xl">
+      <Card maxW="800px" mx="auto" bg="rgba(255,255,255,0.05)" boxShadow="xl" borderRadius="2xl">
         <CardBody>
-          <VStack spacing={8} align="stretch">
-            {/* タイトル入力 */}
-            <Box>
-              <Text fontWeight="bold" mb={2} fontSize="lg">
-                タイトル
-              </Text>
-              <Input
-                placeholder="イベントタイトルを入力"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                bg="white"
-                color="black"
-              />
-            </Box>
+          <VStack spacing={6}>
+            <Heading size="lg" color="#FDB9C8">
+              日程登録
+            </Heading>
+
+            {/* タイトル */}
+            <Input
+              placeholder="タイトルを入力してください"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              bg="white"
+              color="black"
+            />
 
             {/* カレンダー */}
-            <Box>
-              <Text fontWeight="bold" mb={2} fontSize="lg">
-                カレンダー（日付を選択）
-              </Text>
-              <FullCalendar
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                selectable={true}
-                select={handleDateSelect}
-                events={events}
-                height="500px"
-              />
-            </Box>
+            <FullCalendar
+              plugins={[dayGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              selectable={true}
+              select={handleSelect}
+              dateClick={handleDateClick}
+              events={dates.map((d) => ({ title: "✅ 選択", date: d, color: "#FDB9C8" }))}
+              height="auto"
+            />
 
-            {/* 選択モード */}
+            {/* 時間帯選択 */}
             <Box>
-              <Text fontWeight="bold" mb={2} fontSize="lg">
-                日程選択モード
-              </Text>
-              <RadioGroup onChange={setSelectionMode} value={selectionMode}>
+              <Text mb={2}>時間帯を選択</Text>
+              <RadioGroup onChange={setTimeOption} value={timeOption}>
                 <HStack spacing={6}>
-                  <Radio value="range">範囲選択</Radio>
-                  <Radio value="multi">複数選択</Radio>
+                  <Radio value="終日">終日</Radio>
+                  <Radio value="昼">昼</Radio>
+                  <Radio value="夜">夜</Radio>
+                  <Radio value="時間指定">時間指定</Radio>
                 </HStack>
               </RadioGroup>
             </Box>
 
-            {/* 時間帯 */}
-            <Box>
-              <Text fontWeight="bold" mb={2} fontSize="lg">
-                時間帯
-              </Text>
-              <RadioGroup onChange={setTimeOption} value={timeOption}>
-                <VStack align="start" spacing={2}>
-                  <Radio value="allday">終日</Radio>
-                  <Radio value="daytime">昼</Radio>
-                  <Radio value="night">夜</Radio>
-                  <Radio value="custom">指定（1時〜0時）</Radio>
-                </VStack>
-              </RadioGroup>
-            </Box>
-
-            {/* 登録ボタン */}
+            {/* 保存ボタン */}
             <Button
-              size="lg"
-              onClick={handleRegister}
+              onClick={handleSave}
+              colorScheme="pink"
+              w="full"
               bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-              color="white"
               _hover={{ transform: "scale(1.05)", boxShadow: "0 0 12px #FDB9C8" }}
-              borderRadius="full"
             >
               登録して共有リンクを発行
             </Button>
 
-            {/* 共有リンク */}
-            {shareLink && (
-              <Box textAlign="center" mt={4} p={4} bg="rgba(255,255,255,0.1)" borderRadius="lg">
-                <Text fontWeight="bold" mb={2}>共有リンク</Text>
-                <Link as={RouterLink} to={shareLink.replace(window.location.origin, "")} color="#FDB9C8" isExternal>
-                  {shareLink}
-                </Link>
+            {/* 共有URL表示 */}
+            {shareUrl && (
+              <Box mt={4}>
+                <Text mb={2}>共有リンク:</Text>
+                <Badge colorScheme="blue" p={2} borderRadius="md">
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                    {shareUrl}
+                  </a>
+                </Badge>
               </Box>
             )}
           </VStack>
