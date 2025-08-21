@@ -1,7 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-  @apply bg-black text-white;
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./frontend/src/**/*.{js,jsx,ts,tsx}", // Reactコンポーネント全部
+    "./frontend/public/index.html"         // HTMLファイル
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
 }
