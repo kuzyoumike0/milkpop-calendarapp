@@ -1,35 +1,8 @@
-/* frontend/src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
 body {
-  @apply bg-black text-white min-h-screen;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  overflow-x: hidden;
-  position: relative;
-}
-
-/* 背景ハニカム模様＋グラデーション */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml;utf8,\
-    <svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'>\
-      <polygon points='70,0 140,40 140,120 70,160 0,120 0,40' fill='none' stroke='%23FDB9C8' stroke-opacity='0.1'/>\
-    </svg>");
-  background-size: 120px 140px;
-  background-color: #000;
-  background-attachment: fixed;
-  z-index: -2;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(253,185,200,0.2), rgba(0,76,160,0.2));
-  z-index: -1;
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
 }
