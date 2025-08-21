@@ -18,7 +18,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   padding: 40px 20px;
-  min-height: 100vh; /* 画面全体を覆う */
+  min-height: 100vh;
 }
 
 /* トップページ画像 */
@@ -31,9 +31,9 @@ body {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* バナー */
+/* バナー（ヘッダー） */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important; /* フッターと統一 */
   color: white !important;
   padding: 25px !important;
   text-align: center !important;
@@ -63,8 +63,8 @@ body {
 
 /* フッター */
 .footer {
-  background: linear-gradient(90deg, #004CA0, #000000) !important;
-  color: #FDB9C8 !important;
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important; /* ヘッダーと統一 */
+  color: white !important;
   text-align: center !important;
   padding: 18px !important;
   margin-top: auto !important;
