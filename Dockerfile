@@ -9,17 +9,22 @@ RUN npm run build
 
 # ===== バックエンド =====
 FROM node:18
-WORKDIR /app/backend
+WORKDIR /app
 
-COPY backend/package*.json ./
+# --- バックエンド依存関係 ---
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
 RUN npm install
 
-# ソースコピー
-COPY backend/ ./
-COPY --from=builder /app/frontend/build ../frontend/build
+# --- ソースコピー ---
+COPY backend/ ./       # ← /app/backend/index.js が配置される
+COPY --from=builder /app/frontend/build ../frontend/build  # ← /app/frontend/build にコピーされる
+
+WORKDIR /app/backend
 
 ENV NODE_ENV=production
 
-RUN ls -R /app/backend   # デバッグ: index.js があるか確認
+# デバッグ用にファイル確認
+RUN ls -R /app
 
 CMD ["node", "index.js"]
