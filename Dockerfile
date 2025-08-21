@@ -6,22 +6,23 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-# ソースコピーしてビルド
+# ソースコピー & ビルド
 COPY frontend/ ./
-RUN npm run build   # ✅ ここで /app/frontend/build が生成される
+RUN npm run build
 
 # ===== バックエンド =====
 FROM node:18 AS backend
 WORKDIR /app
 
-# backend の依存関係
+# バックエンド依存関係
 COPY backend/package*.json ./
 RUN npm install
 
-# backend のソースをコピー
+# バックエンドソースコピー
 COPY backend/ ./
 
-# フロントエンドの build をコピー
+# フロントエンドのビルド成果物を backend から見える ../frontend/build にコピー
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
+# 起動
 CMD ["node", "index.js"]
