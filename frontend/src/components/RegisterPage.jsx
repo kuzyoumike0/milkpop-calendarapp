@@ -10,7 +10,7 @@ const localizer = momentLocalizer(moment);
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [events, setEvents] = useState([]);
-  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [selectedSlots, setSelectedSlots] = useState([]); // 複数保持
   const [shareUrl, setShareUrl] = useState("");
 
   // 時間帯 & 時刻
@@ -18,7 +18,7 @@ const RegisterPage = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
 
-  // 祝日データ（例）
+  // 祝日データ
   const holidays = {
     "2025-01-01": "元日",
     "2025-02-11": "建国記念の日",
@@ -30,10 +30,11 @@ const RegisterPage = () => {
     "2025-08-11": "山の日",
   };
 
-  // 範囲選択 & 複数選択
+  // 選択処理（複数 or 範囲）
   const handleSelectSlot = ({ start, end }) => {
+    // 単日クリックは start == end として入る
     const range = { start, end };
-    setSelectedSlots((prev) => [...prev, range]);
+    setSelectedSlots((prev) => [...prev, range]); // 追加保持
   };
 
   // イベント保存
@@ -59,7 +60,7 @@ const RegisterPage = () => {
     });
 
     setEvents((prev) => [...prev, ...newEvents]);
-    setSelectedSlots([]);
+    setSelectedSlots([]); // 選択クリア
     setTitle("");
     setShareUrl(`${window.location.origin}/share/${Date.now()}`);
   };
@@ -92,7 +93,7 @@ const RegisterPage = () => {
     return {};
   };
 
-  // 時刻プルダウン（1時間刻み）
+  // 時刻プルダウン
   const times = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
@@ -123,8 +124,8 @@ const RegisterPage = () => {
         <Calendar
           localizer={localizer}
           events={events}
-          selectable="ignoreEvents"
-          onSelectSlot={handleSelectSlot}
+          selectable
+          onSelectSlot={handleSelectSlot} // クリック＝単日、ドラッグ＝範囲
           startAccessor="start"
           endAccessor="end"
           style={{ height: "100%" }}
@@ -147,7 +148,7 @@ const RegisterPage = () => {
         </select>
       </div>
 
-      {/* custom の場合のみ表示 */}
+      {/* custom の場合のみ開始・終了時刻 */}
       {timeRange === "custom" && (
         <div
           className="form-group"
@@ -160,7 +161,6 @@ const RegisterPage = () => {
               onChange={(e) => {
                 setStartTime(e.target.value);
                 if (moment(e.target.value, "HH:mm").isSameOrAfter(moment(endTime, "HH:mm"))) {
-                  // 終了時刻を自動的に1時間後にする
                   const idx = times.indexOf(e.target.value);
                   if (idx < times.length - 1) {
                     setEndTime(times[idx + 1]);
