@@ -3,15 +3,6 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import TopPage from "./components/TopPage";
 
 const theme = extendTheme({
-  styles: {
-    global: {
-      body: {
-        bg: "black",
-        color: "white",
-        fontFamily: "Poppins, 'Noto Sans JP', sans-serif",
-      },
-    },
-  },
   colors: {
     brand: {
       pink: "#FDB9C8",
