@@ -5,13 +5,12 @@
 /* === Soleil フォントをローカル化 === */
 @font-face {
   font-family: 'Soleil';
-  src: url('/fonts/Soleil.woff2') format('woff2');
+  src: url('fonts/Soleil.woff2') format('woff2'); /* ← / を外した */
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
-/* === デフォルトのフォントを Soleil に変更 === */
 body {
   font-family: 'Soleil', sans-serif;
   background-color: #fdfdfd;
@@ -19,7 +18,6 @@ body {
   padding: 0;
 }
 
-/* カスタムスクロールバー（オシャレにする） */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -31,7 +29,6 @@ body {
   border-radius: 10px;
 }
 
-/* 共通ボタンのスタイル */
 .btn-primary {
   @apply bg-[#004CA0] text-white px-4 py-2 rounded-lg shadow hover:bg-[#003580];
 }
