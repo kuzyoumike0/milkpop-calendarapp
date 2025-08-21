@@ -10,7 +10,7 @@ import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import ja from "date-fns/locale/ja";
 
-import "react-big-calendar/lib/css/react-big-calendar.css"; // カレンダー用CSS
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 const locales = { ja };
 const localizer = dateFnsLocalizer({
@@ -87,7 +87,7 @@ const LinkPage = () => {
   return (
     <div className="min-h-screen bg-black text-white p-6">
       {/* バナー */}
-      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold text-center rounded-2xl shadow-md flex justify-between">
+      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold rounded-2xl shadow-md flex justify-between items-center">
         <span>MilkPOP Calendar</span>
         <nav className="space-x-4">
           <a href="/" className="hover:underline">トップ</a>
@@ -95,21 +95,22 @@ const LinkPage = () => {
         </nav>
       </header>
 
-      <h1 className="text-3xl font-bold my-6 text-center">日程登録</h1>
+      <h1 className="text-3xl font-bold my-8 text-center text-[#FDB9C8]">日程登録</h1>
 
       {/* タイトル入力 */}
-      <div className="max-w-xl mx-auto mb-6">
+      <div className="max-w-xl mx-auto mb-8">
         <label className="block text-lg mb-2">タイトル</label>
         <input
           type="text"
-          className="w-full p-2 rounded text-black"
+          className="w-full p-3 rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-[#FDB9C8]"
+          placeholder="例：打ち合わせ"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
       {/* カレンダー */}
-      <div className="max-w-4xl mx-auto h-[500px] bg-white text-black rounded-lg mb-6 shadow-lg p-4">
+      <div className="max-w-5xl mx-auto bg-white text-black rounded-2xl shadow-lg p-4 mb-10">
         <Calendar
           localizer={localizer}
           selectable
@@ -117,39 +118,42 @@ const LinkPage = () => {
           events={selectedEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 450 }}
+          style={{ height: 500 }}
           views={["month", "week", "day"]}
           popup
         />
       </div>
 
       {/* 選択した日程 */}
-      <div className="max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-6">
         {selectedEvents.map((event) => (
           <div
             key={event.id}
-            className="p-4 bg-[#004CA0] rounded-lg shadow-md text-white"
+            className="p-5 bg-[#004CA0] rounded-2xl shadow-lg"
           >
-            <p className="mb-2">
+            <p className="text-lg font-semibold text-[#FDB9C8]">
               {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
               {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
             </p>
 
             {/* 時間帯プルダウン */}
-            <select
-              value={event.option}
-              onChange={(e) => handleOptionChange(event.id, e.target.value)}
-              className="p-2 text-black rounded"
-            >
-              <option value="終日">終日</option>
-              <option value="昼">昼</option>
-              <option value="夜">夜</option>
-              <option value="時刻指定">時刻指定</option>
-            </select>
+            <div className="mt-3">
+              <label className="mr-2">時間帯：</label>
+              <select
+                value={event.option}
+                onChange={(e) => handleOptionChange(event.id, e.target.value)}
+                className="p-2 rounded text-black"
+              >
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                <option value="時刻指定">時刻指定</option>
+              </select>
+            </div>
 
             {/* 時刻指定の場合 */}
             {event.option === "時刻指定" && (
-              <div className="flex gap-4 mt-2">
+              <div className="flex gap-6 mt-3">
                 <div>
                   <label>開始</label>
                   <select
@@ -197,10 +201,10 @@ const LinkPage = () => {
       </div>
 
       {/* 登録ボタン */}
-      <div className="text-center mt-6">
+      <div className="text-center mt-10">
         <button
           onClick={handleSubmit}
-          className="bg-[#FDB9C8] text-[#004CA0] px-6 py-2 rounded-full font-bold shadow hover:opacity-80"
+          className="bg-[#FDB9C8] text-[#004CA0] px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:opacity-80 transition"
         >
           登録して共有リンク発行
         </button>
@@ -208,11 +212,11 @@ const LinkPage = () => {
 
       {/* 共有リンク表示 */}
       {shareUrl && (
-        <div className="text-center mt-6">
-          <p className="mb-2">共有リンクが発行されました：</p>
+        <div className="text-center mt-8">
+          <p className="mb-3">✅ 共有リンクが発行されました：</p>
           <a
             href={shareUrl}
-            className="text-[#FDB9C8] underline break-all"
+            className="text-[#FDB9C8] underline break-all text-lg"
           >
             {shareUrl}
           </a>
