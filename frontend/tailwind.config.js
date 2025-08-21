@@ -1,4 +1,3 @@
-// frontend/tailwind.config.js
 module.exports = {
   content: [
     "./public/index.html",
