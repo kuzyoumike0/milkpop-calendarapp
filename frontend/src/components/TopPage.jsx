@@ -1,12 +1,15 @@
+// frontend/src/components/TopPage.jsx
 import React from "react";
+import logo from "../assets/logo.png";
 import "../index.css";
 
 const TopPage = () => {
   return (
     <div className="top-page">
-      <img src="/logo.png" alt="トップ画像" className="top-image" />
-      <p className="text-lg mt-4">
-      </p>
+      <div className="logo-wrapper">
+        <img src={logo} alt="logo" className="logo-image" />
+      </div>
+      <h2 className="welcome-text">ようこそ MilkPOP Calendar へ</h2>
     </div>
   );
 };
