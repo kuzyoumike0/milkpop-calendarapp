@@ -1,8 +1,7 @@
 // frontend/tailwind.config.js
 module.exports = {
   content: [
-    "./public/index.html",
-    "./src/**/*.{js,jsx,ts,tsx}"  // ← ここが大事
+    "./src/**/*.{js,jsx,ts,tsx}", // Reactのsrc以下をスキャン
   ],
   theme: {
     extend: {},
