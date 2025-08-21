@@ -1,15 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
-const path = require("path");
+const cors = require("cors");
 
 const app = express();
-
 app.use(bodyParser.json());
 app.use(cors());
 
+// === DB接続設定 ===
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
@@ -25,52 +23,36 @@ const pool = new Pool(
       }
 );
 
-// === API ===
-
-// 登録
-app.post("/api/events", async (req, res) => {
+// === スケジュール一覧取得 ===
+app.get("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, timeOption } = req.body;
-    const id = uuidv4();
-
-    await pool.query(
-      "INSERT INTO events (id, title, dates, time_option) VALUES ($1, $2, $3, $4)",
-      [id, title, dates, timeOption]
+    const result = await pool.query(
+      "SELECT * FROM schedules ORDER BY created_at DESC"
     );
-
-    res.json({ success: true, id });
+    res.json(result.rows);
   } catch (err) {
-    console.error("❌ DB Insert Error", err);
-    res.status(500).json({ error: "DB insert failed" });
+    console.error(err);
+    res.status(500).send("DB取得エラー");
   }
 });
 
-// 取得
-app.get("/api/events/:id", async (req, res) => {
+// === スケジュール追加 ===
+app.post("/api/schedules", async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM events WHERE id=$1", [id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Not found" });
-    }
-
+    const { title, memo, timeType, startTime, endTime } = req.body;
+    const result = await pool.query(
+      `INSERT INTO schedules (title, memo, time_type, start_time, end_time)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [title, memo, timeType, startTime, endTime]
+    );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("❌ DB Select Error", err);
-    res.status(500).json({ error: "DB select failed" });
+    console.error(err);
+    res.status(500).send("DB保存エラー");
   }
 });
 
-// === フロント配信 ===
-const buildPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(buildPath));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(buildPath, "index.html"));
-});
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
