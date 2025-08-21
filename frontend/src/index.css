@@ -2,8 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 追加カスタム（任意） */
+/* =====================
+   グローバルスタイル
+   ===================== */
 body {
   @apply bg-black text-white min-h-screen;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* 背景ハニカムパターン（高級感） */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml;utf8,\
+    <svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'>\
+      <defs>\
+        <linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'>\
+          <stop offset='0%' stop-color='%23FDB9C8' stop-opacity='0.15'/>\
+          <stop offset='100%' stop-color='%23004CA0' stop-opacity='0.15'/>\
+        </linearGradient>\
+      </defs>\
+      <polygon points='70,0 140,40 140,120 70,160 0,120 0,40' fill='url(%23grad)'/>\
+    </svg>");
+  background-size: 120px 140px;
+  opacity: 0.08;
+  z-index: 0;
+}
+
+/* コンテンツが背景の上に載るように */
+#root {
+  position: relative;
+  z-index: 10;
+}
+
+/* =====================
+   React Calendar カスタム
+   ===================== */
+.react-calendar {
+  background: transparent;
+  border: none;
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
+  color: white;
+}
+
+.react-calendar__tile {
+  background: transparent;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.react-calendar__tile:enabled:hover {
+  background: rgba(253, 185, 200, 0.25);
+  transform: scale(1.05);
+}
+
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #FDB9C8 30%, #004CA0 90%) !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+.holiday-tile {
+  background: rgba(253, 185, 200, 0.25) !important;
+  border: 1px solid #FDB9C8 !important;
+  color: #FDB9C8 !important;
+  font-weight: bold;
 }
