@@ -1,41 +1,40 @@
-// 既存の import と app 宣言の後に追加
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-// DB 接続
-const pool = new Pool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "postgres",
-  password: process.env.DB_PASSWORD || "password",
-  database: process.env.DB_NAME || "calendar",
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+// === DB接続設定 ===
+const pool = new Pool(
+  process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "password",
+        database: process.env.DB_NAME || "calendar",
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
+      }
+);
+
+// === ルート確認用 ===
+app.get("/", (req, res) => {
+  res.send("🚀 MilkPOP Calendar Backend is running!");
 });
 
-// 🔹 リンク一覧 API
-app.get("/api/links", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT id, title, url, description FROM links ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("DB Error:", err);
-    res.status(500).json({ error: "Database error" });
+// === サーバー起動 ===
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  const url = `http://localhost:${PORT}`;
+  const railwayUrl = process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_URL;
+  console.log(`✅ Server running on ${url}`);
+  if (railwayUrl) {
+    console.log(`🌐 Railway public URL: https://${railwayUrl}`);
   }
-});
-
-// フロント配信
-const frontendPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(frontendPath));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`✅ Backend running on port ${process.env.PORT || 3000}`);
 });
