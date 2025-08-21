@@ -9,8 +9,8 @@ WORKDIR /app/backend
 RUN npm install
 
 # frontend 依存関係
-COPY frontend/package*.json frontend/
 WORKDIR /app/frontend
+COPY frontend/package*.json ./
 RUN npm install
 
 # プロジェクト全体コピー
@@ -21,7 +21,7 @@ COPY . .
 WORKDIR /app/frontend
 RUN npm run build
 
-# backend に戻って成果物を配信
+# backend で配信
 WORKDIR /app/backend
 
 ENV NODE_ENV=production
