@@ -1,6 +1,5 @@
 import React from "react";
-import LinksSection from "./components/LinksSection";
-
+import LinksSection from "./LinksSection.jsx";
 function App() {
   return (
     <div className="min-h-screen bg-black text-white">
