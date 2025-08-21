@@ -1,4 +1,5 @@
 // frontend/src/App.jsx
+import "./index.css"; // ✅ 全ページ共通スタイルはここで一度だけ読み込む
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
@@ -6,7 +7,6 @@ import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import "./index.css";
 
 function App() {
   return (
