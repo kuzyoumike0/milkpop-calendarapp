@@ -12,73 +12,37 @@ function TopPage() {
       alignItems="center"
     >
       {/* タイトル */}
-      <Heading mb={12} textAlign="center" color="white" fontWeight="bold" letterSpacing="2px">
+      <Heading mb={12} textAlign="center" color="white">
         MilkPOP Calendar
       </Heading>
 
-      {/* カードグリッド */}
+      {/* カードエリア */}
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
-        {/* カード1 */}
         <Box
-          bg="rgba(255,255,255,0.05)"
-          backdropFilter="blur(12px)"
+          bg="gray.800"   // ← 一旦濃い背景にして見やすく
           borderRadius="2xl"
           p={8}
           w="100%"
           maxW="400px"
-          boxShadow="dark-lg"
-          border="1px solid rgba(255,255,255,0.2)"
-          transition="all 0.3s ease"
-          _hover={{
-            transform: "translateY(-8px)",
-            borderColor: "brand.pink",
-            boxShadow: "0 0 20px #FDB9C8",
-          }}
         >
           <VStack spacing={4} align="stretch">
             <Heading size="md" color="brand.pink">日程登録ページ</Heading>
-            <Text fontSize="sm">新しい日程を登録しましょう。</Text>
-            <Button
-              size="lg"
-              borderRadius="full"
-              bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-              _hover={{ opacity: 0.9, transform: "scale(1.05)" }}
-              _active={{ transform: "scale(0.95)" }}
-            >
-              移動する
-            </Button>
+            <Text>新しい日程を登録しましょう。</Text>
+            <Button colorScheme="pink">移動する</Button>
           </VStack>
         </Box>
 
-        {/* カード2 */}
         <Box
-          bg="rgba(255,255,255,0.05)"
-          backdropFilter="blur(12px)"
+          bg="gray.800"
           borderRadius="2xl"
           p={8}
           w="100%"
           maxW="400px"
-          boxShadow="dark-lg"
-          border="1px solid rgba(255,255,255,0.2)"
-          transition="all 0.3s ease"
-          _hover={{
-            transform: "translateY(-8px)",
-            borderColor: "brand.blue",
-            boxShadow: "0 0 20px #004CA0",
-          }}
         >
           <VStack spacing={4} align="stretch">
             <Heading size="md" color="brand.blue">個人スケジュール</Heading>
-            <Text fontSize="sm">あなた専用の予定を登録できます。</Text>
-            <Button
-              size="lg"
-              borderRadius="full"
-              bgGradient="linear(to-r, #004CA0, #FDB9C8)"
-              _hover={{ opacity: 0.9, transform: "scale(1.05)" }}
-              _active={{ transform: "scale(0.95)" }}
-            >
-              移動する
-            </Button>
+            <Text>あなた専用の予定を登録できます。</Text>
+            <Button colorScheme="blue">移動する</Button>
           </VStack>
         </Box>
       </SimpleGrid>
