@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, Heading } from "@chakra-ui/react";
+import { Box, Heading, HStack, Link as ChakraLink } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
 
 function Layout({ children }) {
   return (
@@ -25,12 +26,44 @@ function Layout({ children }) {
           bgGradient="linear(to-r, #FDB9C8, #004CA0)"
           bgClip="text"
           fontWeight="extrabold"
+          mb={2}
         >
           MilkPOP Calendar
         </Heading>
+
+        {/* ナビゲーション */}
+        <HStack spacing={8} justify="center">
+          <ChakraLink
+            as={RouterLink}
+            to="/"
+            color="white"
+            fontWeight="bold"
+            _hover={{ color: "#FDB9C8" }}
+          >
+            トップ
+          </ChakraLink>
+          <ChakraLink
+            as={RouterLink}
+            to="/share"
+            color="white"
+            fontWeight="bold"
+            _hover={{ color: "#FDB9C8" }}
+          >
+            日程登録
+          </ChakraLink>
+          <ChakraLink
+            as={RouterLink}
+            to="/personal"
+            color="white"
+            fontWeight="bold"
+            _hover={{ color: "#FDB9C8" }}
+          >
+            個人スケジュール
+          </ChakraLink>
+        </HStack>
       </Box>
 
-      {/* メインコンテンツ */}
+      {/* メイン */}
       <Box as="main" flex="1" p={8} display="flex" justifyContent="center">
         {children}
       </Box>
