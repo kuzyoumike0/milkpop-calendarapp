@@ -1,35 +1,24 @@
-import React from "react";
-import { ChakraProvider, extendTheme } from "@chakra-ui/react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import TopPage from "./components/TopPage";
-import PersonalPage from "./components/PersonalPage";
-import SharePage from "./components/SharePage";
-import RegisterPage from "./components/RegisterPage";
-import ShareLinkPage from "./components/ShareLinkPage"; // ← 追加
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-const theme = extendTheme({
-  colors: {
-    brand: {
-      pink: "#FDB9C8",
-      blue: "#004CA0",
-    },
-  },
-});
-
-function App() {
-  return (
-    <ChakraProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<TopPage />} />
-          <Route path="/personal" element={<PersonalPage />} />
-          <Route path="/share" element={<SharePage />} />
-          <Route path="/register" element={<RegisterPage />} /> {/* 日程登録ページ */}
-          <Route path="/share/:id" element={<ShareLinkPage />} /> {/* 共有リンクページ */}
-        </Routes>
-      </Router>
-    </ChakraProvider>
-  );
+export async function fetchSchedules() {
+  const res = await fetch(`${API_URL}/api/schedules`);
+  return res.json();
 }
 
-export default App;
+export async function addSchedule(data) {
+  const res = await fetch(`${API_URL}/api/schedules`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function updateSchedule(id, data) {
+  const res = await fetch(`${API_URL}/api/schedules/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
