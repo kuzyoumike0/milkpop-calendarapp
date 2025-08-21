@@ -1,4 +1,3 @@
-// frontend/src/components/PersonalPage.jsx
 import React from "react";
 
 function PersonalPage() {
