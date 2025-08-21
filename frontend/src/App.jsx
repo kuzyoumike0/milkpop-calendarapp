@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import TopPage from "./components/TopPage";
 import LinkPage from "./components/LinkPage";
@@ -9,7 +9,7 @@ import ShareLinkPage from "./components/ShareLinkPage";
 
 function App() {
   return (
-    <HashRouter>
+    <Router>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<TopPage />} />
@@ -19,7 +19,7 @@ function App() {
           <Route path="sharelink/:linkid" element={<ShareLinkPage />} />
         </Route>
       </Routes>
-    </HashRouter>
+    </Router>
   );
 }
 
