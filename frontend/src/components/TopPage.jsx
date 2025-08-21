@@ -4,16 +4,14 @@ import { Link } from "react-router-dom";
 export default function TopPage() {
   return (
     <div className="flex flex-col items-center">
-      {/* トップページ専用 ロゴ画像 */}
       <div className="flex justify-center mt-8 mb-10">
         <img
-          src="/logo.png"  // ← frontend/public/logo.png に置く
+          src="/logo.png"
           alt="MilkPOP Logo"
           className="h-40 w-auto drop-shadow-2xl"
         />
       </div>
 
-      {/* コンテンツ */}
       <div className="bg-white/10 rounded-2xl shadow-2xl p-10 text-center max-w-2xl backdrop-blur-md">
         <h2 className="text-3xl font-bold mb-6 text-[#FDB9C8] drop-shadow">
           ようこそ、MilkPOP Calendar へ
