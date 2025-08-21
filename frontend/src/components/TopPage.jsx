@@ -1,30 +1,35 @@
-// frontend/src/components/TopPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import "./TopPage.css"; // 独自スタイルを読み込み
 
 const TopPage = () => {
   return (
-    <div className="top-page">
+    <div>
       {/* バナー */}
       <header className="banner">
-        <span className="logo">🌸 MilkPOP Calendar</span>
-        <nav className="nav">
-          <Link to="/register" className="nav-link">日程登録</Link>
+        <span>MilkPOP Calendar</span>
+        <nav>
+          <Link to="/" className="nav-link">トップ</Link>
+          <Link to="/share" className="nav-link">日程登録</Link>
           <Link to="/personal" className="nav-link">個人スケジュール</Link>
         </nav>
       </header>
 
       {/* メイン */}
-      <main className="main">
-        <h1 className="title">ようこそ MilkPOP Calendar へ</h1>
-        <p className="description">
-          スケジュールを簡単に登録して、みんなと共有できる便利なカレンダーアプリです。
+      <main style={{ textAlign: "center", padding: "40px" }}>
+        <h1 style={{ fontSize: "32px", marginBottom: "20px" }}>
+          ようこそ MilkPOP Calendar へ
+        </h1>
+        <p style={{ fontSize: "18px", marginBottom: "40px" }}>
+          日程を登録して共有リンクを発行したり、個人スケジュールを管理できます。
         </p>
 
-        <div className="button-group">
-          <Link to="/register" className="btn btn-pink">日程登録へ</Link>
-          <Link to="/personal" className="btn btn-blue">個人スケジュールへ</Link>
+        <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+          <Link to="/share">
+            <button className="btn btn-pink">日程登録ページへ</button>
+          </Link>
+          <Link to="/personal">
+            <button className="btn btn-pink">個人スケジュールへ</button>
+          </Link>
         </div>
       </main>
     </div>
