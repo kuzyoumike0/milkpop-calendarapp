@@ -1,11 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",  // React ソース
-    "./public/index.html",         // index.html も対象
+    "./public/index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        pink: "#FDB9C8",
+        deepblue: "#004CA0",
+        luxuryblack: "#000000",
+      },
+      fontFamily: {
+        sans: ["Poppins", "Noto Sans JP", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };
