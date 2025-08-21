@@ -5,14 +5,14 @@ import SharePage from "./components/SharePage";
 import PersonalPage from "./components/PersonalPage";
 import ShareLinkPage from "./components/ShareLinkPage";
 import LinkPage from "./components/LinkPage";
-import Header from "./components/Header";
+import Header from "./components/Header";   // ✅ ここで指定
 import Footer from "./components/Footer";
 
 function App() {
   return (
     <Router>
       <div className="page-container">
-        <Header />
+        <Header />   {/* ✅ 全ページ共通のバナー */}
 
         <main className="main-content">
           <Routes>
@@ -24,7 +24,7 @@ function App() {
           </Routes>
         </main>
 
-        <Footer />
+        <Footer />   {/* ✅ 全ページ共通のフッター */}
       </div>
     </Router>
   );
