@@ -1,18 +1,11 @@
-// frontend/tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",  // React ソース
+    "./public/index.html",         // index.html も対象
+  ],
   theme: {
     extend: {},
   },
-  safelist: [
-    "bg-gray-900",
-    "hover:bg-gray-800",
-    "text-white",
-    "rounded-2xl",
-    "shadow-lg",
-    "transition",
-    "transform",
-    "hover:scale-105",
-  ],
   plugins: [],
 };
