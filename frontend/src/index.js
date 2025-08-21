@@ -1,9 +1,12 @@
+// frontend/src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider } from "@chakra-ui/react";
+import "./index.css";
+import "react-big-calendar/lib/css/react-big-calendar.css"; // ← 追加！
 import App from "./App";
-import theme from "./theme";
 
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
 // React 18 の新しい root API
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
