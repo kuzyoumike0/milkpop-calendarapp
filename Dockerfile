@@ -17,14 +17,14 @@ WORKDIR /app/backend
 RUN npm install
 
 # --- ソースコピー ---
-COPY backend/ ./       # ← /app/backend/index.js が配置される
-COPY --from=builder /app/frontend/build ../frontend/build  # ← /app/frontend/build にコピーされる
+COPY backend/ ./backend/
+COPY --from=builder /app/frontend/build ./frontend/build  # ← 修正！../ をやめる
 
 WORKDIR /app/backend
 
 ENV NODE_ENV=production
 
-# デバッグ用にファイル確認
+# デバッグ用
 RUN ls -R /app
 
 CMD ["node", "index.js"]
