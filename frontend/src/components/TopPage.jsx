@@ -1,7 +1,6 @@
 // frontend/src/components/TopPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
-import "../index.css"; // ← 念のためCSSを読み込む
 
 const TopPage = () => {
   return (
