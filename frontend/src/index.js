@@ -10,9 +10,12 @@ import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 const theme = extendTheme({
   styles: {
     global: {
-      // body の bg を設定しない → index.css が優先される
       body: {
-        color: "#333", // 文字色だけ残す
+        margin: 0,
+        fontFamily: `"Helvetica Neue", Arial, sans-serif`,
+        bgGradient: "linear(135deg, #fff5f7, #e6f0ff, #fdf6ff)", // ← Chakraの背景指定
+        color: "#333",
+        minHeight: "100vh",
       },
     },
   },
