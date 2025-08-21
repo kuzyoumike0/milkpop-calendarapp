@@ -1,237 +1,150 @@
-/* ============================= */
-/* 全体共通 */
-/* ============================= */
-body {
-  margin: 0;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  line-height: 1.6;
-}
+// frontend/src/components/RegisterPage.jsx
+import React, { useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../index.css";
 
-/* ============================= */
-/* トップページ専用 */
-/* ============================= */
-.top-page {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 40px 20px;
-  min-height: 100vh;
-}
+const localizer = momentLocalizer(moment);
 
-/* ロゴ用 グラスモーフィズムカード */
-.logo-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-  border-radius: 20px;
+const RegisterPage = () => {
+  const [events, setEvents] = useState([]);
+  const [title, setTitle] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [timeType, setTimeType] = useState("all"); // all, day, night, custom
+  const [startHour, setStartHour] = useState(1);
+  const [endHour, setEndHour] = useState(2);
 
-  background: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  // 1時〜0時（24時間表記）
+  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
-  margin-bottom: 30px;
-}
+  const handleSelectSlot = ({ start, end }) => {
+    setSelectedSlot({ start, end });
+  };
 
-/* ロゴ画像 */
-.logo-image {
-  width: 300px;   /* 少し大きめ */
-  max-width: 85%;
-  display: block;
-}
+  const handleRegister = () => {
+    if (!title || !selectedSlot) {
+      alert("タイトルと日程を入力してください！");
+      return;
+    }
 
-/* トップページ画像 */
-.top-image {
-  width: 840px !important;
-  max-width: 100% !important;
-  display: block !important;
-  margin: 20px auto !important;
-  border-radius: 16px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
-}
+    let displayTime = "";
+    let startDate = new Date(selectedSlot.start);
+    let endDate = new Date(selectedSlot.start);
 
-/* ============================= */
-/* ヘッダー・フッター */
-/* ============================= */
-@keyframes gold-shine {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+    if (timeType === "all") {
+      displayTime = "終日";
+      startDate.setHours(0);
+      endDate.setHours(23, 59);
+    } else if (timeType === "day") {
+      displayTime = "昼";
+      startDate.setHours(9);
+      endDate.setHours(17);
+    } else if (timeType === "night") {
+      displayTime = "夜";
+      startDate.setHours(18);
+      endDate.setHours(23, 59);
+    } else if (timeType === "custom") {
+      if (startHour >= endHour) {
+        alert("開始時刻は終了時刻より前にしてください！");
+        return;
+      }
+      displayTime = `${startHour}:00〜${endHour}:00`;
+      startDate.setHours(startHour);
+      endDate.setHours(endHour);
+    }
 
-/* ヘッダー */
-.banner {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  padding: 25px !important;
-  text-align: center !important;
-  position: relative !important;
-  z-index: 10 !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8) !important;
-  border-bottom: 2px solid rgba(253,185,200,0.5) !important;
-}
+    const newEvent = {
+      title: `${title} (${displayTime})`,
+      start: startDate,
+      end: endDate,
+    };
 
-.banner h1 {
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 6s infinite linear;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  font-size: 40px !important;
-  font-weight: 700 !important;
-  letter-spacing: 2px !important;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.6),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 20px rgba(253, 185, 200, 0.5);
-  margin: 0 0 10px 0 !important;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
+    setEvents([...events, newEvent]);
+    setTitle("");
+    setSelectedSlot(null);
+    setTimeType("all");
+    setStartHour(1);
+    setEndHour(2);
+  };
 
-/* ナビゲーション */
-.banner nav {
-  margin-top: 14px !important;
-}
+  return (
+    <div className="register-page">
+      <h2 className="page-title">📅 日程登録</h2>
 
-.banner nav a {
-  margin: 0 20px !important;
-  text-decoration: none !important;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700, #FFF3B0);
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gold-shine 8s infinite linear;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  font-weight: 600 !important;
-  font-size: 16px !important;
-  letter-spacing: 1px !important;
-  transition: all 0.3s ease !important;
-}
+      {/* イベントタイトル */}
+      <div className="form-group">
+        <label>イベントタイトル</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例: 七夕イベント"
+        />
+      </div>
 
-.banner nav a:hover {
-  -webkit-text-fill-color: #FDB9C8 !important;
-  background: none !important;
-  animation: none;
-  text-shadow:
-    0 0 8px rgba(253,185,200,0.9),
-    0 0 16px rgba(253,185,200,0.8),
-    0 0 24px rgba(253,185,200,0.7);
-}
+      {/* カレンダー */}
+      <div style={{ height: "500px", margin: "20px 0" }}>
+        <Calendar
+          selectable
+          localizer={localizer}
+          events={events}
+          defaultView="month"
+          style={{ borderRadius: "16px", overflow: "hidden" }}
+          onSelectSlot={handleSelectSlot}
+        />
+      </div>
 
-/* フッター */
-.footer {
-  background: linear-gradient(
-    180deg,
-    #f5f5f5 0%,
-    #e0e0e0 15%,
-    #2b2b2b 70%,
-    #000000 100%
-  ) !important;
-  text-align: center !important;
-  padding: 20px !important;
-  margin-top: auto !important;
-  font-size: 15px !important;
-  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
-  letter-spacing: 1px !important;
-  color: #FFD700;
-  text-shadow:
-    0 0 6px rgba(255, 215, 0, 0.7),
-    0 0 12px rgba(255, 165, 0, 0.5),
-    0 0 18px rgba(253, 185, 200, 0.5);
-}
+      {/* 時間指定 */}
+      <div className="form-group">
+        <label>時間帯</label>
+        <select
+          value={timeType}
+          onChange={(e) => setTimeType(e.target.value)}
+          className="time-type-select"
+        >
+          <option value="all">終日</option>
+          <option value="day">昼 (9:00〜17:00)</option>
+          <option value="night">夜 (18:00〜23:59)</option>
+          <option value="custom">時間指定</option>
+        </select>
+      </div>
 
-/* ============================= */
-/* RegisterPage 用 */
-/* ============================= */
-.register-page {
-  flex: 1;
-  padding: 40px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border-radius: 16px;
-  margin: 20px auto;
-  max-width: 1000px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
+      {/* custom 選択時だけプルダウン表示 */}
+      {timeType === "custom" && (
+        <div className="form-group time-select">
+          <label>開始時刻</label>
+          <select
+            value={startHour}
+            onChange={(e) => setStartHour(Number(e.target.value))}
+          >
+            {hours.map((h) => (
+              <option key={h} value={h}>
+                {h === 0 ? "0時" : `${h}時`}
+              </option>
+            ))}
+          </select>
 
-.page-title {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 20px;
-  font-weight: bold;
-}
+          <label>終了時刻</label>
+          <select
+            value={endHour}
+            onChange={(e) => setEndHour(Number(e.target.value))}
+          >
+            {hours.map((h) => (
+              <option key={h} value={h}>
+                {h === 0 ? "0時" : `${h}時`}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-.form-group {
-  margin: 15px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+      {/* 登録ボタン */}
+      <button className="submit-btn" onClick={handleRegister}>
+        登録する
+      </button>
+    </div>
+  );
+};
 
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.form-group input[type="text"] {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  color: black;
-}
-
-/* プルダウン共通 */
-select {
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  font-family: inherit;
-  color: black; /* 文字は黒 */
-  background: white;
-}
-
-/* custom の開始/終了時刻 */
-.time-select {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* 登録ボタン */
-.submit-btn {
-  margin-top: 20px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-  color: black;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.submit-btn:hover {
-  background: #FDB9C8;
-  color: white;
-  box-shadow: 0 0 12px rgba(253, 185, 200, 0.8);
-}
+export default RegisterPage;
