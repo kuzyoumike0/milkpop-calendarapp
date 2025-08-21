@@ -5,6 +5,7 @@ import TopPage from "./components/TopPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
 import RegisterPage from "./components/RegisterPage";
+import ShareLinkPage from "./components/ShareLinkPage"; // ← 追加
 
 const theme = extendTheme({
   colors: {
@@ -24,6 +25,7 @@ function App() {
           <Route path="/personal" element={<PersonalPage />} />
           <Route path="/share" element={<SharePage />} />
           <Route path="/register" element={<RegisterPage />} /> {/* 日程登録ページ */}
+          <Route path="/share/:id" element={<ShareLinkPage />} /> {/* 共有リンクページ */}
         </Routes>
       </Router>
     </ChakraProvider>
