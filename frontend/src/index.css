@@ -33,15 +33,15 @@ body {
 
 /* バナー（ヘッダー） */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important; /* フッターと統一 */
-  color: white !important;
+  background: #000000 !important; /* 高級感のある黒 */
+  color: #FDB9C8 !important;      /* ピンク文字でアクセント */
   padding: 25px !important;
   text-align: center !important;
   font-size: 32px !important;
   font-weight: bold !important;
   letter-spacing: 2px !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
-  border-bottom: 3px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+  border-bottom: 3px solid #FDB9C8 !important; /* 下にピンクライン */
 }
 
 .banner nav {
@@ -63,12 +63,12 @@ body {
 
 /* フッター */
 .footer {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important; /* ヘッダーと統一 */
-  color: white !important;
+  background: #000000 !important; /* 高級感のある黒 */
+  color: #FDB9C8 !important;
   text-align: center !important;
   padding: 18px !important;
   margin-top: auto !important;
   font-size: 15px !important;
-  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.4) !important;
-  border-top: 2px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.6) !important;
+  border-top: 2px solid #004CA0 !important; /* 上にブルーラインで差別化 */
 }
