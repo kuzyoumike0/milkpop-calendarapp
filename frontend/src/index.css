@@ -40,8 +40,8 @@ body {
   text-shadow: 0 0 10px rgba(253,185,200,0.8) !important;
 }
 
-/* 画像サイズ統一 */
-img {
+/* トップページだけの画像スタイル */
+.top-image {
   max-width: 840px !important;
   width: 100% !important;
   display: block !important;
