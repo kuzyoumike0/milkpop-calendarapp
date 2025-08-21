@@ -125,3 +125,12 @@ body {
   padding: 2px 6px;
   font-weight: bold;
 }
+
+.footer {
+  background: #004ca0;
+  color: white;
+  text-align: center;
+  padding: 12px;
+  margin-top: auto; /* 下に寄せる */
+  font-size: 0.9rem;
+}
