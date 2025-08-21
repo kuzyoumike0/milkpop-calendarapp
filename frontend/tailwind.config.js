@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./public/index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",   // ✅ src 以下の全てのファイルを監視
   ],
   theme: {
     extend: {
