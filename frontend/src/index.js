@@ -11,11 +11,8 @@ const theme = extendTheme({
   styles: {
     global: {
       body: {
-        margin: 0,
-        fontFamily: `"Helvetica Neue", Arial, sans-serif`,
-        bgGradient: "linear(135deg, #fff5f7, #e6f0ff, #fdf6ff)", // ← Chakraの背景指定
+        // 👇 背景は CSS に任せるので削除
         color: "#333",
-        minHeight: "100vh",
       },
     },
   },
