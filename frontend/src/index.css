@@ -1,346 +1,229 @@
-// frontend/src/components/RegisterPage.jsx
-import React, { useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "moment/locale/ja";
-import "../index.css";
+/* ===== ベーススタイル ===== */
+body {
+  margin: 0;
+  font-family: 'Noto Sans JP', sans-serif;
+  background: #000; /* 高級感のある黒背景 */
+  color: #fff;
+}
 
-const localizer = momentLocalizer(moment);
+/* ===== バナー（ヘッダー） ===== */
+.banner {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
 
-const RegisterPage = () => {
-  const [title, setTitle] = useState("");
-  const [events, setEvents] = useState([]);
-  const [selectedSlots, setSelectedSlots] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+.banner h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
 
-  // 選択モード
-  const [selectMode, setSelectMode] = useState("multiple");
-  const [rangeStart, setRangeStart] = useState(null);
+.banner nav a {
+  margin-left: 1.5rem;
+  text-decoration: none;
+  font-size: 1rem;
+  color: #fff;
+  transition: 0.3s;
+}
 
-  // 祝日データ
-  const holidays = {
-    "2025-01-01": "元日",
-    "2025-02-11": "建国記念の日",
-    "2025-02-23": "天皇誕生日",
-    "2025-04-29": "昭和の日",
-    "2025-05-03": "憲法記念日",
-    "2025-05-04": "みどりの日",
-    "2025-05-05": "こどもの日",
-    "2025-08-11": "山の日",
-  };
+.banner nav a:hover {
+  color: #FDB9C8;
+}
 
-  // 時刻プルダウン
-  const times = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
+/* ===== フッター ===== */
+.footer {
+  background: #111;
+  text-align: center;
+  padding: 1rem;
+  color: #aaa;
+  font-size: 0.9rem;
+  border-top: 1px solid #222;
+}
 
-  // 日付クリック処理
-  const handleSelectDay = (date) => {
-    if (selectMode === "multiple") {
-      setSelectedSlots((prev) => [
-        ...prev,
-        {
-          start: date,
-          end: date,
-          division: "allday",
-          startTime: "09:00",
-          endTime: "10:00",
-        },
-      ]);
-    } else if (selectMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(date);
-      } else {
-        const start = moment.min(moment(rangeStart), moment(date)).toDate();
-        const end = moment.max(moment(rangeStart), moment(date)).toDate();
-        setSelectedSlots((prev) => [
-          ...prev,
-          { start, end, division: "allday", startTime: "09:00", endTime: "10:00" },
-        ]);
-        setRangeStart(null);
-      }
-    }
-  };
+/* ===== トップページ ===== */
+.top-page {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15));
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
-  // イベント登録処理
-  const handleAddEvent = () => {
-    if (!title || selectedSlots.length === 0) return;
+.logo-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 2rem;
+  padding: 1rem 2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
 
-    const newEvents = selectedSlots.map((slot) => {
-      let start = slot.start;
-      let end = slot.end;
+.logo-image {
+  width: 1040px;
+  height: auto;
+}
 
-      if (slot.division === "custom") {
-        const dateStr = moment(start).format("YYYY-MM-DD");
-        start = moment(`${dateStr} ${slot.startTime}`, "YYYY-MM-DD HH:mm").toDate();
-        end = moment(`${dateStr} ${slot.endTime}`, "YYYY-MM-DD HH:mm").toDate();
-      }
+.welcome-text {
+  font-size: 1.5rem;
+  color: #FDB9C8;
+  margin-top: 1rem;
+}
 
-      return {
-        title: `${title} (${formatTimeRange(slot)})`,
-        start,
-        end,
-        allDay: slot.division === "allday",
-      };
-    });
+/* ===== ページ共通カード ===== */
+.page-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 2rem auto;
+  max-width: 900px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+}
 
-    setEvents((prev) => [...prev, ...newEvents]);
-    setSelectedSlots([]);
-    setTitle("");
-    setShareUrl(`${window.location.origin}/share/${Date.now()}`);
-  };
+/* ===== カレンダースタイル ===== */
+.rbc-calendar {
+  background: rgba(255,255,255,0.05);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+}
 
-  // 区分の表示用ラベル
-  const formatTimeRange = (slot) => {
-    switch (slot.division) {
-      case "allday":
-        return "終日";
-      case "day":
-        return "昼";
-      case "night":
-        return "夜";
-      case "custom":
-        return `${slot.startTime} - ${slot.endTime}`;
-      default:
-        return "";
-    }
-  };
+/* 通常日付セル */
+.rbc-day-bg {
+  transition: background 0.2s;
+}
 
-  // 日付セルの見た目
-  const dayPropGetter = (date) => {
-    const dateStr = moment(date).format("YYYY-MM-DD");
+.rbc-day-bg:hover {
+  background: rgba(253,185,200,0.1);
+}
 
-    // 祝日
-    if (holidays[dateStr]) {
-      return {
-        className: "holiday",
-        "data-holiday": holidays[dateStr],
-        onClick: () => handleSelectDay(date),
-      };
-    }
+/* 祝日強調 */
+.holiday {
+  color: red !important;
+  font-weight: bold;
+  background: rgba(253,185,200,0.2) !important;
+  position: relative;
+}
 
-    // 選択済みセル
-    const isSelected = selectedSlots.some(
-      (slot) =>
-        moment(date).isSameOrAfter(moment(slot.start), "day") &&
-        moment(date).isSameOrBefore(moment(slot.end), "day")
-    );
+/* 祝日名表示 */
+.holiday::after {
+  content: attr(data-holiday);
+  display: block;
+  font-size: 0.75rem;
+  color: red;
+  margin-top: 2px;
+}
 
-    if (isSelected) {
-      return { className: "selected-day", onClick: () => handleSelectDay(date) };
-    }
+/* 選択範囲（react-big-calendar 標準の選択時） */
+.rbc-selected-cell {
+  background: rgba(0,76,160,0.3) !important;
+}
 
-    // 範囲選択中の開始日
-    if (rangeStart && moment(date).isSame(rangeStart, "day")) {
-      return { className: "selected-day", onClick: () => handleSelectDay(date) };
-    }
+/* イベント表示 */
+.rbc-event {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  color: #fff;
+}
 
-    return { onClick: () => handleSelectDay(date) };
-  };
+/* ツールバー */
+.rbc-toolbar button {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #004CA0;
+  border-radius: 6px;
+  color: #fff;
+  margin: 0 2px;
+  padding: 0.4rem 0.6rem;
+  transition: 0.2s;
+}
 
-  return (
-    <div
-      className="page-card"
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15))",
-      }}
-    >
-      <h2 style={{ color: "#FDB9C8", marginBottom: "1rem" }}>日程登録ページ</h2>
+.rbc-toolbar button:hover {
+  background: #004CA0;
+  color: #fff;
+}
 
-      {/* タイトル入力 */}
-      <div className="form-group">
-        <label>タイトル</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="イベントタイトルを入力"
-        />
-      </div>
+.rbc-toolbar-label {
+  font-weight: bold;
+  color: #FDB9C8;
+}
 
-      {/* 選択モード切替 */}
-      <div className="form-group">
-        <label>日付選択モード</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectMode === "multiple"}
-              onChange={(e) => setSelectMode(e.target.value)}
-            />
-            複数選択
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              value="range"
-              checked={selectMode === "range"}
-              onChange={(e) => setSelectMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-        </div>
-      </div>
+/* ===== 入力フォーム ===== */
+.form-group {
+  margin-bottom: 1rem;
+}
 
-      {/* カレンダー */}
-      <div style={{ height: "500px", marginBottom: "1rem" }}>
-        <Calendar
-          localizer={localizer}
-          events={events}
-          selectable={false}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "100%" }}
-          dayPropGetter={dayPropGetter}
-          views={["month"]}
-        />
-      </div>
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #FDB9C8;
+}
 
-      {/* 選択済み日付ごとの設定 */}
-      {selectedSlots.length > 0 && (
-        <div style={{ marginTop: "1.5rem" }}>
-          <h3 style={{ color: "#FDB9C8" }}>選択中の日程</h3>
-          {selectedSlots.map((slot, idx) => (
-            <div
-              key={idx}
-              style={{
-                marginBottom: "1rem",
-                padding: "0.5rem",
-                border: "1px solid #444",
-                borderRadius: "8px",
-                background: "rgba(255,255,255,0.05)",
-              }}
-            >
-              <p>
-                {moment(slot.start).format("MM/DD")} -{" "}
-                {moment(slot.end).format("MM/DD")}
-              </p>
-              <label>区分</label>
-              <select
-                value={slot.division}
-                onChange={(e) => {
-                  const newSlots = [...selectedSlots];
-                  newSlots[idx].division = e.target.value;
-                  setSelectedSlots(newSlots);
-                }}
-              >
-                <option value="allday">終日</option>
-                <option value="day">昼</option>
-                <option value="night">夜</option>
-                <option value="custom">時間帯</option>
-              </select>
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #fff;   /* 白背景 */
+  color: #000;        /* 黒文字 */
+  font-size: 1rem;
+}
 
-              {/* 時間帯の場合のみ */}
-              {slot.division === "custom" && (
-                <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
-                  <div>
-                    <label>開始</label>
-                    <select
-                      value={slot.startTime}
-                      onChange={(e) => {
-                        const newSlots = [...selectedSlots];
-                        newSlots[idx].startTime = e.target.value;
-                        if (
-                          moment(e.target.value, "HH:mm").isSameOrAfter(
-                            moment(newSlots[idx].endTime, "HH:mm")
-                          )
-                        ) {
-                          const i = times.indexOf(e.target.value);
-                          if (i < times.length - 1) {
-                            newSlots[idx].endTime = times[i + 1];
-                          }
-                        }
-                        setSelectedSlots(newSlots);
-                      }}
-                    >
-                      {times.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label>終了</label>
-                    <select
-                      value={slot.endTime}
-                      onChange={(e) => {
-                        const newSlots = [...selectedSlots];
-                        newSlots[idx].endTime = e.target.value;
-                        setSelectedSlots(newSlots);
-                      }}
-                    >
-                      {times
-                        .filter((t) =>
-                          moment(t, "HH:mm").isAfter(moment(slot.startTime, "HH:mm"))
-                        )
-                        .map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #FDB9C8;
+  background: #fdfdfd;  /* フォーカス時も白系 */
+  color: #000;          /* 黒文字維持 */
+}
 
-      {/* 登録ボタン */}
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <button
-          onClick={handleAddEvent}
-          style={{
-            fontSize: "1.2rem",
-            padding: "0.8rem 2rem",
-            borderRadius: "12px",
-            background: "linear-gradient(90deg, #FDB9C8, #004CA0)",
-            border: "none",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "0.3s",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.transform = "scale(1.05)")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.transform = "scale(1.0)")
-          }
-        >
-          ＋ 日程を登録
-        </button>
-      </div>
+/* ===== ボタン ===== */
+button {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
-      {/* 登録済みリスト */}
-      <div style={{ marginTop: "2rem" }}>
-        <h3 style={{ color: "#FDB9C8" }}>登録済み日程</h3>
-        <ul>
-          {events.map((ev, idx) => (
-            <li key={idx}>
-              {ev.title} ({moment(ev.start).format("MM/DD")} -{" "}
-              {moment(ev.end).format("MM/DD")})
-            </li>
-          ))}
-        </ul>
-      </div>
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
 
-      {/* 共有リンク */}
-      {shareUrl && (
-        <div style={{ marginTop: "1.5rem" }}>
-          <h3 style={{ color: "#FDB9C8" }}>共有リンク</h3>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
-        </div>
-      )}
-    </div>
-  );
-};
+/* ===== リンク ===== */
+a {
+  color: #FDB9C8;
+  transition: 0.3s;
+}
 
-export default RegisterPage;
+a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ===== 選択済み日付セル ===== */
+.selected-day {
+  background: rgba(0,76,160,0.4) !important;
+  border: 2px solid #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold;
+  cursor: pointer;
+}
