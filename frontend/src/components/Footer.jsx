@@ -1,9 +1,12 @@
 import React from "react";
+import "../index.css";
 
-export default function Footer() {
+const Footer = () => {
   return (
-    <footer className="bg-[#004CA0] text-center py-3 text-sm text-white">
-      © 2025 MilkPOP Calendar
+    <footer className="footer">
+      <p>© 2025 MilkPOP Calendar | All Rights Reserved</p>
     </footer>
   );
-}
+};
+
+export default Footer;
