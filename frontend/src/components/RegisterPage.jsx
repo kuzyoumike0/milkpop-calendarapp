@@ -16,7 +16,7 @@ const RegisterPage = () => {
   // 時間帯選択
   const [timeRange, setTimeRange] = useState("allday");
 
-  // 祝日データ（例：一部）
+  // 祝日データ（例）
   const holidays = {
     "2025-01-01": "元日",
     "2025-02-11": "建国記念の日",
@@ -83,7 +83,12 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="page-card">
+    <div
+      className="page-card"
+      style={{
+        background: "linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15))",
+      }}
+    >
       <h2 style={{ color: "#FDB9C8", marginBottom: "1rem" }}>
         日程登録ページ
       </h2>
@@ -99,8 +104,23 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 時間帯選択 */}
-      <div className="form-group">
+      {/* カレンダー */}
+      <div style={{ height: "500px", marginBottom: "1rem" }}>
+        <Calendar
+          localizer={localizer}
+          events={events}
+          selectable
+          onSelectSlot={handleSelectSlot}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: "100%" }}
+          dayPropGetter={dayPropGetter}
+          views={["month"]}
+        />
+      </div>
+
+      {/* 時間帯選択（カレンダーの下に移動） */}
+      <div className="form-group" style={{ marginTop: "1.5rem" }}>
         <label>時間帯</label>
         <div>
           <label>
@@ -140,21 +160,6 @@ const RegisterPage = () => {
             時間指定
           </label>
         </div>
-      </div>
-
-      {/* カレンダー */}
-      <div style={{ height: "500px", marginBottom: "1rem" }}>
-        <Calendar
-          localizer={localizer}
-          events={events}
-          selectable
-          onSelectSlot={handleSelectSlot}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "100%" }}
-          dayPropGetter={dayPropGetter}
-          views={["month"]}
-        />
       </div>
 
       {/* 登録ボタン */}
