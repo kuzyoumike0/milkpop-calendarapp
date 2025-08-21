@@ -21,28 +21,33 @@ const RegisterPage = () => {
   const [events, setEvents] = useState([]);
   const [selectedDates, setSelectedDates] = useState([]);
   const [holidays, setHolidays] = useState({});
+  const [loadedYears, setLoadedYears] = useState(new Set());
 
-  // ===== 日本の祝日を取得（前年〜+9年後 = 11年分） =====
-  useEffect(() => {
-    const hd = new Holidays("JP"); // 日本の祝日
-    const currentYear = new Date().getFullYear();
-    const years = [];
+  const hd = new Holidays("JP"); // 日本の祝日
 
-    for (let y = currentYear - 1; y <= currentYear + 9; y++) {
-      years.push(y);
-    }
+  // ===== 指定した年の祝日をロード =====
+  const loadHolidaysForYear = (year) => {
+    if (loadedYears.has(year)) return; // 既にロード済みならスキップ
 
-    const holidayMap = {};
-
-    years.forEach((year) => {
-      const holidayList = hd.getHolidays(year);
+    const holidayList = hd.getHolidays(year);
+    setHolidays((prev) => {
+      const newMap = { ...prev };
       holidayList.forEach((h) => {
         const dateStr = format(new Date(h.date), "yyyy-MM-dd");
-        holidayMap[dateStr] = h.name; // 例: "2025-08-11": "山の日"
+        newMap[dateStr] = h.name;
       });
+      return newMap;
     });
 
-    setHolidays(holidayMap);
+    setLoadedYears((prev) => new Set([...prev, year]));
+  };
+
+  // 初期ロード（今年＋前年＋翌年）
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    loadHolidaysForYear(currentYear - 1);
+    loadHolidaysForYear(currentYear);
+    loadHolidaysForYear(currentYear + 1);
   }, []);
 
   // ===== 日付セルのスタイル付与 =====
@@ -73,6 +78,17 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== ビューが変わったら祝日をロード =====
+  const handleRangeChange = (range) => {
+    let year;
+    if (Array.isArray(range)) {
+      year = range[0] ? new Date(range[0]).getFullYear() : new Date().getFullYear();
+    } else {
+      year = new Date(range.start).getFullYear();
+    }
+    loadHolidaysForYear(year);
+  };
+
   return (
     <div className="page-card">
       <h2>日程登録</h2>
@@ -86,6 +102,7 @@ const RegisterPage = () => {
         style={{ height: 500 }}
         dayPropGetter={dayPropGetter}
         onSelectSlot={handleSelectSlot}
+        onRangeChange={handleRangeChange} // ← ここで動的に祝日取得
       />
 
       {/* 選択した日程一覧 */}
