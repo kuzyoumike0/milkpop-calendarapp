@@ -7,14 +7,23 @@
   box-sizing: border-box;
 }
 
-/* bodyの背景はChakra側で管理するのでここでは書かない */
+/* 背景グラデーションと文字色 */
 body {
   font-family: "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.6;
+  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff);
+  color: #333;
   min-height: 100vh;
+  line-height: 1.6;
 }
 
-/* バナー（TopPage / RegisterPage共通） */
+/* ページコンテナ */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* バナー */
 .banner {
   background: #004ca0;
   color: white;
@@ -63,55 +72,4 @@ body {
   display: inline-block;
   margin: 0 10px;
   padding: 12px 24px;
-  background: #fdb9c8;
-  color: #004ca0;
-  font-weight: bold;
-  border-radius: 25px;
-  text-decoration: none;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
-
-.btn:hover {
-  background: #ffccd8;
-  transform: translateY(-2px);
-}
-
-/* ===== カレンダー専用デザイン上書き ===== */
-.rbc-calendar {
-  background: #ffffff !important;
-  border-radius: 12px;
-  padding: 10px;
-  color: #333 !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.rbc-toolbar {
-  background: #004ca0;
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.rbc-toolbar button {
-  background: #fdb9c8;
-  color: #004ca0;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  margin: 0 2px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.rbc-toolbar button:hover {
-  background: #ffccd8;
-}
-
-.rbc-event {
-  background: #fdb9c8 !important;
-  color: #004ca0 !important;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-weight: bold;
-}
+  background:
