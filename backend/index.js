@@ -1,11 +1,10 @@
-const express = require("express");
-const app = express();
+const path = require("path");
 
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok" });
-});
+// 静的ファイル配信
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+// React Router のための catch-all
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
