@@ -1,29 +1,64 @@
-// frontend/src/components/Layout.jsx
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Box, Heading } from "@chakra-ui/react";
 
-function Layout() {
+function Layout({ children }) {
   return (
-    <div className="min-h-screen bg-black text-white font-sans relative">
-      {/* ナビバー */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-[#FDB9C8] via-black to-[#004CA0] shadow-lg">
-        <div className="max-w-6xl mx-auto flex justify-between items-center px-6 py-3">
-          <h1 className="text-2xl font-bold tracking-wide">
-            MilkPOP Calendar
-          </h1>
-          <nav className="space-x-6 text-lg">
-            <Link to="/" className="hover:text-[#FDB9C8] transition">トップ</Link>
-            <Link to="/link" className="hover:text-[#FDB9C8] transition">日程登録</Link>
-            <Link to="/personal" className="hover:text-[#FDB9C8] transition">個人スケジュール</Link>
-          </nav>
-        </div>
-      </header>
+    <Box
+      minH="100vh"
+      bgGradient="linear(to-br, #FDB9C8, black, #004CA0)"
+      backgroundSize="400% 400%"
+      animation="gradientMove 15s ease infinite"
+      display="flex"
+      flexDirection="column"
+    >
+      {/* ヘッダー */}
+      <Box
+        as="header"
+        p={4}
+        textAlign="center"
+        bg="rgba(0,0,0,0.6)"
+        backdropFilter="blur(6px)"
+        borderBottom="1px solid rgba(255,255,255,0.2)"
+      >
+        <Heading
+          size="lg"
+          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
+          bgClip="text"
+          fontWeight="extrabold"
+        >
+          MilkPOP Calendar
+        </Heading>
+      </Box>
 
-      {/* コンテンツ */}
-      <main className="max-w-6xl mx-auto p-6">
-        <Outlet />
-      </main>
-    </div>
+      {/* メインコンテンツ */}
+      <Box as="main" flex="1" p={8} display="flex" justifyContent="center">
+        {children}
+      </Box>
+
+      {/* フッター */}
+      <Box
+        as="footer"
+        textAlign="center"
+        p={4}
+        fontSize="sm"
+        color="whiteAlpha.700"
+        bg="rgba(0,0,0,0.6)"
+        borderTop="1px solid rgba(255,255,255,0.2)"
+      >
+        © 2025 MilkPOP Calendar
+      </Box>
+
+      {/* 背景アニメーション */}
+      <style>
+        {`
+          @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}
+      </style>
+    </Box>
   );
 }
 
