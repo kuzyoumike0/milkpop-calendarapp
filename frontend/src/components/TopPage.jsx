@@ -8,7 +8,7 @@ import {
   WrapItem,
   Container,
 } from "@chakra-ui/react";
-import NavButton from "./NavButton";
+import ShareButton from "./ShareButton";
 
 const TopPage = () => {
   return (
@@ -34,24 +34,24 @@ const TopPage = () => {
         <VStack spacing={6}>
           <Wrap spacing={4} justify="center">
             <WrapItem>
-              <NavButton to="/" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton to="/" gradient="linear(to-r, #FDB9C8, #004CA0)">
                 トップ
-              </NavButton>
+              </ShareButton>
             </WrapItem>
             <WrapItem>
-              <NavButton to="/register" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton to="/register" gradient="linear(to-r, #FDB9C8, #004CA0)">
                 日程登録
-              </NavButton>
+              </ShareButton>
             </WrapItem>
             <WrapItem>
-              <NavButton to="/personal" gradient="linear(to-r, #004CA0, #FDB9C8)">
+              <ShareButton to="/personal" gradient="linear(to-r, #004CA0, #FDB9C8)">
                 個人スケジュール
-              </NavButton>
+              </ShareButton>
             </WrapItem>
             <WrapItem>
-              <NavButton to="/share" gradient="linear(to-r, #FDB9C8, #004CA0)">
+              <ShareButton to="/share" gradient="linear(to-r, #FDB9C8, #004CA0)">
                 共有ページ
-              </NavButton>
+              </ShareButton>
             </WrapItem>
           </Wrap>
         </VStack>
