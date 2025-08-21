@@ -1,14 +1,15 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import Header from "./Header";
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-black text-white font-sans relative">
-      <Header />
-      <div className="pt-20 px-4 relative z-10">
-        <Outlet />
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="p-4 text-center text-2xl font-bold">
+        MilkPOP Calendar
+      </header>
+      <main className="p-6">
+        <Outlet /> {/* ← これが必須 */}
+      </main>
     </div>
   );
 }
