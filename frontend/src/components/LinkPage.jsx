@@ -10,7 +10,7 @@ import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import ja from "date-fns/locale/ja";
 
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/css/react-big-calendar.css"; // カレンダー用CSS
 
 const locales = { ja };
 const localizer = dateFnsLocalizer({
@@ -109,7 +109,7 @@ const LinkPage = () => {
       </div>
 
       {/* カレンダー */}
-      <div className="max-w-4xl mx-auto h-[500px] bg-white rounded-lg mb-6">
+      <div className="max-w-4xl mx-auto h-[500px] bg-white text-black rounded-lg mb-6 shadow-lg p-4">
         <Calendar
           localizer={localizer}
           selectable
@@ -117,7 +117,7 @@ const LinkPage = () => {
           events={selectedEvents}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: 500 }}
+          style={{ height: 450 }}
           views={["month", "week", "day"]}
           popup
         />
