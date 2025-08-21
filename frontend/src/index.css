@@ -1,22 +1,20 @@
 /* frontend/src/index.css */
 
-/* ページ全体の背景と文字 */
-body {
+/* 全体リセット */
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* bodyの背景はChakra側で管理するのでここでは書かない */
+body {
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff);
-  color: #333;
+  line-height: 1.6;
   min-height: 100vh;
 }
 
-/* ページコンテナ */
-.page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* バナー */
+/* バナー（TopPage / RegisterPage共通） */
 .banner {
   background: #004ca0;
   color: white;
