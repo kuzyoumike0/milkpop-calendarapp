@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchSchedules, addSchedule, updateSchedule } from "../api";
+import { fetchSchedules, addSchedule, updateSchedule, deleteSchedule } from "../api";
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
@@ -23,6 +23,11 @@ const SharePage = () => {
     const saved = await addSchedule(newSchedule);
     setSchedules([saved, ...schedules]);
     setTitle("");
+  };
+
+  const handleDelete = async (id) => {
+    await deleteSchedule(id);
+    setSchedules(schedules.filter((s) => s.id !== id));
   };
 
   const handleTimeTypeChange = async (id, value, s) => {
@@ -83,59 +88,67 @@ const SharePage = () => {
         {schedules.map((s) => (
           <div
             key={s.id}
-            className="p-4 bg-white rounded-xl shadow-md"
+            className="p-4 bg-white rounded-xl shadow-md flex justify-between items-center"
           >
-            <p className="font-semibold">{s.title}</p>
-            <p className="text-sm text-gray-600">{s.memo}</p>
+            <div>
+              <p className="font-semibold">{s.title}</p>
+              <p className="text-sm text-gray-600">{s.memo}</p>
 
-            <select
-              value={s.time_type}
-              onChange={(e) =>
-                handleTimeTypeChange(s.id, e.target.value, s)
-              }
-              className="border p-2 rounded-lg mt-2"
+              <select
+                value={s.time_type}
+                onChange={(e) =>
+                  handleTimeTypeChange(s.id, e.target.value, s)
+                }
+                className="border p-2 rounded-lg mt-2"
+              >
+                <option>終日</option>
+                <option>昼</option>
+                <option>夜</option>
+                <option>時間帯</option>
+              </select>
+
+              {s.time_type === "時間帯" && (
+                <div className="flex gap-2 mt-2">
+                  <select
+                    value={s.start_time}
+                    onChange={(e) =>
+                      handleStartTimeChange(s.id, e.target.value, s)
+                    }
+                    className="border p-2 rounded-lg"
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  <span>〜</span>
+                  <select
+                    value={s.end_time}
+                    onChange={(e) =>
+                      handleEndTimeChange(s.id, e.target.value, s)
+                    }
+                    className="border p-2 rounded-lg"
+                  >
+                    {timeOptions.map((t) => (
+                      <option
+                        key={t}
+                        value={t}
+                        disabled={t <= s.start_time}
+                      >
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => handleDelete(s.id)}
+              className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
             >
-              <option>終日</option>
-              <option>昼</option>
-              <option>夜</option>
-              <option>時間帯</option>
-            </select>
-
-            {s.time_type === "時間帯" && (
-              <div className="flex gap-2 mt-2">
-                <select
-                  value={s.start_time}
-                  onChange={(e) =>
-                    handleStartTimeChange(s.id, e.target.value, s)
-                  }
-                  className="border p-2 rounded-lg"
-                >
-                  {timeOptions.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-                <span>〜</span>
-                <select
-                  value={s.end_time}
-                  onChange={(e) =>
-                    handleEndTimeChange(s.id, e.target.value, s)
-                  }
-                  className="border p-2 rounded-lg"
-                >
-                  {timeOptions.map((t) => (
-                    <option
-                      key={t}
-                      value={t}
-                      disabled={t <= s.start_time}
-                    >
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+              削除
+            </button>
           </div>
         ))}
       </div>
