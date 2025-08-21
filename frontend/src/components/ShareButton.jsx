@@ -3,7 +3,6 @@ import { Button } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
 
-// Motion対応したChakra UIのButton
 const MotionButton = motion(Button);
 
 const ShareButton = ({ to, children, gradient }) => {
