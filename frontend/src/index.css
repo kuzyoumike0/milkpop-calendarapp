@@ -1,11 +1,7 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    "./frontend/src/**/*.{js,jsx,ts,tsx}", // Reactコンポーネント全部
-    "./frontend/public/index.html"         // HTMLファイル
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply min-h-screen bg-gradient-to-br from-[#FDB9C8] via-black to-[#004CA0] text-white font-sans;
 }
