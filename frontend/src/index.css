@@ -3,6 +3,6 @@
 @tailwind utilities;
 
 body {
+  @apply bg-black text-white min-h-screen;
   font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
 }
