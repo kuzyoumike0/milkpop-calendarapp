@@ -1,21 +1,19 @@
-import React from "react";
-import LinksSection from "./components/LinksSection";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import TopPage from "./components/TopPage";
+import LinkPage from "./components/LinkPage";
+import PersonalPage from "./components/PersonalPage";
+import SharePage from "./components/SharePage";
 
 function App() {
-  const links = [
-    { url: "https://example.com", label: "公式サイト", description: "外部リンク" },
-    { url: "/schedule", label: "スケジュール", description: "日程を確認" },
-  ];
-
   return (
-    <div className="min-h-screen bg-luxuryblack text-white">
-      <header className="py-6 text-center text-3xl font-extrabold text-pink">
-        🌸 MilkPOP Calendar
-      </header>
-      <main>
-        <LinksSection links={links} />
-      </main>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<TopPage />} />
+        <Route path="/link" element={<LinkPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
+        <Route path="/share/:linkid" element={<SharePage />} />
+      </Routes>
+    </Router>
   );
 }
 
