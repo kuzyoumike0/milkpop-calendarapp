@@ -1,20 +1,28 @@
 import React from "react";
+import { Button } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
+import { motion } from "framer-motion";
 
-function ShareButton({ url }) {
-  const handleCopy = () => {
-    navigator.clipboard.writeText(url);
-    alert("リンクをコピーしました！");
-  };
+// Motion対応したChakra UIのButton
+const MotionButton = motion(Button);
 
+const ShareButton = ({ to, children, gradient }) => {
   return (
-    <button
-      onClick={handleCopy}
-      className="px-4 py-2 bg-[#FDB9C8] text-black font-bold rounded-lg
-                 hover:bg-[#004CA0] hover:text-white transition-all duration-300"
+    <MotionButton
+      as={RouterLink}
+      to={to}
+      size="sm"
+      borderRadius="full"
+      bgGradient={gradient}
+      color="white"
+      whileHover={{ scale: 1.08 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      _hover={{ boxShadow: "0 0 12px rgba(253, 185, 200, 0.8)" }}
     >
-      共有リンクをコピー
-    </button>
+      {children}
+    </MotionButton>
   );
-}
+};
 
 export default ShareButton;
