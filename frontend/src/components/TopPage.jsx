@@ -18,16 +18,16 @@ const TopPage = () => {
         <h2>ようこそ、MilkPOP Calendar へ</h2>
         <p>スケジュールを登録して共有しましょう！</p>
 
-        {/* public/logo.png を表示 */}
-        <div>
+        {/* public/logo.png を飾りで表示 */}
+        <div style={{ textAlign: "center" }}>
           <img
             src="/logo.png"
             alt="ロゴ"
             style={{
-              maxWidth: "840px",  // 最大280px
-              width: "80%",       // 画面幅の8割まで広がる
+              maxWidth: "840px", // 最大幅
+              width: "70%",      // スマホでは画面幅に合わせる
               height: "auto",
-              margin: "30px auto",
+              margin: "25px auto",
               display: "block",
               borderRadius: "16px",
               boxShadow: "0 6px 12px rgba(0,0,0,0.15)",
