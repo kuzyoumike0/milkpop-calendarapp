@@ -17,13 +17,15 @@ import {
   Badge,
 } from "@chakra-ui/react";
 
+import "@fullcalendar/common/main.css";
+import "@fullcalendar/daygrid/main.css";
+
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState([]);
   const [timeOption, setTimeOption] = useState("終日");
   const [shareUrl, setShareUrl] = useState("");
 
-  // 日付クリック時 → 複数選択
   const handleDateClick = (info) => {
     const dateStr = info.dateStr;
     if (dates.includes(dateStr)) {
@@ -33,7 +35,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 範囲選択時
   const handleSelect = (info) => {
     const range = [];
     let cur = new Date(info.start);
@@ -44,7 +45,6 @@ const RegisterPage = () => {
     setDates(Array.from(new Set([...dates, ...range])));
   };
 
-  // 保存処理
   const handleSave = async () => {
     const res = await fetch("/api/events", {
       method: "POST",
@@ -60,14 +60,20 @@ const RegisterPage = () => {
 
   return (
     <Box bg="black" minH="100vh" color="white" py={10} px={6}>
-      <Card maxW="800px" mx="auto" bg="rgba(255,255,255,0.05)" boxShadow="xl" borderRadius="2xl">
+      <Card
+        maxW="900px"
+        mx="auto"
+        bg="rgba(255,255,255,0.05)"
+        boxShadow="xl"
+        borderRadius="2xl"
+        p={4}
+      >
         <CardBody>
           <VStack spacing={6}>
             <Heading size="lg" color="#FDB9C8">
               日程登録
             </Heading>
 
-            {/* タイトル */}
             <Input
               placeholder="タイトルを入力してください"
               value={title}
@@ -77,17 +83,35 @@ const RegisterPage = () => {
             />
 
             {/* カレンダー */}
-            <FullCalendar
-              plugins={[dayGridPlugin, interactionPlugin]}
-              initialView="dayGridMonth"
-              selectable={true}
-              select={handleSelect}
-              dateClick={handleDateClick}
-              events={dates.map((d) => ({ title: "✅ 選択", date: d, color: "#FDB9C8" }))}
-              height="auto"
-            />
+            <Box
+              w="100%"
+              border="1px solid #FDB9C8"
+              borderRadius="md"
+              overflow="hidden"
+              bg="rgba(255,255,255,0.02)"
+            >
+              <FullCalendar
+                plugins={[dayGridPlugin, interactionPlugin]}
+                initialView="dayGridMonth"
+                selectable={true}
+                select={handleSelect}
+                dateClick={handleDateClick}
+                events={dates.map((d) => ({
+                  title: "✔ 選択",
+                  date: d,
+                  color: "#FDB9C8",
+                  textColor: "white",
+                }))}
+                height="auto"
+                headerToolbar={{
+                  left: "prev,next today",
+                  center: "title",
+                  right: "",
+                }}
+                dayMaxEventRows={2}
+              />
+            </Box>
 
-            {/* 時間帯選択 */}
             <Box>
               <Text mb={2}>時間帯を選択</Text>
               <RadioGroup onChange={setTimeOption} value={timeOption}>
@@ -100,7 +124,6 @@ const RegisterPage = () => {
               </RadioGroup>
             </Box>
 
-            {/* 保存ボタン */}
             <Button
               onClick={handleSave}
               colorScheme="pink"
@@ -111,7 +134,6 @@ const RegisterPage = () => {
               登録して共有リンクを発行
             </Button>
 
-            {/* 共有URL表示 */}
             {shareUrl && (
               <Box mt={4}>
                 <Text mb={2}>共有リンク:</Text>
