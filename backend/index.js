@@ -1,94 +1,39 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
-const cors = require("cors");
+// backend/index.js
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import cors from "cors";
 
 const app = express();
-app.use(bodyParser.json());
-app.use(cors());
-
-// === DB接続設定 ===
-const pool = new Pool(
-  process.env.DATABASE_URL
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: process.env.DB_HOST || "localhost",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "password",
-        database: process.env.DB_NAME || "calendar",
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-      }
-);
-
-// === DB初期化 ===
-async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      start_date TIMESTAMP NOT NULL,
-      end_date TIMESTAMP NOT NULL,
-      time_type TEXT NOT NULL,
-      start_time INT,
-      end_time INT
-    )
-  `);
-}
-initDB();
-
-// === API: スケジュール登録 ===
-app.post("/api/schedules", async (req, res) => {
-  try {
-    const { title, start_date, end_date, time_type, start_time, end_time } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO schedules (title, start_date, end_date, time_type, start_time, end_time)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id`,
-      [title, start_date, end_date, time_type, start_time || null, end_time || null]
-    );
-
-    res.json({ id: result.rows[0].id, message: "スケジュールを登録しました" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "スケジュール登録に失敗しました" });
-  }
-});
-
-// === API: スケジュール取得 ===
-app.get("/api/schedules/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query(`SELECT * FROM schedules WHERE id = $1`, [id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "スケジュール取得に失敗しました" });
-  }
-});
-
-// === API: スケジュール削除 ===
-app.delete("/api/schedules/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query(`DELETE FROM schedules WHERE id = $1`, [id]);
-    res.json({ message: "スケジュールを削除しました" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "スケジュール削除に失敗しました" });
-  }
-});
-
-// === サーバー起動 ===
 const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json());
+
+// APIルート
+app.get("/api/schedules/share/:id", async (req, res) => {
+  const { id } = req.params;
+  // DBからデータ取得する想定
+  const dummyData = [
+    { id: 1, title: "会議", start: "2025-08-21T10:00:00", end: "2025-08-21T11:00:00" },
+    { id: 2, title: "ランチ", start: "2025-08-21T12:00:00", end: "2025-08-21T13:00:00" }
+  ];
+  res.json(dummyData);
+});
+
+// ===== Reactビルドファイルの配信設定 =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// React Router用フォールバック
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+// ======================================
+
 app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
