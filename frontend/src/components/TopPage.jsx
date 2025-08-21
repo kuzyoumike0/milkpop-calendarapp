@@ -6,9 +6,8 @@ function TopPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* 日程登録ページカード */}
         <Link
-          to="#"
+          to="/link"
           className="w-80 p-8 bg-gradient-to-br from-[#FDB9C8]/30 to-[#004CA0]/30
                      rounded-2xl shadow-xl text-center
                      hover:scale-105 hover:shadow-[#FDB9C8]/40
@@ -20,9 +19,8 @@ function TopPage() {
           </p>
         </Link>
 
-        {/* 個人スケジュールページカード */}
         <Link
-          to="#"
+          to="/personal"
           className="w-80 p-8 bg-gradient-to-br from-[#004CA0]/30 to-[#FDB9C8]/30
                      rounded-2xl shadow-xl text-center
                      hover:scale-105 hover:shadow-[#004CA0]/40
