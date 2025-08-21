@@ -1,7 +1,7 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import "./index.css";   // Tailwind 読み込み
+import "./index.css";   // ✅ 最初に置く
+import "react-calendar/dist/Calendar.css"; // 外部CSSは後
 import App from "./App";
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
