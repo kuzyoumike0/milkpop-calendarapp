@@ -42,7 +42,7 @@ body {
 
 /* ロゴ画像 */
 .logo-image {
-  width: 280px; /* 少し大きめに */
+  width: 840px; /* 少し大きめに */
   max-width: 90%;
   display: block;
 }
