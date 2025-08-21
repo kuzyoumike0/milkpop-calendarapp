@@ -22,17 +22,20 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [holidays, setHolidays] = useState({});
 
-  // ===== 日本の祝日を取得 =====
+  // ===== 日本の祝日を取得（前年・今年・翌年） =====
   useEffect(() => {
     const hd = new Holidays("JP"); // 日本の祝日
-    const year = new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 1, currentYear, currentYear + 1];
 
-    const holidayList = hd.getHolidays(year);
     const holidayMap = {};
 
-    holidayList.forEach((h) => {
-      const dateStr = format(new Date(h.date), "yyyy-MM-dd");
-      holidayMap[dateStr] = h.name; // 例: "2025-08-11": "山の日"
+    years.forEach((year) => {
+      const holidayList = hd.getHolidays(year);
+      holidayList.forEach((h) => {
+        const dateStr = format(new Date(h.date), "yyyy-MM-dd");
+        holidayMap[dateStr] = h.name; // 例: "2025-08-11": "山の日"
+      });
     });
 
     setHolidays(holidayMap);
