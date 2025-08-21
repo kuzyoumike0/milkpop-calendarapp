@@ -148,7 +148,7 @@ app.post("/api/share/:linkid/response", async (req, res) => {
 });
 
 // === 静的ファイル配信 ===
-const frontendPath = path.join(__dirname, "frontend/build");
+const frontendPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(frontendPath));
 
 // React Router に対応するため catch-all を index.html にリダイレクト
