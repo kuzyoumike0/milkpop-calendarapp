@@ -3,7 +3,7 @@
 /* ============================= */
 body {
   margin: 0;
-  font-family: Georgia, Cambria, Cochin, serif; /* 上品で柔らかい本文 */
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", Georgia, serif;
   color: white;
   min-height: 100vh;
   display: flex;
@@ -35,25 +35,24 @@ body {
   align-items: center;
   padding: 30px;
   border-radius: 20px;
-
-  /* グラスモーフィズム風の透け白背景 */
   background: rgba(255, 255, 255, 0.35);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.25);
-
   margin-bottom: 30px;
 }
 
 /* ロゴ画像 */
 .logo-image {
-  width: 320px;   /* ← 大きめに変更 */
-  max-width: 90%;
+  width: 300px;   /* ← 大きめに変更 */
+  max-width: 85%;
   display: block;
 }
 
+/* ============================= */
 /* トップページ画像 */
+/* ============================= */
 .top-image {
   width: 840px !important;
   max-width: 100% !important;
@@ -79,7 +78,7 @@ body {
   background: linear-gradient(
     180deg,
     #f5f5f5 0%,
-    #eaeaea 15%,
+    #e0e0e0 15%,
     #2b2b2b 70%,
     #000000 100%
   ) !important;
@@ -98,17 +97,18 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gold-shine 6s infinite linear;
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", Georgia, serif; /* 上品 × 柔らか可愛い */
-  font-size: 40px !important;
-  font-weight: 700 !important;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+  font-size: 42px !important;
+  font-weight: bold !important;
   letter-spacing: 2px !important;
-  text-transform: none !important; /* ← 大文字をやめて柔らかく */
+  text-transform: none !important;
   text-shadow:
     0 0 6px rgba(255, 215, 0, 0.6),
     0 0 12px rgba(255, 165, 0, 0.5),
     0 0 20px rgba(253, 185, 200, 0.5);
   margin: 0 0 10px 0 !important;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .banner h1:hover {
@@ -121,7 +121,9 @@ body {
     0 0 24px rgba(253,185,200,0.7);
 }
 
+/* ============================= */
 /* ナビゲーション */
+/* ============================= */
 .banner nav {
   margin-top: 14px !important;
 }
@@ -135,8 +137,8 @@ body {
   -webkit-text-fill-color: transparent;
   animation: gold-shine 8s infinite linear;
   font-weight: 600 !important;
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", Georgia, serif;
-  font-size: 16px !important;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+  font-size: 18px !important;
   transition: all 0.3s ease !important;
   letter-spacing: 1px !important;
 }
@@ -158,20 +160,21 @@ body {
   background: linear-gradient(
     180deg,
     #f5f5f5 0%,
-    #eaeaea 15%,
+    #e0e0e0 15%,
     #2b2b2b 70%,
     #000000 100%
-  );
-  text-align: center;
-  padding: 20px;
-  margin-top: auto;
-  font-size: 15px;
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", Georgia, serif; /* 柔らか可愛い */
-  letter-spacing: 1px;
-  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8);
-  border-top: 2px solid rgba(0,76,160,0.5);
+  ) !important;
+  text-align: center !important;
+  padding: 20px !important;
+  margin-top: auto !important;
+  font-size: 15px !important;
+  font-family: "Comic Sans MS", "Arial Rounded MT Bold", "Trebuchet MS", cursive, sans-serif;
+  letter-spacing: 1px !important;
+  position: relative !important;
+  z-index: 10 !important;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.8) !important;
+  border-top: 2px solid rgba(0,76,160,0.5) !important;
 
-  /* ゴールド文字 */
   color: #FFD700;
   text-shadow:
     0 0 6px rgba(255, 215, 0, 0.7),
