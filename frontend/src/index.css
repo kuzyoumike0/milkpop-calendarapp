@@ -1,156 +1,61 @@
-/* ==== 共通 ==== */
+/* 全体 */
 body {
   margin: 0;
-  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
-    "Trebuchet MS", sans-serif;
-  color: white;
+  font-family: "Comic Sans MS", "Segoe UI", cursive, sans-serif; /* ポップでかわいい */
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  line-height: 1.6;
-}
-
-/* ==== カレンダー部分 ==== */
-.rbc-calendar {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 16px;
-  padding: 15px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
-    "Trebuchet MS", sans-serif;
   color: #333;
 }
 
-.rbc-toolbar {
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 12px;
-  padding: 8px;
-  margin-bottom: 12px;
+/* ページタイトル */
+.page-title {
+  text-align: center;
+  font-size: 28px;
   font-weight: bold;
+  margin: 20px 0;
+  color: #FFD700;
+  text-shadow: 0 0 6px rgba(255, 165, 0, 0.6);
 }
 
-.rbc-toolbar button {
-  background: #ffd700;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  margin: 0 4px;
-  color: #000;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.rbc-toolbar button:hover {
-  background: #fdb9c8;
-  color: white;
-}
-
-.rbc-off-range-bg {
-  background: #f0f0f0;
-}
-
-.rbc-today {
-  background: rgba(253, 185, 200, 0.4) !important;
-  border: 2px solid #ffd700 !important;
-}
-
-.rbc-event {
-  background: linear-gradient(90deg, #ffd700, #ffa500);
-  border: none;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 12px;
-  color: #000;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+/* ==== カレンダー ==== */
+.rbc-calendar {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  font-family: "Comic Sans MS", "Segoe UI", cursive, sans-serif;
 }
 
 /* 曜日ヘッダー */
 .rbc-header {
-  background: rgba(255, 255, 255, 0.7);
-  border-bottom: 2px solid #ffd700;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: white;
   font-weight: bold;
-  text-align: center;
-  padding: 6px 0;
+  padding: 6px;
   font-size: 14px;
-  color: #333;
-}
-
-/* ==== プルダウン ==== */
-select {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
-    "Trebuchet MS", sans-serif;
-  color: #000;
-  margin: 4px;
-}
-
-/* ==== 日付セルの基本デザイン ==== */
-.rbc-day-bg {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-/* ドット柄風 */
-.rbc-day-bg::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(
-    rgba(255, 182, 193, 0.3) 1px,
-    transparent 1px
-  );
-  background-size: 12px 12px;
-  pointer-events: none;
-  opacity: 0.4;
-}
-
-/* 日付セル hover */
-.rbc-day-bg:hover {
-  background: rgba(253, 185, 200, 0.25);
-  transform: scale(1.02);
-  box-shadow: inset 0 0 10px rgba(253, 185, 200, 0.6);
+  text-align: center;
 }
 
 /* 今日 */
 .rbc-today {
-  background: rgba(253, 185, 200, 0.5) !important;
-  border: 2px solid #ffd700 !important;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
-  border-radius: 8px;
+  background-color: rgba(253, 185, 200, 0.25) !important;
+  border: 2px solid #FDB9C8 !important;
 }
 
-/* 選択中セル */
-.rbc-selected-cell {
-  background: linear-gradient(135deg, #ffd700, #fdb9c8) !important;
-  border: 2px solid #ff69b4 !important;
-  box-shadow: inset 0 0 12px rgba(255, 105, 180, 0.7);
-}
-
-/* 日付数字 */
+/* 日付セル */
 .rbc-date-cell {
-  font-weight: bold;
-  color: #333;
-  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
-    "Trebuchet MS", sans-serif;
-  font-size: 14px;
-  text-align: center;
   padding: 4px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
 }
 
-.rbc-date-cell:hover {
-  background: rgba(255, 215, 0, 0.3);
-  color: #ff1493;
-  transform: scale(1.1);
+/* 祝日セル（JSで赤字指定済み、背景も上書き可能） */
+.rbc-date-cell div {
+  font-size: 0.9em;
+}
+
+/* イベント登録ページコンテナ */
+.register-page {
+  flex: 1;
+  padding: 20px;
 }
