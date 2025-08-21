@@ -1,152 +1,132 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import {
   Box,
-  Card,
-  CardBody,
   Heading,
   Input,
-  VStack,
-  Button,
   RadioGroup,
+  Stack,
   Radio,
-  HStack,
+  Button,
+  VStack,
   Text,
-  Badge,
+  HStack,
 } from "@chakra-ui/react";
+import { v4 as uuidv4 } from "uuid";
 
-import "@fullcalendar/common/main.css";
-import "@fullcalendar/daygrid/main.css";
+// ✅ FullCalendar v6 以降は main.css → index.css
+import "@fullcalendar/common/index.css";
+import "@fullcalendar/daygrid/index.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [dates, setDates] = useState([]);
-  const [timeOption, setTimeOption] = useState("終日");
+  const [events, setEvents] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("range");
+  const [timeOption, setTimeOption] = useState("allday");
   const [shareUrl, setShareUrl] = useState("");
+  const calendarRef = useRef(null);
 
-  const handleDateClick = (info) => {
-    const dateStr = info.dateStr;
-    if (dates.includes(dateStr)) {
-      setDates(dates.filter((d) => d !== dateStr));
-    } else {
-      setDates([...dates, dateStr]);
-    }
+  const handleDateSelect = (selectInfo) => {
+    let calendarApi = selectInfo.view.calendar;
+    calendarApi.unselect();
+
+    const newEvent = {
+      id: uuidv4(),
+      title: title || "予定",
+      start: selectInfo.startStr,
+      end: selectInfo.endStr,
+      allDay: true,
+    };
+
+    setEvents([...events, newEvent]);
   };
 
-  const handleSelect = (info) => {
-    const range = [];
-    let cur = new Date(info.start);
-    while (cur <= info.end) {
-      range.push(cur.toISOString().split("T")[0]);
-      cur.setDate(cur.getDate() + 1);
-    }
-    setDates(Array.from(new Set([...dates, ...range])));
-  };
-
-  const handleSave = async () => {
-    const res = await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, dates, timeOption }),
-    });
-    const data = await res.json();
-
-    if (data.id) {
-      setShareUrl(`${window.location.origin}/share/${data.id}`);
-    }
+  const handleGenerateLink = () => {
+    const fakeLink = `${window.location.origin}/share/${uuidv4()}`;
+    setShareUrl(fakeLink);
   };
 
   return (
-    <Box bg="black" minH="100vh" color="white" py={10} px={6}>
-      <Card
-        maxW="900px"
-        mx="auto"
-        bg="rgba(255,255,255,0.05)"
-        boxShadow="xl"
-        borderRadius="2xl"
-        p={4}
-      >
-        <CardBody>
-          <VStack spacing={6}>
-            <Heading size="lg" color="#FDB9C8">
-              日程登録
-            </Heading>
+    <Box maxW="900px" mx="auto" mt={10} p={6} bg="white" borderRadius="lg" boxShadow="xl">
+      <Heading mb={6} textAlign="center" color="brand.blue">
+        📅 日程登録ページ
+      </Heading>
 
-            <Input
-              placeholder="タイトルを入力してください"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              bg="white"
-              color="black"
-            />
+      {/* タイトル入力 */}
+      <VStack spacing={4} align="stretch" mb={6}>
+        <Box>
+          <Text fontWeight="bold">タイトル</Text>
+          <Input
+            placeholder="イベント名を入力してください"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            bg="gray.50"
+          />
+        </Box>
 
-            {/* カレンダー */}
-            <Box
-              w="100%"
-              border="1px solid #FDB9C8"
-              borderRadius="md"
-              overflow="hidden"
-              bg="rgba(255,255,255,0.02)"
-            >
-              <FullCalendar
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                selectable={true}
-                select={handleSelect}
-                dateClick={handleDateClick}
-                events={dates.map((d) => ({
-                  title: "✔ 選択",
-                  date: d,
-                  color: "#FDB9C8",
-                  textColor: "white",
-                }))}
-                height="auto"
-                headerToolbar={{
-                  left: "prev,next today",
-                  center: "title",
-                  right: "",
-                }}
-                dayMaxEventRows={2}
-              />
-            </Box>
+        {/* 日程選択モード */}
+        <Box>
+          <Text fontWeight="bold">日程選択方法</Text>
+          <RadioGroup onChange={setSelectionMode} value={selectionMode}>
+            <Stack direction="row">
+              <Radio value="range">範囲選択</Radio>
+              <Radio value="multiple">複数選択</Radio>
+            </Stack>
+          </RadioGroup>
+        </Box>
 
-            <Box>
-              <Text mb={2}>時間帯を選択</Text>
-              <RadioGroup onChange={setTimeOption} value={timeOption}>
-                <HStack spacing={6}>
-                  <Radio value="終日">終日</Radio>
-                  <Radio value="昼">昼</Radio>
-                  <Radio value="夜">夜</Radio>
-                  <Radio value="時間指定">時間指定</Radio>
-                </HStack>
-              </RadioGroup>
-            </Box>
+        {/* 時間帯選択 */}
+        <Box>
+          <Text fontWeight="bold">時間帯</Text>
+          <RadioGroup onChange={setTimeOption} value={timeOption}>
+            <Stack direction="row" wrap="wrap">
+              <Radio value="allday">終日</Radio>
+              <Radio value="day">昼</Radio>
+              <Radio value="night">夜</Radio>
+              <Radio value="custom">時間指定</Radio>
+            </Stack>
+          </RadioGroup>
+        </Box>
+      </VStack>
 
-            <Button
-              onClick={handleSave}
-              colorScheme="pink"
-              w="full"
-              bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-              _hover={{ transform: "scale(1.05)", boxShadow: "0 0 12px #FDB9C8" }}
-            >
-              登録して共有リンクを発行
-            </Button>
+      {/* カレンダー */}
+      <Box border="1px solid #e2e8f0" borderRadius="md" p={4} bg="gray.50">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          selectable={true}
+          selectMirror={true}
+          select={handleDateSelect}
+          events={events}
+          height="auto"
+          dayMaxEvents={true}
+        />
+      </Box>
 
-            {shareUrl && (
-              <Box mt={4}>
-                <Text mb={2}>共有リンク:</Text>
-                <Badge colorScheme="blue" p={2} borderRadius="md">
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                    {shareUrl}
-                  </a>
-                </Badge>
-              </Box>
-            )}
-          </VStack>
-        </CardBody>
-      </Card>
+      {/* 共有リンク生成 */}
+      <HStack mt={6} justify="center">
+        <Button
+          colorScheme="pink"
+          size="lg"
+          borderRadius="full"
+          onClick={handleGenerateLink}
+        >
+          共有リンクを発行
+        </Button>
+      </HStack>
+
+      {/* 共有URL表示 */}
+      {shareUrl && (
+        <Box mt={4} textAlign="center">
+          <Text fontWeight="bold" color="brand.blue">
+            🔗 共有リンク:
+          </Text>
+          <Text color="blue.500">{shareUrl}</Text>
+        </Box>
+      )}
     </Box>
   );
 };
