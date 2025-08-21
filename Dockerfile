@@ -1,37 +1,30 @@
-# ==========================
-# 1. フロントエンドのビルド
-# ==========================
-FROM node:18 AS frontend-build
-WORKDIR /app/frontend
+# Node.js 公式イメージ
+FROM node:18
 
-# 依存関係を先にインストール
-COPY frontend/package*.json ./
+# 作業ディレクトリ
+WORKDIR /app
+
+# 依存ファイルコピー
+COPY backend/package*.json ./backend/
+COPY frontend/package*.json ./frontend/
+
+# backend 依存関係インストール
+WORKDIR /app/backend
 RUN npm install
 
-# ソースコードをコピーしてビルド
-COPY frontend ./
+# frontend ビルド
+WORKDIR /app/frontend
+RUN npm install
 RUN npm run build
 
-
-# ==========================
-# 2. バックエンド（Express）
-# ==========================
-FROM node:18
+# build成果物を backend で配信する
+WORKDIR /app
+COPY . .
 WORKDIR /app/backend
 
-# backend の依存関係
-COPY backend/package*.json ./
-RUN npm install
-
-# backend ソースをコピー
-COPY backend . .
-
-# フロントエンドのビルド成果物をコピー
-COPY --from=frontend-build /app/frontend/build ../frontend/build
-
-# Railway 用ポート
-ENV PORT=8080
-EXPOSE 8080
+# 環境変数
+ENV NODE_ENV=production
+ENV PORT=3000
 
 # サーバー起動
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
