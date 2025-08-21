@@ -1,10 +1,11 @@
+// frontend/tailwind.config.js
 module.exports = {
-  style: {
-    postcss: {
-      plugins: [
-        require("tailwindcss"),
-        require("autoprefixer"),
-      ],
-    },
+  content: [
+    "./public/index.html",
+    "./src/**/*.{js,jsx,ts,tsx}"
+  ],
+  theme: {
+    extend: {},
   },
+  plugins: [],
 };
