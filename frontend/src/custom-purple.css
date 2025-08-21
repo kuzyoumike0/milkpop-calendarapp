@@ -1,22 +1,7 @@
-/* オリジナル MilkPOP カラーのテーマ */
-.rmdp-container {
-  --rmdp-primary: #FDB9C8;       /* メインカラー（ピンク） */
-  --rmdp-secondary: #004CA0;     /* サブカラー（ネイビー） */
-  --rmdp-background: #000000;    /* 背景は黒 */
-  --rmdp-hover: #FDB9C8;
-  --rmdp-selected: #FDB9C8;
-  --rmdp-text: #ffffff;
-}
-
-.rmdp-day.rmdp-selected,
-.rmdp-day.rmdp-today {
-  background: var(--rmdp-primary);
-  color: var(--rmdp-background);
-  border-radius: 8px;
-  font-weight: bold;
-}
-
-.rmdp-day:hover {
-  background: var(--rmdp-hover);
-  color: var(--rmdp-background);
-}
+module.exports = {
+  style: {
+    postcss: {
+      plugins: [require("tailwindcss"), require("autoprefixer")],
+    },
+  },
+};
