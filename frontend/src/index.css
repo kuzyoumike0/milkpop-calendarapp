@@ -1,79 +1,213 @@
-/* frontend/src/index.css */
+// frontend/src/components/RegisterPage.jsx
+import React, { useState } from "react";
+import {
+  Calendar,
+  dateFnsLocalizer,
+} from "react-big-calendar";
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+import ja from "date-fns/locale/ja";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
-/* ページ全体 */
-body {
-  margin: 0;
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff) !important;
-  color: #333;
-  min-height: 100vh;
-}
+const locales = { ja };
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales,
+});
 
-/* コンテナ */
-.page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+const RegisterPage = () => {
+  const [title, setTitle] = useState("");
+  const [selectedEvents, setSelectedEvents] = useState([]);
+  const [shareUrl, setShareUrl] = useState("");
 
-/* バナー */
-.banner {
-  background: #004ca0;
-  color: white;
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  // カレンダーで範囲選択
+  const handleSelectSlot = ({ start, end }) => {
+    setSelectedEvents((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        start,
+        end,
+        option: "終日", // デフォルト
+        startTime: null,
+        endTime: null,
+      },
+    ]);
+  };
 
-.banner h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
+  // 時間帯（終日・昼・夜・時刻指定）
+  const handleOptionChange = (id, value) => {
+    setSelectedEvents((prev) =>
+      prev.map((e) =>
+        e.id === id ? { ...e, option: value, startTime: null, endTime: null } : e
+      )
+    );
+  };
 
-.banner nav a {
-  color: white;
-  margin-left: 16px;
-  text-decoration: none;
-  font-weight: bold;
-}
+  // 時刻選択
+  const handleTimeChange = (id, field, value) => {
+    setSelectedEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === id) {
+          let updated = { ...e, [field]: value };
+          // 開始 >= 終了 は許可しない
+          if (
+            updated.startTime &&
+            updated.endTime &&
+            Number(updated.startTime) >= Number(updated.endTime)
+          ) {
+            updated.endTime = null;
+          }
+          return updated;
+        }
+        return e;
+      })
+    );
+  };
 
-.banner nav a:hover {
-  color: #fdb9c8;
-}
+  // 登録処理（共有リンク発行）
+  const handleSubmit = () => {
+    if (!title || selectedEvents.length === 0) {
+      alert("タイトルと日程を入力してください");
+      return;
+    }
+    const url = `${window.location.origin}/share/${Date.now()}`;
+    setShareUrl(url);
+  };
 
-/* メイン */
-.main-content {
-  flex: 1;
-  text-align: center;
-  padding: 40px 20px;
-}
+  // 時刻プルダウン用（1時～0時）
+  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
-.main-content h2 {
-  font-size: 2rem;
-  margin-bottom: 16px;
-  color: #004ca0;
-}
+  return (
+    <div className="page-container">
+      {/* バナー */}
+      <header className="banner">
+        <h1>MilkPOP Calendar</h1>
+        <nav>
+          <a href="/">トップ</a>
+          <a href="/personal">個人スケジュール</a>
+        </nav>
+      </header>
 
-.main-content p {
-  margin-bottom: 24px;
-  font-size: 1.2rem;
-}
+      <main className="main-content">
+        <h2>日程登録</h2>
 
-/* ボタン */
-.btn {
-  display: inline-block;
-  margin: 0 10px;
-  padding: 12px 24px;
-  background: #fdb9c8;
-  color: #004ca0;
-  font-weight: bold;
-  border-radius: 25px;
-  text-decoration: none;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
+        {/* タイトル入力 */}
+        <div className="form-group">
+          <label>タイトル</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
-.btn:hover {
-  background: #ffccd8;
-  transform: translateY(-2px);
-}
+        {/* カレンダー */}
+        <div className="calendar-box">
+          <Calendar
+            localizer={localizer}
+            selectable
+            onSelectSlot={handleSelectSlot}
+            events={selectedEvents}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            views={["month", "week", "day"]}
+            popup
+          />
+        </div>
+
+        {/* 選択した日程 */}
+        <div className="event-list">
+          {selectedEvents.map((event) => (
+            <div key={event.id} className="event-item">
+              <p className="event-date">
+                {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
+                {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
+              </p>
+
+              {/* 時間帯 */}
+              <div className="select-box">
+                <label>時間帯:</label>
+                <select
+                  value={event.option}
+                  onChange={(e) => handleOptionChange(event.id, e.target.value)}
+                >
+                  <option value="終日">終日</option>
+                  <option value="昼">昼</option>
+                  <option value="夜">夜</option>
+                  <option value="時刻指定">時刻指定</option>
+                </select>
+              </div>
+
+              {/* 時刻指定の場合 */}
+              {event.option === "時刻指定" && (
+                <div className="time-select">
+                  <div>
+                    <label>開始</label>
+                    <select
+                      value={event.startTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(event.id, "startTime", e.target.value)
+                      }
+                    >
+                      <option value="">--</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>終了</label>
+                    <select
+                      value={event.endTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(event.id, "endTime", e.target.value)
+                      }
+                    >
+                      <option value="">--</option>
+                      {hours.map((h) => (
+                        <option
+                          key={h}
+                          value={h}
+                          disabled={
+                            event.startTime && Number(h) <= Number(event.startTime)
+                          }
+                        >
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 登録ボタン */}
+        <div className="button-area">
+          <button onClick={handleSubmit}>登録して共有リンク発行</button>
+        </div>
+
+        {/* 共有リンク */}
+        {shareUrl && (
+          <div className="share-link">
+            <p>共有リンクが発行されました：</p>
+            <a href={shareUrl}>{shareUrl}</a>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default RegisterPage;
