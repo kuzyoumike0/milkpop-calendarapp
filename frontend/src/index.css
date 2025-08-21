@@ -88,3 +88,69 @@ select {
   color: #000;
   margin: 4px;
 }
+
+/* ==== 日付セルの基本デザイン ==== */
+.rbc-day-bg {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* ドット柄風 */
+.rbc-day-bg::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+    rgba(255, 182, 193, 0.3) 1px,
+    transparent 1px
+  );
+  background-size: 12px 12px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* 日付セル hover */
+.rbc-day-bg:hover {
+  background: rgba(253, 185, 200, 0.25);
+  transform: scale(1.02);
+  box-shadow: inset 0 0 10px rgba(253, 185, 200, 0.6);
+}
+
+/* 今日 */
+.rbc-today {
+  background: rgba(253, 185, 200, 0.5) !important;
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+  border-radius: 8px;
+}
+
+/* 選択中セル */
+.rbc-selected-cell {
+  background: linear-gradient(135deg, #ffd700, #fdb9c8) !important;
+  border: 2px solid #ff69b4 !important;
+  box-shadow: inset 0 0 12px rgba(255, 105, 180, 0.7);
+}
+
+/* 日付数字 */
+.rbc-date-cell {
+  font-weight: bold;
+  color: #333;
+  font-family: "Comic Sans MS", "Comic Neue", "Arial Rounded MT Bold",
+    "Trebuchet MS", sans-serif;
+  font-size: 14px;
+  text-align: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.rbc-date-cell:hover {
+  background: rgba(255, 215, 0, 0.3);
+  color: #ff1493;
+  transform: scale(1.1);
+}
