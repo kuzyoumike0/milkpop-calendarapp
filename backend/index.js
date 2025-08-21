@@ -4,7 +4,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const path = require("path");
 
-const app = express(); // ✅ app を定義
+const app = express();
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -31,9 +31,12 @@ app.get("/api/hello", (req, res) => {
 });
 
 // === フロントエンドのビルドを配信 ===
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+// __dirname = backend/ ディレクトリなので ../frontend/build を指定
+const buildPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(buildPath));
+
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(buildPath, "index.html"));
 });
 
 // === サーバー起動 ===
