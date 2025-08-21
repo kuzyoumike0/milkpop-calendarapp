@@ -1,13 +1,20 @@
 /* frontend/src/index.css */
 
+
 /* ページ全体の背景と文字 */
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff) !important; /* ← 背景を強制 */
+  background: linear-gradient(
+    135deg,
+    #ffe0e6,  /* 濃いめピンク */
+    #cce0ff,  /* 濃いめ水色 */
+    #f3d1ff   /* 濃いめ紫 */
+  );
   color: #333;
   min-height: 100vh;
 }
+
 
 /* ページコンテナ */
 .page-container {
