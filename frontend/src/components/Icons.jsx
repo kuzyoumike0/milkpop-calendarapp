@@ -1,55 +1,28 @@
+// frontend/src/components/Layout.jsx
 import React from "react";
+import { Outlet, Link } from "react-router-dom";
 
-// カレンダーアイコン
-export const CalendarIcon = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    className={className}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
-);
+function Layout() {
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* ナビゲーションバー */}
+      <header className="bg-gradient-to-r from-[#FDB9C8] via-black to-[#004CA0] p-4 shadow-lg">
+        <nav className="flex justify-between items-center max-w-6xl mx-auto">
+          <h1 className="font-bold text-2xl">MilkPOP Calendar</h1>
+          <div className="space-x-6">
+            <Link to="/" className="hover:text-[#FDB9C8]">トップ</Link>
+            <Link to="/link" className="hover:text-[#FDB9C8]">日程登録</Link>
+            <Link to="/personal" className="hover:text-[#FDB9C8]">個人スケジュール</Link>
+          </div>
+        </nav>
+      </header>
 
-// リンクアイコン
-export const LinkIcon = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    className={className}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 13a5 5 0 007.07 0l1.42-1.42a5 5 0 00-7.07-7.07L10 5m4 4l-4 4"
-    />
-  </svg>
-);
+      {/* コンテンツ */}
+      <main className="max-w-6xl mx-auto p-6">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
 
-// ユーザーアイコン
-export const UserIcon = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    className={className}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5.121 17.804A9 9 0 1118.88 6.197M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-  </svg>
-);
+export default Layout;
