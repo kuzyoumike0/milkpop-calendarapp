@@ -22,3 +22,10 @@ export async function updateSchedule(id, data) {
   });
   return res.json();
 }
+
+export async function deleteSchedule(id) {
+  const res = await fetch(`${API_URL}/api/schedules/${id}`, {
+    method: "DELETE",
+  });
+  return res.json();
+}
