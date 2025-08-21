@@ -1,19 +1,12 @@
 /* frontend/src/index.css */
 
-/* 全体リセット */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* 背景グラデーションと文字色 */
+/* ページ全体の背景と文字 */
 body {
+  margin: 0;
   font-family: "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff);
+  background: linear-gradient(135deg, #fff5f7, #e6f0ff, #fdf6ff); /* グラデーション背景 */
   color: #333;
   min-height: 100vh;
-  line-height: 1.6;
 }
 
 /* ページコンテナ */
@@ -85,7 +78,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* ===== カレンダー専用デザイン上書き ===== */
+/* カレンダー専用 */
 .rbc-calendar {
   background: #ffffff !important;
   border-radius: 12px;
