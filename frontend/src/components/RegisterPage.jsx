@@ -84,17 +84,17 @@ const RegisterPage = () => {
   const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24 || 24);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-[#0a1f44] to-[#004CA0] text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#FDB9C8] via-white to-[#004CA0] text-gray-900 p-6">
       {/* バナー */}
-      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold rounded-2xl shadow-lg flex justify-between items-center">
+      <header className="bg-white text-[#004CA0] p-4 text-2xl font-bold rounded-2xl shadow-lg flex justify-between items-center">
         <span>🌸 MilkPOP Calendar</span>
         <nav className="space-x-6 text-lg">
-          <a href="/" className="hover:underline">トップ</a>
-          <a href="/personal" className="hover:underline">個人スケジュール</a>
+          <a href="/" className="hover:text-[#FDB9C8]">トップ</a>
+          <a href="/personal" className="hover:text-[#FDB9C8]">個人スケジュール</a>
         </nav>
       </header>
 
-      <h1 className="text-4xl font-extrabold my-10 text-center text-[#FDB9C8] drop-shadow-lg">
+      <h1 className="text-4xl font-extrabold my-10 text-center text-[#004CA0] drop-shadow-lg">
         日程登録
       </h1>
 
