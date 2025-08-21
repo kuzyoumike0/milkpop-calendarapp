@@ -1,12 +1,11 @@
 // src/components/RegisterPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import format from "date-fns/format";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import ja from "date-fns/locale/ja";
-import { holidays } from "../holidays"; // 祝日データ
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
 
@@ -24,6 +23,21 @@ const localizer = dateFnsLocalizer({
 
 const RegisterPage = () => {
   const [events, setEvents] = useState([]);
+  const [holidays, setHolidays] = useState({});
+
+  // ✅ 日本の祝日APIから自動取得
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+        const data = await res.json();
+        setHolidays(data); // { "2025-01-01": "元日", ... }
+      } catch (err) {
+        console.error("祝日の取得に失敗:", err);
+      }
+    };
+    fetchHolidays();
+  }, []);
 
   // ✅ 祝日セルを赤字＋背景色にする
   const dayPropGetter = (date) => {
