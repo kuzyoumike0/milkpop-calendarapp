@@ -1,316 +1,203 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "moment/locale/ja";
+import { Calendar, dateFnsLocalizer } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import ja from "date-fns/locale/ja";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
 
-const localizer = momentLocalizer(moment);
+const locales = {
+  ja: ja,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales,
+});
+
+// === 祝日リスト ===
+const holidays = {
+  "2025-08-11": "山の日",
+};
 
 const RegisterPage = () => {
-  const [title, setTitle] = useState("");
   const [events, setEvents] = useState([]);
-  const [selectedSlots, setSelectedSlots] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectMode, setSelectMode] = useState("multi"); // multi / range
+  const [dateDetails, setDateDetails] = useState({}); // { "2025-08-11": { type: "昼", start:"", end:"" } }
 
-  // 選択モード
-  const [selectMode, setSelectMode] = useState("multiple"); // "multiple" or "range"
-  const [rangeStart, setRangeStart] = useState(null);
-
-  // 時間帯 & 時刻
-  const [timeRange, setTimeRange] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
-
-  // 祝日データ
-  const holidays = {
-    "2025-01-01": "元日",
-    "2025-02-11": "建国記念の日",
-    "2025-02-23": "天皇誕生日",
-    "2025-04-29": "昭和の日",
-    "2025-05-03": "憲法記念日",
-    "2025-05-04": "みどりの日",
-    "2025-05-05": "こどもの日",
-    "2025-08-11": "山の日",
-  };
-
-  // 日付クリック
-  const handleSelectDay = (date) => {
-    if (selectMode === "multiple") {
-      // 複数選択
-      setSelectedSlots((prev) => [...prev, { start: date, end: date }]);
-    } else if (selectMode === "range") {
-      if (!rangeStart) {
-        // 開始日をセット
-        setRangeStart(date);
-      } else {
-        // 範囲完了
-        const start = moment.min(moment(rangeStart), moment(date)).toDate();
-        const end = moment.max(moment(rangeStart), moment(date)).toDate();
-        setSelectedSlots((prev) => [...prev, { start, end }]);
-        setRangeStart(null); // リセット
-      }
-    }
-  };
-
-  // イベント保存
-  const handleAddEvent = () => {
-    if (!title || selectedSlots.length === 0) return;
-
-    const newEvents = selectedSlots.map((slot) => {
-      let start = slot.start;
-      let end = slot.end;
-
-      if (timeRange === "custom") {
-        const dateStr = moment(start).format("YYYY-MM-DD");
-        start = moment(`${dateStr} ${startTime}`, "YYYY-MM-DD HH:mm").toDate();
-        end = moment(`${dateStr} ${endTime}`, "YYYY-MM-DD HH:mm").toDate();
-      }
-
-      return {
-        title: `${title} (${formatTimeRange(timeRange, start, end)})`,
-        start,
-        end,
-        allDay: timeRange === "allday",
-      };
-    });
-
-    setEvents((prev) => [...prev, ...newEvents]);
-    setSelectedSlots([]);
-    setTitle("");
-    setShareUrl(`${window.location.origin}/share/${Date.now()}`);
-  };
-
-  // 時間帯ラベル
-  const formatTimeRange = (range, start, end) => {
-    switch (range) {
-      case "allday":
-        return "終日";
-      case "day":
-        return "昼";
-      case "night":
-        return "夜";
-      case "custom":
-        return `${moment(start).format("HH:mm")} - ${moment(end).format("HH:mm")}`;
-      default:
-        return "";
-    }
-  };
-
-  // 日付セルスタイル
+  // === 日付セル装飾 ===
   const dayPropGetter = (date) => {
-    const dateStr = moment(date).format("YYYY-MM-DD");
+    const dateStr = format(date, "yyyy-MM-dd");
 
-    // 祝日
     if (holidays[dateStr]) {
       return {
         className: "holiday",
         "data-holiday": holidays[dateStr],
-        onClick: () => handleSelectDay(date),
       };
     }
 
-    // 選択済みセル
-    const isSelected = selectedSlots.some(
-      (slot) =>
-        moment(date).isSameOrAfter(moment(slot.start), "day") &&
-        moment(date).isSameOrBefore(moment(slot.end), "day")
-    );
-
-    if (isSelected) {
-      return {
-        className: "selected-day",
-        onClick: () => handleSelectDay(date),
-      };
+    if (selectedDates.includes(dateStr)) {
+      return { className: "selected-day" };
     }
 
-    // 範囲選択中の開始日
-    if (rangeStart && moment(date).isSame(rangeStart, "day")) {
-      return {
-        className: "selected-day",
-        onClick: () => handleSelectDay(date),
-      };
-    }
-
-    return { onClick: () => handleSelectDay(date) };
+    return {};
   };
 
-  // 時刻プルダウン
-  const times = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
+  // === 日付選択 ===
+  const handleSelectSlot = ({ start }) => {
+    const dateStr = format(start, "yyyy-MM-dd");
+
+    if (selectMode === "multi") {
+      // 複数選択モード
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      } else {
+        setSelectedDates([...selectedDates, dateStr]);
+      }
+    } else if (selectMode === "range") {
+      // 範囲選択モード
+      if (selectedDates.length === 0) {
+        setSelectedDates([dateStr]);
+      } else {
+        const startDate = new Date(selectedDates[0]);
+        const endDate = new Date(dateStr);
+        let range = [];
+
+        if (startDate <= endDate) {
+          for (let d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
+            range.push(format(new Date(d), "yyyy-MM-dd"));
+          }
+        } else {
+          for (let d = endDate; d <= startDate; d.setDate(d.getDate() + 1)) {
+            range.push(format(new Date(d), "yyyy-MM-dd"));
+          }
+        }
+        setSelectedDates(range);
+      }
+    }
+  };
+
+  // === 区分変更 ===
+  const handleTypeChange = (date, value) => {
+    setDateDetails({
+      ...dateDetails,
+      [date]: { ...dateDetails[date], type: value },
+    });
+  };
+
+  // === 時間帯変更 ===
+  const handleTimeChange = (date, field, value) => {
+    setDateDetails({
+      ...dateDetails,
+      [date]: { ...dateDetails[date], [field]: value },
+    });
+  };
+
+  // 時刻リスト
+  const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
   return (
-    <div
-      className="page-card"
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15))",
-      }}
-    >
-      <h2 style={{ color: "#FDB9C8", marginBottom: "1rem" }}>日程登録ページ</h2>
+    <div className="page-card">
+      <h2>日程登録</h2>
 
-      {/* タイトル入力 */}
-      <div className="form-group">
-        <label>タイトル</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="イベントタイトルを入力"
-        />
+      {/* === ラジオボタンで選択モード切替 === */}
+      <div className="form-group" style={{ marginBottom: "1rem" }}>
+        <label>選択方法:</label>
+        <label>
+          <input
+            type="radio"
+            value="multi"
+            checked={selectMode === "multi"}
+            onChange={(e) => setSelectMode(e.target.value)}
+          />
+          複数選択
+        </label>
+        <label style={{ marginLeft: "1rem" }}>
+          <input
+            type="radio"
+            value="range"
+            checked={selectMode === "range"}
+            onChange={(e) => setSelectMode(e.target.value)}
+          />
+          範囲選択
+        </label>
       </div>
 
-      {/* 選択モード切り替え */}
-      <div className="form-group">
-        <label>日付選択モード</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectMode === "multiple"}
-              onChange={(e) => setSelectMode(e.target.value)}
-            />
-            複数選択
-          </label>
-          <label style={{ marginLeft: "1rem" }}>
-            <input
-              type="radio"
-              value="range"
-              checked={selectMode === "range"}
-              onChange={(e) => setSelectMode(e.target.value)}
-            />
-            範囲選択
-          </label>
-        </div>
-      </div>
+      {/* === カレンダー === */}
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        selectable
+        style={{ height: 500 }}
+        dayPropGetter={dayPropGetter}
+        onSelectSlot={handleSelectSlot}
+      />
 
-      {/* カレンダー */}
-      <div style={{ height: "500px", marginBottom: "1rem" }}>
-        <Calendar
-          localizer={localizer}
-          events={events}
-          selectable={false} // ドラッグは使わない
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "100%" }}
-          dayPropGetter={dayPropGetter}
-          views={["month"]}
-        />
-      </div>
+      {/* === 選択された日付 === */}
+      {selectedDates.length > 0 && (
+        <div className="form-group" style={{ marginTop: "1rem" }}>
+          <label>選択された日程:</label>
+          <ul>
+            {selectedDates.map((date) => (
+              <li key={date} style={{ marginBottom: "0.5rem" }}>
+                {date}
+                <select
+                  value={dateDetails[date]?.type || ""}
+                  onChange={(e) => handleTypeChange(date, e.target.value)}
+                  style={{ marginLeft: "1rem" }}
+                >
+                  <option value="">区分を選択</option>
+                  <option value="終日">終日</option>
+                  <option value="昼">昼</option>
+                  <option value="夜">夜</option>
+                  <option value="時間帯">時間帯</option>
+                </select>
 
-      {/* 日付区分（プルダウン） */}
-      <div className="form-group">
-        <label>日付区分</label>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-        >
-          <option value="allday">終日</option>
-          <option value="day">昼</option>
-          <option value="night">夜</option>
-          <option value="custom">時間帯</option>
-        </select>
-      </div>
-
-      {/* custom の場合のみ開始・終了時刻 */}
-      {timeRange === "custom" && (
-        <div
-          className="form-group"
-          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
-        >
-          <div>
-            <label>開始時刻</label>
-            <select
-              value={startTime}
-              onChange={(e) => {
-                setStartTime(e.target.value);
-                if (
-                  moment(e.target.value, "HH:mm").isSameOrAfter(
-                    moment(endTime, "HH:mm")
-                  )
-                ) {
-                  const idx = times.indexOf(e.target.value);
-                  if (idx < times.length - 1) {
-                    setEndTime(times[idx + 1]);
-                  }
-                }
-              }}
-            >
-              {times.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label>終了時刻</label>
-            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-              {times
-                .filter((t) =>
-                  moment(t, "HH:mm").isAfter(moment(startTime, "HH:mm"))
-                )
-                .map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-            </select>
-          </div>
+                {/* === 時間帯を選んだら開始/終了プルダウン === */}
+                {dateDetails[date]?.type === "時間帯" && (
+                  <span style={{ marginLeft: "1rem" }}>
+                    <select
+                      value={dateDetails[date]?.start || ""}
+                      onChange={(e) =>
+                        handleTimeChange(date, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始時刻</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    <span style={{ margin: "0 0.5rem" }}>〜</span>
+                    <select
+                      value={dateDetails[date]?.end || ""}
+                      onChange={(e) =>
+                        handleTimeChange(date, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了時刻</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      {/* 登録ボタン */}
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <button
-          onClick={handleAddEvent}
-          style={{
-            fontSize: "1.2rem",
-            padding: "0.8rem 2rem",
-            borderRadius: "12px",
-            background: "linear-gradient(90deg, #FDB9C8, #004CA0)",
-            border: "none",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: "pointer",
-            transition: "0.3s",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-          }}
-          onMouseOver={(e) =>
-            (e.currentTarget.style.transform = "scale(1.05)")
-          }
-          onMouseOut={(e) =>
-            (e.currentTarget.style.transform = "scale(1.0)")
-          }
-        >
-          ＋ 日程を登録
-        </button>
-      </div>
-
-      {/* 登録済みリスト */}
-      <div style={{ marginTop: "2rem" }}>
-        <h3 style={{ color: "#FDB9C8" }}>登録済み日程</h3>
-        <ul>
-          {events.map((ev, idx) => (
-            <li key={idx}>
-              {ev.title} ({moment(ev.start).format("MM/DD")} -{" "}
-              {moment(ev.end).format("MM/DD")})
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 共有リンク */}
-      {shareUrl && (
-        <div style={{ marginTop: "1.5rem" }}>
-          <h3 style={{ color: "#FDB9C8" }}>共有リンク</h3>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
-        </div>
-      )}
+      <button style={{ marginTop: "1rem" }}>登録する</button>
     </div>
   );
 };
