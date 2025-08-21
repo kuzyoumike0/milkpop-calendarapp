@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import {
   Calendar,
@@ -9,7 +8,6 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 import ja from "date-fns/locale/ja";
-import "./RegisterPage.css"; // ← CSSでデザイン統一
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -80,32 +78,34 @@ const RegisterPage = () => {
   const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
   return (
-    <div className="register-page">
+    <div>
       {/* バナー */}
       <header className="banner">
-        <span className="logo">🌸 MilkPOP Calendar</span>
-        <nav className="nav">
+        <span>MilkPOP Calendar</span>
+        <nav>
           <a href="/" className="nav-link">トップ</a>
           <a href="/personal" className="nav-link">個人スケジュール</a>
         </nav>
       </header>
 
-      <main className="main">
-        <h1 className="title">日程登録</h1>
+      <main style={{ padding: "40px" }}>
+        <h1 style={{ textAlign: "center", fontSize: "28px", marginBottom: "20px" }}>
+          日程登録
+        </h1>
 
         {/* タイトル入力 */}
-        <div className="form-group">
-          <label className="form-label">タイトル</label>
+        <div className="card">
+          <label style={{ display: "block", marginBottom: "8px" }}>タイトル</label>
           <input
             type="text"
-            className="form-input"
+            style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
         {/* カレンダー */}
-        <div className="calendar-wrapper">
+        <div className="card" style={{ height: "500px" }}>
           <Calendar
             localizer={localizer}
             selectable
@@ -113,25 +113,26 @@ const RegisterPage = () => {
             events={selectedEvents}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: 500 }}
+            style={{ height: "100%" }}
             views={["month", "week", "day"]}
             popup
           />
         </div>
 
         {/* 選択した日程 */}
-        <div className="event-list">
+        <div>
           {selectedEvents.map((event) => (
-            <div key={event.id} className="event-card">
+            <div key={event.id} className="card">
               <p>
                 {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
                 {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
               </p>
 
+              {/* 時間帯プルダウン */}
               <select
                 value={event.option}
                 onChange={(e) => handleOptionChange(event.id, e.target.value)}
-                className="form-select"
+                style={{ padding: "6px", marginTop: "8px" }}
               >
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
@@ -139,22 +140,19 @@ const RegisterPage = () => {
                 <option value="時刻指定">時刻指定</option>
               </select>
 
+              {/* 時刻指定の場合 */}
               {event.option === "時刻指定" && (
-                <div className="time-select">
+                <div style={{ marginTop: "10px", display: "flex", gap: "12px" }}>
                   <div>
                     <label>開始</label>
                     <select
                       value={event.startTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(event.id, "startTime", e.target.value)
-                      }
-                      className="form-select"
+                      onChange={(e) => handleTimeChange(event.id, "startTime", e.target.value)}
+                      style={{ marginLeft: "6px", padding: "4px" }}
                     >
                       <option value="">--</option>
                       {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}時
-                        </option>
+                        <option key={h} value={h}>{h}時</option>
                       ))}
                     </select>
                   </div>
@@ -162,19 +160,15 @@ const RegisterPage = () => {
                     <label>終了</label>
                     <select
                       value={event.endTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(event.id, "endTime", e.target.value)
-                      }
-                      className="form-select"
+                      onChange={(e) => handleTimeChange(event.id, "endTime", e.target.value)}
+                      style={{ marginLeft: "6px", padding: "4px" }}
                     >
                       <option value="">--</option>
                       {hours.map((h) => (
                         <option
                           key={h}
                           value={h}
-                          disabled={
-                            event.startTime && Number(h) <= Number(event.startTime)
-                          }
+                          disabled={event.startTime && Number(h) <= Number(event.startTime)}
                         >
                           {h}時
                         </option>
@@ -188,7 +182,7 @@ const RegisterPage = () => {
         </div>
 
         {/* 登録ボタン */}
-        <div className="btn-center">
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
           <button onClick={handleSubmit} className="btn btn-pink">
             登録して共有リンク発行
           </button>
@@ -196,9 +190,9 @@ const RegisterPage = () => {
 
         {/* 共有リンク表示 */}
         {shareUrl && (
-          <div className="share-link">
+          <div style={{ textAlign: "center", marginTop: "20px" }}>
             <p>共有リンクが発行されました：</p>
-            <a href={shareUrl} className="share-url">
+            <a href={shareUrl} style={{ color: "#004CA0", fontWeight: "bold" }}>
               {shareUrl}
             </a>
           </div>
