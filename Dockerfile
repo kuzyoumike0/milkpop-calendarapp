@@ -1,27 +1,28 @@
-FROM node:18
-
-WORKDIR /app
-
-# ===== Backend =====
-COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
-
-# ===== Frontend =====
+# ==== Frontend Build Stage ====
+FROM node:18 AS frontend-build
 WORKDIR /app/frontend
+
+# 依存関係インストール
 COPY frontend/package*.json ./
 RUN npm install
 
-# ===== Copy all sources (ここで index.css や tailwind.config.js も含める) =====
-WORKDIR /app
-COPY . .
-
-# ===== Build Frontend (Tailwind 有効化) =====
-WORKDIR /app/frontend
+# フロントエンドソースをコピーしてビルド
+COPY frontend/ ./
 RUN npm run build
 
-# ===== Start Backend =====
-WORKDIR /app/backend
-ENV NODE_ENV=production
-ENV PORT=3000
-CMD ["npm", "start"]
+# ==== Backend Stage ====
+FROM node:18
+WORKDIR /app
+
+# バックエンド依存関係インストール
+COPY backend/package*.json ./
+RUN npm install
+
+# バックエンドソースをコピー
+COPY backend/ ./
+
+# フロントのビルド成果物をバックエンドの public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
+
+EXPOSE 3000
+CMD ["node", "index.js"]
