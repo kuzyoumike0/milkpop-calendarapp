@@ -1,4 +1,3 @@
-// frontend/src/components/TopPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -36,5 +35,4 @@ function TopPage() {
   );
 }
 
-// 🔴 これを忘れると今のエラーが出ます
 export default TopPage;
