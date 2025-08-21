@@ -1,19 +1,33 @@
 import React from "react";
-import "./index.css";
+import { ChakraProvider, extendTheme, Box, Heading } from "@chakra-ui/react";
+import TopPage from "./components/TopPage";
+
+const theme = extendTheme({
+  styles: {
+    global: {
+      body: {
+        bg: "black",
+        color: "white",
+        fontFamily: "Poppins, 'Noto Sans JP', sans-serif",
+      },
+    },
+  },
+  colors: {
+    brand: {
+      pink: "#FDB9C8",
+      blue: "#004CA0",
+    },
+  },
+});
 
 function App() {
   return (
-    <>
-      <header>MilkPOP Calendar</header>
-      <main>
-        <div className="card">
-          <h2>ようこそ！</h2>
-          <p>ここにおしゃれなカレンダーアプリの説明を表示します。</p>
-          <button>日程を登録する</button>
-        </div>
-      </main>
-      <footer>© 2025 MilkPOP Calendar</footer>
-    </>
+    <ChakraProvider theme={theme}>
+      <Box as="header" bg="rgba(0,0,0,0.6)" p={4} textAlign="center" borderBottom="2px solid" borderColor="brand.blue">
+        <Heading size="lg" color="brand.pink">MilkPOP Calendar</Heading>
+      </Box>
+      <TopPage />
+    </ChakraProvider>
   );
 }
 
