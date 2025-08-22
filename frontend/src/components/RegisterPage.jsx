@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
   const [dateOptions, setDateOptions] = useState({});
+  const [shareUrl, setShareUrl] = useState("");   // ✅ 共有リンクを保存するstate
   const navigate = useNavigate();
 
   // ===== 複数クリック用 =====
@@ -82,7 +83,9 @@ const RegisterPage = () => {
       });
       const data = await res.json();
       if (data.ok && data.id) {
-        navigate(`/share/${data.id}`);
+        const url = `${window.location.origin}/share/${data.id}`;
+        setShareUrl(url);              // ✅ 新しいURLを保存
+        navigate(`/share/${data.id}`); // ✅ ページ遷移
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
@@ -188,9 +191,20 @@ const RegisterPage = () => {
           })}
 
           {displayDates.length > 0 && (
-            <button className="fancy-btn" onClick={handleShareLink}>
-              共有リンクを発行
-            </button>
+            <>
+              <button className="fancy-btn" onClick={handleShareLink}>
+                共有リンクを発行
+              </button>
+
+              {shareUrl && (
+                <p className="share-link">
+                  共有リンク:{" "}
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                    {shareUrl}
+                  </a>
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
