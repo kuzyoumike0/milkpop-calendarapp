@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import SelectMode from "./SelectMode";
-import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import "../index.css";
 
@@ -74,15 +73,27 @@ const RegisterPage = () => {
     setDateOptions(updated);
   };
 
-  // 共有リンク発行
-  const handleShareLink = () => {
-    const newId = uuidv4();
-    localStorage.setItem(newId, JSON.stringify({
-      mode,
-      dates: selectedDates,
-      options: dateOptions
-    }));
-    navigate(`/share/${newId}`);
+  // 共有リンク発行（バックエンド保存）
+  const handleShareLink = async () => {
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode,
+          dates: selectedDates,
+          options: dateOptions
+        }),
+      });
+
+      const data = await res.json();
+      if (data.ok && data.id) {
+        navigate(`/share/${data.id}`);
+      }
+    } catch (err) {
+      console.error("❌ 保存エラー:", err);
+      alert("保存に失敗しました");
+    }
   };
 
   return (
