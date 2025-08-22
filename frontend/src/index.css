@@ -2,6 +2,7 @@
    🌸 MilkPOP Calendar 共通スタイル
    ================================ */
 
+/* ページ全体 */
 body {
   margin: 0;
   font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
@@ -28,7 +29,6 @@ body {
   text-decoration: none;
   color: #fff;
   font-size: 1rem;
-  font-weight: normal;
   transition: color 0.3s ease;
 }
 .banner nav a:hover {
@@ -44,7 +44,7 @@ body {
   color: #aaa;
 }
 
-/* ===== ページ共通 ===== */
+/* ===== ページコンテナ ===== */
 .page-container {
   padding: 20px;
   color: #fff;
@@ -126,16 +126,16 @@ body {
 }
 
 .react-calendar {
-  width: 90%;
+  width: 90% !important;
   max-width: 800px;
-  background: rgba(0, 0, 0, 0.6);
-  border: none;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-  color: #fff;
-  font-family: 'Segoe UI', sans-serif;
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 20px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5) !important;
+  color: #fff !important;
+  font-family: 'Segoe UI', sans-serif !important;
+  backdrop-filter: blur(10px) !important;
 }
 
 /* 月ナビゲーション */
@@ -146,65 +146,65 @@ body {
   margin-bottom: 15px;
 }
 .react-calendar__navigation button {
-  background: none;
-  border: none;
-  color: #FDB9C8;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  background: none !important;
+  border: none !important;
+  color: #FDB9C8 !important;
+  font-size: 1.2rem !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  transition: 0.3s !important;
 }
 .react-calendar__navigation button:hover {
-  background: rgba(253, 185, 200, 0.2);
+  background: rgba(253, 185, 200, 0.2) !important;
 }
 
 /* 曜日ヘッダー */
 .react-calendar__month-view__weekdays {
   text-transform: uppercase;
   font-weight: bold;
-  color: #FDB9C8;
-  text-align: center;
-  margin-bottom: 8px;
+  color: #FDB9C8 !important;
+  text-align: center !important;
+  margin-bottom: 8px !important;
 }
 
 /* 日付セル */
 .react-calendar__tile {
-  border-radius: 10px;
-  padding: 12px;
-  margin: 2px;
-  transition: all 0.3s ease;
-  text-align: center;
-  font-size: 1rem;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  margin: 2px !important;
+  transition: all 0.3s ease !important;
+  text-align: center !important;
+  font-size: 1rem !important;
 }
 .react-calendar__tile:hover {
-  background: rgba(253, 185, 200, 0.25);
-  transform: scale(1.05);
+  background: rgba(253, 185, 200, 0.25) !important;
+  transform: scale(1.05) !important;
 }
 
 /* 今日 */
 .react-calendar__tile--now {
-  background: rgba(0, 76, 160, 0.6);
-  color: #fff;
-  font-weight: bold;
-  border-radius: 12px;
+  background: rgba(0, 76, 160, 0.6) !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  border-radius: 12px !important;
 }
 
 /* 選択した日 */
 .selected-tile {
   background: #004CA0 !important;
   color: #fff !important;
-  font-weight: bold;
-  border-radius: 50%;
-  box-shadow: 0 0 12px rgba(0, 76, 160, 0.7);
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 12px rgba(0, 76, 160, 0.7) !important;
 }
 
 /* 祝日 */
 .holiday-tile {
   background: #FDB9C8 !important;
   color: #000 !important;
-  font-weight: bold;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 10px rgba(253, 185, 200, 0.7) !important;
 }
