@@ -16,15 +16,14 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-// 日本の祝日データ
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
-  const [rangeStart, setRangeStart] = useState(null);
+  const [selectionMode, setSelectionMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [shareLink, setShareLink] = useState("");
 
-  // 範囲選択モード
+  // 範囲選択
   const handleSelectRange = ({ start, end }) => {
     if (selectionMode !== "range") return;
 
@@ -37,22 +36,20 @@ const RegisterPage = () => {
     setSelectedDates(days);
   };
 
-  // 複数選択モード
+  // 複数選択
   const handleSelectDay = ({ start }) => {
     if (selectionMode !== "multiple") return;
 
     const dateStr = start.toDateString();
     setSelectedDates((prev) => {
       const exists = prev.find((d) => d.toDateString() === dateStr);
-      if (exists) {
-        return prev.filter((d) => d.toDateString() !== dateStr);
-      } else {
-        return [...prev, start];
-      }
+      return exists
+        ? prev.filter((d) => d.toDateString() !== dateStr)
+        : [...prev, start];
     });
   };
 
-  // イベントスタイル（選択＆祝日強調）
+  // 祝日＆選択強調
   const eventStyleGetter = (event) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === event.start.toDateString()
@@ -71,6 +68,16 @@ const RegisterPage = () => {
         border: "none",
       },
     };
+  };
+
+  // 共有リンク発行
+  const generateShareLink = () => {
+    if (selectedDates.length === 0) {
+      alert("日程を選択してください！");
+      return;
+    }
+    const randomId = Math.random().toString(36).substring(2, 8);
+    setShareLink(`${window.location.origin}/share/${randomId}`);
   };
 
   return (
@@ -99,9 +106,9 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダー＋日程一覧 */}
-      <div className="calendar-wrapper">
-        <div className="calendar-container">
+      <div className="register-layout">
+        {/* カレンダー */}
+        <div className="calendar-section">
           <Calendar
             localizer={localizer}
             selectable
@@ -118,13 +125,35 @@ const RegisterPage = () => {
           />
         </div>
 
-        <div className="selected-list">
+        {/* 選択日程リスト */}
+        <div className="schedule-section">
           <h3>選択された日程</h3>
           <ul>
             {selectedDates.map((d, i) => (
               <li key={i}>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</li>
             ))}
           </ul>
+
+          {/* 共有リンク発行 */}
+          <button className="share-button" onClick={generateShareLink}>
+            共有リンク発行
+          </button>
+
+          {shareLink && (
+            <div className="share-link-box">
+              <p>共有リンクが発行されました 🎉</p>
+              <input type="text" value={shareLink} readOnly />
+              <button
+                className="copy-button"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareLink);
+                  alert("リンクをコピーしました！");
+                }}
+              >
+                コピー
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
