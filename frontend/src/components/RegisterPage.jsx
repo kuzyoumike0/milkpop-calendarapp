@@ -6,9 +6,7 @@ import ja from "date-fns/locale/ja";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
 
-const locales = {
-  ja: ja,
-};
+const locales = { ja };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -20,34 +18,43 @@ const localizer = dateFnsLocalizer({
 
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("single"); // single / multi / range
+  const [mode, setMode] = useState("multi"); // multi / range
 
-  // 日付クリック or 範囲選択
+  // クリックまたは範囲選択
   const handleSelectSlot = ({ start, end }) => {
-    if (mode === "single") {
-      setSelectedDates([start]);
-    } else if (mode === "multi") {
-      setSelectedDates((prev) => [...prev, start]);
+    if (mode === "multi") {
+      // 複数選択 → クリックした日を追加
+      const day = new Date(start);
+      if (
+        !selectedDates.some(
+          (d) => d.toDateString() === day.toDateString()
+        )
+      ) {
+        setSelectedDates([...selectedDates, day]);
+      }
     } else if (mode === "range") {
-      let dates = [];
+      // 範囲選択 → start ~ end の日付をすべて追加
+      let days = [];
       let current = new Date(start);
-      while (current <= end) {
-        dates.push(new Date(current));
+      current.setHours(0, 0, 0, 0);
+      const last = new Date(end);
+      last.setHours(0, 0, 0, 0);
+
+      while (current <= last) {
+        days.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
-      setSelectedDates(dates);
+      setSelectedDates(days);
     }
   };
 
-  // 選択された日付をセルに反映
+  // 選択済みセルをハイライト
   const dayPropGetter = (date) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
     );
     if (isSelected) {
-      return {
-        className: "selected-day",
-      };
+      return { className: "selected-day" };
     }
     return {};
   };
@@ -59,15 +66,6 @@ const RegisterPage = () => {
       {/* 選択モード切替 */}
       <div style={{ marginBottom: "1rem" }}>
         <label>
-          <input
-            type="radio"
-            value="single"
-            checked={mode === "single"}
-            onChange={() => setMode("single")}
-          />
-          単日選択
-        </label>
-        <label style={{ marginLeft: "1rem" }}>
           <input
             type="radio"
             value="multi"
