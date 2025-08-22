@@ -1,52 +1,47 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "../index.css";
 
 const SharePage = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // URLの :id を取得
   const [schedules, setSchedules] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const res = await fetch(`/api/share/${id}`);
+        const res = await fetch(`http://localhost:5000/api/share/${id}`);
+        if (!res.ok) throw new Error("データ取得に失敗しました");
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "取得失敗");
-        setSchedules(data.schedules);
+        setSchedules(data);
       } catch (err) {
-        setError(err.message);
+        console.error("取得エラー:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchSchedules();
   }, [id]);
 
-  if (error) return <p style={{ color: "red" }}>❌ {error}</p>;
-  if (schedules.length === 0) return <p>読み込み中...</p>;
+  if (loading) return <p>⏳ 読み込み中...</p>;
 
   return (
     <div className="page-container">
-      <h1 className="page-title">📤 共有されたスケジュール</h1>
-      <table className="fancy-table">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>区分</th>
-            <th>開始</th>
-            <th>終了</th>
-          </tr>
-        </thead>
-        <tbody>
+      <h1 className="page-title">🔗 共有スケジュール</h1>
+
+      {schedules.length === 0 ? (
+        <p>この共有リンクには日程が登録されていません。</p>
+      ) : (
+        <ul className="schedule-list">
           {schedules.map((s, idx) => (
-            <tr key={idx}>
-              <td>{s.date}</td>
-              <td>{s.type}</td>
-              <td>{s.start_time || "-"}</td>
-              <td>{s.end_time || "-"}</td>
-            </tr>
+            <li key={idx} className="schedule-item">
+              <strong>{s.date}</strong>  
+              {s.type === "時間指定"
+                ? ` ${s.start} ~ ${s.end}`
+                : ` (${s.type})`}
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
     </div>
   );
 };
