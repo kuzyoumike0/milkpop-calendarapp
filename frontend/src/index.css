@@ -440,3 +440,30 @@ h1, h2, .page-title, .welcome-text {
   font-family: 'Zen Maru Gothic', sans-serif;
 }
 
+/* 今日の日付 */
+.react-calendar__tile.today-highlight {
+  background: #FDB9C8 !important;
+  color: black !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+/* 祝日 */
+.react-calendar__tile.holiday {
+  background: #ffdddd !important;
+  color: #d60000 !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+/* 日曜 */
+.react-calendar__tile.sunday {
+  color: #d60000 !important;
+}
+
+/* 土曜 */
+.react-calendar__tile.saturday {
+  color: #004CA0 !important;
+}
+
+
