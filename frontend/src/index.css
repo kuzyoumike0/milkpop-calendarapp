@@ -42,66 +42,51 @@
 }
 
 
-/* ===== バナー（ヘッダー） ===== */
-.banner {
-  background: linear-gradient(90deg, #004CA0, #FDB9C8);
+/* ===== ヘッダー ===== */
+.header {
+  background: linear-gradient(90deg, #ffb6c1, #ff69b4, #ff1493);
+  color: white;
   padding: 1rem 2rem;
-  color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.banner h1 {
+.header .logo {
+  font-family: "Poppins", sans-serif;
   font-size: 1.5rem;
-  font-family: 'Noto Serif JP', serif;
-  margin: 0;
+  font-weight: bold;
 }
 
-.banner nav a {
-  margin-left: 2rem; /* ← 少し間隔広めに */
+.nav-links a {
+  margin-left: 1.5rem;
   text-decoration: none;
-  font-size: 1rem;
-  color: #fff;
-  transition: all 0.3s ease;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
+  font-weight: 500;
+  color: white;
+  transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
-.banner nav a:hover {
-  background: rgba(255,255,255,0.2);
-  color: #FDB9C8;
-  text-shadow: 0 0 6px rgba(255,255,255,0.6);
+.nav-links a:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
 }
-
 
 /* ===== フッター ===== */
 .footer {
-  background: linear-gradient(90deg, #ffb6c1, #ffcce6);
+  background: linear-gradient(90deg, #ff69b4, #ff1493, #db7093);
+  color: white;
   text-align: center;
-  padding: 1.2rem;
-  color: #fff;
-  font-size: 0.95rem;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  border-top: 2px solid #ff99bb;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-
-  position: fixed;   /* ← 常に最下部に固定 */
+  padding: 1rem;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-}
-
-.footer p {
-  margin: 0;
-  font-weight: 600;
-}
-
-.footer small {
-  display: block;
-  margin-top: 0.3rem;
-  font-size: 0.8rem;
-  opacity: 0.9;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
 }
 
 
