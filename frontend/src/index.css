@@ -370,6 +370,7 @@ html, body, #root {
 }
 
 /* ===== 📱 スマホ用レスポンシブ ===== */
+/* ===== 📱 スマホ用レスポンシブ ===== */
 @media (max-width: 900px) {
   .register-layout {
     flex-direction: column;
@@ -395,8 +396,9 @@ html, body, #root {
   .banner nav {
     gap: 20px;
   }
+}  /* 👈 ここで閉じる */
 
-  /* ===== 共有リンク発行ボタン ===== */
+/* ===== 共有リンク発行ボタン ===== */
 .share-button {
   display: block;
   width: 100%;
@@ -459,4 +461,3 @@ html, body, #root {
   background: #FDB9C8;
   color: #000;
 }
-
