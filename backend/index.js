@@ -51,29 +51,27 @@ app.get("/api/schedules/:id", async (req, res) => {
   }
 });
 
-// ===== 個人スケジュール保存（共有スケジュールを完全上書き） =====
+// ===== 個人スケジュール保存（共有リンクを毎回新しく発行） =====
 app.post("/api/personal", async (req, res) => {
-  const { personal_id, share_id, title, memo, dates, options } = req.body;
+  const { personal_id, title, memo, dates, options } = req.body;
 
   try {
     let newPersonalId = personal_id || uuidv4();
-    let newShareId = share_id || uuidv4();
+    let newShareId = uuidv4(); // 👈 毎回新しい共有IDを発行
 
     // 個人スケジュール保存（新規 or 更新）
     await pool.query(
       `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options)
        VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (id)
-       DO UPDATE SET title=$3, memo=$4, dates=$5, options=$6`,
+       DO UPDATE SET share_id=$2, title=$3, memo=$4, dates=$5, options=$6`,
       [newPersonalId, newShareId, title, memo, JSON.stringify(dates), JSON.stringify(options)]
     );
 
-    // 共有スケジュールを「完全上書き」
+    // 共有スケジュールを新規作成（履歴として残す）
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (id)
-       DO UPDATE SET title=$2, dates=$3, options=$4`,
+       VALUES ($1, $2, $3, $4)`,
       [newShareId, title, JSON.stringify(dates), JSON.stringify(options)]
     );
 
