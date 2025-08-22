@@ -3,12 +3,10 @@ import "../index.css";
 
 const TopPage = () => {
   return (
-    <div className="flex flex-col items-center text-center px-4 py-12 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-full">
-      {/* バナー */}
-      <div className="w-full bg-black text-white py-6 shadow-lg mb-10">
-        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
-      </div>
-
+    <div
+      className="flex flex-col items-center text-center px-4 py-12 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-full"
+      style={{ fontFamily: "'Mochiy Pop One', 'Yomogi', cursive" }} // ✅ 可愛いフォント
+    >
       {/* メイン見出し */}
       <h2 className="text-4xl font-extrabold text-black mb-6 drop-shadow-lg">
         ようこそ MilkPOP Calendar へ 🎉
