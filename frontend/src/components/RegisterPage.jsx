@@ -7,9 +7,10 @@ import "../index.css";
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeStart, setRangeStart] = useState(null);
-  const [division, setDivision] = useState("午前"); // 区分
+  const [division, setDivision] = useState("午前");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+  const [events, setEvents] = useState([]); // ✅ イベント一覧
 
   // カレンダー日付クリック
   const handleDateClick = (date) => {
@@ -31,26 +32,45 @@ const RegisterPage = () => {
     }
   };
 
-  // 日付の表示形式 (YYYY/MM/DD)
+  // 日付フォーマット
   const formatDate = (date) =>
     `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
 
-  // 時刻リスト（1時〜24時）
+  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
     const hour = String(i).padStart(2, "0");
     return `${hour}:00`;
   });
 
-  // 終了時刻制御
+  // 開始時刻変更
   const handleStartTimeChange = (e) => {
     const newStart = e.target.value;
     setStartTime(newStart);
 
-    // 開始時間より終了時間が早いなら自動修正
     if (endTime <= newStart) {
       const nextIndex = timeOptions.indexOf(newStart) + 1;
       setEndTime(timeOptions[nextIndex] || "23:00");
     }
+  };
+
+  // ✅ イベント追加処理
+  const handleAddEvent = () => {
+    if (selectedDates.length === 0) return;
+
+    const newEvent = {
+      dates: selectedDates.map((d) => formatDate(d)),
+      division,
+      startTime: division === "時間指定" ? startTime : null,
+      endTime: division === "時間指定" ? endTime : null,
+    };
+
+    setEvents([...events, newEvent]);
+
+    // 選択をリセット
+    setSelectedDates([]);
+    setDivision("午前");
+    setStartTime("09:00");
+    setEndTime("10:00");
   };
 
   return (
@@ -75,14 +95,14 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 選択した日付 & 区分 */}
+      {/* 選択した日付 */}
       {selectedDates.length > 0 && (
         <div className="form-group">
           <label>選択した日付:</label>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <span>{selectedDates.map((d) => formatDate(d)).join(" , ")}</span>
 
-            {/* 区分プルダウン */}
+            {/* 区分 */}
             <select
               value={division}
               onChange={(e) => setDivision(e.target.value)}
@@ -94,7 +114,7 @@ const RegisterPage = () => {
               <option value="時間指定">時間指定</option>
             </select>
 
-            {/* 時間指定の場合だけ表示 */}
+            {/* 時間指定の場合 */}
             {division === "時間指定" && (
               <>
                 <label>開始:</label>
@@ -122,6 +142,31 @@ const RegisterPage = () => {
               </>
             )}
           </div>
+
+          <button
+            onClick={handleAddEvent}
+            style={{ marginTop: "1rem", display: "block" }}
+          >
+            追加
+          </button>
+        </div>
+      )}
+
+      {/* ✅ イベント一覧 */}
+      {events.length > 0 && (
+        <div className="event-list">
+          <h3>登録済みイベント</h3>
+          {events.map((ev, idx) => (
+            <div key={idx} className="event-card">
+              <p>
+                📅 {ev.dates.join(" , ")}
+                <br />
+                ⏰ {ev.division}
+                {ev.division === "時間指定" &&
+                  ` (${ev.startTime} ~ ${ev.endTime})`}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </div>
