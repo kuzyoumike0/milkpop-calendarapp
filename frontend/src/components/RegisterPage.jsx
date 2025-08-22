@@ -36,20 +36,34 @@ const RegisterPage = () => {
     return days;
   };
 
+  // 範囲 or 複数選択処理
   const handleDateClick = (date) => {
     if (!date) return;
     const iso = date.toISOString().split("T")[0];
-    if (multiDates.includes(iso)) {
-      setMultiDates(multiDates.filter((d) => d !== iso));
-      const newOptions = { ...dateOptions };
-      delete newOptions[iso];
-      setDateOptions(newOptions);
-    } else {
-      setMultiDates([...multiDates, iso]);
-      setDateOptions({
-        ...dateOptions,
-        [iso]: { type: "終日", start: "9:00", end: "18:00" },
-      });
+
+    if (mode === "multi") {
+      if (multiDates.includes(iso)) {
+        setMultiDates(multiDates.filter((d) => d !== iso));
+        const newOptions = { ...dateOptions };
+        delete newOptions[iso];
+        setDateOptions(newOptions);
+      } else {
+        setMultiDates([...multiDates, iso]);
+        setDateOptions({
+          ...dateOptions,
+          [iso]: { type: "終日", start: "9:00", end: "18:00" },
+        });
+      }
+    } else if (mode === "range") {
+      if (!range[0] || (range[0] && range[1])) {
+        setRange([date, null]);
+      } else if (range[0] && !range[1]) {
+        if (date < range[0]) {
+          setRange([date, range[0]]);
+        } else {
+          setRange([range[0], date]);
+        }
+      }
     }
   };
 
@@ -101,7 +115,7 @@ const RegisterPage = () => {
               name="mode"
               value="range"
               checked={mode === "range"}
-              onChange={() => { setMode("range"); setMultiDates([]); }}
+              onChange={() => { setMode("range"); setMultiDates([]); setRange([null,null]); }}
             />
             範囲選択
           </label>
@@ -135,6 +149,7 @@ const RegisterPage = () => {
                   const iso = date.toISOString().split("T")[0];
                   let className = "day";
                   if (multiDates.includes(iso)) className += " selected";
+                  if (range[0] && range[1] && date >= range[0] && date <= range[1]) className += " selected";
                   if (iso === todayIso) className += " today";
                   if (date.getDay() === 0 || holidays.includes(iso)) className += " holiday";
                   if (date.getDay() === 6) className += " saturday";
@@ -148,7 +163,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* ===== 右リスト ===== */}
+          {/* ===== 右側 選択日リスト + 共有リンク ===== */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
             {mode === "range" && range[0] && range[1] && (
@@ -169,27 +184,6 @@ const RegisterPage = () => {
                     <option value="午後">午後</option>
                     <option value="時間指定">時間指定</option>
                   </select>
-                  {dateOptions[date]?.type === "時間指定" && (
-                    <div className="flex gap-2 items-center ml-2">
-                      <select
-                        value={dateOptions[date]?.start || "9:00"}
-                        onChange={(e) => handleOptionChange(date, "start", e.target.value)}
-                      >
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                      <span>〜</span>
-                      <select
-                        value={dateOptions[date]?.end || "18:00"}
-                        onChange={(e) => handleOptionChange(date, "end", e.target.value)}
-                      >
-                        {endTimeOptions.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                 </div>
               ))
             ) : mode === "multi" ? (
