@@ -5,15 +5,15 @@ import "../index.css";
 
 const Header = () => {
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
-    // URLパラメータからセッションIDを取得
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session");
     if (sessionId) {
       localStorage.setItem("sessionId", sessionId);
-      window.history.replaceState({}, document.title, location.pathname); // URLから削除
+      window.history.replaceState({}, document.title, location.pathname);
     }
 
     const storedSession = localStorage.getItem("sessionId");
@@ -32,10 +32,24 @@ const Header = () => {
 
   return (
     <header className="banner">
-      <h1>MilkPOP Calendar</h1>
-      <nav>
-        <Link to="/share">日程登録</Link>
-        <Link to="/personal">個人スケジュール</Link>
+      <h1 className="logo">MilkPOP Calendar</h1>
+
+      {/* ハンバーガー */}
+      <button
+        className="hamburger"
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="メニュー"
+      >
+        ☰
+      </button>
+
+      <nav className={`nav ${menuOpen ? "open" : ""}`}>
+        <Link to="/share" onClick={() => setMenuOpen(false)}>
+          日程登録
+        </Link>
+        <Link to="/personal" onClick={() => setMenuOpen(false)}>
+          個人スケジュール
+        </Link>
         {user ? (
           <span className="user-info">
             <img
