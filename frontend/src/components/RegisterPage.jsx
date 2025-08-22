@@ -17,7 +17,7 @@ const localizer = dateFnsLocalizer({
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
+  const [selectionMode, setSelectionMode] = useState("range"); // 範囲 or 複数
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time: "時間指定", start: 10, end: 12 } }
@@ -215,6 +215,8 @@ const RegisterPage = () => {
               );
             })}
           </ul>
+
+          {/* 送信ボタン */}
           <button className="submit-btn" onClick={handleSubmit}>
             送信する
           </button>
