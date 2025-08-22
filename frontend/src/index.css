@@ -56,11 +56,6 @@ header,
   width: 100%;
   z-index: 1000;
 }
-header .logo {
-  font-size: 1.4rem;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
 header .nav {
   display: flex;
   gap: 32px;
@@ -74,21 +69,6 @@ header .nav a {
 }
 header .nav a:hover {
   color: #ff5fa2;
-}
-header .login-btn {
-  margin-left: 32px;
-  background: linear-gradient(90deg, #7289da, #5865f2);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-header .login-btn:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
 }
 
 /* ===== フッター ===== */
@@ -144,20 +124,7 @@ main {
   min-width: 300px;
 }
 
-/* ===== 見出し ===== */
-h1, h2, .page-title, .welcome-text {
-  font-family: 'Reggae One','Yomogi',cursive,sans-serif;
-  font-weight: bold;
-  color: #ff5fa2;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
-}
-
 /* ===== ラジオボタン ===== */
-.radio-group.horizontal {
-  display: flex;
-  gap: 20px;
-  margin-top: 8px;
-}
 .radio-label {
   display: flex;
   align-items: center;
@@ -168,9 +135,7 @@ h1, h2, .page-title, .welcome-text {
   cursor: pointer;
   transition: all 0.2s;
 }
-.radio-label input {
-  display: none;
-}
+.radio-label input { display: none; }
 .radio-label:hover {
   background: #FDB9C8;
   color: black;
@@ -198,100 +163,9 @@ h1, h2, .page-title, .welcome-text {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   transition: transform 0.2s;
 }
-.submit-btn:hover {
-  transform: scale(1.05);
-}
+.submit-btn:hover { transform: scale(1.05); }
 
-/* ===== タイトル入力 ===== */
-.title-input {
-  width: 100%;
-  max-width: 400px;
-  padding: 10px;
-  border: 2px solid #FDB9C8;
-  border-radius: 10px;
-  font-size: 1rem;
-}
-
-/* ===== 自作カレンダー ===== */
-.custom-calendar {
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-}
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.calendar-header h3 {
-  margin: 0;
-  color: #004ca0;
-}
-.calendar-header button {
-  background: #fdb9c8;
-  border: none;
-  border-radius: 8px;
-  padding: 5px 10px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.calendar-header button:hover {
-  background: #004ca0;
-  color: white;
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-.weekday {
-  text-align: center;
-  font-weight: bold;
-  color: #004ca0;
-}
-.day {
-  text-align: center;
-  padding: 12px 0;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: transform 0.2s, background 0.3s;
-}
-.day:hover {
-  background: #ffe4ec;
-  transform: scale(1.05);
-}
-/* 今日（日本時間） */
-.day.today {
-  background: #004ca0 !important;
-  color: white !important;
-  font-weight: bold;
-  box-shadow: 0 0 6px rgba(0,0,0,0.3);
-}
-/* 選択日 */
-.day.selected {
-  background: #fdb9c8 !important;
-  color: white !important;
-  font-weight: bold;
-}
-/* 祝日（日曜と日本の祝日） */
-.day.holiday {
-  color: red !important;
-  font-weight: bold;
-}
-
-/* ===== スマホ対応 ===== */
-@media (max-width: 900px) {
-  .register-layout {
-    flex-direction: column;
-  }
-  .calendar-section,
-  .schedule-section {
-    max-width: 100%;
-    flex: 0 0 100%;
-  }
-  /* react-calendar 全体 */
+/* ===== react-calendar カスタム ===== */
 .react-calendar {
   width: 100%;
   background: white;
@@ -301,7 +175,6 @@ h1, h2, .page-title, .welcome-text {
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
   box-shadow: 0 6px 18px rgba(0,0,0,0.1);
 }
-
 .react-calendar__navigation {
   display: flex;
   justify-content: space-between;
@@ -319,13 +192,11 @@ h1, h2, .page-title, .welcome-text {
   background: #004CA0;
   color: white;
 }
-
 .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: bold;
   color: #004CA0;
 }
-
 .react-calendar__tile {
   padding: 10px;
   border-radius: 10px;
@@ -336,13 +207,13 @@ h1, h2, .page-title, .welcome-text {
   background: #ffe4ec;
   transform: scale(1.05);
 }
-
-/* 今日 */
+/* 今日完全カスタム */
 .react-calendar__tile--today {
   background: #004CA0 !important;
   color: white !important;
   font-weight: bold;
-  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
 }
 /* 選択 */
 .react-calendar__tile--active {
@@ -356,4 +227,8 @@ h1, h2, .page-title, .welcome-text {
   font-weight: bold;
 }
 
+/* ===== スマホ対応 ===== */
+@media (max-width: 900px) {
+  .register-layout { flex-direction: column; }
+  .calendar-section, .schedule-section { max-width: 100%; flex: 0 0 100%; }
 }
