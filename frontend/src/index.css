@@ -82,7 +82,11 @@
   height: auto;      /* 縦横比を維持 */
   border-radius: 16px;
 }
-
+.schedule-image {
+  width: 1040px;
+  height: auto;
+  border-radius: 8px;
+}
 
 /* ===== ページタイトル ===== */
 .page-title {
