@@ -188,6 +188,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 .schedule-card span {
   font-weight: bold;
@@ -198,6 +199,19 @@ main {
   border-radius: 8px;
   border: 1px solid #ccc;
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
+}
+.schedule-card button {
+  background: transparent;
+  border: none;
+  color: #ff5fa2;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: 0.2s;
+}
+.schedule-card button:hover {
+  color: red;
+  transform: scale(1.2);
 }
 
 /* ===== 共有リンクボタン ===== */
