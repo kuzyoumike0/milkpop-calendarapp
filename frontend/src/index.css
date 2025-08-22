@@ -1,29 +1,46 @@
-/* ===== ベーススタイル ===== */
-body {
-  margin: 0;
-  font-family: 'Noto Sans JP', sans-serif; /* 本文はモダンで落ち着いたSansに統一 */
-  color: #000;
-  background: #fff;
-  min-height: 100vh;
-  line-height: 1.7;
+/* ===== トップページ ===== */
+.top-page {
+  text-align: center;
+  padding: 3rem 1rem;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ===== 見出し・タイトル ===== */
-h1, h2, h3 {
-  font-family: 'Noto Serif JP', serif; /* 力強く落ち着いたモダン系 */
-  letter-spacing: 0.05em;
+/* ロゴ部分 */
+.logo-wrapper {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 1.5rem;
+  padding: 1rem 2rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
 }
 
-/* ===== トップページの歓迎テキスト ===== */
+.logo-image {
+  width: 1040px;   /* ← 小さめに変更 */
+  max-width: 80%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.logo-image:hover {
+  transform: scale(1.08) rotate(3deg); /* ← ちょっと跳ねる動きで可愛さUP */
+}
+
+/* ウェルカムテキスト */
 .welcome-text {
-  font-size: 2.4rem;
+  font-size: 2rem;
   font-weight: 700;
-  font-family: 'Noto Serif JP', serif; /* ← しっかりした印象に固定 */
-  color: #004CA0;
+  font-family: 'M PLUS Rounded 1c', sans-serif; /* 丸っこく可愛い */
+  color: #ff6699; /* ポップなピンク */
   margin-top: 1rem;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 1px 1px 3px rgba(255, 182, 193, 0.4);
   letter-spacing: 0.05em;
 }
+
 
 /* ===== バナー（ヘッダー） ===== */
 .banner {
