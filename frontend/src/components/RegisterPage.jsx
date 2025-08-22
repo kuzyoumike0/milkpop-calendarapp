@@ -1,10 +1,6 @@
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import Holidays from "date-holidays";
-import "react-calendar/dist/Calendar.css";
+import CustomCalendar from "./CustomCalendar";
 import "../index.css";
-
-const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -16,6 +12,7 @@ const RegisterPage = () => {
   const [events, setEvents] = useState([]);
   const [shareLink, setShareLink] = useState("");
 
+  // 📅 日付クリック処理（範囲 & 複数）
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
@@ -45,30 +42,15 @@ const RegisterPage = () => {
     }
   };
 
+  // 登録処理
   const handleRegister = () => {
     if (!title || selectedDates.length === 0) return;
 
-    const newEvent = {
-      title,
-      dates: selectedDates,
-      timeType,
-      customTime,
-    };
-
+    const newEvent = { title, dates: selectedDates, timeType, customTime };
     setEvents([...events, newEvent]);
     setTitle("");
     setSelectedDates([]);
     setShareLink(window.location.origin + "/share/" + Math.random().toString(36).substr(2, 8));
-  };
-
-  const tileClassName = ({ date }) => {
-    if (hd.isHoliday(date)) {
-      return "holiday-tile";
-    }
-    if (selectedDates.some((d) => d.toDateString() === date.toDateString())) {
-      return "selected-tile";
-    }
-    return null;
   };
 
   return (
@@ -106,13 +88,12 @@ const RegisterPage = () => {
           </label>
         </div>
 
-        {/* 🎨 カレンダーを中央配置 */}
-        <div className="calendar-wrapper">
-          <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={tileClassName}
-          />
-        </div>
+        {/* ✅ 共通カレンダー */}
+        <CustomCalendar
+          selectedDates={selectedDates}
+          onDateClick={handleDateClick}
+          rangeStart={rangeStart}
+        />
 
         <div className="radio-group">
           <label>
