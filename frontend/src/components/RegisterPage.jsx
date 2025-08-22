@@ -12,32 +12,29 @@ const RegisterPage = () => {
   const [events, setEvents] = useState([]);
   const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [rangeStart, setRangeStart] = useState(null);
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]); // {date, timeOption}
   const [shareUrl, setShareUrl] = useState("");
 
   // 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
-        // 開始日をセット
         setRangeStart(date);
-        setSelectedDates([date]);
+        setSelectedDates([{ date, timeOption: "all" }]);
       } else {
-        // 同じ日をもう一度クリック → 解除
         if (rangeStart.toDateString() === date.toDateString()) {
           setRangeStart(null);
           setSelectedDates([]);
           return;
         }
 
-        // 範囲選択完了
         const start = rangeStart < date ? rangeStart : date;
         const end = rangeStart < date ? date : rangeStart;
 
         const days = [];
         let d = new Date(start);
         while (d <= end) {
-          days.push(new Date(d));
+          days.push({ date: new Date(d), timeOption: "all" });
           d.setDate(d.getDate() + 1);
         }
 
@@ -46,29 +43,46 @@ const RegisterPage = () => {
       }
     } else if (selectionMode === "multiple") {
       const exists = selectedDates.some(
-        (d) => d.toDateString() === date.toDateString()
+        (d) => d.date.toDateString() === date.toDateString()
       );
       if (exists) {
-        // 選択済みなら解除
         setSelectedDates(
-          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+          selectedDates.filter((d) => d.date.toDateString() !== date.toDateString())
         );
       } else {
-        // 未選択なら追加
-        setSelectedDates([...selectedDates, date]);
+        setSelectedDates([...selectedDates, { date, timeOption: "all" }]);
       }
     }
+  };
+
+  // 区分変更
+  const handleTimeOptionChange = (index, value) => {
+    const updated = [...selectedDates];
+    updated[index].timeOption = value;
+    setSelectedDates(updated);
   };
 
   // 日程登録
   const handleRegister = () => {
     if (!title || selectedDates.length === 0) return;
 
-    const newEvents = selectedDates.map((date) => ({
-      title: title,
-      start: new Date(date.setHours(0, 0, 0, 0)),
-      end: new Date(date.setHours(23, 59, 59, 999)),
-    }));
+    const newEvents = selectedDates.map(({ date, timeOption }) => {
+      let start = new Date(date);
+      let end = new Date(date);
+
+      if (timeOption === "all") {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      } else if (timeOption === "day") {
+        start.setHours(9, 0, 0, 0);
+        end.setHours(17, 0, 0, 0);
+      } else if (timeOption === "night") {
+        start.setHours(18, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      }
+
+      return { title, start, end };
+    });
 
     setEvents([...events, ...newEvents]);
     setTitle("");
@@ -78,7 +92,7 @@ const RegisterPage = () => {
   // カレンダーセルのカスタムクラス
   const dayPropGetter = (date) => {
     const isSelected = selectedDates.some(
-      (d) => d.toDateString() === date.toDateString()
+      (d) => d.date.toDateString() === date.toDateString()
     );
     const isRangeStart =
       rangeStart && rangeStart.toDateString() === date.toDateString();
@@ -151,7 +165,17 @@ const RegisterPage = () => {
         <h3>選択した日付:</h3>
         <ul>
           {selectedDates.map((d, idx) => (
-            <li key={idx}>{d.toDateString()}</li>
+            <li key={idx}>
+              {d.date.toDateString()}{" "}
+              <select
+                value={d.timeOption}
+                onChange={(e) => handleTimeOptionChange(idx, e.target.value)}
+              >
+                <option value="all">終日</option>
+                <option value="day">昼</option>
+                <option value="night">夜</option>
+              </select>
+            </li>
           ))}
         </ul>
       </div>
