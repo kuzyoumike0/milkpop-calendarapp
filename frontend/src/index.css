@@ -75,6 +75,14 @@
   left: 0;
 }
 
+/* トップページのメイン画像 */
+.logo-image {
+  width: 80%;        /* ページ幅の割合 */
+  max-width: 1040px;  /* 最大サイズ */
+  height: auto;      /* 縦横比を維持 */
+  border-radius: 16px;
+}
+
 
 /* ===== ページタイトル ===== */
 .page-title {
