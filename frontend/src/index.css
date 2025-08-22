@@ -1,3 +1,22 @@
+/* ===== ページ全体のコンテナ ===== */
+.page-container {
+  padding: 20px;
+  background: #fefefe;
+  color: #333;
+}
+
+/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
+.register-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  margin: 40px auto;
+  max-width: 1400px;
+  padding: 0 20px;
+}
+
+
 /* ===== ページタイトル ===== */
 .page-title {
   font-size: 1.8rem;
