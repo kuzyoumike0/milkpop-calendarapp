@@ -2,20 +2,20 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const SharePage = () => {
-  const { id } = useParams(); // /share/:id
+  const { id } = useParams(); // URL の :id 部分
+  const [title, setTitle] = useState("");
   const [schedules, setSchedules] = useState([]);
-  const [title, setTitle] = useState(""); // ✅ タイトルを保存
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSchedules = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/share/${id}`);
-        if (!res.ok) throw new Error("取得に失敗しました");
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/share/${id}`);
+        if (!res.ok) throw new Error("データ取得に失敗しました");
         const data = await res.json();
 
         if (data.length > 0) {
-          setTitle(data[0].title || "（無題）"); // ✅ 先頭にタイトルを格納してる想定
+          setTitle(data[0].title || "（無題）"); // ✅ タイトル
           setSchedules(data);
         }
       } catch (err) {
@@ -31,27 +31,34 @@ const SharePage = () => {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">📤 共有スケジュール</h1>
+      <h1 className="page-title">📖 共有された日程</h1>
 
-      {/* ✅ タイトルを表示 */}
-      <h2 style={{ marginBottom: "15px" }}>📝 {title}</h2>
+      {/* タイトル */}
+      <h2 style={{ marginBottom: "20px", color: "#333" }}>📝 {title}</h2>
 
       {schedules.length === 0 ? (
-        <p>スケジュールが見つかりません</p>
+        <p>データが見つかりません</p>
       ) : (
-        <ul className="schedule-list">
-          {schedules.map((s, idx) => (
-            <li key={idx} className="schedule-item">
-              <strong>{s.date}</strong> ： {s.type}
-              {s.type === "時間指定" && (
-                <>
-                  {" "}
-                  ({s.start} ~ {s.end})
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+        <table className="schedule-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>区分</th>
+              <th>開始時刻</th>
+              <th>終了時刻</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map((s, idx) => (
+              <tr key={idx}>
+                <td>{s.date}</td>
+                <td>{s.type}</td>
+                <td>{s.start || "-"}</td>
+                <td>{s.end || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
