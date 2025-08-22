@@ -8,15 +8,14 @@ const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
+  const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [timeType, setTimeType] = useState("allday"); // allday, noon, night, custom
+  const [timeType, setTimeType] = useState("allday");
   const [customTime, setCustomTime] = useState({ start: "09:00", end: "18:00" });
   const [events, setEvents] = useState([]);
   const [shareLink, setShareLink] = useState("");
 
-  // 📅 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
@@ -35,7 +34,6 @@ const RegisterPage = () => {
         setRangeStart(null);
       }
     } else {
-      // 複数選択
       const exists = selectedDates.some(
         (d) => d.toDateString() === date.toDateString()
       );
@@ -47,7 +45,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 登録処理
   const handleRegister = () => {
     if (!title || selectedDates.length === 0) return;
 
@@ -64,7 +61,6 @@ const RegisterPage = () => {
     setShareLink(window.location.origin + "/share/" + Math.random().toString(36).substr(2, 8));
   };
 
-  // 🎨 祝日強調
   const tileClassName = ({ date }) => {
     if (hd.isHoliday(date)) {
       return "holiday-tile";
@@ -110,10 +106,13 @@ const RegisterPage = () => {
           </label>
         </div>
 
-        <Calendar
-          onClickDay={handleDateClick}
-          tileClassName={tileClassName}
-        />
+        {/* 🎨 カレンダーを中央配置 */}
+        <div className="calendar-wrapper">
+          <Calendar
+            onClickDay={handleDateClick}
+            tileClassName={tileClassName}
+          />
+        </div>
 
         <div className="radio-group">
           <label>
