@@ -288,4 +288,25 @@
   .schedule-item select {
     width: 100%;
   }
+
+  /* === カレンダー選択スタイル === */
+.selected-date {
+  background: #FDB9C8 !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
+
+.selected-range {
+  background: rgba(0, 76, 160, 0.2) !important;
+  border-radius: 50%;
+  color: #004CA0 !important;
+}
+
+/* カレンダー中央寄せ */
+.calendar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px auto;
+}
+
 }
