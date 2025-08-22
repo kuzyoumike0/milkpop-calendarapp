@@ -153,7 +153,10 @@
     text-align: center;
     margin-bottom: 6px;
   }
-  .app-container {
+} /* 👈 ここで閉じる */
+
+/* ===== 全体レイアウト調整（ヘッダー・フッター固定対応） ===== */
+.app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -164,4 +167,3 @@
   padding-bottom: 80px; /* フッターと重ならないように */
 }
 
-}
