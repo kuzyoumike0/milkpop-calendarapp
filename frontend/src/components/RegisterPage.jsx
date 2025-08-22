@@ -19,21 +19,41 @@ const localizer = dateFnsLocalizer({
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("multi"); // multi / range
-  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分データ
+  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分
 
-  // クリックまたは範囲選択
+  // ▼ 日付をトグル選択する（クリックで追加/解除）
+  const toggleDate = (date) => {
+    const exists = selectedDates.some(
+      (d) => d.toDateString() === date.toDateString()
+    );
+    let newDates;
+    if (exists) {
+      newDates = selectedDates.filter(
+        (d) => d.toDateString() !== date.toDateString()
+      );
+    } else {
+      newDates = [...selectedDates, date];
+    }
+    setSelectedDates(newDates);
+
+    // optionsを整理
+    const updatedOptions = { ...dateOptions };
+    if (!exists) {
+      updatedOptions[date.toDateString()] = {
+        type: "allday",
+        start: 1,
+        end: 2,
+      };
+    } else {
+      delete updatedOptions[date.toDateString()];
+    }
+    setDateOptions(updatedOptions);
+  };
+
+  // ▼ 範囲選択
   const handleSelectSlot = ({ start, end }) => {
-    let newDates = [];
-
     if (mode === "multi") {
-      const day = new Date(start);
-      if (
-        !selectedDates.some((d) => d.toDateString() === day.toDateString())
-      ) {
-        newDates = [...selectedDates, day];
-      } else {
-        newDates = [...selectedDates];
-      }
+      toggleDate(new Date(start));
     } else if (mode === "range") {
       let days = [];
       let current = new Date(start);
@@ -45,38 +65,42 @@ const RegisterPage = () => {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
-      newDates = days;
-    }
 
-    setSelectedDates(newDates);
+      // 選択済み → 外す
+      const alreadyAllSelected = days.every((d) =>
+        selectedDates.some((s) => s.toDateString() === d.toDateString())
+      );
 
-    // 初期値を設定
-    const updatedOptions = { ...dateOptions };
-    newDates.forEach((d) => {
-      const key = d.toDateString();
-      if (!updatedOptions[key]) {
-        updatedOptions[key] = {
-          type: "allday", // 終日 / 昼 / 夜 / time
-          start: 1,
-          end: 2,
-        };
+      let newDates;
+      let updatedOptions = { ...dateOptions };
+      if (alreadyAllSelected) {
+        // すべて選択済みなら解除
+        newDates = selectedDates.filter(
+          (s) => !days.some((d) => d.toDateString() === s.toDateString())
+        );
+        days.forEach((d) => delete updatedOptions[d.toDateString()]);
+      } else {
+        // 追加
+        newDates = [...selectedDates];
+        days.forEach((d) => {
+          if (
+            !newDates.some((s) => s.toDateString() === d.toDateString())
+          ) {
+            newDates.push(d);
+            updatedOptions[d.toDateString()] = {
+              type: "allday",
+              start: 1,
+              end: 2,
+            };
+          }
+        });
       }
-    });
-    setDateOptions(updatedOptions);
+      setSelectedDates(newDates);
+      setDateOptions(updatedOptions);
+    }
   };
 
-  // 日付ごとの設定変更
-  const handleOptionChange = (dateKey, field, value) => {
-    setDateOptions((prev) => ({
-      ...prev,
-      [dateKey]: {
-        ...prev[dateKey],
-        [field]: value,
-      },
-    }));
-  };
-
-  // 選択済みセルをハイライト
+  // ▼ 日付セル装飾
   const dayPropGetter = (date) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
@@ -87,14 +111,13 @@ const RegisterPage = () => {
     return {};
   };
 
-  // 時刻のプルダウンリスト
   const hours = Array.from({ length: 24 }, (_, i) => i + 1);
 
   return (
     <div className="page-card">
       <h2>📅 日程登録</h2>
 
-      {/* 選択モード切替 */}
+      {/* モード切替 */}
       <div style={{ marginBottom: "1rem" }}>
         <label>
           <input
@@ -116,7 +139,6 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダー */}
       <Calendar
         localizer={localizer}
         selectable
@@ -126,22 +148,25 @@ const RegisterPage = () => {
         dayPropGetter={dayPropGetter}
       />
 
-      {/* 選択結果表示 */}
+      {/* 選択結果 */}
       <div style={{ marginTop: "1rem" }}>
         <h3>選択された日程</h3>
         <ul>
-          {selectedDates.map((d, i) => {
+          {selectedDates.map((d) => {
             const key = d.toDateString();
             const opt = dateOptions[key] || {};
             return (
-              <li key={i} style={{ marginBottom: "1rem" }}>
+              <li key={key} style={{ marginBottom: "1rem" }}>
                 {format(d, "yyyy/MM/dd (E)", { locale: ja })}
 
-                {/* 区分プルダウン */}
+                {/* 区分 */}
                 <select
                   value={opt.type}
                   onChange={(e) =>
-                    handleOptionChange(key, "type", e.target.value)
+                    setDateOptions((prev) => ({
+                      ...prev,
+                      [key]: { ...prev[key], type: e.target.value },
+                    }))
                   }
                   style={{ marginLeft: "1rem" }}
                 >
@@ -151,13 +176,19 @@ const RegisterPage = () => {
                   <option value="time">時間指定</option>
                 </select>
 
-                {/* 時間指定のときのみ開始・終了プルダウン表示 */}
+                {/* 時間指定の時だけ */}
                 {opt.type === "time" && (
                   <span style={{ marginLeft: "1rem" }}>
                     <select
                       value={opt.start}
                       onChange={(e) =>
-                        handleOptionChange(key, "start", Number(e.target.value))
+                        setDateOptions((prev) => ({
+                          ...prev,
+                          [key]: {
+                            ...prev[key],
+                            start: Number(e.target.value),
+                          },
+                        }))
                       }
                     >
                       {hours.map((h) => (
@@ -170,11 +201,17 @@ const RegisterPage = () => {
                     <select
                       value={opt.end}
                       onChange={(e) =>
-                        handleOptionChange(key, "end", Number(e.target.value))
+                        setDateOptions((prev) => ({
+                          ...prev,
+                          [key]: {
+                            ...prev[key],
+                            end: Number(e.target.value),
+                          },
+                        }))
                       }
                     >
                       {hours
-                        .filter((h) => h > opt.start) // 終了時刻は開始より後
+                        .filter((h) => h > opt.start)
                         .map((h) => (
                           <option key={h} value={h}>
                             {h}時
@@ -189,7 +226,6 @@ const RegisterPage = () => {
         </ul>
       </div>
 
-      {/* 登録ボタン */}
       <button style={{ marginTop: "1rem" }}>登録する</button>
     </div>
   );
