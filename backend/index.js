@@ -3,111 +3,68 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { v4: uuidv4 } = require("uuid");
+const fetch = require("node-fetch");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== 簡易DB =====
-let schedulesDB = {};   // 共有スケジュール: { shareId: { title, dates, options, responses } }
-let personalDB = {};    // 個人スケジュール: { userId: { id, title, memo, dates, options, createdAt }[] }
+let sessions = {}; // userId -> userInfo
 
-// ===== スケジュール取得（共有用） =====
-app.get("/api/schedules/:id", (req, res) => {
-  const { id } = req.params;
-  const schedule = schedulesDB[id];
-  if (!schedule) {
-    return res.json({ ok: false, error: "スケジュールが存在しません" });
-  }
-  res.json({ ok: true, data: schedule });
+// ===== Discord OAuth2 設定 =====
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI || "http://localhost:8080/api/auth/callback";
+
+// Discord OAuth2 認証開始
+app.get("/api/auth/login", (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&response_type=code&scope=identify`;
+  res.redirect(url);
 });
 
-// ===== 出欠保存（共有用） =====
-app.post("/api/share/:id/respond", (req, res) => {
-  const { id } = req.params;
-  const { username, responses } = req.body;
+// 認証後のコールバック
+app.get("/api/auth/callback", async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send("Code missing");
 
-  if (!username || username.trim() === "") {
-    return res.json({ ok: false, error: "ユーザー名が必要です" });
-  }
-
-  if (!schedulesDB[id]) {
-    return res.json({ ok: false, error: "スケジュールが存在しません" });
-  }
-
-  const safeResponses = responses && typeof responses === "object" ? responses : {};
-  if (!schedulesDB[id].responses) schedulesDB[id].responses = {};
-  schedulesDB[id].responses[username] = safeResponses;
-
-  res.json({ ok: true, data: schedulesDB[id] });
-});
-
-// ===== 共有スケジュール登録 =====
-app.post("/api/register", (req, res) => {
-  const { title, dates, options } = req.body;
-  if (!title || !dates) {
-    return res.json({ ok: false, error: "タイトルと日程が必須です" });
-  }
-
-  const shareId = uuidv4();
-  schedulesDB[shareId] = {
-    title,
-    dates,
-    options,
-    responses: {},
-  };
-
-  res.json({ ok: true, shareId });
-});
-
-// ===== 個人スケジュール登録（ユーザーごと） =====
-app.post("/api/personal", (req, res) => {
   try {
-    const { userId, title, memo, dates, options } = req.body;
-    if (!userId) {
-      return res.json({ ok: false, error: "userId が必要です" });
-    }
-    if (!title || !dates || dates.length === 0) {
-      return res.json({ ok: false, error: "タイトルと日程が必須です" });
-    }
+    // 1. アクセストークン取得
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: REDIRECT_URI,
+      }),
+    });
+    const tokenData = await tokenRes.json();
 
-    const id = uuidv4();
-    const newSchedule = {
-      id,
-      title,
-      memo: memo || "",
-      dates,
-      options,
-      createdAt: new Date().toISOString(),
-    };
+    // 2. ユーザー情報取得
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
 
-    if (!personalDB[userId]) personalDB[userId] = [];
-    personalDB[userId].push(newSchedule);
+    // セッションに保存（簡易版）
+    sessions[user.id] = user;
 
-    console.log(`✅ 個人スケジュール保存: userId=${userId}`, newSchedule);
-    res.json({ ok: true, id });
+    // フロントにリダイレクトして userId を渡す
+    res.redirect(`/auth-success?userId=${user.id}&username=${encodeURIComponent(user.username)}`);
   } catch (err) {
-    console.error("❌ /api/personal エラー:", err);
-    res.json({ ok: false, error: err.message });
+    console.error("OAuth error:", err);
+    res.status(500).send("OAuth failed");
   }
 });
 
-// ===== 個人スケジュール一覧取得（ユーザーごと） =====
-app.get("/api/personal/:userId", (req, res) => {
-  const { userId } = req.params;
-  const list = personalDB[userId] || [];
-  res.json({ ok: true, list });
-});
-
-// ===== フロントのビルドを提供 =====
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
-});
-
-// ===== サーバ起動 =====
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
+// ===== 現在のユーザー情報を返す =====
+app.get("/api/auth/me/:id", (req, res) => {
+  const user = sessions[req.params.id];
+  if (!user) return res.json({ ok: false, error: "Not logged in" });
+  res.json({ ok: true, user });
 });
