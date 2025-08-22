@@ -21,11 +21,12 @@ RUN npm install
 # バックエンドソースをコピー
 COPY backend/ ./
 
-# フロントのビルド成果物を backend 配下にコピー
+# フロントのビルド成果物を backend/build にコピー
 COPY --from=frontend-build /app/frontend/build ./build
 
 # Railway 用ポート設定
 ENV PORT=3000
 EXPOSE 3000
 
+# Node.js を起動
 CMD ["node", "index.js"]
