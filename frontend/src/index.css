@@ -1,24 +1,14 @@
 /* ===== フォント ===== */
 @import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&display=swap');
 
-/* ===== ページ全体 ===== */
 body {
   margin: 0;
   padding: 0;
   line-height: 1.8;
-  color: #333;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c','Yomogi',sans-serif;
   font-size: 1.05rem;
-}
-
-/* ===== 見出し ===== */
-h1, h2 {
-  font-family: 'Reggae One','Yomogi','Zen Maru Gothic',cursive,sans-serif;
-  font-weight: bold;
-  color: #ff5fa2;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-  letter-spacing: 1px;
+  color: #333;
 }
 
 /* ===== ヘッダー ===== */
@@ -65,13 +55,10 @@ header .nav a:hover {
   border: 2px solid #FDB9C8;
   border-radius: 9999px;
   cursor: pointer;
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
   transition: all 0.2s;
 }
 .radio-label input {
   accent-color: #FDB9C8;
-  width: 16px;
-  height: 16px;
 }
 .radio-label:hover {
   background: #FDB9C8;
@@ -83,17 +70,31 @@ header .nav a:hover {
   font-weight: bold;
 }
 
-/* ===== カレンダー ===== */
+/* ===== レイアウト ===== */
+.register-layout {
+  display: flex;
+  gap: 24px;
+  margin: 20px auto;
+  padding: 0 20px;
+  align-items: flex-start;
+}
+.calendar-section {
+  flex: 0 0 70%;
+  max-width: 70%;
+}
+.schedule-section {
+  flex: 0 0 30%;
+  max-width: 30%;
+  min-width: 300px;
+}
+
+/* ===== 自作カレンダー ===== */
 .custom-calendar {
-  width: 100%;
   background: #fff;
   border-radius: 24px;
   padding: 20px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   border: 3px solid #FDB9C8;
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
 }
 .calendar-header {
   display: flex;
@@ -102,23 +103,7 @@ header .nav a:hover {
   margin-bottom: 16px;
 }
 .calendar-header h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: bold;
   color: #004CA0;
-}
-.calendar-header button {
-  background: #FDB9C8;
-  border: none;
-  border-radius: 12px;
-  padding: 6px 14px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.calendar-header button:hover {
-  background: #004CA0;
-  color: #fff;
-  transform: scale(1.05);
 }
 .calendar-grid {
   display: grid;
@@ -129,27 +114,23 @@ header .nav a:hover {
   text-align: center;
   font-weight: bold;
   color: #004CA0;
-  padding: 6px 0;
 }
 .day {
   text-align: center;
-  padding: 14px 0;
+  padding: 12px 0;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   background: #fafafa;
-  font-size: 1rem;
 }
 .day:hover {
   background: #ffe4ec;
   transform: scale(1.05);
-  border: 1px solid #FDB9C8;
 }
 .day.today {
   background: #004CA0;
-  color: #fff !important;
+  color: #fff;
   font-weight: bold;
-  font-size: 1.1rem;
   border: 2px solid #FDB9C8;
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
@@ -160,7 +141,6 @@ header .nav a:hover {
 }
 .day.holiday {
   color: red;
-  font-weight: bold;
 }
 .day.saturday {
   color: #004CA0;
@@ -176,26 +156,6 @@ header .nav a:hover {
 }
 .schedule-card select {
   padding: 6px 10px;
-  border: 1px solid #ccc;
   border-radius: 8px;
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
-}
-
-/* ===== レイアウト ===== */
-.register-layout {
-  display: flex;
-  gap: 24px;
-  width: 100%;
-  margin: 40px auto;
-  padding: 0 20px;
-  align-items: flex-start;
-}
-.calendar-section {
-  flex: 0 0 70%;
-  max-width: 70%;
-}
-.schedule-section {
-  flex: 0 0 30%;
-  max-width: 30%;
-  min-width: 300px;
+  border: 1px solid #ccc;
 }
