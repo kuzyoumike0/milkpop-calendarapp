@@ -11,7 +11,7 @@ const TopPage = () => {
       <Header />
 
       {/* メインコンテンツ */}
-      <main className="top-page">
+      <main className="top-page page-card">
         {/* ロゴ部分 */}
         <div className="logo-wrapper">
           <img src="/logo.png" alt="MilkPOP Logo" className="logo-image" />
