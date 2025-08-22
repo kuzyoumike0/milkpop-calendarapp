@@ -9,10 +9,11 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 簡易DB（本番はPostgreSQLを使うとよい）
-let schedulesDB = {};   // { shareId: { title, dates, options, responses } }
+// ===== 簡易DB（本番はPostgreSQLを推奨） =====
+let schedulesDB = {};   // 共有スケジュール: { shareId: { title, dates, options, responses } }
+let personalDB = {};    // 個人スケジュール: { id: { title, memo, dates, options, createdAt } }
 
-// ===== スケジュール取得 =====
+// ===== スケジュール取得（共有用） =====
 app.get("/api/schedules/:id", (req, res) => {
   const { id } = req.params;
   const schedule = schedulesDB[id];
@@ -22,37 +23,34 @@ app.get("/api/schedules/:id", (req, res) => {
   res.json({ ok: true, data: schedule });
 });
 
-// ===== 出欠保存 =====
+// ===== 出欠保存（共有用） =====
 app.post("/api/share/:id/respond", (req, res) => {
   const { id } = req.params;
   const { username, responses } = req.body;
 
-  // ユーザー名は必須
   if (!username || username.trim() === "") {
     return res.json({ ok: false, error: "ユーザー名が必要です" });
   }
 
-  // スケジュール存在チェック
   if (!schedulesDB[id]) {
     return res.json({ ok: false, error: "スケジュールが存在しません" });
   }
 
-  // responses が未定義なら空オブジェクトとして扱う
   const safeResponses = responses && typeof responses === "object" ? responses : {};
-
-  // responses をスケジュールに保存
   if (!schedulesDB[id].responses) schedulesDB[id].responses = {};
   schedulesDB[id].responses[username] = safeResponses;
 
   res.json({ ok: true, data: schedulesDB[id] });
 });
 
-// ===== 簡易スケジュール登録API（テスト用） =====
-// 本来は RegisterPage から呼ばれる想定
+// ===== 共有スケジュール登録 =====
 app.post("/api/register", (req, res) => {
   const { title, dates, options } = req.body;
-  const shareId = uuidv4();
+  if (!title || !dates) {
+    return res.json({ ok: false, error: "タイトルと日程が必須です" });
+  }
 
+  const shareId = uuidv4();
   schedulesDB[shareId] = {
     title,
     dates,
@@ -61,6 +59,37 @@ app.post("/api/register", (req, res) => {
   };
 
   res.json({ ok: true, shareId });
+});
+
+// ===== 個人スケジュール登録 =====
+app.post("/api/personal", (req, res) => {
+  try {
+    const { title, memo, dates, options } = req.body;
+    if (!title || !dates || dates.length === 0) {
+      return res.json({ ok: false, error: "タイトルと日程が必須です" });
+    }
+
+    const id = uuidv4();
+    personalDB[id] = {
+      id,
+      title,
+      memo: memo || "",
+      dates,
+      options,
+      createdAt: new Date().toISOString(),
+    };
+
+    console.log("✅ 個人スケジュール保存:", personalDB[id]);
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.error("❌ /api/personal エラー:", err);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// ===== 個人スケジュール一覧取得 =====
+app.get("/api/personal", (req, res) => {
+  res.json({ ok: true, list: Object.values(personalDB) });
 });
 
 // ===== フロントのビルドを提供 =====
