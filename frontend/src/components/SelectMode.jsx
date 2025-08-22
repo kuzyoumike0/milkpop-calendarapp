@@ -5,7 +5,7 @@ import "../index.css";
 const SelectMode = ({ mode, setMode }) => {
   return (
     <div className="radio-group">
-      <label className="radio-option">
+      <label className={`radio-option ${mode === "range" ? "active" : ""}`}>
         <input
           type="radio"
           name="selectMode"
@@ -13,10 +13,10 @@ const SelectMode = ({ mode, setMode }) => {
           checked={mode === "range"}
           onChange={(e) => setMode(e.target.value)}
         />
-        <span>📅 範囲選択</span>
+        <span>範囲選択</span>
       </label>
 
-      <label className="radio-option">
+      <label className={`radio-option ${mode === "multi" ? "active" : ""}`}>
         <input
           type="radio"
           name="selectMode"
@@ -24,7 +24,7 @@ const SelectMode = ({ mode, setMode }) => {
           checked={mode === "multi"}
           onChange={(e) => setMode(e.target.value)}
         />
-        <span>✅ 複数選択</span>
+        <span>複数選択</span>
       </label>
     </div>
   );
