@@ -4,7 +4,7 @@
 /* ===== ページ全体 ===== */
 body {
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 20px;   /* 左に少し余裕 */
   line-height: 1.8;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c','Yomogi',sans-serif;
@@ -101,7 +101,7 @@ main {
 .schedule-section {
   flex: 0 0 30%;
   max-width: 30%;
-  min-width: 300px;
+  min-width: 320px;
 }
 
 /* ===== 自作カレンダー ===== */
@@ -184,13 +184,16 @@ main {
   border-radius: 16px;
   margin-bottom: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+  display: flex;               /* ← 日付とプルダウンを横並び */
+  justify-content: space-between;
+  align-items: center;
 }
 .schedule-card span {
   font-weight: bold;
   color: #004CA0;
 }
 .schedule-card select {
-  margin-left: 8px;
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
