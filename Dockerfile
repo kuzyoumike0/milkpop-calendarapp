@@ -25,9 +25,9 @@ COPY backend ./backend
 # フロントエンドのビルド成果物を backend/build に配置
 COPY --from=build /app/frontend/build ./backend/build
 
-# 本番用依存関係インストール
+# 本番用依存関係インストール（lockfile は使わない）
 WORKDIR /app/backend
-RUN npm install --production   # ← ci じゃなくて install
+RUN npm install --production
 
 EXPOSE 3000
 CMD ["node", "index.js"]
