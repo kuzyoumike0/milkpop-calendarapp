@@ -1,5 +1,5 @@
 /* ===== フォント ===== */
-@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&family=Kaisei+Decol:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&display=swap');
 
 /* ===== ページ全体 ===== */
 body {
@@ -8,13 +8,13 @@ body {
   line-height: 1.8;
   color: #333;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c','Yomogi',sans-serif;
   font-size: 1.05rem;
 }
 
 /* ===== 見出し ===== */
 h1, h2 {
-  font-family: 'Reggae One','Kaisei Decol','Zen Maru Gothic',cursive,sans-serif;
+  font-family: 'Reggae One','Yomogi','Zen Maru Gothic',cursive,sans-serif;
   font-weight: bold;
   color: #ff5fa2;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
@@ -51,11 +51,11 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
-/* ===== ラジオボタン（範囲 / 複数） ===== */
+/* ===== ラジオボタン ===== */
 .radio-group {
   display: flex;
   gap: 20px;
-  margin-top: 8px;
+  margin: 20px 0;
 }
 .radio-label {
   display: flex;
@@ -170,23 +170,15 @@ header .nav a:hover {
 .schedule-card {
   background: #fff5f8;
   border: 2px solid #FDB9C8;
-  padding: 16px;
+  padding: 12px;
   border-radius: 16px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
-}
-.schedule-card:hover {
-  transform: scale(1.02);
 }
 .schedule-card select {
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
   padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
-}
-.schedule-card span {
-  font-weight: bold;
-  color: #004CA0;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
 }
 
 /* ===== レイアウト ===== */
