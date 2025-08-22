@@ -44,7 +44,7 @@ const Header = () => {
       </button>
 
       <nav className={`nav ${menuOpen ? "open" : ""}`}>
-        <Link to="/share" onClick={() => setMenuOpen(false)}>
+        <Link to="/register" onClick={() => setMenuOpen(false)}>
           日程登録
         </Link>
         <Link to="/personal" onClick={() => setMenuOpen(false)}>
