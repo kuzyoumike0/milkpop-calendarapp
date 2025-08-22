@@ -14,8 +14,9 @@ const RegisterPage = () => {
   const todayIso = getTodayIso();
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
-  const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
+  // 時刻選択肢 (1:00〜24:00)
+  const timeOptions = [...Array(24).keys()].map((h) => `${(h+1)%24}:00`);
+  const endTimeOptions = [...Array(24).keys()].map((h) => `${(h+1)%24}:00`);
 
   useEffect(() => {
     const loadHolidays = async () => {
@@ -36,7 +37,6 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 範囲 or 複数選択処理
   const handleDateClick = (date) => {
     if (!date) return;
     const iso = date.toISOString().split("T")[0];
@@ -48,7 +48,7 @@ const RegisterPage = () => {
         setMultiDates([...multiDates, iso]);
         setDateOptions({
           ...dateOptions,
-          [iso]: { type: "終日", start: "9:00", end: "18:00" },
+          [iso]: { type: "終日", start: "1:00", end: "2:00" },
         });
       }
     } else if (mode === "range") {
@@ -64,7 +64,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 範囲の日付を展開
   const getRangeDates = () => {
     if (!range[0] || !range[1]) return [];
     const dates = [];
@@ -76,7 +75,6 @@ const RegisterPage = () => {
     return dates;
   };
 
-  // 日付削除処理
   const removeDate = (iso) => {
     setMultiDates(multiDates.filter((d) => d !== iso));
     const newOptions = { ...dateOptions };
@@ -85,11 +83,25 @@ const RegisterPage = () => {
   };
 
   const handleOptionChange = (date, field, value) => {
+    let newValue = value;
+
+    // バリデーション: 開始 < 終了
+    if (field === "start" && dateOptions[date]?.end) {
+      if (timeOptions.indexOf(value) >= endTimeOptions.indexOf(dateOptions[date].end])) {
+        newValue = dateOptions[date].end;
+      }
+    }
+    if (field === "end" && dateOptions[date]?.start) {
+      if (endTimeOptions.indexOf(value) <= timeOptions.indexOf(dateOptions[date].start])) {
+        newValue = dateOptions[date].start;
+      }
+    }
+
     setDateOptions({
       ...dateOptions,
       [date]: {
         ...dateOptions[date],
-        [field]: value,
+        [field]: newValue,
       },
     });
   };
@@ -101,7 +113,6 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      {/* ===== ヘッダー ===== */}
       <header className="shadow-lg">
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
         <nav className="nav">
@@ -112,7 +123,6 @@ const RegisterPage = () => {
       </header>
 
       <main>
-        {/* ===== タイトル入力 ===== */}
         <div className="mb-6">
           <label className="block text-lg mb-2">タイトル</label>
           <input
@@ -124,7 +134,6 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== ラジオボタン ===== */}
         <div className="radio-group">
           <label className={`radio-label ${mode === "range" ? "radio-active" : ""}`}>
             <input
@@ -149,7 +158,6 @@ const RegisterPage = () => {
         </div>
 
         <div className="register-layout">
-          {/* ===== 左カレンダー ===== */}
           <div className="calendar-section">
             <div className="custom-calendar">
               <div className="calendar-header">
@@ -180,9 +188,10 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* ===== 右側 選択日リスト + 共有リンク ===== */}
+          {/* 選択日リスト */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
+
             {mode === "range" && getRangeDates().length > 0 && (
               getRangeDates().map((date) => (
                 <div key={date} className="schedule-card">
@@ -196,10 +205,33 @@ const RegisterPage = () => {
                     <option value="午後">午後</option>
                     <option value="時間指定">時間指定</option>
                   </select>
+
+                  {dateOptions[date]?.type === "時間指定" && (
+                    <>
+                      <select
+                        value={dateOptions[date]?.start || "1:00"}
+                        onChange={(e) => handleOptionChange(date, "start", e.target.value)}
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        value={dateOptions[date]?.end || "2:00"}
+                        onChange={(e) => handleOptionChange(date, "end", e.target.value)}
+                      >
+                        {endTimeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </div>
               ))
             )}
-            {mode === "multi" && multiDates.length > 0 ? (
+
+            {mode === "multi" && multiDates.length > 0 && (
               multiDates.map((date) => (
                 <div key={date} className="schedule-card">
                   <span>{date}</span>
@@ -212,14 +244,34 @@ const RegisterPage = () => {
                     <option value="午後">午後</option>
                     <option value="時間指定">時間指定</option>
                   </select>
+
+                  {dateOptions[date]?.type === "時間指定" && (
+                    <>
+                      <select
+                        value={dateOptions[date]?.start || "1:00"}
+                        onChange={(e) => handleOptionChange(date, "start", e.target.value)}
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        value={dateOptions[date]?.end || "2:00"}
+                        onChange={(e) => handleOptionChange(date, "end", e.target.value)}
+                      >
+                        {endTimeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </>
+                  )}
+
                   <button onClick={() => removeDate(date)}>✖</button>
                 </div>
               ))
-            ) : mode === "multi" ? (
-              <p className="text-gray-400">まだ日程が選択されていません</p>
-            ) : null}
+            )}
 
-            {/* ===== 共有リンクボタン ===== */}
             <div className="mt-6">
               <button onClick={handleShare} className="share-btn">共有リンクを作成</button>
               {shareLink && (
@@ -232,7 +284,6 @@ const RegisterPage = () => {
         </div>
       </main>
 
-      {/* ===== フッター ===== */}
       <footer>
         <p>© 2025 MilkPOP Calendar</p>
       </footer>
