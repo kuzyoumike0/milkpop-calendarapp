@@ -1,124 +1,140 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import SelectMode from "./SelectMode";
-import { useNavigate } from "react-router-dom";
-import Holidays from "date-holidays";   // ✅ 祝日判定ライブラリ追加
 import "../index.css";
 
-// 日本の祝日データ
-const hd = new Holidays("JP");
-
 const RegisterPage = () => {
-  const [mode, setMode] = useState("range"); // "range" | "multi"
   const [selectedDates, setSelectedDates] = useState([]);
-  const [title, setTitle] = useState(""); // ✅ タイトル入力欄を追加
+  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分設定
 
-  const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
-  const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
-  const [dateOptions, setDateOptions] = useState({});
-
-  const navigate = useNavigate();
+  const mainOptions = ["終日", "午前", "午後", "時間指定"];
+  const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
+  const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
 
   // 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
-    if (mode === "multi") {
-      // 複数選択
-      if (selectedDates.some(d => d.toDateString() === dateStr)) {
-        setSelectedDates(selectedDates.filter(d => d.toDateString() !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, date]);
-      }
+    if (selectedDates.includes(dateStr)) {
+      // 選択解除
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      const newOptions = { ...dateOptions };
+      delete newOptions[dateStr];
+      setDateOptions(newOptions);
     } else {
-      // 範囲選択
-      setSelectedDates([date]);
-    }
-  };
-
-  // カレンダーの祝日・土日判定
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (holiday) return "holiday";   // ✅ 祝日
-      if (date.getDay() === 0) return "sunday";   // ✅ 日曜
-      if (date.getDay() === 6) return "saturday"; // ✅ 土曜
-    }
-    return null;
-  };
-
-  // 保存処理
-  const handleSave = async () => {
-    if (!title.trim()) {
-      alert("タイトルを入力してください");
-      return;
-    }
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,                // ✅ タイトルを送信
-          dates: selectedDates.map(d => d.toISOString()),
-          options: dateOptions,
-        }),
+      // 新規選択
+      setSelectedDates([...selectedDates, dateStr]);
+      setDateOptions({
+        ...dateOptions,
+        [dateStr]: { type: "終日", start: "0:00", end: "24:00" },
       });
-      const data = await res.json();
-      if (data.ok) {
-        alert("登録しました！共有リンクをコピーして他の人に送れます");
-        navigate(`/share/${data.shareId}`);
-      }
-    } catch (err) {
-      console.error("❌ 登録エラー:", err);
+    }
+  };
+
+  // 区分変更
+  const handleTypeChange = (dateStr, value) => {
+    setDateOptions({
+      ...dateOptions,
+      [dateStr]: {
+        type: value,
+        start: "0:00",
+        end: "24:00",
+      },
+    });
+  };
+
+  // 開始時刻変更
+  const handleStartChange = (dateStr, value) => {
+    const current = dateOptions[dateStr];
+    // 終了時刻より前ならOK
+    if (endTimeOptions.indexOf(value) < endTimeOptions.indexOf(current.end)) {
+      setDateOptions({
+        ...dateOptions,
+        [dateStr]: { ...current, start: value },
+      });
+    }
+  };
+
+  // 終了時刻変更
+  const handleEndChange = (dateStr, value) => {
+    const current = dateOptions[dateStr];
+    // 開始時刻より後ならOK
+    if (timeOptions.indexOf(current.start) < timeOptions.indexOf(value)) {
+      setDateOptions({
+        ...dateOptions,
+        [dateStr]: { ...current, end: value },
+      });
     }
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録ページ</h2>
+      <h2 className="page-title">日程登録</h2>
 
-      {/* ✅ タイトル入力 */}
-      <div className="mb-4">
-        <label>
-          タイトル：
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="例：打ち合わせ、飲み会、イベント名"
-            className="p-2 border rounded w-full text-black"
-          />
-        </label>
-      </div>
-
-      {/* カレンダー */}
       <div className="register-layout">
+        {/* カレンダー */}
         <div className="calendar-section">
-          <Calendar
-            onClickDay={handleDateClick}
-            selectRange={mode === "range"}
-            value={selectedDates}
-            tileClassName={tileClassName}   // ✅ 祝日対応
-          />
-          <SelectMode mode={mode} setMode={setMode} />
+          <Calendar onClickDay={handleDateClick} />
         </div>
 
-        {/* 日程リスト */}
+        {/* 選択日程リスト */}
         <div className="schedule-section">
           <h3>選択した日程</h3>
-          {selectedDates.map((d, i) => (
-            <div key={i} className="schedule-item">
-              {d.toLocaleDateString()}
-            </div>
-          ))}
-        </div>
-      </div>
+          {selectedDates.length === 0 ? (
+            <p>まだ日程が選択されていません。</p>
+          ) : (
+            <div>
+              {selectedDates.map((dateStr) => {
+                const opt = dateOptions[dateStr];
+                return (
+                  <div key={dateStr} className="schedule-item">
+                    <span>{dateStr}</span>
+                    {/* メイン区分 */}
+                    <select
+                      value={opt.type}
+                      onChange={(e) => handleTypeChange(dateStr, e.target.value)}
+                      className="vote-select"
+                    >
+                      {mainOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
 
-      {/* 保存ボタン */}
-      <div className="mt-6 text-center">
-        <button className="fancy-btn" onClick={handleSave}>
-          登録して共有リンクを発行
-        </button>
+                    {/* 時間指定ならさらに2つ表示 */}
+                    {opt.type === "時間指定" && (
+                      <>
+                        <select
+                          value={opt.start}
+                          onChange={(e) => handleStartChange(dateStr, e.target.value)}
+                          className="vote-select"
+                        >
+                          {timeOptions.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                        <span>〜</span>
+                        <select
+                          value={opt.end}
+                          onChange={(e) => handleEndChange(dateStr, e.target.value)}
+                          className="vote-select"
+                        >
+                          {endTimeOptions.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
