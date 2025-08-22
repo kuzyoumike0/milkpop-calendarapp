@@ -29,8 +29,3 @@ CREATE TABLE IF NOT EXISTS personal_schedules (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_share FOREIGN KEY (share_id) REFERENCES schedules(id) ON DELETE CASCADE
 );
-
--- ===== インデックス作成 =====
-CREATE INDEX IF NOT EXISTS idx_schedules_share_token ON schedules(share_token);
-CREATE INDEX IF NOT EXISTS idx_responses_schedule_id ON schedule_responses(schedule_id);
-CREATE INDEX IF NOT EXISTS idx_personal_share_id ON personal_schedules(share_id);
