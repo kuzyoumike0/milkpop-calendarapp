@@ -14,9 +14,9 @@ const RegisterPage = () => {
   const todayIso = getTodayIso();
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // 時刻選択肢 (1:00〜24:00)
-  const timeOptions = [...Array(24).keys()].map((h) => `${(h+1)%24}:00`);
-  const endTimeOptions = [...Array(24).keys()].map((h) => `${(h+1)%24}:00`);
+  // 時刻選択肢 (1:00〜0:00)
+  const timeOptions = [...Array(24).keys()].map((h) => `${(h + 1) % 24}:00`);
+  const endTimeOptions = [...Array(24).keys()].map((h) => `${(h + 1) % 24}:00`);
 
   useEffect(() => {
     const loadHolidays = async () => {
@@ -87,12 +87,12 @@ const RegisterPage = () => {
 
     // バリデーション: 開始 < 終了
     if (field === "start" && dateOptions[date]?.end) {
-      if (timeOptions.indexOf(value) >= endTimeOptions.indexOf(dateOptions[date].end])) {
+      if (timeOptions.indexOf(value) >= endTimeOptions.indexOf(dateOptions[date].end)) {
         newValue = dateOptions[date].end;
       }
     }
     if (field === "end" && dateOptions[date]?.start) {
-      if (endTimeOptions.indexOf(value) <= timeOptions.indexOf(dateOptions[date].start])) {
+      if (endTimeOptions.indexOf(value) <= timeOptions.indexOf(dateOptions[date].start)) {
         newValue = dateOptions[date].start;
       }
     }
@@ -107,7 +107,9 @@ const RegisterPage = () => {
   };
 
   const handleShare = () => {
-    const link = `${window.location.origin}/share/${Math.random().toString(36).substr(2, 8)}`;
+    const link = `${window.location.origin}/share/${Math.random()
+      .toString(36)
+      .substr(2, 8)}`;
     setShareLink(link);
   };
 
@@ -141,7 +143,7 @@ const RegisterPage = () => {
               name="mode"
               value="range"
               checked={mode === "range"}
-              onChange={() => { setMode("range"); setMultiDates([]); setRange([null,null]); }}
+              onChange={() => { setMode("range"); setMultiDates([]); setRange([null, null]); }}
             />
             範囲選択
           </label>
@@ -161,12 +163,26 @@ const RegisterPage = () => {
           <div className="calendar-section">
             <div className="custom-calendar">
               <div className="calendar-header">
-                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>←</button>
-                <h3>{currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月</h3>
-                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>→</button>
+                <button
+                  onClick={() =>
+                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+                  }
+                >
+                  ←
+                </button>
+                <h3>
+                  {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
+                </h3>
+                <button
+                  onClick={() =>
+                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+                  }
+                >
+                  →
+                </button>
               </div>
               <div className="calendar-grid">
-                {["日","月","火","水","木","金","土"].map((w) => (
+                {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
                   <div key={w} className="weekday">{w}</div>
                 ))}
                 {generateDays().map((date, idx) => {
@@ -188,11 +204,10 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* 選択日リスト */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
 
-            {mode === "range" && getRangeDates().length > 0 && (
+            {mode === "range" && getRangeDates().length > 0 &&
               getRangeDates().map((date) => (
                 <div key={date} className="schedule-card">
                   <span>{date}</span>
@@ -228,10 +243,9 @@ const RegisterPage = () => {
                     </>
                   )}
                 </div>
-              ))
-            )}
+              ))}
 
-            {mode === "multi" && multiDates.length > 0 && (
+            {mode === "multi" && multiDates.length > 0 &&
               multiDates.map((date) => (
                 <div key={date} className="schedule-card">
                   <span>{date}</span>
@@ -269,8 +283,7 @@ const RegisterPage = () => {
 
                   <button onClick={() => removeDate(date)}>✖</button>
                 </div>
-              ))
-            )}
+              ))}
 
             <div className="mt-6">
               <button onClick={handleShare} className="share-btn">共有リンクを作成</button>
