@@ -2,18 +2,19 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import SelectMode from "./SelectMode";
+import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 import "../index.css";
 
 const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
 
-  // 開始時刻 0:00〜23:00
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
-  // 終了時刻 0:00〜23:00 + 翌日0:00
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
+  const [dateOptions, setDateOptions] = useState({});
 
-  const [dateOptions, setDateOptions] = useState({}); // 日ごとの区分・時刻を保持
+  const navigate = useNavigate();
 
   // 日付クリック処理
   const handleDateClick = (date) => {
@@ -57,7 +58,6 @@ const RegisterPage = () => {
     let updated = { ...dateOptions };
     updated[dateStr][field] = value;
 
-    // index計算（終了だけ"24:00"対応）
     const startIdx = timeOptions.indexOf(updated[dateStr].start);
     const endIdx = updated[dateStr].end === "24:00"
       ? 24
@@ -65,15 +65,24 @@ const RegisterPage = () => {
 
     if (startIdx >= endIdx) {
       if (field === "start") {
-        // 開始を動かしたとき → 終了を最低でも+1時間に
         updated[dateStr].end = startIdx < 23 ? timeOptions[startIdx + 1] : "24:00";
       } else {
-        // 終了を動かしたとき → 開始を手前にずらす
         updated[dateStr].start = endIdx > 0 ? timeOptions[endIdx - 1] : "0:00";
       }
     }
 
     setDateOptions(updated);
+  };
+
+  // 共有リンク発行
+  const handleShareLink = () => {
+    const newId = uuidv4();
+    localStorage.setItem(newId, JSON.stringify({
+      mode,
+      dates: selectedDates,
+      options: dateOptions
+    }));
+    navigate(`/share/${newId}`);
   };
 
   return (
@@ -143,6 +152,13 @@ const RegisterPage = () => {
               </div>
             );
           })}
+
+          {/* 共有リンク発行ボタン */}
+          {selectedDates.length > 0 && (
+            <button className="fancy-btn" onClick={handleShareLink}>
+              共有リンクを発行
+            </button>
+          )}
         </div>
       </div>
     </div>
