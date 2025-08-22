@@ -1,7 +1,6 @@
 /* ===== フォント ===== */
 @import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
 
-/* ===== ページ全体 ===== */
 body {
   margin: 0;
   padding: 0 0 0 20px;
@@ -117,79 +116,8 @@ main {
 .schedule-section {
   flex: 0 0 30%;
   max-width: 30%;
-  min-width: 320px;
-}
-
-/* ===== 自作カレンダー ===== */
-.custom-calendar {
-  background: #fff;
-  border-radius: 24px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  border: 3px solid #FDB9C8;
-}
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.calendar-header h3 {
-  color: #004CA0;
-}
-.calendar-header button {
-  background: #FDB9C8;
-  border: none;
-  border-radius: 12px;
-  padding: 6px 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.calendar-header button:hover {
-  background: #004CA0;
-  color: #fff;
-  transform: scale(1.05);
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-.weekday {
-  text-align: center;
-  font-weight: bold;
-  color: #004CA0;
-}
-.day {
-  text-align: center;
-  padding: 12px 0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #fafafa;
-}
-.day:hover {
-  background: #ffe4ec;
-  transform: scale(1.05);
-}
-.day.today {
-  background: #004CA0;
-  color: #fff;
-  font-weight: bold;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
-}
-.day.selected {
-  background: linear-gradient(90deg, #FDB9C8, #ff85b3);
-  color: #fff;
-  font-weight: bold;
-}
-.day.holiday {
-  color: red;
-}
-.day.saturday {
-  color: #004CA0;
+  min-width: 340px;
+  padding-right: 30px;   /* 右側余裕 */
 }
 
 /* ===== 選択日カード ===== */
@@ -205,6 +133,7 @@ main {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 .schedule-card span {
   font-weight: bold;
@@ -228,20 +157,4 @@ main {
 .schedule-card button:hover {
   color: red;
   transform: scale(1.2);
-}
-
-/* ===== 共有リンクボタン ===== */
-.share-btn {
-  background: #FDB9C8;
-  color: black;
-  font-weight: bold;
-  padding: 10px 20px;
-  border-radius: 12px;
-  transition: all 0.2s;
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
-}
-.share-btn:hover {
-  background: #004CA0;
-  color: white;
-  transform: scale(1.05);
 }
