@@ -1,72 +1,115 @@
+// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "../index.css";
+import {
+  Button,
+  Input,
+  Select,
+  Box,
+  Heading,
+  VStack,
+  Text,
+} from "@chakra-ui/react";
 
 const SharePage = () => {
-  const { id } = useParams();
+  const { shareId } = useParams();
   const [schedules, setSchedules] = useState([]);
-  const [username, setUsername] = useState("");
-  const [answers, setAnswers] = useState({}); // { date: "◯/✕" }
+  const [responses, setResponses] = useState({}); // { "2025-08-22": { name: "", answer: "○" } }
 
+  // 初回ロード時にサーバーから共有日程を取得
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSchedules = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/share/${id}`);
+        const res = await fetch(`/api/share/${shareId}`);
         const data = await res.json();
-        // 日付でソート
-        const sorted = data.schedules.sort((a, b) =>
-          a.date.localeCompare(b.date)
-        );
-        setSchedules(sorted);
+        setSchedules(data.schedules || []);
       } catch (err) {
-        console.error(err);
+        console.error("❌ 共有日程取得失敗:", err);
       }
     };
-    fetchData();
-  }, [id]);
+    fetchSchedules();
+  }, [shareId]);
 
-  const handleChange = (date, value) => {
-    setAnswers((prev) => ({ ...prev, [date]: value }));
+  // 入力変更処理
+  const handleChange = (date, field, value) => {
+    setResponses((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], [field]: value },
+    }));
   };
 
-  const handleSubmit = () => {
-    alert(`ユーザー: ${username}\n回答: ${JSON.stringify(answers, null, 2)}`);
-    // TODO: サーバーに送信するAPIを作る
+  // 保存処理
+  const handleSave = async () => {
+    const payload = Object.entries(responses).map(([date, info]) => ({
+      date,
+      name: info.name || "",
+      answer: info.answer || "未回答",
+    }));
+
+    try {
+      const res = await fetch(`/api/share/${shareId}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ responses: payload }),
+      });
+
+      if (!res.ok) throw new Error("保存失敗");
+      alert("✅ 回答を保存しました！");
+    } catch (err) {
+      console.error(err);
+      alert("❌ サーバー保存に失敗しました");
+    }
   };
 
   return (
-    <div className="page-container">
-      <h2 className="page-title">共有スケジュール</h2>
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <input
-          type="text"
-          placeholder="お名前を入力"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #ccc" }}
-        />
-      </div>
-      <div className="schedule-section">
+    <Box className="page-container">
+      <Heading size="lg" textAlign="center" mb={6}>
+        共有日程 - 回答ページ
+      </Heading>
+
+      <VStack spacing={6} align="stretch">
+        {schedules.length === 0 && <Text>日程がありません</Text>}
+
         {schedules.map((s) => (
-          <div key={s.date} className="schedule-item">
-            <span>{s.date} ({s.time})</span>
-            <select
-              value={answers[s.date] || ""}
-              onChange={(e) => handleChange(s.date, e.target.value)}
+          <Box
+            key={s.date}
+            className="schedule-item"
+            p={4}
+            borderWidth="1px"
+            borderRadius="lg"
+          >
+            <Text fontWeight="bold" mb={2}>
+              📅 {s.date}（{s.time || "未設定"}）
+            </Text>
+            <Input
+              placeholder="あなたの名前"
+              mb={2}
+              value={responses[s.date]?.name || ""}
+              onChange={(e) => handleChange(s.date, "name", e.target.value)}
+            />
+            <Select
+              placeholder="参加可否を選択"
+              value={responses[s.date]?.answer || ""}
+              onChange={(e) => handleChange(s.date, "answer", e.target.value)}
             >
-              <option value="">選択</option>
-              <option value="◯">◯</option>
-              <option value="✕">✕</option>
-            </select>
-          </div>
+              <option value="○">○ 参加可能</option>
+              <option value="✖">✖ 不可</option>
+            </Select>
+          </Box>
         ))}
-        {schedules.length > 0 && (
-          <button className="submit-btn" onClick={handleSubmit}>
-            回答を送信
-          </button>
-        )}
-      </div>
-    </div>
+      </VStack>
+
+      {schedules.length > 0 && (
+        <Button
+          colorScheme="blue"
+          mt={6}
+          width="100%"
+          onClick={handleSave}
+        >
+          保存する
+        </Button>
+      )}
+    </Box>
   );
 };
 
