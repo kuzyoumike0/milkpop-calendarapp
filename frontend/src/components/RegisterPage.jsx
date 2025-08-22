@@ -7,7 +7,12 @@ import "../index.css";
 const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`)); // 0:00〜23:00
+
+  // 開始時刻 0:00〜23:00
+  const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
+  // 終了時刻 0:00〜23:00 + 翌日0:00
+  const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
+
   const [dateOptions, setDateOptions] = useState({}); // 日ごとの区分・時刻を保持
 
   // 日付クリック処理
@@ -52,14 +57,19 @@ const RegisterPage = () => {
     let updated = { ...dateOptions };
     updated[dateStr][field] = value;
 
-    // 開始時刻より終了時刻が前なら修正
+    // index計算（終了だけ"24:00"対応）
     const startIdx = timeOptions.indexOf(updated[dateStr].start);
-    const endIdx = timeOptions.indexOf(updated[dateStr].end);
+    const endIdx = updated[dateStr].end === "24:00"
+      ? 24
+      : timeOptions.indexOf(updated[dateStr].end);
+
     if (startIdx >= endIdx) {
       if (field === "start") {
-        updated[dateStr].end = timeOptions[startIdx + 1] || "23:00";
+        // 開始を動かしたとき → 終了を最低でも+1時間に
+        updated[dateStr].end = startIdx < 23 ? timeOptions[startIdx + 1] : "24:00";
       } else {
-        updated[dateStr].start = timeOptions[endIdx - 1] || "0:00";
+        // 終了を動かしたとき → 開始を手前にずらす
+        updated[dateStr].start = endIdx > 0 ? timeOptions[endIdx - 1] : "0:00";
       }
     }
 
@@ -124,8 +134,8 @@ const RegisterPage = () => {
                       value={option.end}
                       onChange={(e) => handleTimeChange(dateStr, "end", e.target.value)}
                     >
-                      {timeOptions.map((t, idx) => (
-                        <option key={idx} value={t}>{t}</option>
+                      {endTimeOptions.map((t, idx) => (
+                        <option key={idx} value={t}>{t === "24:00" ? "翌日0:00" : t}</option>
                       ))}
                     </select>
                   </div>
