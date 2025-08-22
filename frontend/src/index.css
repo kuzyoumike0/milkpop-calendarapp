@@ -247,3 +247,38 @@ h1, h2, .page-title, .welcome-text {
 .submit-btn:hover {
   transform: scale(1.05) !important;
 }
+
+/* カレンダー全体 */
+.custom-calendar {
+  border: none !important;
+  width: 100% !important;
+  background: #fff0f5 !important; /* 薄ピンク背景 */
+  font-family: 'Poppins','Noto Sans JP', sans-serif !important;
+}
+
+/* 日付タイル */
+.custom-calendar .react-calendar__tile {
+  padding: 12px !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+}
+
+/* 今日 */
+.custom-calendar .react-calendar__tile--now {
+  background: #004CA0 !important;
+  color: white !important;
+}
+
+/* 選択日 */
+.custom-calendar .react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold !important;
+}
+
+/* ホバー */
+.custom-calendar .react-calendar__tile:hover {
+  background: #ffe4ec !important;
+  cursor: pointer;
+}
+
