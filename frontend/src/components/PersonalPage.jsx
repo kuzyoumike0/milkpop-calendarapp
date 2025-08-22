@@ -5,63 +5,107 @@ import "react-calendar/dist/Calendar.css";
 import "../index.css";
 
 const PersonalPage = () => {
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("range"); // range | multi
+  const [range, setRange] = useState([null, null]);
+  const [multiDates, setMultiDates] = useState([]);
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [time, setTime] = useState("終日");
 
-  // 日付クリック
-  const handleDateClick = (date) => {
+  // ===== 複数日クリック用 =====
+  const handleMultiClick = (date) => {
     const dateStr = date.toDateString();
-    if (selectedDates.some((d) => d.toDateString() === dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d.toDateString() !== dateStr));
+    if (multiDates.some((d) => d.toDateString() === dateStr)) {
+      setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
     } else {
-      setSelectedDates([...selectedDates, date]);
+      setMultiDates([...multiDates, date]);
     }
   };
 
-  // 登録
+  // ===== 登録 =====
   const handleAddEvent = () => {
     if (!title) return;
+
+    let datesInfo = [];
+    if (mode === "range") {
+      if (!range[0] || !range[1]) return alert("範囲を選択してください！");
+      datesInfo = [
+        `${range[0].toDateString()} 〜 ${range[1].toDateString()}`
+      ];
+    } else {
+      if (multiDates.length === 0) return alert("日付を選択してください！");
+      datesInfo = multiDates.map((d) => d.toDateString());
+    }
+
     const newEvent = {
       id: Date.now(),
       title,
       memo,
       time,
-      dates: selectedDates.map((d) => d.toDateString()),
+      dates: datesInfo
     };
+
     setEvents([...events, newEvent]);
     setTitle("");
     setMemo("");
     setTime("終日");
-    setSelectedDates([]);
+    setRange([null, null]);
+    setMultiDates([]);
   };
 
   return (
     <div className="page-container">
-      {/* バナー */}
-      <div className="banner">
-        <span>MilkPOP Calendar</span>
-        <nav className="nav-links">
-          <a href="/">🏠 トップ</a>
-          <a href="/register">🗓 日程登録</a>
-          <a href="/personal">👤 個人スケジュール</a>
-        </nav>
-      </div>
+      {/* 共通ヘッダー */}
+      {/* <Header /> を呼ぶようにしてください */}
 
-      {/* レイアウト */}
       <div className="register-layout">
         {/* カレンダー */}
         <div className="calendar-section">
-          <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={({ date }) =>
-              selectedDates.some((d) => d.toDateString() === date.toDateString())
-                ? "selected-date"
-                : ""
-            }
-          />
+          {/* ラジオボタン切り替え */}
+          <div className="mode-select">
+            <label>
+              <input
+                type="radio"
+                value="range"
+                checked={mode === "range"}
+                onChange={(e) => setMode(e.target.value)}
+              />
+              範囲選択
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="multi"
+                checked={mode === "multi"}
+                onChange={(e) => setMode(e.target.value)}
+              />
+              複数選択
+            </label>
+          </div>
+
+          {mode === "range" ? (
+            <Calendar
+              selectRange={true}
+              onChange={setRange}
+              value={range}
+              tileClassName={({ date }) =>
+                range[0] && range[1] && date >= range[0] && date <= range[1]
+                  ? "selected-date"
+                  : ""
+              }
+            />
+          ) : (
+            <Calendar
+              onClickDay={handleMultiClick}
+              value={multiDates}
+              tileClassName={({ date }) =>
+                multiDates.some((d) => d.toDateString() === date.toDateString())
+                  ? "selected-date"
+                  : ""
+              }
+            />
+          )}
         </div>
 
         {/* 右側リスト */}
