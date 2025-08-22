@@ -344,4 +344,28 @@
 .delete-btn:hover {
   background: #e63946;
 }
+.rbc-toolbar button {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.rbc-event {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
 
