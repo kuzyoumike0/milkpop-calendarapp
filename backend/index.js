@@ -27,17 +27,22 @@ app.post("/api/share/:id/respond", (req, res) => {
   const { id } = req.params;
   const { username, responses } = req.body;
 
-  if (!username || !responses) {
-    return res.json({ ok: false, error: "必要なデータがありません" });
+  // ユーザー名は必須
+  if (!username || username.trim() === "") {
+    return res.json({ ok: false, error: "ユーザー名が必要です" });
   }
 
+  // スケジュール存在チェック
   if (!schedulesDB[id]) {
     return res.json({ ok: false, error: "スケジュールが存在しません" });
   }
 
+  // responses が未定義なら空オブジェクトとして扱う
+  const safeResponses = responses && typeof responses === "object" ? responses : {};
+
   // responses をスケジュールに保存
   if (!schedulesDB[id].responses) schedulesDB[id].responses = {};
-  schedulesDB[id].responses[username] = responses;
+  schedulesDB[id].responses[username] = safeResponses;
 
   res.json({ ok: true, data: schedulesDB[id] });
 });
