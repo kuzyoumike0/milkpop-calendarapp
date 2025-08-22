@@ -2,13 +2,16 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import SelectMode from "./SelectMode";
+import Holidays from "date-holidays";
 import "../index.css";
+
+const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
-  const [title, setTitle] = useState("");   // ✅ タイトル必須
+  const [title, setTitle] = useState("");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
@@ -18,6 +21,29 @@ const RegisterPage = () => {
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
   );
+
+  // ===== 日本時間で今日の日付を取得 =====
+  const today = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+
+  // ===== カレンダー日付の色付け =====
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (
+        date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate()
+      ) {
+        return "today-highlight"; // ✅ 今日
+      }
+      if (holiday) return "holiday"; // ✅ 祝日
+      if (date.getDay() === 0) return "sunday"; // 日曜
+      if (date.getDay() === 6) return "saturday"; // 土曜
+    }
+    return null;
+  };
 
   // ===== 日付クリック処理 =====
   const handleDateClick = (date) => {
@@ -39,9 +65,7 @@ const RegisterPage = () => {
     }
 
     const dates =
-      mode === "range"
-        ? range.filter((d) => d !== null)
-        : multiDates;
+      mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
     if (dates.length === 0) {
       alert("日程を選択してください");
@@ -61,7 +85,7 @@ const RegisterPage = () => {
 
       const data = await res.json();
       if (data.ok && data.url) {
-        setShareUrls((prev) => [...prev, { title, url: data.url }]); // ✅ 履歴追加
+        setShareUrls((prev) => [...prev, { title, url: data.url }]);
       } else {
         alert("リンク生成に失敗しました");
       }
@@ -94,6 +118,7 @@ const RegisterPage = () => {
         onChange={setRange}
         value={mode === "range" ? range : null}
         onClickDay={handleDateClick}
+        tileClassName={tileClassName}  // ✅ 色付け適用
         locale="ja-JP"
         calendarType="gregory"
       />
