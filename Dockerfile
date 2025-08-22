@@ -1,28 +1,24 @@
-# ==========================
-# 1. フロントエンドをビルド
-# ==========================
+# ===== React (frontend) build =====
 FROM node:18 AS frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
-COPY frontend/ ./
+COPY frontend ./
 RUN npm run build
 
-# ==========================
-# 2. バックエンドをセットアップ
-# ==========================
+# ===== Backend (Express) =====
 FROM node:18 AS backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
-COPY backend/ ./
 
-# ==========================
-# 3. React の build をコピー
-# ==========================
-COPY --from=frontend /app/frontend/build ./frontend/build
+# React のビルド成果物を backend から見える /app/frontend/build にコピー
+COPY --from=frontend /app/frontend/build /app/frontend/build
 
-# ==========================
-# 4. 起動コマンド
-# ==========================
+# backend のソースをコピー
+COPY backend ./
+
+# 環境変数
+ENV NODE_ENV=production
+
 CMD ["node", "index.js"]
