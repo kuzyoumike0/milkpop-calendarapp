@@ -3,71 +3,50 @@ const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
-const { Pool } = require("pg");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== PostgreSQL 接続 =====
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+// 簡易DB（本番ではPostgreSQLを使用）
+let schedulesDB = {};
+let sessions = {}; // セッション管理
+
+// ===== ミドルウェア：CSP =====
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+  );
+  next();
 });
 
-// ===== 保存API =====
-app.post("/api/schedules", async (req, res) => {
-  try {
-    const schedules = req.body;
-    const shareId = uuidv4();
+// ===== スケジュール保存 =====
+app.post("/api/schedules", (req, res) => {
+  const { title, schedules } = req.body;
+  const id = uuidv4(); // 毎回新しいIDを発行
+  schedulesDB[id] = { id, title, schedules, createdAt: new Date() };
+  res.json({ id, url: `/share/${id}` });
+});
 
-    // DBに保存（share_id ごとにまとめる）
-    await pool.query("BEGIN");
-    for (const s of schedules) {
-      await pool.query(
-        `INSERT INTO schedules (share_id, date, type, start_time, end_time) 
-         VALUES ($1, $2, $3, $4, $5)`,
-        [shareId, s.date, s.type, s.start, s.end]
-      );
-    }
-    await pool.query("COMMIT");
-
-    res.json({ shareId });
-  } catch (err) {
-    await pool.query("ROLLBACK");
-    console.error("保存エラー:", err);
-    res.status(500).json({ error: "保存に失敗しました" });
+// ===== スケジュール取得（共有リンク用） =====
+app.get("/api/share/:id", (req, res) => {
+  const id = req.params.id;
+  if (schedulesDB[id]) {
+    res.json(schedulesDB[id]);
+  } else {
+    res.status(404).json({ error: "スケジュールが見つかりません" });
   }
 });
 
-// ===== 共有リンク用API =====
-app.get("/api/share/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query(
-      "SELECT date, type, start_time, end_time FROM schedules WHERE share_id = $1 ORDER BY date",
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
-    }
-
-    res.json({ shareId: id, schedules: result.rows });
-  } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "データ取得に失敗しました" });
-  }
-});
-
-// ===== 静的ファイル配信（フロントビルド） =====
+// ===== フロントエンド静的ファイル提供 =====
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 // ===== サーバー起動 =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
