@@ -1,7 +1,9 @@
 # ===== フロントエンドのビルド =====
 FROM node:18 AS frontend
 WORKDIR /app/frontend
-COPY frontend/package.json frontend/package-lock.json ./
+COPY frontend/package.json ./
+# package-lock.json が無いならこの行を削除
+# COPY frontend/package-lock.json ./
 RUN npm install
 COPY frontend/ ./
 RUN npm run build
@@ -9,7 +11,9 @@ RUN npm run build
 # ===== バックエンド =====
 FROM node:18
 WORKDIR /app
-COPY backend/package.json backend/package-lock.json ./backend/
+COPY backend/package.json ./backend/
+# package-lock.json が無いならこの行を削除
+# COPY backend/package-lock.json ./backend/
 WORKDIR /app/backend
 RUN npm install
 COPY backend/ ./
