@@ -84,3 +84,92 @@ body {
   bottom: 0;
   left: 0;
 }
+
+/* ===== カレンダー全体 ===== */
+.calendar-container {
+  margin: 30px auto;
+  padding: 20px;
+  max-width: 800px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+}
+
+/* ヘッダー */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.calendar-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+.calendar-header button {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.calendar-header button:hover {
+  opacity: 0.8;
+}
+
+/* グリッド */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.calendar-weekdays {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+.calendar-weekday {
+  text-align: center;
+  color: #444;
+}
+
+/* 日付セル */
+.calendar-day {
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1.1rem;
+  padding-top: 6px;
+}
+.calendar-day:hover {
+  background: #fdf0f5;
+  transform: scale(1.05);
+}
+.calendar-day.today {
+  background: #ffe6f0;
+  border: 2px solid #FDB9C8;
+  font-weight: bold;
+}
+.calendar-day.selected {
+  background: #c9e4ff;
+  border: 2px solid #004CA0;
+  font-weight: bold;
+}
+.calendar-day.holiday {
+  color: #d32f2f;
+}
+.holiday-label {
+  font-size: 0.7rem;
+  margin-top: 4px;
+  color: #d32f2f;
+}
