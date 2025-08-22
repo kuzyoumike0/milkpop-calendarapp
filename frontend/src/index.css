@@ -1,39 +1,13 @@
-/* ===== ヘッダー ===== */
-.banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  padding: 16px 24px;
+/* ===== ページ全体レイアウト ===== */
+html, body, #root {
+  height: 100%;
+  margin: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  flex-direction: column;
 }
 
-.banner nav a {
-  margin-left: 20px;
-  text-decoration: none;
-  color: #fff;
-  font-size: 1rem;
-  transition: color 0.3s ease;
-}
-.banner nav a:hover {
-  color: #000;
-}
-
-.header-image {
-  display: flex;
-  justify-content: center;
-  margin: 0 auto;
-  padding: 10px 0;
-}
-.header-image img {
-  width: 1040px;
-  max-width: 100%;
-  height: auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+main {
+  flex: 1; /* 中央コンテンツを押し広げる */
 }
 
 /* ===== フッター ===== */
@@ -44,6 +18,9 @@
   font-size: 0.9rem;
   color: #fff;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.4);
+  position: relative;
+  bottom: 0;
+  width: 100%;
 }
 
 .footer-image {
