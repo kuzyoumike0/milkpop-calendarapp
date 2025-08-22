@@ -3,7 +3,11 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import SelectMode from "./SelectMode";
 import { useNavigate } from "react-router-dom";
+import Holidays from "date-holidays";   // ✅ 祝日判定ライブラリ追加
 import "../index.css";
+
+// 日本の祝日データ
+const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [mode, setMode] = useState("range"); // "range" | "multi"
@@ -30,6 +34,17 @@ const RegisterPage = () => {
       // 範囲選択
       setSelectedDates([date]);
     }
+  };
+
+  // カレンダーの祝日・土日判定
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (holiday) return "holiday";   // ✅ 祝日
+      if (date.getDay() === 0) return "sunday";   // ✅ 日曜
+      if (date.getDay() === 6) return "saturday"; // ✅ 土曜
+    }
+    return null;
   };
 
   // 保存処理
@@ -71,7 +86,7 @@ const RegisterPage = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例：打ち合わせ、飲み会、イベント名"
-            className="p-2 border rounded w-full"
+            className="p-2 border rounded w-full text-black"
           />
         </label>
       </div>
@@ -83,6 +98,7 @@ const RegisterPage = () => {
             onClickDay={handleDateClick}
             selectRange={mode === "range"}
             value={selectedDates}
+            tileClassName={tileClassName}   // ✅ 祝日対応
           />
           <SelectMode mode={mode} setMode={setMode} />
         </div>
