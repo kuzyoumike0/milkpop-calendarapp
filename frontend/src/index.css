@@ -1,6 +1,7 @@
-/* ===== ページ全体の基本設定 ===== */
+/* ===== フォント ===== */
 @import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Stick&family=Yomogi&family=Zen+Maru+Gothic&family=M+PLUS+Rounded+1c&family=Poppins:wght@400;600&family=Noto+Sans+JP:wght@400;700&display=swap');
 
+/* ===== ページ全体 ===== */
 body {
   margin: 0;
   padding: 0;
@@ -10,13 +11,13 @@ body {
   font-family: 'Poppins','Noto Sans JP','Zen Maru Gothic','M PLUS Rounded 1c','Reggae One','Stick','Yomogi',sans-serif;
 }
 
-/* ===== ページレイアウトコンテナ ===== */
+/* ===== ページコンテナ ===== */
 .page-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
-  background: #fffafc; /* 柔らかいピンク */
+  background: #fffafc;
   color: #333;
 }
 
@@ -37,19 +38,16 @@ header,
   width: 100%;
   z-index: 1000;
 }
-
 header .logo {
   font-size: 1.4rem;
   font-weight: bold;
   letter-spacing: 1px;
 }
-
 header .nav {
   display: flex;
   gap: 32px;
   align-items: center;
 }
-
 header .nav a {
   color: #fff;
   text-decoration: none;
@@ -59,7 +57,6 @@ header .nav a {
 header .nav a:hover {
   color: #ff5fa2;
 }
-
 header .login-btn {
   margin-left: 32px;
   background: linear-gradient(90deg, #7289da, #5865f2);
@@ -88,7 +85,7 @@ footer {
   width: 100%;
 }
 
-/* ===== main の余白調整 ===== */
+/* ===== main ===== */
 main {
   flex: 1;
   margin-top: 80px;
@@ -137,7 +134,7 @@ h1, h2, .page-title, .welcome-text {
   text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
 }
 
-/* ===== react-calendar カスタマイズ ===== */
+/* ===== カレンダー（react-calendar） ===== */
 .custom-calendar {
   width: 100%;
   max-width: 1000px;
@@ -235,7 +232,7 @@ h1, h2, .page-title, .welcome-text {
   color: #d32f2f;
 }
 
-/* ====== ラジオボタン ====== */
+/* ===== ラジオボタン ===== */
 .radio-group.horizontal {
   display: flex;
   gap: 20px;
@@ -264,14 +261,14 @@ h1, h2, .page-title, .welcome-text {
   font-weight: bold;
 }
 
-/* ====== プルダウン ====== */
+/* ===== プルダウン ===== */
 .vote-select {
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ccc;
 }
 
-/* ====== 保存ボタン ====== */
+/* ===== 保存ボタン ===== */
 .submit-btn {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
@@ -285,7 +282,7 @@ h1, h2, .page-title, .welcome-text {
   transform: scale(1.05);
 }
 
-/* タイトル入力 */
+/* ===== タイトル入力 ===== */
 .title-input {
   width: 100%;
   max-width: 400px;
@@ -305,76 +302,4 @@ h1, h2, .page-title, .welcome-text {
     max-width: 100%;
     flex: 0 0 100%;
   }
-  .register-container {
-  display: flex;
-  gap: 30px;
-  padding: 30px;
-}
-
-/* 左側フォーム */
-.left-panel {
-  flex: 1;
-}
-.title-input {
-  display: block;
-  width: 100%;
-  margin: 10px 0 20px;
-  padding: 8px;
-  border: 2px solid #f48fb1;
-  border-radius: 8px;
-}
-
-/* ラジオボタン横並び */
-.time-type label {
-  margin-right: 15px;
-  font-weight: bold;
-  color: #444;
-}
-
-/* カレンダー */
-.right-panel {
-  flex: 2;
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-.weekday {
-  font-weight: bold;
-  color: #004ca0;
-  text-align: center;
-}
-.day {
-  text-align: center;
-  padding: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.day:hover {
-  background: #fde0ef;
-}
-.day.today {
-  border: 2px solid #004ca0;
-  font-weight: bold;
-}
-.day.selected {
-  background: #f48fb1;
-  color: white;
-}
-
-/* 選択リスト */
-.selected-list {
-  margin-top: 20px;
-  padding: 15px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
 }
