@@ -281,4 +281,92 @@ h1, h2, .page-title, .welcome-text {
   background: #ffe4ec !important;
   cursor: pointer;
 }
+/* ===== カレンダー全体 ===== */
+.custom-calendar {
+  width: 100%;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff0f5, #fce4ec);
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  font-family: 'Poppins','Noto Sans JP', sans-serif;
+  color: #333;
+}
+
+/* ヘッダー部分 */
+.custom-calendar .react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.custom-calendar .react-calendar__navigation button {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #004CA0;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+.custom-calendar .react-calendar__navigation button:hover {
+  background: #FDB9C8;
+  color: white;
+}
+
+/* 曜日ラベル */
+.custom-calendar .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* 日付タイル */
+.custom-calendar .react-calendar__tile {
+  padding: 15px 5px;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* 今日 */
+.custom-calendar .react-calendar__tile--now {
+  background: #004CA0 !important;
+  color: white !important;
+  font-weight: bold;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
+
+/* 選択 */
+.custom-calendar .react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+/* 範囲選択 */
+.custom-calendar .react-calendar__tile--range {
+  background: #ffe4ec !important;
+  border-radius: 10px;
+  color: #333 !important;
+}
+
+/* ホバー */
+.custom-calendar .react-calendar__tile:hover {
+  background: #f8bbd0;
+  color: black;
+  cursor: pointer;
+}
+
+/* 土日 */
+.custom-calendar .react-calendar__month-view__days__day--weekend {
+  color: #d32f2f;
+}
 
