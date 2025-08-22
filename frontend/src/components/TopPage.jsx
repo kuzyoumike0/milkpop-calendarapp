@@ -1,17 +1,16 @@
+// frontend/src/components/TopPage.jsx
 import React from "react";
 import "../index.css";
 
 const TopPage = () => {
   return (
-    <div className="page-container">
-      {/* トップ画像 */}
-      <div className="top-image">
-        <img src="/header-bg.png" alt="Top Visual" />
-      </div>
+    <div className="top-page">
+      {/* 文字を先に表示 */}
+      <h2 className="welcome-text">ようこそ MilkPOP Calendar へ</h2>
 
-      <div className="card" style={{ textAlign: "center" }}>
-        <h2 className="page-title">ようこそ MilkPOP Calendar へ</h2>
-        <p>あなたの予定をスマートに共有しましょう ✨</p>
+      {/* ロゴ画像は小さめに */}
+      <div className="logo-wrapper">
+        <img src="/logo.png" alt="MilkPOP Logo" className="logo-image" />
       </div>
     </div>
   );
