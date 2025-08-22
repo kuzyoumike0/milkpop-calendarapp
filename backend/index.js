@@ -13,33 +13,41 @@ app.use(bodyParser.json());
 // ===== DB接続 =====
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.DATABASE_URL
+    ? { rejectUnauthorized: false }
+    : false, // ローカルではSSLなし
 });
 
 // ===== 初期化 =====
 const initDB = async () => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      share_id UUID NOT NULL,
-      title TEXT,
-      date DATE NOT NULL,
-      time_type TEXT NOT NULL,
-      start_time TEXT,
-      end_time TEXT
-    );
-  `);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id SERIAL PRIMARY KEY,
+        share_id UUID NOT NULL,
+        title TEXT,
+        date DATE NOT NULL,
+        time_type TEXT NOT NULL,
+        start_time TEXT,
+        end_time TEXT
+      );
+    `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS responses (
-      id SERIAL PRIMARY KEY,
-      share_id UUID NOT NULL,
-      name TEXT NOT NULL,
-      schedule_id INT NOT NULL,
-      response TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS responses (
+        id SERIAL PRIMARY KEY,
+        share_id UUID NOT NULL,
+        name TEXT NOT NULL,
+        schedule_id INT NOT NULL,
+        response TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    console.log("✅ Database initialized");
+  } catch (err) {
+    console.error("❌ DB Init Error:", err);
+  }
 };
 initDB();
 
@@ -57,10 +65,17 @@ app.post("/api/schedules", async (req, res) => {
       );
     }
 
-    const shareUrl = `${process.env.PUBLIC_URL || "http://localhost:5000"}/share/${shareId}`;
+    // Railway 環境の URL を推測
+    const baseUrl =
+      process.env.PUBLIC_URL ||
+      (process.env.RAILWAY_STATIC_URL
+        ? `https://${process.env.RAILWAY_STATIC_URL}`
+        : `http://localhost:${PORT}`);
+
+    const shareUrl = `${baseUrl}/share/${shareId}`;
     res.json({ success: true, shareUrl });
   } catch (err) {
-    console.error("Error saving schedule:", err);
+    console.error("❌ Error saving schedule:", err);
     res.status(500).json({ success: false, error: "保存エラー" });
   }
 });
@@ -75,7 +90,7 @@ app.get("/api/share/:shareId", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching schedules:", err);
+    console.error("❌ Error fetching schedules:", err);
     res.status(500).json({ error: "取得エラー" });
   }
 });
@@ -96,7 +111,7 @@ app.post("/api/share/:shareId/responses", async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("Error saving responses:", err);
+    console.error("❌ Error saving responses:", err);
     res.status(500).json({ success: false, error: "回答保存エラー" });
   }
 });
@@ -111,23 +126,30 @@ app.get("/api/share-links", async (req, res) => {
       LIMIT 20
     `);
 
+    const baseUrl =
+      process.env.PUBLIC_URL ||
+      (process.env.RAILWAY_STATIC_URL
+        ? `https://${process.env.RAILWAY_STATIC_URL}`
+        : `http://localhost:${PORT}`);
+
     const links = result.rows.map((row) => ({
       id: row.share_id,
       title: row.title,
-      url: `${process.env.PUBLIC_URL || "http://localhost:5000"}/share/${row.share_id}`,
+      url: `${baseUrl}/share/${row.share_id}`,
     }));
 
     res.json(links);
   } catch (err) {
-    console.error("Error fetching share links:", err);
+    console.error("❌ Error fetching share links:", err);
     res.status(500).json({ error: "リンク取得エラー" });
   }
 });
 
 // ===== 静的ファイル配信 =====
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // ===== サーバー起動 =====
