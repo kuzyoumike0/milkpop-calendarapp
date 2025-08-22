@@ -14,15 +14,37 @@ const getDatesInRange = (start, end) => {
 };
 
 const RegisterPage = () => {
-  const [mode, setMode] = useState("range"); // "range" | "multi"
-  const [range, setRange] = useState([null, null]); // 範囲選択
-  const [multiDates, setMultiDates] = useState([]); // 複数選択
-  const [dateOptions, setDateOptions] = useState({}); // 日程ごとの選択状態
+  const [mode, setMode] = useState("range"); 
+  const [range, setRange] = useState([null, null]);
+  const [multiDates, setMultiDates] = useState([]);
+  const [dateOptions, setDateOptions] = useState({});
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
   const [schedules, setSchedules] = useState([]);
+  const [holidays, setHolidays] = useState([]); // 日本の祝日一覧
 
-  // ===== 日付クリック処理（multiモード用） =====
+  // ===== 日本時間の今日 =====
+  const todayJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+  const todayStr = todayJST.toISOString().split("T")[0];
+
+  // ===== 祝日データ取得（GoogleカレンダーAPI） =====
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        // Google日本の祝日ICSをJSONに変換したAPIを利用（サンプル）
+        const res = await fetch(
+          "https://holidays-jp.github.io/api/v1/date.json"
+        );
+        const data = await res.json();
+        setHolidays(Object.keys(data)); // 祝日の日付キーだけ保持
+      } catch (err) {
+        console.error("祝日取得失敗:", err);
+      }
+    };
+    fetchHolidays();
+  }, []);
+
+  // ===== 日付クリック処理 =====
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
     if (multiDates.some(d => d.toDateString() === dateStr)) {
@@ -32,7 +54,7 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 選択済みリスト（rangeは全展開） =====
+  // ===== 選択済みリスト =====
   let selectedList = [];
   if (mode === "range" && range[0] && range[1]) {
     selectedList = getDatesInRange(range[0], range[1]);
@@ -40,7 +62,7 @@ const RegisterPage = () => {
     selectedList = multiDates;
   }
 
-  // ===== 保存処理（即時反映＋DB保存） =====
+  // ===== 保存処理 =====
   const saveSchedule = async () => {
     const formatted = selectedList.map((d) => {
       const dateStr = d.toISOString().split("T")[0];
@@ -68,7 +90,6 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== プルダウン変更 =====
   const handleOptionChange = (dateStr, field, value) => {
     setDateOptions((prev) => ({
       ...prev,
@@ -83,7 +104,7 @@ const RegisterPage = () => {
     <div className="page-container">
       <h1 className="page-title">📅 日程登録</h1>
 
-      {/* ラジオボタンで範囲 or 複数選択 */}
+      {/* モード切替 */}
       <div className="mode-selector">
         <label className="mode-option">
           <input
@@ -118,10 +139,18 @@ const RegisterPage = () => {
             selectRange={mode === "range"}
             onChange={mode === "range" ? setRange : handleDateClick}
             value={mode === "range" ? range : multiDates}
+            tileClassName={({ date }) => {
+              const dateStr = date.toISOString().split("T")[0];
+              if (dateStr === todayStr) return "today-highlight";
+              if (holidays.includes(dateStr)) return "holiday";
+              if (date.getDay() === 0) return "sunday";
+              if (date.getDay() === 6) return "saturday";
+              return "";
+            }}
           />
         </div>
 
-        {/* ===== 選択済みリスト ===== */}
+        {/* ===== 日程リスト ===== */}
         <div className="schedule-section">
           <h3>📝 選択した日程</h3>
           {selectedList.length === 0 && <p>日程を選択してください</p>}
@@ -150,9 +179,7 @@ const RegisterPage = () => {
                     >
                       <option value="">開始時刻</option>
                       {timeOptions.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
+                        <option key={t} value={t}>{t}</option>
                       ))}
                     </select>
                     <select
@@ -168,9 +195,7 @@ const RegisterPage = () => {
                     >
                       <option value="">終了時刻</option>
                       {endTimeOptions.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
+                        <option key={t} value={t}>{t}</option>
                       ))}
                     </select>
                   </>
