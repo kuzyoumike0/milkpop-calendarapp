@@ -1,22 +1,22 @@
-// backend/index.js
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
-const fetch = require("node-fetch"); // 👈 OAuth用
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 let schedulesDB = {};
-let sessions = {}; // 簡易セッション（実運用はRedisやDBを推奨）
+let sessions = {}; // 簡易セッション
 
 // ===== Discord OAuth2 =====
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || "http://localhost:3000/api/auth/discord/callback";
+const REDIRECT_URI =
+  process.env.DISCORD_REDIRECT_URI || "http://localhost:3000/api/auth/discord/callback";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // Discordログイン開始
 app.get("/api/auth/discord", (req, res) => {
@@ -57,7 +57,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     sessions[sessionId] = user;
 
     // React側へセッションIDを渡す
-    res.redirect(`/auth-success?session=${sessionId}`);
+    res.redirect(`${FRONTEND_URL}/auth-success?session=${sessionId}`);
   } catch (err) {
     console.error("OAuth error:", err);
     res.status(500).send("OAuth failed");
@@ -74,7 +74,7 @@ app.get("/api/me/:sessionId", (req, res) => {
 // ===== スケジュールAPI =====
 app.post("/api/schedules", (req, res) => {
   const id = uuidv4();
-  schedulesDB[id] = req.body.schedules;
+  schedulesDB[id] = req.body; // 修正済み
   res.json({ ok: true, id });
 });
 
@@ -86,9 +86,9 @@ app.get("/api/schedules/:id", (req, res) => {
 });
 
 // ===== Reactビルド配信 =====
-app.use(express.static(path.join(__dirname, "build")));
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
