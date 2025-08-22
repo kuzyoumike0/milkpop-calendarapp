@@ -10,16 +10,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 静的ファイル配信
-app.use(express.static(path.join(__dirname, "build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
-
-// APIサンプル
+// ===== API ルート =====
 app.post("/api/schedules", (req, res) => {
   console.log("📥 受信:", req.body);
   res.json({ ok: true, id: uuidv4(), data: req.body });
+});
+
+// ===== Reactビルド配信 =====
+app.use(express.static(path.join(__dirname, "build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
