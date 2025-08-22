@@ -362,3 +362,53 @@
 .delete-btn:hover {
   background: #e63946;
 }
+
+/* ===== フォームカード ===== */
+.form-card {
+  margin: 2rem auto;
+  padding: 1.5rem;
+  max-width: 600px;
+  background: #fff8fb;
+  border: 1px solid #fdb9c8;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.form-card h3 {
+  margin-bottom: 1rem;
+  color: #004CA0;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row label {
+  font-weight: bold;
+  color: #444;
+}
+
+.form-card select {
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.add-btn {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.add-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
