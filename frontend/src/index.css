@@ -200,3 +200,94 @@ html, body, #root {
   font-size: 0.65rem;
   margin-top: 4px;
 }
+
+/* ===== 選択した日程リスト ===== */
+.selected-dates-container {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.selected-dates-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #444;
+  text-align: center;
+  font-family: 'Zen Maru Gothic', cursive;
+}
+
+/* 日付ごとの行 */
+.selected-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.selected-date-row:hover {
+  background: #fdf5fa;
+  transform: scale(1.01);
+}
+
+/* 日付テキスト */
+.selected-date-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* プルダウン（終日・昼・夜・時刻指定） */
+.time-select {
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.time-select:hover {
+  border-color: #FDB9C8;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
+}
+
+/* 時刻指定用プルダウン */
+.time-range-select {
+  margin-left: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  cursor: pointer;
+}
+
+/* ===== 共有リンクボタン ===== */
+.share-link-button {
+  margin-top: 20px;
+  display: block;
+  width: 100%;
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.share-link-button:hover {
+  background: linear-gradient(90deg, #FFCCE1, #0066CC);
+  transform: scale(1.02);
+}
