@@ -62,5 +62,6 @@ CREATE INDEX IF NOT EXISTS idx_personal_schedules_user_id
 CREATE INDEX IF NOT EXISTS idx_schedule_links_uuid 
   ON personal_schedule_links(uuid);
 
+-- 同じ人が同じ予定に重複投票しないよう制約
 CREATE UNIQUE INDEX IF NOT EXISTS idx_vote_unique 
   ON schedule_votes(schedule_id, COALESCE(voter_discord_id, voter_name));
