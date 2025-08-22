@@ -17,6 +17,9 @@ const PersonalPage = () => {
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
+  // TODO: OAuth後に取得したDiscordのユーザーIDを格納
+  const userId = "123456789012345678"; // ★ここをログイン後に置き換える
+
   // ===== カレンダーの祝日・土日判定 =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
@@ -44,6 +47,7 @@ const PersonalPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          userId, // ✅ DiscordのIDを送信
           title,
           memo,
           dates: selectedDates.map((d) => d.toISOString()),
