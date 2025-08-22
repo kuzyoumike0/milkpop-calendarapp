@@ -31,14 +31,15 @@ const initDB = async () => {
 initDB();
 
 // ====== スケジュール保存 ======
+// req.body = { title: "タイトル", schedules: [{date, type, start, end}] }
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, items } = req.body; // ✅ {title, items:[{date, type, start, end}]}
+    const { title, schedules } = req.body; 
     const shareId = uuidv4();
 
     const client = await pool.connect();
     try {
-      for (const s of items) {
+      for (const s of schedules) {
         await client.query(
           `INSERT INTO schedules (share_id, title, date, type, start_time, end_time)
            VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -61,10 +62,7 @@ app.get("/api/share/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `SELECT title, date, type, start_time AS start, end_time AS end 
-       FROM schedules 
-       WHERE share_id = $1 
-       ORDER BY date ASC`,
+      "SELECT title, date, type, start_time AS start, end_time AS end FROM schedules WHERE share_id = $1 ORDER BY date ASC",
       [id]
     );
     res.json(result.rows);
