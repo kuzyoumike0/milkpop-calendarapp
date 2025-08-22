@@ -1,28 +1,29 @@
-// frontend/src/components/RegisterPage.jsx
+// frontend/src/components/PersonalPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import SelectMode from "./SelectMode";
 import Holidays from "date-holidays";
 import "../index.css";
 
 const hd = new Holidays("JP");
 
-const RegisterPage = () => {
+const PersonalPage = () => {
+  const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
   const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
-  const [title, setTitle] = useState("");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
-  const [shareUrls, setShareUrls] = useState([]);
+  // ✅ 保存済みイベント一覧
+  const [savedEvents, setSavedEvents] = useState([]);
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
   );
 
-  // 日本時間の今日
+  // ===== 日本時間の今日 =====
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
@@ -68,40 +69,18 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 共有リンク生成 =====
-  const handleShare = async () => {
-    if (!title.trim()) {
-      alert("タイトルを入力してください");
-      return;
-    }
-
-    const dates =
-      mode === "range" ? range.filter((d) => d !== null) : multiDates;
-
-    if (dates.length === 0) {
-      alert("日程を選択してください");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          dates: dates.map((d) => d.toISOString()),
-          options: { type: timeType, start, end },
-        }),
-      });
-
-      const data = await res.json();
-      if (data.ok && data.url) {
-        setShareUrls((prev) => [...prev, { title, url: data.url }]);
-      } else {
-        alert("リンク生成に失敗しました");
-      }
-    } catch (err) {
-      console.error("❌ エラー:", err);
+  // ===== 時間帯変更 =====
+  const handleTimeTypeChange = (value) => {
+    setTimeType(value);
+    if (value === "終日") {
+      setStart("09:00");
+      setEnd("18:00");
+    } else if (value === "午前") {
+      setStart("06:00");
+      setEnd("12:00");
+    } else if (value === "午後") {
+      setStart("12:00");
+      setEnd("18:00");
     }
   };
 
@@ -109,9 +88,39 @@ const RegisterPage = () => {
   const selectedList =
     mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
+  // ===== 保存処理 =====
+  const handleSave = () => {
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return;
+    }
+    if (selectedList.length === 0) {
+      alert("日程を選択してください");
+      return;
+    }
+
+    const newEvent = {
+      title,
+      memo,
+      dates: selectedList.map((d) => d.toLocaleDateString()),
+      time: timeType === "時刻指定" ? `${start}〜${end}` : timeType,
+    };
+
+    setSavedEvents((prev) => [...prev, newEvent]);
+
+    // 入力欄リセット
+    setTitle("");
+    setMemo("");
+    setRange([null, null]);
+    setMultiDates([]);
+    setTimeType("終日");
+    setStart("09:00");
+    setEnd("18:00");
+  };
+
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録</h2>
+      <h2 className="page-title">個人日程登録</h2>
 
       {/* ===== タイトル入力 ===== */}
       <div className="mb-4">
@@ -120,14 +129,46 @@ const RegisterPage = () => {
           className="p-2 border rounded w-full text-black"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：歓迎会、旅行、ミーティング"
+          placeholder="例：打ち合わせ、飲み会、旅行"
         />
       </div>
 
-      {/* ===== カレンダー 7割 + 日程リスト 3割 ===== */}
+      {/* ===== メモ入力 ===== */}
+      <div className="mb-4">
+        <label className="block font-semibold mb-1">メモ</label>
+        <textarea
+          className="p-2 border rounded w-full text-black"
+          rows="3"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          placeholder="補足情報を入力してください"
+        />
+      </div>
+
+      {/* ===== カレンダーと選択済み日程を横並び ===== */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-7/10 w-full">
-          <SelectMode mode={mode} setMode={setMode} />
+          <div className="mb-2">
+            <label className="mr-4">
+              <input
+                type="radio"
+                value="range"
+                checked={mode === "range"}
+                onChange={() => setMode("range")}
+              />
+              範囲選択
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="multi"
+                checked={mode === "multi"}
+                onChange={() => setMode("multi")}
+              />
+              複数選択
+            </label>
+          </div>
+
           <Calendar
             selectRange={mode === "range"}
             onChange={setRange}
@@ -161,12 +202,11 @@ const RegisterPage = () => {
         <select
           className="p-2 border rounded text-black"
           value={timeType}
-          onChange={(e) => setTimeType(e.target.value)}
+          onChange={(e) => handleTimeTypeChange(e.target.value)}
         >
           <option value="終日">終日</option>
           <option value="午前">午前</option>
           <option value="午後">午後</option>
-          <option value="夜">夜</option>
           <option value="時刻指定">時刻指定</option>
         </select>
 
@@ -196,29 +236,23 @@ const RegisterPage = () => {
         )}
       </div>
 
-      {/* ===== 共有リンクボタン ===== */}
+      {/* ===== 保存ボタン ===== */}
       <div className="mt-6 text-center">
-        <button className="fancy-btn px-6 py-2" onClick={handleShare}>
-          共有リンクを発行
+        <button className="fancy-btn px-6 py-2" onClick={handleSave}>
+          保存する
         </button>
       </div>
 
-      {/* ===== 発行済みリンク一覧 ===== */}
-      {shareUrls.length > 0 && (
+      {/* ===== 保存済みイベント一覧 ===== */}
+      {savedEvents.length > 0 && (
         <div className="mt-6">
-          <h3 className="font-bold">発行済みリンク</h3>
+          <h3 className="font-bold">保存済み日程</h3>
           <ul className="list-disc list-inside">
-            {shareUrls.map((item, idx) => (
+            {savedEvents.map((event, idx) => (
               <li key={idx}>
-                {item.title}：{" "}
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#004CA0] underline"
-                >
-                  {item.url}
-                </a>
+                <span className="font-semibold">{event.title}</span>：{" "}
+                {event.dates.join("、")}（{event.time}）
+                {event.memo && ` - メモ: ${event.memo}`}
               </li>
             ))}
           </ul>
@@ -228,4 +262,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default PersonalPage;
