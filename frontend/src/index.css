@@ -508,3 +508,111 @@
   padding: 4px 8px;
 }
 
+/* 全体のベースフォント */
+body {
+  font-family: 'Zen Maru Gothic', 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+  background: #fdfdfd;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* タイトルをかわいく */
+.page-title {
+  font-family: 'Zen Maru Gothic', cursive;
+  font-weight: 700;
+  font-size: 1.8rem;
+  text-align: center;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #f7b2d9, #a0c4ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* テーブルの文字 */
+.fancy-table th,
+.fancy-table td {
+  font-family: 'Poppins', 'Zen Maru Gothic', sans-serif;
+  font-size: 0.95rem;
+}
+
+/* 入力ボックス */
+.stylish-box {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.stylish-box input {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* テーブル */
+.fancy-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.fancy-table th {
+  background: linear-gradient(90deg, #f7b2d9, #a0c4ff);
+  color: #fff;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.fancy-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.fancy-table tr:hover {
+  background: #f9f9ff;
+}
+
+/* プルダウン */
+.vote-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.vote-select:hover {
+  border-color: #888;
+  background: #fafafa;
+}
+
+/* ボタン */
+.fancy-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f7b2d9, #a0c4ff);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.fancy-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #a0c4ff, #f7b2d9);
+}
+
