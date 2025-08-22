@@ -19,24 +19,19 @@ const localizer = dateFnsLocalizer({
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
+  const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
+  const [dateOptions, setDateOptions] = useState({}); 
 
-  // プルダウン用データ
-  const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { status: "〇", time: "終日" } }
-
-  // 日付フォーマットキー
   const dateKey = (d) => format(d, "yyyy-MM-dd");
 
-  // 範囲選択モード（クリックベース）
+  // 範囲選択
   const handleDateClickRange = ({ start }) => {
     if (!rangeStart) {
-      // 1回目クリック → 開始日保存
       setRangeStart(start);
       setSelectedDates([start]);
     } else {
-      // 2回目クリック → 範囲を確定
       const startDate = rangeStart < start ? rangeStart : start;
       const endDate = rangeStart < start ? start : rangeStart;
 
@@ -48,24 +43,22 @@ const RegisterPage = () => {
       }
 
       setSelectedDates(days);
-      setRangeStart(null); // リセット
+      setRangeStart(null);
     }
   };
 
-  // 複数選択モード
+  // 複数選択
   const handleDateClickMultiple = ({ start }) => {
     const key = start.toDateString();
     setSelectedDates((prev) => {
       const exists = prev.find((d) => d.toDateString() === key);
-      if (exists) {
-        return prev.filter((d) => d.toDateString() !== key);
-      } else {
-        return [...prev, start];
-      }
+      return exists
+        ? prev.filter((d) => d.toDateString() !== key)
+        : [...prev, start];
     });
   };
 
-  // イベントスタイル（祝日＆選択強調）
+  // イベントスタイル
   const eventStyleGetter = (event) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === event.start.toDateString()
@@ -74,17 +67,16 @@ const RegisterPage = () => {
 
     return {
       style: {
-        backgroundColor: isSelected
-          ? "#FDB9C8"
-          : isHoliday
-          ? "#004CA0"
-          : "#222",
+        backgroundColor: isSelected ? "#FDB9C8" : isHoliday ? "#004CA0" : "#222",
         color: "#fff",
         borderRadius: "6px",
         border: "none",
       },
     };
   };
+
+  // 時刻リスト 1〜24時
+  const timeOptions = Array.from({ length: 24 }, (_, i) => i + 1);
 
   // プルダウン変更処理
   const handleOptionChange = (date, field, value) => {
@@ -102,7 +94,7 @@ const RegisterPage = () => {
     <div className="page-container">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* 選択モード切替 */}
+      {/* モード切替 */}
       <div className="mode-switch">
         <label>
           <input
@@ -145,40 +137,69 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 選択日程リスト */}
+        {/* 選択リスト */}
         <div className="schedule-section">
           <h3>選択された日程</h3>
           <ul>
             {selectedDates.map((d, i) => {
               const key = dateKey(d);
+              const opts = dateOptions[key] || {};
               return (
                 <li key={i} className="schedule-item">
                   <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
 
-                  {/* 出欠プルダウン */}
-                  <select
-                    value={dateOptions[key]?.status || ""}
-                    onChange={(e) =>
-                      handleOptionChange(d, "status", e.target.value)
-                    }
-                  >
-                    <option value="">選択</option>
-                    <option value="〇">〇</option>
-                    <option value="✕">✕</option>
-                  </select>
-
                   {/* 時間帯プルダウン */}
                   <select
-                    value={dateOptions[key]?.time || ""}
+                    value={opts.timezone || ""}
                     onChange={(e) =>
-                      handleOptionChange(d, "time", e.target.value)
+                      handleOptionChange(d, "timezone", e.target.value)
                     }
                   >
                     <option value="">時間帯</option>
                     <option value="終日">終日</option>
                     <option value="昼">昼</option>
                     <option value="夜">夜</option>
+                    <option value="時間指定">時間指定</option>
                   </select>
+
+                  {/* 時間指定を選んだ場合だけ時刻プルダウン表示 */}
+                  {opts.timezone === "時間指定" && (
+                    <>
+                      <select
+                        value={opts.start || ""}
+                        onChange={(e) =>
+                          handleOptionChange(d, "start", e.target.value)
+                        }
+                      >
+                        <option value="">開始</option>
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>
+                            {t}時
+                          </option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={opts.end || ""}
+                        onChange={(e) => {
+                          const start = parseInt(opts.start || "0", 10);
+                          const end = parseInt(e.target.value, 10);
+                          if (!start || end > start) {
+                            handleOptionChange(d, "end", e.target.value);
+                          } else {
+                            alert("終了時刻は開始時刻より後にしてください");
+                          }
+                        }}
+                      >
+                        <option value="">終了</option>
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>
+                            {t}時
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </li>
               );
             })}
