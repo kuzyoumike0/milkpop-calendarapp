@@ -8,7 +8,7 @@ const TopPage = () => {
         <img
           src="/logo.png"
           alt="MilkPOP Logo"
-          style={{ width: "150px", marginBottom: "20px" }}
+          style={{ width: "180px", marginBottom: "20px" }}
         />
         <h2 className="page-title">ようこそ MilkPOP Calendar へ</h2>
         <p>あなたの予定をスマートに共有しましょう ✨</p>
