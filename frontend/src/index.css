@@ -250,12 +250,31 @@
   transform: scale(1.05);
 }
 
-/* 選択された日 */
-.react-calendar__tile--active {
+/* 選択された日 → 丸いバッジ風 */
+.react-calendar__tile--active,
+.selected-date {
   background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
   color: white !important;
   font-weight: bold;
-  border-radius: 12px;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  transform: scale(1.1);
+}
+
+/* 祝日 */
+.holiday {
+  color: #d32f2f !important;
+  font-weight: bold;
+}
+
+/* 日曜 */
+.sunday {
+  color: #d32f2f !important;
+}
+
+/* 土曜 */
+.saturday {
+  color: #1976d2 !important;
 }
 
 /* ===== スマホ対応 ===== */
