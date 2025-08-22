@@ -1,53 +1,31 @@
 import React, { useEffect, useState } from "react";
-import VoteMatrix from "./VoteMatrix";
+import { useParams } from "react-router-dom";
 
-function SharePage({ uuid }) {
-  const [voterName, setVoterName] = useState("");
-  const [confirmedName, setConfirmedName] = useState("");
-  const [user, setUser] = useState(null); // Discordログイン情報
+const SharePage = () => {
+  const { id } = useParams();
+  const [schedule, setSchedule] = useState(null);
 
-  // Discordログインしているかチェック
   useEffect(() => {
-    fetch("/api/auth/user")
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.id) {
-          setUser(data);
-          setConfirmedName(data.username); // Discordユーザー名をそのまま使う
-        }
-      });
-  }, []);
+    const fetchData = async () => {
+      const res = await fetch(`/api/schedules/${id}`);
+      const data = await res.json();
+      setSchedule(data);
+    };
+    fetchData();
+  }, [id]);
 
-  const handleConfirm = () => {
-    if (voterName.trim() !== "") {
-      setConfirmedName(voterName.trim());
-    }
-  };
-
-  // 名前未入力かつDiscordログインもしていない場合 → 入力モーダル
-  if (!confirmedName) {
-    return (
-      <div className="name-modal">
-        <div className="modal-content">
-          <h2>あなたのお名前を入力してください</h2>
-          <input
-            type="text"
-            value={voterName}
-            onChange={(e) => setVoterName(e.target.value)}
-            placeholder="例: 山田太郎"
-          />
-          <button onClick={handleConfirm}>OK</button>
-        </div>
-      </div>
-    );
-  }
+  if (!schedule) return <p>読み込み中...</p>;
 
   return (
-    <div>
-      <h2>スケジュール調整表</h2>
-      <VoteMatrix uuid={uuid} currentUser={confirmedName} />
+    <div className="page-container">
+      <h2 className="page-title">共有された日程</h2>
+      <ul>
+        {schedule.dates.map((d, i) => (
+          <li key={i}>{d}</li>
+        ))}
+      </ul>
     </div>
   );
-}
+};
 
 export default SharePage;
