@@ -1,69 +1,35 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import pkg from "pg";
+// スケジュール編集
+app.put("/api/schedules/:id", async (req, res) => {
+  const { id } = req.params;
+  const { date, time_option, start_hour, end_hour } = req.body;
 
-const { Pool } = pkg;
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// PostgreSQL 接続設定
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// ミドルウェア
-app.use(cors());
-app.use(bodyParser.json());
-
-// APIルート
-app.get("/", (req, res) => {
-  res.send("✅ Backend is running");
-});
-
-// スケジュール保存API
-app.post("/api/schedules", async (req, res) => {
-  try {
-    const schedules = req.body; // [{date, time, start, end}, ...]
-
-    const client = await pool.connect();
-
-    for (const s of schedules) {
-      await client.query(
-        `INSERT INTO schedules (date, time_option, start_hour, end_hour) 
-         VALUES ($1, $2, $3, $4)`,
-        [s.date, s.time || null, s.start || null, s.end || null]
-      );
-    }
-
-    client.release();
-    res.json({ success: true, count: schedules.length });
-  } catch (err) {
-    console.error("DB insert error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 保存済みスケジュール一覧を返す
-app.get("/api/schedules", async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query(
-      `SELECT id, date, time_option, start_hour, end_hour 
-       FROM schedules 
-       ORDER BY date ASC`
+    await client.query(
+      `UPDATE schedules 
+       SET date=$1, time_option=$2, start_hour=$3, end_hour=$4 
+       WHERE id=$5`,
+      [date, time_option, start_hour, end_hour, id]
     );
     client.release();
-
-    res.json(result.rows);
+    res.json({ success: true });
   } catch (err) {
-    console.error("DB fetch error:", err);
+    console.error("DB update error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// サーバー起動
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// スケジュール削除
+app.delete("/api/schedules/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const client = await pool.connect();
+    await client.query(`DELETE FROM schedules WHERE id=$1`, [id]);
+    client.release();
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DB delete error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
