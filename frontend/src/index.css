@@ -96,9 +96,11 @@ body {
   box-shadow: 0 2px 15px rgba(0,0,0,0.5);
 }
 
+/* 通常日付セル */
 .rbc-day-bg {
   transition: background 0.2s;
 }
+
 .rbc-day-bg:hover {
   background: rgba(253,185,200,0.1);
 }
@@ -110,6 +112,8 @@ body {
   background: rgba(253,185,200,0.2) !important;
   position: relative;
 }
+
+/* 祝日名表示 */
 .holiday::after {
   content: attr(data-holiday);
   display: block;
@@ -118,9 +122,21 @@ body {
   margin-top: 2px;
 }
 
-/* 選択範囲 */
-.rbc-selected-cell {
-  background: rgba(0,76,160,0.3) !important;
+/* 選択済み日付セル */
+.selected-day {
+  background: rgba(0,76,160,0.4) !important;
+  border: 2px solid #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* 範囲選択の開始日を強調 */
+.range-start {
+  background: rgba(253,185,200,0.6) !important;
+  border: 2px solid #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold;
 }
 
 /* イベント表示 */
@@ -143,10 +159,12 @@ body {
   padding: 0.4rem 0.6rem;
   transition: 0.2s;
 }
+
 .rbc-toolbar button:hover {
   background: #004CA0;
   color: #fff;
 }
+
 .rbc-toolbar-label {
   font-weight: bold;
   color: #FDB9C8;
@@ -156,6 +174,7 @@ body {
 .form-group {
   margin-bottom: 1rem;
 }
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
@@ -170,8 +189,8 @@ select {
   padding: 0.6rem;
   border: 1px solid #444;
   border-radius: 8px;
-  background: #fff;
-  color: #000;
+  background: #fff;   /* 白背景 */
+  color: #000;        /* 黒文字 */
   font-size: 1rem;
 }
 
@@ -180,8 +199,8 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: #FDB9C8;
-  background: #fdfdfd;
-  color: #000;
+  background: #fdfdfd;  /* フォーカス時も白系 */
+  color: #000;          /* 黒文字維持 */
 }
 
 /* ===== ボタン ===== */
@@ -195,6 +214,7 @@ button {
   cursor: pointer;
   transition: 0.3s;
 }
+
 button:hover {
   opacity: 0.9;
   transform: translateY(-2px);
@@ -205,16 +225,8 @@ a {
   color: #FDB9C8;
   transition: 0.3s;
 }
+
 a:hover {
   color: #fff;
   text-decoration: underline;
-}
-
-/* 選択済み日付セル */
-.selected-day {
-  background: rgba(0,76,160,0.4) !important;
-  border: 2px solid #FDB9C8 !important;
-  color: #fff !important;
-  font-weight: bold;
-  cursor: pointer;
 }
