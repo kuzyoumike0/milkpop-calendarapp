@@ -471,4 +471,92 @@ html, body, #root {
   align-items: center;
   gap: 6px;
 }
+/* ===== ページ全体レイアウト（カレンダー＋日程一覧 横並び） ===== */
+.register-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  margin: 40px auto;
+  max-width: 1200px;
+  padding: 0 20px;
+}
+
+/* カレンダー側 */
+.calendar-section {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* 日程一覧側 */
+.schedule-section {
+  flex: 1;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* 見出し */
+.schedule-section h3 {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #444;
+  text-align: center;
+  font-family: 'Zen Maru Gothic', cursive;
+}
+
+/* 登録済み日程リスト */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  transition: all 0.3s ease;
+}
+
+.schedule-item:hover {
+  background: #fdf5fa;
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.schedule-item span {
+  min-width: 120px;
+  font-weight: 500;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* プルダウン共通 */
+.schedule-item select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.schedule-item select:hover {
+  border-color: #FDB9C8;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
+}
+
+/* 時刻指定用プルダウン */
+.time-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
