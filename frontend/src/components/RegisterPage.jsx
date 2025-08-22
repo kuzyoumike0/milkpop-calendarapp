@@ -30,12 +30,9 @@ const RegisterPage = () => {
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-
     const days = [];
     for (let i = 0; i < firstDay.getDay(); i++) days.push(null);
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      days.push(new Date(year, month, d));
-    }
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
     return days;
   };
 
@@ -83,7 +80,7 @@ const RegisterPage = () => {
         </nav>
       </header>
 
-      <main className="mt-28">
+      <main>
         {/* ===== タイトル入力 ===== */}
         <div className="mb-6">
           <label className="block text-lg mb-2">タイトル</label>
@@ -96,7 +93,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== ラジオボタン（範囲 or 複数） ===== */}
+        {/* ===== ラジオボタン ===== */}
         <div className="radio-group">
           <label className={`radio-label ${mode === "range" ? "radio-active" : ""}`}>
             <input
@@ -121,7 +118,7 @@ const RegisterPage = () => {
         </div>
 
         <div className="register-layout">
-          {/* ===== 自作カレンダー（左7割） ===== */}
+          {/* ===== 左カレンダー ===== */}
           <div className="calendar-section">
             <div className="custom-calendar">
               <div className="calendar-header">
@@ -141,7 +138,6 @@ const RegisterPage = () => {
                   if (iso === todayIso) className += " today";
                   if (date.getDay() === 0 || holidays.includes(iso)) className += " holiday";
                   if (date.getDay() === 6) className += " saturday";
-
                   return (
                     <div key={iso} className={className} onClick={() => handleDateClick(date)}>
                       {date.getDate()}
@@ -152,7 +148,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* ===== 選択した日程（右3割） ===== */}
+          {/* ===== 右リスト ===== */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
             {mode === "range" && range[0] && range[1] && (
@@ -161,57 +157,50 @@ const RegisterPage = () => {
               </div>
             )}
             {mode === "multi" && multiDates.length > 0 ? (
-              <div className="space-y-4">
-                {multiDates.map((date) => (
-                  <div key={date} className="schedule-card flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <span>{date}</span>
+              multiDates.map((date) => (
+                <div key={date} className="schedule-card">
+                  <div className="flex justify-between items-center">
+                    <span>{date}</span>
+                    <select
+                      value={dateOptions[date]?.type || "終日"}
+                      onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                    >
+                      <option value="終日">終日</option>
+                      <option value="午前">午前</option>
+                      <option value="午後">午後</option>
+                      <option value="時間指定">時間指定</option>
+                    </select>
+                  </div>
+                  {dateOptions[date]?.type === "時間指定" && (
+                    <div className="flex gap-2 items-center mt-2">
                       <select
-                        value={dateOptions[date]?.type || "終日"}
-                        onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                        value={dateOptions[date]?.start || "9:00"}
+                        onChange={(e) => handleOptionChange(date, "start", e.target.value)}
                       >
-                        <option value="終日">終日</option>
-                        <option value="午前">午前</option>
-                        <option value="午後">午後</option>
-                        <option value="時間指定">時間指定</option>
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        value={dateOptions[date]?.end || "18:00"}
+                        onChange={(e) => handleOptionChange(date, "end", e.target.value)}
+                      >
+                        {endTimeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
                       </select>
                     </div>
-                    {dateOptions[date]?.type === "時間指定" && (
-                      <div className="flex gap-2 items-center">
-                        <select
-                          value={dateOptions[date]?.start || "9:00"}
-                          onChange={(e) => handleOptionChange(date, "start", e.target.value)}
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                        <span>〜</span>
-                        <select
-                          value={dateOptions[date]?.end || "18:00"}
-                          onChange={(e) => handleOptionChange(date, "end", e.target.value)}
-                        >
-                          {endTimeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              ))
             ) : mode === "multi" ? (
               <p className="text-gray-400">まだ日程が選択されていません</p>
             ) : null}
 
             {/* ===== 共有リンクボタン ===== */}
             <div className="mt-6">
-              <button
-                onClick={handleShare}
-                className="bg-[#FDB9C8] text-black px-6 py-2 rounded-xl font-bold hover:bg-[#004CA0] hover:text-white shadow-lg"
-              >
-                共有リンクを作成
-              </button>
+              <button onClick={handleShare} className="share-btn">共有リンクを作成</button>
               {shareLink && (
                 <p className="mt-3 text-sm text-black bg-white p-2 rounded-lg shadow">
                   {shareLink}
