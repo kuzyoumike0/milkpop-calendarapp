@@ -1,80 +1,66 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+// frontend/src/components/RegisterPage.jsx
+import React, { useState } from "react";
 import "../index.css";
-
-const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+import Holidays from "date-holidays";
 
 const RegisterPage = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
 
-  // 月初めの日と末日の情報を生成
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  const hd = new Holidays("JP"); // 日本の祝日
+
+  // 日数を計算
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-
   const startDay = firstDay.getDay();
   const totalDays = lastDay.getDate();
 
-  // 日付クリック
-  const handleDateClick = (day) => {
-    const clicked = new Date(year, month, day);
-    const dateStr = clicked.toISOString().split("T")[0];
-
-    if (selectedDates.includes(dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      setSchedules(schedules.filter((s) => s.date !== dateStr));
+  // 前月・次月移動
+  const prevMonth = () => {
+    if (month === 0) {
+      setYear(year - 1);
+      setMonth(11);
     } else {
-      setSelectedDates([...selectedDates, dateStr]);
-      setSchedules([
-        ...schedules,
-        { date: dateStr, timeType: "終日", start: "", end: "" },
-      ]);
+      setMonth(month - 1);
+    }
+  };
+  const nextMonth = () => {
+    if (month === 11) {
+      setYear(year + 1);
+      setMonth(0);
+    } else {
+      setMonth(month + 1);
     }
   };
 
-  // 前月・翌月移動
-  const prevMonth = () =>
-    setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () =>
-    setCurrentDate(new Date(year, month + 1, 1));
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    const exists = selectedDates.find((d) => d.date.getTime() === date.getTime());
+    if (exists) {
+      setSelectedDates(selectedDates.filter((d) => d.date.getTime() !== date.getTime()));
+    } else {
+      setSelectedDates([...selectedDates, { date, time: "終日" }]);
+    }
+  };
 
-  // 時間帯の変更
+  // プルダウン変更
   const handleTimeChange = (date, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.date === date ? { ...s, timeType: value } : s
+    setSelectedDates(
+      selectedDates.map((d) =>
+        d.date.getTime() === date.getTime() ? { ...d, time: value } : d
       )
     );
   };
 
-  // 時刻範囲の変更
-  const handleTimeRangeChange = (date, field, value) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.date === date ? { ...s, [field]: value } : s
-      )
-    );
+  // 日付削除
+  const handleDelete = (date) => {
+    setSelectedDates(selectedDates.filter((d) => d.date.getTime() !== date.getTime()));
   };
 
-  // サーバーに保存して共有リンク生成
-  const handleShare = async () => {
-    try {
-      const res = await axios.post("/api/share", { schedules });
-      setShareUrl(res.data.url);
-    } catch (err) {
-      console.error(err);
-      alert("共有リンクの生成に失敗しました");
-    }
-  };
-
-  // 日程を日付順にソート
-  const sortedSchedules = [...schedules].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
-  );
+  // ソート済み日程
+  const sortedDates = [...selectedDates].sort((a, b) => a.date - b.date);
 
   return (
     <div className="register-layout">
@@ -82,103 +68,65 @@ const RegisterPage = () => {
       <div className="calendar-section">
         <div className="calendar-header">
           <button onClick={prevMonth}>←</button>
-          <h2>
-            {year}年 {month + 1}月
-          </h2>
+          <h2>{`${year}年 ${month + 1}月`}</h2>
           <button onClick={nextMonth}>→</button>
         </div>
 
         <div className="calendar-weekdays">
-          {weekdays.map((w) => (
-            <div key={w} className="calendar-weekday">
-              {w}
-            </div>
+          {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
+            <div key={w} className="calendar-weekday">{w}</div>
           ))}
         </div>
 
         <div className="calendar-grid">
-          {Array.from({ length: startDay }).map((_, i) => (
-            <div key={`empty-${i}`} />
+          {Array(startDay).fill(null).map((_, i) => (
+            <div key={`empty-${i}`} className="calendar-day empty"></div>
           ))}
-
-          {Array.from({ length: totalDays }).map((_, i) => {
+          {Array(totalDays).fill(null).map((_, i) => {
             const day = i + 1;
-            const dateStr = new Date(year, month, day)
-              .toISOString()
-              .split("T")[0];
-            const isToday =
-              dateStr === new Date().toISOString().split("T")[0];
-            const isSelected = selectedDates.includes(dateStr);
+            const date = new Date(year, month, day);
+            const holiday = hd.isHoliday(date);
+            const isToday = date.toDateString() === today.toDateString();
+            const isSelected = selectedDates.find((d) => d.date.getTime() === date.getTime());
 
             return (
               <div
                 key={day}
-                className={`calendar-day 
-                  ${isToday ? "today" : ""} 
-                  ${isSelected ? "selected" : ""}`}
-                onClick={() => handleDateClick(day)}
+                className={`calendar-day ${isToday ? "today" : ""} ${isSelected ? "selected" : ""} ${holiday ? "holiday" : ""}`}
+                onClick={() => handleDateClick(date)}
               >
                 {day}
+                {holiday && <div className="holiday-label">{holiday[0].name}</div>}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* ===== 登録済み日程一覧 ===== */}
+      {/* ===== 登録済み日程リスト ===== */}
       <div className="schedule-section">
-        <h3>📅 登録した日程</h3>
-        {sortedSchedules.length === 0 ? (
-          <p>日程が選択されていません</p>
+        <h3>📅 登録済みの日程</h3>
+        {sortedDates.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#666" }}>まだ日程が登録されていません</p>
         ) : (
-          sortedSchedules.map((s, i) => (
-            <div key={i} className="schedule-item">
-              <span>{s.date}</span>
+          sortedDates.map(({ date, time }) => (
+            <div key={date.toISOString()} className="schedule-item">
+              <span>
+                {date.getMonth() + 1}/{date.getDate()}
+              </span>
               <select
-                value={s.timeType}
-                onChange={(e) =>
-                  handleTimeChange(s.date, e.target.value)
-                }
+                value={time}
+                onChange={(e) => handleTimeChange(date, e.target.value)}
               >
                 <option value="終日">終日</option>
-                <option value="昼">昼</option>
+                <option value="午前">午前</option>
+                <option value="午後">午後</option>
                 <option value="夜">夜</option>
                 <option value="時間指定">時間指定</option>
               </select>
-              {s.timeType === "時間指定" && (
-                <div className="time-select-wrapper">
-                  <input
-                    type="time"
-                    value={s.start}
-                    onChange={(e) =>
-                      handleTimeRangeChange(s.date, "start", e.target.value)
-                    }
-                  />
-                  〜
-                  <input
-                    type="time"
-                    value={s.end}
-                    onChange={(e) =>
-                      handleTimeRangeChange(s.date, "end", e.target.value)
-                    }
-                  />
-                </div>
-              )}
+              <button className="delete-button" onClick={() => handleDelete(date)}>×</button>
             </div>
           ))
-        )}
-
-        <button className="share-link-button" onClick={handleShare}>
-          共有リンクを作成
-        </button>
-
-        {shareUrl && (
-          <div style={{ marginTop: "12px", textAlign: "center" }}>
-            <p>🔗 共有リンク:</p>
-            <a href={shareUrl} target="_blank" rel="noreferrer">
-              {shareUrl}
-            </a>
-          </div>
         )}
       </div>
     </div>
