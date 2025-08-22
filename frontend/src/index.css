@@ -24,7 +24,7 @@ header,
 .banner {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
-  padding: 16px 32px; /* 余白を広めに */
+  padding: 16px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -37,17 +37,15 @@ header,
   z-index: 1000;
 }
 
-/* ヘッダー左側：ロゴやタイトル */
 header .logo {
   font-size: 1.4rem;
   font-weight: bold;
   letter-spacing: 1px;
 }
 
-/* ヘッダー中央：ナビゲーションリンク */
 header .nav {
   display: flex;
-  gap: 32px; /* 👈 リンク間隔を広めに */
+  gap: 32px;
   align-items: center;
 }
 
@@ -61,7 +59,6 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
-/* ヘッダー右側：Discordログインボタン */
 header .login-btn {
   margin-left: 32px;
   background: linear-gradient(90deg, #7289da, #5865f2);
@@ -93,20 +90,44 @@ footer {
 /* ===== main の余白調整 ===== */
 main {
   flex: 1;
-  margin-top: 80px;   /* ヘッダー分 */
-  margin-bottom: 60px; /* フッター分 */
+  margin-top: 80px;
+  margin-bottom: 60px;
 }
 
 /* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
 .register-layout {
   display: flex;
-  justify-content: center;
+  flex-direction: row;      /* 横並び強制 */
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 24px;
+  width: 100%;
   margin: 40px auto;
-  max-width: 1400px;
   padding: 0 20px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;        /* 折り返し禁止 */
+}
+
+/* カレンダー枠（左側 7割） */
+.calendar-section {
+  flex: 0 0 70%;            /* ← 7割固定 */
+  max-width: 70%;
+  background: #fff;
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  margin: 0;
+}
+
+/* 日程リスト（右側 3割） */
+.schedule-section {
+  flex: 0 0 30%;            /* ← 3割固定 */
+  max-width: 30%;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  margin: 0;
+  min-width: 300px;
 }
 
 /* ===== 見出し ===== */
@@ -159,17 +180,6 @@ h1, h2, .page-title, .welcome-text {
   -webkit-text-fill-color: transparent;
 }
 
-/* ===== カレンダー枠 ===== */
-.calendar-section {
-  flex: 7;
-  background: #fff;
-  padding: 16px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  max-width: 800px;
-  margin: 0 auto;
-}
-
 /* ===== react-calendar カスタマイズ ===== */
 .react-calendar {
   width: 100% !important;
@@ -216,14 +226,6 @@ h1, h2, .page-title, .welcome-text {
 }
 
 /* ===== 日程リスト側 ===== */
-.schedule-section {
-  flex: 3;
-  background: #fff;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  min-width: 300px;
-}
 .schedule-section h3 {
   font-size: 1.4rem;
   font-weight: bold;
@@ -322,7 +324,8 @@ h1, h2, .page-title, .welcome-text {
   }
   .calendar-section,
   .schedule-section {
-    min-width: 100%;
+    max-width: 100%;
+    flex: 0 0 100%;
   }
   .schedule-item {
     flex-direction: column;
@@ -341,51 +344,28 @@ h1, h2, .page-title, .welcome-text {
 }
 
 /* ===== カレンダー祝日対応 ===== */
-.react-calendar__tile.holiday {
-  color: red !important;
-  font-weight: bold;
-}
-.react-calendar__tile.sunday {
-  color: red;
-}
-.react-calendar__tile.saturday {
-  color: blue;
-}
-
-/* ユーザー情報 */
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.user-info .avatar {
-  width: 32px;
-  height: 32px;
+.react-calendar__tile.today-highlight {
+  background: #FDB9C8 !important;
+  color: black !important;
   border-radius: 50%;
-}
-
-.username {
-  font-size: 1rem;
-}
-
-/* Discordログインボタン */
-.login-btn {
-  background: #5865f2;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s;
 }
 
-.login-btn:hover {
-  background: #4752c4;
+.react-calendar__tile.holiday {
+  background: #ffdddd !important;
+  color: #d60000 !important;
+  border-radius: 50%;
+  font-weight: bold;
 }
+
+.react-calendar__tile.sunday {
+  color: #d60000 !important;
+}
+
+.react-calendar__tile.saturday {
+  color: #004CA0 !important;
+}
+
 /* ===== ラジオボタンカスタム ===== */
 .mode-selector {
   display: flex;
@@ -434,103 +414,28 @@ h1, h2, .page-title, .welcome-text {
   background: #FDB9C8;
   border-radius: 50%;
 }
+
 .mode-option span {
   font-weight: bold;
   color: #444;
   font-family: 'Zen Maru Gothic', sans-serif;
 }
 
-/* 今日の日付 */
-.react-calendar__tile.today-highlight {
-  background: #FDB9C8 !important;
-  color: black !important;
-  border-radius: 50%;
-  font-weight: bold;
-}
-
-/* 祝日 */
-.react-calendar__tile.holiday {
-  background: #ffdddd !important;
-  color: #d60000 !important;
-  border-radius: 50%;
-  font-weight: bold;
-}
-
-/* 日曜 */
-.react-calendar__tile.sunday {
-  color: #d60000 !important;
-}
-
-/* 土曜 */
-.react-calendar__tile.saturday {
-  color: #004CA0 !important;
-}
-/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
-.register-layout {
+/* ユーザー情報 */
+.user-info {
   display: flex;
-  justify-content: space-between; /* 中央寄せ → 左右に分離 */
-  align-items: flex-start;
-  gap: 24px;
-  margin: 40px auto;
-  width: 100%;   /* ← max-widthを外す */
-  padding: 0 20px;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  color: #fff;
 }
 
-/* カレンダー枠（左側 7割） */
-.calendar-section {
-  flex: 7;
-  background: #fff;
-  padding: 16px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  width: 70%;   /* ← 7割指定 */
-  margin: 0;    /* 中央寄せ解除 */
+.user-info .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
 }
 
-/* 日程リスト（右側 3割） */
-.schedule-section {
-  flex: 3;
-  background: #fff;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  width: 30%;   /* ← 3割指定 */
-  min-width: 300px;
-  margin: 0;    /* 中央寄せ解除 */
+.username {
+  font-size: 1rem;
 }
-
-
-/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
-.register-layout {
-  display: flex;
-  justify-content: space-between; /* 左右に分ける */
-  align-items: flex-start;
-  gap: 24px;
-  margin: 40px auto;
-  width: 100%;   /* フル幅を使う */
-  padding: 0 20px;
-}
-
-/* カレンダー枠（左側 7割） */
-.calendar-section {
-  flex: 7;
-  background: #fff;
-  padding: 16px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  width: 70%;
-  margin: 0;
-}
-
-/* 日程リスト（右側 3割） */
-.schedule-section {
-  flex: 3;
-  background: #fff;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-  width: 30%;
-  min-width: 300px;
-  margin: 0;
-}
-
