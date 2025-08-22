@@ -163,23 +163,9 @@ const RegisterPage = () => {
           <div className="calendar-section">
             <div className="custom-calendar">
               <div className="calendar-header">
-                <button
-                  onClick={() =>
-                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
-                  }
-                >
-                  ←
-                </button>
-                <h3>
-                  {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
-                </h3>
-                <button
-                  onClick={() =>
-                    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
-                  }
-                >
-                  →
-                </button>
+                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>←</button>
+                <h3>{currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月</h3>
+                <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>→</button>
               </div>
               <div className="calendar-grid">
                 {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
@@ -289,7 +275,9 @@ const RegisterPage = () => {
               <button onClick={handleShare} className="share-btn">共有リンクを作成</button>
               {shareLink && (
                 <p className="mt-3 text-sm text-black bg-white p-2 rounded-lg shadow">
-                  {shareLink}
+                  <a href={shareLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {shareLink}
+                  </a>
                 </p>
               )}
             </div>
