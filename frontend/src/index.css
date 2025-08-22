@@ -402,4 +402,13 @@
   background: #FDB9C8;
   border-color: #FDB9C8;
 }
+/* 範囲開始日の強調 */
+.range-start-date {
+  background: #FDB9C8 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.9);
+}
+
 
