@@ -19,21 +19,22 @@ const localizer = dateFnsLocalizer({
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("multi"); // multi / range
+  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分データ
 
   // クリックまたは範囲選択
   const handleSelectSlot = ({ start, end }) => {
+    let newDates = [];
+
     if (mode === "multi") {
-      // 複数選択 → クリックした日を追加
       const day = new Date(start);
       if (
-        !selectedDates.some(
-          (d) => d.toDateString() === day.toDateString()
-        )
+        !selectedDates.some((d) => d.toDateString() === day.toDateString())
       ) {
-        setSelectedDates([...selectedDates, day]);
+        newDates = [...selectedDates, day];
+      } else {
+        newDates = [...selectedDates];
       }
     } else if (mode === "range") {
-      // 範囲選択 → start ~ end の日付をすべて追加
       let days = [];
       let current = new Date(start);
       current.setHours(0, 0, 0, 0);
@@ -44,8 +45,35 @@ const RegisterPage = () => {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
-      setSelectedDates(days);
+      newDates = days;
     }
+
+    setSelectedDates(newDates);
+
+    // 初期値を設定
+    const updatedOptions = { ...dateOptions };
+    newDates.forEach((d) => {
+      const key = d.toDateString();
+      if (!updatedOptions[key]) {
+        updatedOptions[key] = {
+          type: "allday", // 終日 / 昼 / 夜 / time
+          start: 1,
+          end: 2,
+        };
+      }
+    });
+    setDateOptions(updatedOptions);
+  };
+
+  // 日付ごとの設定変更
+  const handleOptionChange = (dateKey, field, value) => {
+    setDateOptions((prev) => ({
+      ...prev,
+      [dateKey]: {
+        ...prev[dateKey],
+        [field]: value,
+      },
+    }));
   };
 
   // 選択済みセルをハイライト
@@ -58,6 +86,9 @@ const RegisterPage = () => {
     }
     return {};
   };
+
+  // 時刻のプルダウンリスト
+  const hours = Array.from({ length: 24 }, (_, i) => i + 1);
 
   return (
     <div className="page-card">
@@ -99,11 +130,67 @@ const RegisterPage = () => {
       <div style={{ marginTop: "1rem" }}>
         <h3>選択された日程</h3>
         <ul>
-          {selectedDates.map((d, i) => (
-            <li key={i}>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</li>
-          ))}
+          {selectedDates.map((d, i) => {
+            const key = d.toDateString();
+            const opt = dateOptions[key] || {};
+            return (
+              <li key={i} style={{ marginBottom: "1rem" }}>
+                {format(d, "yyyy/MM/dd (E)", { locale: ja })}
+
+                {/* 区分プルダウン */}
+                <select
+                  value={opt.type}
+                  onChange={(e) =>
+                    handleOptionChange(key, "type", e.target.value)
+                  }
+                  style={{ marginLeft: "1rem" }}
+                >
+                  <option value="allday">終日</option>
+                  <option value="day">昼</option>
+                  <option value="night">夜</option>
+                  <option value="time">時間指定</option>
+                </select>
+
+                {/* 時間指定のときのみ開始・終了プルダウン表示 */}
+                {opt.type === "time" && (
+                  <span style={{ marginLeft: "1rem" }}>
+                    <select
+                      value={opt.start}
+                      onChange={(e) =>
+                        handleOptionChange(key, "start", Number(e.target.value))
+                      }
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                    ～
+                    <select
+                      value={opt.end}
+                      onChange={(e) =>
+                        handleOptionChange(key, "end", Number(e.target.value))
+                      }
+                    >
+                      {hours
+                        .filter((h) => h > opt.start) // 終了時刻は開始より後
+                        .map((h) => (
+                          <option key={h} value={h}>
+                            {h}時
+                          </option>
+                        ))}
+                    </select>
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
+
+      {/* 登録ボタン */}
+      <button style={{ marginTop: "1rem" }}>登録する</button>
     </div>
   );
 };
