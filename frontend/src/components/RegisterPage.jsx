@@ -14,15 +14,16 @@ const getDatesInRange = (start, end) => {
 };
 
 const RegisterPage = () => {
-  const [title, setTitle] = useState(""); // ✅ タイトル入力
   const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
   const [timeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`).concat("24:00"));
+  const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState([]);
-  const [shareUrls, setShareUrls] = useState([]); // ✅ 共有リンク履歴
+  const [shareUrls, setShareUrls] = useState([]); // ✅ 複数の共有リンクを保持
+  const [title, setTitle] = useState(""); // ✅ タイトル入力欄
 
   // ===== 日本時間の今日 =====
   const todayJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
@@ -66,12 +67,8 @@ const RegisterPage = () => {
       alert("タイトルを入力してください");
       return;
     }
-    if (selectedList.length === 0) {
-      alert("日程を選択してください");
-      return;
-    }
 
-    const items = selectedList.map((d) => {
+    const formatted = selectedList.map((d) => {
       const dateStr = d.toISOString().split("T")[0];
       const option = dateOptions[dateStr] || { type: "終日" };
       return {
@@ -82,18 +79,21 @@ const RegisterPage = () => {
       };
     });
 
+    setSchedules(formatted);
+
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/schedules`, {
+      const res = await fetch("http://localhost:5000/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, items }),
+        body: JSON.stringify({ title, schedules: formatted }),
       });
       if (!res.ok) throw new Error("保存に失敗しました");
       const data = await res.json();
+      console.log("保存成功", data);
 
-      // ✅ 保存成功したら共有リンクを表示
-      setShareUrls((prev) => [data.url, ...prev]); // 最新を上に追加
-      setTitle(""); // 入力クリア
+      // ✅ 保存成功したら共有リンクを生成
+      const newUrl = data.url || `${window.location.origin}/share/${uuidv4()}`;
+      setShareUrls((prev) => [newUrl, ...prev]); // 最新を上に追加
     } catch (err) {
       console.error("保存エラー:", err);
     }
@@ -113,16 +113,18 @@ const RegisterPage = () => {
     <div className="page-container">
       <h1 className="page-title">📅 日程登録</h1>
 
-      {/* ===== タイトル入力 ===== */}
+      {/* ✅ タイトル入力欄 */}
       <div style={{ marginBottom: "20px" }}>
-        <label>タイトル：</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="例: 飲み会予定"
-          style={{ padding: "6px", width: "300px", border: "1px solid #ccc", borderRadius: "6px" }}
-        />
+        <label>
+          タイトル:{" "}
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="イベント名やスケジュールタイトル"
+            className="title-input"
+          />
+        </label>
       </div>
 
       {/* モード切替 */}
