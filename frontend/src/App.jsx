@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
@@ -10,34 +9,19 @@ import SharePage from "./components/SharePage";
 const App = () => {
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-black text-white">
+      <div className="page-container">
         {/* ===== バナー（共通ヘッダー） ===== */}
-        <header className="bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] p-4 shadow-lg flex justify-between items-center">
-          <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
-          <nav className="flex gap-4">
-            <Link
-              to="/"
-              className="hover:underline text-white font-medium"
-            >
-              トップ
-            </Link>
-            <Link
-              to="/register"
-              className="hover:underline text-white font-medium"
-            >
-              日程登録
-            </Link>
-            <Link
-              to="/personal"
-              className="hover:underline text-white font-medium"
-            >
-              個人スケジュール
-            </Link>
+        <header className="banner">
+          <div className="logo">MilkPOP Calendar</div>
+          <nav className="nav">
+            <Link to="/">トップ</Link>
+            <Link to="/register">日程登録</Link>
+            <Link to="/personal">個人スケジュール</Link>
           </nav>
         </header>
 
         {/* ===== ページ表示部分 ===== */}
-        <main className="flex-1 p-6">
+        <main>
           <Routes>
             <Route path="/" element={<TopPage />} />
             <Route path="/register" element={<RegisterPage />} />
@@ -47,7 +31,7 @@ const App = () => {
         </main>
 
         {/* ===== フッター ===== */}
-        <footer className="bg-gray-900 text-center py-4 text-sm text-gray-400">
+        <footer>
           &copy; {new Date().getFullYear()} MilkPOP Calendar
         </footer>
       </div>
