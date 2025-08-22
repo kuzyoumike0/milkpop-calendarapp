@@ -35,9 +35,8 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single"); // single or range
   const [rangeBuffer, setRangeBuffer] = useState([]);
-  const [dateDetails, setDateDetails] = useState({}); // { "2025-08-11": {区分, start, end} }
+  const [dateDetails, setDateDetails] = useState({}); // { "2025-08-11": {division, start, end} }
 
-  // 日付を文字列に変換
   const toDateStr = (date) => format(date, "yyyy-MM-dd");
 
   // 日付クリック処理
@@ -61,7 +60,7 @@ const RegisterPage = () => {
         const last = start < end ? end : start;
 
         while (current <= last) {
-          range.push(toDateStr(current));
+          range.push(toDateStr(new Date(current)));
           current = new Date(current.setDate(current.getDate() + 1));
         }
         setSelectedDates([...new Set([...selectedDates, ...range])]);
@@ -70,7 +69,7 @@ const RegisterPage = () => {
     }
   };
 
-  // カレンダーセルにクラスを付与
+  // 祝日や選択日のスタイル
   const dayPropGetter = (date) => {
     const dateStr = toDateStr(date);
     if (jpHolidays[dateStr]) {
@@ -96,7 +95,7 @@ const RegisterPage = () => {
       const detail = prev[dateStr] || {};
       let newDetail = { ...detail, [type]: value };
 
-      // 開始時刻 < 終了時刻にする
+      // 開始 < 終了を保証
       if (type === "start" && newDetail.end && Number(value) >= Number(newDetail.end)) {
         newDetail.end = String(Number(value) + 1);
       }
@@ -160,14 +159,16 @@ const RegisterPage = () => {
         localizer={localizer}
         views={["month"]}
         style={{ height: 500 }}
-        selectable={false}
-        onDrillDown={handleDateClick}
-        onNavigate={() => {}}
+        selectable={false} // react-big-calendar のドラッグ選択は使わない
         dayPropGetter={dayPropGetter}
-        onView={() => {}}
         components={{
-          dateCellWrapper: (props) => (
-            <div onClick={() => handleDateClick(props.value)}>{props.children}</div>
+          dateCellWrapper: ({ value, children }) => (
+            <div
+              onClick={() => handleDateClick(value)}
+              style={{ cursor: "pointer", height: "100%" }}
+            >
+              {children}
+            </div>
           ),
         }}
       />
@@ -190,7 +191,7 @@ const RegisterPage = () => {
               <option value="time">時間指定</option>
             </select>
 
-            {/* 時間指定なら時間プルダウン */}
+            {/* 時間指定 */}
             {dateDetails[dateStr]?.division === "time" && (
               <div style={{ marginTop: "0.5rem", display: "flex", gap: "1rem" }}>
                 <select
