@@ -20,7 +20,7 @@ const initDB = async () => {
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
       share_id UUID NOT NULL,
-      title TEXT,
+      title TEXT,                -- ✅ タイトル追加
       date DATE NOT NULL,
       type TEXT NOT NULL,
       start_time TEXT,
@@ -31,10 +31,9 @@ const initDB = async () => {
 initDB();
 
 // ====== スケジュール保存 ======
-// req.body = { title: "タイトル", schedules: [{date, type, start, end}] }
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, schedules } = req.body; 
+    const { title, schedules } = req.body; // ✅ {title, schedules[]} を受け取る
     const shareId = uuidv4();
 
     const client = await pool.connect();
@@ -62,7 +61,10 @@ app.get("/api/share/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      "SELECT title, date, type, start_time AS start, end_time AS end FROM schedules WHERE share_id = $1 ORDER BY date ASC",
+      `SELECT title, date, type, start_time AS start, end_time AS end 
+       FROM schedules 
+       WHERE share_id = $1 
+       ORDER BY date ASC`,
       [id]
     );
     res.json(result.rows);
