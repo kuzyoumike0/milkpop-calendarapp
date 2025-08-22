@@ -1,7 +1,8 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "../index.css";
-import { v4 as uuidv4 } from "uuid"; // 👈 ランダムID生成用
+import { v4 as uuidv4 } from "uuid"; // ランダムID生成用
 
 const getDatesInRange = (start, end) => {
   const dates = [];
@@ -14,25 +15,32 @@ const getDatesInRange = (start, end) => {
 };
 
 const RegisterPage = () => {
-  const [title, setTitle] = useState(""); // ✅ タイトル入力
+  const [title, setTitle] = useState(""); // ✅ タイトル
   const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
   const [timeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`));
-  const [endTimeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`).concat("24:00"));
+  const [endTimeOptions] = useState(
+    [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00")
+  );
+  const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState([]);
-  const [shareUrls, setShareUrls] = useState([]); // ✅ 共有リンク履歴
+  const [shareUrls, setShareUrls] = useState([]); // 複数共有リンク
 
   // ===== 日本時間の今日 =====
-  const todayJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+  const todayJST = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
   const todayStr = todayJST.toISOString().split("T")[0];
 
   // ===== 祝日取得 =====
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+        const res = await fetch(
+          "https://holidays-jp.github.io/api/v1/date.json"
+        );
         const data = await res.json();
         setHolidays(Object.keys(data));
       } catch (err) {
@@ -62,10 +70,11 @@ const RegisterPage = () => {
 
   // ===== 保存処理 =====
   const saveSchedule = async () => {
-    if (!title) {
+    if (!title.trim()) {
       alert("タイトルを入力してください");
       return;
     }
+
     const formatted = selectedList.map((d) => {
       const dateStr = d.toISOString().split("T")[0];
       const option = dateOptions[dateStr] || { type: "終日" };
@@ -77,21 +86,24 @@ const RegisterPage = () => {
       };
     });
 
+    setSchedules(formatted);
+
     try {
       const res = await fetch("http://localhost:5000/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, schedules: formatted }), // ✅ title も送信
+        body: JSON.stringify({
+          title,
+          schedules: formatted,
+        }),
       });
       if (!res.ok) throw new Error("保存に失敗しました");
-      const result = await res.json();
+      const data = await res.json();
 
-      // ✅ 新しい共有URLを追加
-      setShareUrls((prev) => [result.url, ...prev]);
-      alert("保存しました！");
+      // ✅ 保存成功したら共有リンクを生成
+      setShareUrls((prev) => [data.url, ...prev]); // 最新を上に追加
     } catch (err) {
       console.error("保存エラー:", err);
-      alert("保存に失敗しました");
     }
   };
 
@@ -109,18 +121,15 @@ const RegisterPage = () => {
     <div className="page-container">
       <h1 className="page-title">📅 日程登録</h1>
 
-      {/* ✅ タイトル入力 */}
-      <div style={{ marginBottom: "15px" }}>
-        <label>
-          タイトル：
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="タイトルを入力"
-            style={{ marginLeft: "10px", padding: "5px", width: "250px" }}
-          />
-        </label>
+      {/* ===== タイトル入力 ===== */}
+      <div className="mb-4">
+        <label className="block font-semibold mb-1">イベントタイトル</label>
+        <input
+          className="p-2 border rounded w-full text-black"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例：歓迎会、旅行、ミーティング"
+        />
       </div>
 
       {/* モード切替 */}
@@ -182,7 +191,9 @@ const RegisterPage = () => {
                 <strong>{dateStr}</strong>
                 <select
                   value={option.type}
-                  onChange={(e) => handleOptionChange(dateStr, "type", e.target.value)}
+                  onChange={(e) =>
+                    handleOptionChange(dateStr, "type", e.target.value)
+                  }
                 >
                   <option value="終日">終日</option>
                   <option value="午前">午前</option>
@@ -194,7 +205,9 @@ const RegisterPage = () => {
                   <>
                     <select
                       value={option.start || ""}
-                      onChange={(e) => handleOptionChange(dateStr, "start", e.target.value)}
+                      onChange={(e) =>
+                        handleOptionChange(dateStr, "start", e.target.value)
+                      }
                     >
                       <option value="">開始時刻</option>
                       {timeOptions.map((t) => (
@@ -207,7 +220,11 @@ const RegisterPage = () => {
                       value={option.end || ""}
                       onChange={(e) => {
                         const start = dateOptions[dateStr]?.start;
-                        if (start && timeOptions.indexOf(e.target.value) <= timeOptions.indexOf(start)) {
+                        if (
+                          start &&
+                          timeOptions.indexOf(e.target.value) <=
+                            timeOptions.indexOf(start)
+                        ) {
                           alert("終了時刻は開始時刻より後にしてください");
                           return;
                         }
@@ -233,7 +250,7 @@ const RegisterPage = () => {
             </button>
           )}
 
-          {/* ✅ 共有リンク表示 */}
+          {/* 共有リンク表示 */}
           {shareUrls.length > 0 && (
             <div style={{ marginTop: "20px" }}>
               <h4>🔗 共有リンク</h4>
