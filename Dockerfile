@@ -1,36 +1,21 @@
-# ====== Stage 1: フロントエンドをビルド ======
-FROM node:18 AS frontend-build
-
-# 作業ディレクトリ
+# ===== フロントエンドのビルド =====
+FROM node:18 AS frontend
 WORKDIR /app/frontend
-
-# package.json をコピーして依存関係インストール
-COPY frontend/package*.json ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
-
-# ソースコードをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
-
-# ====== Stage 2: バックエンドをセットアップ ======
+# ===== バックエンド =====
 FROM node:18
-
-# 作業ディレクトリ
+WORKDIR /app
+COPY backend/package.json backend/package-lock.json ./backend/
 WORKDIR /app/backend
-
-# backend の依存関係インストール
-COPY backend/package*.json ./
 RUN npm install
-
-# backend ソースコードをコピー
 COPY backend/ ./
 
-# フロントエンドのビルド成果物を public フォルダへコピー
-COPY --from=frontend-build /app/frontend/build ./public
+# フロントのビルド成果物をコピー
+COPY --from=frontend /app/frontend/build ../frontend/build
 
-# ポート公開
-EXPOSE 3000
-
-# サーバー起動
+EXPOSE 8080
 CMD ["node", "index.js"]
