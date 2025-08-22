@@ -6,7 +6,6 @@ const TopPage = () => {
     <div className="page-container">
       <div className="card" style={{ textAlign: "center" }}>
         <img
-          src="/logo.png"
           alt="MilkPOP Logo"
           style={{ width: "180px", marginBottom: "20px" }}
         />
