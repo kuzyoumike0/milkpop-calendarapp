@@ -20,6 +20,7 @@ const initDB = async () => {
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
       share_id UUID NOT NULL,
+      title TEXT,
       date DATE NOT NULL,
       type TEXT NOT NULL,
       start_time TEXT,
@@ -32,16 +33,16 @@ initDB();
 // ====== スケジュール保存 ======
 app.post("/api/schedules", async (req, res) => {
   try {
-    const schedules = req.body; // [{date, type, start, end}]
+    const { title, dates } = req.body; // {title, dates:[{date, type, start, end}]}
     const shareId = uuidv4();
 
     const client = await pool.connect();
     try {
-      for (const s of schedules) {
+      for (const s of dates) {
         await client.query(
-          `INSERT INTO schedules (share_id, date, type, start_time, end_time)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [shareId, s.date, s.type, s.start, s.end]
+          `INSERT INTO schedules (share_id, title, date, type, start_time, end_time)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [shareId, title, s.date, s.type, s.start, s.end]
         );
       }
     } finally {
@@ -60,10 +61,27 @@ app.get("/api/share/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      "SELECT date, type, start_time AS start, end_time AS end FROM schedules WHERE share_id = $1 ORDER BY date ASC",
+      `SELECT title, date, type, start_time AS start, end_time AS end
+         FROM schedules
+        WHERE share_id = $1
+        ORDER BY date ASC`,
       [id]
     );
-    res.json(result.rows);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: "Not found" });
+    }
+
+    const title = result.rows[0].title;
+    res.json({
+      title,
+      dates: result.rows.map((r) => ({
+        date: r.date,
+        type: r.type,
+        start: r.start,
+        end: r.end,
+      })),
+    });
   } catch (err) {
     console.error("❌ 取得エラー:", err);
     res.status(500).json({ error: "取得に失敗しました" });
