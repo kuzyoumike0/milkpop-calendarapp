@@ -153,26 +153,24 @@ const RegisterPage = () => {
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
             {mode === "range" && range[0] && range[1] && (
               <div className="schedule-card">
-                {range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}
+                <span>{range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}</span>
               </div>
             )}
             {mode === "multi" && multiDates.length > 0 ? (
               multiDates.map((date) => (
                 <div key={date} className="schedule-card">
-                  <div className="flex justify-between items-center">
-                    <span>{date}</span>
-                    <select
-                      value={dateOptions[date]?.type || "終日"}
-                      onChange={(e) => handleOptionChange(date, "type", e.target.value)}
-                    >
-                      <option value="終日">終日</option>
-                      <option value="午前">午前</option>
-                      <option value="午後">午後</option>
-                      <option value="時間指定">時間指定</option>
-                    </select>
-                  </div>
+                  <span>{date}</span>
+                  <select
+                    value={dateOptions[date]?.type || "終日"}
+                    onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                  >
+                    <option value="終日">終日</option>
+                    <option value="午前">午前</option>
+                    <option value="午後">午後</option>
+                    <option value="時間指定">時間指定</option>
+                  </select>
                   {dateOptions[date]?.type === "時間指定" && (
-                    <div className="flex gap-2 items-center mt-2">
+                    <div className="flex gap-2 items-center ml-2">
                       <select
                         value={dateOptions[date]?.start || "9:00"}
                         onChange={(e) => handleOptionChange(date, "start", e.target.value)}
