@@ -4,70 +4,85 @@ const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
-const { Pool } = require("pg");
+const fetch = require("node-fetch"); // 👈 OAuth用
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== PostgreSQL 接続 =====
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Railwayの環境変数
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+let schedulesDB = {};
+let sessions = {}; // 簡易セッション（実運用はRedisやDBを推奨）
+
+// ===== Discord OAuth2 =====
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || "http://localhost:3000/api/auth/discord/callback";
+
+// Discordログイン開始
+app.get("/api/auth/discord", (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    REDIRECT_URI
+  )}&response_type=code&scope=identify`;
+  res.redirect(url);
 });
 
-// 初期化 (テーブル作成)
-(async () => {
+// Discordからのコールバック
+app.get("/api/auth/discord/callback", async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send("No code");
+
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS schedules (
-        id UUID PRIMARY KEY,
-        data JSONB NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-    console.log("✅ PostgreSQL ready");
+    // トークン取得
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: REDIRECT_URI,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+
+    // ユーザー情報取得
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
+
+    // セッションID発行
+    const sessionId = uuidv4();
+    sessions[sessionId] = user;
+
+    // React側へセッションIDを渡す
+    res.redirect(`/auth-success?session=${sessionId}`);
   } catch (err) {
-    console.error("❌ DB init error:", err);
-  }
-})();
-
-// ===== 登録 =====
-app.post("/api/schedules", async (req, res) => {
-  try {
-    const id = uuidv4();
-    const data = req.body.schedules;
-
-    await pool.query("INSERT INTO schedules (id, data) VALUES ($1, $2)", [
-      id,
-      data,
-    ]);
-
-    console.log("📥 保存:", id);
-    res.json({ ok: true, id });
-  } catch (err) {
-    console.error("❌ 保存エラー:", err);
-    res.status(500).json({ ok: false, message: "DB Error" });
+    console.error("OAuth error:", err);
+    res.status(500).send("OAuth failed");
   }
 });
 
-// ===== 取得 =====
-app.get("/api/schedules/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT data FROM schedules WHERE id=$1", [
-      id,
-    ]);
+// ユーザー情報取得API
+app.get("/api/me/:sessionId", (req, res) => {
+  const user = sessions[req.params.sessionId];
+  if (!user) return res.status(401).json({ ok: false });
+  res.json({ ok: true, user });
+});
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ ok: false, message: "Not found" });
-    }
+// ===== スケジュールAPI =====
+app.post("/api/schedules", (req, res) => {
+  const id = uuidv4();
+  schedulesDB[id] = req.body.schedules;
+  res.json({ ok: true, id });
+});
 
-    res.json({ ok: true, schedules: result.rows[0].data });
-  } catch (err) {
-    console.error("❌ 取得エラー:", err);
-    res.status(500).json({ ok: false, message: "DB Error" });
-  }
+app.get("/api/schedules/:id", (req, res) => {
+  const { id } = req.params;
+  const schedules = schedulesDB[id];
+  if (!schedules) return res.status(404).json({ ok: false });
+  res.json({ ok: true, schedules });
 });
 
 // ===== Reactビルド配信 =====
@@ -77,6 +92,4 @@ app.get("*", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
