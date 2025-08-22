@@ -75,17 +75,19 @@
   left: 0;
 }
 
-/* トップページのメイン画像 */
+/* ===== トップページのロゴ画像 ===== */
 .logo-image {
-  width: 80%;        /* ページ幅の割合 */
+  width: 80%;        /* ページ幅に対する割合 */
   max-width: 1040px;  /* 最大サイズ */
-  height: auto;      /* 縦横比を維持 */
+  height: auto;      /* 縦横比を維持して自動調整 */
   border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.schedule-image {
-  width: 1040px;
-  height: auto;
-  border-radius: 8px;
+
+.logo-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.35);
 }
 
 /* ===== ページタイトル ===== */
