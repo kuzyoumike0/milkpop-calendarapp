@@ -8,16 +8,18 @@ const RegisterPage = () => {
   const [mode, setMode] = useState("range"); // "range" | "multi"
   const [range, setRange] = useState([null, null]); // 範囲選択用
   const [multiDates, setMultiDates] = useState([]); // 複数選択用
-  const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
-  const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
+  const [timeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`));
+  const [endTimeOptions] = useState(
+    [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00")
+  );
   const [dateOptions, setDateOptions] = useState({});
-  const [shareUrl, setShareUrl] = useState("");   // ✅ 生成された共有リンクを保持
+  const [shareUrls, setShareUrls] = useState([]); // ✅ 発行したリンク履歴を保持
 
   // ===== 複数クリック用 =====
   const handleMultiClick = (date) => {
     const dateStr = date.toDateString();
-    if (multiDates.some(d => d.toDateString() === dateStr)) {
-      setMultiDates(multiDates.filter(d => d.toDateString() !== dateStr));
+    if (multiDates.some((d) => d.toDateString() === dateStr)) {
+      setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
       const updated = { ...dateOptions };
       delete updated[dateStr];
       setDateOptions(updated);
@@ -25,7 +27,7 @@ const RegisterPage = () => {
       setMultiDates([...multiDates, date]);
       setDateOptions({
         ...dateOptions,
-        [dateStr]: { type: "終日", start: "0:00", end: "23:00" }
+        [dateStr]: { type: "終日", start: "0:00", end: "23:00" },
       });
     }
   };
@@ -34,7 +36,7 @@ const RegisterPage = () => {
   const handleTypeChange = (dateStr, value) => {
     setDateOptions({
       ...dateOptions,
-      [dateStr]: { ...dateOptions[dateStr], type: value }
+      [dateStr]: { ...dateOptions[dateStr], type: value },
     });
   };
 
@@ -43,12 +45,17 @@ const RegisterPage = () => {
     let updated = { ...dateOptions };
     updated[dateStr][field] = value;
     const startIdx = timeOptions.indexOf(updated[dateStr].start);
-    const endIdx = updated[dateStr].end === "24:00" ? 24 : timeOptions.indexOf(updated[dateStr].end);
+    const endIdx =
+      updated[dateStr].end === "24:00"
+        ? 24
+        : timeOptions.indexOf(updated[dateStr].end);
     if (startIdx >= endIdx) {
       if (field === "start") {
-        updated[dateStr].end = startIdx < 23 ? timeOptions[startIdx + 1] : "24:00";
+        updated[dateStr].end =
+          startIdx < 23 ? timeOptions[startIdx + 1] : "24:00";
       } else {
-        updated[dateStr].start = endIdx > 0 ? timeOptions[endIdx - 1] : "0:00";
+        updated[dateStr].start =
+          endIdx > 0 ? timeOptions[endIdx - 1] : "0:00";
       }
     }
     setDateOptions(updated);
@@ -76,13 +83,13 @@ const RegisterPage = () => {
         body: JSON.stringify({
           mode,
           dates: selectedDates,
-          options: dateOptions
+          options: dateOptions,
         }),
       });
       const data = await res.json();
       if (data.ok && data.id) {
         const url = `${window.location.origin}/share/${data.id}`;
-        setShareUrl(url);  // ✅ ボタンの下に表示する用に保存
+        setShareUrls((prev) => [url, ...prev]); // ✅ 最新を先頭に追加
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
@@ -91,20 +98,21 @@ const RegisterPage = () => {
   };
 
   // ===== 表示用の日付リスト =====
-  const displayDates = mode === "range"
-    ? (() => {
-        if (range[0] && range[1]) {
-          const dates = [];
-          let cur = new Date(range[0]);
-          while (cur <= range[1]) {
-            dates.push(new Date(cur));
-            cur.setDate(cur.getDate() + 1);
+  const displayDates =
+    mode === "range"
+      ? (() => {
+          if (range[0] && range[1]) {
+            const dates = [];
+            let cur = new Date(range[0]);
+            while (cur <= range[1]) {
+              dates.push(new Date(cur));
+              cur.setDate(cur.getDate() + 1);
+            }
+            return dates;
           }
-          return dates;
-        }
-        return [];
-      })()
-    : multiDates;
+          return [];
+        })()
+      : multiDates;
 
   return (
     <div className="page-container">
@@ -133,7 +141,9 @@ const RegisterPage = () => {
               onClickDay={handleMultiClick}
               value={multiDates}
               tileClassName={({ date }) =>
-                multiDates.some(d => d.toDateString() === date.toDateString())
+                multiDates.some(
+                  (d) => d.toDateString() === date.toDateString()
+                )
                   ? "selected-date"
                   : null
               }
@@ -147,7 +157,12 @@ const RegisterPage = () => {
           {displayDates.length === 0 && <p>日程を選択してください。</p>}
           {displayDates.map((d, i) => {
             const dateStr = d.toDateString();
-            const option = dateOptions[dateStr] || { type: "終日", start: "0:00", end: "23:00" };
+            const option =
+              dateOptions[dateStr] || {
+                type: "終日",
+                start: "0:00",
+                end: "23:00",
+              };
             return (
               <div key={i} className="schedule-item">
                 <span>{d.toLocaleDateString()}</span>
@@ -166,19 +181,27 @@ const RegisterPage = () => {
                   <div className="time-selects">
                     <select
                       value={option.start}
-                      onChange={(e) => handleTimeChange(dateStr, "start", e.target.value)}
+                      onChange={(e) =>
+                        handleTimeChange(dateStr, "start", e.target.value)
+                      }
                     >
                       {timeOptions.map((t, idx) => (
-                        <option key={idx} value={t}>{t}</option>
+                        <option key={idx} value={t}>
+                          {t}
+                        </option>
                       ))}
                     </select>
                     <span>〜</span>
                     <select
                       value={option.end}
-                      onChange={(e) => handleTimeChange(dateStr, "end", e.target.value)}
+                      onChange={(e) =>
+                        handleTimeChange(dateStr, "end", e.target.value)
+                      }
                     >
                       {endTimeOptions.map((t, idx) => (
-                        <option key={idx} value={t}>{t === "24:00" ? "翌日0:00" : t}</option>
+                        <option key={idx} value={t}>
+                          {t === "24:00" ? "翌日0:00" : t}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -193,13 +216,23 @@ const RegisterPage = () => {
                 共有リンクを発行
               </button>
 
-              {shareUrl && (
-                <p className="share-link">
-                  共有リンク:{" "}
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-                    {shareUrl}
-                  </a>
-                </p>
+              {shareUrls.length > 0 && (
+                <div className="share-link-list">
+                  <p>発行された共有リンク:</p>
+                  <ul>
+                    {shareUrls.map((url, idx) => (
+                      <li key={idx}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {url}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </>
           )}
