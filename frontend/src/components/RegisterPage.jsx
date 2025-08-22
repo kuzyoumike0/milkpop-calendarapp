@@ -12,21 +12,21 @@ const RegisterPage = () => {
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [timeType, setTimeType] = useState("終日");
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("18:00");
   const [shareUrls, setShareUrls] = useState([]);
+
+  // 各日付のオプションを保存
+  const [dateOptions, setDateOptions] = useState({});
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
   );
 
-  // ===== 日本時間の今日 =====
+  // ===== 今日の日付 =====
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
 
-  // ===== カレンダー日付の色付け =====
+  // ===== カレンダー色付け =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -44,13 +44,10 @@ const RegisterPage = () => {
     return null;
   };
 
-  // ===== 祝日名をセルに表示 =====
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
-      if (holiday) {
-        return <div className="holiday-label">{holiday[0].name}</div>;
-      }
+      if (holiday) return <div className="holiday-label">{holiday[0].name}</div>;
     }
     return null;
   };
@@ -61,10 +58,43 @@ const RegisterPage = () => {
       const dateStr = date.toDateString();
       if (multiDates.some((d) => d.toDateString() === dateStr)) {
         setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
+        // 削除時はオプションも消す
+        setDateOptions((prev) => {
+          const updated = { ...prev };
+          delete updated[dateStr];
+          return updated;
+        });
       } else {
         setMultiDates([...multiDates, date]);
+        // デフォルト: 終日
+        setDateOptions((prev) => ({
+          ...prev,
+          [dateStr]: { type: "終日", start: "01:00", end: "24:00" },
+        }));
       }
     }
+  };
+
+  // ===== プルダウン変更 =====
+  const handleOptionChange = (dateStr, field, value) => {
+    setDateOptions((prev) => {
+      const updated = { ...prev };
+      if (!updated[dateStr]) {
+        updated[dateStr] = { type: "終日", start: "01:00", end: "24:00" };
+      }
+      updated[dateStr][field] = value;
+
+      // 開始時刻は終了時刻より前にする
+      if (field === "start" && updated[dateStr].end <= value) {
+        updated[dateStr].end = timeOptions[timeOptions.indexOf(value) + 1] || "24:00";
+      }
+      if (field === "end" && updated[dateStr].start >= value) {
+        const idx = timeOptions.indexOf(value);
+        updated[dateStr].start = timeOptions[idx - 1] || "01:00";
+      }
+
+      return updated;
+    });
   };
 
   // ===== 共有リンク生成 =====
@@ -74,9 +104,7 @@ const RegisterPage = () => {
       return;
     }
 
-    const dates =
-      mode === "range" ? range.filter((d) => d !== null) : multiDates;
-
+    const dates = mode === "range" ? range.filter((d) => d !== null) : multiDates;
     if (dates.length === 0) {
       alert("日程を選択してください");
       return;
@@ -89,7 +117,7 @@ const RegisterPage = () => {
         body: JSON.stringify({
           title,
           dates: dates.map((d) => d.toISOString()),
-          options: { type: timeType, start, end },
+          options: dateOptions,
         }),
       });
 
@@ -123,9 +151,8 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== 横並びレイアウト（カレンダー 7割・リスト 3割） ===== */}
+      {/* ===== 横並び（左7割カレンダー / 右3割リスト） ===== */}
       <div className="register-layout">
-        {/* 左側カレンダー */}
         <div className="calendar-section">
           <SelectMode mode={mode} setMode={setMode} />
           <Calendar
@@ -140,60 +167,67 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 右側リスト */}
         <div className="schedule-section">
           <h3 className="font-bold">選択した日程</h3>
-          <ul className="list-disc list-inside">
-            {selectedList.map((d, i) => {
-              const holiday = hd.isHoliday(d);
-              const holidayName = holiday ? `（${holiday[0].name}）` : "";
-              return (
-                <li key={i}>
-                  {d.toLocaleDateString()} {holidayName}
-                </li>
-              );
-            })}
-          </ul>
+          {selectedList.map((d, i) => {
+            const dateStr = d.toDateString();
+            const holiday = hd.isHoliday(d);
+            const holidayName = holiday ? `（${holiday[0].name}）` : "";
+
+            return (
+              <div key={i} className="schedule-item">
+                <div className="flex flex-col w-full">
+                  <span>
+                    {d.toLocaleDateString()} {holidayName}
+                  </span>
+
+                  {/* 時間帯プルダウン */}
+                  <select
+                    value={dateOptions[dateStr]?.type || "終日"}
+                    onChange={(e) =>
+                      handleOptionChange(dateStr, "type", e.target.value)
+                    }
+                    className="mt-2 p-2 border rounded text-black"
+                  >
+                    <option value="終日">終日</option>
+                    <option value="午前">午前</option>
+                    <option value="午後">午後</option>
+                    <option value="時刻指定">時間指定</option>
+                  </select>
+
+                  {/* 時刻指定時のみ */}
+                  {dateOptions[dateStr]?.type === "時刻指定" && (
+                    <div className="mt-2 flex gap-2">
+                      <select
+                        value={dateOptions[dateStr]?.start || "01:00"}
+                        onChange={(e) =>
+                          handleOptionChange(dateStr, "start", e.target.value)
+                        }
+                        className="p-2 border rounded text-black"
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t}>{t}</option>
+                        ))}
+                      </select>
+                      〜
+                      <select
+                        value={dateOptions[dateStr]?.end || "24:00"}
+                        onChange={(e) =>
+                          handleOptionChange(dateStr, "end", e.target.value)
+                        }
+                        className="p-2 border rounded text-black"
+                      >
+                        {timeOptions.concat("24:00").map((t) => (
+                          <option key={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
-
-      {/* ===== 時間指定プルダウン ===== */}
-      <div className="mt-4 space-y-2">
-        <select
-          className="p-2 border rounded text-black"
-          value={timeType}
-          onChange={(e) => setTimeType(e.target.value)}
-        >
-          <option value="終日">終日</option>
-          <option value="午前">午前</option>
-          <option value="午後">午後</option>
-          <option value="時刻指定">時刻指定</option>
-        </select>
-
-        {timeType === "時刻指定" && (
-          <div className="mt-2 flex gap-2">
-            <select
-              className="p-2 border rounded text-black"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-            〜
-            <select
-              className="p-2 border rounded text-black"
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-              <option value="24:00">24:00</option>
-            </select>
-          </div>
-        )}
       </div>
 
       {/* ===== 共有リンクボタン ===== */}
