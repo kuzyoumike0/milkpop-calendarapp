@@ -1,7 +1,5 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "../index.css";
 
 const RegisterPage = () => {
@@ -32,17 +30,58 @@ const RegisterPage = () => {
     fetchHolidays();
   }, []);
 
-  // ==== 日付クリック（複数選択モード） ====
-  const handleMultiClick = (date) => {
-    const dStr = date.toISOString().split("T")[0];
-    if (multiDates.includes(dStr)) {
-      setMultiDates(multiDates.filter((d) => d !== dStr));
+  // ==== 自作カレンダー ====
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const buildCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const cells = [];
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    for (let d = 1; d <= lastDate; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+        d
+      ).padStart(2, "0")}`;
+      cells.push(dateStr);
+    }
+    return cells;
+  };
+
+  const handleClickDate = (dateStr) => {
+    if (mode === "multi") {
+      if (multiDates.includes(dateStr)) {
+        setMultiDates(multiDates.filter((d) => d !== dateStr));
+      } else {
+        setMultiDates([...multiDates, dateStr]);
+      }
     } else {
-      setMultiDates([...multiDates, dStr]);
+      if (!range[0] || (range[0] && range[1])) {
+        setRange([new Date(dateStr), null]);
+      } else {
+        setRange([range[0], new Date(dateStr)]);
+      }
     }
   };
 
-  // ==== 保存処理 ====
+  const isSelected = (dateStr) => {
+    if (mode === "multi") return multiDates.includes(dateStr);
+    if (mode === "range" && range[0] && range[1]) {
+      const start = range[0];
+      const end = range[1];
+      const d = new Date(dateStr);
+      return d >= start && d <= end;
+    }
+    if (mode === "range" && range[0] && !range[1]) {
+      return dateStr === range[0].toISOString().split("T")[0];
+    }
+    return false;
+  };
+
+  // ==== 保存 ====
   const handleSave = async () => {
     const dates =
       mode === "range"
@@ -82,30 +121,52 @@ const RegisterPage = () => {
     }
   };
 
-  // ==== カレンダーのタイル装飾 ====
-  const tileClassName = ({ date }) => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    const dStr = date.toISOString().split("T")[0];
-
-    if (dStr === todayStr) return "today-highlight";
-    if (holidays[dStr]) return "holiday-highlight";
-
-    if (mode === "multi" && multiDates.includes(dStr)) return "selected-date";
-
-    if (mode === "range" && range[0] && !range[1] && dStr === range[0].toISOString().split("T")[0]) {
-      return "selected-date"; // 範囲開始日
-    }
-
-    return null;
-  };
+  const days = buildCalendar();
 
   return (
     <main className="page-container">
       <h2 className="page-title">日程登録ページ</h2>
 
       <div className="register-layout">
-        {/* 左側：入力フォーム */}
-        <div className="calendar-section">
+        {/* 左側：カレンダー */}
+        <div className="calendar-section custom-calendar">
+          <div className="calendar-header">
+            <button onClick={() => setCurrentMonth(
+              new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+            )}>‹</button>
+            <h3>
+              {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
+            </h3>
+            <button onClick={() => setCurrentMonth(
+              new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+            )}>›</button>
+          </div>
+          <div className="calendar-grid">
+            {["日","月","火","水","木","金","土"].map((w)=>(
+              <div key={w} className="weekday">{w}</div>
+            ))}
+            {days.map((d, i) => {
+              if (!d) return <div key={i} />;
+              const isToday = d === todayStr;
+              const selected = isSelected(d);
+              return (
+                <div
+                  key={i}
+                  className={`day 
+                    ${isToday ? "today" : ""} 
+                    ${selected ? "selected" : ""} 
+                    ${holidays[d] ? "holiday" : ""}`}
+                  onClick={() => handleClickDate(d)}
+                >
+                  {new Date(d).getDate()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 右側：入力とリスト */}
+        <div className="schedule-section">
           <input
             type="text"
             placeholder="イベントタイトルを入力"
@@ -114,13 +175,9 @@ const RegisterPage = () => {
             className="title-input"
           />
 
-          {/* 選択モード */}
+          {/* モード選択 */}
           <div className="radio-group horizontal">
-            <label
-              className={`radio-label ${
-                mode === "range" ? "radio-active" : ""
-              }`}
-            >
+            <label className={`radio-label ${mode === "range" ? "radio-active" : ""}`}>
               <input
                 type="radio"
                 value="range"
@@ -129,11 +186,7 @@ const RegisterPage = () => {
               />
               範囲選択
             </label>
-            <label
-              className={`radio-label ${
-                mode === "multi" ? "radio-active" : ""
-              }`}
-            >
+            <label className={`radio-label ${mode === "multi" ? "radio-active" : ""}`}>
               <input
                 type="radio"
                 value="multi"
@@ -144,7 +197,7 @@ const RegisterPage = () => {
             </label>
           </div>
 
-          {/* 時間帯選択 */}
+          {/* 時間帯 */}
           <div className="radio-group horizontal" style={{ marginTop: "16px" }}>
             {["終日", "午前", "午後", "時間指定"].map((t) => (
               <label
@@ -162,56 +215,33 @@ const RegisterPage = () => {
             ))}
           </div>
 
-          {/* 時間指定用プルダウン */}
           {timeType === "時間指定" && (
             <div className="time-select" style={{ marginTop: "10px" }}>
-              <select
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              >
+              <select value={startTime} onChange={(e)=>setStartTime(e.target.value)}>
                 {Array.from({ length: 24 }, (_, i) => `${i}:00`).map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </select>
               <span>〜</span>
-              <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              >
+              <select value={endTime} onChange={(e)=>setEndTime(e.target.value)}>
                 {Array.from({ length: 24 }, (_, i) => `${i}:00`).map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </select>
             </div>
           )}
-        </div>
 
-        {/* 右側：カレンダー＋選択リスト */}
-        <div className="schedule-section">
-          <Calendar
-            className="custom-calendar"
-            selectRange={mode === "range"}
-            onChange={
-              mode === "range" ? setRange : (date) => handleMultiClick(date)
-            }
-            value={mode === "range" ? range : null}
-            tileClassName={tileClassName}
-          />
-
-          {/* 選択した日程リスト */}
+          {/* 選択リスト */}
           <div className="selected-list" style={{ marginTop: "20px" }}>
             <h3>選択した日程</h3>
             {mode === "range" ? (
-              !range[0] || !range[1] ? (
+              !range[0] ? (
                 <p>日程が選択されていません</p>
+              ) : !range[1] ? (
+                <p>{range[0].toLocaleDateString()} (開始日)</p>
               ) : (
                 <p>
-                  {range[0].toLocaleDateString()} 〜{" "}
-                  {range[1].toLocaleDateString()}
+                  {range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}
                 </p>
               )
             ) : multiDates.length === 0 ? (
@@ -227,30 +257,24 @@ const RegisterPage = () => {
               </ul>
             )}
           </div>
+
+          {/* 保存 */}
+          <div style={{ textAlign: "center", marginTop: "20px" }}>
+            <button onClick={handleSave} className="submit-btn">
+              保存 & 共有リンク発行
+            </button>
+          </div>
+
+          {shareUrl && (
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+              <p>発行された共有リンク:</p>
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                {shareUrl}
+              </a>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* 保存ボタン */}
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={handleSave} className="submit-btn">
-          共有リンク発行
-        </button>
-      </div>
-
-      {/* 発行された共有リンク */}
-      {shareUrl && (
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
-          <p>発行された共有リンク:</p>
-          <a
-            href={shareUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#004CA0", fontWeight: "bold" }}
-          >
-            {shareUrl}
-          </a>
-        </div>
-      )}
     </main>
   );
 };
