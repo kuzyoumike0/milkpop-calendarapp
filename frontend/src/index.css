@@ -107,7 +107,7 @@ html, body, #root {
 
 /* カレンダー側 */
 .calendar-section {
-  flex: 7; /* カレンダーを7割 */
+  flex: 7; /* PCでは7割 */
   background: #fff;
   padding: 20px;
   border-radius: 16px;
@@ -117,7 +117,7 @@ html, body, #root {
 
 /* 日程一覧側 */
 .schedule-section {
-  flex: 3; /* リストを3割 */
+  flex: 3; /* PCでは3割 */
   background: #fff;
   padding: 20px;
   border-radius: 16px;
@@ -195,7 +195,7 @@ html, body, #root {
 }
 
 .calendar-day {
-  height: 100px; /* 高さを大きめに */
+  height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -310,4 +310,32 @@ html, body, #root {
 .delete-button:hover {
   background: #e63946;
   transform: scale(1.1);
+}
+
+/* ===== 📱 スマホ用レスポンシブ ===== */
+@media (max-width: 900px) {
+  .register-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .calendar-section, .schedule-section {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .calendar-day {
+    height: 80px;
+    font-size: 1rem;
+  }
+
+  .banner {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .banner nav {
+    gap: 20px;
+  }
 }
