@@ -60,6 +60,31 @@
   font-family: 'Potta One', cursive; /* ロゴは遊び心を残す */
 }
 
+/* ===== フッター ===== */
+.footer {
+  background: linear-gradient(90deg, #ffb6c1, #ffcce6);
+  text-align: center;
+  padding: 1.2rem;
+  color: #fff;
+  font-size: 0.95rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  border-top: 2px solid #ff99bb;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  margin-top: auto;  /* ← ページ最下部に寄せる */
+}
+
+.footer p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.footer small {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
 /* ===== カレンダー全体 ===== */
 .rbc-calendar {
   background: #fff;
