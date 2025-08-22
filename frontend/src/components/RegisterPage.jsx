@@ -209,6 +209,11 @@ const RegisterPage = () => {
           </div>
         </div>
       </main>
+
+      {/* ===== フッター ===== */}
+      <footer>
+        <p>© 2025 MilkPOP Calendar</p>
+      </footer>
     </div>
   );
 };
