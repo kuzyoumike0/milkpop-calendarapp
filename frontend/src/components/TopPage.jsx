@@ -7,7 +7,7 @@ import Footer from "./Footer";
 // const logoPath = "/logo.png";
 
 // ✅ src/assets/logo.png を使う場合はこちら
-import logo from "../assets/logo.png";
+import logo from "../public/logo.png";
 
 const TopPage = () => {
   return (
