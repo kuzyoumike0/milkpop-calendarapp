@@ -1,5 +1,5 @@
 {
-  "name": "calendar-frontend",
+  "name": "カレンダーフロントエンド",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -13,8 +13,7 @@
     "react-big-calendar": "^1.11.1",
     "date-fns": "^3.6.0",
     "date-holidays": "^3.23.0",
-    "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0"
+    "react-scripts": "5.0.1"   // ✅ 追加
   },
   "scripts": {
     "start": "react-scripts start",
