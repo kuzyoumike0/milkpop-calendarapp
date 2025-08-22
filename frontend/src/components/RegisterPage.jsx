@@ -1,107 +1,78 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
+import CalendarWithHolidays from "./CalendarWithHolidays";
 import "../index.css";
-import Header from "./Header";
-import Footer from "./Footer";
 
 const RegisterPage = () => {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [category, setCategory] = useState(""); // 区分
-  const [startTime, setStartTime] = useState("1"); // 開始時刻
-  const [endTime, setEndTime] = useState("2");   // 終了時刻
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [shareUrl, setShareUrl] = useState("");
 
-  // 時間リスト生成 (1時〜0時)
-  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
+  // 日付クリック処理（選択/解除切り替え）
+  const handleSelectDate = (date) => {
+    const exists = selectedDates.some(
+      (d) => d.toDateString() === date.toDateString()
+    );
+    if (exists) {
+      setSelectedDates(
+        selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+      );
+    } else {
+      setSelectedDates([...selectedDates, date]);
+    }
+  };
 
-  // 日付クリック処理（サンプル: クリックで日付を選択）
-  const handleDateClick = (date) => {
-    setSelectedDate(date.toISOString().split("T")[0]);
+  // 登録処理（仮：共有リンク生成）
+  const handleRegister = () => {
+    if (!title || selectedDates.length === 0) return;
+
+    const url = `${window.location.origin}/share/${Math.random()
+      .toString(36)
+      .substring(2, 8)}`;
+    setShareUrl(url);
   };
 
   return (
-    <div className="page-container">
-      <Header />
+    <main className="page-card">
+      <h2 className="page-title">📅 日程登録ページ</h2>
 
-      <main className="page-card">
-        {/* ==== ページ見出し ==== */}
-        <h2 className="page-title">📅 日程登録</h2>
-        <p className="page-subtitle">
-          予定を登録して、みんなとスケジュールを共有しましょう
-        </p>
+      {/* 入力フォーム */}
+      <div className="form-group">
+        <label>タイトル:</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例: 打ち合わせ"
+        />
+      </div>
 
-        {/* ==== カレンダー ==== */}
-        <div className="calendar-wrapper">
-          {/* 自作カレンダーや big-calendar をここに設置 */}
-          <div
-            className="calendar-mock"
-            onClick={() => handleDateClick(new Date())}
-          >
-            [カレンダー表示領域]
-          </div>
+      {/* おしゃれ祝日カレンダー */}
+      <CalendarWithHolidays onSelectDate={handleSelectDate} />
+
+      {/* 選択した日付リスト */}
+      <div className="selected-dates">
+        <h3>選択した日付:</h3>
+        <ul>
+          {selectedDates.map((d, idx) => (
+            <li key={idx}>{d.toLocaleDateString("ja-JP")}</li>
+          ))}
+        </ul>
+      </div>
+
+      {/* 登録ボタン */}
+      <button onClick={handleRegister}>登録</button>
+
+      {/* 共有リンク */}
+      {shareUrl && (
+        <div className="share-link">
+          <p>✅ 共有リンクが発行されました:</p>
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
         </div>
-
-        {/* ==== 選択した日付と区分 ==== */}
-        {selectedDate && (
-          <div className="form-group">
-            <label>選択した日付:</label>
-            <span className="selected-date">{selectedDate}</span>
-
-            {/* 区分プルダウン */}
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              style={{ marginLeft: "1rem" }}
-            >
-              <option value="">区分を選択</option>
-              <option value="all-day">終日</option>
-              <option value="morning">午前</option>
-              <option value="afternoon">午後</option>
-              <option value="evening">夜</option>
-              <option value="time">時間指定</option>
-            </select>
-
-            {/* 時間指定が選ばれた場合に時刻プルダウンを表示 */}
-            {category === "time" && (
-              <>
-                <select
-                  value={startTime}
-                  onChange={(e) => {
-                    setStartTime(e.target.value);
-                    if (parseInt(e.target.value) >= parseInt(endTime)) {
-                      setEndTime(String((parseInt(e.target.value) + 1) % 24));
-                    }
-                  }}
-                  style={{ marginLeft: "1rem" }}
-                >
-                  {hours.map((h) => (
-                    <option key={h} value={h}>
-                      {h}時
-                    </option>
-                  ))}
-                </select>
-
-                <span style={{ margin: "0 0.5rem" }}>〜</span>
-
-                <select
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                >
-                  {hours
-                    .filter((h) => h > parseInt(startTime))
-                    .map((h) => (
-                      <option key={h} value={h}>
-                        {h}時
-                      </option>
-                    ))}
-                </select>
-              </>
-            )}
-          </div>
-        )}
-      </main>
-
-      <Footer />
-    </div>
+      )}
+    </main>
   );
 };
 
