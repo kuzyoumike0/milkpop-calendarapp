@@ -10,6 +10,10 @@ const SharePage = () => {
   const [userName, setUserName] = useState("");
   const [highlightDates, setHighlightDates] = useState([]);
 
+  const hours = [...Array(24).keys()].map((h) =>
+    String(h).padStart(2, "0") + ":00"
+  );
+
   // ===== データ取得 =====
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -30,11 +34,14 @@ const SharePage = () => {
     fetchSchedules();
   }, [shareId]);
 
-  // ===== 参加可否選択 =====
-  const handleSelect = (scheduleId, value) => {
+  // ===== 選択 =====
+  const handleSelect = (scheduleId, field, value) => {
     setResponses((prev) => ({
       ...prev,
-      [scheduleId]: value,
+      [scheduleId]: {
+        ...prev[scheduleId],
+        [field]: value,
+      },
     }));
   };
 
@@ -53,13 +60,6 @@ const SharePage = () => {
           responses,
         }),
       });
-
-      // 即反映
-      const res = await fetch(`/api/share/${shareId}`);
-      const data = await res.json();
-      const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-      setSchedules(sorted);
-      setHighlightDates(sorted.map((s) => s.date));
 
       alert("保存しました！");
     } catch (err) {
@@ -122,39 +122,86 @@ const SharePage = () => {
 
             {/* スケジュール一覧 */}
             <div className="space-y-4">
-              {schedules.map((schedule) => (
-                <div
-                  key={schedule.id}
-                  className="schedule-item flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-semibold text-lg text-[#004CA0]">
-                      {schedule.title || "タイトルなし"}
-                    </p>
-                    <p className="text-gray-600">
-                      {new Date(schedule.date).toLocaleDateString("ja-JP")}{" "}
-                      ({schedule.time_type})
-                    </p>
-                  </div>
-                  <select
-                    className="vote-select"
-                    value={responses[schedule.id] || ""}
-                    onChange={(e) => handleSelect(schedule.id, e.target.value)}
+              {schedules.map((schedule) => {
+                const response = responses[schedule.id] || {};
+                return (
+                  <div
+                    key={schedule.id}
+                    className="schedule-item flex flex-col gap-2"
                   >
-                    <option value="">選択</option>
-                    <option value="〇">〇</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </div>
-              ))}
+                    <div>
+                      <p className="font-semibold text-lg text-[#004CA0]">
+                        {schedule.title || "タイトルなし"}
+                      </p>
+                      <p className="text-gray-600">
+                        {new Date(schedule.date).toLocaleDateString("ja-JP")}
+                      </p>
+                    </div>
+
+                    {/* 時間帯選択 */}
+                    <div className="flex items-center gap-2">
+                      <select
+                        className="vote-select"
+                        value={response.timeType || ""}
+                        onChange={(e) =>
+                          handleSelect(schedule.id, "timeType", e.target.value)
+                        }
+                      >
+                        <option value="">選択してください</option>
+                        <option value="all">終日</option>
+                        <option value="morning">午前</option>
+                        <option value="afternoon">午後</option>
+                        <option value="custom">時間指定</option>
+                      </select>
+
+                      {/* 時間指定プルダウン */}
+                      {response.timeType === "custom" && (
+                        <>
+                          <select
+                            className="vote-select"
+                            value={response.startTime || ""}
+                            onChange={(e) =>
+                              handleSelect(schedule.id, "startTime", e.target.value)
+                            }
+                          >
+                            <option value="">開始時刻</option>
+                            {hours.map((h) => (
+                              <option key={h} value={h}>
+                                {h}
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            className="vote-select"
+                            value={response.endTime || ""}
+                            onChange={(e) =>
+                              handleSelect(schedule.id, "endTime", e.target.value)
+                            }
+                          >
+                            <option value="">終了時刻</option>
+                            {hours
+                              .filter(
+                                (h) =>
+                                  !response.startTime || h > response.startTime
+                              )
+                              .map((h) => (
+                                <option key={h} value={h}>
+                                  {h}
+                                </option>
+                              ))}
+                          </select>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* 保存ボタン */}
             <div className="mt-8 text-center">
-              <button
-                onClick={handleSave}
-                className="submit-btn"
-              >
+              <button onClick={handleSave} className="submit-btn">
                 保存
               </button>
             </div>
