@@ -2,22 +2,23 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
+import SelectMode from "./SelectMode";
 import "../index.css";
 
 const hd = new Holidays("JP");
 
 const PersonalPage = () => {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [mode, setMode] = useState("range");
+  const [mode, setMode] = useState("range"); // "range" | "multi"
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
+
+  const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
-  // ✅ 保存済みイベント一覧
-  const [savedEvents, setSavedEvents] = useState([]);
+  const [savedSchedules, setSavedSchedules] = useState([]); // DB保存したものを即時反映
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
@@ -69,7 +70,7 @@ const PersonalPage = () => {
     }
   };
 
-  // ===== 時間帯変更 =====
+  // ===== 時間帯切り替え =====
   const handleTimeTypeChange = (value) => {
     setTimeType(value);
     if (value === "終日") {
@@ -84,39 +85,67 @@ const PersonalPage = () => {
     }
   };
 
-  // ===== 選択済み日程リスト =====
-  const selectedList =
-    mode === "range" ? range.filter((d) => d !== null) : multiDates;
-
-  // ===== 保存処理 =====
-  const handleSave = () => {
+  // ===== 保存処理（DBへ送信） =====
+  const handleSave = async () => {
     if (!title.trim()) {
       alert("タイトルを入力してください");
       return;
     }
-    if (selectedList.length === 0) {
+
+    const dates =
+      mode === "range" ? range.filter((d) => d !== null) : multiDates;
+
+    if (dates.length === 0) {
       alert("日程を選択してください");
       return;
     }
 
-    const newEvent = {
-      title,
-      memo,
-      dates: selectedList.map((d) => d.toLocaleDateString()),
-      time: timeType === "時刻指定" ? `${start}〜${end}` : timeType,
-    };
+    try {
+      const res = await fetch("/api/personal-schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          memo,
+          dates: dates.map((d) => d.toISOString()),
+          options: { type: timeType, start, end },
+        }),
+      });
 
-    setSavedEvents((prev) => [...prev, newEvent]);
+      const data = await res.json();
+      if (data.ok) {
+        // ✅ 即時反映
+        setSavedSchedules((prev) => [
+          ...prev,
+          {
+            id: data.id,
+            title,
+            memo,
+            dates,
+            options: { type: timeType, start, end },
+          },
+        ]);
 
-    // 入力欄リセット
-    setTitle("");
-    setMemo("");
-    setRange([null, null]);
-    setMultiDates([]);
-    setTimeType("終日");
-    setStart("09:00");
-    setEnd("18:00");
+        // 入力欄リセット
+        setTitle("");
+        setMemo("");
+        setRange([null, null]);
+        setMultiDates([]);
+        setTimeType("終日");
+        setStart("09:00");
+        setEnd("18:00");
+      } else {
+        alert("保存に失敗しました");
+      }
+    } catch (err) {
+      console.error("❌ エラー:", err);
+      alert("サーバーエラーが発生しました");
+    }
   };
+
+  // ===== 選択済み日程リスト =====
+  const selectedList =
+    mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
   return (
     <div className="page-container">
@@ -129,7 +158,7 @@ const PersonalPage = () => {
           className="p-2 border rounded w-full text-black"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：打ち合わせ、飲み会、旅行"
+          placeholder="例：出張、病院、打ち合わせ"
         />
       </div>
 
@@ -138,37 +167,16 @@ const PersonalPage = () => {
         <label className="block font-semibold mb-1">メモ</label>
         <textarea
           className="p-2 border rounded w-full text-black"
-          rows="3"
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
-          placeholder="補足情報を入力してください"
+          placeholder="詳細や備考を入力"
         />
       </div>
 
       {/* ===== カレンダーと選択済み日程を横並び ===== */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-7/10 w-full">
-          <div className="mb-2">
-            <label className="mr-4">
-              <input
-                type="radio"
-                value="range"
-                checked={mode === "range"}
-                onChange={() => setMode("range")}
-              />
-              範囲選択
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="multi"
-                checked={mode === "multi"}
-                onChange={() => setMode("multi")}
-              />
-              複数選択
-            </label>
-          </div>
-
+          <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
             onChange={setRange}
@@ -243,16 +251,21 @@ const PersonalPage = () => {
         </button>
       </div>
 
-      {/* ===== 保存済みイベント一覧 ===== */}
-      {savedEvents.length > 0 && (
+      {/* ===== 保存済み一覧 ===== */}
+      {savedSchedules.length > 0 && (
         <div className="mt-6">
-          <h3 className="font-bold">保存済み日程</h3>
+          <h3 className="font-bold">保存済みスケジュール</h3>
           <ul className="list-disc list-inside">
-            {savedEvents.map((event, idx) => (
+            {savedSchedules.map((item, idx) => (
               <li key={idx}>
-                <span className="font-semibold">{event.title}</span>：{" "}
-                {event.dates.join("、")}（{event.time}）
-                {event.memo && ` - メモ: ${event.memo}`}
+                <strong>{item.title}</strong>（{item.options.type}）<br />
+                {item.dates.map((d, i) => (
+                  <span key={i}>
+                    {new Date(d).toLocaleDateString()}{" "}
+                  </span>
+                ))}
+                <br />
+                <span className="text-gray-500">{item.memo}</span>
               </li>
             ))}
           </ul>
