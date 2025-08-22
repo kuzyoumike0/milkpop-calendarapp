@@ -68,21 +68,6 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 時間帯選択時の処理（プリセット時間） =====
-  const handleTimeTypeChange = (value) => {
-    setTimeType(value);
-    if (value === "終日") {
-      setStart("09:00");
-      setEnd("18:00");
-    } else if (value === "午前") {
-      setStart("06:00");
-      setEnd("12:00");
-    } else if (value === "午後") {
-      setStart("12:00");
-      setEnd("18:00");
-    }
-  };
-
   // ===== 共有リンク生成 =====
   const handleShare = async () => {
     if (!title.trim()) {
@@ -124,6 +109,21 @@ const RegisterPage = () => {
   const selectedList =
     mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
+  // ===== 時間帯選択処理 =====
+  const handleTimeTypeChange = (value) => {
+    setTimeType(value);
+    if (value === "終日") {
+      setStart("09:00");
+      setEnd("18:00");
+    } else if (value === "午前") {
+      setStart("06:00");
+      setEnd("12:00");
+    } else if (value === "午後") {
+      setStart("12:00");
+      setEnd("18:00");
+    }
+  };
+
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
@@ -139,10 +139,9 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== カレンダー左（7割） + 日程リスト右（3割） ===== */}
+      {/* ===== カレンダーと選択済み日程を横並び ===== */}
       <div className="flex flex-col md:flex-row gap-6">
-        {/* 左：カレンダー */}
-        <div className="md:w-7/10 w-full">
+        <div className="flex-1">
           <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
@@ -156,8 +155,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 右：選択日程リスト */}
-        <div className="md:w-3/10 w-full">
+        <div className="flex-1">
           <h3 className="font-bold">選択した日程</h3>
           <ul className="list-disc list-inside">
             {selectedList.map((d, i) => {
