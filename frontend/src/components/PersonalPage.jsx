@@ -1,165 +1,175 @@
-import React, { useState, useEffect } from "react";
-import { fetchSchedules, addSchedule, updateSchedule, deleteSchedule } from "../api";
+// frontend/src/components/PersonalPage.jsx
+import React, { useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
+
+const localizer = momentLocalizer(moment);
 
 const PersonalPage = () => {
-  const [schedules, setSchedules] = useState([]);
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
+  const [events, setEvents] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("range");
+  const [rangeStart, setRangeStart] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeOption, setTimeOption] = useState("all");
 
-  useEffect(() => {
-    fetchSchedules().then(setSchedules);
-  }, []);
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    if (selectionMode === "range") {
+      if (!rangeStart) {
+        setRangeStart(date);
+        setSelectedDates([date]);
+      } else {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
 
-  const handleAddSchedule = async () => {
-    if (!title) return;
+        const days = [];
+        let d = new Date(start);
+        while (d <= end) {
+          days.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
 
-    const newSchedule = {
-      title,
-      memo,
-      timeType: "終日",
-      startTime: "01:00",
-      endTime: "02:00",
-    };
+        setSelectedDates(days);
+        setRangeStart(null);
+      }
+    } else if (selectionMode === "multiple") {
+      const exists = selectedDates.some(
+        (d) => d.toDateString() === date.toDateString()
+      );
+      if (exists) {
+        setSelectedDates(
+          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+        );
+      } else {
+        setSelectedDates([...selectedDates, date]);
+      }
+    }
+  };
 
-    const saved = await addSchedule(newSchedule);
-    setSchedules([saved, ...schedules]);
+  // 登録処理
+  const handleRegister = () => {
+    if (!title || selectedDates.length === 0) return;
+
+    const newEvents = selectedDates.map((date) => {
+      let start = new Date(date);
+      let end = new Date(date);
+
+      if (timeOption === "all") {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      } else if (timeOption === "day") {
+        start.setHours(9, 0, 0, 0);
+        end.setHours(17, 0, 0, 0);
+      } else if (timeOption === "night") {
+        start.setHours(18, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      }
+
+      return { title, start, end, memo };
+    });
+
+    setEvents([...events, ...newEvents]);
     setTitle("");
     setMemo("");
+    setSelectedDates([]);
   };
-
-  const handleDelete = async (id) => {
-    await deleteSchedule(id);
-    setSchedules(schedules.filter((s) => s.id !== id));
-  };
-
-  const handleTimeTypeChange = async (id, value, s) => {
-    const updated = await updateSchedule(id, {
-      timeType: value,
-      startTime: s.start_time,
-      endTime: s.end_time,
-    });
-    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
-  };
-
-  const handleStartTimeChange = async (id, value, s) => {
-    const updated = await updateSchedule(id, {
-      timeType: s.time_type,
-      startTime: value,
-      endTime: s.end_time,
-    });
-    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
-  };
-
-  const handleEndTimeChange = async (id, value, s) => {
-    const updated = await updateSchedule(id, {
-      timeType: s.time_type,
-      startTime: s.start_time,
-      endTime: value,
-    });
-    setSchedules(schedules.map((item) => (item.id === id ? updated : item)));
-  };
-
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = (i + 1) % 24;
-    return `${hour.toString().padStart(2, "0")}:00`;
-  });
 
   return (
-    <div className="p-6 bg-black text-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-[#FDB9C8]">
-        MilkPOP Calendar - 個人スケジュール
-      </h1>
+    <div className="page-container">
+      <Header />
 
-      <div className="flex flex-col gap-2 mb-4">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="タイトルを入力"
-          className="p-2 border rounded-lg text-black"
-        />
-        <textarea
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="メモを入力"
-          className="p-2 border rounded-lg text-black"
-        />
-        <button
-          onClick={handleAddSchedule}
-          className="bg-[#FDB9C8] text-black px-4 py-2 rounded-lg"
-        >
-          追加
-        </button>
-      </div>
+      <main className="page-card">
+        <h2 className="page-title">個人スケジュール</h2>
 
-      <div className="space-y-4">
-        {schedules.map((s) => (
-          <div
-            key={s.id}
-            className="p-4 bg-[#004CA0] rounded-xl shadow-md flex justify-between items-center"
+        {/* 入力フォーム */}
+        <div className="form-group">
+          <label>タイトル:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>メモ:</label>
+          <textarea
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>選択方法:</label>
+          <label>
+            <input
+              type="radio"
+              name="mode"
+              value="range"
+              checked={selectionMode === "range"}
+              onChange={() => setSelectionMode("range")}
+            />
+            範囲選択
+          </label>
+          <label style={{ marginLeft: "1rem" }}>
+            <input
+              type="radio"
+              name="mode"
+              value="multiple"
+              checked={selectionMode === "multiple"}
+              onChange={() => setSelectionMode("multiple")}
+            />
+            複数選択
+          </label>
+        </div>
+
+        <div className="form-group">
+          <label>時間帯:</label>
+          <select
+            value={timeOption}
+            onChange={(e) => setTimeOption(e.target.value)}
           >
-            <div>
-              <p className="font-semibold text-lg">{s.title}</p>
-              <p className="text-sm text-gray-200">{s.memo}</p>
+            <option value="all">終日</option>
+            <option value="day">昼</option>
+            <option value="night">夜</option>
+          </select>
+        </div>
 
-              <select
-                value={s.time_type}
-                onChange={(e) =>
-                  handleTimeTypeChange(s.id, e.target.value, s)
-                }
-                className="border p-2 rounded-lg mt-2 text-black"
-              >
-                <option>終日</option>
-                <option>昼</option>
-                <option>夜</option>
-                <option>時間帯</option>
-              </select>
+        <button onClick={handleRegister}>登録</button>
 
-              {s.time_type === "時間帯" && (
-                <div className="flex gap-2 mt-2">
-                  <select
-                    value={s.start_time}
-                    onChange={(e) =>
-                      handleStartTimeChange(s.id, e.target.value, s)
-                    }
-                    className="border p-2 rounded-lg text-black"
-                  >
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                  <span>〜</span>
-                  <select
-                    value={s.end_time}
-                    onChange={(e) =>
-                      handleEndTimeChange(s.id, e.target.value, s)
-                    }
-                    className="border p-2 rounded-lg text-black"
-                  >
-                    {timeOptions.map((t) => (
-                      <option
-                        key={t}
-                        value={t}
-                        disabled={t <= s.start_time}
-                      >
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => handleDelete(s.id)}
-              className="ml-4 bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
-            >
-              削除
-            </button>
-          </div>
-        ))}
-      </div>
+        {/* カレンダー */}
+        <div className="calendar-container" style={{ marginTop: "2rem" }}>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: 500 }}
+            selectable
+            onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
+          />
+        </div>
+
+        {/* 登録済み一覧 */}
+        <div className="selected-dates" style={{ marginTop: "2rem" }}>
+          <h3>登録済みスケジュール:</h3>
+          <ul>
+            {events.map((ev, idx) => (
+              <li key={idx}>
+                {ev.title} ({ev.start.toLocaleDateString()} {ev.memo && `- ${ev.memo}`})
+              </li>
+            ))}
+          </ul>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
