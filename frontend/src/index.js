@@ -1,7 +1,7 @@
 // frontend/src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";   // ✅ Tailwind & 全体CSS
+import "./index.css";   // ✅ Tailwindと全体のCSSを読み込む
 import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
