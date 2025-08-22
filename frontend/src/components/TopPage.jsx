@@ -12,14 +12,6 @@ const TopPage = () => {
         <br />
         グループの日程調整や個人スケジュール管理ができるツールです。
       </p>
-
-      <div className="top-actions">
-        <Link to="/register" className="fancy-btn">
-          日程を登録する
-        </Link>
-        <Link to="/personal" className="fancy-btn">
-          個人スケジュールを見る
-        </Link>
       </div>
     </div>
   );
