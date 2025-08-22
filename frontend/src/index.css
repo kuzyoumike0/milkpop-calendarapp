@@ -105,9 +105,9 @@
 }
 
 .welcome-text {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 28px;
+  margin-bottom: 32px; /* 👈 下に余白を広めにしてロゴと間隔をとる */
   color: #444;
   font-family: 'Zen Maru Gothic', cursive;
 }
@@ -115,12 +115,13 @@
 .logo-wrapper {
   display: flex;
   justify-content: center;
-  margin-top: 12px;
+  margin-bottom: 40px; /* 👈 ロゴ下にも余白を追加 */
 }
 
 .logo-image {
-  max-width: 800px;
+  max-width: 400px;  /* 👈 ロゴを少しコンパクトに */
   height: auto;
+  display: block;
 }
 
 /* ===== ページタイトル ===== */
@@ -288,8 +289,9 @@
   .schedule-item select {
     width: 100%;
   }
+}
 
-  /* === カレンダー選択スタイル === */
+/* === カレンダー選択スタイル === */
 .selected-date {
   background: #FDB9C8 !important;
   color: #fff !important;
@@ -307,6 +309,4 @@
   display: flex;
   justify-content: center;
   margin: 20px auto;
-}
-
 }
