@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
-import { isHoliday, getTodayIso } from "../holiday";
+import { fetchHolidays, getTodayIso } from "../holiday";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -10,12 +10,23 @@ const RegisterPage = () => {
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
+  const [holidays, setHolidays] = useState([]);   // ← APIから取得した祝日を保持
 
   const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
   const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
 
   const todayIso = getTodayIso();
 
+  // ===== 祝日API取得 =====
+  useEffect(() => {
+    const loadHolidays = async () => {
+      const list = await fetchHolidays();
+      setHolidays(list);
+    };
+    loadHolidays();
+  }, []);
+
+  // ===== 日付クリック（複数選択モード） =====
   const handleDateClick = (date) => {
     const iso = date.toISOString().split("T")[0];
     if (multiDates.includes(iso)) {
@@ -32,6 +43,7 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== プルダウン変更処理 =====
   const handleOptionChange = (date, field, value) => {
     let newValue = value;
     if (field === "start" && dateOptions[date]?.end) {
@@ -53,6 +65,7 @@ const RegisterPage = () => {
     });
   };
 
+  // ===== 保存処理 =====
   const handleSave = () => {
     const payload = {
       title,
@@ -70,7 +83,10 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6" style={{ fontFamily: "'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif" }}>
+    <div
+      className="min-h-screen bg-black text-white p-6"
+      style={{ fontFamily: "'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif" }}
+    >
       {/* ===== バナー ===== */}
       <header className="bg-[#004CA0] text-white py-4 px-6 rounded-2xl mb-6 flex justify-between items-center shadow-lg">
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
@@ -120,7 +136,7 @@ const RegisterPage = () => {
               const iso = date.toISOString().split("T")[0];
               let classes = [];
               if (iso === todayIso) classes.push("react-calendar__tile--today");
-              if (date.getDay() === 0 || isHoliday(date)) classes.push("holiday");
+              if (date.getDay() === 0 || holidays.includes(iso)) classes.push("holiday");
               return classes.join(" ");
             }}
           />
@@ -132,7 +148,7 @@ const RegisterPage = () => {
               let classes = [];
               if (multiDates.includes(iso)) classes.push("react-calendar__tile--active");
               if (iso === todayIso) classes.push("react-calendar__tile--today");
-              if (date.getDay() === 0 || isHoliday(date)) classes.push("holiday");
+              if (date.getDay() === 0 || holidays.includes(iso)) classes.push("holiday");
               return classes.join(" ");
             }}
           />
