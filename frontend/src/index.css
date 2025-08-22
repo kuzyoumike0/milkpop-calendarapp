@@ -1,7 +1,7 @@
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
-  font-family: 'Noto Sans JP', 'M PLUS Rounded 1c', sans-serif;
+  font-family: 'Noto Sans JP', sans-serif; /* 本文はモダンで落ち着いたSansに統一 */
   color: #000;
   background: #fff;
   min-height: 100vh;
@@ -10,20 +10,20 @@ body {
 
 /* ===== 見出し・タイトル ===== */
 h1, h2, h3 {
-  font-family: 'Potta One', cursive; /* バナーなど強調部分は残す */
+  font-family: 'Noto Serif JP', serif; /* 力強く落ち着いたモダン系 */
   letter-spacing: 0.05em;
 }
 
+/* ===== トップページの歓迎テキスト ===== */
 .welcome-text {
   font-size: 2.4rem;
   font-weight: 700;
-  font-family: 'Noto Serif JP', serif; /* ← しっかりした印象に変更 */
+  font-family: 'Noto Serif JP', serif; /* ← しっかりした印象に固定 */
   color: #004CA0;
   margin-top: 1rem;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
   letter-spacing: 0.05em;
 }
-
 
 /* ===== バナー（ヘッダー） ===== */
 .banner {
@@ -40,226 +40,5 @@ h1, h2, h3 {
 .banner h1 {
   font-size: 1.8rem;
   margin: 0;
-  font-family: 'Potta One', 'M PLUS Rounded 1c', sans-serif;
-}
-
-.banner nav a {
-  margin-left: 1.5rem;
-  text-decoration: none;
-  font-size: 1rem;
-  color: #fff;
-  transition: 0.3s;
-}
-
-.banner nav a:hover {
-  color: #FDB9C8;
-  text-shadow: 0 0 6px rgba(255,255,255,0.6);
-}
-
-/* ===== フッター ===== */
-.footer {
-  background: #fafafa;
-  text-align: center;
-  padding: 1rem;
-  color: #555;
-  font-size: 0.9rem;
-  border-top: 1px solid #ddd;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-/* ===== トップページ ===== */
-.top-page {
-  text-align: center;
-  padding: 4rem 1rem;
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-wrapper {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border-radius: 2rem;
-  padding: 1.5rem 3rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.15);
-}
-
-.logo-image {
-  width: 1040px;
-  height: auto;
-}
-
-.welcome-text {
-  font-size: 2.2rem;
-  font-weight: bold;
-  font-family: 'Potta One', cursive;
-  color: #004CA0;
-  margin-top: 1rem;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-}
-
-/* ===== ページ共通カード ===== */
-.page-card {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 2rem;
-  margin: 2rem auto;
-  max-width: 900px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-  border: 1px solid #eee;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.page-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-
-/* ===== カレンダースタイル ===== */
-.rbc-calendar {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 3px 15px rgba(0,0,0,0.12);
-  border: 1px solid #eee;
-  color: #000;
-}
-
-/* 通常日付セル */
-.rbc-day-bg {
-  transition: background 0.2s;
-}
-
-.rbc-day-bg:hover {
-  background: rgba(253,185,200,0.15);
-  cursor: pointer;
-}
-
-/* 祝日強調 */
-.holiday {
-  color: red !important;
-  font-weight: bold;
-  background: rgba(253,185,200,0.2) !important;
-  position: relative;
-}
-
-.holiday::after {
-  content: attr(data-holiday);
-  display: block;
-  font-size: 0.75rem;
-  color: red;
-  margin-top: 2px;
-}
-
-/* 選択済み日付セル */
-.selected-day {
-  background: rgba(0,76,160,0.2) !important;
-  border: 2px solid #FDB9C8 !important;
-  color: #000 !important;
-  font-weight: bold;
-}
-
-/* 選択開始日 */
-.range-start {
-  background: rgba(253,185,200,0.4) !important;
-  border: 2px solid #004CA0 !important;
-}
-
-/* イベント表示 */
-.rbc-event {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
-  border: none;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 0.8rem;
-  color: #fff;
-}
-
-/* ツールバー */
-.rbc-toolbar button {
-  background: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  color: #000;
-  margin: 0 2px;
-  padding: 0.4rem 0.6rem;
-  transition: 0.2s;
-}
-
-.rbc-toolbar button:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-
-.rbc-toolbar-label {
-  font-weight: bold;
-  color: #004CA0;
-  font-size: 1.2rem;
-}
-
-/* ===== 入力フォーム ===== */
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: #004CA0;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-input[type="text"],
-textarea,
-select {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #fff;
-  color: #000;
-  font-size: 1rem;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-input[type="text"]:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: #FDB9C8;
-  box-shadow: 0 0 6px rgba(253,185,200,0.5);
-}
-
-/* ===== ボタン ===== */
-button {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-button:hover {
-  opacity: 0.95;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-/* ===== リンク ===== */
-a {
-  color: #004CA0;
-  transition: 0.3s;
-}
-
-a:hover {
-  color: #FDB9C8;
-  text-decoration: underline;
+  font-family: 'Potta One', cursive; /* ロゴは遊び心を残す */
 }
