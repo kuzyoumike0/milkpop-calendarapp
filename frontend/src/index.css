@@ -1,6 +1,7 @@
 /* ===== フォント ===== */
 @import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&display=swap');
 
+/* ===== ページ全体 ===== */
 body {
   margin: 0;
   padding: 0;
@@ -9,6 +10,15 @@ body {
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c','Yomogi',sans-serif;
   font-size: 1.05rem;
   color: #333;
+}
+
+/* ===== 見出し ===== */
+h1, h2 {
+  font-family: 'Reggae One','Yomogi','Zen Maru Gothic',cursive,sans-serif;
+  font-weight: bold;
+  color: #ff5fa2;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  letter-spacing: 1px;
 }
 
 /* ===== ヘッダー ===== */
@@ -41,6 +51,12 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
+/* ===== メイン領域 ===== */
+main {
+  margin-top: 120px;  /* ヘッダー干渉防止 */
+  margin-bottom: 60px;
+}
+
 /* ===== ラジオボタン ===== */
 .radio-group {
   display: flex;
@@ -70,7 +86,7 @@ header .nav a:hover {
   font-weight: bold;
 }
 
-/* ===== レイアウト ===== */
+/* ===== レイアウト（カレンダー＋リスト） ===== */
 .register-layout {
   display: flex;
   gap: 24px;
@@ -104,6 +120,20 @@ header .nav a:hover {
 }
 .calendar-header h3 {
   color: #004CA0;
+}
+.calendar-header button {
+  background: #FDB9C8;
+  border: none;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.calendar-header button:hover {
+  background: #004CA0;
+  color: #fff;
+  transform: scale(1.05);
 }
 .calendar-grid {
   display: grid;
@@ -146,16 +176,38 @@ header .nav a:hover {
   color: #004CA0;
 }
 
-/* ===== 選択日カード ===== */
+/* ===== 選択日カード（右リスト） ===== */
 .schedule-card {
   background: #fff5f8;
   border: 2px solid #FDB9C8;
   padding: 12px;
   border-radius: 16px;
+  margin-bottom: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+.schedule-card span {
+  font-weight: bold;
+  color: #004CA0;
+}
 .schedule-card select {
+  margin-left: 8px;
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+}
+
+/* ===== 共有リンクボタン ===== */
+.share-btn {
+  background: #FDB9C8;
+  color: black;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.share-btn:hover {
+  background: #004CA0;
+  color: white;
+  transform: scale(1.05);
 }
