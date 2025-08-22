@@ -1,29 +1,20 @@
-# ====== Frontend Build ======
+# ===== Frontend Build =====
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係インストール
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
-
-# ソースコードをコピー
+RUN npm install --legacy-peer-deps   # ✅ react-scripts / ajv 系の依存解決を安定化
 COPY frontend/ ./
-
-# ビルド
 RUN npm run build
 
-# ====== Backend ======
+# ===== Backend =====
 FROM node:18 AS backend
 WORKDIR /app
 
-# backend の依存関係
 COPY backend/package*.json ./backend/
-RUN cd backend && npm install --legacy-peer-deps
+RUN cd backend && npm install
 
-# backend ソースコードコピー
 COPY backend/ ./backend/
-
-# frontend/build を backend にコピー
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
 WORKDIR /app/backend
