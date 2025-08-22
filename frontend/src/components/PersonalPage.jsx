@@ -1,22 +1,22 @@
-// frontend/src/components/PersonalPage.jsx
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import SelectMode from "./SelectMode";
 import Holidays from "date-holidays";
 import "../index.css";
 
 const hd = new Holidays("JP");
 
-const PersonalPage = () => {
+const RegisterPage = () => {
+  const [mode, setMode] = useState("range");
+  const [range, setRange] = useState([null, null]);
+  const [multiDates, setMultiDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multi");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
-  const userId = "123456789012345678"; // TODO: OAuth後に置き換える
+  const [shareUrls, setShareUrls] = useState([]);
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
@@ -56,121 +56,94 @@ const PersonalPage = () => {
     return null;
   };
 
-  // ===== 保存処理 =====
-  const handleSave = async () => {
+  // ===== 日付クリック処理 =====
+  const handleDateClick = (date) => {
+    if (mode === "multi") {
+      const dateStr = date.toDateString();
+      if (multiDates.some((d) => d.toDateString() === dateStr)) {
+        setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
+      } else {
+        setMultiDates([...multiDates, date]);
+      }
+    }
+  };
+
+  // ===== 共有リンク生成 =====
+  const handleShare = async () => {
     if (!title.trim()) {
       alert("タイトルを入力してください");
       return;
     }
-    if (selectedDates.length === 0) {
-      alert("日程を1つ以上選択してください");
-      return;
-    }
-    if (timeType === "時刻指定" && start >= end) {
-      alert("開始時刻は終了時刻より前にしてください");
+
+    const dates =
+      mode === "range" ? range.filter((d) => d !== null) : multiDates;
+
+    if (dates.length === 0) {
+      alert("日程を選択してください");
       return;
     }
 
     try {
-      const res = await fetch("/api/personal", {
+      const res = await fetch("/api/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
           title,
-          memo,
-          dates: selectedDates.map((d) => d.toISOString()),
+          dates: dates.map((d) => d.toISOString()),
           options: { type: timeType, start, end },
         }),
       });
+
       const data = await res.json();
-      if (data.ok) {
-        alert("保存しました！");
+      if (data.ok && data.url) {
+        setShareUrls((prev) => [...prev, { title, url: data.url }]);
       } else {
-        alert("保存に失敗しました: " + data.error);
+        alert("リンク生成に失敗しました");
       }
     } catch (err) {
-      console.error("❌ 保存エラー:", err);
+      console.error("❌ エラー:", err);
     }
   };
 
-  // ===== 日付選択処理 =====
-  const handleDateChange = (val) => {
-    if (mode === "range") {
-      if (Array.isArray(val)) setSelectedDates(val);
-    } else {
-      const dateStr = val.toDateString();
-      if (selectedDates.some((d) => d.toDateString() === dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, val]);
-      }
-    }
-  };
+  // ===== 選択済み日程リスト =====
+  const selectedList =
+    mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
   return (
     <div className="page-container">
-      <h2 className="page-title">個人スケジュール登録</h2>
+      <h2 className="page-title">日程登録</h2>
 
-      {/* ===== タイトル ===== */}
+      {/* ===== タイトル入力 ===== */}
       <div className="mb-4">
         <label className="block font-semibold mb-1">タイトル</label>
         <input
           className="p-2 border rounded w-full text-black"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：出張、通院、友達と遊ぶ"
-        />
-      </div>
-
-      {/* ===== メモ ===== */}
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">メモ</label>
-        <textarea
-          className="p-2 border rounded w-full text-black"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="詳細メモを入力"
+          placeholder="例：歓迎会、旅行、ミーティング"
         />
       </div>
 
       {/* ===== カレンダー 7割 + 日程リスト 3割 ===== */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-7/10 w-full">
-          <div className="mb-4 flex gap-4">
-            {["range", "multi"].map((m) => (
-              <label
-                key={m}
-                className={`cursor-pointer px-3 py-1 rounded-full border ${
-                  mode === m ? "bg-[#FDB9C8] text-black" : "bg-white text-gray-700"
-                }`}
-              >
-                <input
-                  type="radio"
-                  className="hidden"
-                  checked={mode === m}
-                  onChange={() => setMode(m)}
-                />
-                {m === "range" ? "範囲選択" : "複数選択"}
-              </label>
-            ))}
-          </div>
-
+          <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
-            onChange={handleDateChange}
+            onChange={setRange}
+            value={mode === "range" ? range : null}
+            onClickDay={handleDateClick}
             tileClassName={tileClassName}
             tileContent={tileContent}
             locale="ja-JP"
             calendarType="gregory"
-            activeStartDate={new Date()}
           />
         </div>
 
         <div className="md:w-3/10 w-full">
           <h3 className="font-bold">選択した日程</h3>
           <ul className="list-disc list-inside">
-            {selectedDates.map((d, i) => {
+            {selectedList.map((d, i) => {
               const holiday = hd.isHoliday(d);
               const holidayName = holiday ? `（${holiday[0].name}）` : "";
               return (
@@ -183,7 +156,7 @@ const PersonalPage = () => {
         </div>
       </div>
 
-      {/* ===== 時間帯指定プルダウン ===== */}
+      {/* ===== 時間指定プルダウン ===== */}
       <div className="mt-4 space-y-2">
         <select
           className="p-2 border rounded text-black"
@@ -223,14 +196,36 @@ const PersonalPage = () => {
         )}
       </div>
 
-      {/* ===== 保存 ===== */}
+      {/* ===== 共有リンクボタン ===== */}
       <div className="mt-6 text-center">
-        <button className="fancy-btn" onClick={handleSave}>
-          保存
+        <button className="fancy-btn px-6 py-2" onClick={handleShare}>
+          共有リンクを発行
         </button>
       </div>
+
+      {/* ===== 発行済みリンク一覧 ===== */}
+      {shareUrls.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-bold">発行済みリンク</h3>
+          <ul className="list-disc list-inside">
+            {shareUrls.map((item, idx) => (
+              <li key={idx}>
+                {item.title}：{" "}
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#004CA0] underline"
+                >
+                  {item.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
 
-export default PersonalPage;
+export default RegisterPage;
