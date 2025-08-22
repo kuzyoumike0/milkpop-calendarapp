@@ -537,6 +537,20 @@ h1, h2 {
     width: 100%;
     min-width: auto;
   }
+  /* ===== カレンダー祝日対応 ===== */
+.react-calendar__tile.holiday {
+  color: red !important;
+  font-weight: bold;
+}
+
+.react-calendar__tile.sunday {
+  color: red;
+}
+
+.react-calendar__tile.saturday {
+  color: blue;
+}
+
 }
 
 
