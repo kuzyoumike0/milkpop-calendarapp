@@ -1,109 +1,65 @@
 import React, { useState } from "react";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import ja from "date-fns/locale/ja";
-import Holidays from "date-holidays";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import Calendar from "react-calendar";
 import "../index.css";
 
-const locales = { ja };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
-  getDay,
-  locales,
-});
-const hd = new Holidays("JP");
+// 日付をキー用にフォーマット
+const dateKey = (date) => {
+  return date.toISOString().split("T")[0];
+};
+
+// 時間リスト（1:00〜24:00）
+const hours = Array.from({ length: 24 }, (_, i) => `${i + 1}:00`);
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range"); // 範囲 or 複数
+  const [selectionMode, setSelectionMode] = useState("range"); // "range" or "multiple"
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time: "時間指定", start: 10, end: 12 } }
+  const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time, start, end } }
 
-  const [editingKey, setEditingKey] = useState(null); // 編集中の日付
-  const [editValues, setEditValues] = useState({});   // 編集内容
-
-  const dateKey = (d) => format(d, "yyyy-MM-dd");
-
-  // 範囲選択クリック
-  const handleDateClickRange = ({ start }) => {
-    if (!rangeStart) {
-      setRangeStart(start);
-      setSelectedDates([start]);
-    } else {
-      const startDate = rangeStart < start ? rangeStart : start;
-      const endDate = rangeStart < start ? start : rangeStart;
-      const days = [];
-      let d = new Date(startDate);
-      while (d <= endDate) {
-        days.push(new Date(d));
-        d.setDate(d.getDate() + 1);
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    if (selectionMode === "range") {
+      if (!rangeStart) {
+        setRangeStart(date);
+        setSelectedDates([date]);
+      } else {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+        const days = [];
+        let d = new Date(start);
+        while (d <= end) {
+          days.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
+        setSelectedDates(days);
+        setRangeStart(null);
       }
-      setSelectedDates(days);
-      setRangeStart(null);
+    } else {
+      // 複数選択
+      const exists = selectedDates.some(
+        (d) => dateKey(d) === dateKey(date)
+      );
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => dateKey(d) !== dateKey(date)));
+      } else {
+        setSelectedDates([...selectedDates, date]);
+      }
     }
   };
 
-  // 複数選択クリック
-  const handleDateClickMultiple = ({ start }) => {
-    const key = start.toDateString();
-    setSelectedDates((prev) => {
-      const exists = prev.find((d) => d.toDateString() === key);
-      return exists
-        ? prev.filter((d) => d.toDateString() !== key)
-        : [...prev, start];
-    });
-  };
-
-  // プルダウン更新
+  // プルダウン変更
   const handleOptionChange = (date, field, value) => {
     const key = dateKey(date);
     setDateOptions((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        [field]: value,
-      },
+      [key]: { ...prev[key], [field]: value },
     }));
   };
 
-  // 編集開始
-  const startEdit = (d) => {
-    const key = dateKey(d);
-    setEditingKey(key);
-    setEditValues(dateOptions[key] || {});
-  };
-
-  // 編集保存
-  const saveEdit = (d) => {
-    const key = dateKey(d);
-    if (
-      editValues.time === "時間指定" &&
-      (!editValues.start || !editValues.end || editValues.start >= editValues.end)
-    ) {
-      alert(`${key} の開始・終了時刻が不正です`);
-      return;
-    }
-    setDateOptions((prev) => ({
-      ...prev,
-      [key]: { ...editValues },
-    }));
-    setEditingKey(null);
-    setEditValues({});
-  };
-
-  // 編集キャンセル
-  const cancelEdit = () => {
-    setEditingKey(null);
-    setEditValues({});
-  };
-
-  // 削除
-  const deleteDate = (d) => {
-    const key = dateKey(d);
-    setSelectedDates((prev) => prev.filter((x) => dateKey(x) !== key));
+  // 削除ボタン
+  const handleDelete = (date) => {
+    const key = dateKey(date);
+    setSelectedDates(selectedDates.filter((d) => dateKey(d) !== key));
     setDateOptions((prev) => {
       const copy = { ...prev };
       delete copy[key];
@@ -111,8 +67,15 @@ const RegisterPage = () => {
     });
   };
 
+  // 編集ボタン → アラートで内容を確認（UI強化はここから拡張可能）
+  const handleEdit = (date) => {
+    const key = dateKey(date);
+    const option = dateOptions[key];
+    alert(`${key} を編集中\n時間帯: ${option?.time || "未設定"}\n開始: ${option?.start || "-"}\n終了: ${option?.end || "-"}`);
+  };
+
   // 送信処理
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const results = selectedDates.map((d) => {
       const key = dateKey(d);
       return { date: key, ...dateOptions[key] };
@@ -128,35 +91,28 @@ const RegisterPage = () => {
       }
     }
 
-    console.log("送信データ:", results);
-    alert("日程を送信しました！\n" + JSON.stringify(results, null, 2));
-  };
+    try {
+      const res = await fetch("http://localhost:5000/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schedules: results }),
+      });
 
-  // イベントスタイル（祝日 or 選択日）
-  const eventStyleGetter = (event) => {
-    const isSelected = selectedDates.some(
-      (d) => d.toDateString() === event.start.toDateString()
-    );
-    const isHoliday = hd.isHoliday(event.start);
-    return {
-      style: {
-        backgroundColor: isSelected
-          ? "#FDB9C8"
-          : isHoliday
-          ? "#004CA0"
-          : "#222",
-        color: "#fff",
-        borderRadius: "6px",
-        border: "none",
-      },
-    };
+      if (!res.ok) throw new Error("送信失敗");
+
+      const data = await res.json();
+      alert("送信成功！\n" + JSON.stringify(data, null, 2));
+    } catch (err) {
+      console.error(err);
+      alert("サーバーへの送信に失敗しました");
+    }
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録ページ</h2>
+      <h2 className="page-title">日程登録</h2>
 
-      {/* 選択モード切替 */}
+      {/* 範囲選択・複数選択切替 */}
       <div className="mode-switch">
         <label>
           <input
@@ -182,116 +138,74 @@ const RegisterPage = () => {
         {/* カレンダー */}
         <div className="calendar-section">
           <Calendar
-            localizer={localizer}
-            selectable
-            onSelectSlot={
-              selectionMode === "range"
-                ? handleDateClickRange
-                : handleDateClickMultiple
+            onClickDay={handleDateClick}
+            tileClassName={({ date }) =>
+              selectedDates.some((d) => dateKey(d) === dateKey(date))
+                ? "selected"
+                : ""
             }
-            events={selectedDates.map((d) => ({
-              start: d,
-              end: d,
-              title: "選択中",
-            }))}
-            style={{ height: 600 }}
-            eventPropGetter={eventStyleGetter}
           />
         </div>
 
-        {/* 選択リスト */}
+        {/* 日程リスト */}
         <div className="schedule-section">
-          <h3>選択された日程</h3>
-          <ul>
-            {selectedDates.map((d, i) => {
-              const key = dateKey(d);
-              const opt = dateOptions[key] || {};
-              const isEditing = editingKey === key;
+          <h3>選択した日程</h3>
+          {selectedDates.map((date) => {
+            const key = dateKey(date);
+            return (
+              <div key={key} className="schedule-item">
+                <span>{key}</span>
 
-              return (
-                <li key={i} className="schedule-item">
-                  <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
+                {/* 時間帯プルダウン */}
+                <select
+                  value={dateOptions[key]?.time || ""}
+                  onChange={(e) => handleOptionChange(date, "time", e.target.value)}
+                >
+                  <option value="">選択してください</option>
+                  <option value="終日">終日</option>
+                  <option value="午前">午前</option>
+                  <option value="午後">午後</option>
+                  <option value="夜">夜</option>
+                  <option value="時間指定">時間指定</option>
+                </select>
 
-                  {isEditing ? (
-                    <>
-                      {/* 編集モード */}
-                      <select
-                        value={editValues.time || ""}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, time: e.target.value })
-                        }
-                      >
-                        <option value="">時間帯</option>
-                        <option value="終日">終日</option>
-                        <option value="昼">昼</option>
-                        <option value="夜">夜</option>
-                        <option value="時間指定">時間指定</option>
-                      </select>
+                {/* 時間指定の場合のみ開始・終了プルダウン */}
+                {dateOptions[key]?.time === "時間指定" && (
+                  <>
+                    <select
+                      value={dateOptions[key]?.start || ""}
+                      onChange={(e) => handleOptionChange(date, "start", e.target.value)}
+                    >
+                      <option value="">開始時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={dateOptions[key]?.end || ""}
+                      onChange={(e) => handleOptionChange(date, "end", e.target.value)}
+                    >
+                      <option value="">終了時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
 
-                      {editValues.time === "時間指定" && (
-                        <>
-                          <select
-                            value={editValues.start || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                start: Number(e.target.value),
-                              })
-                            }
-                          >
-                            <option value="">開始</option>
-                            {Array.from({ length: 24 }, (_, h) => (
-                              <option key={h + 1} value={h + 1}>
-                                {h + 1}時
-                              </option>
-                            ))}
-                          </select>
-
-                          <select
-                            value={editValues.end || ""}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                end: Number(e.target.value),
-                              })
-                            }
-                          >
-                            <option value="">終了</option>
-                            {Array.from({ length: 24 }, (_, h) => (
-                              <option key={h + 1} value={h + 1}>
-                                {h + 1}時
-                              </option>
-                            ))}
-                          </select>
-                        </>
-                      )}
-
-                      <button onClick={() => saveEdit(d)}>保存</button>
-                      <button onClick={cancelEdit}>キャンセル</button>
-                    </>
-                  ) : (
-                    <>
-                      {/* 通常表示 */}
-                      <span style={{ marginLeft: "8px" }}>
-                        {opt.time || "未指定"}
-                        {opt.time === "時間指定" &&
-                          opt.start &&
-                          opt.end &&
-                          ` (${opt.start}時〜${opt.end}時)`}
-                      </span>
-                      <button onClick={() => startEdit(d)}>✏ 編集</button>
-                      <button onClick={() => deleteDate(d)}>🗑 削除</button>
-                    </>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                {/* 編集・削除ボタン */}
+                <button onClick={() => handleEdit(date)}>✏️</button>
+                <button onClick={() => handleDelete(date)}>🗑️</button>
+              </div>
+            );
+          })}
 
           {/* 送信ボタン */}
-          <button className="submit-btn" onClick={handleSubmit}>
-            送信する
-          </button>
+          {selectedDates.length > 0 && (
+            <button className="submit-btn" onClick={handleSubmit}>
+              送信する
+            </button>
+          )}
         </div>
       </div>
     </div>
