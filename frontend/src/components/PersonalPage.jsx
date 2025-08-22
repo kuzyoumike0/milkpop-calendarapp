@@ -1,33 +1,36 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
-import { useParams } from "react-router-dom";
 import "../index.css";
 
 const PersonalPage = () => {
-  const { id } = useParams(); // 共有リンクのIDから取得
+  const [user, setUser] = useState(null);
   const [schedule, setSchedule] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/schedules/${id}`)
+    fetch("/api/me", { credentials: "include" })
       .then(res => res.json())
       .then(data => {
         if (data.ok) {
-          setSchedule(data.schedules);
+          setUser(data.user);
+          fetch("/api/myschedule", { credentials: "include" })
+            .then(res => res.json())
+            .then(s => setSchedule(s.schedule));
         }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [id]);
+      });
+  }, []);
 
-  if (loading) return <p>読み込み中...</p>;
-  if (!schedule) return <p>このスケジュールは存在しません。</p>;
+  if (!user) {
+    return <p>Discordでログインしてください。</p>;
+  }
 
-  // 日付選択済みかどうかを判定
   const tileClassName = ({ date }) => {
-    if (schedule.dates.some(d => new Date(d).toDateString() === date.toDateString())) {
-      return "selected-date"; // index.css にある強調スタイルを再利用
+    if (
+      schedule?.selectedDates?.some(
+        (d) => new Date(d).toDateString() === date.toDateString()
+      )
+    ) {
+      return "selected-date";
     }
     return null;
   };
@@ -35,16 +38,23 @@ const PersonalPage = () => {
   return (
     <div className="page-container">
       <h2 className="page-title">個人スケジュール</h2>
+      <p>👤 {user.username}</p>
 
-      <div className="calendar-section">
-        <Calendar tileClassName={tileClassName} />
-      </div>
+      <div className="register-layout">
+        <div className="calendar-section">
+          <Calendar tileClassName={tileClassName} />
+        </div>
+        <div className="schedule-section">
+          <h3>保存した日程</h3>
+          {schedule?.selectedDates?.map((d, i) => {
+            const dateStr = new Date(d).toDateString();
+            const option =
+              schedule.dateOptions?.[dateStr] || {
+                type: "終日",
+                start: "0:00",
+                end: "23:00",
+              };
 
-      <div className="schedule-section">
-        <h3>詳細</h3>
-        <ul>
-          {schedule.dates.map((d, i) => {
-            const option = schedule.options[d] || {};
             return (
               <li key={i}>
                 <strong>{new Date(d).toLocaleDateString()}</strong>
@@ -55,7 +65,7 @@ const PersonalPage = () => {
               </li>
             );
           })}
-        </ul>
+        </div>
       </div>
     </div>
   );
