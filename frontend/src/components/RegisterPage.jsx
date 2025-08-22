@@ -6,13 +6,15 @@ import "../index.css";
 const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [rangeStart, setRangeStart] = useState(null);
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedSchedules, setSelectedSchedules] = useState([]); 
+  // [{date, type, start, end}, ...]
 
   const handleDateClick = (date) => {
+    const dateStr = date.toDateString();
     if (selectionMode === "range") {
       if (!rangeStart) {
         setRangeStart(date);
-        setSelectedDates([date]);
+        setSelectedSchedules([{ date, type: "終日", start: null, end: null }]);
       } else {
         const start = rangeStart < date ? rangeStart : date;
         const end = rangeStart < date ? date : rangeStart;
@@ -20,30 +22,60 @@ const RegisterPage = () => {
         const days = [];
         let d = new Date(start);
         while (d <= end) {
-          days.push(new Date(d));
+          days.push({
+            date: new Date(d),
+            type: "終日",
+            start: null,
+            end: null,
+          });
           d.setDate(d.getDate() + 1);
         }
 
-        setSelectedDates(days);
+        setSelectedSchedules(days);
         setRangeStart(null);
       }
     } else {
-      // multiple
-      if (selectedDates.some((d) => d.toDateString() === date.toDateString())) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
+      if (selectedSchedules.some((s) => s.date.toDateString() === dateStr)) {
+        setSelectedSchedules(selectedSchedules.filter((s) => s.date.toDateString() !== dateStr));
       } else {
-        setSelectedDates([...selectedDates, date]);
+        setSelectedSchedules([
+          ...selectedSchedules,
+          { date, type: "終日", start: null, end: null },
+        ]);
       }
     }
   };
 
+  const handleTypeChange = (idx, value) => {
+    const newSchedules = [...selectedSchedules];
+    newSchedules[idx].type = value;
+
+    // 終日/午前/午後なら時間をリセット
+    if (value !== "時間指定") {
+      newSchedules[idx].start = null;
+      newSchedules[idx].end = null;
+    }
+    setSelectedSchedules(newSchedules);
+  };
+
+  const handleTimeChange = (idx, field, value) => {
+    const newSchedules = [...selectedSchedules];
+    newSchedules[idx][field] = value;
+    setSelectedSchedules(newSchedules);
+  };
+
   const handleSubmit = async () => {
+    const payload = selectedSchedules.map((s) => ({
+      date: s.date.toISOString().split("T")[0], // YYYY-MM-DD
+      type: s.type,
+      start: s.start,
+      end: s.end,
+    }));
+
     const res = await fetch("/api/schedules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dates: selectedDates,
-      }),
+      body: JSON.stringify({ schedules: payload }),
     });
     const data = await res.json();
     if (data.id) {
@@ -83,7 +115,7 @@ const RegisterPage = () => {
           <Calendar
             onClickDay={handleDateClick}
             tileClassName={({ date }) =>
-              selectedDates.some((d) => d.toDateString() === date.toDateString())
+              selectedSchedules.some((s) => s.date.toDateString() === date.toDateString())
                 ? "selected"
                 : ""
             }
@@ -93,36 +125,47 @@ const RegisterPage = () => {
         {/* 日程リスト（プルダウン付き） */}
         <div className="schedule-section">
           <h3>選択した日程</h3>
-          {selectedDates.length === 0 && <p>日程を選択してください</p>}
-          {selectedDates.map((date, idx) => (
+          {selectedSchedules.length === 0 && <p>日程を選択してください</p>}
+          {selectedSchedules.map((s, idx) => (
             <div key={idx} className="schedule-item">
-              <span>{date.toLocaleDateString()}</span>
-              {/* 時間帯プルダウン */}
-              <select defaultValue="">
-                <option value="">時間を選択</option>
-                <option value="morning">午前</option>
-                <option value="afternoon">午後</option>
-                <option value="evening">夜</option>
+              <span>{s.date.toLocaleDateString()}</span>
+
+              {/* 種類プルダウン */}
+              <select value={s.type} onChange={(e) => handleTypeChange(idx, e.target.value)}>
+                <option value="終日">終日</option>
+                <option value="午前">午前</option>
+                <option value="午後">午後</option>
+                <option value="時間指定">時間指定</option>
               </select>
-              {/* 開始時間プルダウン */}
-              <select defaultValue="">
-                <option value="">開始時間</option>
-                {[...Array(24).keys()].map((h) => (
-                  <option key={h} value={h}>{`${h}:00`}</option>
-                ))}
-              </select>
-              {/* 終了時間プルダウン */}
-              <select defaultValue="">
-                <option value="">終了時間</option>
-                {[...Array(24).keys()].map((h) => (
-                  <option key={h} value={h}>{`${h}:00`}</option>
-                ))}
-              </select>
+
+              {/* 時間指定のときだけ表示 */}
+              {s.type === "時間指定" && (
+                <>
+                  <select
+                    value={s.start || ""}
+                    onChange={(e) => handleTimeChange(idx, "start", e.target.value)}
+                  >
+                    <option value="">開始時間</option>
+                    {[...Array(24).keys()].map((h) => (
+                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={s.end || ""}
+                    onChange={(e) => handleTimeChange(idx, "end", e.target.value)}
+                  >
+                    <option value="">終了時間</option>
+                    {[...Array(24).keys()].map((h) => (
+                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           ))}
 
           {/* 送信ボタン */}
-          {selectedDates.length > 0 && (
+          {selectedSchedules.length > 0 && (
             <button onClick={handleSubmit} className="submit-btn">
               共有リンク作成
             </button>
