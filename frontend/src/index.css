@@ -1,5 +1,5 @@
 /* ===== フォント ===== */
-@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
 
 /* ===== ページ全体 ===== */
 body {
@@ -14,7 +14,7 @@ body {
 
 /* ===== 見出し ===== */
 h1, h2 {
-  font-family: 'Reggae One','Yomogi','M PLUS Rounded 1c',cursive,sans-serif;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
   font-weight: bold;
   color: #ff5fa2;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
@@ -36,7 +36,7 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* 丸く可愛い */
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 header .nav {
   display: flex;
@@ -59,7 +59,7 @@ footer {
   color: white;
   padding: 14px 20px;
   text-align: center;
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* 丸く可愛い */
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
   position: fixed;
   bottom: 0;
   left: 0;
