@@ -102,4 +102,7 @@ main {
 
 .page-title {
   font-size: 2rem;
-  fon
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #004CA0;
+}
