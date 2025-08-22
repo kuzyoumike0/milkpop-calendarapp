@@ -1,181 +1,84 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "../index.css";
+import SelectMode from "./SelectMode";
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range");
-  const [rangeStart, setRangeStart] = useState(null);
-  const [selectedSchedules, setSelectedSchedules] = useState([]);
-  const [shareUrl, setShareUrl] = useState(""); // 👈 追加
+  const [mode, setMode] = useState("range"); // "range" | "multi"
+  const [selectedDates, setSelectedDates] = useState([]);
 
+  // 日付クリック時の挙動
   const handleDateClick = (date) => {
-    const dateStr = date.toDateString();
-    if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(date);
-        setSelectedSchedules([{ date, type: "終日", start: null, end: null }]);
+    if (mode === "multi") {
+      // 複数選択
+      if (selectedDates.some(d => d.toDateString() === date.toDateString())) {
+        setSelectedDates(selectedDates.filter(d => d.toDateString() !== date.toDateString()));
       } else {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-
-        const days = [];
-        let d = new Date(start);
-        while (d <= end) {
-          days.push({
-            date: new Date(d),
-            type: "終日",
-            start: null,
-            end: null,
-          });
-          d.setDate(d.getDate() + 1);
-        }
-
-        setSelectedSchedules(days);
-        setRangeStart(null);
+        setSelectedDates([...selectedDates, date]);
       }
     } else {
-      if (selectedSchedules.some((s) => s.date.toDateString() === dateStr)) {
-        setSelectedSchedules(selectedSchedules.filter((s) => s.date.toDateString() !== dateStr));
-      } else {
-        setSelectedSchedules([
-          ...selectedSchedules,
-          { date, type: "終日", start: null, end: null },
-        ]);
+      // 範囲選択
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0];
+        const range = start < date ? [start, date] : [date, start];
+        setSelectedDates(range);
       }
     }
   };
 
-  const handleTypeChange = (idx, value) => {
-    const newSchedules = [...selectedSchedules];
-    newSchedules[idx].type = value;
-
-    if (value !== "時間指定") {
-      newSchedules[idx].start = null;
-      newSchedules[idx].end = null;
+  // カレンダーの日付タイルにスタイルを適用
+  const tileClassName = ({ date }) => {
+    if (mode === "multi") {
+      return selectedDates.some(d => d.toDateString() === date.toDateString())
+        ? "selected-date"
+        : null;
     }
-    setSelectedSchedules(newSchedules);
-  };
-
-  const handleTimeChange = (idx, field, value) => {
-    const newSchedules = [...selectedSchedules];
-    newSchedules[idx][field] = value;
-    setSelectedSchedules(newSchedules);
-  };
-
-  const handleSubmit = async () => {
-    const payload = selectedSchedules.map((s) => ({
-      date: s.date.toISOString().split("T")[0],
-      type: s.type,
-      start: s.start,
-      end: s.end,
-    }));
-
-    const res = await fetch("/api/schedules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ schedules: payload }),
-    });
-    const data = await res.json();
-    if (data.id) {
-      const url = `${window.location.origin}/share/${data.id}`;
-      setShareUrl(url); // 👈 URLを保存
+    if (mode === "range" && selectedDates.length === 2) {
+      const [start, end] = selectedDates;
+      return date >= start && date <= end ? "selected-range" : null;
     }
+    if (mode === "range" && selectedDates.length === 1) {
+      return date.toDateString() === selectedDates[0].toDateString()
+        ? "selected-range"
+        : null;
+    }
+    return null;
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録</h2>
+      <h2 className="page-title">日程登録ページ</h2>
 
-      {/* 範囲選択 / 複数選択 ラジオボタン */}
-      <div className="mode-switch">
-        <label>
-          <input
-            type="radio"
-            value="range"
-            checked={selectionMode === "range"}
-            onChange={(e) => setSelectionMode(e.target.value)}
-          />
-          範囲選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={selectionMode === "multiple"}
-            onChange={(e) => setSelectionMode(e.target.value)}
-          />
-          複数選択
-        </label>
+      {/* ラジオボタン */}
+      <SelectMode mode={mode} setMode={setMode} />
+
+      {/* カレンダー */}
+      <div className="calendar-wrapper">
+        <Calendar
+          onClickDay={handleDateClick}
+          tileClassName={tileClassName}
+        />
       </div>
 
-      <div className="register-layout">
-        {/* カレンダー */}
-        <div className="calendar-section">
-          <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={({ date }) =>
-              selectedSchedules.some((s) => s.date.toDateString() === date.toDateString())
-                ? "selected"
-                : ""
-            }
-          />
-        </div>
-
-        {/* 日程リスト */}
-        <div className="schedule-section">
-          <h3>選択した日程</h3>
-          {selectedSchedules.length === 0 && <p>日程を選択してください</p>}
-          {selectedSchedules.map((s, idx) => (
-            <div key={idx} className="schedule-item">
-              <span>{s.date.toLocaleDateString()}</span>
-              <select value={s.type} onChange={(e) => handleTypeChange(idx, e.target.value)}>
-                <option value="終日">終日</option>
-                <option value="午前">午前</option>
-                <option value="午後">午後</option>
-                <option value="時間指定">時間指定</option>
-              </select>
-              {s.type === "時間指定" && (
-                <>
-                  <select
-                    value={s.start || ""}
-                    onChange={(e) => handleTimeChange(idx, "start", e.target.value)}
-                  >
-                    <option value="">開始時間</option>
-                    {[...Array(24).keys()].map((h) => (
-                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={s.end || ""}
-                    onChange={(e) => handleTimeChange(idx, "end", e.target.value)}
-                  >
-                    <option value="">終了時間</option>
-                    {[...Array(24).keys()].map((h) => (
-                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
-                    ))}
-                  </select>
-                </>
-              )}
-            </div>
-          ))}
-
-          {/* 送信ボタン */}
-          {selectedSchedules.length > 0 && (
-            <>
-              <button onClick={handleSubmit} className="submit-btn">
-                共有リンク作成
-              </button>
-
-              {/* 👇 共有リンクを表示 */}
-              {shareUrl && (
-                <p className="share-link">
-                  共有リンク: <a href={shareUrl}>{shareUrl}</a>
-                </p>
-              )}
-            </>
-          )}
-        </div>
+      {/* 選択結果を下に表示 */}
+      <div className="selected-output">
+        <h3>選択した日程</h3>
+        {mode === "multi" && (
+          <ul>
+            {selectedDates.map((d, i) => (
+              <li key={i}>{d.toLocaleDateString()}</li>
+            ))}
+          </ul>
+        )}
+        {mode === "range" && selectedDates.length > 0 && (
+          <p>
+            {selectedDates[0].toLocaleDateString()}
+            {selectedDates[1] && ` 〜 ${selectedDates[1].toLocaleDateString()}`}
+          </p>
+        )}
       </div>
     </div>
   );
