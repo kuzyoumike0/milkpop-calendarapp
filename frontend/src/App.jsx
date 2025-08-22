@@ -7,14 +7,17 @@ import SharePage from "./components/SharePage";
 import ShareLinkPage from "./components/ShareLinkPage";
 import LinkPage from "./components/LinkPage";
 import Footer from "./components/Footer";
+import Header from "./components/Header";
 import "./index.css";
 
 const App = () => {
   return (
     <Router>
-      {/* 縦方向レイアウト */}
       <div className="flex flex-col min-h-screen">
-        {/* コンテンツ部分 */}
+        {/* 👇 共通ヘッダー */}
+        <Header />
+
+        {/* メインコンテンツ */}
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<TopPage />} />
@@ -25,7 +28,8 @@ const App = () => {
             <Route path="/link" element={<LinkPage />} />
           </Routes>
         </main>
-        {/* フッター（ページ下部） */}
+
+        {/* 👇 共通フッター */}
         <Footer />
       </div>
     </Router>
