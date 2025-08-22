@@ -436,6 +436,98 @@
   height: 28px;
   border-radius: 50%;
 }
+/* ===== 共通ヘッダー ===== */
+.banner {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: bold;
+  position: relative;
+}
+
+.logo {
+  flex: 1;
+}
+
+/* ===== ナビゲーション ===== */
+.nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  transition: 0.3s;
+}
+
+.nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav.open {
+  display: block;
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* ===== ハンバーガーボタン ===== */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ===== Discordログインボタン ===== */
+.login-btn {
+  background: linear-gradient(90deg, #7289da, #5865f2);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.login-btn:hover {
+  opacity: 0.85;
+}
+
+/* ===== ユーザー表示 ===== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+}
+.user-info .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+/* ===== レスポンシブ対応 ===== */
+@media (max-width: 768px) {
+  .nav {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    width: 200px;
+  }
+
+  .hamburger {
+    display: block;
+  }
+}
 
 
 
