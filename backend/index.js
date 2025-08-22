@@ -41,19 +41,9 @@ app.get("/api/schedules/:id", async (req, res) => {
       return res.json({ ok: false, error: "スケジュールが見つかりません" });
     }
 
-    const responseRes = await pool.query(
-      "SELECT username, responses FROM schedule_responses WHERE schedule_id = $1",
-      [id]
-    );
-
     res.json({
       ok: true,
-      data: {
-        ...scheduleRes.rows[0],
-        responses: Object.fromEntries(
-          responseRes.rows.map(r => [r.username, r.responses])
-        ),
-      },
+      data: scheduleRes.rows[0],
     });
   } catch (err) {
     console.error("❌ スケジュール取得エラー:", err);
@@ -61,48 +51,7 @@ app.get("/api/schedules/:id", async (req, res) => {
   }
 });
 
-// ===== 出欠保存API（user_idでユニーク管理・名前は最新で上書き） =====
-app.post("/api/schedules/:id/responses", async (req, res) => {
-  const { id } = req.params;
-  const { user_id, username, responses } = req.body;
-
-  if (!user_id || !username || !responses) {
-    return res.status(400).json({ ok: false, error: "ユーザーID・名前・出欠が必要です" });
-  }
-
-  try {
-    await pool.query(
-      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (schedule_id, user_id)
-       DO UPDATE SET username = EXCLUDED.username,
-                     responses = EXCLUDED.responses,
-                     created_at = CURRENT_TIMESTAMP`,
-      [id, user_id, username, responses]
-    );
-
-    const scheduleRes = await pool.query("SELECT * FROM schedules WHERE id = $1", [id]);
-    const responseRes = await pool.query(
-      "SELECT username, responses FROM schedule_responses WHERE schedule_id = $1",
-      [id]
-    );
-
-    res.json({
-      ok: true,
-      data: {
-        ...scheduleRes.rows[0],
-        responses: Object.fromEntries(
-          responseRes.rows.map(r => [r.username, r.responses])
-        ),
-      },
-    });
-  } catch (err) {
-    console.error("❌ 保存エラー:", err);
-    res.status(500).json({ ok: false, error: "DB保存に失敗しました" });
-  }
-});
-
-// ===== 個人スケジュール保存（同時に共有スケジュールへ上書き） =====
+// ===== 個人スケジュール保存（共有スケジュールを完全上書き） =====
 app.post("/api/personal", async (req, res) => {
   const { personal_id, share_id, title, memo, dates, options } = req.body;
 
@@ -119,7 +68,7 @@ app.post("/api/personal", async (req, res) => {
       [newPersonalId, newShareId, title, memo, JSON.stringify(dates), JSON.stringify(options)]
     );
 
-    // 共有スケジュールへ上書き
+    // 共有スケジュールを「完全上書き」
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options)
        VALUES ($1, $2, $3, $4)
