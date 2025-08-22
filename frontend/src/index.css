@@ -478,3 +478,52 @@
   border-radius: 50%;
 }
 
+.calendar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+/* React Calendar 全体のデザイン */
+.react-calendar {
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #FDB9C8;
+}
+
+/* 日付セル */
+.react-calendar__tile {
+  border-radius: 8px;
+  padding: 10px;
+  transition: background 0.3s ease;
+}
+
+.react-calendar__tile:hover {
+  background: rgba(253, 185, 200, 0.4);
+}
+
+/* 選択した日 */
+.selected-tile {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
+
+/* 祝日 */
+.holiday-tile {
+  background: #FDB9C8 !important;
+  color: #000 !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
