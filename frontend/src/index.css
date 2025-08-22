@@ -23,10 +23,18 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Mochiy Pop One', 'Yomogi', cursive, sans-serif;
+  font-family: 'Reggae One', 'Stick', 'Yomogi', cursive, sans-serif;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
   color: #333;
 }
+
+h1, h2, .page-title, .welcome-text {
+  font-family: 'Reggae One', 'Yomogi', cursive, sans-serif;
+  font-weight: bold;
+  color: #ff5fa2; /* ポップなピンク */
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+}
+
 
 /* 共通レイアウト用 */
 .page-container {
