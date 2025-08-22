@@ -1,27 +1,29 @@
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
-  font-family: 'Noto Sans JP', sans-serif;
+  font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
   color: #000;
   background: #fff; /* ✅ ページ背景は白 */
   min-height: 100vh;
+  line-height: 1.6;
 }
 
 /* ===== バナー（ヘッダー） ===== */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0); /* ✅ バナーはグラデーション */
+  background: linear-gradient(90deg, #FDB9C8, #ff85a1, #004CA0);
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: bold;
   color: #fff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
 }
 
 .banner h1 {
   font-size: 1.8rem;
   margin: 0;
+  font-family: 'Potta One', 'M PLUS Rounded 1c', sans-serif;
 }
 
 .banner nav a {
@@ -34,16 +36,18 @@ body {
 
 .banner nav a:hover {
   color: #FDB9C8;
+  text-shadow: 0 0 6px rgba(255,255,255,0.6);
 }
 
 /* ===== フッター ===== */
 .footer {
-  background: #f8f8f8;
+  background: #fafafa;
   text-align: center;
   padding: 1rem;
   color: #555;
   font-size: 0.9rem;
   border-top: 1px solid #ddd;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
 }
 
 /* ===== トップページ ===== */
@@ -58,24 +62,26 @@ body {
 }
 
 .logo-wrapper {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   border-radius: 2rem;
-  padding: 1rem 2rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 1.5rem 3rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.15);
 }
 
 .logo-image {
-  width: 1040px;
+  width: 320px;
   height: auto;
 }
 
 .welcome-text {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: bold;
+  font-family: 'Potta One', cursive;
   color: #004CA0;
   margin-top: 1rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 /* ===== ページ共通カード ===== */
@@ -85,8 +91,14 @@ body {
   padding: 2rem;
   margin: 2rem auto;
   max-width: 900px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   border: 1px solid #eee;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.page-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 /* ===== カレンダースタイル ===== */
@@ -94,7 +106,7 @@ body {
   background: #fff;
   border-radius: 1rem;
   padding: 1rem;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 15px rgba(0,0,0,0.12);
   border: 1px solid #eee;
   color: #000;
 }
@@ -106,6 +118,7 @@ body {
 
 .rbc-day-bg:hover {
   background: rgba(253,185,200,0.15);
+  cursor: pointer;
 }
 
 /* 祝日強調 */
@@ -116,7 +129,6 @@ body {
   position: relative;
 }
 
-/* 祝日名表示 */
 .holiday::after {
   content: attr(data-holiday);
   display: block;
@@ -131,10 +143,9 @@ body {
   border: 2px solid #FDB9C8 !important;
   color: #000 !important;
   font-weight: bold;
-  cursor: pointer;
 }
 
-/* 選択開始日を強調 */
+/* 選択開始日 */
 .range-start {
   background: rgba(253,185,200,0.4) !important;
   border: 2px solid #004CA0 !important;
@@ -145,7 +156,7 @@ body {
   background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
   border: none;
   border-radius: 6px;
-  padding: 2px 4px;
+  padding: 2px 6px;
   font-size: 0.8rem;
   color: #fff;
 }
@@ -169,6 +180,7 @@ body {
 .rbc-toolbar-label {
   font-weight: bold;
   color: #004CA0;
+  font-size: 1.2rem;
 }
 
 /* ===== 入力フォーム ===== */
@@ -181,6 +193,7 @@ body {
   margin-bottom: 0.5rem;
   font-weight: bold;
   color: #004CA0;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
 }
 
 input[type="text"],
@@ -193,6 +206,7 @@ select {
   background: #fff;
   color: #000;
   font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
 }
 
 input[type="text"]:focus,
@@ -200,8 +214,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: #FDB9C8;
-  background: #fff;
-  color: #000;
+  box-shadow: 0 0 6px rgba(253,185,200,0.5);
 }
 
 /* ===== ボタン ===== */
@@ -214,11 +227,13 @@ button {
   font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
 }
 
 button:hover {
   opacity: 0.95;
   transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 /* ===== リンク ===== */
