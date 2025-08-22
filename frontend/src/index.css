@@ -1,4 +1,24 @@
 /* ===== ページ全体のコンテナ ===== */
+// frontend/src/theme.js
+import { extendTheme } from "@chakra-ui/react";
+
+const theme = extendTheme({
+  colors: {
+    brand: {
+      pink: "#FDB9C8",
+      blue: "#004CA0",
+      black: "#000000"
+    },
+  },
+  styles: {
+    global: {
+      body: {
+        bg: "#FFF0F5",   // 薄いピンク背景
+        color: "black",  // 文字は黒に
+      },
+    },
+  },
+
 .page-container {
   display: flex;
   flex-direction: column;
