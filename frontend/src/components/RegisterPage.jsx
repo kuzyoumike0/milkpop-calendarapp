@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
@@ -15,18 +14,17 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range");
+  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({});
+  const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time: "時間指定", start: 10, end: 12 } }
 
   const dateKey = (d) => format(d, "yyyy-MM-dd");
 
-  // 範囲選択
+  // 範囲選択クリック
   const handleDateClickRange = ({ start }) => {
     if (!rangeStart) {
       setRangeStart(start);
@@ -34,20 +32,18 @@ const RegisterPage = () => {
     } else {
       const startDate = rangeStart < start ? rangeStart : start;
       const endDate = rangeStart < start ? start : rangeStart;
-
       const days = [];
       let d = new Date(startDate);
       while (d <= endDate) {
         days.push(new Date(d));
         d.setDate(d.getDate() + 1);
       }
-
       setSelectedDates(days);
       setRangeStart(null);
     }
   };
 
-  // 複数選択
+  // 複数選択クリック
   const handleDateClickMultiple = ({ start }) => {
     const key = start.toDateString();
     setSelectedDates((prev) => {
@@ -58,27 +54,7 @@ const RegisterPage = () => {
     });
   };
 
-  // イベントスタイル
-  const eventStyleGetter = (event) => {
-    const isSelected = selectedDates.some(
-      (d) => d.toDateString() === event.start.toDateString()
-    );
-    const isHoliday = hd.isHoliday(event.start);
-
-    return {
-      style: {
-        backgroundColor: isSelected ? "#FDB9C8" : isHoliday ? "#004CA0" : "#222",
-        color: "#fff",
-        borderRadius: "6px",
-        border: "none",
-      },
-    };
-  };
-
-  // 時刻リスト 1〜24時
-  const timeOptions = Array.from({ length: 24 }, (_, i) => i + 1);
-
-  // プルダウン変更処理
+  // プルダウン更新
   const handleOptionChange = (date, field, value) => {
     const key = dateKey(date);
     setDateOptions((prev) => ({
@@ -90,11 +66,52 @@ const RegisterPage = () => {
     }));
   };
 
+  // 送信処理
+  const handleSubmit = () => {
+    const results = selectedDates.map((d) => {
+      const key = dateKey(d);
+      return { date: key, ...dateOptions[key] };
+    });
+
+    // バリデーション
+    for (const r of results) {
+      if (r.time === "時間指定") {
+        if (!r.start || !r.end || r.start >= r.end) {
+          alert(`${r.date} の開始・終了時刻が不正です`);
+          return;
+        }
+      }
+    }
+
+    console.log("送信データ:", results);
+    alert("日程を送信しました！\n" + JSON.stringify(results, null, 2));
+  };
+
+  // イベントスタイル（祝日 or 選択日）
+  const eventStyleGetter = (event) => {
+    const isSelected = selectedDates.some(
+      (d) => d.toDateString() === event.start.toDateString()
+    );
+    const isHoliday = hd.isHoliday(event.start);
+    return {
+      style: {
+        backgroundColor: isSelected
+          ? "#FDB9C8"
+          : isHoliday
+          ? "#004CA0"
+          : "#222",
+        color: "#fff",
+        borderRadius: "6px",
+        border: "none",
+      },
+    };
+  };
+
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* モード切替 */}
+      {/* 選択モード切替 */}
       <div className="mode-switch">
         <label>
           <input
@@ -143,18 +160,16 @@ const RegisterPage = () => {
           <ul>
             {selectedDates.map((d, i) => {
               const key = dateKey(d);
-              const opts = dateOptions[key] || {};
-              const startVal = parseInt(opts.start || "0", 10);
-
+              const opt = dateOptions[key] || {};
               return (
                 <li key={i} className="schedule-item">
                   <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
 
-                  {/* 時間帯プルダウン */}
+                  {/* 時間帯 */}
                   <select
-                    value={opts.timezone || ""}
+                    value={opt.time || ""}
                     onChange={(e) =>
-                      handleOptionChange(d, "timezone", e.target.value)
+                      handleOptionChange(d, "time", e.target.value)
                     }
                   >
                     <option value="">時間帯</option>
@@ -164,40 +179,35 @@ const RegisterPage = () => {
                     <option value="時間指定">時間指定</option>
                   </select>
 
-                  {/* 時間指定を選んだ場合だけ時刻プルダウン表示 */}
-                  {opts.timezone === "時間指定" && (
+                  {/* 時間指定プルダウン */}
+                  {opt.time === "時間指定" && (
                     <>
-                      {/* 開始時刻 */}
                       <select
-                        value={opts.start || ""}
+                        value={opt.start || ""}
                         onChange={(e) =>
-                          handleOptionChange(d, "start", e.target.value)
+                          handleOptionChange(d, "start", Number(e.target.value))
                         }
                       >
                         <option value="">開始</option>
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}時
+                        {Array.from({ length: 24 }, (_, h) => (
+                          <option key={h + 1} value={h + 1}>
+                            {h + 1}時
                           </option>
                         ))}
                       </select>
 
-                      {/* 終了時刻（開始より後のみ表示） */}
                       <select
-                        value={opts.end || ""}
+                        value={opt.end || ""}
                         onChange={(e) =>
-                          handleOptionChange(d, "end", e.target.value)
+                          handleOptionChange(d, "end", Number(e.target.value))
                         }
-                        disabled={!opts.start}
                       >
                         <option value="">終了</option>
-                        {timeOptions
-                          .filter((t) => !startVal || t > startVal)
-                          .map((t) => (
-                            <option key={t} value={t}>
-                              {t}時
-                            </option>
-                          ))}
+                        {Array.from({ length: 24 }, (_, h) => (
+                          <option key={h + 1} value={h + 1}>
+                            {h + 1}時
+                          </option>
+                        ))}
                       </select>
                     </>
                   )}
@@ -205,6 +215,9 @@ const RegisterPage = () => {
               );
             })}
           </ul>
+          <button className="submit-btn" onClick={handleSubmit}>
+            送信する
+          </button>
         </div>
       </div>
     </div>
