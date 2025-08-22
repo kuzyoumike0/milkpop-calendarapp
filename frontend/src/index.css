@@ -1,5 +1,5 @@
 /* ===== フォント ===== */
-@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
 
 /* ===== ページ全体 ===== */
 body {
@@ -7,14 +7,14 @@ body {
   padding: 0 0 0 20px;   /* 左に少し余裕 */
   line-height: 1.8;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c','Yomogi',sans-serif;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
   font-size: 1.05rem;
   color: #333;
 }
 
 /* ===== 見出し ===== */
 h1, h2 {
-  font-family: 'Reggae One','Yomogi','Zen Maru Gothic',cursive,sans-serif;
+  font-family: 'Reggae One','Yomogi','M PLUS Rounded 1c',cursive,sans-serif;
   font-weight: bold;
   color: #ff5fa2;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
@@ -51,9 +51,9 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
-/* ===== メイン領域 ===== */
+/* ===== main領域 ===== */
 main {
-  margin-top: 120px;  /* ヘッダー干渉防止 */
+  margin-top: 120px;
   margin-bottom: 60px;
 }
 
@@ -86,7 +86,7 @@ main {
   font-weight: bold;
 }
 
-/* ===== レイアウト（カレンダー＋リスト） ===== */
+/* ===== レイアウト ===== */
 .register-layout {
   display: flex;
   gap: 24px;
@@ -176,7 +176,7 @@ main {
   color: #004CA0;
 }
 
-/* ===== 選択日カード（右リスト） ===== */
+/* ===== 選択日カード（右に表示） ===== */
 .schedule-card {
   background: #fff5f8;
   border: 2px solid #FDB9C8;
@@ -185,7 +185,7 @@ main {
   margin-bottom: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 
-  display: flex;               /* ← 日付とプルダウンを横並び */
+  display: flex;
   justify-content: space-between;
   align-items: center;
 }
@@ -197,7 +197,7 @@ main {
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 
 /* ===== 共有リンクボタン ===== */
