@@ -20,14 +20,14 @@
 }
 
 .logo-image {
-  width: 1040px;   /* ← 小さめに変更 */
+  width: 260px;   /* ← 小さめで可愛らしく */
   max-width: 80%;
   height: auto;
   transition: transform 0.3s ease;
 }
 
 .logo-image:hover {
-  transform: scale(1.08) rotate(3deg); /* ← ちょっと跳ねる動きで可愛さUP */
+  transform: scale(1.08) rotate(3deg); /* ← 跳ねる動きでポップさUP */
 }
 
 /* ウェルカムテキスト */
@@ -43,6 +43,21 @@
 
 
 /* ===== バナー（ヘッダー） ===== */
+.banner {
+  background: linear-gradient(90deg, #004CA0, #FDB9C8);
+  padding: 1rem 2rem;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.banner h1 {
+  font-size: 1.5rem;
+  font-family: 'Noto Serif JP', serif;
+  margin: 0;
+}
+
 .banner nav a {
   margin-left: 2rem; /* ← 少し間隔広めに */
   text-decoration: none;
@@ -54,7 +69,7 @@
 }
 
 .banner nav a:hover {
-  background: rgba(255,255,255,0.2); /* ホバー時に背景ぼんやり */
+  background: rgba(255,255,255,0.2);
   color: #FDB9C8;
   text-shadow: 0 0 6px rgba(255,255,255,0.6);
 }
@@ -71,11 +86,10 @@
   border-top: 2px solid #ff99bb;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
 
-  position: fixed;   /* ← 固定する */
-  bottom: 0;         /* ← ページ下部に配置 */
+  position: fixed;   /* ← 常に最下部に固定 */
+  bottom: 0;
   left: 0;
-  width: 100%;       /* ← 横幅いっぱい */
-  z-index: 100;      /* ← 前面に出す */
+  width: 100%;
 }
 
 .footer p {
@@ -149,7 +163,7 @@
   border-radius: 6px;
 }
 
-/* 今日を強調 */
+/* 今日 */
 .rbc-today {
   background: rgba(0, 76, 160, 0.08) !important;
   border: 2px solid #004CA0 !important;
@@ -172,6 +186,7 @@
   position: relative;
 }
 
+
 /* ===== イベント表示 ===== */
 .rbc-event {
   background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
@@ -192,6 +207,7 @@
 .rbc-time-view {
   border: none;
 }
+
 
 /* ==== RegisterPage 専用 ==== */
 .page-title {
@@ -214,7 +230,7 @@
 }
 
 .calendar-mock {
-  width: 80%;              /* ← 幅を少し小さめ */
+  width: 80%;
   max-width: 750px;
   height: 400px;
   background: #fdfdfd;
@@ -303,6 +319,7 @@
   background: rgba(0,76,160,0.1);
   font-weight: bold;
 }
+
 /* イベント一覧 */
 .event-list {
   margin-top: 2rem;
@@ -329,6 +346,7 @@
   font-weight: 500;
   color: #333;
 }
+
 .delete-btn {
   background: #ff6b6b;
   color: #fff;
@@ -344,28 +362,3 @@
 .delete-btn:hover {
   background: #e63946;
 }
-.rbc-toolbar button {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.rbc-toolbar button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-.rbc-event {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
-  border: none !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
