@@ -58,6 +58,7 @@ const RegisterPage = () => {
     if (selectedDates.length === 0) return;
 
     const newEvent = {
+      id: Date.now(), // ← 識別用ID
       dates: selectedDates.map((d) => formatDate(d)),
       division,
       startTime: division === "時間指定" ? startTime : null,
@@ -71,6 +72,11 @@ const RegisterPage = () => {
     setDivision("午前");
     setStartTime("09:00");
     setEndTime("10:00");
+  };
+
+  // ✅ イベント削除処理
+  const handleDeleteEvent = (id) => {
+    setEvents(events.filter((ev) => ev.id !== id));
   };
 
   return (
@@ -156,8 +162,8 @@ const RegisterPage = () => {
       {events.length > 0 && (
         <div className="event-list">
           <h3>登録済みイベント</h3>
-          {events.map((ev, idx) => (
-            <div key={idx} className="event-card">
+          {events.map((ev) => (
+            <div key={ev.id} className="event-card">
               <p>
                 📅 {ev.dates.join(" , ")}
                 <br />
@@ -165,6 +171,12 @@ const RegisterPage = () => {
                 {ev.division === "時間指定" &&
                   ` (${ev.startTime} ~ ${ev.endTime})`}
               </p>
+              <button
+                className="delete-btn"
+                onClick={() => handleDeleteEvent(ev.id)}
+              >
+                削除
+              </button>
             </div>
           ))}
         </div>
