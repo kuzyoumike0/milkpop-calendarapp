@@ -164,16 +164,18 @@ const RegisterPage = () => {
               <div className="space-y-4">
                 {multiDates.map((date) => (
                   <div key={date} className="schedule-card flex flex-col gap-2">
-                    <span>{date}</span>
-                    <select
-                      value={dateOptions[date]?.type || "終日"}
-                      onChange={(e) => handleOptionChange(date, "type", e.target.value)}
-                    >
-                      <option value="終日">終日</option>
-                      <option value="午前">午前</option>
-                      <option value="午後">午後</option>
-                      <option value="時間指定">時間指定</option>
-                    </select>
+                    <div className="flex justify-between items-center">
+                      <span>{date}</span>
+                      <select
+                        value={dateOptions[date]?.type || "終日"}
+                        onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                      >
+                        <option value="終日">終日</option>
+                        <option value="午前">午前</option>
+                        <option value="午後">午後</option>
+                        <option value="時間指定">時間指定</option>
+                      </select>
+                    </div>
                     {dateOptions[date]?.type === "時間指定" && (
                       <div className="flex gap-2 items-center">
                         <select
