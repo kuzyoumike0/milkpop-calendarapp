@@ -14,12 +14,12 @@ const RegisterPage = () => {
   const [rangeStart, setRangeStart] = useState(null);
 
   const [title, setTitle] = useState("");
-  const [responses, setResponses] = useState({}); // 日付ごとの回答保存
+  const [responses, setResponses] = useState({});
+  const [shareUrl, setShareUrl] = useState("");
 
-  // ▼ 時刻リスト（1時〜24時）
   const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-  // 日付クリック処理（前のまま）
+  // 日付クリック（省略: 前と同じ）
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
@@ -51,12 +51,9 @@ const RegisterPage = () => {
     }
   };
 
-  // 日付フォーマット
-  const formatDate = (date) => {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  };
+  const formatDate = (date) =>
+    `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-  // 選択肢変更
   const handleResponseChange = (dateStr, field, value) => {
     setResponses((prev) => ({
       ...prev,
@@ -67,11 +64,18 @@ const RegisterPage = () => {
     }));
   };
 
+  // ランダムURL生成
+  const generateShareUrl = () => {
+    const randomId = Math.random().toString(36).substring(2, 10);
+    const url = `${window.location.origin}/share/${randomId}`;
+    setShareUrl(url);
+  };
+
   return (
     <div className="card">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <div className="title-input">
         <label>タイトル：</label>
         <input
@@ -82,7 +86,7 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* モード切替 */}
+      {/* 選択モード */}
       <div className="calendar-mode">
         <label>
           <input
@@ -110,9 +114,9 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダー本体は省略（前のまま） */}
+      {/* ▼ カレンダー本体は省略（既存と同じ） */}
 
-      {/* 選択した日程リスト */}
+      {/* 選択日程表示 */}
       {selectedDates.length > 0 && (
         <div className="selected-dates">
           <h3>選択した日程</h3>
@@ -122,8 +126,6 @@ const RegisterPage = () => {
             return (
               <div key={dateStr} className="date-response">
                 <span>{dateStr}</span>
-
-                {/* メインのプルダウン */}
                 <select
                   value={resp.type || ""}
                   onChange={(e) =>
@@ -136,8 +138,6 @@ const RegisterPage = () => {
                   <option value="夜">夜</option>
                   <option value="時刻指定">時刻指定</option>
                 </select>
-
-                {/* 時刻指定の場合だけ開始・終了プルダウン表示 */}
                 {resp.type === "時刻指定" && (
                   <>
                     <select
@@ -153,7 +153,6 @@ const RegisterPage = () => {
                         </option>
                       ))}
                     </select>
-
                     <select
                       value={resp.end || ""}
                       onChange={(e) =>
@@ -177,6 +176,17 @@ const RegisterPage = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* 共有リンク生成ボタン */}
+      <button onClick={generateShareUrl}>共有リンクを生成</button>
+      {shareUrl && (
+        <div style={{ marginTop: "12px" }}>
+          <strong>共有URL:</strong>{" "}
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
         </div>
       )}
     </div>
