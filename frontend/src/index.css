@@ -219,6 +219,45 @@
   box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 }
 
+/* ===== react-calendar カスタマイズ ===== */
+.react-calendar {
+  width: 100% !important;
+  max-width: 650px;
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  padding: 20px;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+}
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  font-weight: bold;
+  text-align: center;
+  color: #004CA0;
+}
+
+/* 各日付タイル */
+.react-calendar__tile {
+  padding: 10px 6px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.react-calendar__tile:hover {
+  background: #FFDDEE;
+  transform: scale(1.05);
+}
+
+/* 選択された日 */
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 12px;
+}
+
 /* ===== スマホ対応 ===== */
 @media (max-width: 900px) {
   .register-layout {
