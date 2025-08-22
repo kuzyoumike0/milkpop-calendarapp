@@ -36,3 +36,27 @@
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+/* ===== フッター ===== */
+.footer {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  text-align: center;
+  padding: 16px;
+  font-size: 0.9rem;
+  color: #fff;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.4);
+}
+
+/* ===== フッター下の画像 ===== */
+.footer-image {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 10px 0;
+}
+.footer-image img {
+  width: 1040px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.3);
+}
