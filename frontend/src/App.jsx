@@ -1,19 +1,24 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// 各ページコンポーネント
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
-import SharePage from "./components/SharePage";  // 👈 追加
+import SharePage from "./components/SharePage";  // 👈 新規追加
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+
 import "./index.css";
 
 function App() {
   return (
     <Router>
       <div className="app-container">
+        {/* 共通ヘッダー */}
         <Header />
 
+        {/* メインコンテンツ */}
         <main className="main-content">
           <Routes>
             {/* トップページ */}
@@ -30,6 +35,7 @@ function App() {
           </Routes>
         </main>
 
+        {/* 共通フッター */}
         <Footer />
       </div>
     </Router>
