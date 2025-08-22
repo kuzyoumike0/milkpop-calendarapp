@@ -337,3 +337,23 @@
   justify-content: center;
   margin: 20px auto;
 }
+.time-selects {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-selects select {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.time-selects select:hover {
+  border-color: #FDB9C8;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
+}
