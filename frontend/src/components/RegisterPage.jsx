@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "../index.css";
+import { v4 as uuidv4 } from "uuid"; // 👈 ランダムID生成用
 
-// ===== 日付範囲展開ユーティリティ =====
 const getDatesInRange = (start, end) => {
   const dates = [];
   let current = new Date(start);
@@ -14,29 +14,27 @@ const getDatesInRange = (start, end) => {
 };
 
 const RegisterPage = () => {
-  const [mode, setMode] = useState("range"); 
+  const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
-  const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
-  const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
+  const [timeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`));
+  const [endTimeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`).concat("24:00"));
   const [schedules, setSchedules] = useState([]);
-  const [holidays, setHolidays] = useState([]); // 日本の祝日一覧
+  const [holidays, setHolidays] = useState([]);
+  const [shareUrls, setShareUrls] = useState([]); // ✅ 複数の共有リンクを保持
 
   // ===== 日本時間の今日 =====
   const todayJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
   const todayStr = todayJST.toISOString().split("T")[0];
 
-  // ===== 祝日データ取得（GoogleカレンダーAPI） =====
+  // ===== 祝日取得 =====
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        // Google日本の祝日ICSをJSONに変換したAPIを利用（サンプル）
-        const res = await fetch(
-          "https://holidays-jp.github.io/api/v1/date.json"
-        );
+        const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
         const data = await res.json();
-        setHolidays(Object.keys(data)); // 祝日の日付キーだけ保持
+        setHolidays(Object.keys(data));
       } catch (err) {
         console.error("祝日取得失敗:", err);
       }
@@ -44,17 +42,17 @@ const RegisterPage = () => {
     fetchHolidays();
   }, []);
 
-  // ===== 日付クリック処理 =====
+  // ===== 日付クリック =====
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
-    if (multiDates.some(d => d.toDateString() === dateStr)) {
-      setMultiDates(multiDates.filter(d => d.toDateString() !== dateStr));
+    if (multiDates.some((d) => d.toDateString() === dateStr)) {
+      setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
     } else {
       setMultiDates([...multiDates, date]);
     }
   };
 
-  // ===== 選択済みリスト =====
+  // ===== 選択済み日程 =====
   let selectedList = [];
   if (mode === "range" && range[0] && range[1]) {
     selectedList = getDatesInRange(range[0], range[1]);
@@ -85,6 +83,11 @@ const RegisterPage = () => {
       });
       if (!res.ok) throw new Error("保存に失敗しました");
       console.log("保存成功");
+
+      // ✅ 保存成功したら共有リンクを生成
+      const newId = uuidv4();
+      const newUrl = `${window.location.origin}/share/${newId}`;
+      setShareUrls((prev) => [newUrl, ...prev]); // 最新を上に追加
     } catch (err) {
       console.error("保存エラー:", err);
     }
@@ -179,7 +182,9 @@ const RegisterPage = () => {
                     >
                       <option value="">開始時刻</option>
                       {timeOptions.map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
                       ))}
                     </select>
                     <select
@@ -195,7 +200,9 @@ const RegisterPage = () => {
                     >
                       <option value="">終了時刻</option>
                       {endTimeOptions.map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
                       ))}
                     </select>
                   </>
@@ -208,6 +215,22 @@ const RegisterPage = () => {
             <button className="fancy-btn" onClick={saveSchedule}>
               💾 保存する
             </button>
+          )}
+
+          {/* ✅ 共有リンク表示 */}
+          {shareUrls.length > 0 && (
+            <div style={{ marginTop: "20px" }}>
+              <h4>🔗 共有リンク</h4>
+              <ul>
+                {shareUrls.map((url, idx) => (
+                  <li key={idx}>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>
