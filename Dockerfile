@@ -1,33 +1,33 @@
-# ===== Frontend Build =====
+# ===== フロントエンドをビルド =====
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
 
-# 依存関係をインストール
+# 依存関係インストール
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-# ソースコードコピー
+# ソースコードをコピーしてビルド
 COPY frontend/ ./
-
-# フロントエンドをビルド
 RUN npm run build
 
-# ===== Backend =====
+# ===== バックエンド =====
 FROM node:18 AS backend
 WORKDIR /app
 
-# 依存関係をインストール
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install
+# バックエンド依存関係
+COPY backend/package*.json ./
+RUN npm install
 
-# バックエンドソースコードをコピー
-COPY backend/ ./backend/
+# バックエンドソースをコピー
+COPY backend ./backend
 
-# frontend のビルド成果物を backend 配下へコピー
+# フロントのビルド成果物をコピー
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
-# 作業ディレクトリを backend に
 WORKDIR /app/backend
 
-# バックエンド起動コマンド
+# Railway 用ポート設定
+ENV PORT=3000
+EXPOSE 3000
+
 CMD ["node", "index.js"]
