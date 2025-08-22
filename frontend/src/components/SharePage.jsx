@@ -7,8 +7,8 @@ const SharePage = () => {
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [responses, setResponses] = useState({});
-  const [user, setUser] = useState(null);        
-  const [username, setUsername] = useState("");  
+  const [user, setUser] = useState(null);
+  const [username, setUsername] = useState("");
 
   const shareUrl = `${window.location.origin}/share/${id}`;
 
@@ -36,6 +36,7 @@ const SharePage = () => {
         const data = await res.json();
         if (data.ok) {
           setScheduleData(data.data);
+          setResponses(data.data.responses || {}); // サーバーに保存済みの出欠を反映
         }
       } catch (err) {
         console.error("❌ スケジュール取得エラー:", err);
@@ -48,40 +49,31 @@ const SharePage = () => {
 
   // ===== プルダウン変更 =====
   const handleResponseChange = (dateStr, value) => {
-    setResponses({
-      ...responses,
+    setResponses(prev => ({
+      ...prev,
       [dateStr]: value,
-    });
+    }));
   };
 
-  // ===== 保存処理（完全上書き用） =====
+  // ===== 保存処理 =====
   const handleSave = async () => {
-    if (!username) {
+    if (!username.trim()) {
       alert("ユーザー名を入力してください");
       return;
     }
     try {
-      const res = await fetch(`/api/personal`, {
+      const res = await fetch(`/api/share/${id}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          personal_id: null,        // 新規作成
-          share_id: id,             // 今の共有IDに上書き
-          title: scheduleData?.title || "スケジュール",
-          memo: "",
-          dates: scheduleData?.dates || [],
-          options: scheduleData?.options || {},
+          username,
+          responses,
         }),
       });
       const data = await res.json();
       if (data.ok) {
-        alert("保存しました！（共有スケジュールを上書き）");
-        // 最新の共有データを再取得
-        const refetch = await fetch(`/api/schedules/${data.shareId}`);
-        const updated = await refetch.json();
-        if (updated.ok) {
-          setScheduleData(updated.data);
-        }
+        alert("保存しました！");
+        setScheduleData(data.data); // 最新データに即反映
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
@@ -127,30 +119,31 @@ const SharePage = () => {
 
       {/* ユーザー名入力 */}
       {!user && (
-        <div className="username-input">
+        <div className="username-input mt-4">
           <label>
             名前：
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className="ml-2 p-1 border rounded"
             />
           </label>
         </div>
       )}
       {user && (
-        <p>Discordログイン中: <strong>{user.username}</strong></p>
+        <p className="mt-2">Discordログイン中: <strong>{user.username}</strong></p>
       )}
 
       {/* 保存ボタン */}
       {scheduleData && scheduleData.dates?.length > 0 && (
-        <button className="fancy-btn" onClick={handleSave}>
-          保存（共有スケジュールを上書き）
+        <button className="fancy-btn mt-4" onClick={handleSave}>
+          保存
         </button>
       )}
 
       {/* 下部に共有リンク */}
-      <div className="share-link-section">
+      <div className="share-link-section mt-6">
         <h3>このページの共有リンク</h3>
         <p className="share-link">
           <a href={shareUrl} target="_blank" rel="noopener noreferrer">
