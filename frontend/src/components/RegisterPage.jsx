@@ -1,7 +1,7 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import "react-big-calendar/lib/css/react-big-calendar.css"; 
 import "../index.css";
 
 const RegisterPage = () => {
