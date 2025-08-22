@@ -250,9 +250,22 @@
   transform: scale(1.05);
 }
 
-/* 選択された日 → 丸いバッジ風 */
+/* ====== 選択された日を丸いバッジに ====== */
+/* 単日選択 */
 .react-calendar__tile--active,
 .selected-date {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  transform: scale(1.1);
+}
+
+/* 複数日選択（複数モードや範囲モードでも全部丸バッジ化） */
+.react-calendar__tile--range,
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd {
   background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
   color: white !important;
   font-weight: bold;
