@@ -186,3 +186,37 @@
 .rbc-time-view {
   border: none;
 }
+
+/* ==== RegisterPage 専用 ==== */
+.page-title {
+  font-size: 1.8rem;
+  color: #004CA0;
+  margin-bottom: 0.5rem;
+  font-family: 'Noto Serif JP', serif;
+}
+
+.page-subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1rem auto 2rem;
+}
+
+.calendar-mock {
+  width: 80%;              /* ← 幅を少し小さめ */
+  max-width: 750px;
+  height: 400px;
+  background: #fdfdfd;
+  border: 2px dashed #ccc;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 1.2rem;
+}
