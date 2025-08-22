@@ -1,25 +1,39 @@
+-- ===== Users（Discordユーザー情報） =====
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  discord_id VARCHAR(50) UNIQUE NOT NULL,
+  username VARCHAR(100) NOT NULL,
+  avatar VARCHAR(255),
+  email VARCHAR(150),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===== 個人日程（ユーザーごとの予定） =====
 CREATE TABLE IF NOT EXISTS personal_schedules (
   id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
   memo TEXT,
-  date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  is_all_day BOOLEAN DEFAULT true,
+  time_range VARCHAR(50), -- "昼" "夜" "終日" "カスタム"
+  start_time TIME,        -- カスタム開始時刻
+  end_time TIME,          -- カスタム終了時刻
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===== 共有リンク（ユーザーが発行する公開用リンク） =====
+CREATE TABLE IF NOT EXISTS personal_schedule_links (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  uuid VARCHAR(100) UNIQUE NOT NULL,  -- ランダム識別子
+  title VARCHAR(255),                 -- 共有リンクのタイトル
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS schedules (
-  id SERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  linkid TEXT NOT NULL,
-  date DATE NOT NULL,
-  timeslot TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS responses (
-  id SERIAL PRIMARY KEY,
-  linkid TEXT NOT NULL,
-  username TEXT NOT NULL,
-  answers JSONB NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- インデックスを追加して検索を高速化
+CREATE INDEX IF NOT EXISTS idx_personal_schedules_user_id ON personal_schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_schedule_links_uuid ON personal_schedule_links(uuid);
