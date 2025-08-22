@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS personal_schedule_links (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS schedule_votes (
+  id SERIAL PRIMARY KEY,
+  schedule_id INTEGER NOT NULL REFERENCES personal_schedules(id) ON DELETE CASCADE,
+  voter_name VARCHAR(100) NOT NULL,   -- 投票者の名前（Discordログインしなくても入力できる想定）
+  status VARCHAR(10) NOT NULL CHECK (status IN ('参加', '不参加')),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 同じ voter_name が同じ schedule_id に二重投票しないよう制約
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vote_unique ON schedule_votes(schedule_id, voter_name);
+
+
 -- インデックスを追加して検索を高速化
 CREATE INDEX IF NOT EXISTS idx_personal_schedules_user_id ON personal_schedules(user_id);
 CREATE INDEX IF NOT EXISTS idx_schedule_links_uuid ON personal_schedule_links(uuid);
