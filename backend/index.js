@@ -3,13 +3,23 @@ const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
+const fetch = require("node-fetch"); // OAuth用
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// ===== CSP ヘッダー設定 =====
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+  );
+  next();
+});
+
 let schedulesDB = {};
-let sessions = {}; // 簡易セッション
+let sessions = {}; // 簡易セッション（本番はDB推奨）
 
 // ===== Discord OAuth2 =====
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -74,7 +84,7 @@ app.get("/api/me/:sessionId", (req, res) => {
 // ===== スケジュールAPI =====
 app.post("/api/schedules", (req, res) => {
   const id = uuidv4();
-  schedulesDB[id] = req.body; // 修正済み
+  schedulesDB[id] = req.body; // 登録内容を保存
   res.json({ ok: true, id });
 });
 
@@ -91,5 +101,6 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
+// ===== サーバー起動 =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
