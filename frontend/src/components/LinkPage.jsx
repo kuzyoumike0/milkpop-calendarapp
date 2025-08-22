@@ -1,227 +1,71 @@
 // frontend/src/components/LinkPage.jsx
 import React, { useState } from "react";
-import {
-  Calendar,
-  dateFnsLocalizer,
-} from "react-big-calendar";
-import format from "date-fns/format";
-import parse from "date-fns/parse";
-import startOfWeek from "date-fns/startOfWeek";
-import getDay from "date-fns/getDay";
-import ja from "date-fns/locale/ja";
-
-import "react-big-calendar/lib/css/react-big-calendar.css";
-
-const locales = { ja };
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
-  getDay,
-  locales,
-});
+import { Link, useNavigate } from "react-router-dom";
 
 const LinkPage = () => {
-  const [title, setTitle] = useState("");
-  const [selectedEvents, setSelectedEvents] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+  const [inputUrl, setInputUrl] = useState("");
+  const navigate = useNavigate();
 
-  // カレンダー上で範囲選択
-  const handleSelectSlot = ({ start, end }) => {
-    setSelectedEvents((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        start,
-        end,
-        option: "終日", // デフォルト
-        startTime: null,
-        endTime: null,
-      },
-    ]);
-  };
-
-  // 時間帯変更
-  const handleOptionChange = (id, value) => {
-    setSelectedEvents((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, option: value, startTime: null, endTime: null } : e
-      )
-    );
-  };
-
-  // 時刻指定変更
-  const handleTimeChange = (id, field, value) => {
-    setSelectedEvents((prev) =>
-      prev.map((e) => {
-        if (e.id === id) {
-          let updated = { ...e, [field]: value };
-          // 終了時刻が開始より前ならリセット
-          if (
-            updated.startTime &&
-            updated.endTime &&
-            Number(updated.startTime) >= Number(updated.endTime)
-          ) {
-            updated.endTime = null;
-          }
-          return updated;
-        }
-        return e;
-      })
-    );
-  };
-
-  // 登録処理（ダミーで共有リンクを作る）
-  const handleSubmit = () => {
-    if (!title || selectedEvents.length === 0) {
-      alert("タイトルと日程を入力してください");
+  const handleGo = () => {
+    if (!inputUrl.trim()) {
+      alert("共有リンクを入力してください");
       return;
     }
-    const url = `${window.location.origin}/share/${Date.now()}`;
-    setShareUrl(url);
+
+    try {
+      // URLから shareId を抽出
+      const urlObj = new URL(inputUrl);
+      const parts = urlObj.pathname.split("/");
+      const shareId = parts[parts.length - 1];
+      if (!shareId) {
+        alert("リンクが正しくありません");
+        return;
+      }
+      navigate(`/share/${shareId}`);
+    } catch (err) {
+      alert("有効なURLを入力してください");
+    }
   };
 
-  // 時刻プルダウン
-  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
-
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      {/* バナー */}
-      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold rounded-2xl shadow-md flex justify-between items-center">
-        <span>MilkPOP Calendar</span>
+    <div className="min-h-screen bg-black text-white font-sans">
+      {/* ===== バナー ===== */}
+      <header className="bg-[#004CA0] text-white py-4 shadow-md flex justify-between items-center px-6">
+        <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
         <nav className="space-x-4">
-          <a href="/" className="hover:underline">トップ</a>
-          <a href="/personal" className="hover:underline">個人スケジュール</a>
+          <Link
+            to="/register"
+            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
+          >
+            日程登録ページ
+          </Link>
+          <Link
+            to="/personal"
+            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
+          >
+            個人スケジュール
+          </Link>
         </nav>
       </header>
 
-      <h1 className="text-3xl font-bold my-8 text-center text-[#FDB9C8]">日程登録</h1>
+      {/* ===== 本体 ===== */}
+      <main className="max-w-2xl mx-auto p-6 text-center">
+        <h2 className="text-xl font-bold mb-6 text-[#FDB9C8]">共有リンクからアクセス</h2>
 
-      {/* タイトル入力 */}
-      <div className="max-w-xl mx-auto mb-8">
-        <label className="block text-lg mb-2">タイトル</label>
         <input
           type="text"
-          className="w-full p-3 rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-[#FDB9C8]"
-          placeholder="例：打ち合わせ"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={inputUrl}
+          onChange={(e) => setInputUrl(e.target.value)}
+          placeholder="共有リンクを入力してください"
+          className="w-full p-3 rounded-lg text-black mb-4"
         />
-      </div>
-
-      {/* カレンダー */}
-      <div className="max-w-5xl mx-auto bg-white text-black rounded-2xl shadow-lg p-4 mb-10">
-        <Calendar
-          localizer={localizer}
-          selectable
-          onSelectSlot={handleSelectSlot}
-          events={selectedEvents}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: 500 }}
-          views={["month", "week", "day"]}
-          popup
-        />
-      </div>
-
-      {/* 選択した日程 */}
-      <div className="max-w-3xl mx-auto space-y-6">
-        {selectedEvents.map((event) => (
-          <div
-            key={event.id}
-            className="p-5 bg-[#004CA0] rounded-2xl shadow-lg"
-          >
-            <p className="text-lg font-semibold text-[#FDB9C8]">
-              {format(event.start, "yyyy/MM/dd HH:mm", { locale: ja })} -{" "}
-              {format(event.end, "yyyy/MM/dd HH:mm", { locale: ja })}
-            </p>
-
-            {/* 時間帯プルダウン */}
-            <div className="mt-3">
-              <label className="mr-2">時間帯：</label>
-              <select
-                value={event.option}
-                onChange={(e) => handleOptionChange(event.id, e.target.value)}
-                className="p-2 rounded text-black"
-              >
-                <option value="終日">終日</option>
-                <option value="昼">昼</option>
-                <option value="夜">夜</option>
-                <option value="時刻指定">時刻指定</option>
-              </select>
-            </div>
-
-            {/* 時刻指定の場合 */}
-            {event.option === "時刻指定" && (
-              <div className="flex gap-6 mt-3">
-                <div>
-                  <label>開始</label>
-                  <select
-                    value={event.startTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(event.id, "startTime", e.target.value)
-                    }
-                    className="ml-2 p-1 text-black rounded"
-                  >
-                    <option value="">--</option>
-                    {hours.map((h) => (
-                      <option key={h} value={h}>
-                        {h}時
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label>終了</label>
-                  <select
-                    value={event.endTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(event.id, "endTime", e.target.value)
-                    }
-                    className="ml-2 p-1 text-black rounded"
-                  >
-                    <option value="">--</option>
-                    {hours.map((h) => (
-                      <option
-                        key={h}
-                        value={h}
-                        disabled={
-                          event.startTime && Number(h) <= Number(event.startTime)
-                        }
-                      >
-                        {h}時
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* 登録ボタン */}
-      <div className="text-center mt-10">
         <button
-          onClick={handleSubmit}
-          className="bg-[#FDB9C8] text-[#004CA0] px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:opacity-80 transition"
+          onClick={handleGo}
+          className="px-6 py-3 rounded-xl bg-[#FDB9C8] text-black font-bold shadow-lg hover:opacity-80"
         >
-          登録して共有リンク発行
+          開く
         </button>
-      </div>
-
-      {/* 共有リンク表示 */}
-      {shareUrl && (
-        <div className="text-center mt-8">
-          <p className="mb-3">✅ 共有リンクが発行されました：</p>
-          <a
-            href={shareUrl}
-            className="text-[#FDB9C8] underline break-all text-lg"
-          >
-            {shareUrl}
-          </a>
-        </div>
-      )}
+      </main>
     </div>
   );
 };
