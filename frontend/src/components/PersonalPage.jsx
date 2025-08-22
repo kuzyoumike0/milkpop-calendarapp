@@ -30,6 +30,15 @@ const PersonalPage = () => {
 
   // ===== 保存処理 =====
   const handleSave = async () => {
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return;
+    }
+    if (selectedDates.length === 0) {
+      alert("日程を1つ以上選択してください");
+      return;
+    }
+
     try {
       const res = await fetch("/api/personal", {
         method: "POST",
@@ -124,20 +133,25 @@ const PersonalPage = () => {
         selectRange={mode === "range"}
         onChange={handleDateChange}
         tileClassName={tileClassName}  // ✅ 祝日対応
+        locale="ja-JP"
+        calendarType="gregory"
+        activeStartDate={new Date()}  // ✅ 今日を基準に表示
       />
 
       {/* ===== 選択済み日付リスト ===== */}
       <div className="mt-4">
         <h3 className="font-bold">選択した日程</h3>
         <ul className="list-disc list-inside">
-          {selectedDates.map((d, i) => (
-            <li key={i}>{d.toLocaleDateString()}</li>
-          ))}
+          {selectedDates.map((d, i) => {
+            const holiday = hd.isHoliday(d);
+            const holidayName = holiday ? `（${holiday[0].name}）` : "";
+            return <li key={i}>{d.toLocaleDateString()} {holidayName}</li>;
+          })}
         </ul>
       </div>
 
       {/* ===== 時間指定 ===== */}
-      <div className="mt-4">
+      <div className="mt-4 space-x-4">
         <label>
           <input
             type="radio"
