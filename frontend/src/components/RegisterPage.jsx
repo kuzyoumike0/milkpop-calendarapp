@@ -4,10 +4,10 @@ import "../index.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("range"); // range | multi
+  const [mode, setMode] = useState("range"); // 範囲選択 or 複数選択
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
-  const [timeType, setTimeType] = useState("終日");
+  const [timeType, setTimeType] = useState("終日"); // 終日/午前/午後/時間指定
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
   const [shareUrl, setShareUrl] = useState(null);
@@ -131,19 +131,41 @@ const RegisterPage = () => {
         {/* 左側：カレンダー */}
         <div className="calendar-section custom-calendar">
           <div className="calendar-header">
-            <button onClick={() => setCurrentMonth(
-              new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-            )}>‹</button>
+            <button
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(
+                    currentMonth.getFullYear(),
+                    currentMonth.getMonth() - 1,
+                    1
+                  )
+                )
+              }
+            >
+              ‹
+            </button>
             <h3>
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </h3>
-            <button onClick={() => setCurrentMonth(
-              new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-            )}>›</button>
+            <button
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(
+                    currentMonth.getFullYear(),
+                    currentMonth.getMonth() + 1,
+                    1
+                  )
+                )
+              }
+            >
+              ›
+            </button>
           </div>
           <div className="calendar-grid">
-            {["日","月","火","水","木","金","土"].map((w)=>(
-              <div key={w} className="weekday">{w}</div>
+            {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
+              <div key={w} className="weekday">
+                {w}
+              </div>
             ))}
             {days.map((d, i) => {
               if (!d) return <div key={i} />;
@@ -175,57 +197,57 @@ const RegisterPage = () => {
             className="title-input"
           />
 
-          {/* モード選択 */}
-          <div className="radio-group horizontal">
-            <label className={`radio-label ${mode === "range" ? "radio-active" : ""}`}>
-              <input
-                type="radio"
-                value="range"
-                checked={mode === "range"}
-                onChange={(e) => setMode(e.target.value)}
-              />
-              範囲選択
-            </label>
-            <label className={`radio-label ${mode === "multi" ? "radio-active" : ""}`}>
-              <input
-                type="radio"
-                value="multi"
-                checked={mode === "multi"}
-                onChange={(e) => setMode(e.target.value)}
-              />
-              複数選択
-            </label>
+          {/* モード選択をプルダウン化 */}
+          <div style={{ marginTop: "16px" }}>
+            <label>日程選択モード：</label>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              className="vote-select"
+            >
+              <option value="range">範囲選択</option>
+              <option value="multi">複数選択</option>
+            </select>
           </div>
 
-          {/* 時間帯 */}
-          <div className="radio-group horizontal" style={{ marginTop: "16px" }}>
-            {["終日", "午前", "午後", "時間指定"].map((t) => (
-              <label
-                key={t}
-                className={`radio-label ${timeType === t ? "radio-active" : ""}`}
-              >
-                <input
-                  type="radio"
-                  value={t}
-                  checked={timeType === t}
-                  onChange={(e) => setTimeType(e.target.value)}
-                />
-                {t}
-              </label>
-            ))}
+          {/* 時間帯をプルダウン化 */}
+          <div style={{ marginTop: "16px" }}>
+            <label>時間帯：</label>
+            <select
+              value={timeType}
+              onChange={(e) => setTimeType(e.target.value)}
+              className="vote-select"
+            >
+              <option value="終日">終日</option>
+              <option value="午前">午前</option>
+              <option value="午後">午後</option>
+              <option value="時間指定">時間指定</option>
+            </select>
           </div>
 
           {timeType === "時間指定" && (
             <div className="time-select" style={{ marginTop: "10px" }}>
-              <select value={startTime} onChange={(e)=>setStartTime(e.target.value)}>
+              <select
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="vote-select"
+              >
                 {Array.from({ length: 24 }, (_, i) => `${i}:00`).map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
               <span>〜</span>
-              <select value={endTime} onChange={(e)=>setEndTime(e.target.value)}>
+              <select
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="vote-select"
+              >
                 {Array.from({ length: 24 }, (_, i) => `${i}:00`).map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
             </div>
@@ -261,7 +283,7 @@ const RegisterPage = () => {
           {/* 保存 */}
           <div style={{ textAlign: "center", marginTop: "20px" }}>
             <button onClick={handleSave} className="submit-btn">
-              保存 & 共有リンク発行
+              共有リンク発行
             </button>
           </div>
 
