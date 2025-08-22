@@ -4,6 +4,7 @@ import Calendar from "react-calendar";
 import "../index.css";
 import SelectMode from "./SelectMode";
 
+
 const RegisterPage = () => {
   const [mode, setMode] = useState("range"); // "range" | "multi"
   const [selectedDates, setSelectedDates] = useState([]);
