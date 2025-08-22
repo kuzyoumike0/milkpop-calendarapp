@@ -176,3 +176,73 @@ h1, h2, .page-title, .welcome-text {
     flex: 0 0 100%;
   }
 }
+/* フォント */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Poppins:wght@400;600&display=swap');
+.font-poppins {
+  font-family: 'Poppins','Noto Sans JP', sans-serif;
+}
+
+/* カレンダー */
+.custom-calendar {
+  border: none !important;
+  width: 100% !important;
+  font-family: 'Poppins','Noto Sans JP', sans-serif;
+}
+.react-calendar__tile {
+  padding: 12px;
+  border-radius: 10px;
+}
+.react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+}
+.today-highlight {
+  background: #004CA0 !important;
+  color: white !important;
+}
+
+/* ラジオボタン */
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 2px solid #FDB9C8;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.radio-label input {
+  display: none;
+}
+.radio-label:hover {
+  background: #FDB9C8;
+  color: black;
+}
+.radio-active {
+  background: #FDB9C8;
+  color: black;
+  font-weight: bold;
+}
+
+/* プルダウン */
+.vote-select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* 保存ボタン */
+.submit-btn {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+.submit-btn:hover {
+  transform: scale(1.05);
+}
+
