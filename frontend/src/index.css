@@ -1,225 +1,210 @@
-/* ===== ベーススタイル ===== */
-body {
-  margin: 0;
-  font-family: 'Noto Sans JP', sans-serif;
-  background: #000; /* 高級感のある黒背景 */
-  color: #fff;
-}
+// frontend/src/components/RegisterPage.jsx
+import React, { useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "moment/locale/ja";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import Holidays from "date-holidays";
 
-/* ===== バナー（ヘッダー） ===== */
-.banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
-  color: #fff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
-}
+moment.locale("ja");
+const localizer = momentLocalizer(moment);
+const hd = new Holidays("JP");
 
-.banner h1 {
-  font-size: 1.8rem;
-  margin: 0;
-}
+const RegisterPage = () => {
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [rangeStart, setRangeStart] = useState(null);
+  const [selectionMode, setSelectionMode] = useState("multi"); // "multi" or "range"
+  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分・時間
 
-.banner nav a {
-  margin-left: 1.5rem;
-  text-decoration: none;
-  font-size: 1rem;
-  color: #fff;
-  transition: 0.3s;
-}
+  // 日付クリック処理
+  const handleDayClick = (date) => {
+    const day = moment(date).startOf("day").toDate();
 
-.banner nav a:hover {
-  color: #FDB9C8;
-}
+    if (selectionMode === "multi") {
+      if (selectedDates.some((d) => moment(d).isSame(day, "day"))) {
+        setSelectedDates(selectedDates.filter((d) => !moment(d).isSame(day, "day")));
+      } else {
+        setSelectedDates([...selectedDates, day]);
+      }
+    }
 
-/* ===== フッター ===== */
-.footer {
-  background: #111;
-  text-align: center;
-  padding: 1rem;
-  color: #aaa;
-  font-size: 0.9rem;
-  border-top: 1px solid #222;
-}
+    if (selectionMode === "range") {
+      if (!rangeStart) {
+        // 開始クリック
+        setRangeStart(day);
+        setSelectedDates([day]); // 開始日は強調表示
+      } else {
+        // 終了クリック
+        let start = moment(rangeStart);
+        let end = moment(day);
+        if (end.isBefore(start)) {
+          [start, end] = [end, start]; // 逆順なら入れ替え
+        }
+        const days = [];
+        const current = start.clone();
+        while (current.isSameOrBefore(end, "day")) {
+          days.push(current.toDate());
+          current.add(1, "day");
+        }
+        setSelectedDates(days);
+        setRangeStart(null);
+      }
+    }
+  };
 
-/* ===== トップページ ===== */
-.top-page {
-  text-align: center;
-  padding: 4rem 1rem;
-  background: linear-gradient(135deg, rgba(253,185,200,0.15), rgba(0,76,160,0.15));
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+  // 区分変更
+  const handleOptionChange = (date, field, value) => {
+    setDateOptions((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        [field]: value,
+      },
+    }));
+  };
 
-.logo-wrapper {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border-radius: 2rem;
-  padding: 1rem 2rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
-}
+  // 祝日スタイル
+  const dayPropGetter = (date) => {
+    const holiday = hd.isHoliday(date);
+    const isSelected = selectedDates.some((d) => moment(d).isSame(date, "day"));
+    let className = "";
+    let style = {};
 
-.logo-image {
-  width: 1040px;
-  height: auto;
-}
+    if (holiday) {
+      className = "holiday";
+      style = { background: "rgba(253,185,200,0.2)", color: "red" };
+    }
+    if (isSelected) {
+      className += " selected-day";
+    }
+    return { className, style };
+  };
 
-.welcome-text {
-  font-size: 1.5rem;
-  color: #FDB9C8;
-  margin-top: 1rem;
-}
+  const handleSubmit = () => {
+    alert(
+      JSON.stringify(
+        {
+          title,
+          dates: selectedDates,
+          options: dateOptions,
+        },
+        null,
+        2
+      )
+    );
+  };
 
-/* ===== ページ共通カード ===== */
-.page-card {
-  background: rgba(255,255,255,0.05);
-  border-radius: 1rem;
-  padding: 2rem;
-  margin: 2rem auto;
-  max-width: 900px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  backdrop-filter: blur(8px);
-}
+  return (
+    <div className="page-card">
+      <h2>日程登録ページ</h2>
 
-/* ===== カレンダースタイル ===== */
-.rbc-calendar {
-  background: rgba(255,255,255,0.05);
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.5);
-}
+      <div className="form-group">
+        <label>タイトル</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="イベントタイトルを入力"
+        />
+      </div>
 
-/* 通常日付セル */
-.rbc-day-bg {
-  transition: background 0.2s;
-}
+      {/* モード切替 */}
+      <div className="form-group">
+        <label>選択モード</label>
+        <label>
+          <input
+            type="radio"
+            value="multi"
+            checked={selectionMode === "multi"}
+            onChange={() => {
+              setSelectionMode("multi");
+              setSelectedDates([]);
+              setRangeStart(null);
+            }}
+          />
+          複数選択
+        </label>
+        <label style={{ marginLeft: "1rem" }}>
+          <input
+            type="radio"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => {
+              setSelectionMode("range");
+              setSelectedDates([]);
+              setRangeStart(null);
+            }}
+          />
+          範囲選択
+        </label>
+      </div>
 
-.rbc-day-bg:hover {
-  background: rgba(253,185,200,0.1);
-}
+      {/* カレンダー */}
+      <Calendar
+        localizer={localizer}
+        views={["month"]}
+        selectable
+        style={{ height: 500 }}
+        dayPropGetter={dayPropGetter}
+        onSelectSlot={({ start }) => handleDayClick(start)}
+      />
 
-/* 祝日強調 */
-.holiday {
-  color: red !important;
-  font-weight: bold;
-  background: rgba(253,185,200,0.2) !important;
-  position: relative;
-}
+      {/* 選択日リスト */}
+      <div className="form-group">
+        <h3>選択された日程</h3>
+        {selectedDates.length === 0 && <p>日程が選択されていません</p>}
+        {selectedDates.map((date, idx) => {
+          const key = moment(date).format("YYYY-MM-DD");
+          const option = dateOptions[key] || { type: "終日", start: "", end: "" };
 
-/* 祝日名表示 */
-.holiday::after {
-  content: attr(data-holiday);
-  display: block;
-  font-size: 0.75rem;
-  color: red;
-  margin-top: 2px;
-}
+          return (
+            <div key={idx} style={{ marginBottom: "0.5rem" }}>
+              <strong>{moment(date).format("YYYY年MM月DD日")}</strong>{" "}
+              <select
+                value={option.type}
+                onChange={(e) => handleOptionChange(key, "type", e.target.value)}
+              >
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                <option value="時間指定">時間指定</option>
+              </select>
+              {option.type === "時間指定" && (
+                <>
+                  <select
+                    value={option.start}
+                    onChange={(e) => handleOptionChange(key, "start", e.target.value)}
+                  >
+                    <option value="">開始時刻</option>
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}時
+                      </option>
+                    ))}
+                  </select>
+                  <span> ~ </span>
+                  <select
+                    value={option.end}
+                    onChange={(e) => handleOptionChange(key, "end", e.target.value)}
+                  >
+                    <option value="">終了時刻</option>
+                    {Array.from({ length: 24 }).map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}時
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-/* 選択済み日付セル */
-.selected-day {
-  background: rgba(0,76,160,0.4) !important;
-  border: 2px solid #FDB9C8 !important;
-  color: #fff !important;
-  font-weight: bold;
-  cursor: pointer;
-}
+      <button onClick={handleSubmit}>登録</button>
+    </div>
+  );
+};
 
-/* イベント表示 */
-.rbc-event {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
-  border: none;
-  border-radius: 6px;
-  padding: 2px 4px;
-  font-size: 0.8rem;
-  color: #fff;
-}
-
-/* ツールバー */
-.rbc-toolbar button {
-  background: rgba(0,0,0,0.6);
-  border: 1px solid #004CA0;
-  border-radius: 6px;
-  color: #fff;
-  margin: 0 2px;
-  padding: 0.4rem 0.6rem;
-  transition: 0.2s;
-}
-
-.rbc-toolbar button:hover {
-  background: #004CA0;
-  color: #fff;
-}
-
-.rbc-toolbar-label {
-  font-weight: bold;
-  color: #FDB9C8;
-}
-
-/* ===== 入力フォーム ===== */
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: #FDB9C8;
-}
-
-input[type="text"],
-textarea,
-select {
-  width: auto;
-  min-width: 120px;
-  padding: 0.6rem;
-  border: 1px solid #444;
-  border-radius: 8px;
-  background: #fff;   /* 白背景 */
-  color: #000;        /* 黒文字 */
-  font-size: 1rem;
-}
-
-input[type="text"]:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: #FDB9C8;
-  background: #fdfdfd;  /* フォーカス時も白系 */
-  color: #000;          /* 黒文字維持 */
-}
-
-/* ===== ボタン ===== */
-button {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-/* ===== リンク ===== */
-a {
-  color: #FDB9C8;
-  transition: 0.3s;
-}
-
-a:hover {
-  color: #fff;
-  text-decoration: underline;
-}
+export default RegisterPage;
