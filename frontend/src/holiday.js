@@ -1,34 +1,35 @@
-// ===== 日本の祝日一覧（必要に応じて追加可能） =====
-// 固定祝日 + 動的に変わるものもあるが、まずは固定分を記述
-// フォーマットは "YYYY-MM-DD"
-const holidays = [
-  "2025-01-01", // 元日
-  "2025-01-13", // 成人の日
-  "2025-02-11", // 建国記念の日
-  "2025-02-23", // 天皇誕生日
-  "2025-03-20", // 春分の日（年によって変動）
-  "2025-04-29", // 昭和の日
-  "2025-05-03", // 憲法記念日
-  "2025-05-04", // みどりの日
-  "2025-05-05", // こどもの日
-  "2025-07-21", // 海の日
-  "2025-08-11", // 山の日
-  "2025-09-15", // 敬老の日
-  "2025-09-23", // 秋分の日（年によって変動）
-  "2025-10-13", // 体育の日
-  "2025-11-03", // 文化の日
-  "2025-11-23", // 勤労感謝の日
-];
+// holidays-jp APIを使って日本の祝日を取得する
+// 参考: https://holidays-jp.github.io/
 
-// ===== 今日の判定（日本時間） =====
+let holidayCache = null;
+
+// 祝日一覧を取得（キャッシュ付き）
+export const fetchHolidays = async () => {
+  if (holidayCache) return holidayCache;
+
+  try {
+    const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+    if (!res.ok) throw new Error("Failed to fetch holidays");
+    const data = await res.json();
+    // data は { "2025-01-01": "元日", ... } の形式
+    holidayCache = Object.keys(data);
+    return holidayCache;
+  } catch (err) {
+    console.error("祝日の取得に失敗しました:", err);
+    return [];
+  }
+};
+
+// 今日（日本時間）のISO日付を取得
 export const getTodayIso = () => {
   const now = new Date();
   const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
   return jst.toISOString().split("T")[0];
 };
 
-// ===== 祝日判定 =====
-export const isHoliday = (date) => {
+// 指定日が祝日か判定
+export const isHoliday = async (date) => {
+  const holidays = await fetchHolidays();
   const iso = date.toISOString().split("T")[0];
   return holidays.includes(iso);
 };
