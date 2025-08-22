@@ -13,7 +13,7 @@ body {
 }
 
 /* ===== 見出し ===== */
-h1, h2, .page-title {
+h1, h2 {
   font-family: 'Reggae One','Kaisei Decol','Zen Maru Gothic',cursive,sans-serif;
   font-weight: bold;
   color: #ff5fa2;
@@ -51,139 +51,39 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
-/* ===== レイアウト（左7割カレンダー + 右3割リスト） ===== */
-.register-layout {
+/* ===== ラジオボタン（範囲 / 複数） ===== */
+.radio-group {
   display: flex;
-  gap: 24px;
-  width: 100%;
-  margin: 40px auto;
-  padding: 0 20px;
-  align-items: flex-start;
+  gap: 20px;
+  margin-top: 8px;
 }
-.calendar-section {
-  flex: 0 0 70%;
-  max-width: 70%;
-  background: #fff;
-  padding: 20px;
-  border-radius: 24px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  border: 3px solid #FDB9C8;
-}
-.schedule-section {
-  flex: 0 0 30%;
-  max-width: 30%;
-  background: #fff;
-  padding: 20px;
-  border-radius: 24px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  min-width: 300px;
-}
-
-/* ===== react-calendar カスタム ===== */
-.react-calendar {
-  width: 100%;
-  background: white;
-  border: none;
-  border-radius: 24px;
-  padding: 20px;
-  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-.react-calendar__navigation {
+.radio-label {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.react-calendar__navigation button {
-  background: #FDB9C8;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-weight: bold;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 2px solid #FDB9C8;
+  border-radius: 9999px;
   cursor: pointer;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
   transition: all 0.2s;
 }
-.react-calendar__navigation button:hover {
-  background: #004CA0;
-  color: white;
-  transform: scale(1.1);
+.radio-label input {
+  accent-color: #FDB9C8;
+  width: 16px;
+  height: 16px;
 }
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
-  color: #004CA0;
-  padding-bottom: 6px;
+.radio-label:hover {
+  background: #FDB9C8;
+  color: black;
 }
-.react-calendar__month-view__weekdays__weekday {
-  padding: 4px;
-}
-
-/* 曜日別カラーリング */
-.react-calendar__month-view__weekdays__weekday abbr[title="日曜日"] {
-  color: red;
-}
-.react-calendar__month-view__weekdays__weekday abbr[title="土曜日"] {
-  color: #004CA0;
-}
-
-/* 日付タイル */
-.react-calendar__tile {
-  padding: 14px 0;
-  border-radius: 14px;
-  text-align: center;
-  transition: all 0.25s;
-  font-weight: 500;
-  background: #fafafa;
-}
-.react-calendar__tile:enabled:hover {
-  background: #ffe4ec;
-  transform: scale(1.1);
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-/* 今日 */
-.react-calendar__tile--now,
-.react-calendar__tile--today {
-  background: linear-gradient(135deg, #004CA0, #3f87ff) !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 14px;
-  box-shadow: 0 0 12px rgba(0,0,0,0.3);
-  position: relative;
-}
-.react-calendar__tile--now::after {
-  content: "★";
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  font-size: 0.8rem;
-  color: #FDB9C8;
-}
-
-/* 選択日 */
-.react-calendar__tile--active {
-  background: linear-gradient(90deg, #FDB9C8, #ff85b3) !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-}
-
-/* 祝日 */
-.react-calendar__tile.holiday {
-  color: red !important;
+.radio-active {
+  background: #FDB9C8;
+  color: black;
   font-weight: bold;
 }
 
-/* ===== スマホ対応 ===== */
-@media (max-width: 900px) {
-  .register-layout { flex-direction: column; }
-  .calendar-section, .schedule-section { max-width: 100%; flex: 0 0 100%; }
-}
-
-/* ===== 自作カレンダー ===== */
+/* ===== カレンダー ===== */
 .custom-calendar {
   width: 100%;
   background: #fff;
@@ -193,8 +93,8 @@ header .nav a:hover {
   border: 3px solid #FDB9C8;
   display: flex;
   flex-direction: column;
+  margin-top: 20px;
 }
-
 .calendar-header {
   display: flex;
   justify-content: space-between;
@@ -214,27 +114,23 @@ header .nav a:hover {
   padding: 6px 14px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s;
 }
 .calendar-header button:hover {
   background: #004CA0;
   color: #fff;
   transform: scale(1.05);
 }
-
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
 }
-
 .weekday {
   text-align: center;
   font-weight: bold;
   color: #004CA0;
   padding: 6px 0;
 }
-
 .day {
   text-align: center;
   padding: 14px 0;
@@ -242,8 +138,7 @@ header .nav a:hover {
   cursor: pointer;
   transition: all 0.2s;
   background: #fafafa;
-  border: 1px solid transparent;
-  font-weight: 500;
+  font-size: 1rem;
 }
 .day:hover {
   background: #ffe4ec;
@@ -252,9 +147,11 @@ header .nav a:hover {
 }
 .day.today {
   background: #004CA0;
-  color: #fff;
+  color: #fff !important;
   font-weight: bold;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  font-size: 1.1rem;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
 }
 .day.selected {
   background: linear-gradient(90deg, #FDB9C8, #ff85b3);
@@ -268,6 +165,7 @@ header .nav a:hover {
 .day.saturday {
   color: #004CA0;
 }
+
 /* ===== 選択日カード ===== */
 .schedule-card {
   background: #fff5f8;
@@ -291,4 +189,21 @@ header .nav a:hover {
   color: #004CA0;
 }
 
-
+/* ===== レイアウト ===== */
+.register-layout {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  margin: 40px auto;
+  padding: 0 20px;
+  align-items: flex-start;
+}
+.calendar-section {
+  flex: 0 0 70%;
+  max-width: 70%;
+}
+.schedule-section {
+  flex: 0 0 30%;
+  max-width: 30%;
+  min-width: 300px;
+}
