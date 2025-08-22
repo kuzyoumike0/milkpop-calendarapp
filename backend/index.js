@@ -3,13 +3,12 @@ const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
-const fetch = require("node-fetch"); // OAuth用
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== CSP ヘッダー設定 =====
+// ===== Content Security Policy =====
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -19,13 +18,14 @@ app.use((req, res, next) => {
 });
 
 let schedulesDB = {};
-let sessions = {}; // 簡易セッション（本番はDB推奨）
+let sessions = {}; // 簡易セッション
 
 // ===== Discord OAuth2 =====
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI =
-  process.env.DISCORD_REDIRECT_URI || "http://localhost:3000/api/auth/discord/callback";
+  process.env.DISCORD_REDIRECT_URI ||
+  "http://localhost:3000/api/auth/discord/callback";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // Discordログイン開始
@@ -84,7 +84,7 @@ app.get("/api/me/:sessionId", (req, res) => {
 // ===== スケジュールAPI =====
 app.post("/api/schedules", (req, res) => {
   const id = uuidv4();
-  schedulesDB[id] = req.body; // 登録内容を保存
+  schedulesDB[id] = req.body; // 修正済み
   res.json({ ok: true, id });
 });
 
@@ -96,11 +96,12 @@ app.get("/api/schedules/:id", (req, res) => {
 });
 
 // ===== Reactビルド配信 =====
-app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.use(express.static(path.join(__dirname, "build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// ===== サーバー起動 =====
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running at http://localhost:${PORT}`)
+);
