@@ -122,9 +122,19 @@ body {
   margin-top: 2px;
 }
 
-/* 選択範囲（react-big-calendar 標準の選択時） */
-.rbc-selected-cell {
-  background: rgba(0,76,160,0.3) !important;
+/* ===== 選択強調（日付セル全ビュー共通） ===== */
+.selected-day,
+.rbc-selected-cell,
+.rbc-day-bg.selected-day,
+.rbc-date-cell.selected-day,
+.rbc-off-range-bg.selected-day {
+  background: rgba(0, 76, 160, 0.6) !important;  /* 濃い青 */
+  border: 3px solid #FDB9C8 !important;          /* ピンク枠 */
+  color: #fff !important;                        /* 白文字 */
+  font-weight: bold;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(253,185,200,0.6);     /* 発光効果 */
+  cursor: pointer;
 }
 
 /* イベント表示 */
@@ -217,13 +227,4 @@ a {
 a:hover {
   color: #fff;
   text-decoration: underline;
-}
-
-/* ===== 選択済み日付セル ===== */
-.selected-day {
-  background: rgba(0,76,160,0.4) !important;
-  border: 2px solid #FDB9C8 !important;
-  color: #fff !important;
-  font-weight: bold;
-  cursor: pointer;
 }
