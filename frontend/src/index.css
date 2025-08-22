@@ -29,7 +29,6 @@ h1, h2, .page-title, .welcome-text {
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
 }
 
-
 /* ===== ページコンテナ ===== */
 .page-container {
   display: flex;
@@ -263,19 +262,23 @@ h1, h2, .page-title, .welcome-text {
   background: #ffe4ec;
   transform: scale(1.05);
 }
+/* 今日（日本時間） */
 .day.today {
-  background: #004ca0;
-  color: white;
+  background: #004ca0 !important;
+  color: white !important;
   font-weight: bold;
   box-shadow: 0 0 6px rgba(0,0,0,0.3);
 }
+/* 選択日 */
 .day.selected {
-  background: #fdb9c8;
-  color: white;
+  background: #fdb9c8 !important;
+  color: white !important;
   font-weight: bold;
 }
+/* 祝日（日曜と日本の祝日） */
 .day.holiday {
-  color: red;
+  color: red !important;
+  font-weight: bold;
 }
 
 /* ===== スマホ対応 ===== */
