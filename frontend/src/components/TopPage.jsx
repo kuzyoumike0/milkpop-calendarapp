@@ -1,19 +1,18 @@
-// frontend/src/components/TopPage.jsx
 import React from "react";
-import { Link } from "react-router-dom";
 import "../index.css";
 
 const TopPage = () => {
   return (
-    <div className="top-page">
-      <div className="logo-wrapper">
-        <img src="/logo.png" alt="MilkPOP Logo" className="logo-image" />
+    <div className="page-container">
+      <div className="card" style={{ textAlign: "center" }}>
+        <img
+          src="/logo.png"
+          alt="MilkPOP Logo"
+          style={{ width: "150px", marginBottom: "20px" }}
+        />
+        <h2 className="page-title">ようこそ MilkPOP Calendar へ</h2>
+        <p>あなたの予定をスマートに共有しましょう ✨</p>
       </div>
-      <h2 className="welcome-text">ようこそ MilkPOP Calendar へ</h2>
-      <p className="welcome-subtext">ポップで可愛いスケジューラー</p>
-      <Link to="/register" className="start-btn">
-        📅 日程登録ページへ
-      </Link>
     </div>
   );
 };
