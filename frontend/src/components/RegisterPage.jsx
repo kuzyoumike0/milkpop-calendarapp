@@ -19,37 +19,53 @@ const localizer = dateFnsLocalizer({
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const [selectionMode, setSelectionMode] = useState("range");
+  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
+  const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [shareLink, setShareLink] = useState("");
 
-  // 範囲選択
-  const handleSelectRange = ({ start, end }) => {
-    if (selectionMode !== "range") return;
+  // プルダウン用データ
+  const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { status: "〇", time: "終日" } }
 
-    const days = [];
-    let d = new Date(start);
-    while (d <= end) {
-      days.push(new Date(d));
-      d.setDate(d.getDate() + 1);
+  // 日付フォーマットキー
+  const dateKey = (d) => format(d, "yyyy-MM-dd");
+
+  // 範囲選択モード（クリックベース）
+  const handleDateClickRange = ({ start }) => {
+    if (!rangeStart) {
+      // 1回目クリック → 開始日保存
+      setRangeStart(start);
+      setSelectedDates([start]);
+    } else {
+      // 2回目クリック → 範囲を確定
+      const startDate = rangeStart < start ? rangeStart : start;
+      const endDate = rangeStart < start ? start : rangeStart;
+
+      const days = [];
+      let d = new Date(startDate);
+      while (d <= endDate) {
+        days.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+      }
+
+      setSelectedDates(days);
+      setRangeStart(null); // リセット
     }
-    setSelectedDates(days);
   };
 
-  // 複数選択
-  const handleSelectDay = ({ start }) => {
-    if (selectionMode !== "multiple") return;
-
-    const dateStr = start.toDateString();
+  // 複数選択モード
+  const handleDateClickMultiple = ({ start }) => {
+    const key = start.toDateString();
     setSelectedDates((prev) => {
-      const exists = prev.find((d) => d.toDateString() === dateStr);
-      return exists
-        ? prev.filter((d) => d.toDateString() !== dateStr)
-        : [...prev, start];
+      const exists = prev.find((d) => d.toDateString() === key);
+      if (exists) {
+        return prev.filter((d) => d.toDateString() !== key);
+      } else {
+        return [...prev, start];
+      }
     });
   };
 
-  // 祝日＆選択強調
+  // イベントスタイル（祝日＆選択強調）
   const eventStyleGetter = (event) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === event.start.toDateString()
@@ -70,14 +86,16 @@ const RegisterPage = () => {
     };
   };
 
-  // 共有リンク発行
-  const generateShareLink = () => {
-    if (selectedDates.length === 0) {
-      alert("日程を選択してください！");
-      return;
-    }
-    const randomId = Math.random().toString(36).substring(2, 8);
-    setShareLink(`${window.location.origin}/share/${randomId}`);
+  // プルダウン変更処理
+  const handleOptionChange = (date, field, value) => {
+    const key = dateKey(date);
+    setDateOptions((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
+    }));
   };
 
   return (
@@ -113,7 +131,9 @@ const RegisterPage = () => {
             localizer={localizer}
             selectable
             onSelectSlot={
-              selectionMode === "range" ? handleSelectRange : handleSelectDay
+              selectionMode === "range"
+                ? handleDateClickRange
+                : handleDateClickMultiple
             }
             events={selectedDates.map((d) => ({
               start: d,
@@ -129,31 +149,40 @@ const RegisterPage = () => {
         <div className="schedule-section">
           <h3>選択された日程</h3>
           <ul>
-            {selectedDates.map((d, i) => (
-              <li key={i}>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</li>
-            ))}
+            {selectedDates.map((d, i) => {
+              const key = dateKey(d);
+              return (
+                <li key={i} className="schedule-item">
+                  <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
+
+                  {/* 出欠プルダウン */}
+                  <select
+                    value={dateOptions[key]?.status || ""}
+                    onChange={(e) =>
+                      handleOptionChange(d, "status", e.target.value)
+                    }
+                  >
+                    <option value="">選択</option>
+                    <option value="〇">〇</option>
+                    <option value="✕">✕</option>
+                  </select>
+
+                  {/* 時間帯プルダウン */}
+                  <select
+                    value={dateOptions[key]?.time || ""}
+                    onChange={(e) =>
+                      handleOptionChange(d, "time", e.target.value)
+                    }
+                  >
+                    <option value="">時間帯</option>
+                    <option value="終日">終日</option>
+                    <option value="昼">昼</option>
+                    <option value="夜">夜</option>
+                  </select>
+                </li>
+              );
+            })}
           </ul>
-
-          {/* 共有リンク発行 */}
-          <button className="share-button" onClick={generateShareLink}>
-            共有リンク発行
-          </button>
-
-          {shareLink && (
-            <div className="share-link-box">
-              <p>共有リンクが発行されました 🎉</p>
-              <input type="text" value={shareLink} readOnly />
-              <button
-                className="copy-button"
-                onClick={() => {
-                  navigator.clipboard.writeText(shareLink);
-                  alert("リンクをコピーしました！");
-                }}
-              >
-                コピー
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
