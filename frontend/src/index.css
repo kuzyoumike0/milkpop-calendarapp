@@ -291,4 +291,69 @@ h1, h2, .page-title, .welcome-text {
     max-width: 100%;
     flex: 0 0 100%;
   }
+  /* react-calendar 全体 */
+.react-calendar {
+  width: 100%;
+  background: white;
+  border: none;
+  border-radius: 20px;
+  padding: 20px;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.react-calendar__navigation button {
+  background: #FDB9C8;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.react-calendar__navigation button:hover {
+  background: #004CA0;
+  color: white;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+}
+
+.react-calendar__tile {
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.react-calendar__tile:enabled:hover {
+  background: #ffe4ec;
+  transform: scale(1.05);
+}
+
+/* 今日 */
+.react-calendar__tile--today {
+  background: #004CA0 !important;
+  color: white !important;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+/* 選択 */
+.react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold;
+}
+/* 祝日・日曜 */
+.react-calendar__tile.holiday {
+  color: red !important;
+  font-weight: bold;
+}
+
 }
