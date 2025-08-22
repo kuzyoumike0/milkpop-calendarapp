@@ -102,6 +102,44 @@ app.post("/api/schedules/:id/responses", async (req, res) => {
   }
 });
 
+// ===== 個人スケジュール保存（同時に共有スケジュールへ上書き） =====
+app.post("/api/personal", async (req, res) => {
+  const { personal_id, share_id, title, memo, dates, options } = req.body;
+
+  try {
+    let newPersonalId = personal_id || uuidv4();
+    let newShareId = share_id || uuidv4();
+
+    // 個人スケジュール保存（新規 or 更新）
+    await pool.query(
+      `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id)
+       DO UPDATE SET title=$3, memo=$4, dates=$5, options=$6`,
+      [newPersonalId, newShareId, title, memo, JSON.stringify(dates), JSON.stringify(options)]
+    );
+
+    // 共有スケジュールへ上書き
+    await pool.query(
+      `INSERT INTO schedules (id, title, dates, options)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id)
+       DO UPDATE SET title=$2, dates=$3, options=$4`,
+      [newShareId, title, JSON.stringify(dates), JSON.stringify(options)]
+    );
+
+    res.json({
+      ok: true,
+      personalId: newPersonalId,
+      shareId: newShareId,
+      shareUrl: `${process.env.APP_URL || "http://localhost:3000"}/share/${newShareId}`,
+    });
+  } catch (err) {
+    console.error("❌ 個人スケジュール保存エラー:", err);
+    res.status(500).json({ ok: false, error: "個人スケジュール保存に失敗しました" });
+  }
+});
+
 // ===== Reactビルド配信 =====
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
