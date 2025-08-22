@@ -268,4 +268,27 @@ header .nav a:hover {
 .day.saturday {
   color: #004CA0;
 }
+/* ===== 選択日カード ===== */
+.schedule-card {
+  background: #fff5f8;
+  border: 2px solid #FDB9C8;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+.schedule-card:hover {
+  transform: scale(1.02);
+}
+.schedule-card select {
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+.schedule-card span {
+  font-weight: bold;
+  color: #004CA0;
+}
+
 
