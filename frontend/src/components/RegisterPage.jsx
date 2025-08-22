@@ -22,7 +22,7 @@ const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({}); 
+  const [dateOptions, setDateOptions] = useState({});
 
   const dateKey = (d) => format(d, "yyyy-MM-dd");
 
@@ -144,6 +144,8 @@ const RegisterPage = () => {
             {selectedDates.map((d, i) => {
               const key = dateKey(d);
               const opts = dateOptions[key] || {};
+              const startVal = parseInt(opts.start || "0", 10);
+
               return (
                 <li key={i} className="schedule-item">
                   <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
@@ -165,6 +167,7 @@ const RegisterPage = () => {
                   {/* 時間指定を選んだ場合だけ時刻プルダウン表示 */}
                   {opts.timezone === "時間指定" && (
                     <>
+                      {/* 開始時刻 */}
                       <select
                         value={opts.start || ""}
                         onChange={(e) =>
@@ -179,24 +182,22 @@ const RegisterPage = () => {
                         ))}
                       </select>
 
+                      {/* 終了時刻（開始より後のみ表示） */}
                       <select
                         value={opts.end || ""}
-                        onChange={(e) => {
-                          const start = parseInt(opts.start || "0", 10);
-                          const end = parseInt(e.target.value, 10);
-                          if (!start || end > start) {
-                            handleOptionChange(d, "end", e.target.value);
-                          } else {
-                            alert("終了時刻は開始時刻より後にしてください");
-                          }
-                        }}
+                        onChange={(e) =>
+                          handleOptionChange(d, "end", e.target.value)
+                        }
+                        disabled={!opts.start}
                       >
                         <option value="">終了</option>
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}時
-                          </option>
-                        ))}
+                        {timeOptions
+                          .filter((t) => !startVal || t > startVal)
+                          .map((t) => (
+                            <option key={t} value={t}>
+                              {t}時
+                            </option>
+                          ))}
                       </select>
                     </>
                   )}
