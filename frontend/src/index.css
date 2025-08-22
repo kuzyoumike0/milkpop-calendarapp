@@ -412,3 +412,12 @@
   opacity: 0.9;
   transform: translateY(-2px);
 }
+
+/* 祝日スタイル */
+.rbc-event.holiday {
+  background-color: #ffe5e5 !important;
+  color: #d60000 !important;
+  font-weight: bold;
+  border: 1px solid #d60000 !important;
+}
+
