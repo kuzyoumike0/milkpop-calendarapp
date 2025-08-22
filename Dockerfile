@@ -1,28 +1,20 @@
-# ====== ビルド用ステージ ======
-FROM node:18 AS build
-WORKDIR /app
+# ====== フロントエンドをビルド ======
+FROM node:18 AS frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# frontend をコピーして依存関係インストール & ビルド
-COPY frontend ./frontend
-RUN cd frontend && npm install && npm run build
-
-# backend をコピーして依存関係インストール
-COPY backend ./backend
-RUN cd backend && npm install
-
-# ====== 実行ステージ ======
+# ====== バックエンドをセットアップ ======
 FROM node:18
 WORKDIR /app
-
-# backend 全体をコピー
-COPY backend ./backend
-
-# フロントエンドのビルド成果物を backend/build に配置
-COPY --from=build /app/frontend/build ./backend/build
-
-# 本番用依存関係インストール
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
-RUN npm install --production
+RUN npm install
+COPY backend/ ./ 
 
-EXPOSE 3000
+# フロントのビルド成果物を backend 配下にコピー
+COPY --from=frontend /app/frontend/build ./frontend/build
+
 CMD ["node", "index.js"]
