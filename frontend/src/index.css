@@ -90,6 +90,38 @@
   left: 0;
 }
 
+/* ===== トップページ ===== */
+.top-page {
+  display: flex;
+  flex-direction: column; /* 縦に並べる */
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+/* 文字を上に */
+.welcome-text {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 16px; /* 下に余白 */
+}
+
+/* ロゴ画像の調整 */
+.logo-wrapper {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.logo-image {
+  width: 150px;   /* ← サイズ小さめに */
+  height: auto;
+}
+
+
 /* ===== ページタイトル ===== */
 .page-title {
   font-size: 1.8rem;
