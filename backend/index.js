@@ -3,39 +3,50 @@ const path = require("path");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
+const { Pool } = require("pg");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// 簡易DB（本番ではPostgreSQLを使用）
-let schedulesDB = {};
-let sessions = {}; // セッション管理
-
-// ===== ミドルウェア：CSP =====
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
-  );
-  next();
+// ===== PostgreSQL 接続設定 =====
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // RailwayやHerokuならこれでOK
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
 // ===== スケジュール保存 =====
-app.post("/api/schedules", (req, res) => {
-  const { title, schedules } = req.body;
-  const id = uuidv4(); // 毎回新しいIDを発行
-  schedulesDB[id] = { id, title, schedules, createdAt: new Date() };
-  res.json({ id, url: `/share/${id}` });
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, schedules } = req.body;
+    const id = uuidv4();
+
+    await pool.query(
+      "INSERT INTO schedules (id, title, schedules) VALUES ($1, $2, $3)",
+      [id, title, JSON.stringify(schedules)]
+    );
+
+    res.json({ id, url: `/share/${id}` });
+  } catch (err) {
+    console.error("❌ Error inserting schedule:", err);
+    res.status(500).json({ error: "DB保存に失敗しました" });
+  }
 });
 
 // ===== スケジュール取得（共有リンク用） =====
-app.get("/api/share/:id", (req, res) => {
-  const id = req.params.id;
-  if (schedulesDB[id]) {
-    res.json(schedulesDB[id]);
-  } else {
-    res.status(404).json({ error: "スケジュールが見つかりません" });
+app.get("/api/share/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await pool.query("SELECT * FROM schedules WHERE id = $1", [id]);
+
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+  } catch (err) {
+    console.error("❌ Error fetching schedule:", err);
+    res.status(500).json({ error: "DB取得に失敗しました" });
   }
 });
 
