@@ -1,31 +1,23 @@
+// ✅ OK: index.js で BrowserRouter を使っているので、ここでは Routes だけ
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import { Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
-import "./index.css";
+import ShareLinkPage from "./components/ShareLinkPage";
+import LinkPage from "./components/LinkPage";
 
 function App() {
   return (
-    <Router>
-      <div className="app-container">
-        <Header />
-
-        <main>
-          <Routes>
-            <Route path="/" element={<TopPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/personal" element={<PersonalPage />} />
-            <Route path="/share/:id" element={<SharePage />} />
-          </Routes>
-        </main>
-
-        <Footer />
-      </div>
-    </Router>
+    <Routes>
+      <Route path="/" element={<TopPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/personal" element={<PersonalPage />} />
+      <Route path="/share/:shareId" element={<SharePage />} />
+      <Route path="/share-links" element={<ShareLinkPage />} />
+      <Route path="/link" element={<LinkPage />} />
+    </Routes>
   );
 }
 
