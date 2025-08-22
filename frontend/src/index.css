@@ -1,5 +1,5 @@
 /* ===== フォント ===== */
-@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Stick&family=Yomogi&family=Zen+Maru+Gothic&family=M+PLUS+Rounded+1c&family=Poppins:wght@400;600&family=Noto+Sans+JP:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
 
 /* ===== ページ全体 ===== */
 body {
@@ -8,8 +8,27 @@ body {
   line-height: 1.7;
   color: black;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'Poppins','Noto Sans JP','Zen Maru Gothic','M PLUS Rounded 1c','Reggae One','Stick','Yomogi',sans-serif;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
 }
+
+/* ===== 見出しを特にかわいく ===== */
+h1, h2, .page-title, .welcome-text {
+  font-family: 'Reggae One','Zen Maru Gothic',cursive,sans-serif;
+  font-weight: bold;
+  color: #ff5fa2;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+}
+
+/* ===== 入力や本文は丸ゴシック ===== */
+.title-input,
+.vote-select,
+.radio-label,
+.day,
+.selected-list,
+.submit-btn {
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+}
+
 
 /* ===== ページコンテナ ===== */
 .page-container {
