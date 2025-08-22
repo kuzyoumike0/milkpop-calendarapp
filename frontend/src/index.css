@@ -19,79 +19,49 @@
   flex-wrap: wrap; /* 👈 はみ出し防止 */
 }
 
-/* ===== ヘッダー（バナー） ===== */
-.banner {
-  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
-  padding: 16px 40px;
+/* ベーススタイル */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Mochiy Pop One', 'Yomogi', cursive, sans-serif;
+  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
+  color: #333;
+}
+
+/* 共通レイアウト用 */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* ヘッダー */
+header {
+  background: black;
+  color: white;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #fff;
-  font-size: 1.6rem;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  letter-spacing: 1px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  border-radius: 0 0 20px 20px;
 }
 
-.banner h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  font-family: 'Zen Maru Gothic', cursive;
-}
-
-.banner nav {
-  display: flex;
-  gap: 36px;
-}
-
-.banner nav a {
-  text-decoration: none;
-  color: #fff;
-  font-size: 1.05rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  padding: 6px 12px;
-  border-radius: 12px;
-}
-
-.banner nav a:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #fffafc;
-}
-
-.login-button {
-  background: #A0C4FF;
+/* フッター */
+footer {
+  background: black;
   color: white;
-  padding: 6px 14px;
-  border-radius: 14px;
-  text-decoration: none;
-  margin-left: 16px;
-  font-weight: 600;
-  transition: 0.3s;
-}
-.login-button:hover {
-  background: #FDB9C8;
+  padding: 12px;
+  text-align: center;
+  margin-top: auto;
 }
 
-/* ===== フッター ===== */
-.footer {
-  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
-  text-align: center;
-  padding: 16px;
-  font-size: 0.95rem;
-  color: #fff;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
-  width: 100%;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  border-radius: 20px 20px 0 0;
+/* 見出し */
+h1, h2 {
+  font-weight: bold;
+  margin-bottom: 16px;
 }
 
 /* ===== トップページ ===== */
