@@ -182,3 +182,90 @@ header .nav a:hover {
   .register-layout { flex-direction: column; }
   .calendar-section, .schedule-section { max-width: 100%; flex: 0 0 100%; }
 }
+
+/* ===== 自作カレンダー ===== */
+.custom-calendar {
+  width: 100%;
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border: 3px solid #FDB9C8;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.calendar-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #004CA0;
+}
+.calendar-header button {
+  background: #FDB9C8;
+  border: none;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.calendar-header button:hover {
+  background: #004CA0;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+  padding: 6px 0;
+}
+
+.day {
+  text-align: center;
+  padding: 14px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+.day:hover {
+  background: #ffe4ec;
+  transform: scale(1.05);
+  border: 1px solid #FDB9C8;
+}
+.day.today {
+  background: #004CA0;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+.day.selected {
+  background: linear-gradient(90deg, #FDB9C8, #ff85b3);
+  color: #fff;
+  font-weight: bold;
+}
+.day.holiday {
+  color: red;
+  font-weight: bold;
+}
+.day.saturday {
+  color: #004CA0;
+}
+
