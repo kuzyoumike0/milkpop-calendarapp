@@ -1,16 +1,19 @@
-/* ===== ページ全体レイアウト ===== */
+/* ===== Google Fonts ===== */
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Sawarabi+Gothic&display=swap");
+
+/* ===== 全体のフォント ===== */
 html, body, #root {
   height: 100%;
   margin: 0;
   display: flex;
   flex-direction: column;
-  font-family: "Poppins", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-family: "Quicksand", "Sawarabi Gothic", sans-serif;
   background-color: #fdfdfd;
   color: #333;
 }
 
 main {
-  flex: 1; /* 中央コンテンツを押し広げる */
+  flex: 1;
   padding: 20px;
 }
 
@@ -45,7 +48,7 @@ main {
 /* ===== ヘッダー（バナー） ===== */
 .banner {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  padding: 16px 40px; /* 余白を広げて見やすく */
+  padding: 16px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -59,12 +62,13 @@ main {
 .banner h1 {
   margin: 0;
   font-size: 1.8rem;
+  font-family: "Quicksand", "Sawarabi Gothic", sans-serif;
 }
 
 /* ナビゲーション */
 .banner nav {
   display: flex;
-  gap: 28px; /* リンク間のスペース */
+  gap: 28px;
 }
 
 .banner nav a {
@@ -75,28 +79,27 @@ main {
   transition: all 0.3s ease;
   padding: 6px 10px;
   border-radius: 6px;
+  font-family: "Quicksand", "Sawarabi Gothic", sans-serif;
 }
 
-/* ホバー時の変化 */
+/* ホバー */
 .banner nav a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #FFDDEE; /* 淡いピンクでお洒落に */
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffecf2; /* 優しいピンク */
 }
 
-/* ===== 共通カードデザイン ===== */
+/* ===== 共通カード ===== */
 .card {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
   padding: 32px;
   margin: 20px auto;
   max-width: 800px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   text-align: center;
+  font-family: "Quicksand", "Sawarabi Gothic", sans-serif;
 }
 
 .page-title {
   font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: #004CA0;
-}
+  fon
