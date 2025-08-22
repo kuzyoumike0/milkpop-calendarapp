@@ -3,6 +3,7 @@ import Calendar from "react-calendar";
 import "../index.css";
 import { v4 as uuidv4 } from "uuid"; // 👈 ランダムID生成用
 
+// 範囲選択された日付リストを返す関数
 const getDatesInRange = (start, end) => {
   const dates = [];
   let current = new Date(start);
@@ -14,7 +15,7 @@ const getDatesInRange = (start, end) => {
 };
 
 const RegisterPage = () => {
-  const [mode, setMode] = useState("range");
+  const [mode, setMode] = useState("range"); // 範囲 or 複数選択
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
@@ -22,19 +23,19 @@ const RegisterPage = () => {
   const [endTimeOptions] = useState([...Array(24).keys()].map((h) => `${h}:00`).concat("24:00"));
   const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState([]);
-  const [shareUrls, setShareUrls] = useState([]); // ✅ 複数の共有リンクを保持
+  const [shareUrls, setShareUrls] = useState([]); // ✅ 発行済み共有リンク履歴
 
   // ===== 日本時間の今日 =====
   const todayJST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
   const todayStr = todayJST.toISOString().split("T")[0];
 
-  // ===== 祝日取得 =====
+  // ===== 日本の祝日を取得 =====
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
         const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
         const data = await res.json();
-        setHolidays(Object.keys(data));
+        setHolidays(Object.keys(data)); // YYYY-MM-DD の配列
       } catch (err) {
         console.error("祝日取得失敗:", err);
       }
@@ -42,7 +43,7 @@ const RegisterPage = () => {
     fetchHolidays();
   }, []);
 
-  // ===== 日付クリック =====
+  // ===== 日付クリック（複数選択モード用） =====
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
     if (multiDates.some((d) => d.toDateString() === dateStr)) {
@@ -84,7 +85,7 @@ const RegisterPage = () => {
       if (!res.ok) throw new Error("保存に失敗しました");
       console.log("保存成功");
 
-      // ✅ 保存成功したら共有リンクを生成
+      // ✅ 保存成功したら毎回新しい共有リンクを生成
       const newId = uuidv4();
       const newUrl = `${window.location.origin}/share/${newId}`;
       setShareUrls((prev) => [newUrl, ...prev]); // 最新を上に追加
@@ -93,6 +94,7 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== オプション変更処理 =====
   const handleOptionChange = (dateStr, field, value) => {
     setDateOptions((prev) => ({
       ...prev,
@@ -107,7 +109,7 @@ const RegisterPage = () => {
     <div className="page-container">
       <h1 className="page-title">📅 日程登録</h1>
 
-      {/* モード切替 */}
+      {/* ===== モード切替 ===== */}
       <div className="mode-selector">
         <label className="mode-option">
           <input
@@ -116,7 +118,7 @@ const RegisterPage = () => {
             checked={mode === "range"}
             onChange={() => {
               setMode("range");
-              setMultiDates([]);
+              setMultiDates([]); // 範囲モードに切り替えたら複数選択クリア
             }}
           />
           <span>範囲選択</span>
@@ -128,33 +130,36 @@ const RegisterPage = () => {
             checked={mode === "multi"}
             onChange={() => {
               setMode("multi");
-              setRange([null, null]);
+              setRange([null, null]); // 複数モードに切り替えたら範囲クリア
             }}
           />
           <span>複数選択</span>
         </label>
       </div>
 
-      <div className="register-layout">
-        {/* ===== カレンダー ===== */}
-        <div className="calendar-section">
+      {/* ===== 横並びレイアウト (左:カレンダー 右:リスト) ===== */}
+      <div className="register-layout flex gap-4">
+        {/* ===== カレンダー (左 7割) ===== */}
+        <div className="calendar-section flex-[7]">
           <Calendar
             selectRange={mode === "range"}
             onChange={mode === "range" ? setRange : handleDateClick}
             value={mode === "range" ? range : multiDates}
+            locale="ja-JP"
+            calendarType="gregory"
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
-              if (dateStr === todayStr) return "today-highlight";
-              if (holidays.includes(dateStr)) return "holiday";
-              if (date.getDay() === 0) return "sunday";
-              if (date.getDay() === 6) return "saturday";
+              if (dateStr === todayStr) return "today-highlight"; // 今日
+              if (holidays.includes(dateStr)) return "holiday"; // 祝日
+              if (date.getDay() === 0) return "sunday"; // 日曜
+              if (date.getDay() === 6) return "saturday"; // 土曜
               return "";
             }}
           />
         </div>
 
-        {/* ===== 日程リスト ===== */}
-        <div className="schedule-section">
+        {/* ===== 日程リスト (右 3割) ===== */}
+        <div className="schedule-section flex-[3]">
           <h3>📝 選択した日程</h3>
           {selectedList.length === 0 && <p>日程を選択してください</p>}
           {selectedList.map((d) => {
@@ -162,7 +167,7 @@ const RegisterPage = () => {
             const option = dateOptions[dateStr] || { type: "終日" };
 
             return (
-              <div key={dateStr} className="schedule-item">
+              <div key={dateStr} className="schedule-item mb-2">
                 <strong>{dateStr}</strong>
                 <select
                   value={option.type}
@@ -212,15 +217,15 @@ const RegisterPage = () => {
           })}
 
           {selectedList.length > 0 && (
-            <button className="fancy-btn" onClick={saveSchedule}>
+            <button className="fancy-btn mt-4" onClick={saveSchedule}>
               💾 保存する
             </button>
           )}
 
-          {/* ✅ 共有リンク表示 */}
+          {/* ✅ 共有リンク履歴表示 */}
           {shareUrls.length > 0 && (
-            <div style={{ marginTop: "20px" }}>
-              <h4>🔗 共有リンク</h4>
+            <div className="mt-4">
+              <h4>🔗 発行済み共有リンク</h4>
               <ul>
                 {shareUrls.map((url, idx) => (
                   <li key={idx}>
