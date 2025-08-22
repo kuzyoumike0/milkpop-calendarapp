@@ -147,7 +147,7 @@ const RegisterPage = () => {
       <button onClick={handleRegister}>登録</button>
 
       {/* カレンダー */}
-      <div className="calendar-container" style={{ marginTop: "2rem" }}>
+      <div className="calendar-container fancy-calendar" style={{ marginTop: "2rem" }}>
         <Calendar
           localizer={localizer}
           events={events}
@@ -165,8 +165,14 @@ const RegisterPage = () => {
         <h3>選択した日付:</h3>
         <ul>
           {selectedDates.map((d, idx) => (
-            <li key={idx}>
-              {d.date.toDateString()}{" "}
+            <li key={idx} style={{ display: "flex", alignItems: "center", marginBottom: "0.5rem" }}>
+              <span style={{ marginRight: "1rem" }}>
+                {d.date.toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
               <select
                 value={d.timeOption}
                 onChange={(e) => handleTimeOptionChange(idx, e.target.value)}
