@@ -5,15 +5,16 @@ import "../index.css";
 const SharePage = () => {
   const { id } = useParams();
   const [schedule, setSchedule] = useState(null);
-  const [votes, setVotes] = useState({}); // ← 各日程ごとの投票状態を保存
+  const [votes, setVotes] = useState({}); // 各行ごとの出欠を保持
 
   useEffect(() => {
-    // 仮API呼び出し（バックエンドから日程を取得する想定）
+    // ✅ 仮のAPI呼び出し（本番ではExpress側から取得）
     fetch(`/api/schedules/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setSchedule(data);
-        // 初期値は未定にする
+
+        // 初期値は「未定」にする
         const initialVotes = {};
         data.dates.forEach((d, index) => {
           initialVotes[index] = "未定";
@@ -22,6 +23,7 @@ const SharePage = () => {
       });
   }, [id]);
 
+  // ✅ 出欠の変更
   const handleVoteChange = (index, value) => {
     setVotes((prev) => ({
       ...prev,
@@ -29,9 +31,10 @@ const SharePage = () => {
     }));
   };
 
+  // ✅ 出欠を送信
   const handleSubmit = () => {
     console.log("送信データ:", votes);
-    // ここで API に送信する
+    // ここで Express API に POST する想定
     alert("出欠を登録しました！");
   };
 
