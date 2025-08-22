@@ -4,7 +4,7 @@
 /* ===== ページ全体 ===== */
 body {
   margin: 0;
-  padding: 0 0 0 20px;   /* 左に少し余裕 */
+  padding: 0 0 0 20px;
   line-height: 1.8;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
@@ -36,6 +36,7 @@ header {
   left: 0;
   width: 100%;
   z-index: 1000;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* 丸く可愛い */
 }
 header .nav {
   display: flex;
@@ -44,11 +45,25 @@ header .nav {
 header .nav a {
   color: #fff;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: bold;
   transition: color 0.2s;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 header .nav a:hover {
   color: #ff5fa2;
+}
+
+/* ===== フッター ===== */
+footer {
+  background: #004CA0;
+  color: white;
+  padding: 14px 20px;
+  text-align: center;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* 丸く可愛い */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
 }
 
 /* ===== main領域 ===== */
@@ -72,6 +87,7 @@ main {
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 .radio-label input {
   accent-color: #FDB9C8;
@@ -176,7 +192,7 @@ main {
   color: #004CA0;
 }
 
-/* ===== 選択日カード（右に表示） ===== */
+/* ===== 選択日カード ===== */
 .schedule-card {
   background: #fff5f8;
   border: 2px solid #FDB9C8;
@@ -188,7 +204,7 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .schedule-card span {
   font-weight: bold;
@@ -222,6 +238,7 @@ main {
   padding: 10px 20px;
   border-radius: 12px;
   transition: all 0.2s;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 .share-btn:hover {
   background: #004CA0;
