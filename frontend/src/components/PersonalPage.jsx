@@ -1,92 +1,78 @@
-// frontend/src/components/PersonalPage.jsx
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import Holidays from "date-holidays";
+import SelectMode from "./SelectMode";
 import "../index.css";
 
-const hd = new Holidays("JP");
-
-const PersonalPage = () => {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multi");
+const RegisterPage = () => {
+  const [mode, setMode] = useState("range");
+  const [range, setRange] = useState([null, null]);
+  const [multiDates, setMultiDates] = useState([]);
+  const [title, setTitle] = useState("");   // ✅ タイトル必須
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
-  const userId = "123456789012345678"; // TODO: Discord OAuth で置き換える
+  const [shareUrls, setShareUrls] = useState([]);
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
   );
 
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (holiday) return "holiday";
-      if (date.getDay() === 0) return "sunday";
-      if (date.getDay() === 6) return "saturday";
+  // ===== 日付クリック処理 =====
+  const handleDateClick = (date) => {
+    if (mode === "multi") {
+      const dateStr = date.toDateString();
+      if (multiDates.some((d) => d.toDateString() === dateStr)) {
+        setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
+      } else {
+        setMultiDates([...multiDates, date]);
+      }
     }
-    return null;
   };
 
-  const handleSave = async () => {
+  // ===== 共有リンク生成 =====
+  const handleShare = async () => {
     if (!title.trim()) {
       alert("タイトルを入力してください");
       return;
     }
-    if (selectedDates.length === 0) {
-      alert("日程を1つ以上選択してください");
-      return;
-    }
-    if (timeType === "時刻指定" && start >= end) {
-      alert("開始時刻は終了時刻より前にしてください");
+
+    const dates =
+      mode === "range"
+        ? range.filter((d) => d !== null)
+        : multiDates;
+
+    if (dates.length === 0) {
+      alert("日程を選択してください");
       return;
     }
 
     try {
-      const res = await fetch("/api/personal", {
+      const res = await fetch("/api/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
           title,
-          memo,
-          dates: selectedDates.map((d) => d.toISOString()),
+          dates: dates.map((d) => d.toISOString()),
           options: { type: timeType, start, end },
         }),
       });
+
       const data = await res.json();
-      if (data.ok) {
-        alert("保存しました！");
+      if (data.ok && data.url) {
+        setShareUrls((prev) => [...prev, { title, url: data.url }]); // ✅ 履歴追加
       } else {
-        alert("保存に失敗しました: " + data.error);
+        alert("リンク生成に失敗しました");
       }
     } catch (err) {
-      console.error("❌ 保存エラー:", err);
-    }
-  };
-
-  const handleDateChange = (val) => {
-    if (mode === "range") {
-      if (Array.isArray(val)) {
-        setSelectedDates(val);
-      }
-    } else {
-      const dateStr = val.toDateString();
-      if (selectedDates.some((d) => d.toDateString() === dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, val]);
-      }
+      console.error("❌ エラー:", err);
     }
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">個人スケジュール登録</h2>
+      <h2 className="page-title">日程登録</h2>
 
       {/* ===== タイトル入力 ===== */}
       <div className="mb-4">
@@ -95,64 +81,32 @@ const PersonalPage = () => {
           className="p-2 border rounded w-full text-black"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：出張、通院、友達と遊ぶ"
-        />
-      </div>
-
-      {/* ===== メモ入力 ===== */}
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">メモ</label>
-        <textarea
-          className="p-2 border rounded w-full text-black"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="詳細メモを入力"
+          placeholder="例：歓迎会、旅行、ミーティング"
         />
       </div>
 
       {/* ===== 範囲 or 複数選択 ===== */}
-      <div className="mb-4 flex gap-4">
-        {["range", "multi"].map((m) => (
-          <label
-            key={m}
-            className={`cursor-pointer px-3 py-1 rounded-full border ${
-              mode === m ? "bg-[#FDB9C8] text-black" : "bg-white text-gray-700"
-            }`}
-          >
-            <input
-              type="radio"
-              className="hidden"
-              checked={mode === m}
-              onChange={() => setMode(m)}
-            />
-            {m === "range" ? "範囲選択" : "複数選択"}
-          </label>
-        ))}
-      </div>
+      <SelectMode mode={mode} setMode={setMode} />
 
       {/* ===== カレンダー ===== */}
       <Calendar
         selectRange={mode === "range"}
-        onChange={handleDateChange}
-        tileClassName={tileClassName}
+        onChange={setRange}
+        value={mode === "range" ? range : null}
+        onClickDay={handleDateClick}
         locale="ja-JP"
         calendarType="gregory"
-        activeStartDate={new Date()}
       />
 
       {/* ===== 選択済み日付リスト ===== */}
       <div className="mt-4">
         <h3 className="font-bold">選択した日程</h3>
         <ul className="list-disc list-inside">
-          {selectedDates.map((d, i) => {
-            const holiday = hd.isHoliday(d);
-            const holidayName = holiday ? `（${holiday[0].name}）` : "";
-            return (
-              <li key={i}>
-                {d.toLocaleDateString()} {holidayName}
-              </li>
-            );
-          })}
+          {(mode === "range" ? range.filter((d) => d) : multiDates).map(
+            (d, i) => (
+              <li key={i}>{d.toLocaleDateString()}</li>
+            )
+          )}
         </ul>
       </div>
 
@@ -167,15 +121,14 @@ const PersonalPage = () => {
           >
             <input
               type="radio"
-              value={t}
               className="hidden"
+              value={t}
               checked={timeType === t}
               onChange={() => setTimeType(t)}
             />
             {t}
           </label>
         ))}
-
         {timeType === "時刻指定" && (
           <div className="mt-2 flex gap-2">
             <select
@@ -184,9 +137,7 @@ const PersonalPage = () => {
               onChange={(e) => setStart(e.target.value)}
             >
               {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
+                <option key={t}>{t}</option>
               ))}
             </select>
             〜
@@ -196,9 +147,7 @@ const PersonalPage = () => {
               onChange={(e) => setEnd(e.target.value)}
             >
               {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
+                <option key={t}>{t}</option>
               ))}
               <option value="24:00">24:00</option>
             </select>
@@ -206,14 +155,36 @@ const PersonalPage = () => {
         )}
       </div>
 
-      {/* ===== 保存ボタン ===== */}
+      {/* ===== 共有リンクボタン ===== */}
       <div className="mt-6 text-center">
-        <button className="fancy-btn px-6 py-2" onClick={handleSave}>
-          保存
+        <button className="fancy-btn px-6 py-2" onClick={handleShare}>
+          共有リンクを発行
         </button>
       </div>
+
+      {/* ===== 発行済みリンク一覧 ===== */}
+      {shareUrls.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-bold">発行済みリンク</h3>
+          <ul className="list-disc list-inside">
+            {shareUrls.map((item, idx) => (
+              <li key={idx}>
+                {item.title}：{" "}
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#004CA0] underline"
+                >
+                  {item.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
 
-export default PersonalPage;
+export default RegisterPage;
