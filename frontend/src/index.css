@@ -20,7 +20,7 @@
 }
 
 .logo-image {
-  width: 260px;   /* ← 小さめで可愛らしく */
+  width: 1040px;   /* ← 小さめで可愛らしく */
   max-width: 80%;
   height: auto;
   transition: transform 0.3s ease;
