@@ -1,35 +1,29 @@
-// スケジュール編集
-app.put("/api/schedules/:id", async (req, res) => {
-  const { id } = req.params;
-  const { date, time_option, start_hour, end_hour } = req.body;
+import express from "express";
+import cors from "cors";
+import { randomBytes } from "crypto";
 
-  try {
-    const client = await pool.connect();
-    await client.query(
-      `UPDATE schedules 
-       SET date=$1, time_option=$2, start_hour=$3, end_hour=$4 
-       WHERE id=$5`,
-      [date, time_option, start_hour, end_hour, id]
-    );
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DB update error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// 簡易保存用（本当はDB推奨）
+const sharedData = {};
+
+// POST /api/share
+app.post("/api/share", (req, res) => {
+  const { schedules } = req.body;
+  const id = randomBytes(4).toString("hex"); // ランダムID
+  sharedData[id] = { schedules };
+  res.json({ id });
 });
 
-// スケジュール削除
-app.delete("/api/schedules/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const client = await pool.connect();
-    await client.query(`DELETE FROM schedules WHERE id=$1`, [id]);
-    client.release();
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DB delete error:", err);
-    res.status(500).json({ success: false, error: err.message });
+// GET /api/share/:id
+app.get("/api/share/:id", (req, res) => {
+  const id = req.params.id;
+  if (!sharedData[id]) {
+    return res.status(404).json({ error: "Not found" });
   }
+  res.json(sharedData[id]);
 });
+
+app.listen(5000, () => console.log("✅ Backend running on 5000"));
