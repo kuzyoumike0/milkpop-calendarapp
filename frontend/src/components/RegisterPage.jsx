@@ -15,8 +15,6 @@ const RegisterPage = () => {
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
-
-  // 発行済みリンク一覧
   const [shareUrls, setShareUrls] = useState([]);
 
   const timeOptions = [...Array(24).keys()].map((h) =>
@@ -69,22 +67,7 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 時間帯変更 =====
-  const handleTimeTypeChange = (value) => {
-    setTimeType(value);
-    if (value === "終日") {
-      setStart("09:00");
-      setEnd("18:00");
-    } else if (value === "午前") {
-      setStart("06:00");
-      setEnd("12:00");
-    } else if (value === "午後") {
-      setStart("12:00");
-      setEnd("18:00");
-    }
-  };
-
-  // ===== 共有リンク生成 & DB保存 =====
+  // ===== 共有リンク生成 =====
   const handleShare = async () => {
     if (!title.trim()) {
       alert("タイトルを入力してください");
@@ -112,22 +95,12 @@ const RegisterPage = () => {
 
       const data = await res.json();
       if (data.ok && data.url) {
-        // ✅ 即時反映
         setShareUrls((prev) => [...prev, { title, url: data.url }]);
-
-        // 入力欄リセット
-        setTitle("");
-        setRange([null, null]);
-        setMultiDates([]);
-        setTimeType("終日");
-        setStart("09:00");
-        setEnd("18:00");
       } else {
         alert("リンク生成に失敗しました");
       }
     } catch (err) {
       console.error("❌ エラー:", err);
-      alert("サーバーエラーが発生しました");
     }
   };
 
@@ -150,9 +123,10 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== カレンダーと選択済み日程を横並び ===== */}
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-7/10 w-full">
+      {/* ===== 横並びレイアウト（カレンダー 7割・リスト 3割） ===== */}
+      <div className="register-layout">
+        {/* 左側カレンダー */}
+        <div className="calendar-section">
           <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
@@ -166,7 +140,8 @@ const RegisterPage = () => {
           />
         </div>
 
-        <div className="md:w-3/10 w-full">
+        {/* 右側リスト */}
+        <div className="schedule-section">
           <h3 className="font-bold">選択した日程</h3>
           <ul className="list-disc list-inside">
             {selectedList.map((d, i) => {
@@ -187,7 +162,7 @@ const RegisterPage = () => {
         <select
           className="p-2 border rounded text-black"
           value={timeType}
-          onChange={(e) => handleTimeTypeChange(e.target.value)}
+          onChange={(e) => setTimeType(e.target.value)}
         >
           <option value="終日">終日</option>
           <option value="午前">午前</option>
