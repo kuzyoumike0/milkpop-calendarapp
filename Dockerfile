@@ -3,15 +3,15 @@ FROM node:18 AS build
 
 WORKDIR /app
 
-# frontend
+# frontend 依存関係インストール
 COPY frontend/package.json ./frontend/
 RUN cd frontend && npm install
 
-# backend
+# backend 依存関係インストール
 COPY backend/package.json ./backend/
 RUN cd backend && npm install
 
-# ソースコピー & フロントビルド
+# フロントエンドのソースをコピー & ビルド
 COPY frontend ./frontend
 RUN cd frontend && npm run build
 
@@ -19,9 +19,13 @@ RUN cd frontend && npm run build
 FROM node:18
 WORKDIR /app
 
-COPY --from=build /app/backend ./backend
+# backend 全体をコピー
+COPY backend ./backend
+
+# フロントエンドのビルド成果物を backend/build に配置
 COPY --from=build /app/frontend/build ./backend/build
 
+# 本番用依存関係インストール
 WORKDIR /app/backend
 RUN npm install --production
 
