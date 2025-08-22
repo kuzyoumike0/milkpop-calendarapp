@@ -1,143 +1,85 @@
+// frontend/src/components/ShareLinkPage.jsx
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Button,
-  Container,
-  Heading,
-  Spinner,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-export default function ShareLinkPage() {
-  const { id } = useParams(); // URLの :id を取得
-  const [schedule, setSchedule] = useState(null);
-  const [loading, setLoading] = useState(true);
+const ShareLinkPage = () => {
+  const [links, setLinks] = useState([]);
 
+  // ===== 共有リンク取得 =====
   useEffect(() => {
-    async function fetchData() {
+    const fetchLinks = async () => {
       try {
-        const res = await fetch(`/api/schedules/${id}`);
-        if (!res.ok) throw new Error("not found");
+        const res = await fetch("/api/share-links");
         const data = await res.json();
-        setSchedule(data);
+        setLinks(data);
       } catch (err) {
-        setSchedule(null);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching share links:", err);
       }
-    }
-    fetchData();
-  }, [id]);
+    };
+    fetchLinks();
+  }, []);
 
-  if (loading) {
-    return (
-      <Container maxW="4xl" py={20} textAlign="center">
-        <Spinner size="xl" color="pink.300" />
-        <Text mt={4}>読み込み中...</Text>
-      </Container>
-    );
-  }
-
-  if (!schedule) {
-    return (
-      <Container maxW="4xl" py={20} textAlign="center">
-        <Heading size="lg" color="red.300">
-          予定が見つかりません
-        </Heading>
-        <Text mt={2}>リンクが間違っているか、削除された可能性があります。</Text>
-      </Container>
-    );
-  }
+  // ===== URLコピー =====
+  const handleCopy = (url) => {
+    navigator.clipboard.writeText(url);
+    alert("URLをコピーしました！");
+  };
 
   return (
-    <Container maxW="4xl" py={10}>
-      <VStack spacing={6}>
-        <Heading
-          size="2xl"
-          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-          bgClip="text"
-        >
-          共有された日程
-        </Heading>
+    <div className="min-h-screen bg-black text-white font-sans">
+      {/* ===== バナー ===== */}
+      <header className="bg-[#004CA0] text-white py-4 shadow-md flex justify-between items-center px-6">
+        <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
+        <nav className="space-x-4">
+          <Link
+            to="/register"
+            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
+          >
+            日程登録ページ
+          </Link>
+          <Link
+            to="/personal"
+            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
+          >
+            個人スケジュール
+          </Link>
+        </nav>
+      </header>
 
-        {/* タイトル */}
-        <Box
-          w="100%"
-          p={6}
-          borderRadius="xl"
-          bg="whiteAlpha.100"
-          border="1px solid"
-          borderColor="whiteAlpha.300"
-          textAlign="center"
-        >
-          <Text fontSize="2xl" fontWeight="bold">
-            {schedule.title}
-          </Text>
-        </Box>
+      {/* ===== 本体 ===== */}
+      <main className="max-w-4xl mx-auto p-6">
+        <h2 className="text-xl font-bold mb-6 text-[#FDB9C8]">
+          発行された共有リンク一覧
+        </h2>
 
-        {/* 日程リスト */}
-        <Box
-          w="100%"
-          p={6}
-          borderRadius="xl"
-          bg="whiteAlpha.50"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-        >
-          <Heading size="md" mb={4}>
-            選択された日程
-          </Heading>
-          {schedule.dates && schedule.dates.length > 0 ? (
-            schedule.dates.map((d, i) => (
-              <Text key={i} fontSize="lg" color="cyan.200">
-                📅 {d}
-              </Text>
-            ))
-          ) : (
-            <Text color="gray.400">日程が未設定です。</Text>
-          )}
-        </Box>
-
-        {/* 時間帯 */}
-        <Box
-          w="100%"
-          p={6}
-          borderRadius="xl"
-          bg="whiteAlpha.50"
-          border="1px solid"
-          borderColor="whiteAlpha.200"
-        >
-          <Heading size="md" mb={2}>
-            時間帯
-          </Heading>
-          <Text fontSize="lg" color="pink.200">
-            {schedule.timetype === "allday"
-              ? "終日"
-              : schedule.timetype === "day"
-              ? "昼"
-              : schedule.timetype === "night"
-              ? "夜"
-              : "時間指定"}
-          </Text>
-        </Box>
-
-        {/* 戻る */}
-        <Button
-          mt={6}
-          borderRadius="full"
-          bgGradient="linear(to-r, #FDB9C8, #004CA0)"
-          color="white"
-          _hover={{
-            transform: "scale(1.07)",
-            boxShadow: "0 0 15px #FDB9C8",
-          }}
-          onClick={() => (window.location.href = "/")}
-        >
-          トップへ戻る
-        </Button>
-      </VStack>
-    </Container>
+        {links.length === 0 ? (
+          <p className="text-gray-400">まだ共有リンクは発行されていません。</p>
+        ) : (
+          <div className="space-y-4">
+            {links.map((link) => (
+              <div
+                key={link.id}
+                className="bg-[#1a1a1a] rounded-xl shadow p-4 flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-semibold text-lg text-[#FDB9C8]">
+                    {link.title || "タイトルなし"}
+                  </p>
+                  <p className="text-gray-300">{link.url}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(link.url)}
+                  className="px-4 py-2 rounded-lg bg-[#FDB9C8] text-black font-bold hover:opacity-80"
+                >
+                  コピー
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
-}
+};
+
+export default ShareLinkPage;
