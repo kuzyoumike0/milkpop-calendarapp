@@ -1,278 +1,200 @@
-// frontend/src/components/PersonalPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
-import Holidays from "date-holidays";
-import SelectMode from "./SelectMode";
 import "../index.css";
 
-const hd = new Holidays("JP");
-
-const PersonalPage = () => {
+const RegisterPage = () => {
   const [mode, setMode] = useState("range"); // "range" | "multi"
   const [range, setRange] = useState([null, null]);
-  const [multiDates, setMultiDates] = useState([]);
+  const [selectedList, setSelectedList] = useState([]);
+  const [dateOptions, setDateOptions] = useState({});
+  const [shareUrls, setShareUrls] = useState([]);
 
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [timeType, setTimeType] = useState("終日");
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("18:00");
-
-  const [savedSchedules, setSavedSchedules] = useState([]); // DB保存したものを即時反映
-
-  const timeOptions = [...Array(24).keys()].map((h) =>
-    `${h.toString().padStart(2, "0")}:00`
+  const [timeOptions] = useState(
+    [...Array(24).keys()].map((h) => `${h}:00`)
+  );
+  const [endTimeOptions] = useState(
+    [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00")
   );
 
-  // ===== 日本時間の今日 =====
-  const today = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
+  // ==== 日本の祝日APIから祝日取得 ====
+  const [holidays, setHolidays] = useState({});
+  useEffect(() => {
+    fetch("https://holidays-jp.github.io/api/v1/date.json")
+      .then((res) => res.json())
+      .then((data) => setHolidays(data))
+      .catch(() => setHolidays({}));
+  }, []);
 
-  // ===== カレンダー日付の色付け =====
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (
-        date.getFullYear() === today.getFullYear() &&
-        date.getMonth() === today.getMonth() &&
-        date.getDate() === today.getDate()
-      ) {
-        return "today-highlight";
-      }
-      if (holiday) return "holiday";
-      if (date.getDay() === 0) return "sunday";
-      if (date.getDay() === 6) return "saturday";
-    }
-    return null;
-  };
-
-  // ===== 祝日名をセルに表示 =====
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (holiday) {
-        return <div className="holiday-label">{holiday[0].name}</div>;
-      }
-    }
-    return null;
-  };
-
-  // ===== 日付クリック処理 =====
+  // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+
     if (mode === "multi") {
-      const dateStr = date.toDateString();
-      if (multiDates.some((d) => d.toDateString() === dateStr)) {
-        setMultiDates(multiDates.filter((d) => d.toDateString() !== dateStr));
+      setSelectedList((prev) =>
+        prev.some((d) => d.toISOString().split("T")[0] === dateStr)
+          ? prev.filter((d) => d.toISOString().split("T")[0] !== dateStr)
+          : [...prev, date]
+      );
+    } else if (mode === "range") {
+      if (!range[0] || (range[0] && range[1])) {
+        setRange([date, null]);
       } else {
-        setMultiDates([...multiDates, date]);
+        const start = range[0] < date ? range[0] : date;
+        const end = range[0] < date ? date : range[0];
+        setRange([start, end]);
+
+        let dates = [];
+        let d = new Date(start);
+        while (d <= end) {
+          dates.push(new Date(d));
+          d.setDate(d.getDate() + 1);
+        }
+        setSelectedList(dates);
       }
     }
   };
 
-  // ===== 時間帯切り替え =====
-  const handleTimeTypeChange = (value) => {
-    setTimeType(value);
-    if (value === "終日") {
-      setStart("09:00");
-      setEnd("18:00");
-    } else if (value === "午前") {
-      setStart("06:00");
-      setEnd("12:00");
-    } else if (value === "午後") {
-      setStart("12:00");
-      setEnd("18:00");
-    }
+  // ==== プルダウン変更 ====
+  const handleOptionChange = (dateStr, key, value) => {
+    setDateOptions((prev) => ({
+      ...prev,
+      [dateStr]: { ...prev[dateStr], [key]: value },
+    }));
   };
 
-  // ===== 保存処理（DBへ送信） =====
-  const handleSave = async () => {
-    if (!title.trim()) {
-      alert("タイトルを入力してください");
-      return;
-    }
-
-    const dates =
-      mode === "range" ? range.filter((d) => d !== null) : multiDates;
-
-    if (dates.length === 0) {
-      alert("日程を選択してください");
-      return;
-    }
+  // ==== 保存処理 ====
+  const saveSchedule = async () => {
+    const formatted = selectedList.map((d) => {
+      const dateStr = d.toISOString().split("T")[0];
+      const option = dateOptions[dateStr] || { type: "終日" };
+      return {
+        date: dateStr,
+        type: option.type,
+        start: option.start || null,
+        end: option.end || null,
+      };
+    });
 
     try {
-      const res = await fetch("/api/personal-schedule", {
+      const res = await fetch("http://localhost:5000/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          memo,
-          dates: dates.map((d) => d.toISOString()),
-          options: { type: timeType, start, end },
-        }),
+        body: JSON.stringify(formatted),
       });
 
       const data = await res.json();
-      if (data.ok) {
-        // ✅ 即時反映
-        setSavedSchedules((prev) => [
-          ...prev,
-          {
-            id: data.id,
-            title,
-            memo,
-            dates,
-            options: { type: timeType, start, end },
-          },
-        ]);
+      if (!res.ok) throw new Error(data.error || "保存に失敗しました");
 
-        // 入力欄リセット
-        setTitle("");
-        setMemo("");
-        setRange([null, null]);
-        setMultiDates([]);
-        setTimeType("終日");
-        setStart("09:00");
-        setEnd("18:00");
-      } else {
-        alert("保存に失敗しました");
-      }
+      const newUrl = `${window.location.origin}/share/${data.shareId}`;
+      setShareUrls((prev) => [newUrl, ...prev]);
     } catch (err) {
-      console.error("❌ エラー:", err);
-      alert("サーバーエラーが発生しました");
+      console.error("保存エラー:", err);
     }
   };
 
-  // ===== 選択済み日程リスト =====
-  const selectedList =
-    mode === "range" ? range.filter((d) => d !== null) : multiDates;
+  // ==== 今日の日付（JST） ====
+  const todayStr = new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Asia/Tokyo",
+  });
 
   return (
     <div className="page-container">
-      <h2 className="page-title">個人日程登録</h2>
+      <h1 className="page-title">📅 日程登録</h1>
 
-      {/* ===== タイトル入力 ===== */}
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">タイトル</label>
-        <input
-          className="p-2 border rounded w-full text-black"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：出張、病院、打ち合わせ"
-        />
-      </div>
-
-      {/* ===== メモ入力 ===== */}
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">メモ</label>
-        <textarea
-          className="p-2 border rounded w-full text-black"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="詳細や備考を入力"
-        />
-      </div>
-
-      {/* ===== カレンダーと選択済み日程を横並び ===== */}
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="md:w-7/10 w-full">
-          <SelectMode mode={mode} setMode={setMode} />
+      <div className="register-layout">
+        {/* ===== カレンダー ===== */}
+        <div className="calendar-section">
           <Calendar
             selectRange={mode === "range"}
-            onChange={setRange}
-            value={mode === "range" ? range : null}
             onClickDay={handleDateClick}
-            tileClassName={tileClassName}
-            tileContent={tileContent}
-            locale="ja-JP"
-            calendarType="gregory"
+            value={selectedList}
+            tileClassName={({ date }) => {
+              const dateStr = date.toISOString().split("T")[0];
+              if (dateStr === todayStr) return "today-highlight";
+              if (holidays[dateStr]) return "holiday";
+              if (date.getDay() === 0) return "sunday";
+              if (date.getDay() === 6) return "saturday";
+              return "";
+            }}
           />
         </div>
 
-        <div className="md:w-3/10 w-full">
-          <h3 className="font-bold">選択した日程</h3>
-          <ul className="list-disc list-inside">
-            {selectedList.map((d, i) => {
-              const holiday = hd.isHoliday(d);
-              const holidayName = holiday ? `（${holiday[0].name}）` : "";
-              return (
-                <li key={i}>
-                  {d.toLocaleDateString()} {holidayName}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </div>
+        {/* ===== 日程リスト ===== */}
+        <div className="schedule-section">
+          <h3>📝 選択した日程</h3>
+          {selectedList.length === 0 && <p>日程を選択してください</p>}
+          {selectedList.map((d, idx) => {
+            const dateStr = d.toISOString().split("T")[0];
+            const option = dateOptions[dateStr] || { type: "終日" };
+            return (
+              <div key={idx} className="schedule-item">
+                <span>{dateStr}</span>
+                <select
+                  value={option.type}
+                  onChange={(e) =>
+                    handleOptionChange(dateStr, "type", e.target.value)
+                  }
+                >
+                  <option value="終日">終日</option>
+                  <option value="午前">午前</option>
+                  <option value="午後">午後</option>
+                  <option value="時間指定">時間指定</option>
+                </select>
+                {option.type === "時間指定" && (
+                  <>
+                    <select
+                      value={option.start || ""}
+                      onChange={(e) =>
+                        handleOptionChange(dateStr, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={option.end || ""}
+                      onChange={(e) =>
+                        handleOptionChange(dateStr, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了</option>
+                      {endTimeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <button className="submit-btn" onClick={saveSchedule}>
+            保存する
+          </button>
 
-      {/* ===== 時間指定プルダウン ===== */}
-      <div className="mt-4 space-y-2">
-        <select
-          className="p-2 border rounded text-black"
-          value={timeType}
-          onChange={(e) => handleTimeTypeChange(e.target.value)}
-        >
-          <option value="終日">終日</option>
-          <option value="午前">午前</option>
-          <option value="午後">午後</option>
-          <option value="時刻指定">時刻指定</option>
-        </select>
-
-        {timeType === "時刻指定" && (
-          <div className="mt-2 flex gap-2">
-            <select
-              className="p-2 border rounded text-black"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-            〜
-            <select
-              className="p-2 border rounded text-black"
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-              <option value="24:00">24:00</option>
-            </select>
-          </div>
-        )}
-      </div>
-
-      {/* ===== 保存ボタン ===== */}
-      <div className="mt-6 text-center">
-        <button className="fancy-btn px-6 py-2" onClick={handleSave}>
-          保存する
-        </button>
-      </div>
-
-      {/* ===== 保存済み一覧 ===== */}
-      {savedSchedules.length > 0 && (
-        <div className="mt-6">
-          <h3 className="font-bold">保存済みスケジュール</h3>
-          <ul className="list-disc list-inside">
-            {savedSchedules.map((item, idx) => (
-              <li key={idx}>
-                <strong>{item.title}</strong>（{item.options.type}）<br />
-                {item.dates.map((d, i) => (
-                  <span key={i}>
-                    {new Date(d).toLocaleDateString()}{" "}
-                  </span>
+          {shareUrls.length > 0 && (
+            <div style={{ marginTop: "20px" }}>
+              <h4>🔗 共有リンク</h4>
+              <ul>
+                {shareUrls.map((url, idx) => (
+                  <li key={idx}>
+                    <a href={url} target="_blank" rel="noreferrer">
+                      {url}
+                    </a>
+                  </li>
                 ))}
-                <br />
-                <span className="text-gray-500">{item.memo}</span>
-              </li>
-            ))}
-          </ul>
+              </ul>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default PersonalPage;
+export default RegisterPage;
