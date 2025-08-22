@@ -75,21 +75,6 @@
   left: 0;
 }
 
-/* ===== トップページのロゴ画像 ===== */
-.logo-image {
-  width: 80%;        /* ページ幅に対する割合 */
-  max-width: 1040px;  /* 最大サイズ */
-  height: auto;      /* 縦横比を維持して自動調整 */
-  border-radius: 16px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.logo-image:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.35);
-}
-
 /* ===== ページタイトル ===== */
 .page-title {
   font-size: 1.8rem;
@@ -213,15 +198,25 @@
   box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
 }
 
-/* 出欠プルダウン */
-.schedule-item select:first-of-type {
-  background: #fdfdfd;
-  font-weight: bold;
+/* ===== 送信ボタン ===== */
+.submit-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
 }
 
-/* 時間帯プルダウン */
-.schedule-item select:last-of-type {
-  background: #f9fbff;
+.submit-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
 }
 
 /* ===== スマホ対応 ===== */
@@ -245,7 +240,7 @@
     text-align: center;
     margin-bottom: 6px;
   }
-} /* 👈 ここで閉じる */
+}
 
 /* ===== 全体レイアウト調整（ヘッダー・フッター固定対応） ===== */
 .app-container {
@@ -258,4 +253,3 @@
   flex: 1;
   padding-bottom: 80px; /* フッターと重ならないように */
 }
-
