@@ -70,7 +70,12 @@
   font-family: 'M PLUS Rounded 1c', sans-serif;
   border-top: 2px solid #ff99bb;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-  margin-top: auto;  /* ← ページ最下部に寄せる */
+
+  position: fixed;   /* ← 固定する */
+  bottom: 0;         /* ← ページ下部に配置 */
+  left: 0;
+  width: 100%;       /* ← 横幅いっぱい */
+  z-index: 100;      /* ← 前面に出す */
 }
 
 .footer p {
@@ -84,6 +89,7 @@
   font-size: 0.8rem;
   opacity: 0.9;
 }
+
 
 /* ===== カレンダー全体 ===== */
 .rbc-calendar {
