@@ -45,6 +45,24 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
+// 保存済みスケジュール一覧を返す
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query(
+      `SELECT id, date, time_option, start_hour, end_hour 
+       FROM schedules 
+       ORDER BY date ASC`
+    );
+    client.release();
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("DB fetch error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // サーバー起動
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
