@@ -22,6 +22,9 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time: "時間指定", start: 10, end: 12 } }
 
+  const [editingKey, setEditingKey] = useState(null); // 編集中の日付
+  const [editValues, setEditValues] = useState({});   // 編集内容
+
   const dateKey = (d) => format(d, "yyyy-MM-dd");
 
   // 範囲選択クリック
@@ -64,6 +67,48 @@ const RegisterPage = () => {
         [field]: value,
       },
     }));
+  };
+
+  // 編集開始
+  const startEdit = (d) => {
+    const key = dateKey(d);
+    setEditingKey(key);
+    setEditValues(dateOptions[key] || {});
+  };
+
+  // 編集保存
+  const saveEdit = (d) => {
+    const key = dateKey(d);
+    if (
+      editValues.time === "時間指定" &&
+      (!editValues.start || !editValues.end || editValues.start >= editValues.end)
+    ) {
+      alert(`${key} の開始・終了時刻が不正です`);
+      return;
+    }
+    setDateOptions((prev) => ({
+      ...prev,
+      [key]: { ...editValues },
+    }));
+    setEditingKey(null);
+    setEditValues({});
+  };
+
+  // 編集キャンセル
+  const cancelEdit = () => {
+    setEditingKey(null);
+    setEditValues({});
+  };
+
+  // 削除
+  const deleteDate = (d) => {
+    const key = dateKey(d);
+    setSelectedDates((prev) => prev.filter((x) => dateKey(x) !== key));
+    setDateOptions((prev) => {
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
   };
 
   // 送信処理
@@ -161,54 +206,81 @@ const RegisterPage = () => {
             {selectedDates.map((d, i) => {
               const key = dateKey(d);
               const opt = dateOptions[key] || {};
+              const isEditing = editingKey === key;
+
               return (
                 <li key={i} className="schedule-item">
                   <span>{format(d, "yyyy/MM/dd (E)", { locale: ja })}</span>
 
-                  {/* 時間帯 */}
-                  <select
-                    value={opt.time || ""}
-                    onChange={(e) =>
-                      handleOptionChange(d, "time", e.target.value)
-                    }
-                  >
-                    <option value="">時間帯</option>
-                    <option value="終日">終日</option>
-                    <option value="昼">昼</option>
-                    <option value="夜">夜</option>
-                    <option value="時間指定">時間指定</option>
-                  </select>
-
-                  {/* 時間指定プルダウン */}
-                  {opt.time === "時間指定" && (
+                  {isEditing ? (
                     <>
+                      {/* 編集モード */}
                       <select
-                        value={opt.start || ""}
+                        value={editValues.time || ""}
                         onChange={(e) =>
-                          handleOptionChange(d, "start", Number(e.target.value))
+                          setEditValues({ ...editValues, time: e.target.value })
                         }
                       >
-                        <option value="">開始</option>
-                        {Array.from({ length: 24 }, (_, h) => (
-                          <option key={h + 1} value={h + 1}>
-                            {h + 1}時
-                          </option>
-                        ))}
+                        <option value="">時間帯</option>
+                        <option value="終日">終日</option>
+                        <option value="昼">昼</option>
+                        <option value="夜">夜</option>
+                        <option value="時間指定">時間指定</option>
                       </select>
 
-                      <select
-                        value={opt.end || ""}
-                        onChange={(e) =>
-                          handleOptionChange(d, "end", Number(e.target.value))
-                        }
-                      >
-                        <option value="">終了</option>
-                        {Array.from({ length: 24 }, (_, h) => (
-                          <option key={h + 1} value={h + 1}>
-                            {h + 1}時
-                          </option>
-                        ))}
-                      </select>
+                      {editValues.time === "時間指定" && (
+                        <>
+                          <select
+                            value={editValues.start || ""}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                start: Number(e.target.value),
+                              })
+                            }
+                          >
+                            <option value="">開始</option>
+                            {Array.from({ length: 24 }, (_, h) => (
+                              <option key={h + 1} value={h + 1}>
+                                {h + 1}時
+                              </option>
+                            ))}
+                          </select>
+
+                          <select
+                            value={editValues.end || ""}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                end: Number(e.target.value),
+                              })
+                            }
+                          >
+                            <option value="">終了</option>
+                            {Array.from({ length: 24 }, (_, h) => (
+                              <option key={h + 1} value={h + 1}>
+                                {h + 1}時
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+
+                      <button onClick={() => saveEdit(d)}>保存</button>
+                      <button onClick={cancelEdit}>キャンセル</button>
+                    </>
+                  ) : (
+                    <>
+                      {/* 通常表示 */}
+                      <span style={{ marginLeft: "8px" }}>
+                        {opt.time || "未指定"}
+                        {opt.time === "時間指定" &&
+                          opt.start &&
+                          opt.end &&
+                          ` (${opt.start}時〜${opt.end}時)`}
+                      </span>
+                      <button onClick={() => startEdit(d)}>✏ 編集</button>
+                      <button onClick={() => deleteDate(d)}>🗑 削除</button>
                     </>
                   )}
                 </li>
