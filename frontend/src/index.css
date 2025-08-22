@@ -1,12 +1,19 @@
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
-  font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+  font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
   color: #000;
   background: #fff; /* ✅ ページ背景は白 */
   min-height: 100vh;
-  line-height: 1.6;
+  line-height: 1.7;
 }
+
+/* 見出し・タイトル */
+h1, h2, h3, .welcome-text, .page-title {
+  font-family: 'Potta One', cursive;
+  letter-spacing: 0.05em;
+}
+
 
 /* ===== バナー（ヘッダー） ===== */
 .banner {
