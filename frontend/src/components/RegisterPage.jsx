@@ -8,20 +8,14 @@ import "../index.css";
 const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [rangeStart, setRangeStart] = useState(null);
-
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
   const [dateOptions, setDateOptions] = useState({});
-
   const navigate = useNavigate();
 
-  // 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
-
     if (mode === "multi") {
-      // === 複数選択 ===
       if (selectedDates.some(d => d.toDateString() === dateStr)) {
         setSelectedDates(selectedDates.filter(d => d.toDateString() !== dateStr));
         const updated = { ...dateOptions };
@@ -35,41 +29,18 @@ const RegisterPage = () => {
         });
       }
     } else {
-      // === 範囲選択 ===
-      if (!rangeStart) {
-        // 1クリック目 → 開始日保存
-        setRangeStart(date);
+      if (selectedDates.some(d => d.toDateString() === dateStr)) {
+        setSelectedDates([]);
+        setDateOptions({});
+      } else {
         setSelectedDates([date]);
         setDateOptions({
           [dateStr]: { type: "終日", start: "0:00", end: "23:00" }
         });
-      } else {
-        // 2クリック目 → 範囲確定
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-
-        let days = [];
-        let loop = new Date(start);
-        while (loop <= end) {
-          days.push(new Date(loop));
-          loop.setDate(loop.getDate() + 1);
-        }
-
-        setSelectedDates(days);
-
-        const updated = {};
-        days.forEach((d) => {
-          updated[d.toDateString()] = { type: "終日", start: "0:00", end: "23:00" };
-        });
-        setDateOptions(updated);
-
-        // 範囲完了 → 次回のためリセット
-        setRangeStart(null);
       }
     }
   };
 
-  // 区分変更
   const handleTypeChange = (dateStr, value) => {
     setDateOptions({
       ...dateOptions,
@@ -77,16 +48,11 @@ const RegisterPage = () => {
     });
   };
 
-  // 時刻変更
   const handleTimeChange = (dateStr, field, value) => {
     let updated = { ...dateOptions };
     updated[dateStr][field] = value;
-
     const startIdx = timeOptions.indexOf(updated[dateStr].start);
-    const endIdx = updated[dateStr].end === "24:00"
-      ? 24
-      : timeOptions.indexOf(updated[dateStr].end);
-
+    const endIdx = updated[dateStr].end === "24:00" ? 24 : timeOptions.indexOf(updated[dateStr].end);
     if (startIdx >= endIdx) {
       if (field === "start") {
         updated[dateStr].end = startIdx < 23 ? timeOptions[startIdx + 1] : "24:00";
@@ -94,11 +60,9 @@ const RegisterPage = () => {
         updated[dateStr].start = endIdx > 0 ? timeOptions[endIdx - 1] : "0:00";
       }
     }
-
     setDateOptions(updated);
   };
 
-  // 共有リンク発行
   const handleShareLink = async () => {
     try {
       const res = await fetch("/api/schedules", {
@@ -110,7 +74,6 @@ const RegisterPage = () => {
           options: dateOptions
         }),
       });
-
       const data = await res.json();
       if (data.ok && data.id) {
         navigate(`/share/${data.id}`);
@@ -126,30 +89,22 @@ const RegisterPage = () => {
       <h2 className="page-title">日程登録ページ</h2>
 
       <div className="register-layout">
-        {/* ===== 左：カレンダー ===== */}
+        {/* 左：カレンダー */}
         <div className="calendar-section">
           <div className="calendar-header">
             <SelectMode mode={mode} setMode={setMode} />
           </div>
           <Calendar
             onClickDay={handleDateClick}
-            tileClassName={({ date }) => {
-              const dateStr = date.toDateString();
-
-              if (selectedDates.some(d => d.toDateString() === dateStr)) {
-                return "selected-date";
-              }
-
-              if (mode === "range" && rangeStart && rangeStart.toDateString() === dateStr) {
-                return "range-start-date";
-              }
-
-              return null;
-            }}
+            tileClassName={({ date }) =>
+              selectedDates.some(d => d.toDateString() === date.toDateString())
+                ? "selected-date"
+                : null
+            }
           />
         </div>
 
-        {/* ===== 右：選択日程リスト ===== */}
+        {/* 右：日程リスト */}
         <div className="schedule-section">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 && <p>日程を選択してください。</p>}
@@ -159,7 +114,6 @@ const RegisterPage = () => {
             return (
               <div key={i} className="schedule-item">
                 <span>{d.toLocaleDateString()}</span>
-                {/* 区分選択 */}
                 <select
                   className="vote-select"
                   value={option.type}
@@ -171,7 +125,6 @@ const RegisterPage = () => {
                   <option value="時刻指定">時刻指定</option>
                 </select>
 
-                {/* 時刻指定のときのみ表示 */}
                 {option.type === "時刻指定" && (
                   <div className="time-selects">
                     <select
@@ -197,7 +150,6 @@ const RegisterPage = () => {
             );
           })}
 
-          {/* 共有リンク発行ボタン */}
           {selectedDates.length > 0 && (
             <button className="fancy-btn" onClick={handleShareLink}>
               共有リンクを発行
