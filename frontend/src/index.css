@@ -1,32 +1,38 @@
 /* ===== フォント ===== */
-@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Reggae+One&family=Zen+Maru+Gothic:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&family=Yomogi&family=Kaisei+Decol:wght@400;700&display=swap');
 
 /* ===== ページ全体 ===== */
 body {
   margin: 0;
   padding: 0;
-  line-height: 1.7;
-  color: black;
+  line-height: 1.8;
+  color: #333;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  font-size: 1.05rem;
 }
 
-/* ===== 見出しを特にかわいく ===== */
-h1, h2, .page-title, .welcome-text {
-  font-family: 'Reggae One','Zen Maru Gothic',cursive,sans-serif;
+/* ===== 見出し ===== */
+h1, h2, .page-title {
+  font-family: 'Reggae One','Kaisei Decol','Zen Maru Gothic',cursive,sans-serif;
   font-weight: bold;
   color: #ff5fa2;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  letter-spacing: 1px;
 }
 
-/* ===== ページコンテナ ===== */
-.page-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  padding: 20px;
-  background: #fffafc;
-  color: #333;
+/* ===== 本文 ===== */
+p, label, input, select, button {
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+/* ===== アクセントテキスト ===== */
+.accent-text {
+  font-family: 'Yomogi','Zen Maru Gothic',cursive;
+  font-size: 1.1rem;
+  color: #004CA0;
 }
 
 /* ===== ヘッダー ===== */
@@ -59,19 +65,7 @@ header .nav a:hover {
   color: #ff5fa2;
 }
 
-/* ===== フッター ===== */
-footer {
-  background: black;
-  color: white;
-  padding: 14px 20px;
-  text-align: center;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
-
-/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
+/* ===== レイアウト（左7割カレンダー + 右3割リスト） ===== */
 .register-layout {
   display: flex;
   gap: 24px;
@@ -84,18 +78,53 @@ footer {
   flex: 0 0 70%;
   max-width: 70%;
   background: #fff;
-  padding: 16px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border: 3px solid #FDB9C8;
 }
 .schedule-section {
   flex: 0 0 30%;
   max-width: 30%;
   background: #fff;
   padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  border-radius: 24px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   min-width: 300px;
+}
+
+/* ===== 入力欄 ===== */
+.title-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 12px;
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+.title-input:focus {
+  outline: none;
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.5);
+}
+
+/* ===== ボタン ===== */
+button, .submit-btn {
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  font-weight: bold;
+  border-radius: 30px;
+}
+.submit-btn {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: white;
+  padding: 12px 24px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+.submit-btn:hover {
+  transform: scale(1.05);
 }
 
 /* ===== react-calendar カスタム ===== */
@@ -107,11 +136,6 @@ footer {
   padding: 20px;
   font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
   box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-}
-.react-calendar__navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
 }
 .react-calendar__navigation button {
   background: #FDB9C8;
@@ -131,7 +155,6 @@ footer {
   text-align: center;
   font-weight: bold;
   color: #004CA0;
-  padding-bottom: 6px;
 }
 .react-calendar__tile {
   padding: 12px 0;
@@ -145,7 +168,6 @@ footer {
   transform: scale(1.08);
   font-weight: bold;
 }
-/* 今日 */
 .react-calendar__tile--now,
 .react-calendar__tile--today {
   background: #004CA0 !important;
@@ -154,89 +176,12 @@ footer {
   border-radius: 12px;
   box-shadow: 0 0 8px rgba(0,0,0,0.4);
 }
-/* 選択 */
 .react-calendar__tile--active {
   background: #FDB9C8 !important;
   color: black !important;
   font-weight: bold;
 }
-/* 祝日 */
 .react-calendar__tile.holiday {
-  color: red !important;
-  font-weight: bold;
-}
-
-/* ===== 自作カレンダー（オリジナル表示用） ===== */
-.custom-calendar {
-  background: #fff;
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  border: 3px solid #FDB9C8;
-}
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.calendar-header h3 {
-  margin: 0;
-  color: #004ca0;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.calendar-header button {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 12px;
-  padding: 6px 14px;
-  font-weight: bold;
-  cursor: pointer;
-  color: #fff;
-  transition: all 0.2s;
-}
-.calendar-header button:hover {
-  opacity: 0.85;
-  transform: scale(1.05);
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-}
-.weekday {
-  text-align: center;
-  font-weight: bold;
-  color: #004ca0;
-  padding: 4px 0;
-}
-.day {
-  text-align: center;
-  padding: 14px 0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s, background 0.3s;
-  background: #fafafa;
-  border: 1px solid transparent;
-}
-.day:hover {
-  background: #ffe4ec;
-  transform: scale(1.05);
-  border: 1px solid #FDB9C8;
-}
-.day.today {
-  background: #004ca0 !important;
-  color: white !important;
-  font-weight: bold;
-  box-shadow: 0 0 6px rgba(0,0,0,0.3);
-}
-.day.selected {
-  background: #fdb9c8 !important;
-  color: white !important;
-  font-weight: bold;
-}
-.day.holiday {
   color: red !important;
   font-weight: bold;
 }
@@ -244,8 +189,5 @@ footer {
 /* ===== スマホ対応 ===== */
 @media (max-width: 900px) {
   .register-layout { flex-direction: column; }
-  .calendar-section, .schedule-section {
-    max-width: 100%;
-    flex: 0 0 100%;
-  }
+  .calendar-section, .schedule-section { max-width: 100%; flex: 0 0 100%; }
 }
