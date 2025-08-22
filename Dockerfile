@@ -12,19 +12,17 @@ RUN npm run build
 
 # ===== バックエンド =====
 FROM node:18 AS backend
-WORKDIR /app
+WORKDIR /app/backend
 
 # バックエンド依存関係
 COPY backend/package*.json ./
 RUN npm install
 
 # バックエンドソースをコピー
-COPY backend ./backend
+COPY backend/ ./
 
-# フロントのビルド成果物をコピー
-COPY --from=frontend-build /app/frontend/build ./frontend/build
-
-WORKDIR /app/backend
+# フロントのビルド成果物を backend 配下にコピー
+COPY --from=frontend-build /app/frontend/build ./build
 
 # Railway 用ポート設定
 ENV PORT=3000
