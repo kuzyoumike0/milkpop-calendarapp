@@ -297,4 +297,30 @@
   background: rgba(0,76,160,0.1);
   font-weight: bold;
 }
+/* イベント一覧 */
+.event-list {
+  margin-top: 2rem;
+}
+
+.event-card {
+  background: #fff0f5;
+  border: 1px solid #fdb9c8;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: 0.2s;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.event-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
 
