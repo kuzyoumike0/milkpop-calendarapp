@@ -68,6 +68,21 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 時間帯選択時の処理（プリセット時間） =====
+  const handleTimeTypeChange = (value) => {
+    setTimeType(value);
+    if (value === "終日") {
+      setStart("09:00");
+      setEnd("18:00");
+    } else if (value === "午前") {
+      setStart("06:00");
+      setEnd("12:00");
+    } else if (value === "午後") {
+      setStart("12:00");
+      setEnd("18:00");
+    }
+  };
+
   // ===== 共有リンク生成 =====
   const handleShare = async () => {
     if (!title.trim()) {
@@ -124,9 +139,10 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== カレンダーと選択済み日程を横並び ===== */}
+      {/* ===== カレンダー左（7割） + 日程リスト右（3割） ===== */}
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1">
+        {/* 左：カレンダー */}
+        <div className="md:w-7/10 w-full">
           <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
@@ -140,7 +156,8 @@ const RegisterPage = () => {
           />
         </div>
 
-        <div className="flex-1">
+        {/* 右：選択日程リスト */}
+        <div className="md:w-3/10 w-full">
           <h3 className="font-bold">選択した日程</h3>
           <ul className="list-disc list-inside">
             {selectedList.map((d, i) => {
@@ -161,12 +178,11 @@ const RegisterPage = () => {
         <select
           className="p-2 border rounded text-black"
           value={timeType}
-          onChange={(e) => setTimeType(e.target.value)}
+          onChange={(e) => handleTimeTypeChange(e.target.value)}
         >
           <option value="終日">終日</option>
           <option value="午前">午前</option>
           <option value="午後">午後</option>
-          <option value="夜">夜</option>
           <option value="時刻指定">時刻指定</option>
         </select>
 
