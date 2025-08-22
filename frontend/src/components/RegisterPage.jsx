@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import Holidays from "date-holidays";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
 
@@ -12,6 +13,25 @@ const RegisterPage = () => {
   const [division, setDivision] = useState("終日");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+
+  const hd = new Holidays("JP"); // 🇯🇵 日本の祝日
+
+  // ====== 祝日をロード ======
+  useEffect(() => {
+    const year = new Date().getFullYear();
+    const holidayList = hd.getHolidays(year);
+
+    const holidayEvents = holidayList.map((h) => ({
+      id: `holiday-${h.date}`,
+      title: `🎌 ${h.name}`,
+      start: new Date(h.date),
+      end: new Date(h.date),
+      allDay: true,
+      type: "holiday",
+    }));
+
+    setEvents((prev) => [...holidayEvents, ...prev]);
+  }, []);
 
   // 時刻選択リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
@@ -62,15 +82,16 @@ const RegisterPage = () => {
     setEndTime("10:00");
   };
 
-  // イベント削除
+  // イベント削除（祝日は削除できない）
   const handleDeleteEvent = (id) => {
+    if (String(id).startsWith("holiday-")) return; // 🎌 祝日は削除禁止
     setEvents(events.filter((ev) => ev.id !== id));
   };
 
   return (
     <div className="page-card">
       <h2 className="page-title">📅 日程登録</h2>
-      <p className="page-subtitle">Googleカレンダー風のスケジューラー</p>
+      <p className="page-subtitle">Googleカレンダー風スケジューラー（祝日対応）</p>
 
       {/* カレンダー */}
       <div className="calendar-container">
@@ -84,6 +105,19 @@ const RegisterPage = () => {
           views={["month", "week", "day", "agenda"]}
           onSelectSlot={handleSelectSlot}
           popup
+          eventPropGetter={(event) => {
+            if (event.type === "holiday") {
+              return {
+                style: {
+                  backgroundColor: "#ffe5e5",
+                  color: "#d60000",
+                  fontWeight: "bold",
+                  border: "1px solid #d60000",
+                },
+              };
+            }
+            return { style: {} };
+          }}
         />
       </div>
 
@@ -133,24 +167,26 @@ const RegisterPage = () => {
       )}
 
       {/* 登録済みイベント */}
-      {events.length > 0 && (
+      {events.filter((ev) => ev.type !== "holiday").length > 0 && (
         <div className="event-list">
           <h3>登録済みイベント</h3>
-          {events.map((ev) => (
-            <div key={ev.id} className="event-card">
-              <p>
-                {moment(ev.start).format("YYYY/MM/DD HH:mm")} ~{" "}
-                {moment(ev.end).format("HH:mm")} <br />
-                ⏰ {ev.division}
-              </p>
-              <button
-                className="delete-btn"
-                onClick={() => handleDeleteEvent(ev.id)}
-              >
-                削除
-              </button>
-            </div>
-          ))}
+          {events
+            .filter((ev) => ev.type !== "holiday")
+            .map((ev) => (
+              <div key={ev.id} className="event-card">
+                <p>
+                  {moment(ev.start).format("YYYY/MM/DD HH:mm")} ~{" "}
+                  {moment(ev.end).format("HH:mm")} <br />
+                  ⏰ {ev.division}
+                </p>
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDeleteEvent(ev.id)}
+                >
+                  削除
+                </button>
+              </div>
+            ))}
         </div>
       )}
     </div>
