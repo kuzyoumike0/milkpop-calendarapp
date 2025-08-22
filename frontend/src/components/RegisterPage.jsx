@@ -1,29 +1,34 @@
-// frontend/src/components/PersonalPage.jsx
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
+import SelectMode from "./SelectMode";
 import Holidays from "date-holidays";
 import "../index.css";
 
 const hd = new Holidays("JP");
 
-const PersonalPage = () => {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
+const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
+  const [title, setTitle] = useState("");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
+
+  // 発行済みリンク一覧
+  const [shareUrls, setShareUrls] = useState([]);
 
   const timeOptions = [...Array(24).keys()].map((h) =>
     `${h.toString().padStart(2, "0")}:00`
   );
 
+  // ===== 日本時間の今日 =====
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
 
+  // ===== カレンダー日付の色付け =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -41,6 +46,7 @@ const PersonalPage = () => {
     return null;
   };
 
+  // ===== 祝日名をセルに表示 =====
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -51,6 +57,7 @@ const PersonalPage = () => {
     return null;
   };
 
+  // ===== 日付クリック処理 =====
   const handleDateClick = (date) => {
     if (mode === "multi") {
       const dateStr = date.toDateString();
@@ -62,6 +69,7 @@ const PersonalPage = () => {
     }
   };
 
+  // ===== 時間帯変更 =====
   const handleTimeTypeChange = (value) => {
     setTimeType(value);
     if (value === "終日") {
@@ -76,57 +84,76 @@ const PersonalPage = () => {
     }
   };
 
+  // ===== 共有リンク生成 & DB保存 =====
+  const handleShare = async () => {
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return;
+    }
+
+    const dates =
+      mode === "range" ? range.filter((d) => d !== null) : multiDates;
+
+    if (dates.length === 0) {
+      alert("日程を選択してください");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: dates.map((d) => d.toISOString()),
+          options: { type: timeType, start, end },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.ok && data.url) {
+        // ✅ 即時反映
+        setShareUrls((prev) => [...prev, { title, url: data.url }]);
+
+        // 入力欄リセット
+        setTitle("");
+        setRange([null, null]);
+        setMultiDates([]);
+        setTimeType("終日");
+        setStart("09:00");
+        setEnd("18:00");
+      } else {
+        alert("リンク生成に失敗しました");
+      }
+    } catch (err) {
+      console.error("❌ エラー:", err);
+      alert("サーバーエラーが発生しました");
+    }
+  };
+
+  // ===== 選択済み日程リスト =====
   const selectedList =
     mode === "range" ? range.filter((d) => d !== null) : multiDates;
 
   return (
     <div className="page-container">
-      <h2 className="page-title">個人日程登録</h2>
+      <h2 className="page-title">日程登録</h2>
 
+      {/* ===== タイトル入力 ===== */}
       <div className="mb-4">
         <label className="block font-semibold mb-1">タイトル</label>
         <input
           className="p-2 border rounded w-full text-black"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="例：打ち合わせ、飲み会、旅行"
+          placeholder="例：歓迎会、旅行、ミーティング"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block font-semibold mb-1">メモ</label>
-        <textarea
-          className="p-2 border rounded w-full text-black"
-          rows="3"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-          placeholder="補足情報を入力してください"
-        />
-      </div>
-
+      {/* ===== カレンダーと選択済み日程を横並び ===== */}
       <div className="flex flex-col md:flex-row gap-6">
         <div className="md:w-7/10 w-full">
-          <div className="mb-2">
-            <label className="mr-4">
-              <input
-                type="radio"
-                value="range"
-                checked={mode === "range"}
-                onChange={() => setMode("range")}
-              />
-              範囲選択
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="multi"
-                checked={mode === "multi"}
-                onChange={() => setMode("multi")}
-              />
-              複数選択
-            </label>
-          </div>
-
+          <SelectMode mode={mode} setMode={setMode} />
           <Calendar
             selectRange={mode === "range"}
             onChange={setRange}
@@ -155,6 +182,7 @@ const PersonalPage = () => {
         </div>
       </div>
 
+      {/* ===== 時間指定プルダウン ===== */}
       <div className="mt-4 space-y-2">
         <select
           className="p-2 border rounded text-black"
@@ -193,11 +221,36 @@ const PersonalPage = () => {
         )}
       </div>
 
+      {/* ===== 共有リンクボタン ===== */}
       <div className="mt-6 text-center">
-        <button className="fancy-btn px-6 py-2">保存する</button>
+        <button className="fancy-btn px-6 py-2" onClick={handleShare}>
+          共有リンクを発行
+        </button>
       </div>
+
+      {/* ===== 発行済みリンク一覧 ===== */}
+      {shareUrls.length > 0 && (
+        <div className="mt-6">
+          <h3 className="font-bold">発行済みリンク</h3>
+          <ul className="list-disc list-inside">
+            {shareUrls.map((item, idx) => (
+              <li key={idx}>
+                {item.title}：{" "}
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#004CA0] underline"
+                >
+                  {item.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
 
-export default PersonalPage;
+export default RegisterPage;
