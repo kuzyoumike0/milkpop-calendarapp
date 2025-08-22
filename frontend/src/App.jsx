@@ -12,8 +12,9 @@ import "./index.css";
 const App = () => {
   return (
     <Router>
-      {/* ✅ 全体を縦方向flexにしてフッター固定 */}
+      {/* 縦方向レイアウト */}
       <div className="flex flex-col min-h-screen">
+        {/* コンテンツ部分 */}
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<TopPage />} />
@@ -24,6 +25,7 @@ const App = () => {
             <Route path="/link" element={<LinkPage />} />
           </Routes>
         </main>
+        {/* フッター（ページ下部） */}
         <Footer />
       </div>
     </Router>
