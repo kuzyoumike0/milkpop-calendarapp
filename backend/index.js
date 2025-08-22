@@ -17,6 +17,12 @@ const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const CALLBACK_URL =
   process.env.CALLBACK_URL || "http://localhost:3000/api/auth/discord/callback";
 
+if (!CLIENT_ID || !CLIENT_SECRET) {
+  console.error("❌ DISCORD_CLIENT_ID または DISCORD_CLIENT_SECRET が設定されていません");
+  process.exit(1);
+}
+
+
 // ===== ミドルウェア =====
 app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json());
