@@ -1,4 +1,6 @@
-# ====== フロントエンドをビルド ======
+# ==========================
+# 1. フロントエンドをビルド
+# ==========================
 FROM node:18 AS frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -6,15 +8,22 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# ====== バックエンドをセットアップ ======
-FROM node:18
+# ==========================
+# 2. バックエンドをセットアップ
+# ==========================
+FROM node:18 AS backend
 WORKDIR /app
 COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm install
-COPY backend/ ./ 
+COPY backend/ ./
 
-# フロントのビルド成果物を backend 配下にコピー
+# ==========================
+# 3. React のビルド成果物をコピー
+# ==========================
 COPY --from=frontend /app/frontend/build ./frontend/build
 
+# ==========================
+# 4. 起動コマンド
+# ==========================
 CMD ["node", "index.js"]
