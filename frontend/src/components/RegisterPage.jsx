@@ -19,7 +19,7 @@ const RegisterPage = () => {
 
   const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-  // 日付クリック（省略: 前と同じ）
+  // 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
@@ -51,6 +51,27 @@ const RegisterPage = () => {
     }
   };
 
+  // 曜日ヘッダー
+  const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
+
+  // 月の最初の日と日数
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+  // カレンダー用セル作成
+  const calendarCells = [];
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    calendarCells.push(null);
+  }
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    calendarCells.push(new Date(currentYear, currentMonth, d));
+  }
+
+  const isSameDate = (d1, d2) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+
   const formatDate = (date) =>
     `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
@@ -75,7 +96,7 @@ const RegisterPage = () => {
     <div className="card">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* タイトル */}
+      {/* タイトル入力 */}
       <div className="title-input">
         <label>タイトル：</label>
         <input
@@ -114,7 +135,62 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* ▼ カレンダー本体は省略（既存と同じ） */}
+      {/* カレンダー */}
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "12px 0" }}>
+        <button
+          onClick={() =>
+            setCurrentMonth((prev) =>
+              prev === 0 ? (setCurrentYear(currentYear - 1), 11) : prev - 1
+            )
+          }
+        >
+          ←
+        </button>
+        <strong>
+          {currentYear}年 {currentMonth + 1}月
+        </strong>
+        <button
+          onClick={() =>
+            setCurrentMonth((prev) =>
+              prev === 11 ? (setCurrentYear(currentYear + 1), 0) : prev + 1
+            )
+          }
+        >
+          →
+        </button>
+      </div>
+
+      <div className="calendar">
+        {daysOfWeek.map((day) => (
+          <div key={day} className="header">
+            {day}
+          </div>
+        ))}
+        {calendarCells.map((date, idx) => {
+          if (!date) return <div key={idx} className="day"></div>;
+
+          const dateStr = formatDate(date);
+          const isToday = isSameDate(date, today);
+          const isSelected = selectedDates.some((d) => isSameDate(d, date));
+          const holiday = hd.isHoliday(date);
+
+          let className = "day";
+          if (isToday) className += " today";
+          if (holiday) className += " holiday";
+          if (isSelected) className += " selected";
+
+          return (
+            <div
+              key={dateStr}
+              className={className}
+              onClick={() => handleDateClick(date)}
+            >
+              {date.getDate()}
+              {holiday && <div style={{ fontSize: "0.6rem" }}>{holiday.name}</div>}
+            </div>
+          );
+        })}
+      </div>
 
       {/* 選択日程表示 */}
       {selectedDates.length > 0 && (
