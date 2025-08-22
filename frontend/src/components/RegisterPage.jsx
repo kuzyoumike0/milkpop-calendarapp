@@ -105,6 +105,10 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 選択済み日程リスト =====
+  const selectedList =
+    mode === "range" ? range.filter((d) => d !== null) : multiDates;
+
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
@@ -120,52 +124,52 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== 範囲 or 複数選択 ===== */}
-      <SelectMode mode={mode} setMode={setMode} />
+      {/* ===== カレンダーと選択済み日程を横並び ===== */}
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1">
+          <SelectMode mode={mode} setMode={setMode} />
+          <Calendar
+            selectRange={mode === "range"}
+            onChange={setRange}
+            value={mode === "range" ? range : null}
+            onClickDay={handleDateClick}
+            tileClassName={tileClassName}
+            tileContent={tileContent}
+            locale="ja-JP"
+            calendarType="gregory"
+          />
+        </div>
 
-      {/* ===== カレンダー ===== */}
-      <Calendar
-        selectRange={mode === "range"}
-        onChange={setRange}
-        value={mode === "range" ? range : null}
-        onClickDay={handleDateClick}
-        tileClassName={tileClassName}
-        tileContent={tileContent}  // ✅ 祝日名を表示
-        locale="ja-JP"
-        calendarType="gregory"
-      />
-
-      {/* ===== 選択済み日付リスト ===== */}
-      <div className="mt-4">
-        <h3 className="font-bold">選択した日程</h3>
-        <ul className="list-disc list-inside">
-          {(mode === "range" ? range.filter((d) => d) : multiDates).map(
-            (d, i) => (
-              <li key={i}>{d.toLocaleDateString()}</li>
-            )
-          )}
-        </ul>
+        <div className="flex-1">
+          <h3 className="font-bold">選択した日程</h3>
+          <ul className="list-disc list-inside">
+            {selectedList.map((d, i) => {
+              const holiday = hd.isHoliday(d);
+              const holidayName = holiday ? `（${holiday[0].name}）` : "";
+              return (
+                <li key={i}>
+                  {d.toLocaleDateString()} {holidayName}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
 
-      {/* ===== 時間指定 ===== */}
+      {/* ===== 時間指定プルダウン ===== */}
       <div className="mt-4 space-y-2">
-        {["終日", "午前", "午後", "夜", "時刻指定"].map((t) => (
-          <label
-            key={t}
-            className={`cursor-pointer px-3 py-1 rounded-full border mr-2 ${
-              timeType === t ? "bg-[#004CA0] text-white" : "bg-white text-gray-700"
-            }`}
-          >
-            <input
-              type="radio"
-              className="hidden"
-              value={t}
-              checked={timeType === t}
-              onChange={() => setTimeType(t)}
-            />
-            {t}
-          </label>
-        ))}
+        <select
+          className="p-2 border rounded text-black"
+          value={timeType}
+          onChange={(e) => setTimeType(e.target.value)}
+        >
+          <option value="終日">終日</option>
+          <option value="午前">午前</option>
+          <option value="午後">午後</option>
+          <option value="夜">夜</option>
+          <option value="時刻指定">時刻指定</option>
+        </select>
+
         {timeType === "時刻指定" && (
           <div className="mt-2 flex gap-2">
             <select
