@@ -1,3 +1,4 @@
+
 /* ===== ページ全体のコンテナ ===== */
 .page-container {
   padding: 20px;
@@ -57,6 +58,20 @@
 .banner nav a:hover {
   background-color: rgba(255, 255, 255, 0.25);
   color: #FFDDEE;
+}
+
+.login-button {
+  background: #004ca0;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  margin-left: 16px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+.login-button:hover {
+  background: #FDB9C8;
 }
 
 /* ===== フッター ===== */
