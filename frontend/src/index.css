@@ -43,22 +43,22 @@
 
 
 /* ===== バナー（ヘッダー） ===== */
-.banner {
-  background: linear-gradient(90deg, #FDB9C8, #ff85a1, #004CA0);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: bold;
+.banner nav a {
+  margin-left: 2rem; /* ← 少し間隔広めに */
+  text-decoration: none;
+  font-size: 1rem;
   color: #fff;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
 }
 
-.banner h1 {
-  font-size: 1.8rem;
-  margin: 0;
-  font-family: 'Potta One', cursive; /* ロゴは遊び心を残す */
+.banner nav a:hover {
+  background: rgba(255,255,255,0.2); /* ホバー時に背景ぼんやり */
+  color: #FDB9C8;
+  text-shadow: 0 0 6px rgba(255,255,255,0.6);
 }
+
 
 /* ===== フッター ===== */
 .footer {
