@@ -1,24 +1,21 @@
 const express = require("express");
 const path = require("path");
-
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
-// APIルート例
+// フロントの build を配信
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// React Router 対応: どのルートでも index.html を返す
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
+
+// API ルート (例)
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from backend!" });
 });
 
-// === フロントエンドの静的ファイル配信 ===
-const frontendPath = path.join(__dirname, "../frontend/build");
-app.use(express.static(frontendPath));
-
-// React Router のために全リクエストを index.html にフォールバック
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
-
-// サーバー起動
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
