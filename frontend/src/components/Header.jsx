@@ -10,6 +10,7 @@ const Header = () => {
       <nav className="nav-links">
         <Link to="/">トップ</Link>
         <Link to="/register">日程登録</Link>
+        <Link to="/personal">個人スケジュール</Link> {/* ✅ 個人スケジュール追加 */}
       </nav>
     </header>
   );
