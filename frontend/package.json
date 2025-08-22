@@ -15,15 +15,15 @@
     "date-fns": "^3.6.0",
     "date-holidays": "^3.23.0",
     "react-scripts": "5.0.1",
-    "@craco/craco": "^7.1.0",              // ✅ cracoを追加
-    "tailwindcss": "^3.4.1",               // ✅ Tailwind
-    "autoprefixer": "^10.4.19",            // ✅ PostCSS用
-    "postcss": "^8.4.38"                   // ✅ PostCSS用
+    "@craco/craco": "^7.1.0",
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
   },
   "scripts": {
-    "start": "craco start",                // ✅ react-scripts → craco
-    "build": "craco build",                // ✅ react-scripts → craco
-    "test": "craco test",                  // ✅ react-scripts → craco
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   }
 }
