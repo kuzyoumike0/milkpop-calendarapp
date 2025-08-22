@@ -36,7 +36,7 @@ const SharePage = () => {
         const data = await res.json();
         if (data.ok) {
           setScheduleData(data.data);
-          setResponses(data.data.responses || {}); // サーバーに保存済みの出欠を反映
+          setResponses(data.data.responses || {});
         }
       } catch (err) {
         console.error("❌ スケジュール取得エラー:", err);
@@ -73,7 +73,7 @@ const SharePage = () => {
       const data = await res.json();
       if (data.ok) {
         alert("保存しました！");
-        setScheduleData(data.data); // 最新データに即反映
+        setScheduleData(data.data);
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
@@ -83,9 +83,11 @@ const SharePage = () => {
 
   return (
     <div className="page-container">
-      <h2 className="page-title">共有ページ</h2>
+      {/* ✅ タイトルを表示 */}
+      {scheduleData && (
+        <h2 className="page-title">{scheduleData.title}</h2>
+      )}
 
-      {/* 登録された日程リスト */}
       <h3>登録された日程</h3>
       {loading && <p>読み込み中...</p>}
       {!loading && scheduleData && scheduleData.dates?.length === 0 && (
@@ -119,31 +121,30 @@ const SharePage = () => {
 
       {/* ユーザー名入力 */}
       {!user && (
-        <div className="username-input mt-4">
+        <div className="username-input">
           <label>
             名前：
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="ml-2 p-1 border rounded"
             />
           </label>
         </div>
       )}
       {user && (
-        <p className="mt-2">Discordログイン中: <strong>{user.username}</strong></p>
+        <p>Discordログイン中: <strong>{user.username}</strong></p>
       )}
 
       {/* 保存ボタン */}
       {scheduleData && scheduleData.dates?.length > 0 && (
-        <button className="fancy-btn mt-4" onClick={handleSave}>
+        <button className="fancy-btn" onClick={handleSave}>
           保存
         </button>
       )}
 
-      {/* 下部に共有リンク */}
-      <div className="share-link-section mt-6">
+      {/* 共有リンク */}
+      <div className="share-link-section">
         <h3>このページの共有リンク</h3>
         <p className="share-link">
           <a href={shareUrl} target="_blank" rel="noopener noreferrer">
