@@ -1,45 +1,33 @@
-// frontend/src/components/RegisterPage.jsx
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Calendar from "react-calendar";
-import SelectMode from "./SelectMode";
-import "../index.css";
-import { v4 as uuidv4 } from "uuid"; // URL用ID発行
+// frontend/src/components/SharePage.jsx
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
-const RegisterPage = () => {
-  const [mode, setMode] = useState("range");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const navigate = useNavigate();
+const SharePage = () => {
+  const { id } = useParams();
+  const [schedule, setSchedule] = useState(null);
 
-  // ダミー保存関数（本来はバックエンドAPIにPOST）
-  const handleSave = () => {
-    const newId = uuidv4(); // ランダムID生成
-    localStorage.setItem(newId, JSON.stringify({
-      mode,
-      selectedDates
-    }));
+  useEffect(() => {
+    const data = localStorage.getItem(id);
+    if (data) {
+      setSchedule(JSON.parse(data));
+    }
+  }, [id]);
 
-    // 共有URLに遷移
-    navigate(`/share/${newId}`);
-  };
+  if (!schedule) {
+    return <p>この共有リンクは存在しません。</p>;
+  }
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録ページ</h2>
-
-      <SelectMode mode={mode} setMode={setMode} />
-
-      <div className="calendar-wrapper">
-        <Calendar
-          onClickDay={(date) => setSelectedDates([...selectedDates, date])}
-        />
-      </div>
-
-      <button className="btn" onClick={handleSave}>
-        共有リンクを発行
-      </button>
+      <h2 className="page-title">共有ページ</h2>
+      <p>モード: {schedule.mode === "range" ? "範囲選択" : "複数選択"}</p>
+      <ul>
+        {schedule.selectedDates.map((d, i) => (
+          <li key={i}>{new Date(d).toLocaleDateString()}</li>
+        ))}
+      </ul>
     </div>
   );
 };
 
-export default RegisterPage;
+export default SharePage;
