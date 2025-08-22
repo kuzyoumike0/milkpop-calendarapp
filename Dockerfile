@@ -1,25 +1,40 @@
-# ===== フロントエンドのビルド =====
-FROM node:18 AS frontend
+# ===========================
+# 1. Build Frontend
+# ===========================
+FROM node:18 AS frontend-build
+
 WORKDIR /app/frontend
-COPY frontend/package.json ./
-# package-lock.json が無いならこの行を削除
-# COPY frontend/package-lock.json ./
+
+COPY frontend/package.json frontend/package-lock.json* ./ 
 RUN npm install
-COPY frontend/ ./
+
+COPY frontend ./ 
 RUN npm run build
 
-# ===== バックエンド =====
+
+# ===========================
+# 2. Setup Backend
+# ===========================
 FROM node:18
+
 WORKDIR /app
-COPY backend/package.json ./backend/
-# package-lock.json が無いならこの行を削除
-# COPY backend/package-lock.json ./backend/
+
+# backend パッケージをコピーしてインストール
+COPY backend/package.json backend/package-lock.json* ./backend/
 WORKDIR /app/backend
 RUN npm install
-COPY backend/ ./
 
-# フロントのビルド成果物をコピー
-COPY --from=frontend /app/frontend/build ../frontend/build
+# frontend ビルド成果物を backend 側にコピー
+WORKDIR /app
+COPY --from=frontend-build /app/frontend/build ./frontend/build
+COPY backend ./backend
 
-EXPOSE 8080
-CMD ["node", "index.js"]
+WORKDIR /app/backend
+
+# 環境変数
+ENV NODE_ENV=production
+ENV PORT=5000
+
+EXPOSE 5000
+
+CMD ["npm", "start"]
