@@ -19,9 +19,10 @@ const localizer = dateFnsLocalizer({
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("multi"); // multi / range
-  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分
+  const [rangeStart, setRangeStart] = useState(null);
+  const [dateOptions, setDateOptions] = useState({});
 
-  // ▼ 日付をトグル選択（クリックで追加/解除）
+  // 日付トグル（追加・解除）
   const toggleDate = (date) => {
     const exists = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
@@ -30,13 +31,11 @@ const RegisterPage = () => {
     let updatedOptions = { ...dateOptions };
 
     if (exists) {
-      // 外す
       newDates = selectedDates.filter(
         (d) => d.toDateString() !== date.toDateString()
       );
       delete updatedOptions[date.toDateString()];
     } else {
-      // 追加
       newDates = [...selectedDates, date];
       updatedOptions[date.toDateString()] = {
         type: "allday",
@@ -49,43 +48,61 @@ const RegisterPage = () => {
     setDateOptions(updatedOptions);
   };
 
-  // ▼ 範囲選択
-  const handleSelectSlot = ({ start, end }) => {
+  // 範囲クリック選択
+  const handleDayClick = (date) => {
+    const exists = selectedDates.some(
+      (d) => d.toDateString() === date.toDateString()
+    );
+
+    // ✅ 選択済みなら解除
+    if (exists) {
+      toggleDate(date);
+      return;
+    }
+
     if (mode === "multi") {
-      toggleDate(new Date(start));
+      toggleDate(date);
     } else if (mode === "range") {
-      let days = [];
-      let current = new Date(start);
-      current.setHours(0, 0, 0, 0);
-      const last = new Date(end);
-      last.setHours(0, 0, 0, 0);
+      if (!rangeStart) {
+        // 範囲開始
+        setRangeStart(date);
+      } else {
+        // 範囲終了 → 開始と終了の間を選択
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
 
-      while (current <= last) {
-        days.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
+        let days = [];
+        let current = new Date(start);
+        current.setHours(0, 0, 0, 0);
+        const last = new Date(end);
+        last.setHours(0, 0, 0, 0);
 
-      // 追加だけ（削除は toggleDate に任せる）
-      let newDates = [...selectedDates];
-      let updatedOptions = { ...dateOptions };
-
-      days.forEach((d) => {
-        if (!newDates.some((s) => s.toDateString() === d.toDateString())) {
-          newDates.push(d);
-          updatedOptions[d.toDateString()] = {
-            type: "allday",
-            start: 1,
-            end: 2,
-          };
+        while (current <= last) {
+          days.push(new Date(current));
+          current.setDate(current.getDate() + 1);
         }
-      });
 
-      setSelectedDates(newDates);
-      setDateOptions(updatedOptions);
+        let newDates = [...selectedDates];
+        let updatedOptions = { ...dateOptions };
+
+        days.forEach((d) => {
+          if (!newDates.some((s) => s.toDateString() === d.toDateString())) {
+            newDates.push(d);
+            updatedOptions[d.toDateString()] = {
+              type: "allday",
+              start: 1,
+              end: 2,
+            };
+          }
+        });
+
+        setSelectedDates(newDates);
+        setDateOptions(updatedOptions);
+        setRangeStart(null); // 範囲選択リセット
+      }
     }
   };
 
-  // ▼ 日付セルのスタイル
   const dayPropGetter = (date) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
@@ -109,7 +126,10 @@ const RegisterPage = () => {
             type="radio"
             value="multi"
             checked={mode === "multi"}
-            onChange={() => setMode("multi")}
+            onChange={() => {
+              setMode("multi");
+              setRangeStart(null);
+            }}
           />
           複数選択
         </label>
@@ -118,7 +138,10 @@ const RegisterPage = () => {
             type="radio"
             value="range"
             checked={mode === "range"}
-            onChange={() => setMode("range")}
+            onChange={() => {
+              setMode("range");
+              setRangeStart(null);
+            }}
           />
           範囲選択
         </label>
@@ -126,13 +149,10 @@ const RegisterPage = () => {
 
       <Calendar
         localizer={localizer}
-        selectable
-        onSelectSlot={handleSelectSlot}
         views={["month"]}
         style={{ height: 500 }}
         dayPropGetter={dayPropGetter}
-        // クリックでもトグル可能にする
-        onDrillDown={(date) => toggleDate(date)}
+        onDrillDown={(date) => handleDayClick(date)}
       />
 
       {/* 選択結果 */}
@@ -143,10 +163,19 @@ const RegisterPage = () => {
             const key = d.toDateString();
             const opt = dateOptions[key] || {};
             return (
-              <li key={key} style={{ marginBottom: "1rem" }}>
-                {format(d, "yyyy/MM/dd (E)", { locale: ja })}
+              <li
+                key={key}
+                style={{
+                  marginBottom: "0.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <span style={{ minWidth: "180px" }}>
+                  {format(d, "yyyy/MM/dd (E)", { locale: ja })}
+                </span>
 
-                {/* 区分 */}
+                {/* 区分プルダウン */}
                 <select
                   value={opt.type}
                   onChange={(e) =>
@@ -163,7 +192,7 @@ const RegisterPage = () => {
                   <option value="time">時間指定</option>
                 </select>
 
-                {/* 時間指定の時だけ */}
+                {/* 時間指定時の開始・終了 */}
                 {opt.type === "time" && (
                   <span style={{ marginLeft: "1rem" }}>
                     <select
