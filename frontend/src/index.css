@@ -108,18 +108,28 @@
 }
 
 /* ロゴ画像の調整 */
+.top-page {
+  text-align: center;
+  padding: 40px 20px;
+}
+
 .logo-wrapper {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(8px);
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: center;
+  margin-top: 20px; /* 文字と画像の間に余白を追加 */
 }
 
 .logo-image {
-  width: 320px;   /* 👈 さらに小さめに */
+  max-width: 1040px;
   height: auto;
 }
+
+.welcome-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 20px; /* 👈 ここで文字の下に余白を入れる */
+}
+
 
 /* ===== ページタイトル ===== */
 .page-title {
