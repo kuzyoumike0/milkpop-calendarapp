@@ -173,10 +173,7 @@ body {
 .react-calendar__tile {
   border-radius: 10px !important;
   padding: 12px !important;
-  margin: 2px !important;
-  transition: all 0.3s ease !important;
-  text-align: center !important;
-  font-size: 1rem !important;
+  background: transparent !important;
 }
 .react-calendar__tile:hover {
   background: rgba(253, 185, 200, 0.25) !important;
