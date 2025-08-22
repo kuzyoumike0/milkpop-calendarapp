@@ -253,3 +253,36 @@
   flex: 1;
   padding-bottom: 80px; /* フッターと重ならないように */
 }
+// RegisterPage.jsx の handleSubmit 部分を修正
+const handleSubmit = async () => {
+  const results = selectedDates.map((d) => {
+    const key = dateKey(d);
+    return { date: key, ...dateOptions[key] };
+  });
+
+  // バリデーション
+  for (const r of results) {
+    if (r.time === "時間指定") {
+      if (!r.start || !r.end || r.start >= r.end) {
+        alert(`${r.date} の開始・終了時刻が不正です`);
+        return;
+      }
+    }
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/schedules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schedules: results }),
+    });
+
+    if (!res.ok) throw new Error("送信失敗");
+
+    const data = await res.json();
+    alert("送信成功！\n" + JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error(err);
+    alert("サーバーへの送信に失敗しました");
+  }
+};
