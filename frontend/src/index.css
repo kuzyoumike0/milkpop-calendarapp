@@ -528,6 +528,38 @@
     display: block;
   }
 }
+/* ===== ページレイアウト ===== */
+.register-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  margin: 20px auto;
+  max-width: 1400px;
+  padding: 0 20px;
+}
+
+/* 左右分割（PC） */
+.calendar-section {
+  flex: 2;
+  min-width: 400px;
+}
+.schedule-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* ===== レスポンシブ（スマホ/タブレット） ===== */
+@media (max-width: 1024px) {
+  .register-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .calendar-section, .schedule-section {
+    width: 100%;
+    min-width: auto;
+  }
+}
 
 
 
