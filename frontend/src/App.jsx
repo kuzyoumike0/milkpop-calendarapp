@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
-import SharePage from "./components/SharePage";   // 共有ページ
+import SharePage from "./components/SharePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import "./index.css";
@@ -15,10 +15,10 @@ function App() {
       <Header />
       <main className="main-container">
         <Routes>
-          <Route path="/" element={<TopPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/" element={<TopPage />} /> {/* ✅ トップページ */}
+          <Route path="/register" element={<RegisterPage />} /> {/* ✅ 日程登録ページ */}
           <Route path="/personal" element={<PersonalPage />} />
-          <Route path="/share" element={<SharePage />} />  {/* ✅ 共有ページ */}
+          <Route path="/share/:id" element={<SharePage />} />
         </Routes>
       </main>
       <Footer />
