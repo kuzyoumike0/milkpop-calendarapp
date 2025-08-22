@@ -1,12 +1,11 @@
-import express from "express";
-import cors from "cors";
-import { randomBytes } from "crypto";
+const express = require("express");
+const cors = require("cors");
+const { randomBytes } = require("crypto");
 
-const app = express();   // ← これがないと参照エラーになる！
+const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 簡易保存用（本当はDB推奨）
 const sharedData = {};
 
 // スケジュール保存
