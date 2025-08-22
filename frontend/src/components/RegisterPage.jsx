@@ -43,10 +43,7 @@ const RegisterPage = () => {
 
     if (mode === "multi") {
       if (multiDates.includes(iso)) {
-        setMultiDates(multiDates.filter((d) => d !== iso));
-        const newOptions = { ...dateOptions };
-        delete newOptions[iso];
-        setDateOptions(newOptions);
+        removeDate(iso);
       } else {
         setMultiDates([...multiDates, iso]);
         setDateOptions({
@@ -65,6 +62,14 @@ const RegisterPage = () => {
         }
       }
     }
+  };
+
+  // 日付削除処理
+  const removeDate = (iso) => {
+    setMultiDates(multiDates.filter((d) => d !== iso));
+    const newOptions = { ...dateOptions };
+    delete newOptions[iso];
+    setDateOptions(newOptions);
   };
 
   const handleOptionChange = (date, field, value) => {
@@ -169,6 +174,7 @@ const RegisterPage = () => {
             {mode === "range" && range[0] && range[1] && (
               <div className="schedule-card">
                 <span>{range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}</span>
+                <button onClick={() => setRange([null, null])}>✖</button>
               </div>
             )}
             {mode === "multi" && multiDates.length > 0 ? (
@@ -184,6 +190,7 @@ const RegisterPage = () => {
                     <option value="午後">午後</option>
                     <option value="時間指定">時間指定</option>
                   </select>
+                  <button onClick={() => removeDate(date)}>✖</button>
                 </div>
               ))
             ) : mode === "multi" ? (
