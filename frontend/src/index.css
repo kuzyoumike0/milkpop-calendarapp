@@ -168,17 +168,26 @@
 .calendar-section {
   flex: 7;
   background: #fff;
-  padding: 20px;
+  padding: 16px;              /* ← padding少なめに */
   border-radius: 20px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  min-width: 700px;
-  transition: all 0.3s ease;
+  width: 100%;                /* ← 幅を親に合わせる */
+  max-width: 800px;           /* ← 画面に応じて調整 */
+  margin: 0 auto;             /* ← 中央寄せ */
 }
 
-.calendar-section:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.35);
+/* ===== react-calendar カスタマイズ ===== */
+.react-calendar {
+  width: 100% !important;     /* ← 親幅に合わせる */
+  max-width: 100% !important; /* ← はみ出し防止 */
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  box-shadow: none;           /* ← 余分な影は削除（外枠に影があるので） */
+  padding: 10px;
+  box-sizing: border-box;     /* ← padding込みで幅計算 */
 }
+
 
 /* ===== 日程リスト側 ===== */
 .schedule-section {
