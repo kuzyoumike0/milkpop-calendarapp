@@ -1,8 +1,10 @@
 /* ===== ページ全体のコンテナ ===== */
 .page-container {
   padding: 20px;
-  background: #fefefe;
+  background: #fffafc; /* 柔らかいピンク系背景 */
   color: #333;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', 'Poppins', sans-serif;
+  line-height: 1.7;
 }
 
 /* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
@@ -19,7 +21,7 @@
 
 /* ===== ヘッダー（バナー） ===== */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
   padding: 16px 40px;
   display: flex;
   justify-content: space-between;
@@ -27,11 +29,12 @@
   color: #fff;
   font-size: 1.6rem;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   letter-spacing: 1px;
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-radius: 0 0 20px 20px;
 }
 
 .banner h1 {
@@ -52,19 +55,19 @@
   font-weight: 500;
   transition: all 0.3s ease;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 .banner nav a:hover {
   background-color: rgba(255, 255, 255, 0.25);
-  color: #FFDDEE;
+  color: #fffafc;
 }
 
 .login-button {
-  background: #004ca0;
+  background: #A0C4FF;
   color: white;
   padding: 6px 14px;
-  border-radius: 12px;
+  border-radius: 14px;
   text-decoration: none;
   margin-left: 16px;
   font-weight: 600;
@@ -76,102 +79,60 @@
 
 /* ===== フッター ===== */
 .footer {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
   text-align: center;
   padding: 16px;
   font-size: 0.95rem;
   color: #fff;
   font-weight: 500;
   letter-spacing: 0.5px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
   width: 100%;
   position: fixed;
   bottom: 0;
   left: 0;
+  border-radius: 20px 20px 0 0;
 }
 
 /* ===== トップページ ===== */
 .top-page {
   display: flex;
-  flex-direction: column; /* 縦に並べる */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   text-align: center;
 }
 
-/* 文字を上に */
 .welcome-text {
   font-size: 1.8rem;
-  font-weight: 600;
-  margin-bottom: 16px; /* 下に余白 */
-}
-
-/* ロゴ画像の調整 */
-.top-page {
-  text-align: center;
-  padding: 40px 20px;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #444;
+  font-family: 'Zen Maru Gothic', cursive;
 }
 
 .logo-wrapper {
   display: flex;
   justify-content: center;
-  margin-top: 20px; /* 文字と画像の間に余白を追加 */
+  margin-top: 12px;
 }
 
 .logo-image {
-  max-width: 1040px;
+  max-width: 800px;
   height: auto;
 }
 
-.welcome-text {
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 20px; /* 👈 ここで文字の下に余白を入れる */
-}
-
-
 /* ===== ページタイトル ===== */
 .page-title {
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #FDB9C8;
-  text-align: center;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
   font-family: 'Zen Maru Gothic', cursive;
-}
-
-/* ===== ラジオボタン（範囲選択・複数選択切替） ===== */
-.mode-switch {
-  margin: 20px auto;
-  display: flex;
-  gap: 30px;
-  justify-content: center;
-}
-
-.mode-switch label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-}
-
-.mode-switch label:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-}
-
-.mode-switch input {
-  accent-color: #FDB9C8;
-  transform: scale(1.2);
+  font-weight: 700;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* ===== カレンダー枠 ===== */
@@ -180,82 +141,34 @@
   background: #fff;
   padding: 16px;
   border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-  width: 100%;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
   max-width: 800px;
   margin: 0 auto;
-  overflow-x: hidden; /* 👈 はみ出し防止 */
 }
 
 /* ===== react-calendar カスタマイズ ===== */
 .react-calendar {
   width: 100% !important;
-  max-width: 100% !important;
-  background: #fff;
   border: none;
   border-radius: 20px;
-  box-shadow: none;
   padding: 20px;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  box-sizing: border-box;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  background: #fff;
 }
 
-/* 曜日ヘッダー */
-.react-calendar__month-view__weekdays {
-  font-weight: bold;
-  text-align: center;
-  color: #004CA0;
-}
-
-/* 各日付タイル */
 .react-calendar__tile {
   padding: 10px 6px;
   border-radius: 12px;
   transition: all 0.2s ease;
 }
-
 .react-calendar__tile:hover {
   background: #FFDDEE;
   transform: scale(1.05);
 }
-
-/* ====== 選択された日を丸いバッジに ====== */
-.react-calendar__tile--active,
-.selected-date {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
-  color: white !important;
-  font-weight: bold;
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #FDB9C8, #A0C4FF) !important;
+  color: #fff !important;
   border-radius: 50% !important;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
-  transform: scale(1.1);
-}
-
-/* 複数日選択 */
-.react-calendar__tile--range,
-.react-calendar__tile--rangeStart,
-.react-calendar__tile--rangeEnd {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 50% !important;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
-  transform: scale(1.1);
-}
-
-/* 祝日 */
-.holiday {
-  color: #d32f2f !important;
-  font-weight: bold;
-}
-
-/* 日曜 */
-.sunday {
-  color: #d32f2f !important;
-}
-
-/* 土曜 */
-.saturday {
-  color: #1976d2 !important;
 }
 
 /* ===== 日程リスト側 ===== */
@@ -264,9 +177,8 @@
   background: #fff;
   padding: 20px;
   border-radius: 20px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
   min-width: 300px;
-  overflow-x: hidden; /* 👈 はみ出し防止 */
 }
 
 .schedule-section h3 {
@@ -278,341 +190,102 @@
   font-family: 'Zen Maru Gothic', cursive;
 }
 
-/* ===== リスト1件ごとのカード ===== */
+/* ===== リストカード ===== */
 .schedule-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #fdfdfd, #f9f9f9);
+  padding: 12px;
+  border-radius: 16px;
+  background: #fffdfd;
   border: 1px solid #eee;
-  transition: all 0.3s ease;
-  flex-wrap: wrap; /* 👈 selectがはみ出さないよう折り返し */
+  transition: 0.3s;
 }
-
 .schedule-item:hover {
-  background: #fff0f5;
+  background: #fff0f8;
   transform: scale(1.02);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-.schedule-item span {
-  flex: 2;
-  font-weight: 600;
-  color: #333;
-  font-size: 1rem;
-  text-align: left;
-}
-
-/* ===== プルダウン（時間帯・開始終了） ===== */
-.schedule-item select {
-  flex: 1;
-  min-width: 120px;   /* 👈 最小幅を設定 */
-  max-width: 100%;    /* 👈 はみ出し防止 */
-  padding: 8px 10px;
-  border-radius: 10px;
+/* ===== プルダウン ===== */
+.schedule-item select,
+.vote-select {
+  padding: 8px 12px;
+  border-radius: 12px;
   border: 1px solid #ccc;
   background: #fff;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
+  transition: 0.3s;
 }
-
-.schedule-item select:hover {
+.schedule-item select:hover,
+.vote-select:hover {
   border-color: #FDB9C8;
-  box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
 }
 
-/* ===== 送信ボタン ===== */
-.submit-btn {
-  display: block;
-  margin: 20px auto 0;
-  padding: 10px 24px;
+/* ===== ボタン ===== */
+.submit-btn,
+.fancy-btn {
+  display: inline-block;
+  padding: 12px 24px;
   font-size: 1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  font-weight: bold;
+  background: linear-gradient(135deg, #FDB9C8, #A0C4FF);
   color: #fff;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.submit-btn:hover,
+.fancy-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: linear-gradient(135deg, #A0C4FF, #FDB9C8);
 }
 
-.submit-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+/* ===== 出欠テーブル ===== */
+.fancy-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.fancy-table th {
+  background: linear-gradient(90deg, #FDB9C8, #A0C4FF);
+  color: #fff;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+.fancy-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+.fancy-table tr:hover {
+  background: #fdf7fa;
 }
 
 /* ===== スマホ対応 ===== */
 @media (max-width: 900px) {
   .register-layout {
     flex-direction: column;
-    gap: 20px;
   }
-
-  .calendar-section, .schedule-section {
-    flex: 1;
+  .calendar-section,
+  .schedule-section {
     min-width: 100%;
   }
-
   .schedule-item {
     flex-direction: column;
     align-items: stretch;
   }
-
-  .schedule-item span {
-    text-align: center;
-    margin-bottom: 6px;
-  }
-
   .schedule-item select {
-    width: 100%;   /* 👈 スマホでは横幅いっぱいに */
+    width: 100%;
   }
 }
-
-/* ===== 全体レイアウト調整 ===== */
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.main-content {
-  flex: 1;
-  padding-bottom: 80px; /* フッターと重ならないように */
-}
-
-/* 選択済み日付 */
-.react-calendar__tile.selected {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 12px;
-  position: relative;
-  box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
-}
-
-/* 丸バッジ風にマーク */
-.react-calendar__tile.selected::after {
-  content: "✔";
-  position: absolute;
-  bottom: 4px;
-  right: 6px;
-  font-size: 0.7rem;
-  color: #fff;
-  background: #004CA0;
-  border-radius: 50%;
-  padding: 2px 5px;
-}
-
-/* ===== 名前入力モーダル ===== */
-.name-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background: rgba(255,255,255,0.9);
-  padding: 2rem;
-  border-radius: 20px;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-.modal-content input {
-  padding: 0.5rem;
-  width: 80%;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-}
-
-.schedule-item {
-  display: flex;
-  flex-wrap: wrap; /* ✅ 時間指定が長いとき折り返す */
-  gap: 8px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.type-select,
-.time-select {
-  padding: 4px;
-  font-size: 14px;
-  max-width: 120px;
-}
-
-.time-select-group {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.schedule-table th,
-.schedule-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-.schedule-table th {
-  background-color: #f4f4f4;
-}
-
-.name-input {
-  margin-bottom: 16px;
-}
-
-.schedule-table-wrapper {
-  overflow-x: auto;
-  margin-top: 20px;
-}
-
-.schedule-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.schedule-table th,
-.schedule-table td {
-  border: 1px solid #ccc;
-  padding: 8px 12px;
-  text-align: center;
-}
-
-.schedule-table th {
-  background: #f0f0f0;
-}
-
-.schedule-table td select {
-  padding: 4px 8px;
-}
-
-/* 全体のベースフォント */
-body {
-  font-family: 'Zen Maru Gothic', 'Poppins', 'Helvetica Neue', Arial, sans-serif;
-  background: #fdfdfd;
-  color: #333;
-  margin: 0;
-  padding: 0;
-  line-height: 1.6;
-}
-
-/* タイトルをかわいく */
-.page-title {
-  font-family: 'Zen Maru Gothic', cursive;
-  font-weight: 700;
-  font-size: 1.8rem;
-  text-align: center;
-  margin-bottom: 20px;
-  background: linear-gradient(90deg, #f7b2d9, #a0c4ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* テーブルの文字 */
-.fancy-table th,
-.fancy-table td {
-  font-family: 'Poppins', 'Zen Maru Gothic', sans-serif;
-  font-size: 0.95rem;
-}
-
-/* 入力ボックス */
-.stylish-box {
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-.stylish-box input {
-  margin-left: 10px;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-/* テーブル */
-.fancy-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.fancy-table th {
-  background: linear-gradient(90deg, #f7b2d9, #a0c4ff);
-  color: #fff;
-  padding: 10px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.fancy-table td {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-}
-
-.fancy-table tr:hover {
-  background: #f9f9ff;
-}
-
-/* プルダウン */
-.vote-select {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-  transition: 0.2s;
-}
-
-.vote-select:hover {
-  border-color: #888;
-  background: #fafafa;
-}
-
-/* ボタン */
-.fancy-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #f7b2d9, #a0c4ff);
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: transform 0.2s;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.fancy-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #a0c4ff, #f7b2d9);
-}
-
