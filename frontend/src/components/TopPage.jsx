@@ -3,27 +3,29 @@ import "../index.css";
 
 const TopPage = () => {
   return (
-    <div
-      className="flex flex-col items-center text-center px-4 py-12 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-full"
-      style={{ fontFamily: "'Mochiy Pop One', 'Yomogi', cursive" }} // ✅ 可愛いフォント
-    >
-      {/* メイン見出し */}
-      <h2 className="text-4xl font-extrabold text-black mb-6 drop-shadow-lg">
-        ようこそ MilkPOP Calendar へ 🎉
-      </h2>
+    <div className="page-container">
+      <main style={{ textAlign: "center", padding: "40px" }}>
+        <h2 style={{ fontSize: "2.5rem" }}>ようこそ MilkPOP Calendar へ 🎉</h2>
 
-      {/* ロゴ画像 */}
-      <img
-        src="/logo.png"
-        alt="MilkPOP Calendar Logo"
-        className="w-[1040px] max-w-full h-auto shadow-lg rounded-xl"
-      />
+        {/* ロゴ画像 */}
+        <img
+          src="/logo.png"
+          alt="MilkPOP Calendar Logo"
+          style={{
+            width: "1040px",
+            maxWidth: "100%",
+            height: "auto",
+            margin: "20px auto",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            borderRadius: "12px",
+          }}
+        />
 
-      {/* 説明文 */}
-      <p className="text-lg text-gray-700 max-w-2xl mt-10 leading-relaxed">
-        このアプリは、Discord ログインを利用して
-        グループの日程調整や個人スケジュール管理ができるツールです。
-      </p>
+        <p style={{ fontSize: "1.2rem", marginTop: "24px", lineHeight: "1.8" }}>
+          このアプリは、Discord ログインを利用して
+          グループの日程調整や個人スケジュール管理ができるツールです。
+        </p>
+      </main>
     </div>
   );
 };
