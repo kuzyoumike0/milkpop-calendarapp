@@ -1,430 +1,75 @@
-/* ===== トップページ ===== */
-.top-page {
-  text-align: center;
-  padding: 3rem 1rem;
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+/* ================================
+   🌸 MilkPOP Calendar 共通スタイル
+   ================================ */
 
-/* ロゴ部分 */
-.logo-wrapper {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border-radius: 1.5rem;
-  padding: 1rem 2rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-}
-
-.logo-image {
-  width: 1040px;   /* ← 小さめで可愛らしく */
-  max-width: 80%;
-  height: auto;
-  transition: transform 0.3s ease;
-}
-
-.logo-image:hover {
-  transform: scale(1.08) rotate(3deg); /* ← 跳ねる動きでポップさUP */
-}
-
-/* ウェルカムテキスト */
-.welcome-text {
-  font-size: 2rem;
-  font-weight: 700;
-  font-family: 'M PLUS Rounded 1c', sans-serif; /* 丸っこく可愛い */
-  color: #ff6699; /* ポップなピンク */
-  margin-top: 1rem;
-  text-shadow: 1px 1px 3px rgba(255, 182, 193, 0.4);
-  letter-spacing: 0.05em;
-}
-
-
-/* ==== ヘッダー ==== */
-.header {
-  background: linear-gradient(90deg, #ff99cc, #66ccff); /* 🌸ピンク → ブルー */
-  color: white;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.header .logo {
-  font-family: "Poppins", sans-serif;
-  font-size: 1.6rem;
-  font-weight: bold;
-}
-
-.nav-links a {
-  color: white;
-  margin-left: 1.5rem;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.nav-links a:hover {
-  color: #ffe6f2; /* 薄いピンクに */
-  transform: translateY(-2px);
-}
-
-/* ==== フッター ==== */
-.footer {
-  background: linear-gradient(90deg, #ff99cc, #66ccff); /* 🌸ピンク → ブルー */
-  color: white;
-  text-align: center;
-  padding: 1rem;
-  font-size: 0.9rem;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* ===== カレンダー全体 ===== */
-.rbc-calendar {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.12);
-  border: none;
-  font-family: 'Noto Sans JP', sans-serif;
-  transition: 0.3s;
-}
-
-.rbc-calendar:hover {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
-}
-
-/* ===== ツールバー（ナビ部分） ===== */
-.rbc-toolbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.rbc-toolbar button {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-.rbc-toolbar button:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-
-.rbc-toolbar-label {
-  font-weight: 700;
-  font-size: 1.3rem;
-  color: #004CA0;
-  font-family: 'Noto Serif JP', serif;
-}
-
-/* ===== 日付セル ===== */
-.rbc-day-bg {
-  transition: background 0.3s, transform 0.1s;
-}
-
-.rbc-day-bg:hover {
-  background: rgba(253,185,200,0.15);
-  transform: scale(1.02);
-  border-radius: 6px;
-}
-
-/* 今日 */
-.rbc-today {
-  background: rgba(0, 76, 160, 0.08) !important;
-  border: 2px solid #004CA0 !important;
-  border-radius: 6px;
-}
-
-/* 選択した日付 */
-.selected-day {
-  background: rgba(253,185,200,0.35) !important;
-  border: 2px solid #FDB9C8 !important;
-  border-radius: 6px;
-}
-
-/* 祝日 */
-.holiday {
-  color: #d9534f !important;
-  background: rgba(253,185,200,0.25) !important;
-  border-radius: 6px;
-  font-weight: bold;
-  position: relative;
-}
-
-
-/* ===== イベント表示 ===== */
-.rbc-event {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* ===== 時間スロット（週/日ビュー用） ===== */
-.rbc-time-slot {
-  border-top: 1px dashed #eee;
-}
-
-.rbc-time-view {
-  border: none;
-}
-
-
-/* ==== RegisterPage 専用 ==== */
-.page-title {
-  font-size: 1.8rem;
-  color: #004CA0;
-  margin-bottom: 0.5rem;
-  font-family: 'Noto Serif JP', serif;
-}
-
-.page-subtitle {
-  font-size: 1rem;
-  color: #666;
-  margin-bottom: 1.5rem;
-}
-
-.calendar-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 1rem auto 2rem;
-}
-
-.calendar-mock {
-  width: 80%;
-  max-width: 750px;
-  height: 400px;
-  background: #fdfdfd;
-  border: 2px dashed #ccc;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #aaa;
-  font-size: 1.2rem;
-}
-
-/* ==== カレンダー全体 ==== */
-.calendar-container {
-  max-width: 700px;
-  margin: 1rem auto;
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-}
-
-/* ==== ツールバー ==== */
-.calendar-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.calendar-toolbar h3 {
-  font-family: 'Noto Serif JP', serif;
-  color: #004CA0;
-}
-
-/* ==== グリッド ==== */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
-}
-
-.calendar-cell {
-  min-height: 70px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding: 0.3rem;
-  font-size: 0.9rem;
-  transition: 0.2s;
-  cursor: pointer;
-}
-
-.calendar-cell:hover {
-  background: rgba(253,185,200,0.15);
-}
-
-/* 曜日ヘッダー */
-.weekday {
-  font-weight: bold;
-  text-align: center;
-  background: #f0f0f0;
-  border-radius: 6px;
-  padding: 0.5rem 0;
-}
-
-/* 祝日セル */
-.holiday {
-  background: rgba(253,185,200,0.2) !important;
-  color: red !important;
-  font-weight: bold;
-  position: relative;
-}
-
-.holiday-label {
-  font-size: 0.7rem;
-  color: red;
-  margin-top: 2px;
-}
-
-/* 今日 */
-.today {
-  border: 2px solid #004CA0;
-  background: rgba(0,76,160,0.1);
-  font-weight: bold;
-}
-
-/* イベント一覧 */
-.event-list {
-  margin-top: 2rem;
-}
-
-.event-card {
-  background: #fff0f5;
-  border: 1px solid #fdb9c8;
-  border-radius: 10px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-  transition: 0.2s;
-}
-
-.event-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-
-.event-card p {
+body {
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #333;
-}
-
-.delete-btn {
-  background: #ff6b6b;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, #000, #004CA0);
   color: #fff;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: 0.2s;
-  margin-top: 0.5rem;
-}
-
-.delete-btn:hover {
-  background: #e63946;
-}
-
-/* ===== フォームカード ===== */
-.form-card {
-  margin: 2rem auto;
-  padding: 1.5rem;
-  max-width: 600px;
-  background: #fff8fb;
-  border: 1px solid #fdb9c8;
-  border-radius: 1rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.form-card h3 {
-  margin-bottom: 1rem;
-  color: #004CA0;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.form-row label {
-  font-weight: bold;
-  color: #444;
-}
-
-.form-card select {
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
-.add-btn {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.add-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-/* 祝日スタイル */
-.rbc-event.holiday {
-  background-color: #ffe5e5 !important;
-  color: #d60000 !important;
-  font-weight: bold;
-  border: 1px solid #d60000 !important;
-}
-.page-container {
-  padding: 20px;
-  color: #fff;
-  background: linear-gradient(135deg, #004CA0, #000);
   min-height: 100vh;
 }
 
-.page-title {
+/* ===== ヘッダー ===== */
+.banner {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #FDB9C8;
   font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.banner nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: normal;
+  transition: color 0.3s ease;
+}
+.banner nav a:hover {
   color: #FDB9C8;
 }
 
+/* ===== フッター ===== */
+.footer {
+  text-align: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+/* ===== ページ共通 ===== */
+.page-container {
+  padding: 20px;
+  color: #fff;
+  min-height: calc(100vh - 120px);
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #FDB9C8;
+  text-align: center;
+}
+
+/* ===== カード ===== */
 .card {
   background: rgba(0, 0, 0, 0.5);
   border-radius: 16px;
   padding: 20px;
-  margin-bottom: 20px;
+  margin: 20px auto;
+  max-width: 800px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
+/* ===== 入力フォーム ===== */
 .label {
   display: block;
   margin-bottom: 8px;
@@ -433,18 +78,21 @@
 
 .input {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   border-radius: 8px;
   border: none;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  font-size: 1rem;
 }
 
+/* ===== ラジオボタン ===== */
 .radio-group {
   display: flex;
   gap: 20px;
   margin: 12px 0;
 }
 
+/* ===== 時間入力 ===== */
 .time-inputs {
   display: flex;
   align-items: center;
@@ -452,13 +100,14 @@
   margin: 10px 0;
 }
 
+/* ===== ボタン ===== */
 .btn {
   background: #FDB9C8;
   color: #000;
   font-weight: bold;
   border: none;
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: 10px 18px;
   cursor: pointer;
   transition: 0.3s;
 }
@@ -467,71 +116,9 @@
   color: #fff;
 }
 
-.holiday-tile {
-  background: #FDB9C8 !important;
-  border-radius: 50%;
-}
-
-.selected-tile {
-  background: #004CA0 !important;
-  color: #fff !important;
-  border-radius: 50%;
-}
-
-.calendar-wrapper {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-/* React Calendar 全体のデザイン */
-.react-calendar {
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  color: #fff;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-/* 曜日ヘッダー */
-.react-calendar__month-view__weekdays {
-  text-transform: uppercase;
-  font-weight: bold;
-  color: #FDB9C8;
-}
-
-/* 日付セル */
-.react-calendar__tile {
-  border-radius: 8px;
-  padding: 10px;
-  transition: background 0.3s ease;
-}
-
-.react-calendar__tile:hover {
-  background: rgba(253, 185, 200, 0.4);
-}
-
-/* 選択した日 */
-.selected-tile {
-  background: #004CA0 !important;
-  color: #fff !important;
-  border-radius: 50%;
-}
-
-/* 祝日 */
-.holiday-tile {
-  background: #FDB9C8 !important;
-  color: #000 !important;
-  border-radius: 50%;
-  font-weight: bold;
-}
-
 /* ================================
-   🎨 MilkPOP Calendar カスタムテーマ
+   🎨 自作カレンダー MilkPOP テーマ
    ================================ */
-
 .calendar-wrapper {
   display: flex;
   justify-content: center;
@@ -547,18 +134,17 @@
   padding: 20px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.5);
   color: #fff;
-  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   backdrop-filter: blur(10px);
 }
 
-/* 月ナビゲーション部分 */
+/* 月ナビゲーション */
 .react-calendar__navigation {
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 15px;
 }
-
 .react-calendar__navigation button {
   background: none;
   border: none;
@@ -570,7 +156,6 @@
   border-radius: 8px;
   transition: all 0.3s ease;
 }
-
 .react-calendar__navigation button:hover {
   background: rgba(253, 185, 200, 0.2);
 }
@@ -593,13 +178,12 @@
   text-align: center;
   font-size: 1rem;
 }
-
 .react-calendar__tile:hover {
   background: rgba(253, 185, 200, 0.25);
   transform: scale(1.05);
 }
 
-/* 今日の日付 */
+/* 今日 */
 .react-calendar__tile--now {
   background: rgba(0, 76, 160, 0.6);
   color: #fff;
