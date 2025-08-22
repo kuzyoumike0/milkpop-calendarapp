@@ -4,6 +4,7 @@ import "react-calendar/dist/Calendar.css";
 import "../index.css";
 
 const RegisterPage = () => {
+  const [title, setTitle] = useState(""); // 追加: タイトル
   const [mode, setMode] = useState("range"); // 範囲 or 複数
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
@@ -31,13 +32,46 @@ const RegisterPage = () => {
 
   // ===== プルダウン変更処理 =====
   const handleOptionChange = (date, field, value) => {
+    let newValue = value;
+
+    // バリデーション: 時間指定の場合、開始 < 終了 にする
+    if (field === "start" && dateOptions[date]?.end) {
+      if (timeOptions.indexOf(value) >= endTimeOptions.indexOf(dateOptions[date].end)) {
+        newValue = dateOptions[date].end;
+      }
+    }
+    if (field === "end" && dateOptions[date]?.start) {
+      if (endTimeOptions.indexOf(value) <= timeOptions.indexOf(dateOptions[date].start)) {
+        newValue = dateOptions[date].start;
+      }
+    }
+
     setDateOptions({
       ...dateOptions,
       [date]: {
         ...dateOptions[date],
-        [field]: value,
+        [field]: newValue,
       },
     });
+  };
+
+  // ===== 保存処理（API接続予定） =====
+  const handleSave = () => {
+    const payload = {
+      title,
+      mode,
+      range: mode === "range" ? range : null,
+      dates: mode === "multi"
+        ? multiDates.map((d) => ({
+            date: d,
+            ...dateOptions[d],
+          }))
+        : [],
+    };
+    console.log("保存データ:", payload);
+
+    // TODO: fetch("/api/schedules", {method:"POST", body: JSON.stringify(payload)}) ...
+    alert("保存しました！（デバッグ表示）");
   };
 
   return (
@@ -51,6 +85,18 @@ const RegisterPage = () => {
           <a href="/personal" className="hover:text-[#FDB9C8]">個人スケジュール</a>
         </nav>
       </header>
+
+      {/* ===== タイトル入力 ===== */}
+      <div className="mb-6">
+        <label className="block text-lg mb-2">タイトル</label>
+        <input
+          type="text"
+          className="w-full px-3 py-2 text-black rounded-lg"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例: 打ち合わせ日程"
+        />
+      </div>
 
       {/* ===== 切替ボタン ===== */}
       <div className="mb-4 flex gap-4">
@@ -142,6 +188,16 @@ const RegisterPage = () => {
             ))}
           </div>
         )}
+      </div>
+
+      {/* ===== 保存ボタン ===== */}
+      <div className="mt-6">
+        <button
+          onClick={handleSave}
+          className="bg-[#FDB9C8] text-black px-6 py-2 rounded-xl font-bold hover:bg-[#004CA0] hover:text-white shadow-lg"
+        >
+          保存する
+        </button>
       </div>
     </div>
   );
