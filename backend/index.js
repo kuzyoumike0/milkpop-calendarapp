@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const sharedData = {};
+const sharedData = {}; // 共有用データをメモリ保存
 
 // スケジュール保存
 app.post("/api/schedules", (req, res) => {
@@ -37,6 +37,7 @@ app.get("/api/share/:id", (req, res) => {
   res.json(sharedData[id]);
 });
 
+// サーバー起動
 app.listen(5000, () => {
   console.log("✅ Backend running on http://localhost:5000");
 });
