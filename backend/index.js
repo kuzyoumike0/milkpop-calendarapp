@@ -16,19 +16,19 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const CALLBACK_URL =
   process.env.CALLBACK_URL || "http://localhost:3000/api/auth/discord/callback";
+const SESSION_SECRET = process.env.SESSION_SECRET || "090612300623";
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error("❌ DISCORD_CLIENT_ID または DISCORD_CLIENT_SECRET が設定されていません");
   process.exit(1);
 }
 
-
 // ===== ミドルウェア =====
 app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.json());
 app.use(
   session({
-    secret: "milkpop_secret",
+    secret: SESSION_SECRET, // ← ここを環境変数から取得
     resave: false,
     saveUninitialized: false,
   })
