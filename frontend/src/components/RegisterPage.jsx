@@ -23,6 +23,13 @@ const RegisterPage = () => {
         setRangeStart(date);
         setSelectedDates([date]);
       } else {
+        // 同じ日をもう一度クリック → 解除
+        if (rangeStart.toDateString() === date.toDateString()) {
+          setRangeStart(null);
+          setSelectedDates([]);
+          return;
+        }
+
         // 範囲選択完了
         const start = rangeStart < date ? rangeStart : date;
         const end = rangeStart < date ? date : rangeStart;
@@ -42,10 +49,12 @@ const RegisterPage = () => {
         (d) => d.toDateString() === date.toDateString()
       );
       if (exists) {
+        // 選択済みなら解除
         setSelectedDates(
           selectedDates.filter((d) => d.toDateString() !== date.toDateString())
         );
       } else {
+        // 未選択なら追加
         setSelectedDates([...selectedDates, date]);
       }
     }
@@ -133,7 +142,7 @@ const RegisterPage = () => {
           selectable
           style={{ height: 500 }}
           onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
-          dayPropGetter={dayPropGetter} // ← セルのクラスを付与
+          dayPropGetter={dayPropGetter}
         />
       </div>
 
