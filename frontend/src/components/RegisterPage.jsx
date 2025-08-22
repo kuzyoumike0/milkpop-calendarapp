@@ -11,6 +11,9 @@ const RegisterPage = () => {
   const todayIso = getTodayIso();
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
+  const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
+
   useEffect(() => {
     const loadHolidays = async () => {
       const list = await fetchHolidays();
@@ -52,6 +55,17 @@ const RegisterPage = () => {
         [iso]: { type: "終日", start: "9:00", end: "18:00" },
       });
     }
+  };
+
+  // プルダウン変更処理
+  const handleOptionChange = (date, field, value) => {
+    setDateOptions({
+      ...dateOptions,
+      [date]: {
+        ...dateOptions[date],
+        [field]: value,
+      },
+    });
   };
 
   return (
@@ -116,11 +130,46 @@ const RegisterPage = () => {
         <div className="schedule-section">
           <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
           {multiDates.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {multiDates.map((date) => (
-                <div key={date} className="bg-gray-100 p-3 rounded-xl shadow-md text-black">
-                  <span className="font-bold text-[#004CA0]">{date}</span>
-                  <p className="text-sm">区分: {dateOptions[date]?.type}</p>
+                <div key={date} className="schedule-card">
+                  <span>{date}</span>
+
+                  {/* 区分プルダウン */}
+                  <div className="mt-2 flex gap-2 items-center">
+                    <select
+                      value={dateOptions[date]?.type || "終日"}
+                      onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                    >
+                      <option value="終日">終日</option>
+                      <option value="午前">午前</option>
+                      <option value="午後">午後</option>
+                      <option value="時間指定">時間指定</option>
+                    </select>
+                  </div>
+
+                  {/* 時間指定のときだけ表示 */}
+                  {dateOptions[date]?.type === "時間指定" && (
+                    <div className="mt-2 flex gap-2 items-center">
+                      <select
+                        value={dateOptions[date]?.start || "9:00"}
+                        onChange={(e) => handleOptionChange(date, "start", e.target.value)}
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        value={dateOptions[date]?.end || "18:00"}
+                        onChange={(e) => handleOptionChange(date, "end", e.target.value)}
+                      >
+                        {endTimeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
