@@ -2,7 +2,12 @@ import React from "react";
 import { Box, Flex, Heading, Image, Text } from "@chakra-ui/react";
 import Header from "./Header";
 import Footer from "./Footer";
-import logo from "../assets/logo.png"; // public/logo.png なら "/logo.png" でOK
+
+// ✅ public/logo.png を使う場合はこちら
+// const logoPath = "/logo.png";
+
+// ✅ src/assets/logo.png を使う場合はこちら
+import logo from "../assets/logo.png";
 
 const TopPage = () => {
   return (
@@ -20,8 +25,10 @@ const TopPage = () => {
         pt="120px"
         pb="60px"
       >
+        {/* ロゴ */}
         <Box mb={10}>
-          <Image src={logo} alt="MilkPOP Logo" maxW="400px" />
+          {/* public に置いた場合 → <Image src={logoPath} alt="MilkPOP Logo" maxW="1040px" /> */}
+          <Image src={logo} alt="MilkPOP Logo" maxW="1040px" />
         </Box>
 
         <Heading as="h2" size="lg" color="brand.blue" mb={6}>
