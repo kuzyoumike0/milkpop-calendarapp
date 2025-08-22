@@ -1,26 +1,18 @@
 // frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
 
 const SharePage = () => {
   const { id } = useParams();
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [responses, setResponses] = useState({}); // { dateStr: "〇" | "✖" }
-  const [user, setUser] = useState(null);        // Discordログインユーザー
-  const [username, setUsername] = useState("");   // 未ログイン時の名前入力
+  const [responses, setResponses] = useState({});
+  const [user, setUser] = useState(null);        
+  const [username, setUsername] = useState("");  
 
   const shareUrl = `${window.location.origin}/share/${id}`;
 
-  // ===== ユーザー識別ID（Discordログイン時はDiscord ID、未ログイン時はUUID） =====
-  useEffect(() => {
-    if (!localStorage.getItem("user_id")) {
-      localStorage.setItem("user_id", uuidv4()); // 未ログイン用の一意IDを保持
-    }
-  }, []);
-
-  // ===== ユーザー情報取得（Discordログイン状態保持） =====
+  // ===== ユーザー情報取得（Discordログイン） =====
   useEffect(() => {
     const sessionId = localStorage.getItem("sessionId");
     if (sessionId) {
@@ -62,28 +54,34 @@ const SharePage = () => {
     });
   };
 
-  // ===== 保存処理 =====
+  // ===== 保存処理（完全上書き用） =====
   const handleSave = async () => {
-    const userId = user?.id || localStorage.getItem("user_id"); // 👈 Discord ID or UUID
     if (!username) {
       alert("ユーザー名を入力してください");
       return;
     }
     try {
-      const res = await fetch(`/api/schedules/${id}/responses`, {
+      const res = await fetch(`/api/personal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userId,
-          username: user?.username || username, // 👈 最新の名前で上書き
-          responses,
+          personal_id: null,        // 新規作成
+          share_id: id,             // 今の共有IDに上書き
+          title: scheduleData?.title || "スケジュール",
+          memo: "",
+          dates: scheduleData?.dates || [],
+          options: scheduleData?.options || {},
         }),
       });
       const data = await res.json();
       if (data.ok) {
-        alert("保存しました！");
-        setScheduleData(data.data); // 最新のレスポンスを反映
-        setResponses({});
+        alert("保存しました！（共有スケジュールを上書き）");
+        // 最新の共有データを再取得
+        const refetch = await fetch(`/api/schedules/${data.shareId}`);
+        const updated = await refetch.json();
+        if (updated.ok) {
+          setScheduleData(updated.data);
+        }
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
@@ -113,8 +111,6 @@ const SharePage = () => {
                 {option?.type === "時刻指定" && (
                   <span> {option.start}〜{option.end}</span>
                 )}
-
-                {/* プルダウンで出欠選択 */}
                 <select
                   value={responses[dateStr] || ""}
                   onChange={(e) => handleResponseChange(dateStr, e.target.value)}
@@ -149,39 +145,11 @@ const SharePage = () => {
       {/* 保存ボタン */}
       {scheduleData && scheduleData.dates?.length > 0 && (
         <button className="fancy-btn" onClick={handleSave}>
-          保存
+          保存（共有スケジュールを上書き）
         </button>
       )}
 
-      {/* 全員分の出欠一覧 */}
-      {scheduleData && scheduleData.responses && (
-        <div className="responses-table">
-          <h3>みんなの出欠状況</h3>
-          <table className="fancy-table">
-            <thead>
-              <tr>
-                <th>ユーザー名</th>
-                {scheduleData.dates.map((d, i) => (
-                  <th key={i}>{new Date(d).toLocaleDateString()}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(scheduleData.responses).map(([name, userResponses], i) => (
-                <tr key={i}>
-                  <td>{name}</td>
-                  {scheduleData.dates.map((d, j) => {
-                    const dateStr = new Date(d).toDateString();
-                    return <td key={j}>{userResponses[dateStr] || "-"}</td>;
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* 下部に共有リンクを表示 */}
+      {/* 下部に共有リンク */}
       <div className="share-link-section">
         <h3>このページの共有リンク</h3>
         <p className="share-link">
