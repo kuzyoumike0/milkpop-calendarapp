@@ -1,3 +1,22 @@
+# --- frontend build ---
+FROM node:18 AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend ./
+RUN npm run build
+
+# --- backend ---
+FROM node:18
+WORKDIR /app
+COPY backend/package*.json ./
+RUN npm install
+COPY backend ./
+
+# フロントのビルド成果物だけコピー
+COPY --from=frontend-build /app/frontend/build ./frontend/build
+
+CMD ["npm", "start", "--prefix", "backend"]
 # ====== Frontend Build ======
 FROM node:18 AS frontend-build
 WORKDIR /app/frontend
