@@ -1,76 +1,188 @@
-// frontend/src/components/SharePage.jsx
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../index.css";
 
-const SharePage = () => {
-  const { id } = useParams(); // URLの :id を取得
+const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
+const RegisterPage = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDates, setSelectedDates] = useState([]);
   const [schedules, setSchedules] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [shareUrl, setShareUrl] = useState("");
 
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const response = await fetch(`/api/schedules/share/${id}`);
-        if (!response.ok) throw new Error("データ取得に失敗しました");
-        const data = await response.json();
-        setSchedules(data);
-      } catch (error) {
-        console.error("エラー:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 月初めの日と末日の情報を生成
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
 
-    fetchSchedules();
-  }, [id]);
+  const startDay = firstDay.getDay();
+  const totalDays = lastDay.getDate();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-gray-400">読み込み中...</p>
-      </div>
+  // 日付クリック
+  const handleDateClick = (day) => {
+    const clicked = new Date(year, month, day);
+    const dateStr = clicked.toISOString().split("T")[0];
+
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      setSchedules(schedules.filter((s) => s.date !== dateStr));
+    } else {
+      setSelectedDates([...selectedDates, dateStr]);
+      setSchedules([
+        ...schedules,
+        { date: dateStr, timeType: "終日", start: "", end: "" },
+      ]);
+    }
+  };
+
+  // 前月・翌月移動
+  const prevMonth = () =>
+    setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () =>
+    setCurrentDate(new Date(year, month + 1, 1));
+
+  // 時間帯の変更
+  const handleTimeChange = (date, value) => {
+    setSchedules(
+      schedules.map((s) =>
+        s.date === date ? { ...s, timeType: value } : s
+      )
     );
-  }
+  };
+
+  // 時刻範囲の変更
+  const handleTimeRangeChange = (date, field, value) => {
+    setSchedules(
+      schedules.map((s) =>
+        s.date === date ? { ...s, [field]: value } : s
+      )
+    );
+  };
+
+  // サーバーに保存して共有リンク生成
+  const handleShare = async () => {
+    try {
+      const res = await axios.post("/api/share", { schedules });
+      setShareUrl(res.data.url);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンクの生成に失敗しました");
+    }
+  };
+
+  // 日程を日付順にソート
+  const sortedSchedules = [...schedules].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      {/* バナー */}
-      <header className="bg-[#FDB9C8] text-[#004CA0] p-4 text-2xl font-bold text-center rounded-2xl shadow-md flex justify-between">
-        <span>MilkPOP Calendar</span>
-        <nav className="space-x-4">
-          <a href="/" className="hover:underline">トップ</a>
-          <a href="/personal" className="hover:underline">個人スケジュール</a>
-          <a href="/register" className="hover:underline">日程登録</a>
-        </nav>
-      </header>
+    <div className="register-layout">
+      {/* ===== カレンダー ===== */}
+      <div className="calendar-section">
+        <div className="calendar-header">
+          <button onClick={prevMonth}>←</button>
+          <h2>
+            {year}年 {month + 1}月
+          </h2>
+          <button onClick={nextMonth}>→</button>
+        </div>
 
-      {/* タイトル */}
-      <h1 className="text-3xl font-bold my-6 text-center">共有スケジュール</h1>
-
-      {/* スケジュール一覧 */}
-      {schedules.length === 0 ? (
-        <p className="text-center text-gray-400">スケジュールがありません。</p>
-      ) : (
-        <ul className="space-y-4 max-w-2xl mx-auto">
-          {schedules.map((schedule) => (
-            <li
-              key={schedule.id}
-              className="p-4 rounded-2xl shadow bg-[#004CA0] text-white"
-            >
-              <h2 className="text-xl font-semibold">{schedule.title}</h2>
-              <p className="mt-1 text-sm text-gray-200">
-                {new Date(schedule.start).toLocaleString()} -{" "}
-                {new Date(schedule.end).toLocaleString()}
-              </p>
-              {schedule.memo && (
-                <p className="mt-2 text-gray-100">メモ: {schedule.memo}</p>
-              )}
-            </li>
+        <div className="calendar-weekdays">
+          {weekdays.map((w) => (
+            <div key={w} className="calendar-weekday">
+              {w}
+            </div>
           ))}
-        </ul>
-      )}
+        </div>
+
+        <div className="calendar-grid">
+          {Array.from({ length: startDay }).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
+
+          {Array.from({ length: totalDays }).map((_, i) => {
+            const day = i + 1;
+            const dateStr = new Date(year, month, day)
+              .toISOString()
+              .split("T")[0];
+            const isToday =
+              dateStr === new Date().toISOString().split("T")[0];
+            const isSelected = selectedDates.includes(dateStr);
+
+            return (
+              <div
+                key={day}
+                className={`calendar-day 
+                  ${isToday ? "today" : ""} 
+                  ${isSelected ? "selected" : ""}`}
+                onClick={() => handleDateClick(day)}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ===== 登録済み日程一覧 ===== */}
+      <div className="schedule-section">
+        <h3>📅 登録した日程</h3>
+        {sortedSchedules.length === 0 ? (
+          <p>日程が選択されていません</p>
+        ) : (
+          sortedSchedules.map((s, i) => (
+            <div key={i} className="schedule-item">
+              <span>{s.date}</span>
+              <select
+                value={s.timeType}
+                onChange={(e) =>
+                  handleTimeChange(s.date, e.target.value)
+                }
+              >
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                <option value="時間指定">時間指定</option>
+              </select>
+              {s.timeType === "時間指定" && (
+                <div className="time-select-wrapper">
+                  <input
+                    type="time"
+                    value={s.start}
+                    onChange={(e) =>
+                      handleTimeRangeChange(s.date, "start", e.target.value)
+                    }
+                  />
+                  〜
+                  <input
+                    type="time"
+                    value={s.end}
+                    onChange={(e) =>
+                      handleTimeRangeChange(s.date, "end", e.target.value)
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          ))
+        )}
+
+        <button className="share-link-button" onClick={handleShare}>
+          共有リンクを作成
+        </button>
+
+        {shareUrl && (
+          <div style={{ marginTop: "12px", textAlign: "center" }}>
+            <p>🔗 共有リンク:</p>
+            <a href={shareUrl} target="_blank" rel="noreferrer">
+              {shareUrl}
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default SharePage;
+export default RegisterPage;
