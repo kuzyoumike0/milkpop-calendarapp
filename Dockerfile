@@ -1,32 +1,38 @@
-# ===== フロントエンドをビルド =====
-FROM node:18 AS frontend-build
-WORKDIR /app/frontend
+# ====== ビルド用ステージ ======
+FROM node:18 AS build
 
-# 依存関係インストール
-COPY frontend/package*.json ./
-RUN npm install
+# 作業ディレクトリ
+WORKDIR /app
 
-# ソースコードをコピーしてビルド
-COPY frontend/ ./
-RUN npm run build
+# フロントエンド依存関係をコピーしてインストール
+COPY frontend/package.json frontend/package-lock.json ./frontend/
+RUN cd frontend && npm install
 
-# ===== バックエンド =====
-FROM node:18 AS backend
+# バックエンド依存関係をコピーしてインストール
+COPY backend/package.json backend/package-lock.json ./backend/
+RUN cd backend && npm install
+
+# フロントエンドのソースをコピーしてビルド
+COPY frontend ./frontend
+RUN cd frontend && npm run build
+
+# ====== 実行ステージ ======
+FROM node:18
+
+WORKDIR /app
+
+# バックエンドのみコピー
+COPY --from=build /app/backend ./backend
+
+# フロントエンドのビルド成果物を backend/build にコピー
+COPY --from=build /app/frontend/build ./backend/build
+
+# バックエンド依存関係（本番用のみ）
 WORKDIR /app/backend
+RUN npm install --production
 
-# バックエンド依存関係
-COPY backend/package*.json ./
-RUN npm install
-
-# バックエンドソースをコピー
-COPY backend/ ./
-
-# フロントのビルド成果物を backend/build にコピー
-COPY --from=frontend-build /app/frontend/build ./build
-
-# Railway 用ポート設定
-ENV PORT=3000
+# ポートを公開
 EXPOSE 3000
 
-# Node.js を起動
+# サーバー起動
 CMD ["node", "index.js"]
