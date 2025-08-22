@@ -24,7 +24,7 @@ header,
 .banner {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
-  padding: 16px 24px;
+  padding: 16px 32px; /* 余白を広めに */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -37,11 +37,52 @@ header,
   z-index: 1000;
 }
 
+/* ヘッダー左側：ロゴやタイトル */
+header .logo {
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* ヘッダー中央：ナビゲーションリンク */
+header .nav {
+  display: flex;
+  gap: 32px; /* 👈 リンク間隔を広めに */
+  align-items: center;
+}
+
+header .nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+header .nav a:hover {
+  color: #ff5fa2;
+}
+
+/* ヘッダー右側：Discordログインボタン */
+header .login-btn {
+  margin-left: 32px;
+  background: linear-gradient(90deg, #7289da, #5865f2);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+header .login-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
 /* ===== フッター固定 ===== */
 footer {
   background: black;
   color: white;
-  padding: 12px;
+  padding: 14px 20px;
   text-align: center;
   position: fixed;
   bottom: 0;
@@ -52,8 +93,8 @@ footer {
 /* ===== main の余白調整 ===== */
 main {
   flex: 1;
-  margin-top: 70px;  /* ヘッダー分 */
-  margin-bottom: 50px; /* フッター分 */
+  margin-top: 80px;   /* ヘッダー分 */
+  margin-bottom: 60px; /* フッター分 */
 }
 
 /* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
@@ -65,7 +106,7 @@ main {
   margin: 40px auto;
   max-width: 1400px;
   padding: 0 20px;
-  flex-wrap: wrap; /* 👈 はみ出し防止 */
+  flex-wrap: wrap;
 }
 
 /* ===== 見出し ===== */
@@ -139,18 +180,15 @@ h1, h2, .page-title, .welcome-text {
   background: #fff;
   box-shadow: 0 6px 14px rgba(0,0,0,0.2);
 }
-
 .react-calendar__tile {
   padding: 10px 6px;
   border-radius: 12px;
   transition: all 0.2s ease;
 }
-
 .react-calendar__tile:hover {
   background: #FFDDEE;
   transform: scale(1.05);
 }
-
 .react-calendar__tile--active {
   background: linear-gradient(135deg, #FDB9C8, #A0C4FF) !important;
   color: #fff !important;
@@ -158,7 +196,6 @@ h1, h2, .page-title, .welcome-text {
   font-weight: bold;
   box-shadow: 0 0 8px rgba(253, 185, 200, 0.7);
 }
-
 .react-calendar__navigation button {
   color: #004CA0;
   font-weight: bold;
@@ -168,11 +205,9 @@ h1, h2, .page-title, .welcome-text {
   border-radius: 6px;
   transition: 0.2s;
 }
-
 .react-calendar__navigation button:hover {
   background: rgba(253, 185, 200, 0.2);
 }
-
 .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: bold;
@@ -189,7 +224,6 @@ h1, h2, .page-title, .welcome-text {
   box-shadow: 0 6px 14px rgba(0,0,0,0.2);
   min-width: 300px;
 }
-
 .schedule-section h3 {
   font-size: 1.4rem;
   font-weight: bold;
@@ -296,6 +330,13 @@ h1, h2, .page-title, .welcome-text {
   }
   .schedule-item select {
     width: 100%;
+  }
+  header .nav {
+    gap: 16px;
+  }
+  header .login-btn {
+    margin-left: 16px;
+    padding: 6px 12px;
   }
 }
 
