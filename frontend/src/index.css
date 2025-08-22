@@ -1,21 +1,9 @@
-/* ===== ページ全体レイアウト ===== */
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
+/* ===== 全体のフォントをかわいく ===== */
+body {
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', 'Poppins', cursive, sans-serif;
 }
 
-main {
-  flex: 1; /* コンテンツ部分を広げる */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding-bottom: 60px; /* フッター分の余白 */
-}
-
-/* ===== ヘッダー ===== */
+/* ===== ヘッダー（バナー） ===== */
 .banner {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   padding: 16px 40px;
@@ -32,16 +20,44 @@ main {
   z-index: 1000;
 }
 
+.banner h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-family: 'Zen Maru Gothic', cursive;
+}
+
+/* ナビゲーション */
+.banner nav {
+  display: flex;
+  gap: 36px; /* ← リンク同士の間隔を広げる */
+}
+
+.banner nav a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* ホバー時の変化 */
+.banner nav a:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFDDEE;
+}
+
 /* ===== トップページ画像 ===== */
 .top-image {
   display: flex;
   justify-content: center;
-  margin: 40px auto 20px auto;  /* ← ヘッダーから40px離す */
+  margin: 80px auto 30px auto;  /* ← ヘッダーからさらに80px離す */
 }
 
 .top-image img {
   width: 90%;
-  max-width: 1040px;
+  max-width: 1000px;
   height: auto;
   border-radius: 16px;
   box-shadow: 0 6px 14px rgba(0,0,0,0.25);
@@ -64,7 +80,7 @@ main {
   letter-spacing: 0.5px;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
   width: 100%;
-  position: fixed;   /* ← 画面下に固定 */
+  position: fixed;
   bottom: 0;
   left: 0;
 }
