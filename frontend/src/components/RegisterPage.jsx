@@ -4,6 +4,8 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
 const localizer = momentLocalizer(moment);
 
@@ -72,18 +74,23 @@ const RegisterPage = () => {
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録ページ</h2>
+      <Header />
 
-      {/* 入力フォーム */}
-      <div className="form-container">
-        <label>タイトル:</label>
-        <input
-          className="input-field"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <main className="page-card">
+        <h2 className="page-title">日程登録ページ</h2>
 
-        <div className="radio-container">
+        {/* 入力フォーム */}
+        <div className="form-group">
+          <label>タイトル:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>選択方法:</label>
           <label>
             <input
               type="radio"
@@ -94,7 +101,7 @@ const RegisterPage = () => {
             />
             範囲選択
           </label>
-          <label>
+          <label style={{ marginLeft: "1rem" }}>
             <input
               type="radio"
               name="mode"
@@ -106,43 +113,43 @@ const RegisterPage = () => {
           </label>
         </div>
 
-        <button className="submit-button" onClick={handleRegister}>
-          登録
-        </button>
-      </div>
+        <button onClick={handleRegister}>登録</button>
 
-      {/* カレンダー */}
-      <div className="calendar-container">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          selectable
-          style={{ height: 500 }}
-          onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
-        />
-      </div>
-
-      {/* 選択中の日程 */}
-      <div className="selected-dates">
-        <h3>選択した日付:</h3>
-        <ul>
-          {selectedDates.map((d, idx) => (
-            <li key={idx}>{d.toDateString()}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 共有リンク */}
-      {shareUrl && (
-        <div className="share-link">
-          <p>共有リンクが発行されました:</p>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
+        {/* カレンダー */}
+        <div className="calendar-container" style={{ marginTop: "2rem" }}>
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            selectable
+            style={{ height: 500 }}
+            onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
+          />
         </div>
-      )}
+
+        {/* 選択中の日程 */}
+        <div className="selected-dates">
+          <h3>選択した日付:</h3>
+          <ul>
+            {selectedDates.map((d, idx) => (
+              <li key={idx}>{d.toDateString()}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 共有リンク */}
+        {shareUrl && (
+          <div className="share-link">
+            <p>共有リンクが発行されました:</p>
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+              {shareUrl}
+            </a>
+          </div>
+        )}
+      </main>
+
+      <Footer />
     </div>
   );
 };
