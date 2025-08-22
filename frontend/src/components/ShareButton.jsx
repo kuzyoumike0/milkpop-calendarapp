@@ -1,28 +1,24 @@
+// frontend/src/components/ShareButton.jsx
 import React from "react";
-import { Button } from "@chakra-ui/react";
-import { Link as RouterLink } from "react-router-dom";
 
-const ShareButton = ({ to, children }) => {
+const ShareButton = ({ url }) => {
+  if (!url) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url);
+    alert("共有リンクをコピーしました！");
+  };
+
   return (
-    <Button
-      as={RouterLink}
-      to={to}
-      bgGradient="linear(to-r, brandPink, brandBlue)"
-      color="white"
-      px={6}
-      py={4}
-      rounded="xl"
-      shadow="md"
-      fontWeight="bold"
-      _hover={{
-        opacity: 0.9,
-        transform: "scale(1.05)",
-        bgGradient: "linear(to-r, brandBlue, brandPink)", // hover時に逆グラデーション
-      }}
-      transition="all 0.2s ease-in-out"
-    >
-      {children}
-    </Button>
+    <div className="flex items-center gap-4 mt-4">
+      <p className="text-gray-300 break-all">{url}</p>
+      <button
+        onClick={handleCopy}
+        className="px-4 py-2 rounded-lg bg-[#FDB9C8] text-black font-bold shadow-md hover:opacity-80"
+      >
+        コピー
+      </button>
+    </div>
   );
 };
 
