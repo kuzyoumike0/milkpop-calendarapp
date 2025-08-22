@@ -42,3 +42,105 @@ h1, h2, h3 {
   margin: 0;
   font-family: 'Potta One', cursive; /* ロゴは遊び心を残す */
 }
+
+/* ===== カレンダー全体 ===== */
+.rbc-calendar {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+  border: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: 0.3s;
+}
+
+.rbc-calendar:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+}
+
+/* ===== ツールバー（ナビ部分） ===== */
+.rbc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.rbc-toolbar button {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+}
+
+.rbc-toolbar button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.rbc-toolbar-label {
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: #004CA0;
+  font-family: 'Noto Serif JP', serif;
+}
+
+/* ===== 日付セル ===== */
+.rbc-day-bg {
+  transition: background 0.3s, transform 0.1s;
+}
+
+.rbc-day-bg:hover {
+  background: rgba(253,185,200,0.15);
+  transform: scale(1.02);
+  border-radius: 6px;
+}
+
+/* 今日を強調 */
+.rbc-today {
+  background: rgba(0, 76, 160, 0.08) !important;
+  border: 2px solid #004CA0 !important;
+  border-radius: 6px;
+}
+
+/* 選択した日付 */
+.selected-day {
+  background: rgba(253,185,200,0.35) !important;
+  border: 2px solid #FDB9C8 !important;
+  border-radius: 6px;
+}
+
+/* 祝日 */
+.holiday {
+  color: #d9534f !important;
+  background: rgba(253,185,200,0.25) !important;
+  border-radius: 6px;
+  font-weight: bold;
+  position: relative;
+}
+
+/* ===== イベント表示 ===== */
+.rbc-event {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0) !important;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ===== 時間スロット（週/日ビュー用） ===== */
+.rbc-time-slot {
+  border-top: 1px dashed #eee;
+}
+
+.rbc-time-view {
+  border: none;
+}
