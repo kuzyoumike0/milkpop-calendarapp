@@ -1,11 +1,11 @@
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
-  font-family: 'Shippori Mincho', 'Noto Sans JP', serif;
+  font-family: 'Noto Sans JP', 'M PLUS Rounded 1c', sans-serif;
   color: #000;
   background: #fff;
   min-height: 100vh;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 /* 見出し・タイトル */
@@ -13,7 +13,6 @@ h1, h2, h3, .welcome-text, .page-title {
   font-family: 'Potta One', cursive;
   letter-spacing: 0.05em;
 }
-
 
 /* ===== バナー（ヘッダー） ===== */
 .banner {
