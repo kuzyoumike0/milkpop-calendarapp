@@ -4,6 +4,8 @@ import { fetchHolidays, getTodayIso } from "../holiday";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
+  const [mode, setMode] = useState("range");
+  const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
   const [holidays, setHolidays] = useState([]);
@@ -78,7 +80,7 @@ const RegisterPage = () => {
         </nav>
       </header>
 
-      <main>
+      <main className="mt-24">
         {/* ===== タイトル入力 ===== */}
         <div className="mb-6">
           <label className="block text-lg mb-2">タイトル</label>
@@ -89,6 +91,30 @@ const RegisterPage = () => {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="例: 打ち合わせ日程"
           />
+        </div>
+
+        {/* ===== ラジオボタンでモード切替 ===== */}
+        <div className="radio-group mb-6">
+          <label className={`radio-label ${mode === "range" ? "radio-active" : ""}`}>
+            <input
+              type="radio"
+              name="mode"
+              value="range"
+              checked={mode === "range"}
+              onChange={() => { setMode("range"); setMultiDates([]); }}
+            />
+            範囲選択
+          </label>
+          <label className={`radio-label ${mode === "multi" ? "radio-active" : ""}`}>
+            <input
+              type="radio"
+              name="mode"
+              value="multi"
+              checked={mode === "multi"}
+              onChange={() => { setMode("multi"); setRange([null, null]); }}
+            />
+            複数選択
+          </label>
         </div>
 
         <div className="register-layout">
@@ -128,7 +154,12 @@ const RegisterPage = () => {
           {/* ===== 選択した日程（右3割） ===== */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
-            {multiDates.length > 0 ? (
+            {mode === "range" && range[0] && range[1] && (
+              <div className="schedule-card">
+                {range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}
+              </div>
+            )}
+            {mode === "multi" && multiDates.length > 0 ? (
               <div className="space-y-4">
                 {multiDates.map((date) => (
                   <div key={date} className="schedule-card">
@@ -144,15 +175,14 @@ const RegisterPage = () => {
                         <option value="時間指定">時間指定</option>
                       </select>
                     </div>
-
                     {dateOptions[date]?.type === "時間指定" && (
                       <div className="mt-2 flex gap-2 items-center">
                         <select
                           value={dateOptions[date]?.start || "9:00"}
                           onChange={(e) => handleOptionChange(date, "start", e.target.value)}
                         >
-                          {[...Array(24).keys()].map((h) => (
-                            <option key={h} value={`${h}:00`}>{h}:00</option>
+                          {timeOptions.map((t) => (
+                            <option key={t} value={t}>{t}</option>
                           ))}
                         </select>
                         <span>〜</span>
@@ -160,19 +190,18 @@ const RegisterPage = () => {
                           value={dateOptions[date]?.end || "18:00"}
                           onChange={(e) => handleOptionChange(date, "end", e.target.value)}
                         >
-                          {[...Array(24).keys()].map((h) => (
-                            <option key={h} value={`${h}:00`}>{h}:00</option>
+                          {endTimeOptions.map((t) => (
+                            <option key={t} value={t}>{t}</option>
                           ))}
-                          <option value="24:00">24:00</option>
                         </select>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : mode === "multi" ? (
               <p className="text-gray-400">まだ日程が選択されていません</p>
-            )}
+            ) : null}
           </div>
         </div>
       </main>
