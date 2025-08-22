@@ -465,5 +465,39 @@ h1, h2, .page-title, .welcome-text {
 .react-calendar__tile.saturday {
   color: #004CA0 !important;
 }
+/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
+.register-layout {
+  display: flex;
+  justify-content: space-between; /* 中央寄せ → 左右に分離 */
+  align-items: flex-start;
+  gap: 24px;
+  margin: 40px auto;
+  width: 100%;   /* ← max-widthを外す */
+  padding: 0 20px;
+}
+
+/* カレンダー枠（左側 7割） */
+.calendar-section {
+  flex: 7;
+  background: #fff;
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  width: 70%;   /* ← 7割指定 */
+  margin: 0;    /* 中央寄せ解除 */
+}
+
+/* 日程リスト（右側 3割） */
+.schedule-section {
+  flex: 3;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  width: 30%;   /* ← 3割指定 */
+  min-width: 300px;
+  margin: 0;    /* 中央寄せ解除 */
+}
+
 
 
