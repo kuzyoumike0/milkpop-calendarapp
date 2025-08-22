@@ -19,9 +19,11 @@ const RegisterPage = () => {
   const handleDateClick = (date) => {
     if (selectionMode === "range") {
       if (!rangeStart) {
+        // 開始日をセット
         setRangeStart(date);
         setSelectedDates([date]);
       } else {
+        // 範囲選択完了
         const start = rangeStart < date ? rangeStart : date;
         const end = rangeStart < date ? date : rangeStart;
 
@@ -62,12 +64,23 @@ const RegisterPage = () => {
     setEvents([...events, ...newEvents]);
     setTitle("");
     setSelectedDates([]);
+  };
 
-    // 共有リンク作成（ダミー）
-    const url = `${window.location.origin}/share/${Math.random()
-      .toString(36)
-      .substring(2, 8)}`;
-    setShareUrl(url);
+  // カレンダーセルのカスタムクラス
+  const dayPropGetter = (date) => {
+    const isSelected = selectedDates.some(
+      (d) => d.toDateString() === date.toDateString()
+    );
+    const isRangeStart =
+      rangeStart && rangeStart.toDateString() === date.toDateString();
+
+    if (isRangeStart) {
+      return { className: "range-start" };
+    }
+    if (isSelected) {
+      return { className: "selected-day" };
+    }
+    return {};
   };
 
   return (
@@ -120,6 +133,7 @@ const RegisterPage = () => {
           selectable
           style={{ height: 500 }}
           onSelectSlot={(slotInfo) => handleDateClick(slotInfo.start)}
+          dayPropGetter={dayPropGetter} // ← セルのクラスを付与
         />
       </div>
 
