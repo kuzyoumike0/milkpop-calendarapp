@@ -1,26 +1,19 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
+import "./index.css";
 
-const App = () => {
+function App() {
   return (
     <Router>
-      <div className="page-container">
-        {/* ===== バナー（共通ヘッダー） ===== */}
-        <header className="banner">
-          <div className="logo">MilkPOP Calendar</div>
-          <nav className="nav">
-            <Link to="/">トップ</Link>
-            <Link to="/register">日程登録</Link>
-            <Link to="/personal">個人スケジュール</Link>
-          </nav>
-        </header>
+      <div className="app-container">
+        <Header />
 
-        {/* ===== ページ表示部分 ===== */}
         <main>
           <Routes>
             <Route path="/" element={<TopPage />} />
@@ -30,13 +23,10 @@ const App = () => {
           </Routes>
         </main>
 
-        {/* ===== フッター ===== */}
-        <footer>
-          &copy; {new Date().getFullYear()} MilkPOP Calendar
-        </footer>
+        <Footer />
       </div>
     </Router>
   );
-};
+}
 
 export default App;
