@@ -324,3 +324,27 @@
   flex: 1;
   padding-bottom: 80px; /* フッターと重ならないように */
 }
+
+/* 選択済み日付 */
+.react-calendar__tile.selected {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
+}
+
+/* 丸バッジ風にマーク */
+.react-calendar__tile.selected::after {
+  content: "✔";
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 0.7rem;
+  color: #fff;
+  background: #004CA0;
+  border-radius: 50%;
+  padding: 2px 5px;
+}
+
