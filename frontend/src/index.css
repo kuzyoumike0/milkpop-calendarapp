@@ -500,4 +500,37 @@ h1, h2, .page-title, .welcome-text {
 }
 
 
+/* ===== レイアウト（カレンダー＋日程リスト横並び） ===== */
+.register-layout {
+  display: flex;
+  justify-content: space-between; /* 左右に分ける */
+  align-items: flex-start;
+  gap: 24px;
+  margin: 40px auto;
+  width: 100%;   /* フル幅を使う */
+  padding: 0 20px;
+}
+
+/* カレンダー枠（左側 7割） */
+.calendar-section {
+  flex: 7;
+  background: #fff;
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  width: 70%;
+  margin: 0;
+}
+
+/* 日程リスト（右側 3割） */
+.schedule-section {
+  flex: 3;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  width: 30%;
+  min-width: 300px;
+  margin: 0;
+}
 
