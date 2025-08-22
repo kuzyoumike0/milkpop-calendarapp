@@ -119,7 +119,7 @@
 }
 
 .logo-image {
-  max-width: 1040px;  /* 👈 ロゴを少しコンパクトに */
+  max-width: 1040px;
   height: auto;
   display: block;
 }
@@ -147,7 +147,7 @@
   margin: 0 auto;
 }
 
-/* ===== react-calendar カスタマイズ ===== */
+/* ===== react-calendar カスタマイズ（hover/拡大/強調あり） ===== */
 .react-calendar {
   width: 100% !important;
   border: none;
@@ -155,6 +155,7 @@
   padding: 20px;
   font-family: 'Zen Maru Gothic', sans-serif;
   background: #fff;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2); /* カード風 */
 }
 
 .react-calendar__tile {
@@ -162,14 +163,39 @@
   border-radius: 12px;
   transition: all 0.2s ease;
 }
+
 .react-calendar__tile:hover {
-  background: #FFDDEE;
-  transform: scale(1.05);
+  background: #FFDDEE;       /* hover時に淡いピンク */
+  transform: scale(1.05);    /* 少し拡大 */
 }
+
 .react-calendar__tile--active {
-  background: linear-gradient(135deg, #FDB9C8, #A0C4FF) !important;
+  background: linear-gradient(135deg, #FDB9C8, #A0C4FF) !important; /* ピンク→青のグラデーション */
   color: #fff !important;
   border-radius: 50% !important;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(253, 185, 200, 0.7); /* 光るような強調 */
+}
+
+.react-calendar__navigation button {
+  color: #004CA0;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 2px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.react-calendar__navigation button:hover {
+  background: rgba(253, 185, 200, 0.2);
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 8px;
 }
 
 /* ===== 日程リスト側 ===== */
@@ -309,54 +335,4 @@
   display: flex;
   justify-content: center;
   margin: 20px auto;
-}
-/* ===== react-calendar カスタマイズ（hover/拡大/強調あり） ===== */
-.react-calendar {
-  width: 100% !important;
-  border: none;
-  border-radius: 20px;
-  padding: 20px;
-  font-family: 'Zen Maru Gothic', sans-serif;
-  background: #fff;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2); /* カード風 */
-}
-
-.react-calendar__tile {
-  padding: 10px 6px;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.react-calendar__tile:hover {
-  background: #FFDDEE;       /* hover時に淡いピンク */
-  transform: scale(1.05);    /* 少し拡大 */
-}
-
-.react-calendar__tile--active {
-  background: linear-gradient(135deg, #FDB9C8, #A0C4FF) !important; /* ピンク→青のグラデーション */
-  color: #fff !important;
-  border-radius: 50% !important;
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(253, 185, 200, 0.7); /* 光るような強調 */
-}
-
-.react-calendar__navigation button {
-  color: #004CA0;
-  font-weight: bold;
-  font-size: 1rem;
-  margin: 2px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: 0.2s;
-}
-
-.react-calendar__navigation button:hover {
-  background: rgba(253, 185, 200, 0.2);
-}
-
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
-  color: #444;
-  margin-bottom: 8px;
 }
