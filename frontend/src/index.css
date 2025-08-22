@@ -428,3 +428,25 @@
   border-radius: 10px;
   border: 1px solid #ccc;
 }
+
+.schedule-item {
+  display: flex;
+  flex-wrap: wrap; /* ✅ 時間指定が長いとき折り返す */
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.type-select,
+.time-select {
+  padding: 4px;
+  font-size: 14px;
+  max-width: 120px;
+}
+
+.time-select-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
