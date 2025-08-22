@@ -8,10 +8,17 @@ body {
   line-height: 1.7;
 }
 
-/* 見出し・タイトル */
-h1, h2, h3, .welcome-text, .page-title {
-  font-family: 'Potta One', cursive;
+/* ===== 見出し・タイトル ===== */
+h1, h2, h3 {
+  font-family: 'Potta One', cursive; /* バナーなど強調部分は残す */
   letter-spacing: 0.05em;
+}
+
+.welcome-text,
+.page-title {
+  font-family: 'Noto Sans JP', sans-serif; /* ← モダンに変更 */
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 /* ===== バナー（ヘッダー） ===== */
