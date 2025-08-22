@@ -12,6 +12,7 @@
     "uuid": "^9.0.0",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
-    "express-session": "^1.17.3"
+    "express-session": "^1.17.3",
+    "pg": "^8.11.5"   // 👈 PostgreSQL クライアントを追加
   }
 }
