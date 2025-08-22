@@ -119,6 +119,7 @@ body {
 /* ================================
    🎨 自作カレンダー MilkPOP テーマ
    ================================ */
+/* React Calendar カスタムテーマ */
 .calendar-wrapper {
   display: flex;
   justify-content: center;
@@ -139,12 +140,6 @@ body {
 }
 
 /* 月ナビゲーション */
-.react-calendar__navigation {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 15px;
-}
 .react-calendar__navigation button {
   background: none !important;
   border: none !important;
@@ -154,25 +149,27 @@ body {
   cursor: pointer !important;
   padding: 8px 12px !important;
   border-radius: 8px !important;
-  transition: 0.3s !important;
 }
 .react-calendar__navigation button:hover {
   background: rgba(253, 185, 200, 0.2) !important;
 }
 
-/* 曜日ヘッダー */
+/* 曜日 */
 .react-calendar__month-view__weekdays {
-  text-transform: uppercase;
-  font-weight: bold;
+  text-transform: uppercase !important;
+  font-weight: bold !important;
   color: #FDB9C8 !important;
   text-align: center !important;
-  margin-bottom: 8px !important;
 }
 
 /* 日付セル */
 .react-calendar__tile {
   border-radius: 10px !important;
   padding: 12px !important;
+  margin: 2px !important;
+  transition: all 0.3s ease !important;
+  text-align: center !important;
+  font-size: 1rem !important;
   background: transparent !important;
 }
 .react-calendar__tile:hover {
@@ -188,8 +185,8 @@ body {
   border-radius: 12px !important;
 }
 
-/* 選択した日 */
-.selected-tile {
+/* 選択日 */
+.react-calendar .selected-tile {
   background: #004CA0 !important;
   color: #fff !important;
   font-weight: bold !important;
@@ -198,7 +195,7 @@ body {
 }
 
 /* 祝日 */
-.holiday-tile {
+.react-calendar .holiday-tile {
   background: #FDB9C8 !important;
   color: #000 !important;
   font-weight: bold !important;
