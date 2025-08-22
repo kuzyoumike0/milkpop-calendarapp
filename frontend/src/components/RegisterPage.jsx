@@ -64,6 +64,18 @@ const RegisterPage = () => {
     }
   };
 
+  // 範囲の日付を展開
+  const getRangeDates = () => {
+    if (!range[0] || !range[1]) return [];
+    const dates = [];
+    let cur = new Date(range[0]);
+    while (cur <= range[1]) {
+      dates.push(cur.toISOString().split("T")[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    return dates;
+  };
+
   // 日付削除処理
   const removeDate = (iso) => {
     setMultiDates(multiDates.filter((d) => d !== iso));
@@ -171,11 +183,21 @@ const RegisterPage = () => {
           {/* ===== 右側 選択日リスト + 共有リンク ===== */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
-            {mode === "range" && range[0] && range[1] && (
-              <div className="schedule-card">
-                <span>{range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}</span>
-                <button onClick={() => setRange([null, null])}>✖</button>
-              </div>
+            {mode === "range" && getRangeDates().length > 0 && (
+              getRangeDates().map((date) => (
+                <div key={date} className="schedule-card">
+                  <span>{date}</span>
+                  <select
+                    value={dateOptions[date]?.type || "終日"}
+                    onChange={(e) => handleOptionChange(date, "type", e.target.value)}
+                  >
+                    <option value="終日">終日</option>
+                    <option value="午前">午前</option>
+                    <option value="午後">午後</option>
+                    <option value="時間指定">時間指定</option>
+                  </select>
+                </div>
+              ))
             )}
             {mode === "multi" && multiDates.length > 0 ? (
               multiDates.map((date) => (
