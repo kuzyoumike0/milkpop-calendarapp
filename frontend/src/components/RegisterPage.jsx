@@ -8,6 +8,7 @@ import "../index.css";
 const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [rangeStart, setRangeStart] = useState(null);
 
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
@@ -18,7 +19,9 @@ const RegisterPage = () => {
   // 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
+
     if (mode === "multi") {
+      // === 複数選択 ===
       if (selectedDates.some(d => d.toDateString() === dateStr)) {
         setSelectedDates(selectedDates.filter(d => d.toDateString() !== dateStr));
         const updated = { ...dateOptions };
@@ -32,14 +35,36 @@ const RegisterPage = () => {
         });
       }
     } else {
-      if (selectedDates.some(d => d.toDateString() === dateStr)) {
-        setSelectedDates([]);
-        setDateOptions({});
-      } else {
+      // === 範囲選択 ===
+      if (!rangeStart) {
+        // 1クリック目 → 開始日保存
+        setRangeStart(date);
         setSelectedDates([date]);
         setDateOptions({
           [dateStr]: { type: "終日", start: "0:00", end: "23:00" }
         });
+      } else {
+        // 2クリック目 → 範囲確定
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+
+        let days = [];
+        let loop = new Date(start);
+        while (loop <= end) {
+          days.push(new Date(loop));
+          loop.setDate(loop.getDate() + 1);
+        }
+
+        setSelectedDates(days);
+
+        const updated = {};
+        days.forEach((d) => {
+          updated[d.toDateString()] = { type: "終日", start: "0:00", end: "23:00" };
+        });
+        setDateOptions(updated);
+
+        // 範囲完了 → 次回のためリセット
+        setRangeStart(null);
       }
     }
   };
@@ -73,7 +98,7 @@ const RegisterPage = () => {
     setDateOptions(updated);
   };
 
-  // 共有リンク発行（バックエンド保存）
+  // 共有リンク発行
   const handleShareLink = async () => {
     try {
       const res = await fetch("/api/schedules", {
@@ -108,11 +133,19 @@ const RegisterPage = () => {
           </div>
           <Calendar
             onClickDay={handleDateClick}
-            tileClassName={({ date }) =>
-              selectedDates.some(d => d.toDateString() === date.toDateString())
-                ? "selected-date"
-                : null
-            }
+            tileClassName={({ date }) => {
+              const dateStr = date.toDateString();
+
+              if (selectedDates.some(d => d.toDateString() === dateStr)) {
+                return "selected-date";
+              }
+
+              if (mode === "range" && rangeStart && rangeStart.toDateString() === dateStr) {
+                return "range-start-date";
+              }
+
+              return null;
+            }}
           />
         </div>
 
