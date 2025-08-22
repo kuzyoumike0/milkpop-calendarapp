@@ -369,4 +369,42 @@ h1, h2, .page-title, .welcome-text {
 .custom-calendar .react-calendar__month-view__days__day--weekend {
   color: #d32f2f;
 }
+/* 今日の強調 */
+.today-highlight {
+  background: #004CA0 !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 50%;
+}
+
+/* 祝日 */
+.holiday-highlight {
+  color: red !important;
+  font-weight: bold;
+}
+
+/* 選択日 */
+.selected-date {
+  background: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold;
+  border-radius: 10px;
+}
+
+/* タイトル入力 */
+.title-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  border: 2px solid #FDB9C8;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+/* ラジオボタングループ横並び */
+.radio-group.horizontal {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+}
 
