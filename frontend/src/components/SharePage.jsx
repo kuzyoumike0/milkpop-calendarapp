@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "../index.css"; // カスタムCSS追加
+import "../index.css";   // react-calendar より後に読み込まれていればOK
 
 const SharePage = () => {
   const { shareId } = useParams();
