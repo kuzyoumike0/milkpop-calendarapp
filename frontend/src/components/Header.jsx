@@ -31,7 +31,12 @@ const Header = () => {
 
   return (
     <header className="banner">
-      <h1 className="logo">MilkPOP Calendar</h1>
+      {/* 👇 ロゴをトップページへのリンクに変更 */}
+      <h1 className="logo">
+        <Link to="/" onClick={() => setMenuOpen(false)}>
+          MilkPOP Calendar
+        </Link>
+      </h1>
 
       {/* ハンバーガー */}
       <button
