@@ -1,116 +1,53 @@
-// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import {
-  Button,
-  Input,
-  Select,
-  Box,
-  Heading,
-  VStack,
-  Text,
-} from "@chakra-ui/react";
+import VoteMatrix from "./VoteMatrix";
 
-const SharePage = () => {
-  const { shareId } = useParams();
-  const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState({}); // { "2025-08-22": { name: "", answer: "○" } }
+function SharePage({ uuid }) {
+  const [voterName, setVoterName] = useState("");
+  const [confirmedName, setConfirmedName] = useState("");
+  const [user, setUser] = useState(null); // Discordログイン情報
 
-  // 初回ロード時にサーバーから共有日程を取得
+  // Discordログインしているかチェック
   useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const res = await fetch(`/api/share/${shareId}`);
-        const data = await res.json();
-        setSchedules(data.schedules || []);
-      } catch (err) {
-        console.error("❌ 共有日程取得失敗:", err);
-      }
-    };
-    fetchSchedules();
-  }, [shareId]);
-
-  // 入力変更処理
-  const handleChange = (date, field, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], [field]: value },
-    }));
-  };
-
-  // 保存処理
-  const handleSave = async () => {
-    const payload = Object.entries(responses).map(([date, info]) => ({
-      date,
-      name: info.name || "",
-      answer: info.answer || "未回答",
-    }));
-
-    try {
-      const res = await fetch(`/api/share/${shareId}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ responses: payload }),
+    fetch("/api/auth/user")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.id) {
+          setUser(data);
+          setConfirmedName(data.username); // Discordユーザー名をそのまま使う
+        }
       });
+  }, []);
 
-      if (!res.ok) throw new Error("保存失敗");
-      alert("✅ 回答を保存しました！");
-    } catch (err) {
-      console.error(err);
-      alert("❌ サーバー保存に失敗しました");
+  const handleConfirm = () => {
+    if (voterName.trim() !== "") {
+      setConfirmedName(voterName.trim());
     }
   };
 
+  // 名前未入力かつDiscordログインもしていない場合 → 入力モーダル
+  if (!confirmedName) {
+    return (
+      <div className="name-modal">
+        <div className="modal-content">
+          <h2>あなたのお名前を入力してください</h2>
+          <input
+            type="text"
+            value={voterName}
+            onChange={(e) => setVoterName(e.target.value)}
+            placeholder="例: 山田太郎"
+          />
+          <button onClick={handleConfirm}>OK</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Box className="page-container">
-      <Heading size="lg" textAlign="center" mb={6}>
-        共有日程 - 回答ページ
-      </Heading>
-
-      <VStack spacing={6} align="stretch">
-        {schedules.length === 0 && <Text>日程がありません</Text>}
-
-        {schedules.map((s) => (
-          <Box
-            key={s.date}
-            className="schedule-item"
-            p={4}
-            borderWidth="1px"
-            borderRadius="lg"
-          >
-            <Text fontWeight="bold" mb={2}>
-              📅 {s.date}（{s.time || "未設定"}）
-            </Text>
-            <Input
-              placeholder="あなたの名前"
-              mb={2}
-              value={responses[s.date]?.name || ""}
-              onChange={(e) => handleChange(s.date, "name", e.target.value)}
-            />
-            <Select
-              placeholder="参加可否を選択"
-              value={responses[s.date]?.answer || ""}
-              onChange={(e) => handleChange(s.date, "answer", e.target.value)}
-            >
-              <option value="○">○ 参加可能</option>
-              <option value="✖">✖ 不可</option>
-            </Select>
-          </Box>
-        ))}
-      </VStack>
-
-      {schedules.length > 0 && (
-        <Button
-          colorScheme="blue"
-          mt={6}
-          width="100%"
-          onClick={handleSave}
-        >
-          保存する
-        </Button>
-      )}
-    </Box>
+    <div>
+      <h2>スケジュール調整表</h2>
+      <VoteMatrix uuid={uuid} currentUser={confirmedName} />
+    </div>
   );
-};
+}
 
 export default SharePage;
