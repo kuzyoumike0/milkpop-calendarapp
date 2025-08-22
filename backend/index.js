@@ -61,23 +61,24 @@ app.get("/api/schedules/:id", async (req, res) => {
   }
 });
 
-// ===== 出欠保存API（最後の入力だけ保持） =====
+// ===== 出欠保存API（user_idでユニーク管理・名前は最新で上書き） =====
 app.post("/api/schedules/:id/responses", async (req, res) => {
   const { id } = req.params;
-  const { user, responses } = req.body;
+  const { user_id, username, responses } = req.body;
 
-  // user = Discordログイン時のusername または 未ログイン時の自由入力名
-  if (!user || !responses) {
-    return res.status(400).json({ ok: false, error: "ユーザー名と出欠が必要です" });
+  if (!user_id || !username || !responses) {
+    return res.status(400).json({ ok: false, error: "ユーザーID・名前・出欠が必要です" });
   }
 
   try {
     await pool.query(
-      `INSERT INTO schedule_responses (schedule_id, username, responses)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (schedule_id, username)
-       DO UPDATE SET responses = EXCLUDED.responses, created_at = CURRENT_TIMESTAMP`,
-      [id, user, responses]
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username = EXCLUDED.username,
+                     responses = EXCLUDED.responses,
+                     created_at = CURRENT_TIMESTAMP`,
+      [id, user_id, username, responses]
     );
 
     const scheduleRes = await pool.query("SELECT * FROM schedules WHERE id = $1", [id]);
