@@ -12,17 +12,15 @@ function App() {
   return (
     <Router>
       <div className="page-container">
-        {/* 共通ヘッダー */}
         <Header />
-
-        <Routes>
-          <Route path="/" element={<TopPage />} />
-          <Route path="/share" element={<RegisterPage />} />
-          <Route path="/personal" element={<PersonalPage />} />
-        </Routes>
-
-        {/* 共通フッター */}
-        <Footer />
+        <main>
+          <Routes>
+            <Route path="/" element={<TopPage />} />
+            <Route path="/share" element={<RegisterPage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+          </Routes>
+        </main>
+        <Footer /> {/* ← フッターを共通表示 */}
       </div>
     </Router>
   );
