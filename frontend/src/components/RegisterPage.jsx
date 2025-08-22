@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
@@ -16,35 +17,39 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP"); // 🇯🇵 日本の祝日
 
-  // ====== 祝日をロード ======
+  // ✅ 毎年祝日を自動追加
   useEffect(() => {
-    const year = new Date().getFullYear();
-    const holidayList = hd.getHolidays(year);
+    const currentYear = new Date().getFullYear();
+    let holidayEvents = [];
 
-    const holidayEvents = holidayList.map((h) => ({
-      id: `holiday-${h.date}`,
-      title: `🎌 ${h.name}`,
-      start: new Date(h.date),
-      end: new Date(h.date),
-      allDay: true,
-      type: "holiday",
-    }));
+    // 今年と来年分をあらかじめ登録
+    for (let year = currentYear; year <= currentYear + 1; year++) {
+      const holidayList = hd.getHolidays(year);
+      holidayEvents = [
+        ...holidayEvents,
+        ...holidayList.map((h) => ({
+          id: `holiday-${h.date}`,
+          title: `🎌 ${h.name}`,
+          start: new Date(h.date),
+          end: new Date(h.date),
+          allDay: true,
+          type: "holiday",
+        })),
+      ];
+    }
 
     setEvents((prev) => [...holidayEvents, ...prev]);
   }, []);
 
-  // 時刻選択リスト
+  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
     const h = String(i).padStart(2, "0");
     return `${h}:00`;
   });
 
-  // スロット選択時
-  const handleSelectSlot = ({ start, end }) => {
-    setSelectedSlot({ start, end });
-  };
+  const handleSelectSlot = ({ start, end }) => setSelectedSlot({ start, end });
 
-  // イベント追加
+  // 予定追加
   const handleAddEvent = () => {
     if (!selectedSlot) return;
 
@@ -82,7 +87,6 @@ const RegisterPage = () => {
     setEndTime("10:00");
   };
 
-  // イベント削除（祝日は削除できない）
   const handleDeleteEvent = (id) => {
     if (String(id).startsWith("holiday-")) return; // 🎌 祝日は削除禁止
     setEvents(events.filter((ev) => ev.id !== id));
@@ -121,7 +125,7 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* フォーム */}
+      {/* 予定追加フォーム */}
       {selectedSlot && (
         <div className="form-card">
           <h3>新しい予定を追加</h3>
@@ -147,10 +151,7 @@ const RegisterPage = () => {
               </select>
 
               <label>終了:</label>
-              <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              >
+              <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
                 {timeOptions.filter((t) => t > startTime).map((t) => (
                   <option key={t} value={t}>
                     {t}
@@ -166,7 +167,7 @@ const RegisterPage = () => {
         </div>
       )}
 
-      {/* 登録済みイベント */}
+      {/* イベント一覧 */}
       {events.filter((ev) => ev.type !== "holiday").length > 0 && (
         <div className="event-list">
           <h3>登録済みイベント</h3>
@@ -179,10 +180,7 @@ const RegisterPage = () => {
                   {moment(ev.end).format("HH:mm")} <br />
                   ⏰ {ev.division}
                 </p>
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDeleteEvent(ev.id)}
-                >
+                <button className="delete-btn" onClick={() => handleDeleteEvent(ev.id)}>
                   削除
                 </button>
               </div>
