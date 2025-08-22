@@ -134,9 +134,9 @@ const PersonalPage = () => {
         />
       </div>
 
-      {/* ===== カレンダーと日程リストを横並び ===== */}
+      {/* ===== カレンダー 7割 + 日程リスト 3割 ===== */}
       <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1">
+        <div className="md:w-7/10 w-full">
           <div className="mb-4 flex gap-4">
             {["range", "multi"].map((m) => (
               <label
@@ -167,7 +167,7 @@ const PersonalPage = () => {
           />
         </div>
 
-        <div className="flex-1">
+        <div className="md:w-3/10 w-full">
           <h3 className="font-bold">選択した日程</h3>
           <ul className="list-disc list-inside">
             {selectedDates.map((d, i) => {
