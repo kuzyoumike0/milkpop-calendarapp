@@ -1,224 +1,140 @@
-// frontend/src/components/SharePage.jsx
-import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import "../index.css";   // react-calendar より後に読み込まれていればOK
+/* ===== ページ全体のコンテナ ===== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins','Noto Sans JP','Reggae One','Yomogi', cursive, sans-serif;
+  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
+  color: #333;
+  line-height: 1.7;
+}
 
-const SharePage = () => {
-  const { shareId } = useParams();
-  const [schedules, setSchedules] = useState([]);
-  const [responses, setResponses] = useState({});
-  const [userName, setUserName] = useState("");
-  const [highlightDates, setHighlightDates] = useState([]);
+/* ===== ヘッダー固定 ===== */
+header {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: white;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+}
+header .nav {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+header .nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.2s;
+}
+header .nav a:hover {
+  color: #ff5fa2;
+}
 
-  const hours = [...Array(24).keys()].map((h) =>
-    String(h).padStart(2, "0") + ":00"
-  );
+/* ===== フッター固定 ===== */
+footer {
+  background: black;
+  color: white;
+  padding: 14px 20px;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
 
-  // ===== データ取得 =====
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const res = await fetch(`/api/share/${shareId}`);
-        const data = await res.json();
-        const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-        setSchedules(sorted);
-        setHighlightDates(sorted.map((s) => s.date));
-      } catch (err) {
-        console.error("Error fetching schedules:", err);
-      }
-    };
-    fetchSchedules();
-  }, [shareId]);
+/* ===== main の余白 ===== */
+main {
+  flex: 1;
+  margin-top: 80px;
+  margin-bottom: 60px;
+}
 
-  // ===== 選択 =====
-  const handleSelect = (scheduleId, field, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [scheduleId]: {
-        ...prev[scheduleId],
-        [field]: value,
-      },
-    }));
-  };
+/* ===== カレンダー全体 ===== */
+.custom-calendar {
+  width: 100%;
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff0f5, #fce4ec);
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  font-family: 'Poppins','Noto Sans JP', sans-serif;
+  color: #333;
+}
 
-  // ===== 保存 =====
-  const handleSave = async () => {
-    if (!userName.trim()) {
-      alert("名前を入力してください");
-      return;
-    }
-    try {
-      await fetch(`/api/share/${shareId}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: userName, responses }),
-      });
-      alert("保存しました！");
-    } catch (err) {
-      console.error("Error saving responses:", err);
-      alert("エラーが発生しました");
-    }
-  };
+/* ナビゲーション */
+.custom-calendar .react-calendar__navigation button {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #004CA0;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+.custom-calendar .react-calendar__navigation button:hover {
+  background: #FDB9C8;
+  color: white;
+}
 
-  return (
-    <div className="min-h-screen bg-[#FFF0F5] text-black font-poppins">
-      {/* ===== バナー ===== */}
-      <header className="bg-[#004CA0] text-white py-4 shadow-md flex justify-between items-center px-6">
-        <h1 className="text-2xl font-bold tracking-wide">MilkPOP Calendar</h1>
-        <nav className="space-x-4">
-          <Link
-            to="/register"
-            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80 transition"
-          >
-            日程登録ページ
-          </Link>
-          <Link
-            to="/personal"
-            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80 transition"
-          >
-            個人スケジュール
-          </Link>
-        </nav>
-      </header>
+/* 曜日ラベル */
+.custom-calendar .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
 
-      {/* ===== 本体: 左カレンダー + 右リスト ===== */}
-      <main className="max-w-6xl mx-auto p-6 mt-10">
-        <h2 className="text-xl font-bold mb-6 text-[#FDB9C8]">
-          共有スケジュール
-        </h2>
+/* 日付タイル */
+.custom-calendar .react-calendar__tile {
+  padding: 15px 5px;
+  border-radius: 12px;
+  transition: 0.2s;
+  text-align: center;
+  font-size: 1rem;
+}
 
-        <div className="register-layout">
-          {/* 左：カレンダー */}
-          <div className="calendar-section bg-white rounded-2xl shadow-lg p-4">
-            <Calendar
-              className="custom-calendar"
-              tileClassName={({ date }) => {
-                const dateStr = date.toISOString().split("T")[0];
-                return highlightDates.includes(dateStr)
-                  ? "today-highlight"
-                  : null;
-              }}
-            />
-          </div>
+/* 今日 */
+.custom-calendar .react-calendar__tile--now {
+  background: #004CA0 !important;
+  color: white !important;
+  font-weight: bold;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
 
-          {/* 右：リスト */}
-          <div className="schedule-section">
-            {/* 名前入力 */}
-            <div className="mb-6">
-              <label className="block mb-2 text-gray-700">あなたの名前：</label>
-              <input
-                type="text"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#FDB9C8]"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="例: 山田太郎"
-              />
-            </div>
+/* 選択日 */
+.custom-calendar .react-calendar__tile--active {
+  background: #FDB9C8 !important;
+  color: black !important;
+  font-weight: bold;
+}
 
-            {/* スケジュール一覧 */}
-            <div className="space-y-6">
-              {schedules.map((schedule) => {
-                const response = responses[schedule.id] || {};
-                return (
-                  <div
-                    key={schedule.id}
-                    className="bg-white rounded-xl shadow-md p-4"
-                  >
-                    <p className="font-semibold text-lg text-[#004CA0] mb-2">
-                      {schedule.title || "タイトルなし"}
-                    </p>
-                    <p className="text-gray-600 mb-3">
-                      {new Date(schedule.date).toLocaleDateString("ja-JP")}
-                    </p>
+/* 範囲選択 */
+.custom-calendar .react-calendar__tile--range {
+  background: #ffe4ec !important;
+  border-radius: 10px;
+  color: #333 !important;
+}
 
-                    {/* ラジオボタン */}
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { value: "all", label: "終日" },
-                        { value: "morning", label: "午前" },
-                        { value: "afternoon", label: "午後" },
-                        { value: "custom", label: "時間指定" },
-                      ].map((opt) => (
-                        <label
-                          key={opt.value}
-                          className={`radio-label ${
-                            response.timeType === opt.value
-                              ? "radio-active"
-                              : ""
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name={`time-${schedule.id}`}
-                            value={opt.value}
-                            checked={response.timeType === opt.value}
-                            onChange={(e) =>
-                              handleSelect(schedule.id, "timeType", e.target.value)
-                            }
-                          />
-                          {opt.label}
-                        </label>
-                      ))}
-                    </div>
+/* ホバー */
+.custom-calendar .react-calendar__tile:hover {
+  background: #f8bbd0;
+  cursor: pointer;
+}
 
-                    {/* 時間指定プルダウン */}
-                    {response.timeType === "custom" && (
-                      <div className="flex gap-2 mt-3">
-                        <select
-                          className="vote-select"
-                          value={response.startTime || ""}
-                          onChange={(e) =>
-                            handleSelect(schedule.id, "startTime", e.target.value)
-                          }
-                        >
-                          <option value="">開始時刻</option>
-                          {hours.map((h) => (
-                            <option key={h} value={h}>
-                              {h}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          className="vote-select"
-                          value={response.endTime || ""}
-                          onChange={(e) =>
-                            handleSelect(schedule.id, "endTime", e.target.value)
-                          }
-                        >
-                          <option value="">終了時刻</option>
-                          {hours
-                            .filter(
-                              (h) => !response.startTime || h > response.startTime
-                            )
-                            .map((h) => (
-                              <option key={h} value={h}>
-                                {h}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* 保存ボタン */}
-            <div className="mt-8 text-center">
-              <button
-                onClick={handleSave}
-                className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white font-bold shadow-lg hover:scale-105 transition"
-              >
-                保存する
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default SharePage;
+/* 土日 */
+.custom-calendar .react-calendar__month-view__days__day--weekend {
+  color: #d32f2f;
+}
