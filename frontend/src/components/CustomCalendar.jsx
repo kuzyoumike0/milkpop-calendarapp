@@ -1,17 +1,32 @@
 import React from "react";
-import DatePicker from "react-multi-date-picker";
+import Calendar from "react-calendar";
+import Holidays from "date-holidays";
+import "react-calendar/dist/Calendar.css";
+import "../index.css";
 
-export default function CustomCalendar({ rangeMode, dates, setDates }) {
+const hd = new Holidays("JP");
+
+const CustomCalendar = ({ selectedDates, onDateClick, rangeStart }) => {
+  // 🎨 祝日 & 選択日のスタイル
+  const tileClassName = ({ date }) => {
+    if (hd.isHoliday(date)) {
+      return "holiday-tile";
+    }
+    if (selectedDates.some((d) => d.toDateString() === date.toDateString())) {
+      return "selected-tile";
+    }
+    return null;
+  };
+
   return (
-    <div style={{ margin: "20px 0" }}>
-      <DatePicker
-        value={dates}
-        onChange={setDates}
-        range={rangeMode === "range"}
-        multiple={rangeMode === "multiple"}
-        format="YYYY-MM-DD"
-        style={{ padding: "10px", borderRadius: "6px" }}
+    <div className="calendar-wrapper">
+      <Calendar
+        onClickDay={onDateClick}
+        tileClassName={tileClassName}
+        locale="ja-JP"
       />
     </div>
   );
-}
+};
+
+export default CustomCalendar;
