@@ -4,16 +4,15 @@ import "react-calendar/dist/Calendar.css";
 import "../index.css";
 
 const RegisterPage = () => {
-  const [title, setTitle] = useState(""); // 追加: タイトル
-  const [mode, setMode] = useState("range"); // 範囲 or 複数
+  const [title, setTitle] = useState("");
+  const [mode, setMode] = useState("range");
   const [range, setRange] = useState([null, null]);
   const [multiDates, setMultiDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({}); // 各日付のプルダウン設定
+  const [dateOptions, setDateOptions] = useState({});
 
   const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
   const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
 
-  // ===== 複数日付クリック処理 =====
   const handleDateClick = (date) => {
     const iso = date.toISOString().split("T")[0];
     if (multiDates.includes(iso)) {
@@ -30,11 +29,9 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== プルダウン変更処理 =====
   const handleOptionChange = (date, field, value) => {
     let newValue = value;
 
-    // バリデーション: 時間指定の場合、開始 < 終了 にする
     if (field === "start" && dateOptions[date]?.end) {
       if (timeOptions.indexOf(value) >= endTimeOptions.indexOf(dateOptions[date].end)) {
         newValue = dateOptions[date].end;
@@ -55,7 +52,6 @@ const RegisterPage = () => {
     });
   };
 
-  // ===== 保存処理（API接続予定） =====
   const handleSave = () => {
     const payload = {
       title,
@@ -69,13 +65,11 @@ const RegisterPage = () => {
         : [],
     };
     console.log("保存データ:", payload);
-
-    // TODO: fetch("/api/schedules", {method:"POST", body: JSON.stringify(payload)}) ...
     alert("保存しました！（デバッグ表示）");
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 font-sans">
+    <div className="min-h-screen bg-black text-white p-6" style={{ fontFamily: "'M PLUS Rounded 1c', 'Poppins', sans-serif" }}>
       {/* ===== バナー ===== */}
       <header className="bg-[#004CA0] text-white py-4 px-6 rounded-2xl mb-6 flex justify-between items-center shadow-lg">
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
@@ -117,11 +111,7 @@ const RegisterPage = () => {
       {/* ===== カレンダー ===== */}
       <div className="bg-white text-black p-4 rounded-2xl shadow-lg">
         {mode === "range" ? (
-          <Calendar
-            selectRange
-            onChange={setRange}
-            value={range}
-          />
+          <Calendar selectRange onChange={setRange} value={range} />
         ) : (
           <Calendar
             onClickDay={handleDateClick}
@@ -143,12 +133,8 @@ const RegisterPage = () => {
         {mode === "multi" && multiDates.length > 0 && (
           <div className="space-y-2">
             {multiDates.map((date) => (
-              <div
-                key={date}
-                className="flex items-center gap-4 bg-gray-800 p-3 rounded-xl"
-              >
+              <div key={date} className="flex items-center gap-4 bg-gray-800 p-3 rounded-xl">
                 <span className="w-32">{date}</span>
-                {/* 区分プルダウン */}
                 <select
                   className="text-black px-2 py-1 rounded"
                   value={dateOptions[date]?.type || "終日"}
@@ -160,7 +146,6 @@ const RegisterPage = () => {
                   <option value="時間指定">時間指定</option>
                 </select>
 
-                {/* 時間指定の場合のみ表示 */}
                 {dateOptions[date]?.type === "時間指定" && (
                   <>
                     <select
