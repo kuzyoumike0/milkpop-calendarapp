@@ -11,7 +11,7 @@ const PersonalPage = () => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multi"); 
+  const [mode, setMode] = useState("multi");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
@@ -23,12 +23,10 @@ const PersonalPage = () => {
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
 
-  // ===== カレンダー日付の色付け =====
+  // ===== 日付色付け =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
-
-      // 今日の強調
       if (
         date.getFullYear() === today.getFullYear() &&
         date.getMonth() === today.getMonth() &&
@@ -39,6 +37,21 @@ const PersonalPage = () => {
       if (holiday) return "holiday";
       if (date.getDay() === 0) return "sunday";
       if (date.getDay() === 6) return "saturday";
+    }
+    return null;
+  };
+
+  // ===== 祝日名をセルに表示 =====
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (holiday) {
+        return (
+          <div className="holiday-label">
+            {holiday[0].name}
+          </div>
+        );
+      }
     }
     return null;
   };
@@ -146,6 +159,7 @@ const PersonalPage = () => {
         selectRange={mode === "range"}
         onChange={handleDateChange}
         tileClassName={tileClassName}
+        tileContent={tileContent}   // ✅ 祝日名を表示
         locale="ja-JP"
         calendarType="gregory"
         activeStartDate={new Date()}
