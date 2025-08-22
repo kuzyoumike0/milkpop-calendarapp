@@ -6,9 +6,10 @@ import "../index.css";
 const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [rangeStart, setRangeStart] = useState(null);
-  const [selectedSchedules, setSelectedSchedules] = useState([]); 
+  const [selectedSchedules, setSelectedSchedules] = useState([]);
   // [{date, type, start, end}, ...]
 
+  // 📌 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toDateString();
     if (selectionMode === "range") {
@@ -36,7 +37,9 @@ const RegisterPage = () => {
       }
     } else {
       if (selectedSchedules.some((s) => s.date.toDateString() === dateStr)) {
-        setSelectedSchedules(selectedSchedules.filter((s) => s.date.toDateString() !== dateStr));
+        setSelectedSchedules(
+          selectedSchedules.filter((s) => s.date.toDateString() !== dateStr)
+        );
       } else {
         setSelectedSchedules([
           ...selectedSchedules,
@@ -46,11 +49,11 @@ const RegisterPage = () => {
     }
   };
 
+  // 📌 プルダウン変更処理
   const handleTypeChange = (idx, value) => {
     const newSchedules = [...selectedSchedules];
     newSchedules[idx].type = value;
 
-    // 終日/午前/午後なら時間をリセット
     if (value !== "時間指定") {
       newSchedules[idx].start = null;
       newSchedules[idx].end = null;
@@ -64,6 +67,7 @@ const RegisterPage = () => {
     setSelectedSchedules(newSchedules);
   };
 
+  // 📌 サーバー送信処理
   const handleSubmit = async () => {
     const payload = selectedSchedules.map((s) => ({
       date: s.date.toISOString().split("T")[0], // YYYY-MM-DD
@@ -78,8 +82,13 @@ const RegisterPage = () => {
       body: JSON.stringify({ schedules: payload }),
     });
     const data = await res.json();
+
     if (data.id) {
-      alert(`共有リンクを作成しました: ${window.location.origin}/share/${data.id}`);
+      alert(
+        `✅ 共有リンクを作成しました:\n${window.location.origin}/share/${data.id}`
+      );
+      // 📌 送信後にクリア
+      setSelectedSchedules([]);
     }
   };
 
@@ -115,7 +124,9 @@ const RegisterPage = () => {
           <Calendar
             onClickDay={handleDateClick}
             tileClassName={({ date }) =>
-              selectedSchedules.some((s) => s.date.toDateString() === date.toDateString())
+              selectedSchedules.some(
+                (s) => s.date.toDateString() === date.toDateString()
+              )
                 ? "selected"
                 : ""
             }
@@ -126,12 +137,17 @@ const RegisterPage = () => {
         <div className="schedule-section">
           <h3>選択した日程</h3>
           {selectedSchedules.length === 0 && <p>日程を選択してください</p>}
+
           {selectedSchedules.map((s, idx) => (
             <div key={idx} className="schedule-item">
               <span>{s.date.toLocaleDateString()}</span>
 
               {/* 種類プルダウン */}
-              <select value={s.type} onChange={(e) => handleTypeChange(idx, e.target.value)}>
+              <select
+                className="type-select"
+                value={s.type}
+                onChange={(e) => handleTypeChange(idx, e.target.value)}
+              >
                 <option value="終日">終日</option>
                 <option value="午前">午前</option>
                 <option value="午後">午後</option>
@@ -140,26 +156,36 @@ const RegisterPage = () => {
 
               {/* 時間指定のときだけ表示 */}
               {s.type === "時間指定" && (
-                <>
+                <div className="time-select-group">
                   <select
+                    className="time-select"
                     value={s.start || ""}
-                    onChange={(e) => handleTimeChange(idx, "start", e.target.value)}
+                    onChange={(e) =>
+                      handleTimeChange(idx, "start", e.target.value)
+                    }
                   >
                     <option value="">開始時間</option>
                     {[...Array(24).keys()].map((h) => (
-                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                      <option key={h} value={`${h}:00`}>
+                        {`${h}:00`}
+                      </option>
                     ))}
                   </select>
                   <select
+                    className="time-select"
                     value={s.end || ""}
-                    onChange={(e) => handleTimeChange(idx, "end", e.target.value)}
+                    onChange={(e) =>
+                      handleTimeChange(idx, "end", e.target.value)
+                    }
                   >
                     <option value="">終了時間</option>
                     {[...Array(24).keys()].map((h) => (
-                      <option key={h} value={`${h}:00`}>{`${h}:00`}</option>
+                      <option key={h} value={`${h}:00`}>
+                        {`${h}:00`}
+                      </option>
                     ))}
                   </select>
-                </>
+                </div>
               )}
             </div>
           ))}
