@@ -21,32 +21,31 @@ const RegisterPage = () => {
   const [mode, setMode] = useState("multi"); // multi / range
   const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分
 
-  // ▼ 日付をトグル選択する（クリックで追加/解除）
+  // ▼ 日付をトグル選択（クリックで追加/解除）
   const toggleDate = (date) => {
     const exists = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
     );
     let newDates;
+    let updatedOptions = { ...dateOptions };
+
     if (exists) {
+      // 外す
       newDates = selectedDates.filter(
         (d) => d.toDateString() !== date.toDateString()
       );
+      delete updatedOptions[date.toDateString()];
     } else {
+      // 追加
       newDates = [...selectedDates, date];
-    }
-    setSelectedDates(newDates);
-
-    // optionsを整理
-    const updatedOptions = { ...dateOptions };
-    if (!exists) {
       updatedOptions[date.toDateString()] = {
         type: "allday",
         start: 1,
         end: 2,
       };
-    } else {
-      delete updatedOptions[date.toDateString()];
     }
+
+    setSelectedDates(newDates);
     setDateOptions(updatedOptions);
   };
 
@@ -66,41 +65,27 @@ const RegisterPage = () => {
         current.setDate(current.getDate() + 1);
       }
 
-      // 選択済み → 外す
-      const alreadyAllSelected = days.every((d) =>
-        selectedDates.some((s) => s.toDateString() === d.toDateString())
-      );
-
-      let newDates;
+      // 追加だけ（削除は toggleDate に任せる）
+      let newDates = [...selectedDates];
       let updatedOptions = { ...dateOptions };
-      if (alreadyAllSelected) {
-        // すべて選択済みなら解除
-        newDates = selectedDates.filter(
-          (s) => !days.some((d) => d.toDateString() === s.toDateString())
-        );
-        days.forEach((d) => delete updatedOptions[d.toDateString()]);
-      } else {
-        // 追加
-        newDates = [...selectedDates];
-        days.forEach((d) => {
-          if (
-            !newDates.some((s) => s.toDateString() === d.toDateString())
-          ) {
-            newDates.push(d);
-            updatedOptions[d.toDateString()] = {
-              type: "allday",
-              start: 1,
-              end: 2,
-            };
-          }
-        });
-      }
+
+      days.forEach((d) => {
+        if (!newDates.some((s) => s.toDateString() === d.toDateString())) {
+          newDates.push(d);
+          updatedOptions[d.toDateString()] = {
+            type: "allday",
+            start: 1,
+            end: 2,
+          };
+        }
+      });
+
       setSelectedDates(newDates);
       setDateOptions(updatedOptions);
     }
   };
 
-  // ▼ 日付セル装飾
+  // ▼ 日付セルのスタイル
   const dayPropGetter = (date) => {
     const isSelected = selectedDates.some(
       (d) => d.toDateString() === date.toDateString()
@@ -146,6 +131,8 @@ const RegisterPage = () => {
         views={["month"]}
         style={{ height: 500 }}
         dayPropGetter={dayPropGetter}
+        // クリックでもトグル可能にする
+        onDrillDown={(date) => toggleDate(date)}
       />
 
       {/* 選択結果 */}
