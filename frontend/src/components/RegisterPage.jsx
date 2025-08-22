@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import SelectMode from "./SelectMode";
-import { useNavigate } from "react-router-dom";
 import "../index.css";
 
 const RegisterPage = () => {
@@ -12,8 +11,7 @@ const RegisterPage = () => {
   const [timeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`));
   const [endTimeOptions] = useState([...Array(24).keys()].map(h => `${h}:00`).concat("24:00"));
   const [dateOptions, setDateOptions] = useState({});
-  const [shareUrl, setShareUrl] = useState("");   // ✅ 共有リンクを保存するstate
-  const navigate = useNavigate();
+  const [shareUrl, setShareUrl] = useState("");   // ✅ 生成された共有リンクを保持
 
   // ===== 複数クリック用 =====
   const handleMultiClick = (date) => {
@@ -84,8 +82,7 @@ const RegisterPage = () => {
       const data = await res.json();
       if (data.ok && data.id) {
         const url = `${window.location.origin}/share/${data.id}`;
-        setShareUrl(url);              // ✅ 新しいURLを保存
-        navigate(`/share/${data.id}`); // ✅ ページ遷移
+        setShareUrl(url);  // ✅ ボタンの下に表示する用に保存
       }
     } catch (err) {
       console.error("❌ 保存エラー:", err);
