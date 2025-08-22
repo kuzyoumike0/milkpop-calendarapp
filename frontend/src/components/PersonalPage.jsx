@@ -5,33 +5,33 @@ import "react-calendar/dist/Calendar.css";
 import Holidays from "date-holidays";
 import "../index.css";
 
-// 日本の祝日データ
 const hd = new Holidays("JP");
 
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multi"); // "multi" or "range"
+  const [mode, setMode] = useState("multi");
   const [timeType, setTimeType] = useState("終日");
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("18:00");
 
-  // TODO: OAuth後に取得したDiscordのユーザーIDを格納
-  const userId = "123456789012345678"; // ★ここをログイン後に置き換える
+  const userId = "123456789012345678"; // TODO: Discord OAuth で置き換える
 
-  // ===== カレンダーの祝日・土日判定 =====
+  const timeOptions = [...Array(24).keys()].map((h) =>
+    `${h.toString().padStart(2, "0")}:00`
+  );
+
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
-      if (holiday) return "holiday";   // 祝日
-      if (date.getDay() === 0) return "sunday";   // 日曜
-      if (date.getDay() === 6) return "saturday"; // 土曜
+      if (holiday) return "holiday";
+      if (date.getDay() === 0) return "sunday";
+      if (date.getDay() === 6) return "saturday";
     }
     return null;
   };
 
-  // ===== 保存処理 =====
   const handleSave = async () => {
     if (!title.trim()) {
       alert("タイトルを入力してください");
@@ -41,13 +41,17 @@ const PersonalPage = () => {
       alert("日程を1つ以上選択してください");
       return;
     }
+    if (timeType === "時刻指定" && start >= end) {
+      alert("開始時刻は終了時刻より前にしてください");
+      return;
+    }
 
     try {
       const res = await fetch("/api/personal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId, // ✅ DiscordのIDを送信
+          userId,
           title,
           memo,
           dates: selectedDates.map((d) => d.toISOString()),
@@ -65,7 +69,6 @@ const PersonalPage = () => {
     }
   };
 
-  // ===== 日付選択処理 =====
   const handleDateChange = (val) => {
     if (mode === "range") {
       if (Array.isArray(val)) {
@@ -74,7 +77,6 @@ const PersonalPage = () => {
     } else {
       const dateStr = val.toDateString();
       if (selectedDates.some((d) => d.toDateString() === dateStr)) {
-        // 選択解除
         setSelectedDates(selectedDates.filter((d) => d.toDateString() !== dateStr));
       } else {
         setSelectedDates([...selectedDates, val]);
@@ -88,58 +90,54 @@ const PersonalPage = () => {
 
       {/* ===== タイトル入力 ===== */}
       <div className="mb-4">
-        <label>
-          タイトル：
-          <input
-            className="p-2 border rounded w-full text-black"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="例：出張、通院、友達と遊ぶ"
-          />
-        </label>
+        <label className="block font-semibold mb-1">タイトル</label>
+        <input
+          className="p-2 border rounded w-full text-black"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="例：出張、通院、友達と遊ぶ"
+        />
       </div>
 
       {/* ===== メモ入力 ===== */}
       <div className="mb-4">
-        <label>
-          メモ：
-          <textarea
-            className="p-2 border rounded w-full text-black"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            placeholder="詳細メモを入力"
-          />
-        </label>
+        <label className="block font-semibold mb-1">メモ</label>
+        <textarea
+          className="p-2 border rounded w-full text-black"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          placeholder="詳細メモを入力"
+        />
       </div>
 
       {/* ===== 範囲 or 複数選択 ===== */}
       <div className="mb-4 flex gap-4">
-        <label>
-          <input
-            type="radio"
-            checked={mode === "range"}
-            onChange={() => setMode("range")}
-          />
-          範囲選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={mode === "multi"}
-            onChange={() => setMode("multi")}
-          />
-          複数選択
-        </label>
+        {["range", "multi"].map((m) => (
+          <label
+            key={m}
+            className={`cursor-pointer px-3 py-1 rounded-full border ${
+              mode === m ? "bg-[#FDB9C8] text-black" : "bg-white text-gray-700"
+            }`}
+          >
+            <input
+              type="radio"
+              className="hidden"
+              checked={mode === m}
+              onChange={() => setMode(m)}
+            />
+            {m === "range" ? "範囲選択" : "複数選択"}
+          </label>
+        ))}
       </div>
 
       {/* ===== カレンダー ===== */}
       <Calendar
         selectRange={mode === "range"}
         onChange={handleDateChange}
-        tileClassName={tileClassName}  // ✅ 祝日対応
+        tileClassName={tileClassName}
         locale="ja-JP"
         calendarType="gregory"
-        activeStartDate={new Date()}  // ✅ 今日を基準に表示
+        activeStartDate={new Date()}
       />
 
       {/* ===== 選択済み日付リスト ===== */}
@@ -149,69 +147,68 @@ const PersonalPage = () => {
           {selectedDates.map((d, i) => {
             const holiday = hd.isHoliday(d);
             const holidayName = holiday ? `（${holiday[0].name}）` : "";
-            return <li key={i}>{d.toLocaleDateString()} {holidayName}</li>;
+            return (
+              <li key={i}>
+                {d.toLocaleDateString()} {holidayName}
+              </li>
+            );
           })}
         </ul>
       </div>
 
       {/* ===== 時間指定 ===== */}
-      <div className="mt-4 space-x-4">
-        <label>
-          <input
-            type="radio"
-            value="終日"
-            checked={timeType === "終日"}
-            onChange={() => setTimeType("終日")}
-          />
-          終日
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="昼"
-            checked={timeType === "昼"}
-            onChange={() => setTimeType("昼")}
-          />
-          昼
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="夜"
-            checked={timeType === "夜"}
-            onChange={() => setTimeType("夜")}
-          />
-          夜
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="時刻指定"
-            checked={timeType === "時刻指定"}
-            onChange={() => setTimeType("時刻指定")}
-          />
-          時刻指定
-        </label>
-        {timeType === "時刻指定" && (
-          <div className="mt-2">
+      <div className="mt-4 space-y-2">
+        {["終日", "午前", "午後", "夜", "時刻指定"].map((t) => (
+          <label
+            key={t}
+            className={`cursor-pointer px-3 py-1 rounded-full border mr-2 ${
+              timeType === t ? "bg-[#004CA0] text-white" : "bg-white text-gray-700"
+            }`}
+          >
             <input
-              type="time"
+              type="radio"
+              value={t}
+              className="hidden"
+              checked={timeType === t}
+              onChange={() => setTimeType(t)}
+            />
+            {t}
+          </label>
+        ))}
+
+        {timeType === "時刻指定" && (
+          <div className="mt-2 flex gap-2">
+            <select
+              className="p-2 border rounded text-black"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-            />
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
             〜
-            <input
-              type="time"
+            <select
+              className="p-2 border rounded text-black"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
-            />
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+              <option value="24:00">24:00</option>
+            </select>
           </div>
         )}
       </div>
 
       {/* ===== 保存ボタン ===== */}
       <div className="mt-6 text-center">
-        <button className="fancy-btn" onClick={handleSave}>
+        <button className="fancy-btn px-6 py-2" onClick={handleSave}>
           保存
         </button>
       </div>
