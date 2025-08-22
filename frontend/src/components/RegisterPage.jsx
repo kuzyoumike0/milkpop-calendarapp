@@ -1,123 +1,56 @@
 import React, { useState } from "react";
+import CustomCalendar from "./CustomCalendar";
 import "../index.css";
-import Holidays from "date-holidays";
-
-const hd = new Holidays("JP");
 
 const RegisterPage = () => {
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-
-  const [selectionMode, setSelectionMode] = useState("range");
+  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [selectedDates, setSelectedDates] = useState([]);
-  const [rangeStart, setRangeStart] = useState(null);
-
   const [title, setTitle] = useState("");
-  const [responses, setResponses] = useState({});
+  const [timeOptions, setTimeOptions] = useState({}); // 日付ごとの時間帯
+
+  // 日付選択時の処理
+  const handleSelectDates = (dates) => {
+    setSelectedDates(dates);
+  };
+
+  // 時間帯変更
+  const handleTimeChange = (dateStr, value) => {
+    setTimeOptions((prev) => ({ ...prev, [dateStr]: value }));
+  };
+
+  // ランダムなURL生成
+  const generateLink = () => {
+    const randomString = Math.random().toString(36).substring(2, 10);
+    return `${window.location.origin}/share/${randomString}`;
+  };
+
   const [shareUrl, setShareUrl] = useState("");
 
-  const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-
-  // 日付クリック処理
-  const handleDateClick = (date) => {
-    if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(date);
-        setSelectedDates([date]);
-      } else {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-        const range = [];
-        let d = new Date(start);
-        while (d <= end) {
-          range.push(new Date(d));
-          d.setDate(d.getDate() + 1);
-        }
-        setSelectedDates(range);
-        setRangeStart(null);
-      }
-    } else if (selectionMode === "multiple") {
-      const exists = selectedDates.some(
-        (d) => d.toDateString() === date.toDateString()
-      );
-      if (exists) {
-        setSelectedDates(
-          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
-        );
-      } else {
-        setSelectedDates([...selectedDates, date]);
-      }
-    }
-  };
-
-  // 曜日ヘッダー
-  const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-
-  // 月の最初の日と日数
-  const firstDay = new Date(currentYear, currentMonth, 1);
-  const lastDay = new Date(currentYear, currentMonth + 1, 0);
-
-  // カレンダー用セル作成
-  const calendarCells = [];
-  for (let i = 0; i < firstDay.getDay(); i++) {
-    calendarCells.push(null);
-  }
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    calendarCells.push(new Date(currentYear, currentMonth, d));
-  }
-
-  const isSameDate = (d1, d2) =>
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate();
-
-  const formatDate = (date) =>
-    `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-
-  const handleResponseChange = (dateStr, field, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [dateStr]: {
-        ...prev[dateStr],
-        [field]: value,
-      },
-    }));
-  };
-
-  // ランダムURL生成
-  const generateShareUrl = () => {
-    const randomId = Math.random().toString(36).substring(2, 10);
-    const url = `${window.location.origin}/share/${randomId}`;
-    setShareUrl(url);
-  };
-
   return (
-    <div className="card">
-      <h2 className="page-title">日程登録ページ</h2>
+    <div className="page-container">
+      <h1 className="page-title">📅 日程登録ページ</h1>
 
       {/* タイトル入力 */}
-      <div className="title-input">
+      <div className="form-group">
         <label>タイトル：</label>
         <input
           type="text"
-          placeholder="イベントのタイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          className="text-input"
+          placeholder="イベントのタイトルを入力"
         />
       </div>
 
       {/* 選択モード */}
-      <div className="calendar-mode">
+      <div className="form-group">
+        <label>選択モード：</label>
         <label>
           <input
             type="radio"
             value="range"
             checked={selectionMode === "range"}
-            onChange={() => {
-              setSelectionMode("range");
-              setSelectedDates([]);
-            }}
+            onChange={() => setSelectionMode("range")}
           />
           範囲選択
         </label>
@@ -126,145 +59,79 @@ const RegisterPage = () => {
             type="radio"
             value="multiple"
             checked={selectionMode === "multiple"}
-            onChange={() => {
-              setSelectionMode("multiple");
-              setSelectedDates([]);
-            }}
+            onChange={() => setSelectionMode("multiple")}
           />
           複数選択
         </label>
       </div>
 
       {/* カレンダー */}
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "12px 0" }}>
-        <button
-          onClick={() =>
-            setCurrentMonth((prev) =>
-              prev === 0 ? (setCurrentYear(currentYear - 1), 11) : prev - 1
-            )
-          }
-        >
-          ←
-        </button>
-        <strong>
-          {currentYear}年 {currentMonth + 1}月
-        </strong>
-        <button
-          onClick={() =>
-            setCurrentMonth((prev) =>
-              prev === 11 ? (setCurrentYear(currentYear + 1), 0) : prev + 1
-            )
-          }
-        >
-          →
-        </button>
-      </div>
+      <CustomCalendar
+        selectionMode={selectionMode}
+        onSelectDates={handleSelectDates}
+      />
 
-      <div className="calendar">
-        {daysOfWeek.map((day) => (
-          <div key={day} className="header">
-            {day}
-          </div>
-        ))}
-        {calendarCells.map((date, idx) => {
-          if (!date) return <div key={idx} className="day"></div>;
-
-          const dateStr = formatDate(date);
-          const isToday = isSameDate(date, today);
-          const isSelected = selectedDates.some((d) => isSameDate(d, date));
-          const holiday = hd.isHoliday(date);
-
-          let className = "day";
-          if (isToday) className += " today";
-          if (holiday) className += " holiday";
-          if (isSelected) className += " selected";
-
+      {/* 選択した日付リスト */}
+      <div className="selected-dates">
+        <h2>選択した日程</h2>
+        {selectedDates.length === 0 && <p>日付を選択してください。</p>}
+        {selectedDates.map((d, i) => {
+          const dateStr = d.toLocaleDateString("ja-JP");
           return (
-            <div
-              key={dateStr}
-              className={className}
-              onClick={() => handleDateClick(date)}
-            >
-              {date.getDate()}
-              {holiday && <div style={{ fontSize: "0.6rem" }}>{holiday.name}</div>}
+            <div key={i} className="date-row">
+              <span>{dateStr}</span>
+              <select
+                value={timeOptions[dateStr] || ""}
+                onChange={(e) => handleTimeChange(dateStr, e.target.value)}
+                className="select-input"
+              >
+                <option value="">時間を選択</option>
+                <option value="all">終日</option>
+                <option value="day">昼</option>
+                <option value="night">夜</option>
+                <option value="custom">時刻指定</option>
+              </select>
+              {/* 時刻指定が選ばれたら追加のプルダウン */}
+              {timeOptions[dateStr] === "custom" && (
+                <div className="time-range">
+                  <select>
+                    {Array.from({ length: 24 }).map((_, h) => (
+                      <option key={h} value={h}>
+                        {h}:00
+                      </option>
+                    ))}
+                  </select>
+                  ～
+                  <select>
+                    {Array.from({ length: 24 }).map((_, h) => (
+                      <option key={h} value={h}>
+                        {h}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* 選択日程表示 */}
-      {selectedDates.length > 0 && (
-        <div className="selected-dates">
-          <h3>選択した日程</h3>
-          {selectedDates.map((date) => {
-            const dateStr = formatDate(date);
-            const resp = responses[dateStr] || {};
-            return (
-              <div key={dateStr} className="date-response">
-                <span>{dateStr}</span>
-                <select
-                  value={resp.type || ""}
-                  onChange={(e) =>
-                    handleResponseChange(dateStr, "type", e.target.value)
-                  }
-                >
-                  <option value="">選択してください</option>
-                  <option value="終日">終日</option>
-                  <option value="昼">昼</option>
-                  <option value="夜">夜</option>
-                  <option value="時刻指定">時刻指定</option>
-                </select>
-                {resp.type === "時刻指定" && (
-                  <>
-                    <select
-                      value={resp.start || ""}
-                      onChange={(e) =>
-                        handleResponseChange(dateStr, "start", e.target.value)
-                      }
-                    >
-                      <option value="">開始時刻</option>
-                      {timeOptions.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={resp.end || ""}
-                      onChange={(e) =>
-                        handleResponseChange(dateStr, "end", e.target.value)
-                      }
-                    >
-                      <option value="">終了時刻</option>
-                      {timeOptions
-                        .filter(
-                          (t) =>
-                            !resp.start || parseInt(t) > parseInt(resp.start)
-                        )
-                        .map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                    </select>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 共有リンク生成ボタン */}
-      <button onClick={generateShareUrl}>共有リンクを生成</button>
-      {shareUrl && (
-        <div style={{ marginTop: "12px" }}>
-          <strong>共有URL:</strong>{" "}
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
-        </div>
-      )}
+      {/* 共有リンクボタン */}
+      <div className="form-group">
+        <button
+          className="share-button"
+          onClick={() => setShareUrl(generateLink())}
+        >
+          🔗 共有リンクを発行
+        </button>
+        {shareUrl && (
+          <p className="share-url">
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+              {shareUrl}
+            </a>
+          </p>
+        )}
+      </div>
     </div>
   );
 };
