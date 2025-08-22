@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "../index.css";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  Select,
+  useDisclosure,
+} from "@chakra-ui/react";
 
 // 日付をキー用にフォーマット
 const dateKey = (date) => {
@@ -15,6 +27,10 @@ const RegisterPage = () => {
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({}); // { "2025-08-22": { time, start, end } }
+
+  // 編集対象
+  const [editDate, setEditDate] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // 日付クリック処理
   const handleDateClick = (date) => {
@@ -67,11 +83,15 @@ const RegisterPage = () => {
     });
   };
 
-  // 編集ボタン → アラートで内容を確認（UI強化はここから拡張可能）
+  // 編集ボタン（モーダルを開く）
   const handleEdit = (date) => {
-    const key = dateKey(date);
-    const option = dateOptions[key];
-    alert(`${key} を編集中\n時間帯: ${option?.time || "未設定"}\n開始: ${option?.start || "-"}\n終了: ${option?.end || "-"}`);
+    setEditDate(date);
+    onOpen();
+  };
+
+  // 編集保存
+  const handleSaveEdit = () => {
+    onClose();
   };
 
   // 送信処理
@@ -156,7 +176,6 @@ const RegisterPage = () => {
               <div key={key} className="schedule-item">
                 <span>{key}</span>
 
-                {/* 時間帯プルダウン */}
                 <select
                   value={dateOptions[key]?.time || ""}
                   onChange={(e) => handleOptionChange(date, "time", e.target.value)}
@@ -169,7 +188,6 @@ const RegisterPage = () => {
                   <option value="時間指定">時間指定</option>
                 </select>
 
-                {/* 時間指定の場合のみ開始・終了プルダウン */}
                 {dateOptions[key]?.time === "時間指定" && (
                   <>
                     <select
@@ -193,14 +211,12 @@ const RegisterPage = () => {
                   </>
                 )}
 
-                {/* 編集・削除ボタン */}
                 <button onClick={() => handleEdit(date)}>✏️</button>
                 <button onClick={() => handleDelete(date)}>🗑️</button>
               </div>
             );
           })}
 
-          {/* 送信ボタン */}
           {selectedDates.length > 0 && (
             <button className="submit-btn" onClick={handleSubmit}>
               送信する
@@ -208,6 +224,74 @@ const RegisterPage = () => {
           )}
         </div>
       </div>
+
+      {/* 編集モーダル */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {editDate ? `${dateKey(editDate)} の編集` : "編集"}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {editDate && (
+              <>
+                <Select
+                  mb={3}
+                  value={dateOptions[dateKey(editDate)]?.time || ""}
+                  onChange={(e) =>
+                    handleOptionChange(editDate, "time", e.target.value)
+                  }
+                >
+                  <option value="">選択してください</option>
+                  <option value="終日">終日</option>
+                  <option value="午前">午前</option>
+                  <option value="午後">午後</option>
+                  <option value="夜">夜</option>
+                  <option value="時間指定">時間指定</option>
+                </Select>
+
+                {dateOptions[dateKey(editDate)]?.time === "時間指定" && (
+                  <>
+                    <Select
+                      mb={3}
+                      value={dateOptions[dateKey(editDate)]?.start || ""}
+                      onChange={(e) =>
+                        handleOptionChange(editDate, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </Select>
+                    <Select
+                      value={dateOptions[dateKey(editDate)]?.end || ""}
+                      onChange={(e) =>
+                        handleOptionChange(editDate, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </Select>
+                  </>
+                )}
+              </>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleSaveEdit}>
+              保存
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              キャンセル
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
