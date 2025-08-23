@@ -339,3 +339,18 @@ main {
   transform: scale(1.1);
 }
 
+/* 選択中の日程エリア */
+.selected-dates {
+  padding: 16px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.selected-dates ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+
