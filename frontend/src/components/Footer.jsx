@@ -1,12 +1,20 @@
 // frontend/src/components/Footer.jsx
 import React from "react";
+import { FaTwitter } from "react-icons/fa"; // ← アイコン追加
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white text-center py-6 mt-10 shadow-inner">
-      <p className="text-sm text-[#FDB9C8]">
-        © 2025 MilkPOP Calendar - All Rights Reserved
-      </p>
+    <footer>
+      <p>© 2025 MilkPOP Calendar - All Rights Reserved</p>
+      <div className="sns-links">
+        <a
+          href="https://twitter.com/your_account" // ← あなたのTwitterアカウントURL
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <FaTwitter />
+        </a>
+      </div>
     </footer>
   );
 };
