@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useState } from "react";
 import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [date, setDate] = useState(new Date());
-  const [selectionMode, setSelectionMode] = useState("range");
-  const [timeType, setTimeType] = useState("allDay");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
-  const [links, setLinks] = useState([]);
 
-  // 登録処理
   const handleSave = async () => {
     try {
       const res = await fetch("/api/personal-schedules", {
@@ -22,183 +15,71 @@ const PersonalPage = () => {
         body: JSON.stringify({
           title,
           memo,
-          date,
-          selectionMode,
-          timeType,
-          startTime: timeType === "custom" ? startTime : null,
-          endTime: timeType === "custom" ? endTime : null,
+          date: new Date(),
+          selectionMode: "single",
+          timeType: "終日",
+          startTime: null,
+          endTime: null,
         }),
       });
-
-      if (!res.ok) throw new Error("保存に失敗しました");
-
-      const data = await res.json();
-      alert("個人日程を登録しました！");
-
-      setTitle("");
-      setMemo("");
-
-      fetchLinks();
+      const json = await res.json();
+      if (json.success) {
+        alert("✅ 個人スケジュールを保存しました");
+      }
     } catch (err) {
       console.error(err);
-      alert("エラーが発生しました");
+      alert("❌ 保存に失敗しました");
     }
   };
-
-  // 登録済みリンクを取得
-  const fetchLinks = async () => {
-    try {
-      const res = await fetch("/api/personal-schedules");
-      const data = await res.json();
-      setLinks(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchLinks();
-  }, []);
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen">
-      {/* ===== バナー ===== */}
-      <header className="bg-black text-white text-center py-4 mb-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
-      </header>
+    <>
+      <Header />
+      <main className="register-page">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-xl font-bold text-[#004CA0] mb-6">
+            📝 個人スケジュール登録
+          </h2>
 
-      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-        {/* タイトル入力 */}
-        <div className="mb-6">
-          <label className="block text-lg font-semibold text-[#004CA0] mb-2">
-            タイトル
-          </label>
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#FDB9C8] focus:outline-none"
-            placeholder="タイトルを入力してください"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-
-        {/* メモ入力 */}
-        <div className="mb-6">
-          <label className="block text-lg font-semibold text-[#004CA0] mb-2">
-            メモ
-          </label>
-          <textarea
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#FDB9C8] focus:outline-none"
-            placeholder="メモを入力してください"
-            rows="3"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-          />
-        </div>
-
-        {/* ===== ラジオボタンエリア ===== */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-[#004CA0] mb-3">選択方法</h2>
-          <div className="flex gap-6">
-            <label className="cursor-pointer flex items-center space-x-2 bg-[#FDB9C8] px-4 py-2 rounded-full shadow hover:bg-[#004CA0] hover:text-white transition">
-              <input
-                type="radio"
-                name="selectionMode"
-                value="range"
-                checked={selectionMode === "range"}
-                onChange={() => setSelectionMode("range")}
-                className="hidden"
-              />
-              <span className="font-semibold">範囲選択</span>
+          {/* タイトル入力 */}
+          <div className="mb-6 text-left">
+            <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+              📌 タイトル
             </label>
-            <label className="cursor-pointer flex items-center space-x-2 bg-[#FDB9C8] px-4 py-2 rounded-full shadow hover:bg-[#004CA0] hover:text-white transition">
-              <input
-                type="radio"
-                name="selectionMode"
-                value="multiple"
-                checked={selectionMode === "multiple"}
-                onChange={() => setSelectionMode("multiple")}
-                className="hidden"
-              />
-              <span className="font-semibold">複数選択</span>
-            </label>
+            <input
+              type="text"
+              placeholder="例: 出張予定"
+              className="input-field"
+              value={title}
+              onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
+            />
           </div>
-        </div>
 
-        {/* ===== カレンダー ===== */}
-        <div className="custom-calendar mb-8">
-          <Calendar
-            onChange={setDate}
-            value={date}
-            selectRange={selectionMode === "range"}
-          />
-        </div>
+          {/* メモ入力 */}
+          <div className="mb-6 text-left">
+            <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+              🗒 メモ
+            </label>
+            <textarea
+              placeholder="詳細を入力してください"
+              className="input-field"
+              rows="4"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+            />
+          </div>
 
-        {/* 時間帯選択 */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-[#004CA0] mb-3">時間帯</h2>
-          <select
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#FDB9C8] focus:outline-none"
-            value={timeType}
-            onChange={(e) => setTimeType(e.target.value)}
+          {/* 保存ボタン */}
+          <button
+            onClick={handleSave}
+            className="save-btn"
           >
-            <option value="allDay">終日</option>
-            <option value="morning">午前</option>
-            <option value="afternoon">午後</option>
-            <option value="custom">時間指定</option>
-          </select>
-
-          {timeType === "custom" && (
-            <div className="flex gap-4 mt-4">
-              <div>
-                <label className="block text-sm text-gray-600">開始時刻</label>
-                <input
-                  type="time"
-                  className="border rounded-xl px-3 py-2"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600">終了時刻</label>
-                <input
-                  type="time"
-                  className="border rounded-xl px-3 py-2"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
+            💾 保存する
+          </button>
         </div>
-
-        {/* 保存ボタン */}
-        <button
-          onClick={handleSave}
-          className="w-full bg-[#004CA0] text-white font-bold py-3 rounded-xl shadow hover:bg-[#FDB9C8] hover:text-black transition"
-        >
-          個人日程を登録する
-        </button>
-
-        {/* 登録済みリンク一覧 */}
-        <div className="mt-10">
-          <h2 className="text-xl font-bold text-[#004CA0] mb-4">共有リンク一覧</h2>
-          <ul className="space-y-2">
-            {links.map((link) => (
-              <li key={link.id} className="border rounded-xl p-3 bg-gray-50">
-                <p className="font-semibold">{link.title}</p>
-                <a
-                  href={`/share/${link.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  {window.location.origin}/share/{link.id}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 };
 
