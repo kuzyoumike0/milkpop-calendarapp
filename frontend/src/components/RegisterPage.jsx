@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import "../index.css";
 import Footer from "./Footer";
@@ -144,13 +145,13 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
-          {/* タイトル */}
+          {/* 入力フォーム */}
           <input
             type="text"
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-field mb-4"
+            className="input-field mb-4 mt-6"  // 👈 上に余白を追加
           />
 
           {/* ラジオボタン */}
@@ -180,9 +181,9 @@ const RegisterPage = () => {
           </div>
 
           {/* 月切替 */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-6 space-x-6">
             <button
-              className="nav-btn mr-6"
+              className="nav-btn"
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
@@ -191,11 +192,11 @@ const RegisterPage = () => {
             >
               &lt;
             </button>
-            <h2 className="text-2xl font-extrabold text-blue-900 tracking-wide mx-6">
+            <h2 className="text-2xl font-extrabold text-blue-900 tracking-wide">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </h2>
             <button
-              className="nav-btn ml-6"
+              className="nav-btn"
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
