@@ -266,3 +266,41 @@ main {
   background: transparent;
   box-shadow: none;
 }
+
+/* ===== 並び順切替ドロップダウン ===== */
+.sort-toggle {
+  margin: 12px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.sort-toggle label {
+  font-weight: bold;
+  color: #004CA0;
+  font-size: 1rem;
+}
+
+.sort-toggle select {
+  padding: 8px 14px;
+  border: 2px solid #FDB9C8;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  background: #fffafc;
+  color: #333;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.sort-toggle select:hover {
+  border-color: #ff5fa2;
+  box-shadow: 0 0 6px rgba(255,95,162,0.4);
+}
+
+.sort-toggle select:focus {
+  outline: none;
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.4);
+}
+
