@@ -438,3 +438,8 @@ body {
   margin: 0 20px; /* ⇔ ボタンと年月の間に余白 */
 }
 
+.calendar-row {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 8px !important;
+}
