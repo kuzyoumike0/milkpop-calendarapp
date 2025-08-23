@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "../index.css";   // 👈 これが無いとスタイルが適用されない
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
