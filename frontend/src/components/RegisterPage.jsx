@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../index.css";
-import { v4 as uuidv4 } from "uuid"; // ← 共有リンク用ID生成
+import { v4 as uuidv4 } from "uuid";
+import { getTodayIso } from "../holiday";  // ← JSTの今日を取得
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -10,11 +11,18 @@ const RegisterPage = () => {
   const [dateOptions, setDateOptions] = useState({});
   const [shareLink, setShareLink] = useState(null);
 
+  const todayIso = getTodayIso(); // ✅ 日本時間の今日
+
   const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
   const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
 
-  // ===== 日付をISO文字列に変換 =====
-  const formatIso = (date) => date.toISOString().split("T")[0];
+  // ===== 日付をISO文字列に変換（JST基準にするためローカル時刻を使用） =====
+  const formatIso = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   // ===== 複数選択モード =====
   const handleDateClick = (date) => {
@@ -109,6 +117,18 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== カレンダー（日付強調用UI） =====
+  const generateDays = () => {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days = [];
+    for (let i = 0; i < firstDay.getDay(); i++) days.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
+    return days;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white p-6">
       {/* ===== バナー ===== */}
@@ -150,8 +170,30 @@ const RegisterPage = () => {
           </button>
         </div>
 
+        {/* ===== カレンダー表示 ===== */}
+        <div className="calendar-section custom-calendar">
+          <div className="calendar-grid">
+            {["日", "月", "火", "水", "木", "金", "土"].map((w) => (
+              <div key={w} className="weekday">{w}</div>
+            ))}
+            {generateDays().map((date, idx) => {
+              if (!date) return <div key={idx} />;
+              const iso = formatIso(date);
+              let className = "day";
+              if (multiDates.includes(iso)) className += " selected";
+              if (range[0] && range[1] && date >= range[0] && date <= range[1]) className += " selected";
+              if (iso === todayIso) className += " today"; // ✅ 日本時間の今日を強調
+              return (
+                <div key={iso} className={className} onClick={() => handleDateClick(date)}>
+                  {date.getDate()}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ===== 選択した日程リスト ===== */}
-        <div className="schedule-section">
+        <div className="schedule-section mt-6">
           <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
 
           {(mode === "range" ? getRangeDates() : multiDates).map((date) => (
