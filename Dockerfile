@@ -7,7 +7,6 @@ WORKDIR /app/frontend
 
 # 依存関係をインストール
 COPY frontend/package.json ./
-COPY frontend/package-lock.json ./  # あれば
 RUN npm install
 
 # ソース一式をコピー（craco.config.js も含む）
@@ -38,8 +37,6 @@ COPY --from=build-frontend /app/frontend/build ./frontend/build
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# ポート公開
 EXPOSE 5000
 
-# サーバ起動
-CMD ["node", "backend/index.js"]
+CMD ["node", "index.js"]
