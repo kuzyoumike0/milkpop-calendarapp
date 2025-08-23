@@ -4,13 +4,14 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const crypto = require("crypto");
 const { Pool } = require("pg");
-const fetch = require("node-fetch"); // 🔹追加
+const fetch = require("node-fetch"); // 🔹Discord API 呼び出し用
 require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// ===== DB 接続 =====
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -59,7 +60,7 @@ app.get("/auth/callback", async (req, res) => {
     });
     const userData = await userRes.json();
 
-    // フロントにユーザー名を返す（本番ではJWT/Cookieにするのが安全）
+    // フロントにユーザー名を返す（本番は JWT/Cookie が安全）
     res.redirect(`/auth-success?username=${encodeURIComponent(userData.username)}`);
   } catch (err) {
     console.error(err);
@@ -75,4 +76,16 @@ app.get("/auth-success", (req, res) => {
       window.close(); // ポップアップを閉じる
     </script>
   `);
+});
+
+// ===== React ビルド配信 =====
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
+
+// ===== サーバー起動 =====
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`✅ MilkPOP Calendar running on port ${PORT}`);
 });
