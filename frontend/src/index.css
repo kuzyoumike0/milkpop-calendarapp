@@ -192,8 +192,11 @@ select:focus {
 header {
   background: black;
   color: white;
-  padding: 12px 24px;
+  padding: 14px 32px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 header .nav-container {
   display: flex;
@@ -202,47 +205,84 @@ header .nav-container {
 }
 header .logo {
   font-size: 1.8rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #FDB9C8;
   font-family: 'M PLUS Rounded 1c', sans-serif;
+  letter-spacing: 1px;
+  transition: transform 0.3s ease;
+}
+header .logo:hover {
+  transform: scale(1.05);
 }
 header nav {
   display: flex;
-  gap: 12px;
+  gap: 14px;
 }
 header nav a {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 1.2rem;
   border-radius: 9999px;
   font-weight: 600;
-  background: #333;
+  background: #222;
   color: white;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
 header nav a:hover {
   background: #FDB9C8;
   color: black;
-  transform: scale(1.05);
+  transform: translateY(-2px) scale(1.05);
 }
+/* Discord専用ボタン */
 header .discord-btn {
   background: #5865F2;
   color: white;
 }
 header .discord-btn:hover {
   background: #4752C4;
+  transform: translateY(-2px) scale(1.05);
 }
 
 /* ===== フッター ===== */
 footer {
   background: black;
-  color: white;
+  color: #ccc;
   text-align: center;
-  padding: 20px;
+  padding: 24px 16px;
   font-size: 0.9rem;
-  border-top: 1px solid #333;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+  margin-top: auto;
 }
 footer p {
-  margin: 0;
+  margin: 6px 0;
   color: #FDB9C8;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+/* SNSリンク */
+footer .sns-links {
+  margin-top: 10px;
+}
+footer .sns-links a {
+  display: inline-block;
+  margin: 0 10px;
+  font-size: 1.6rem;
+  transition: all 0.3s ease;
+}
+/* X (Twitter) */
+footer .sns-links a.twitter {
+  color: #1DA1F2;
+}
+footer .sns-links a.twitter:hover {
+  color: #FDB9C8;
+  transform: scale(1.2);
+}
+/* Discord */
+footer .sns-links a.discord {
+  color: #5865F2;
+}
+footer .sns-links a.discord:hover {
+  color: #FDB9C8;
+  transform: scale(1.2);
 }
 
 /* ===== レスポンシブ対応 ===== */
@@ -279,97 +319,4 @@ footer p {
     flex-direction: column;
     gap: 0.5rem;
   }
-}
-/* ===== ヘッダー ===== */
-header {
-  background: black;
-  color: white;
-  padding: 14px 32px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-header .nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-header .logo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #FDB9C8;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  letter-spacing: 1px;
-  transition: transform 0.3s ease;
-}
-header .logo:hover {
-  transform: scale(1.05);
-}
-
-header nav {
-  display: flex;
-  gap: 14px;
-}
-
-header nav a {
-  padding: 0.5rem 1.2rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  background: #222;
-  color: white;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-header nav a:hover {
-  background: #FDB9C8;
-  color: black;
-  transform: translateY(-2px) scale(1.05);
-}
-
-/* Discord専用ボタン */
-header .discord-btn {
-  background: #5865F2;
-  color: white;
-}
-header .discord-btn:hover {
-  background: #4752C4;
-  transform: translateY(-2px) scale(1.05);
-}
-
-/* ===== フッター ===== */
-footer {
-  background: black;
-  color: #ccc;
-  text-align: center;
-  padding: 24px 16px;
-  font-size: 0.9rem;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
-  margin-top: auto;
-}
-
-footer p {
-  margin: 6px 0;
-  color: #FDB9C8;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-/* SNSリンク */
-footer .sns-links {
-  margin-top: 10px;
-}
-
-footer .sns-links a {
-  display: inline-block;
-  margin: 0 8px;
-  font-size: 1.5rem;
-  color: #1DA1F2; /* Twitterブルー */
-  transition: all 0.3s ease;
-}
-footer .sns-links a:hover {
-  color: #FDB9C8; /* ホバー時ピンク */
-  transform: scale(1.2);
 }
