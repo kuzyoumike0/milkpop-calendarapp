@@ -92,15 +92,23 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            {/* 🔹 タイトル入力欄（年月タイトルの上に配置） */}
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="タイトルを入力してください"
-                className="w-full border-2 border-[#FDB9C8] rounded-xl px-3 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+            {/* 🔹 タイトル入力欄（年月タイトルの上に配置・おしゃれ化） */}
+            <div className="mb-6">
+              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+                📌 スケジュールタイトル
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FDB9C8] text-xl">
+                  🖊️
+                </span>
+                <input
+                  type="text"
+                  placeholder="例: 夏休み旅行の予定"
+                  className="title-input w-full pl-12 pr-4 py-3 rounded-2xl border-2 focus:outline-none focus:ring-4 transition"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* カレンダータイトル */}
