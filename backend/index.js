@@ -21,7 +21,9 @@ const initDB = async () => {
       title TEXT,
       date DATE NOT NULL,
       selection_mode TEXT,
-      time_type TEXT
+      time_type TEXT,
+      start_time TEXT,
+      end_time TEXT
     );
   `);
 };
@@ -30,11 +32,11 @@ initDB();
 // ====== スケジュール保存 ======
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, date, selectionMode, timeType } = req.body;
+    const { title, date, selectionMode, timeType, startTime, endTime } = req.body;
     const result = await pool.query(
-      `INSERT INTO schedules (title, date, selection_mode, time_type)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [title, date, selectionMode, timeType]
+      `INSERT INTO schedules (title, date, selection_mode, time_type, start_time, end_time)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [title, date, selectionMode, timeType, startTime, endTime]
     );
     res.json(result.rows[0]);
   } catch (err) {
