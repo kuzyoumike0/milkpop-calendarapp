@@ -150,7 +150,8 @@ body {
   background: rgba(255,255,255,0.08);
   color: #FDB9C8;
 }
-.main-header .login-btn {
+.main-header .login-btn,
+.main-header .logout-btn {
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
   color: #fff;
   border: none;
@@ -161,7 +162,8 @@ body {
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.main-header .login-btn:hover {
+.main-header .login-btn:hover,
+.main-header .logout-btn:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0,0,0,0.3);
@@ -179,26 +181,19 @@ body {
   box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
 }
 
-/* ===== トップページロゴ ===== */
-.top-logo {
-  display: block;
-  margin: 2rem auto;
-  width: 100%;
-  max-width: 1040px;
-  height: auto;
-  border-radius: 20px;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.25);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* ===== ロゴ文字 ===== */
+.logo-text {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fdfdfd;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
-.top-logo:hover {
+.logo-text:hover {
+  color: #FDB9C8;
+  text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
   transform: scale(1.05);
-  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
-}
-@media (max-width: 768px) {
-  .top-logo { max-width: 90%; }
-}
-@media (max-width: 480px) {
-  .top-logo { max-width: 95%; border-radius: 12px; }
 }
 
 /* ===== RegisterPage レイアウト ===== */
@@ -231,7 +226,7 @@ body {
   .schedule-section { margin-top: 20px; }
 }
 
-/* ===== react-calendar (崩れ修正版) ===== */
+/* ===== react-calendar (修正版) ===== */
 .react-calendar {
   background: #fff;
   border-radius: 20px;
@@ -242,8 +237,6 @@ body {
   width: 100%;
   max-width: 100%;
 }
-
-/* ナビゲーション */
 .react-calendar__navigation {
   display: flex;
   align-items: center;
@@ -271,8 +264,6 @@ body {
   font-weight: bold;
   color: #004CA0;
 }
-
-/* 曜日 */
 .react-calendar__month-view__weekdays {
   display: grid !important;
   grid-template-columns: repeat(7, 1fr);
@@ -284,8 +275,6 @@ body {
 .react-calendar__month-view__weekdays abbr {
   text-decoration: none;
 }
-
-/* 日付セル */
 .react-calendar__tile {
   padding: 16px;
   border-radius: 14px;
@@ -318,7 +307,7 @@ body {
   font-weight: bold;
 }
 
-/* ラジオボタン */
+/* ===== ラジオボタン ===== */
 .radio-options {
   display: flex;
   justify-content: flex-start;
