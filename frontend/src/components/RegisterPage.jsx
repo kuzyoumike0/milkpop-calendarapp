@@ -118,7 +118,7 @@ const RegisterPage = () => {
             <ul>
               {savedSchedules.map((s) => (
                 <li key={s.id} className="schedule-card">
-                  <span>{s.title}</span>
+                  <span className="schedule-title">{s.title}</span>
                   <div>
                     {s.dates.map((d, i) => (
                       <span key={i} className="date-tag">
