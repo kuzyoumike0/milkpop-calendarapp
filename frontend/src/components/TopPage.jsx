@@ -14,7 +14,7 @@ const TopPage = () => {
         <img
           src="/logo.png"
           alt="MilkPOP Calendar"
-          className="w-48 h-auto mb-6"  // ← サイズ調整
+          className="w-[1040px] h-auto mb-6 mx-auto"
         />
 
         {/* キャッチコピー */}
@@ -23,7 +23,7 @@ const TopPage = () => {
         </h2>
 
         {/* 説明文 */}
-        <p className="text-lg text-gray-300 max-w-xl leading-relaxed">
+        <p className="text-lg text-gray-300 max-w-3xl leading-relaxed mx-auto">
           MilkPOP Calendar は、複数人での日程調整や個人スケジュールの管理を
           シンプルでわかりやすいUIでサポートするカレンダーサービスです。<br />
           Discordアカウントでログインして、すぐに利用を開始できます。
