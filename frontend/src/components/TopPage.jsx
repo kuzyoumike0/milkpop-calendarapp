@@ -1,54 +1,35 @@
 import React from "react";
+import Header from "./Header";  // 共通ヘッダーを呼び出し
+import "../index.css";
 
 const TopPage = () => {
-  const handleDiscordLogin = () => {
-    // Discord OAuth2 認証URL
-    const clientId = process.env.REACT_APP_DISCORD_CLIENT_ID;
-    const redirectUri = encodeURIComponent(window.location.origin + "/");
-    const scope = "identify"; // 必要に応じて email, guilds なども追加
-    const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
-    window.location.href = discordUrl;
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      {/* ===== バナー ===== */}
-      <header className="shadow-lg flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
-          <nav className="nav">
-            <a href="/register" className="hover:text-[#FDB9C8]">日程登録</a>
-            <a href="/personal" className="hover:text-[#FDB9C8]">個人スケジュール</a>
-            <a href="/share-links" className="hover:text-[#FDB9C8]">共有リンク一覧</a>
-          </nav>
-        </div>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* ===== ヘッダー ===== */}
+      <Header />
 
-        {/* ===== Discordログインボタン ===== */}
-        <button
-          onClick={handleDiscordLogin}
-          className="bg-[#5865F2] text-white px-4 py-2 rounded-lg font-bold hover:bg-[#4752C4] transition"
-        >
-          Discordでログイン
-        </button>
-      </header>
+      {/* ===== メインコンテンツ ===== */}
+      <main className="flex flex-col items-center justify-center flex-1 text-center p-6">
+        {/* （public/logo.png を置く想定） */}
+        <img
+          src="/logo.png"
+          alt="MilkPOP Calendar"
+          className="w-2/3 max-w-md rounded-xl shadow-lg mb-6"
+        />
 
-      {/* ===== メイン ===== */}
-      <main className="mt-20 text-center">
-        <h2 className="text-3xl font-bold text-[#FDB9C8] mb-6">
-          ようこそ 🎉 MilkPOP Calendar へ
+        {/* 説明文 */}
+        <h2 className="text-3xl font-bold text-[#FDB9C8] mb-4">
+          スケジュール管理をもっとカンタンに
         </h2>
-        <p className="text-lg mb-8">
-          スケジュールを登録して、共有リンクを発行し、みんなで調整しましょう！
+        <p className="text-lg text-gray-300 max-w-xl">
+          MilkPOP Calendar は、複数人での日程調整や個人スケジュールの管理を
+          シンプルでわかりやすいUIでサポートするカレンダーサービスです。
+          Discordアカウントでログインして、すぐに利用を開始できます。
         </p>
-
-        <div className="flex justify-center gap-6">
-          <a href="/register" className="share-btn">📅 日程登録</a>
-          <a href="/personal" className="share-btn">📝 個人スケジュール</a>
-        </div>
       </main>
 
       {/* ===== フッター ===== */}
-      <footer className="mt-20 text-center text-gray-400">
+      <footer className="text-center text-gray-500 p-4">
         <p>© 2025 MilkPOP Calendar</p>
       </footer>
     </div>
