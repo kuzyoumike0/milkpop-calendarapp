@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import "../index.css";
+import "react-calendar/dist/Calendar.css"; // 既存のカレンダーCSSを読み込み
+import "../index.css"; // 自作CSSで上書き
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(new Date());
-  const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
+  const [selectionMode, setSelectionMode] = useState("range");
   const [timeType, setTimeType] = useState("allDay");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
@@ -36,36 +36,29 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen">
-      {/* ===== バナー ===== */}
-      <header className="bg-black text-white text-center py-4 mb-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
+    <div className="register-page">
+      {/* バナー */}
+      <header className="banner">
+        <h1>MilkPOP Calendar</h1>
       </header>
 
-      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+      <div className="form-container">
         {/* タイトル入力 */}
-        <div className="mb-6">
-          <label className="block text-lg font-semibold text-[#004CA0] mb-2">
-            タイトル
-          </label>
+        <div className="form-group">
+          <label>タイトル</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#FDB9C8] focus:outline-none"
             placeholder="タイトルを入力してください"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
-        {/* ===== ラジオボタンエリア ===== */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-[#004CA0] mb-3">選択方法</h2>
+        {/* ラジオボタン */}
+        <div className="form-group">
+          <h2>選択方法</h2>
           <div className="radio-group">
-            <label
-              className={`radio-label ${
-                selectionMode === "range" ? "radio-active" : ""
-              }`}
-            >
+            <label className={`radio-label ${selectionMode === "range" ? "radio-active" : ""}`}>
               <input
                 type="radio"
                 name="selectionMode"
@@ -73,14 +66,9 @@ const RegisterPage = () => {
                 checked={selectionMode === "range"}
                 onChange={() => setSelectionMode("range")}
               />
-              <span>範囲選択</span>
+              範囲選択
             </label>
-
-            <label
-              className={`radio-label ${
-                selectionMode === "multiple" ? "radio-active" : ""
-              }`}
-            >
+            <label className={`radio-label ${selectionMode === "multiple" ? "radio-active" : ""}`}>
               <input
                 type="radio"
                 name="selectionMode"
@@ -88,13 +76,13 @@ const RegisterPage = () => {
                 checked={selectionMode === "multiple"}
                 onChange={() => setSelectionMode("multiple")}
               />
-              <span>複数選択</span>
+              複数選択
             </label>
           </div>
         </div>
 
-        {/* ===== カレンダー ===== */}
-        <div className="custom-calendar mb-8">
+        {/* カレンダー */}
+        <div className="custom-calendar">
           <Calendar
             onChange={setDate}
             value={date}
@@ -102,14 +90,10 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== 時間帯選択 ===== */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-[#004CA0] mb-3">時間帯</h2>
-          <select
-            className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#FDB9C8] focus:outline-none"
-            value={timeType}
-            onChange={(e) => setTimeType(e.target.value)}
-          >
+        {/* 時間帯 */}
+        <div className="form-group">
+          <h2>時間帯</h2>
+          <select value={timeType} onChange={(e) => setTimeType(e.target.value)}>
             <option value="allDay">終日</option>
             <option value="morning">午前</option>
             <option value="afternoon">午後</option>
@@ -117,34 +101,21 @@ const RegisterPage = () => {
           </select>
 
           {timeType === "custom" && (
-            <div className="flex gap-4 mt-4">
+            <div className="time-inputs">
               <div>
-                <label className="block text-sm text-gray-600">開始時刻</label>
-                <input
-                  type="time"
-                  className="border rounded-xl px-3 py-2"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
+                <label>開始時刻</label>
+                <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm text-gray-600">終了時刻</label>
-                <input
-                  type="time"
-                  className="border rounded-xl px-3 py-2"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
+                <label>終了時刻</label>
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
               </div>
             </div>
           )}
         </div>
 
         {/* 保存ボタン */}
-        <button
-          onClick={handleSave}
-          className="w-full bg-[#004CA0] text-white font-bold py-3 rounded-xl shadow hover:bg-[#FDB9C8] hover:text-black transition"
-        >
+        <button className="save-btn" onClick={handleSave}>
           登録する
         </button>
       </div>
