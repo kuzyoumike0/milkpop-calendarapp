@@ -1,13 +1,9 @@
 {
   "name": "milkpop-calendar",
   "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
   "scripts": {
     "start": "node backend/index.js",
-    "backend": "cd backend && npm start",
+    "backend": "cd backend && node index.js",
     "frontend": "cd frontend && npm start",
     "build": "cd frontend && npm run build"
   }
