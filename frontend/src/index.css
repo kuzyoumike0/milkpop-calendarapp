@@ -6,26 +6,31 @@ body {
   margin: 0;
   padding: 0;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
+  font-family: 'M PLUS Rounded 1c',sans-serif;  /* 本文は丸ゴシックで可読性アップ */
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
 }
 
 /* ===== 見出し ===== */
-h1, h2, h3 {
+h1 {
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* タイトルだけ手書き風 */
+  font-weight: bold;
+  color: #004CA0;
+}
+h2, h3 {
   font-family: 'M PLUS Rounded 1c', sans-serif;
   font-weight: bold;
   color: #004CA0;
 }
 
-/* ===== リンク共通 ===== */
+/* ===== リンク ===== */
 a {
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 a:hover {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 /* ===== カードデザイン ===== */
@@ -75,7 +80,7 @@ a:hover {
   color: #444;
 }
 
-/* ===== ナビゲーションボタン ===== */
+/* ===== ナビゲーションボタン共通 ===== */
 .nav-btn {
   background: #FDB9C8;
   color: #fff;
@@ -183,45 +188,61 @@ select:focus {
   margin-bottom: 0.25rem;
 }
 
-/* ===== ヘッダー・ナビゲーション ===== */
+/* ===== ヘッダー ===== */
 header {
+  background: black;
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+header .nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header .logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #FDB9C8;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  background: black;              /* ← ヘッダー背景を黒固定 */
-  padding: 10px 20px;
 }
-header a {
-  color: #FDB9C8;                /* ← ボタン文字はピンク */
+header nav {
+  display: flex;
+  gap: 12px;
+}
+header nav a {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
   font-weight: 600;
-  text-decoration: none;
-  margin: 0 8px;
+  background: #333;
+  color: white;
+  transition: all 0.3s ease;
 }
-header a:hover {
-  color: #fff;
+header nav a:hover {
+  background: #FDB9C8;
+  color: black;
+  transform: scale(1.05);
+}
+header .discord-btn {
+  background: #5865F2;
+  color: white;
+}
+header .discord-btn:hover {
+  background: #4752C4;
 }
 
 /* ===== フッター ===== */
 footer {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  text-align: center;
-  padding: 12px;
   background: black;
   color: white;
+  text-align: center;
+  padding: 20px;
   font-size: 0.9rem;
+  border-top: 1px solid #333;
 }
-
-/* ===== Discordログインボタン専用 ===== */
-.discord-btn {
-  background: #5865F2;
-  color: white;
-  padding: 0.6rem 1.5rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: all 0.2s ease;
-}
-.discord-btn:hover {
-  background: #4752C4;
-  transform: scale(1.05);
+footer p {
+  margin: 0;
+  color: #FDB9C8;
 }
 
 /* ===== レスポンシブ対応 ===== */
