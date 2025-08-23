@@ -5,31 +5,26 @@ import Header from "./Header";
 import Footer from "./Footer";
 
 const SharePage = () => {
-  const { shareId } = useParams(); // URLからid取得
+  const { shareId } = useParams();
   const [linkInfo, setLinkInfo] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [votes, setVotes] = useState({});
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(localStorage.getItem("username") || "");
   const [voteResults, setVoteResults] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // 共有リンク情報を取得
+  // ===== 共有リンク情報取得 =====
   const fetchLinkInfo = async () => {
     try {
       const res = await fetch(`/api/share-links/${shareId}`);
       const json = await res.json();
-      if (json.success) {
-        setLinkInfo(json.data);
-      } else {
-        setLinkInfo(null);
-      }
+      if (json.success) setLinkInfo(json.data);
     } catch (err) {
       console.error(err);
-      setLinkInfo(null);
     }
   };
 
-  // スケジュール取得
+  // ===== 日程取得 =====
   const fetchSchedules = async () => {
     try {
       const res = await fetch(`/api/share-links/${shareId}/schedules`);
@@ -37,7 +32,7 @@ const SharePage = () => {
       if (json.success) {
         setSchedules(json.data);
 
-        // スケジュールごとに投票結果取得
+        // 投票結果を取得
         json.data.forEach(async (s) => {
           const v = await fetchVotes(s.id);
           setVoteResults((prev) => ({ ...prev, [s.id]: v }));
@@ -50,7 +45,7 @@ const SharePage = () => {
     }
   };
 
-  // 投票結果取得
+  // ===== 投票結果取得 =====
   const fetchVotes = async (scheduleId) => {
     try {
       const res = await fetch(`/api/votes/${scheduleId}`);
@@ -62,17 +57,15 @@ const SharePage = () => {
     }
   };
 
-  // 投票選択
+  // ===== 投票選択 =====
   const handleVoteChange = (scheduleId, choice) => {
-    setVotes((prev) => ({
-      ...prev,
-      [scheduleId]: choice,
-    }));
+    setVotes((prev) => ({ ...prev, [scheduleId]: choice }));
   };
 
-  // 投票保存
+  // ===== 投票保存 =====
   const handleSaveVotes = async () => {
     try {
+      localStorage.setItem("username", username || "匿名");
       for (const scheduleId in votes) {
         await fetch("/api/votes", {
           method: "POST",
@@ -85,14 +78,14 @@ const SharePage = () => {
         });
       }
       alert("✅ 投票を保存しました！");
-      fetchSchedules(); // 更新
+      fetchSchedules();
     } catch (err) {
       console.error(err);
-      alert("❌ 投票の保存に失敗しました");
+      alert("❌ 保存に失敗しました");
     }
   };
 
-  // 集計関数
+  // ===== 集計 =====
   const countVotes = (voteList) => {
     const counts = { "〇": 0, "△": 0, "✖": 0 };
     voteList.forEach((v) => {
@@ -114,24 +107,22 @@ const SharePage = () => {
           {loading ? (
             <p className="text-center text-gray-600">読み込み中...</p>
           ) : !linkInfo ? (
-            <p className="text-center text-red-500">
-              ❌ この共有リンクは存在しません
-            </p>
+            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
           ) : (
             <>
               {/* タイトル */}
-              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-8">
+              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-6">
                 📎 {linkInfo.title}
               </h2>
 
-              {/* ユーザー名入力 */}
+              {/* 名前入力 */}
               <div className="mb-6">
                 <label className="block mb-2 text-[#004CA0] font-semibold">
                   あなたの名前
                 </label>
                 <input
                   type="text"
-                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0] transition"
+                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
                   placeholder="名前を入力してください（未入力なら匿名）"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -149,16 +140,12 @@ const SharePage = () => {
                       <div className="flex justify-between items-center mb-4 w-full">
                         <div>
                           <p className="schedule-title">{s.title}</p>
-                          <p className="date-tag">
-                            {new Date(s.date).toLocaleDateString()}
-                          </p>
+                          <p className="date-tag">{new Date(s.date).toLocaleDateString()}</p>
                         </div>
                         <select
                           className="vote-select"
                           value={votes[s.id] || ""}
-                          onChange={(e) =>
-                            handleVoteChange(s.id, e.target.value)
-                          }
+                          onChange={(e) => handleVoteChange(s.id, e.target.value)}
                         >
                           <option value="">選択してください</option>
                           <option value="〇">〇</option>
@@ -169,9 +156,6 @@ const SharePage = () => {
 
                       {/* 投票結果 */}
                       <div className="vote-results">
-                        <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
-                          投票結果
-                        </h3>
                         {result.length > 0 ? (
                           <ul className="text-sm space-y-1">
                             {result.map((v, idx) => (
@@ -184,10 +168,8 @@ const SharePage = () => {
                         ) : (
                           <p className="text-gray-500">まだ投票がありません</p>
                         )}
-
-                        <div className="mt-3 text-sm font-semibold">
-                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖{" "}
-                          {counts["✖"]}人
+                        <div className="mt-2 text-sm font-semibold">
+                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
                         </div>
                       </div>
                     </li>
@@ -196,10 +178,7 @@ const SharePage = () => {
               </ul>
 
               {/* 保存ボタン */}
-              <button
-                onClick={handleSaveVotes}
-                className="vote-save-btn mt-6"
-              >
+              <button onClick={handleSaveVotes} className="vote-save-btn mt-6">
                 💾 投票を保存する
               </button>
             </>
