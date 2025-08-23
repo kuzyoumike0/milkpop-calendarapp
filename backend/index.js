@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const path = require("path");
 const crypto = require("crypto");
 const { Pool } = require("pg");
-const fetch = require("node-fetch"); // 🔹Discord API 呼び出し用
+const fetch = require("node-fetch");
 require("dotenv").config();
 
 const app = express();
@@ -60,7 +60,6 @@ app.get("/auth/callback", async (req, res) => {
     });
     const userData = await userRes.json();
 
-    // フロントにユーザー名を返す（本番は JWT/Cookie が安全）
     res.redirect(
       `/auth-success?username=${encodeURIComponent(userData.username)}`
     );
@@ -75,22 +74,27 @@ app.get("/auth-success", (req, res) => {
   res.send(`
     <script>
       localStorage.setItem("username", "${req.query.username}");
-      window.close(); // ポップアップを閉じる
+      window.close();
     </script>
   `);
 });
 
-// ===== スケジュール登録API =====
+// ===== API: スケジュール登録 =====
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, timeRange, memo } = req.body;
+    const { title, dates, options } = req.body;
     if (!title || !dates) {
       return res.status(400).json({ error: "title と dates は必須です" });
     }
 
+    const id = crypto.randomUUID();
+    const shareToken = crypto.randomBytes(6).toString("hex");
+
     const result = await pool.query(
-      "INSERT INTO schedules (title, dates, time_range, memo) VALUES ($1, $2, $3, $4) RETURNING *",
-      [title, dates, timeRange, memo]
+      `INSERT INTO schedules (id, title, dates, options, share_token) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING *`,
+      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
     );
 
     res.json(result.rows[0]);
@@ -100,10 +104,12 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// スケジュール取得
+// ===== API: スケジュール取得 =====
 app.get("/api/schedules", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM schedules ORDER BY id DESC");
+    const result = await pool.query(
+      "SELECT * FROM schedules ORDER BY created_at DESC"
+    );
     res.json(result.rows);
   } catch (err) {
     console.error("取得エラー:", err);
@@ -111,50 +117,42 @@ app.get("/api/schedules", async (req, res) => {
   }
 });
 
-// ===== 共有リンク生成 =====
+// ===== API: 共有リンク生成 =====
 app.post("/api/share", async (req, res) => {
   try {
-    const { scheduleIds } = req.body;
-    if (!scheduleIds || scheduleIds.length === 0) {
-      return res.status(400).json({ error: "scheduleIds が必要です" });
+    const { scheduleId } = req.body;
+    if (!scheduleId) {
+      return res.status(400).json({ error: "scheduleId が必要です" });
     }
 
-    // ランダムなURLキーを生成
-    const linkKey = crypto.randomBytes(6).toString("hex");
+    const shareToken = crypto.randomBytes(6).toString("hex");
 
-    // DB保存
     await pool.query(
-      "INSERT INTO share_links (link_key, schedule_ids) VALUES ($1, $2)",
-      [linkKey, scheduleIds]
+      "UPDATE schedules SET share_token=$1 WHERE id=$2",
+      [shareToken, scheduleId]
     );
 
-    res.json({ url: `/share/${linkKey}` });
+    res.json({ url: `/share/${shareToken}` });
   } catch (err) {
     console.error("共有エラー:", err);
     res.status(500).json({ error: "共有に失敗しました" });
   }
 });
 
-// 共有リンクからスケジュール取得
-app.get("/share/:linkKey", async (req, res) => {
+// ===== API: 共有リンクからスケジュール取得 =====
+app.get("/share/:token", async (req, res) => {
   try {
-    const { linkKey } = req.params;
+    const { token } = req.params;
     const result = await pool.query(
-      "SELECT schedule_ids FROM share_links WHERE link_key=$1",
-      [linkKey]
+      "SELECT * FROM schedules WHERE share_token=$1",
+      [token]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "リンクが存在しません" });
     }
 
-    const scheduleIds = result.rows[0].schedule_ids;
-    const schedules = await pool.query(
-      "SELECT * FROM schedules WHERE id = ANY($1::int[])",
-      [scheduleIds]
-    );
-
-    res.json(schedules.rows);
+    res.json(result.rows[0]);
   } catch (err) {
     console.error("共有取得エラー:", err);
     res.status(500).json({ error: "共有データ取得に失敗しました" });
