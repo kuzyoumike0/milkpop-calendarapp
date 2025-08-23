@@ -24,9 +24,9 @@ h1, h2 {
 header {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
-  padding: 16px 32px;
+  padding: 16px 0;   /* ← 左右paddingを削除して0にする */
   display: flex;
-  justify-content: flex-start;  /* ← 左寄せベース */
+  justify-content: flex-start;
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
@@ -38,7 +38,12 @@ header {
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 
-/* 左: ロゴ / 右: ナビ全体を右端に押し出す */
+/* 左端のロゴをぴったりに */
+header .logo {
+  margin-left: 16px;  /* ← 必要なら少し余白をつける */
+}
+
+/* 右端にナビ全体を寄せる */
 header > *:last-child {
   margin-left: auto;
 }
