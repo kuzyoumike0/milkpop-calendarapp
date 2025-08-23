@@ -8,6 +8,8 @@ const RegisterPage = () => {
   const [date, setDate] = useState(new Date());
   const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [timeType, setTimeType] = useState("allDay");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("18:00");
 
   const handleSave = async () => {
     try {
@@ -19,6 +21,8 @@ const RegisterPage = () => {
           date,
           selectionMode,
           timeType,
+          startTime: timeType === "custom" ? startTime : null,
+          endTime: timeType === "custom" ? endTime : null,
         }),
       });
 
@@ -104,6 +108,29 @@ const RegisterPage = () => {
             <option value="afternoon">午後</option>
             <option value="custom">時間指定</option>
           </select>
+
+          {timeType === "custom" && (
+            <div className="flex gap-4 mt-4">
+              <div>
+                <label className="block text-sm text-gray-600">開始時刻</label>
+                <input
+                  type="time"
+                  className="border rounded-xl px-3 py-2"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600">終了時刻</label>
+                <input
+                  type="time"
+                  className="border rounded-xl px-3 py-2"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 保存ボタン */}
