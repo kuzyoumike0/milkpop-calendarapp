@@ -1,24 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../index.css";
 import Header from "./Header";
 import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-
-// 時間リスト（1時〜24時）
 const timeOptions = Array.from({ length: 24 }, (_, i) => `${i + 1}:00`);
 
 const RegisterPage = () => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({}); // { dateStr: { type, start, end } }
+  const [dateOptions, setDateOptions] = useState({});
   const [title, setTitle] = useState("");
   const [issuedUrl, setIssuedUrl] = useState("");
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
 
-  // === 今の月の日数 ===
+  // DBから保存済みスケジュールを取得
+  const [savedSchedules, setSavedSchedules] = useState([]);
+
+  const fetchSchedules = async () => {
+    try {
+      const res = await fetch("/api/schedules");
+      const json = await res.json();
+      if (json.success) {
+        setSavedSchedules(json.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  // === 月の情報 ===
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -78,7 +95,7 @@ const RegisterPage = () => {
     }
   };
 
-  // === 区分プルダウン変更 ===
+  // === 区分変更 ===
   const handleOptionChange = (dateStr, value) => {
     setDateOptions({
       ...dateOptions,
@@ -90,23 +107,58 @@ const RegisterPage = () => {
   const handleTimeChange = (dateStr, field, value) => {
     const updated = { ...dateOptions[dateStr], [field]: value };
 
-    // 開始が終了より遅ければ修正
-    if (field === "start" && timeOptions.indexOf(value) >= timeOptions.indexOf(updated.end)) {
+    if (
+      field === "start" &&
+      timeOptions.indexOf(value) >= timeOptions.indexOf(updated.end)
+    ) {
       updated.end = timeOptions[timeOptions.indexOf(value) + 1] || "24:00";
     }
-    if (field === "end" && timeOptions.indexOf(value) <= timeOptions.indexOf(updated.start)) {
+    if (
+      field === "end" &&
+      timeOptions.indexOf(value) <= timeOptions.indexOf(updated.start)
+    ) {
       updated.start = timeOptions[timeOptions.indexOf(value) - 1] || "1:00";
     }
 
     setDateOptions({ ...dateOptions, [dateStr]: updated });
   };
 
-  // === 選択リストから削除 ===
+  // === 日付削除 ===
   const handleDeleteDate = (dateStr) => {
     setSelectedDates(selectedDates.filter((d) => d !== dateStr));
     const updated = { ...dateOptions };
     delete updated[dateStr];
     setDateOptions(updated);
+  };
+
+  // === DB保存 ===
+  const handleSaveSchedules = async () => {
+    try {
+      for (const d of selectedDates) {
+        const opt =
+          dateOptions[d] || { type: "終日", start: "9:00", end: "18:00" };
+
+        await fetch("/api/schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            date: d,
+            selectionMode,
+            timeType: opt.type,
+            startTime: opt.start,
+            endTime: opt.end,
+          }),
+        });
+      }
+      setSelectedDates([]);
+      setDateOptions({});
+      await fetchSchedules(); // 保存後に即時反映
+      alert("✅ スケジュールを保存しました！");
+    } catch (err) {
+      console.error(err);
+      alert("❌ 保存に失敗しました");
+    }
   };
 
   // === URL発行 ===
@@ -129,9 +181,7 @@ const RegisterPage = () => {
   // === カレンダーセル ===
   const cells = [];
   for (let i = 0; i < firstDay; i++) {
-    cells.push(
-      <div key={`empty-${i}`} className="calendar-cell empty"></div>
-    );
+    cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
   }
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
@@ -163,7 +213,6 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            {/* タイトル */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 📌 タイトル
@@ -177,7 +226,6 @@ const RegisterPage = () => {
               />
             </div>
 
-            {/* 選択モード */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 🔽 選択モード
@@ -206,7 +254,6 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* カレンダー年月 */}
             <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
               {year}年 {month + 1}月
             </h2>
@@ -230,7 +277,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* 選択日程 + 区分プルダウン + 時刻指定 */}
+          {/* 選択日程 & 保存済み日程 */}
           <div className="schedule-section">
             <h2>選択した日程</h2>
             <ul>
@@ -256,7 +303,6 @@ const RegisterPage = () => {
                     </button>
                   </div>
 
-                  {/* 時刻指定が選ばれたら時間プルダウン表示 */}
                   {dateOptions[d]?.type === "時刻指定" && (
                     <div className="flex gap-2 items-center">
                       <select
@@ -292,8 +338,8 @@ const RegisterPage = () => {
               ))}
             </ul>
 
-            <button onClick={handleIssueUrl} className="save-btn mt-6">
-              🔗 共有リンクを発行
+            <button onClick={handleSaveSchedules} className="save-btn mt-6">
+              💾 スケジュールを保存
             </button>
 
             {issuedUrl && (
@@ -304,6 +350,22 @@ const RegisterPage = () => {
                 </a>
               </div>
             )}
+
+            <h2 className="mt-8">📋 保存済みスケジュール</h2>
+            <ul>
+              {savedSchedules.map((s) => (
+                <li key={s.id} className="schedule-card">
+                  <span className="schedule-title">
+                    {s.title} ({s.date})
+                  </span>
+                  <span className="ml-2 text-sm text-gray-600">
+                    {s.time_type === "時刻指定"
+                      ? `${s.start_time}〜${s.end_time}`
+                      : s.time_type}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </main>
