@@ -11,6 +11,8 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
   const [issuedUrl, setIssuedUrl] = useState("");
+  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルト: 複数選択
+  const [rangeStart, setRangeStart] = useState(null);
 
   // === 今の月の日数を計算 ===
   const year = currentDate.getFullYear();
@@ -26,10 +28,39 @@ const RegisterPage = () => {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
       day
     ).padStart(2, "0")}`;
-    if (selectedDates.includes(dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-    } else {
-      setSelectedDates([...selectedDates, dateStr]);
+
+    if (selectionMode === "single") {
+      // 単日選択
+      setSelectedDates([dateStr]);
+    } else if (selectionMode === "multiple") {
+      // 複数日選択
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+      } else {
+        setSelectedDates([...selectedDates, dateStr]);
+      }
+    } else if (selectionMode === "range") {
+      // 範囲選択
+      if (!rangeStart) {
+        setRangeStart(dateStr);
+        setSelectedDates([dateStr]);
+      } else {
+        const start = new Date(rangeStart);
+        const end = new Date(dateStr);
+        if (start > end) [start, end] = [end, start];
+
+        const range = [];
+        const cursor = new Date(start);
+        while (cursor <= end) {
+          const d = `${cursor.getFullYear()}-${String(
+            cursor.getMonth() + 1
+          ).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+          range.push(d);
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        setSelectedDates(range);
+        setRangeStart(null); // リセット
+      }
     }
   };
 
@@ -104,6 +135,22 @@ const RegisterPage = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
               />
+            </div>
+
+            {/* 選択モード切替 */}
+            <div className="mb-4 text-left">
+              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+                🔽 選択モード
+              </label>
+              <select
+                className="input-field"
+                value={selectionMode}
+                onChange={(e) => setSelectionMode(e.target.value)}
+              >
+                <option value="single">単日選択</option>
+                <option value="multiple">複数選択</option>
+                <option value="range">範囲選択</option>
+              </select>
             </div>
 
             {/* カレンダータイトル */}
