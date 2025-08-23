@@ -251,28 +251,20 @@ body {
   box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
 }
 
-/* ===== トップページロゴ ===== */
-.top-logo {
-  display: block;
-  margin: 2rem auto;
-  max-width: 1040px;   /* 最大横幅を制限 */
-  width: 80%;         /* 画面幅に対して自動調整 */
-  height: auto;       /* アスペクト比を維持 */
-  border-radius: 24px;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.25);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+/* ===== ロゴ文字 ===== */
+.logo-text {
+  font-family: 'Baloo 2', cursive;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fdfdfd;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
-.top-logo:hover {
+.logo-text:hover {
+  color: #FDB9C8;
+  text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
   transform: scale(1.05);
-  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
 }
-.logo-img {
-  height: 50px;        /* ヘッダー用に高さを調整 */
-  width: auto;
-  display: block;
-  transition: transform 0.3s ease;
-}
-.logo-img:hover {
-  transform: scale(1.08);
-}
+
 
