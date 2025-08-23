@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
-    <header>
+    <header className="app-header">
       <div className="nav-container">
         {/* 左側ロゴ */}
         <Link to="/" className="logo">
