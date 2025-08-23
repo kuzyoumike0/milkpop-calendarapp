@@ -10,9 +10,9 @@ const RegisterPage = () => {
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [savedSchedules, setSavedSchedules] = useState([]);
-  const [sortOrder, setSortOrder] = useState("asc");
   const [selectMode, setSelectMode] = useState("single");
+  const [timeOptions, setTimeOptions] = useState({}); // 各日付の時間帯設定
+  const [shareUrl, setShareUrl] = useState("");
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -46,6 +46,11 @@ const RegisterPage = () => {
   // ===== 選択解除 =====
   const handleRemoveSelected = (date) => {
     setSelectedDates(selectedDates.filter((d) => d !== date));
+    setTimeOptions((prev) => {
+      const newOptions = { ...prev };
+      delete newOptions[date];
+      return newOptions;
+    });
   };
 
   // ===== 月切替 =====
@@ -56,39 +61,37 @@ const RegisterPage = () => {
     setCurrentMonth(new Date(year, month + 1, 1));
   };
 
-  // ===== 保存 =====
-  const handleSave = () => {
+  // ===== 時間帯変更 =====
+  const handleTimeChange = (date, type, value) => {
+    setTimeOptions((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        [type]: value,
+      },
+    }));
+  };
+
+  // ===== 共有リンク生成 =====
+  const handleGenerateLink = () => {
     if (!title || selectedDates.length === 0) {
-      alert("タイトルと日付を入力してください！");
+      alert("タイトルと日程を入力してください！");
       return;
     }
-    const sortedDates = [...selectedDates].sort((a, b) => a - b);
-    setSavedSchedules([
-      ...savedSchedules,
-      { id: Date.now(), title, dates: sortedDates, month, year },
-    ]);
-    setTitle("");
-    setSelectedDates([]);
+    // 仮でランダムUUIDを生成
+    const uuid = Math.random().toString(36).substring(2, 10);
+    const url = `https://milkpop.app/share/${uuid}`;
+    setShareUrl(url);
+    alert("共有リンクを生成しました！");
   };
 
-  // ===== 削除 =====
-  const handleDelete = (id) => {
-    setSavedSchedules(savedSchedules.filter((s) => s.id !== id));
-  };
+  // ===== 時刻リスト =====
+  const hours = Array.from({ length: 24 }, (_, i) => `${i}時`);
 
-  // ===== 並び替え済み登録リスト =====
-  const sortedSchedules = [...savedSchedules].sort((a, b) => {
-    const dateA = new Date(a.year, a.month, a.dates[0]);
-    const dateB = new Date(b.year, b.month, b.dates[0]);
-    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-  });
-
-  // ===== 選択中リスト昇順 =====
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a - b);
 
   return (
     <>
-      {/* === ヘッダー呼び出し === */}
       <Header />
 
       <main className="register-page">
@@ -105,11 +108,10 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* ===== レイアウト：カレンダー7割 / 右リスト3割 ===== */}
         <div className="register-layout">
           {/* ===== カレンダーエリア ===== */}
           <div className="calendar-section">
-            {/* --- 選択モードラジオをカレンダー上に配置 --- */}
+            {/* 選択モードラジオをカレンダー上に配置 */}
             <div className="radio-group mb-3">
               <div className="radio-options">
                 <label className="radio-label">
@@ -173,76 +175,107 @@ const RegisterPage = () => {
                 );
               })}
             </div>
-
-            <button className="save-btn mt-4" onClick={handleSave}>
-              登録する
-            </button>
           </div>
 
-          {/* ===== 右側：選択中 + 登録済み ===== */}
+          {/* ===== 選択中日程リスト ===== */}
           <div className="schedule-section">
             {sortedSelectedDates.length > 0 && (
               <div className="card selected-dates mb-4">
                 <h2 className="form-title">選択中の日程</h2>
                 <ul>
-                  {sortedSelectedDates.map((d, i) => (
-                    <li key={i} className="schedule-card">
-                      <span className="date-tag">
-                        {month + 1}/{d}
-                      </span>
-                      <button
-                        className="delete-btn-small"
-                        onClick={() => handleRemoveSelected(d)}
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
+                  {sortedSelectedDates.map((d, i) => {
+                    const option = timeOptions[d] || { period: "終日" };
+                    return (
+                      <li key={i} className="schedule-card">
+                        <span className="date-tag">
+                          {month + 1}/{d}
+                        </span>
+
+                        {/* 時間帯プルダウン */}
+                        <select
+                          value={option.period}
+                          onChange={(e) =>
+                            handleTimeChange(d, "period", e.target.value)
+                          }
+                        >
+                          <option value="終日">終日</option>
+                          <option value="午前">午前</option>
+                          <option value="午後">午後</option>
+                          <option value="時刻指定">時刻指定</option>
+                        </select>
+
+                        {/* 時刻指定された場合に追加プルダウン */}
+                        {option.period === "時刻指定" && (
+                          <>
+                            <select
+                              value={option.start || ""}
+                              onChange={(e) =>
+                                handleTimeChange(d, "start", e.target.value)
+                              }
+                            >
+                              <option value="">開始時刻</option>
+                              {hours.map((h, idx) => (
+                                <option
+                                  key={idx}
+                                  value={h}
+                                  disabled={
+                                    option.end &&
+                                    idx >= hours.indexOf(option.end)
+                                  }
+                                >
+                                  {h}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              value={option.end || ""}
+                              onChange={(e) =>
+                                handleTimeChange(d, "end", e.target.value)
+                              }
+                            >
+                              <option value="">終了時刻</option>
+                              {hours.map((h, idx) => (
+                                <option
+                                  key={idx}
+                                  value={h}
+                                  disabled={
+                                    option.start &&
+                                    idx <= hours.indexOf(option.start)
+                                  }
+                                >
+                                  {h}
+                                </option>
+                              ))}
+                            </select>
+                          </>
+                        )}
+
+                        <button
+                          className="delete-btn-small"
+                          onClick={() => handleRemoveSelected(d)}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
 
-            <h2 className="form-title">登録済み日程</h2>
-            <div className="sort-toggle">
-              <label>並び順: </label>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-              >
-                <option value="asc">古い順</option>
-                <option value="desc">新しい順</option>
-              </select>
-            </div>
-
-            {sortedSchedules.length === 0 ? (
-              <p className="text-gray">まだ日程がありません</p>
-            ) : (
-              <ul>
-                {sortedSchedules.map((s) => (
-                  <li key={s.id} className="schedule-card">
-                    <span className="schedule-title">{s.title}</span>
-                    <div>
-                      {s.dates.map((d, i) => (
-                        <span key={i} className="date-tag">
-                          {s.month + 1}/{d}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(s.id)}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {/* 共有リンク生成ボタン */}
+            <button className="save-btn mt-4" onClick={handleGenerateLink}>
+              共有リンクを発行する
+            </button>
+            {shareUrl && (
+              <p className="mt-2">
+                共有URL: <a href={shareUrl}>{shareUrl}</a>
+              </p>
             )}
           </div>
         </div>
       </main>
 
-      {/* === フッター呼び出し === */}
       <Footer />
     </>
   );
