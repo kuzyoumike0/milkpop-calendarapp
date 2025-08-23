@@ -221,3 +221,56 @@
   70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
 }
+
+/* ===== ヘッダー ===== */
+.main-header {
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: 'Baloo 2', cursive;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.main-header .logo a {
+  color: #fff;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.main-header .logo a:hover {
+  color: #ffebf2;
+}
+
+.main-header .nav-links {
+  display: flex;
+  gap: 20px;
+}
+.main-header .nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.3s;
+}
+.main-header .nav-links a:hover {
+  color: #FDB9C8;
+}
+
+/* ===== フッター ===== */
+.main-footer {
+  background: #004CA0;
+  color: white;
+  text-align: center;
+  padding: 16px 20px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 0.95rem;
+  border-top: 3px solid #FDB9C8;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+}
+
