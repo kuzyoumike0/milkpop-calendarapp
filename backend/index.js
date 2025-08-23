@@ -13,7 +13,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// ====== 初期化: テーブル作成 ======
+// ====== 初期化: schedules テーブル ======
 const initDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
@@ -28,6 +28,37 @@ const initDB = async () => {
   `);
 };
 initDB();
+
+// ====== 初期化: personal_schedules テーブル ======
+const initPersonalDB = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS personal_schedules (
+      id SERIAL PRIMARY KEY,
+      title TEXT,
+      memo TEXT,
+      date DATE NOT NULL,
+      selection_mode TEXT,
+      time_type TEXT,
+      start_time TEXT,
+      end_time TEXT
+    );
+  `);
+};
+initPersonalDB();
+
+// ====== 初期化: votes テーブル ======
+const initVotesDB = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS votes (
+      id SERIAL PRIMARY KEY,
+      schedule_id INT NOT NULL,
+      username TEXT,
+      choice TEXT CHECK (choice IN ('〇','△','✖')),
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+};
+initVotesDB();
 
 // ====== スケジュール保存 ======
 app.post("/api/schedules", async (req, res) => {
@@ -49,6 +80,66 @@ app.post("/api/schedules", async (req, res) => {
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM schedules ORDER BY date ASC`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB fetch error" });
+  }
+});
+
+// ====== 個人スケジュール保存 ======
+app.post("/api/personal-schedules", async (req, res) => {
+  try {
+    const { title, memo, date, selectionMode, timeType, startTime, endTime } = req.body;
+    const result = await pool.query(
+      `INSERT INTO personal_schedules (title, memo, date, selection_mode, time_type, start_time, end_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [title, memo, date, selectionMode, timeType, startTime, endTime]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB insert error" });
+  }
+});
+
+// ====== 個人スケジュール一覧取得 ======
+app.get("/api/personal-schedules", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules ORDER BY id DESC`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB fetch error" });
+  }
+});
+
+// ====== 投票保存 ======
+app.post("/api/votes", async (req, res) => {
+  try {
+    const { scheduleId, username, choice } = req.body;
+    const result = await pool.query(
+      `INSERT INTO votes (schedule_id, username, choice)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [scheduleId, username, choice]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB insert error" });
+  }
+});
+
+// ====== 投票結果取得 ======
+app.get("/api/votes/:scheduleId", async (req, res) => {
+  try {
+    const { scheduleId } = req.params;
+    const result = await pool.query(
+      `SELECT username, choice FROM votes WHERE schedule_id = $1`,
+      [scheduleId]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
