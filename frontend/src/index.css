@@ -420,4 +420,19 @@ body {
 .flex.justify-between.items-center {
   margin-bottom: 24px;
 }
+/* ✅ ラジオボタンを左揃え */
+.radio-options-left {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start; /* ← 左端に寄せる */
+  margin-left: 4px;
+}
+
+/* ✅ カレンダー年月表示 */
+.calendar-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #004CA0;
+  margin: 0 20px; /* ⇔ ボタンと年月の間に余白 */
+}
 
