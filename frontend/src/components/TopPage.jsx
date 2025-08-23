@@ -23,7 +23,6 @@ const TopPage = () => {
           <p className="subtitle">
             予定を登録して、みんなと共有しましょう。
           </p>
-
         </div>
       </main>
 
