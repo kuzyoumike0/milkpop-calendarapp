@@ -93,7 +93,7 @@ const RegisterPage = () => {
           {/* カレンダー */}
           <div className="calendar-section">
             {/* 🔹 タイトル入力欄 */}
-            <div className="mb-6">
+            <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 📌 スケジュールタイトル
               </label>
@@ -162,7 +162,7 @@ const RegisterPage = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {issuedUrl.replace(/_/g, "")}
+                  {issuedUrl}
                 </a>
               </div>
             )}
