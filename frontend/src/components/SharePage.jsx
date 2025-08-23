@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
@@ -80,88 +82,95 @@ const SharePage = () => {
   }, []);
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen">
-      <header className="bg-black text-white text-center py-4 mb-6 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
-      </header>
+    <>
+      <Header />
+      <main className="share-page">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="form-title">共有された日程</h2>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-xl font-bold text-[#004CA0] mb-6">登録済み日程</h2>
+          {/* ユーザー名入力 */}
+          <div className="mb-6">
+            <label className="block mb-2 text-[#004CA0] font-semibold">
+              あなたの名前
+            </label>
+            <input
+              type="text"
+              className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0] transition"
+              placeholder="名前を入力してください（未入力なら匿名）"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
 
-        {/* ユーザー名入力 */}
-        <div className="mb-6">
-          <label className="block mb-2 text-[#004CA0] font-semibold">
-            あなたの名前
-          </label>
-          <input
-            type="text"
-            className="w-full border rounded-xl px-4 py-2"
-            placeholder="名前を入力してください（未入力なら匿名）"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
+          <ul className="space-y-6">
+            {schedules.map((s) => {
+              const result = voteResults[s.id] || [];
+              const counts = countVotes(result);
 
-        <ul className="space-y-6">
-          {schedules.map((s) => {
-            const result = voteResults[s.id] || [];
-            const counts = countVotes(result);
-
-            return (
-              <li key={s.id} className="schedule-card">
-                <div className="flex justify-between items-center mb-4 w-full">
-                  <div>
-                    <p className="font-bold">{s.title}</p>
-                    <p>{new Date(s.date).toLocaleDateString()}</p>
+              return (
+                <li key={s.id} className="card">
+                  <div className="flex justify-between items-center mb-4 w-full">
+                    <div>
+                      <p className="schedule-title">{s.title}</p>
+                      <p className="date-tag">
+                        {new Date(s.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <select
+                      className="border-2 border-[#FDB9C8] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+                      value={votes[s.id] || ""}
+                      onChange={(e) =>
+                        handleVoteChange(s.id, e.target.value)
+                      }
+                    >
+                      <option value="">選択してください</option>
+                      <option value="〇">〇</option>
+                      <option value="△">△</option>
+                      <option value="✖">✖</option>
+                    </select>
                   </div>
-                  <select
-                    className="border rounded-xl px-3 py-2"
-                    value={votes[s.id] || ""}
-                    onChange={(e) => handleVoteChange(s.id, e.target.value)}
-                  >
-                    <option value="">選択してください</option>
-                    <option value="〇">〇</option>
-                    <option value="△">△</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </div>
 
-                {/* 投票結果 */}
-                <div className="mt-2 w-full">
-                  <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
-                    投票結果
-                  </h3>
-                  <ul className="text-sm space-y-1">
-                    {result.length > 0 ? (
-                      result.map((v, idx) => (
-                        <li key={idx}>
-                          {v.username} : {v.choice}
+                  {/* 投票結果 */}
+                  <div className="mt-2 w-full">
+                    <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
+                      投票結果
+                    </h3>
+                    <ul className="text-sm space-y-1">
+                      {result.length > 0 ? (
+                        result.map((v, idx) => (
+                          <li key={idx}>
+                            {v.username} : {v.choice}
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-gray-500">
+                          まだ投票がありません
                         </li>
-                      ))
-                    ) : (
-                      <li className="text-gray-500">まだ投票がありません</li>
-                    )}
-                  </ul>
+                      )}
+                    </ul>
 
-                  {/* 集計表示 */}
-                  <div className="mt-3 text-sm font-semibold">
-                    集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
+                    {/* 集計表示 */}
+                    <div className="mt-3 text-sm font-semibold">
+                      集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖{" "}
+                      {counts["✖"]}人
+                    </div>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
 
-        {/* 保存ボタン */}
-        <button
-          onClick={handleSaveVotes}
-          className="mt-6 w-full bg-[#004CA0] text-white font-bold py-3 rounded-xl shadow hover:bg-[#FDB9C8] hover:text-black transition"
-        >
-          投票を保存する
-        </button>
-      </div>
-    </div>
+          {/* 保存ボタン */}
+          <button
+            onClick={handleSaveVotes}
+            className="mt-6 w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white font-bold py-3 rounded-xl shadow hover:scale-105 transition"
+          >
+            投票を保存する
+          </button>
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 };
 
