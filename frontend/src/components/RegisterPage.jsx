@@ -1,118 +1,170 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "../index.css";
 
-const RegisterPage = () => {
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");
-  const [schedules, setSchedules] = useState([]);
+const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // ===== 登録 =====
-  const handleSave = async () => {
-    if (!title || !date) {
-      alert("タイトルと日付を入力してください");
+const RegisterPage = () => {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [title, setTitle] = useState("");
+  const [savedSchedules, setSavedSchedules] = useState([]);
+  const [sortOrder, setSortOrder] = useState("asc"); // ← 並び順管理
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  // ===== 日付クリックで選択・解除 =====
+  const handleDateClick = (date) => {
+    if (selectedDates.includes(date)) {
+      setSelectedDates(selectedDates.filter((d) => d !== date));
+    } else {
+      setSelectedDates([...selectedDates, date]);
+    }
+  };
+
+  // ===== 月切り替え =====
+  const prevMonth = () => {
+    setCurrentMonth(new Date(year, month - 1, 1));
+  };
+  const nextMonth = () => {
+    setCurrentMonth(new Date(year, month + 1, 1));
+  };
+
+  // ===== 保存処理 =====
+  const handleSave = () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日付を入力してください！");
       return;
     }
-    try {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, date }),
-      });
-      if (!res.ok) throw new Error("保存に失敗しました");
-
-      setTitle("");
-      setDate("");
-      fetchSchedules(); // 更新
-    } catch (err) {
-      console.error(err);
-      alert("エラーが発生しました");
-    }
+    const sortedDates = [...selectedDates].sort((a, b) => a - b);
+    setSavedSchedules([
+      ...savedSchedules,
+      { id: Date.now(), title, dates: sortedDates, month, year },
+    ]);
+    setTitle("");
+    setSelectedDates([]);
   };
 
-  // ===== 一覧取得（古い順にソート） =====
-  const fetchSchedules = async () => {
-    try {
-      const res = await fetch("/api/schedules");
-      const data = await res.json();
-      // 古い順 → 新しい順
-      const sorted = data.sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
-      );
-      setSchedules(sorted);
-    } catch (err) {
-      console.error(err);
-    }
+  // ===== 削除処理 =====
+  const handleDelete = (id) => {
+    setSavedSchedules(savedSchedules.filter((s) => s.id !== id));
   };
 
-  // ===== 削除 =====
-  const handleDelete = async (id) => {
-    if (!window.confirm("この日程を削除しますか？")) return;
-    try {
-      const res = await fetch(`/api/schedules/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("削除に失敗しました");
-      fetchSchedules();
-    } catch (err) {
-      console.error(err);
-      alert("削除エラー");
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
+  // ===== 登録済みスケジュールを並べ替え =====
+  const sortedSchedules = [...savedSchedules].sort((a, b) => {
+    const dateA = new Date(a.year, a.month, a.dates[0]);
+    const dateB = new Date(b.year, b.month, b.dates[0]);
+    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+  });
 
   return (
     <div className="register-page">
-      <div className="banner">📅 日程登録ページ</div>
+      <div className="banner">MilkPOP Calendar</div>
 
       <div className="register-layout">
-        {/* ===== カレンダーエリア（左7割） ===== */}
+        {/* ===== 左：カレンダー 7割 ===== */}
         <div className="calendar-section">
-          <div className="card">
-            <h2>カレンダー</h2>
-            <div className="form-group">
-              <label>タイトル</label>
-              <input
-                type="text"
-                placeholder="タイトルを入力"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>日付</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-            <button className="save-btn" onClick={handleSave}>
-              登録する
-            </button>
+          <h2 className="form-title">
+            {year}年 {month + 1}月
+          </h2>
+          <div className="calendar-nav">
+            <button onClick={prevMonth}>← 前の月</button>
+            <button onClick={nextMonth}>次の月 →</button>
           </div>
+
+          {/* カレンダー */}
+          <div className="calendar-grid custom-calendar">
+            {daysOfWeek.map((day) => (
+              <div key={day} className="calendar-day-header">
+                {day}
+              </div>
+            ))}
+
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="calendar-cell empty"></div>
+            ))}
+
+            {Array.from({ length: lastDate }).map((_, i) => {
+              const date = i + 1;
+              const isToday =
+                year === today.getFullYear() &&
+                month === today.getMonth() &&
+                date === today.getDate();
+              const isSelected = selectedDates.includes(date);
+
+              return (
+                <div
+                  key={date}
+                  className={`calendar-cell ${
+                    isToday ? "today" : ""
+                  } ${isSelected ? "selected" : ""}`}
+                  onClick={() => handleDateClick(date)}
+                >
+                  {date}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* タイトル入力 */}
+          <div className="form-group mt-4">
+            <label>タイトル</label>
+            <input
+              type="text"
+              value={title}
+              placeholder="予定タイトルを入力"
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <button className="save-btn" onClick={handleSave}>
+            登録する
+          </button>
         </div>
 
-        {/* ===== 登録済みリスト（右3割） ===== */}
+        {/* ===== 右：登録済みリスト 3割 ===== */}
         <div className="schedule-section">
-          <h2>登録済み日程</h2>
-          {schedules.length > 0 ? (
-            schedules.map((s) => (
-              <div key={s.id} className="schedule-card">
-                <span className="schedule-title">{s.title}</span>
-                <span className="date-tag">
-                  {new Date(s.date).toLocaleDateString()}
-                </span>
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(s.id)}
-                >
-                  ✖
-                </button>
-              </div>
-            ))
+          <h2 className="form-title">登録済み日程</h2>
+
+          {/* 並び順切り替え */}
+          <div className="sort-toggle">
+            <label>並び順: </label>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="asc">古い順</option>
+              <option value="desc">新しい順</option>
+            </select>
+          </div>
+
+          {sortedSchedules.length === 0 ? (
+            <p className="text-gray">まだ日程がありません</p>
           ) : (
-            <p>まだ日程が登録されていません</p>
+            <ul>
+              {sortedSchedules.map((s) => (
+                <li key={s.id} className="schedule-card">
+                  <span className="schedule-title">{s.title}</span>
+                  <div>
+                    {s.dates.map((d, i) => (
+                      <span key={i} className="date-tag">
+                        {s.month + 1}/{d}
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(s.id)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
