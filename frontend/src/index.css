@@ -1,12 +1,12 @@
 /* ===== Google Fonts ===== */
-@import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;600;700&display=swap');
 
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
   padding: 0;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'M PLUS Rounded 1c',sans-serif;  /* 本文は丸ゴシックで可読性アップ */
+  font-family: 'M PLUS Rounded 1c',sans-serif;
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
@@ -14,13 +14,13 @@ body {
 
 /* ===== 見出し ===== */
 h1 {
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* タイトルだけ手書き風 */
-  font-weight: bold;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
+  font-weight: 700;
   color: #004CA0;
 }
 h2, h3 {
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: bold;
+  font-weight: 600;
   color: #004CA0;
 }
 
@@ -37,14 +37,25 @@ a:hover {
 .card {
   background: #fff;
   border-radius: 1.25rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+
+/* ===== トップページ本文 ===== */
+.top-message {
+  font-size: 1.2rem;
+  font-weight: 500;
+  max-width: 40rem;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 1.9;
+  color: #444;
 }
 
 /* ===== カレンダーUI ===== */
@@ -80,7 +91,7 @@ a:hover {
   color: #444;
 }
 
-/* ===== ナビゲーションボタン共通 ===== */
+/* ===== ナビゲーションボタン ===== */
 .nav-btn {
   background: #FDB9C8;
   color: #fff;
@@ -101,7 +112,7 @@ a:hover {
   background: #003080;
 }
 
-/* ===== ラジオボタン（お洒落仕様） ===== */
+/* ===== ラジオボタン ===== */
 .radio-group {
   display: flex;
   gap: 1rem;
@@ -127,7 +138,7 @@ a:hover {
   transform: scale(1.05);
 }
 
-/* ===== プルダウン（セレクト） ===== */
+/* ===== プルダウン ===== */
 select {
   appearance: none;
   padding: 0.6rem 1rem;
@@ -190,7 +201,7 @@ select:focus {
 
 /* ===== ヘッダー ===== */
 header {
-  background: black;
+  background: linear-gradient(90deg, #000000, #111827);
   color: white;
   padding: 14px 32px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -244,7 +255,7 @@ header .discord-btn:hover {
 
 /* ===== フッター ===== */
 footer {
-  background: black;
+  background: linear-gradient(90deg, #000000, #111827);
   color: #ccc;
   text-align: center;
   padding: 24px 16px;
