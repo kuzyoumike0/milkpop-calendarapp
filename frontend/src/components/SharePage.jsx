@@ -1,215 +1,182 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const path = require("path");
-const crypto = require("crypto");
-const fs = require("fs");
-const { Pool } = require("pg");
-const fetch = require("node-fetch");
-require("dotenv").config();
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const SharePage = () => {
+  const { shareId } = useParams(); // = share_token
+  const [linkInfo, setLinkInfo] = useState(null);
+  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const [votes, setVotes] = useState({});
+  const [voteResults, setVoteResults] = useState({});
+  const [loading, setLoading] = useState(true);
 
-// ===== DB 接続 =====
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+  // ===== 共有スケジュール取得 =====
+  const fetchLinkInfo = async () => {
+    try {
+      const res = await fetch(`/share/${shareId}`);
+      const json = await res.json();
+      if (!json.error) {
+        setLinkInfo(json);
+        // 投票結果を取得
+        fetchVoteResults(json.id);
+      }
+    } catch (err) {
+      console.error("共有取得エラー:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-// ===== 起動時に init.sql を実行 =====
-(async () => {
-  try {
-    const initSql = fs.readFileSync(path.join(__dirname, "init.sql")).toString();
-    await pool.query(initSql);
-    console.log("✅ init.sql 実行完了: テーブル準備OK");
-  } catch (err) {
-    console.error("❌ init.sql 実行エラー:", err.message);
-  }
-})();
+  // ===== 投票結果取得 =====
+  const fetchVoteResults = async (scheduleId) => {
+    try {
+      const res = await fetch(`/api/schedule_responses/${scheduleId}`);
+      const json = await res.json();
+      if (json.success) {
+        setVoteResults(json.data); // [{ username, responses }, ...]
+      }
+    } catch (err) {
+      console.error("投票結果取得エラー:", err);
+    }
+  };
 
-// ===== Discord OAuth =====
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+  // ===== 投票選択 =====
+  const handleVoteChange = (dateStr, choice) => {
+    setVotes((prev) => ({ ...prev, [dateStr]: choice }));
+  };
 
-// ログイン開始
-app.get("/auth/login", (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    REDIRECT_URI
-  )}&response_type=code&scope=identify`;
-  res.redirect(url);
-});
+  // ===== 投票保存 =====
+  const handleSaveVotes = async () => {
+    try {
+      localStorage.setItem("username", username || "匿名");
+      const res = await fetch("/api/schedule_responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduleId: linkInfo.id,
+          username: username || "匿名",
+          responses: votes,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        alert("❌ 保存に失敗しました: " + json.error);
+      } else {
+        alert("✅ 投票を保存しました！");
+        fetchVoteResults(linkInfo.id); // 保存後に最新結果を再取得
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ 保存に失敗しました");
+    }
+  };
 
-// コールバック
-app.get("/auth/callback", async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send("Missing code");
-
-  try {
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: REDIRECT_URI,
-      }),
+  // ===== 集計処理 =====
+  const countVotes = (dateStr) => {
+    const counts = { "〇": 0, "△": 0, "✖": 0 };
+    voteResults.forEach((v) => {
+      const choice = v.responses[dateStr];
+      if (counts[choice] !== undefined) counts[choice]++;
     });
+    return counts;
+  };
 
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) {
-      return res.status(400).json({ error: "Failed to get token" });
-    }
+  useEffect(() => {
+    fetchLinkInfo();
+  }, [shareId]);
 
-    const userRes = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const userData = await userRes.json();
+  return (
+    <>
+      <Header />
+      <main className="share-page">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          {loading ? (
+            <p className="text-center text-gray-600">読み込み中...</p>
+          ) : !linkInfo ? (
+            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
+          ) : (
+            <>
+              {/* タイトル */}
+              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-6">
+                📎 {linkInfo.title}
+              </h2>
 
-    res.redirect(`/auth-success?username=${encodeURIComponent(userData.username)}`);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Auth error");
-  }
-});
+              {/* 名前入力 */}
+              <div className="mb-6">
+                <label className="block mb-2 text-[#004CA0] font-semibold">
+                  あなたの名前
+                </label>
+                <input
+                  type="text"
+                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+                  placeholder="名前を入力してください（未入力なら匿名）"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
 
-// 認証成功用エンドポイント
-app.get("/auth-success", (req, res) => {
-  res.send(`
-    <script>
-      localStorage.setItem("username", "${req.query.username}");
-      window.close();
-    </script>
-  `);
-});
+              {/* 日程リスト */}
+              <ul className="space-y-6">
+                {linkInfo.dates.map((d) => {
+                  const counts = countVotes(d);
 
-// ===== API: スケジュール登録 =====
-app.post("/api/schedules", async (req, res) => {
-  try {
-    const { title, dates, options } = req.body;
-    console.log("受信データ:", req.body);
+                  return (
+                    <li key={d} className="card">
+                      <div className="flex justify-between items-center mb-4 w-full">
+                        <div>
+                          <p className="schedule-title">{d}</p>
+                          <p className="date-tag">{linkInfo.options?.[d]?.type || "終日"}</p>
+                        </div>
+                        <select
+                          className="vote-select"
+                          value={votes[d] || ""}
+                          onChange={(e) => handleVoteChange(d, e.target.value)}
+                        >
+                          <option value="">選択してください</option>
+                          <option value="〇">〇</option>
+                          <option value="△">△</option>
+                          <option value="✖">✖</option>
+                        </select>
+                      </div>
 
-    if (!title || !dates) {
-      return res.status(400).json({ error: "title と dates は必須です" });
-    }
+                      {/* 投票結果一覧 */}
+                      <div className="vote-results">
+                        {voteResults.length > 0 ? (
+                          <ul className="text-sm space-y-1">
+                            {voteResults.map((v, idx) => (
+                              v.responses[d] ? (
+                                <li key={idx} className="flex justify-between">
+                                  <span>{v.username}</span>
+                                  <span>{v.responses[d]}</span>
+                                </li>
+                              ) : null
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500">まだ投票がありません</p>
+                        )}
+                        <div className="mt-2 text-sm font-semibold">
+                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
 
-    const id = crypto.randomUUID();
-    const shareToken = crypto.randomBytes(6).toString("hex");
+              {/* 保存ボタン */}
+              <button onClick={handleSaveVotes} className="vote-save-btn mt-6">
+                💾 投票を保存する
+              </button>
+            </>
+          )}
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+};
 
-    const result = await pool.query(
-      `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1, $2, $3::jsonb, $4::jsonb, $5)
-       RETURNING *`,
-      [id, title, JSON.stringify(dates || []), JSON.stringify(options || {}), shareToken]
-    );
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("保存エラー:", err);
-    res.status(500).json({ error: "保存に失敗しました" });
-  }
-});
-
-// ===== API: スケジュール取得 =====
-app.get("/api/schedules", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM schedules ORDER BY created_at DESC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// ===== API: 共有リンク生成 =====
-app.post("/api/share", async (req, res) => {
-  try {
-    const { scheduleId } = req.body;
-    if (!scheduleId) {
-      return res.status(400).json({ error: "scheduleId が必要です" });
-    }
-
-    const shareToken = crypto.randomBytes(6).toString("hex");
-
-    await pool.query("UPDATE schedules SET share_token=$1 WHERE id=$2", [
-      shareToken,
-      scheduleId,
-    ]);
-
-    res.json({ url: `/share/${shareToken}` });
-  } catch (err) {
-    console.error("共有エラー:", err);
-    res.status(500).json({ error: "共有に失敗しました" });
-  }
-});
-
-// ===== API: 共有リンクからスケジュール取得 =====
-app.get("/share/:token", async (req, res) => {
-  try {
-    const { token } = req.params;
-    const result = await pool.query("SELECT * FROM schedules WHERE share_token=$1", [token]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "リンクが存在しません" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("共有取得エラー:", err);
-    res.status(500).json({ error: "共有データ取得に失敗しました" });
-  }
-});
-
-// ===== API: 出欠回答保存 =====
-app.post("/api/schedule_responses", async (req, res) => {
-  try {
-    const { scheduleId, username, responses } = req.body;
-    if (!scheduleId || !username || !responses) {
-      return res.status(400).json({ error: "必要なデータが不足しています" });
-    }
-
-    await pool.query(
-      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
-       VALUES ($1, $2, $3, $4::jsonb)
-       ON CONFLICT (schedule_id, user_id)
-       DO UPDATE SET username = EXCLUDED.username, responses = EXCLUDED.responses, created_at = CURRENT_TIMESTAMP`,
-      [scheduleId, username, username, JSON.stringify(responses)]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("回答保存エラー:", err);
-    res.status(500).json({ error: "回答保存に失敗しました" });
-  }
-});
-
-// ===== API: 出欠回答取得 =====
-app.get("/api/schedule_responses/:scheduleId", async (req, res) => {
-  try {
-    const { scheduleId } = req.params;
-    const result = await pool.query(
-      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
-      [scheduleId]
-    );
-    res.json({ success: true, data: result.rows });
-  } catch (err) {
-    console.error("回答取得エラー:", err);
-    res.status(500).json({ error: "回答取得に失敗しました" });
-  }
-});
-
-// ===== React ビルド配信 =====
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
-
-// ===== サーバー起動 =====
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`✅ MilkPOPカレンダーはポート${PORT}で動作しています`);
-});
+export default SharePage;
