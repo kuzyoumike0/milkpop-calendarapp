@@ -17,12 +17,12 @@ const TopPage = () => {
           </p>
 
           <div className="flex justify-center">
-            <img
-              src="/logo.png"
-              alt="MilkPOP Calendar ロゴ"
-              className="rounded-2xl shadow-lg w-1/2 max-w-xs"
-            />
-          </div>
+  <img
+    src="/logo.png"
+    alt="MilkPOP Calendar ロゴ"
+    className="top-logo rounded-2xl shadow-2xl"
+  />
+</div>
 
           <div className="flex justify-center gap-6">
             <Link
