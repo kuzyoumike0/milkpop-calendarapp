@@ -26,6 +26,11 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 選択解除ボタン =====
+  const handleRemoveSelected = (date) => {
+    setSelectedDates(selectedDates.filter((d) => d !== date));
+  };
+
   // ===== 月切り替え =====
   const prevMonth = () => {
     setCurrentMonth(new Date(year, month - 1, 1));
@@ -49,7 +54,7 @@ const RegisterPage = () => {
     setSelectedDates([]);
   };
 
-  // ===== 削除処理 =====
+  // ===== 削除処理（保存済み） =====
   const handleDelete = (id) => {
     setSavedSchedules(savedSchedules.filter((s) => s.id !== id));
   };
@@ -123,6 +128,12 @@ const RegisterPage = () => {
                     <span className="date-tag">
                       {month + 1}/{d}
                     </span>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleRemoveSelected(d)}
+                    >
+                      ×
+                    </button>
                   </li>
                 ))}
               </ul>
