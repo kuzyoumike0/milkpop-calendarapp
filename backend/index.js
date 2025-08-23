@@ -14,8 +14,8 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// ====== 初期化: schedules テーブル ======
-const initDB = async () => {
+// ====== DB 初期化 ======
+const initAllDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schedules (
       id SERIAL PRIMARY KEY,
@@ -27,11 +27,7 @@ const initDB = async () => {
       end_time TEXT
     );
   `);
-};
-initDB();
 
-// ====== 初期化: personal_schedules テーブル ======
-const initPersonalDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS personal_schedules (
       id SERIAL PRIMARY KEY,
@@ -44,11 +40,7 @@ const initPersonalDB = async () => {
       end_time TEXT
     );
   `);
-};
-initPersonalDB();
 
-// ====== 初期化: votes テーブル ======
-const initVotesDB = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS votes (
       id SERIAL PRIMARY KEY,
@@ -59,14 +51,16 @@ const initVotesDB = async () => {
     );
   `);
 };
-initVotesDB();
+initAllDB();
 
-// ====== ルート確認用 ======
-app.get("/", (req, res) => {
-  res.send("✅ MilkPOP Calendar API が稼働中です");
+// ====== API ======
+
+// 確認用ルート
+app.get("/api", (req, res) => {
+  res.send("✅ MilkPOP Calendar API 稼働中");
 });
 
-// ====== スケジュール保存 ======
+// スケジュール保存
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, date, selectionMode, timeType, startTime, endTime } = req.body;
@@ -82,7 +76,7 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// ====== スケジュール一覧取得 ======
+// スケジュール一覧
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM schedules ORDER BY date ASC`);
@@ -93,7 +87,7 @@ app.get("/api/schedules", async (req, res) => {
   }
 });
 
-// ====== 個人スケジュール保存 ======
+// 個人スケジュール保存
 app.post("/api/personal-schedules", async (req, res) => {
   try {
     const { title, memo, date, selectionMode, timeType, startTime, endTime } = req.body;
@@ -109,7 +103,7 @@ app.post("/api/personal-schedules", async (req, res) => {
   }
 });
 
-// ====== 個人スケジュール一覧取得 ======
+// 個人スケジュール一覧
 app.get("/api/personal-schedules", async (req, res) => {
   try {
     const result = await pool.query(
@@ -122,7 +116,7 @@ app.get("/api/personal-schedules", async (req, res) => {
   }
 });
 
-// ====== 投票保存 ======
+// 投票保存
 app.post("/api/votes", async (req, res) => {
   try {
     const { scheduleId, username, choice } = req.body;
@@ -138,7 +132,7 @@ app.post("/api/votes", async (req, res) => {
   }
 });
 
-// ====== 投票結果取得 ======
+// 投票取得
 app.get("/api/votes/:scheduleId", async (req, res) => {
   try {
     const { scheduleId } = req.params;
@@ -153,7 +147,7 @@ app.get("/api/votes/:scheduleId", async (req, res) => {
   }
 });
 
-// ====== React ビルドファイルを配信（Railwayで同居させる場合） ======
+// ====== React ビルドを配信 ======
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
@@ -162,5 +156,5 @@ app.get("*", (req, res) => {
 // ====== サーバー起動 ======
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ MilkPOP Calendar API running on port ${PORT}`);
+  console.log(`✅ MilkPOP Calendar running on port ${PORT}`);
 });
