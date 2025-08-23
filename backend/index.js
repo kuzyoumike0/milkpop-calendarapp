@@ -83,6 +83,8 @@ app.get("/auth-success", (req, res) => {
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates, options } = req.body;
+    console.log("受信データ:", req.body);
+
     if (!title || !dates) {
       return res.status(400).json({ error: "title と dates は必須です" });
     }
@@ -91,8 +93,8 @@ app.post("/api/schedules", async (req, res) => {
     const shareToken = crypto.randomBytes(6).toString("hex");
 
     const result = await pool.query(
-      `INSERT INTO schedules (id, title, dates, options, share_token) 
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
     );
@@ -166,7 +168,7 @@ app.get("*", (req, res) => {
 });
 
 // ===== サーバー起動 =====
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`✅ MilkPOP Calendar running on port ${PORT}`);
+  console.log(`✅ MilkPOPカレンダーはポート${PORT}で動作しています`);
 });
