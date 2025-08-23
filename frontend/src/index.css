@@ -26,7 +26,7 @@ header {
   color: white;
   padding: 16px 32px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;  /* ← 左寄せベース */
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
@@ -37,17 +37,21 @@ header {
   z-index: 1000;
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
+
+/* 左: ロゴ / 右: ナビ全体を右端に押し出す */
+header > *:last-child {
+  margin-left: auto;
+}
+
 header .nav {
   display: flex;
   gap: 32px;
-  margin-left: auto;   /* 👈 追加：右端に固定 */
 }
 header .nav a {
   color: #fff;
   text-decoration: none;
   font-weight: bold;
   transition: color 0.2s;
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 header .nav a:hover {
   color: #ff5fa2;
