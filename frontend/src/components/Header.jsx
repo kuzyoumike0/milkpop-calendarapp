@@ -4,6 +4,7 @@ import "../index.css";
 
 const Header = () => {
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -36,49 +37,47 @@ const Header = () => {
   };
 
   return (
-    <header>
+    <header className="main-header">
       {/* 左端ロゴ */}
-      <div className="logo ml-4 text-2xl font-bold">
+      <div className="logo text-2xl font-bold">
         <Link to="/">MilkPOP Calendar</Link>
       </div>
 
-      {/* 右端リンク群 */}
-      <div className="flex items-center gap-6 mr-4">
+      {/* PC表示ナビ */}
+      <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
         <Link to="/register">日程登録</Link>
         <Link to="/personal">個人スケジュール</Link>
+        <Link to="/share">共有ページ</Link>
 
         {user ? (
-          <div className="flex items-center gap-2">
+          <div className="user-info">
             <img
               src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
               alt="avatar"
-              className="w-8 h-8 rounded-full"
+              className="avatar"
             />
             <span>{user.username}</span>
-            <button
-              className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
-              onClick={handleLogout}
-            >
+            <button className="logout-btn" onClick={handleLogout}>
               ログアウト
             </button>
           </div>
         ) : (
-          <button
-            className="bg-[#5865F2] text-white px-3 py-1 rounded hover:bg-[#4752C4]"
-            onClick={handleLogin}
-          >
+          <button className="login-btn" onClick={handleLogin}>
             Discordでログイン
           </button>
         )}
+      </nav>
 
-        {/* ☰ ボタンも横並びに */}
-        <button
-          className="hamburger text-2xl"
-          aria-label="メニュー"
-        >
-          ☰
-        </button>
-      </div>
+      {/* ハンバーガーメニュー */}
+      <button
+        className={`hamburger ${menuOpen ? "active" : ""}`}
+        aria-label="メニュー"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
     </header>
   );
 };
