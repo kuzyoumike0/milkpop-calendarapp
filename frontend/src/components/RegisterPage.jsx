@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import "../index.css";
+import "react-calendar/dist/Calendar.css"; // react-calendar のデフォルトCSS
+import "../index.css"; // 自作CSS
 import Header from "./Header";
 import Footer from "./Footer";
 
@@ -39,7 +39,7 @@ const RegisterPage = () => {
       const res = await fetch("/api/share-links", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, scheduleIds: [] }), // スケジュールIDは後で追加
+        body: JSON.stringify({ title, scheduleIds: [] }), // TODO: scheduleIds を追加する場合はここに
       });
       const json = await res.json();
       if (json.success) {
@@ -58,30 +58,21 @@ const RegisterPage = () => {
           {/* カレンダー部分 */}
           <div className="calendar-section">
             <div className="calendar-header flex justify-between items-center mb-4">
-              <button
-                onClick={prevMonth}
-                className="month-btn"
-              >
-                ◀ 前の月
-              </button>
+              <button onClick={prevMonth} className="month-btn">◀ 前の月</button>
               <h2 className="text-lg font-bold text-[#004CA0]">
                 {currentDate.getFullYear()}年 {currentDate.getMonth() + 1}月
               </h2>
-              <button
-                onClick={nextMonth}
-                className="month-btn"
-              >
-                次の月 ▶
-              </button>
+              <button onClick={nextMonth} className="month-btn">次の月 ▶</button>
             </div>
+
             <Calendar
+              className="custom-calendar" // ✅ 自作CSSを効かせる
               value={currentDate}
               onClickDay={handleDateClick}
-              tileClassName={({ date }) =>
-                selectedDates.includes(date.toISOString().split("T")[0])
-                  ? "selected"
-                  : ""
-              }
+              tileClassName={({ date }) => {
+                const dateStr = date.toISOString().split("T")[0];
+                return selectedDates.includes(dateStr) ? "selected" : "";
+              }}
             />
           </div>
 
