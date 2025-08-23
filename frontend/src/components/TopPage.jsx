@@ -1,13 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Header from "./Header";
+import Footer from "./Footer";
 
 const TopPage = () => {
   return (
     <div className="bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen flex flex-col">
-      {/* ===== バナー ===== */}
-      <header className="bg-black text-white text-center py-4 shadow-lg z-10">
-        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
-      </header>
+      {/* ===== 共通ヘッダー ===== */}
+      <Header />
 
       {/* ===== コンテンツ ===== */}
       <main className="flex-grow flex flex-col items-center px-6">
@@ -42,6 +42,9 @@ const TopPage = () => {
           </div>
         </div>
       </main>
+
+      {/* ===== 共通フッター ===== */}
+      <Footer />
     </div>
   );
 };
