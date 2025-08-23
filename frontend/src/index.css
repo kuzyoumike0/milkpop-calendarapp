@@ -221,11 +221,12 @@ body {
 }
 .main-header .logo a {
   color: #fdfdfd;
-  text-decoration: none;
+  text-decoration: none;  /* 下線削除 */
   transition: color 0.3s;
 }
 .main-header .logo a:hover {
   color: #FDB9C8;
+  text-decoration: none;
 }
 .main-header .nav-links {
   display: flex;
@@ -237,10 +238,12 @@ body {
   padding: 6px 10px;
   border-radius: 8px;
   transition: background 0.3s, color 0.3s;
+  text-decoration: none;   /* 下線削除 */
 }
 .main-header .nav-links a:hover {
   background: rgba(255,255,255,0.08);
   color: #FDB9C8;
+  text-decoration: none;
 }
 .main-header .login-btn,
 .main-header .logout-btn {
@@ -279,13 +282,14 @@ body {
   font-size: 1.8rem;
   font-weight: bold;
   color: #fdfdfd;
-  text-decoration: none;
+  text-decoration: none; /* 下線削除 */
   transition: all 0.3s ease;
 }
 .logo-text:hover {
   color: #FDB9C8;
   text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
   transform: scale(1.05);
+  text-decoration: none;
 }
 
 /* ===== トップページロゴ画像（レスポンシブ対応） ===== */
@@ -404,10 +408,11 @@ body {
 .issued-url a {
   color: #004CA0;
   font-weight: bold;
-  text-decoration: underline;
+  text-decoration: none; /* 下線削除 */
 }
 .issued-url a:hover {
   color: #ff5fa2;
+  text-decoration: none;
 }
 
 /* ✖ 削除ボタン */
@@ -426,27 +431,6 @@ body {
   transform: scale(1.2);
 }
 
-/* === タイトル入力欄おしゃれスタイル === */
-.title-input {
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #333;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-}
-
-.title-input::placeholder {
-  color: #aaa;
-  font-style: italic;
-}
-
-.title-input:focus {
-  border-color: #004CA0;
-  box-shadow: 0 6px 18px rgba(0,76,160,0.25);
-  transform: scale(1.01);
-}
 /* === タイトル入力欄さらにお洒落に === */
 .title-input {
   border: 2px solid transparent;
@@ -458,8 +442,10 @@ body {
   box-shadow: 0 6px 16px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
 }
-
-
+.title-input::placeholder {
+  color: #bbb;
+  font-style: italic;
+}
 .title-input:focus {
   background: linear-gradient(#fff, #fff) padding-box,
               linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
