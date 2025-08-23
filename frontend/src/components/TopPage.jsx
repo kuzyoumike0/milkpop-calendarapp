@@ -6,7 +6,9 @@ import Footer from "./Footer";
 const TopPage = () => {
   return (
     <>
+      {/* ヘッダー呼び出し */}
       <Header />
+
       <main className="top-page">
         {/* ロゴ */}
         <img
@@ -21,16 +23,10 @@ const TopPage = () => {
           <p className="subtitle">
             予定を登録して、みんなと共有しましょう。
           </p>
-          <div className="nav-links">
-            <Link to="/register" className="save-btn">
-              日程登録ページへ
-            </Link>
-            <Link to="/personal" className="save-btn">
-              個人スケジュールへ
-            </Link>
-          </div>
         </div>
       </main>
+
+      {/* フッター呼び出し */}
       <Footer />
     </>
   );
