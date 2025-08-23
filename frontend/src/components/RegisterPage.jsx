@@ -1,13 +1,13 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "../index.css";
 import Header from "./Header";
 
+const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
+
 const RegisterPage = () => {
   const today = new Date();
-  const [currentDate, setCurrentDate] = useState(today);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("single");
   const [title, setTitle] = useState("");
@@ -27,7 +27,34 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
-  const handleDateChange = (date) => {
+  // 月の日付を生成する
+  const generateCalendarDays = (month) => {
+    const year = month.getFullYear();
+    const monthIndex = month.getMonth();
+    const firstDay = new Date(year, monthIndex, 1);
+    const lastDay = new Date(year, monthIndex + 1, 0);
+
+    const days = [];
+    const startDayOfWeek = firstDay.getDay();
+
+    // 前月の空白
+    for (let i = 0; i < startDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // 今月の日付
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      days.push(new Date(year, monthIndex, d));
+    }
+
+    return days;
+  };
+
+  const days = generateCalendarDays(currentMonth);
+
+  const handleDateClick = (date) => {
+    if (!date) return;
+
     if (selectionMode === "single") {
       setSelectedDates([date]);
     } else if (selectionMode === "multiple") {
@@ -35,7 +62,9 @@ const RegisterPage = () => {
         (d) => d.toDateString() === date.toDateString()
       );
       if (exists) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
+        setSelectedDates(
+          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+        );
       } else {
         setSelectedDates([...selectedDates, date]);
       }
@@ -56,6 +85,18 @@ const RegisterPage = () => {
         setSelectedDates([date]);
       }
     }
+  };
+
+  const prevMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+    );
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+    );
   };
 
   const saveSchedules = async () => {
@@ -87,60 +128,97 @@ const RegisterPage = () => {
   };
 
   return (
-    <div>
+    <div className="register-page">
       <Header />
-      <div className="flex flex-col md:flex-row p-6">
-        {/* 左：カレンダー */}
-        <div className="md:w-2/3 p-4 bg-white rounded-2xl shadow-lg">
-          <div className="flex space-x-4 mb-4">
-            <label>
+      <div className="register-layout">
+        {/* 左：自作カレンダー */}
+        <div className="calendar-section">
+          {/* 選択モード */}
+          <div className="radio-options mb-4">
+            <label className="radio-label">
               <input
                 type="radio"
                 name="mode"
                 value="single"
                 checked={selectionMode === "single"}
                 onChange={() => setSelectionMode("single")}
-              /> 単日
+              />
+              <span className="custom-radio"></span>単日
             </label>
-            <label>
+            <label className="radio-label">
               <input
                 type="radio"
                 name="mode"
                 value="multiple"
                 checked={selectionMode === "multiple"}
                 onChange={() => setSelectionMode("multiple")}
-              /> 複数
+              />
+              <span className="custom-radio"></span>複数
             </label>
-            <label>
+            <label className="radio-label">
               <input
                 type="radio"
                 name="mode"
                 value="range"
                 checked={selectionMode === "range"}
                 onChange={() => setSelectionMode("range")}
-              /> 範囲
+              />
+              <span className="custom-radio"></span>範囲
             </label>
           </div>
 
-          <Calendar
-            onClickDay={handleDateChange}
-            value={currentDate}
-            tileClassName={({ date }) =>
-              isHoliday(date)
-                ? "bg-red-200 rounded-xl"
-                : ""
-            }
-          />
+          {/* 月切り替え */}
+          <div className="flex justify-between items-center mb-2">
+            <button onClick={prevMonth} className="month-btn">
+              ◀
+            </button>
+            <span className="font-bold text-lg">
+              {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
+            </span>
+            <button onClick={nextMonth} className="month-btn">
+              ▶
+            </button>
+          </div>
+
+          {/* 自作カレンダー */}
+          <div className="custom-calendar">
+            {daysOfWeek.map((day, i) => (
+              <div key={i} className="calendar-day-header">
+                {day}
+              </div>
+            ))}
+            {days.map((date, i) => {
+              const isToday =
+                date && date.toDateString() === today.toDateString();
+              const isSelected =
+                date &&
+                selectedDates.some(
+                  (d) => d.toDateString() === date.toDateString()
+                );
+              const isHolidayDay = date && isHoliday(date);
+
+              return (
+                <div
+                  key={i}
+                  className={`calendar-cell 
+                    ${isToday ? "today" : ""} 
+                    ${isSelected ? "selected" : ""} 
+                    ${isHolidayDay ? "holiday" : ""}`}
+                  onClick={() => handleDateClick(date)}
+                >
+                  {date ? date.getDate() : ""}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* 右：選択リスト */}
-        <div className="md:w-1/3 p-4 ml-6 bg-white rounded-2xl shadow-lg">
-          <h2 className="text-lg font-bold mb-2">選択中の日程</h2>
-          <ul className="mb-4">
+        <div className="schedule-section">
+          <h2>選択中の日程</h2>
+          <ul>
             {selectedDates.map((d, i) => (
-              <li key={i} className="mb-1">
-                {d.toLocaleDateString("ja-JP")}
-              </li>
+              <li key={i}>{d.toLocaleDateString("ja-JP")}</li>
             ))}
           </ul>
 
@@ -149,13 +227,13 @@ const RegisterPage = () => {
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full border rounded p-2 mb-3"
+            className="input-field mb-3"
           />
 
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="w-full border rounded p-2 mb-3"
+            className="vote-select mb-3"
           >
             <option value="終日">終日</option>
             <option value="午前">午前</option>
@@ -164,22 +242,13 @@ const RegisterPage = () => {
             <option value="時刻指定">時刻指定</option>
           </select>
 
-          <button
-            onClick={saveSchedules}
-            className="w-full bg-pink-400 text-white font-bold py-2 px-4 rounded-xl hover:bg-pink-500"
-          >
+          <button onClick={saveSchedules} className="save-btn">
             共有リンク発行
           </button>
 
           {shareUrl && (
-            <div className="mt-4">
-              <p className="text-sm">共有リンク:</p>
-              <a
-                href={shareUrl}
-                className="text-blue-600 underline break-all"
-              >
-                {shareUrl}
-              </a>
+            <div className="issued-url">
+              <a href={shareUrl}>{shareUrl}</a>
             </div>
           )}
         </div>
