@@ -1,4 +1,4 @@
-// ✅ OK: index.js で BrowserRouter を使っているので、ここでは Routes だけ
+// frontend/src/App.jsx
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
