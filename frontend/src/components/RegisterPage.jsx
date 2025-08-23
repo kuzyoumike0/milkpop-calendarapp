@@ -9,14 +9,26 @@ const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("range"); // range or multiple
   const [timeType, setTimeType] = useState("allDay");
 
-  const handleSave = () => {
-    console.log({
-      title,
-      date,
-      selectionMode,
-      timeType,
-    });
-    alert("登録しました！");
+  const handleSave = async () => {
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          date,
+          selectionMode,
+          timeType,
+        }),
+      });
+
+      if (!res.ok) throw new Error("保存に失敗しました");
+      alert("登録しました！");
+      setTitle("");
+    } catch (err) {
+      console.error(err);
+      alert("エラーが発生しました");
+    }
   };
 
   return (
@@ -76,7 +88,6 @@ const RegisterPage = () => {
             onChange={setDate}
             value={date}
             selectRange={selectionMode === "range"}
-            // react-calendar の複数選択対応はカスタム必要（今回は簡易版）
           />
         </div>
 
