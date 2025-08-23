@@ -115,19 +115,35 @@ const SharePage = () => {
                 📎 {linkInfo.title}
               </h2>
 
-              {/* 名前入力 */}
-              <div className="mb-6">
-                <label className="block mb-2 text-[#004CA0] font-semibold">
-                  あなたの名前
-                </label>
-                <input
-                  type="text"
-                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
-                  placeholder="名前を入力してください（未入力なら匿名）"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
+              {/* 名前入力 / Discordログイン */}
+              {!username ? (
+                <div className="mb-6">
+                  <label className="block mb-2 text-[#004CA0] font-semibold">
+                    あなたの名前
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      className="flex-1 border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+                      placeholder="名前を入力してください（未入力なら匿名）"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <button
+                      onClick={() =>
+                        window.open("/auth/login", "discordLogin", "width=500,height=600")
+                      }
+                      className="bg-[#5865F2] text-white px-4 py-2 rounded-lg shadow hover:scale-105 transition"
+                    >
+                      Discordでログイン
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mb-6 text-[#004CA0] font-semibold">
+                  👤 ログイン中: {username}
+                </p>
+              )}
 
               {/* 日程リスト */}
               <ul className="space-y-6">
@@ -140,7 +156,9 @@ const SharePage = () => {
                       <div className="flex justify-between items-center mb-4 w-full">
                         <div>
                           <p className="schedule-title">{s.title}</p>
-                          <p className="date-tag">{new Date(s.date).toLocaleDateString()}</p>
+                          <p className="date-tag">
+                            {new Date(s.date).toLocaleDateString()}
+                          </p>
                         </div>
                         <select
                           className="vote-select"
