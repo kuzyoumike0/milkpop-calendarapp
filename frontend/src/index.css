@@ -206,3 +206,63 @@ main {
   color: red;
   transform: scale(1.2);
 }
+
+/* ===== 自作カレンダー ===== */
+.custom-calendar {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 20px;
+}
+
+/* 曜日ヘッダー */
+.calendar-day-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  color: #004CA0;
+  border-bottom: 2px solid #FDB9C8;
+  background: #fffafc;
+  border-radius: 10px;
+}
+
+/* 各日付セル */
+.calendar-cell {
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: #fff;
+  transition: 0.2s;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.calendar-cell:hover {
+  background: #fde4ec;
+}
+
+/* 今日の日付 */
+.calendar-cell.today {
+  background: #ffebf2;
+  border: 2px solid #ff5fa2;
+  font-weight: bold;
+  color: #ff5fa2;
+}
+
+/* 選択済みの日付 */
+.calendar-cell.selected {
+  background: #004CA0;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+}
+
+/* 空白セル */
+.calendar-cell.empty {
+  background: transparent;
+  box-shadow: none;
+}
