@@ -1,6 +1,6 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
-import "../index.css";  // ✅ CSSだけ読み込む
+import "../index.css";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -45,7 +45,7 @@ const RegisterPage = () => {
 
   const days = generateCalendarDays(currentMonth);
 
-  // ✅ 範囲選択（クリックだけ）
+  // ✅ 範囲選択（クリックのみ）
   const handleDateClick = (date) => {
     if (!date) return;
     if (selectedDates.length === 0) {
@@ -61,7 +61,7 @@ const RegisterPage = () => {
       }
       setSelectedDates(range);
     } else {
-      setSelectedDates([date]); // 新規開始
+      setSelectedDates([date]);
     }
   };
 
@@ -108,6 +108,7 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
+          {/* タイトルをカレンダー左上に配置 */}
           <div className="mb-3">
             <input
               type="text"
@@ -118,6 +119,7 @@ const RegisterPage = () => {
             />
           </div>
 
+          {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="month-btn">◀</button>
             <span className="font-bold text-lg">
@@ -126,6 +128,7 @@ const RegisterPage = () => {
             <button onClick={nextMonth} className="month-btn">▶</button>
           </div>
 
+          {/* 自作カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
               <div key={i} className="calendar-day-header">{day}</div>
@@ -153,7 +156,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右：リスト */}
+        {/* 右：選択リスト */}
         <div className="schedule-section">
           <h2>選択中の日程</h2>
           <ul>
