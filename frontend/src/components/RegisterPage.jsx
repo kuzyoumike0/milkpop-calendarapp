@@ -1,8 +1,6 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import "../index.css";
-import Header from "./Header";
-import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -31,7 +29,7 @@ const RegisterPage = () => {
     let days = [];
 
     for (let i = 0; i < firstDay; i++) {
-      days.push(<td key={`empty-${i}`}></td>);
+      days.push(<div key={`empty-${i}`} className="p-4"></div>);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -41,19 +39,25 @@ const RegisterPage = () => {
       const isSelected = selectedDates.includes(dateString);
 
       days.push(
-        <td
+        <div
           key={day}
-          className={`p-2 text-center cursor-pointer rounded-lg ${
-            isSelected ? "bg-pink-300 text-white" : "hover:bg-pink-100"
-          }`}
           onClick={() => handleDateClick(day)}
+          className={`p-4 text-center rounded-2xl cursor-pointer transition ${
+            isSelected
+              ? "bg-[#FDB9C8] text-white shadow-lg scale-105"
+              : "hover:bg-pink-100 hover:scale-105"
+          }`}
         >
           {day}
-        </td>
+        </div>
       );
 
       if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
-        weeks.push(<tr key={`week-${day}`}>{days}</tr>);
+        weeks.push(
+          <div key={`week-${day}`} className="grid grid-cols-7 gap-2">
+            {days}
+          </div>
+        );
         days = [];
       }
     }
@@ -61,74 +65,72 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold text-center mb-6">日程登録ページ</h2>
+    <main className="flex-grow container mx-auto px-4 py-10">
+      <h2 className="text-3xl font-bold text-center mb-8 text-[#004CA0]">
+        日程登録ページ
+      </h2>
 
-        {/* カレンダー */}
-        <div className="overflow-x-auto mb-6">
-          <div className="flex justify-between mb-2">
-            <button
-              onClick={() => {
-                if (currentMonth === 0) {
-                  setCurrentMonth(11);
-                  setCurrentYear(currentYear - 1);
-                } else {
-                  setCurrentMonth(currentMonth - 1);
-                }
-              }}
-              className="px-3 py-1 bg-pink-300 text-white rounded-lg"
-            >
-              ＜
-            </button>
-            <span className="text-lg font-semibold">
-              {currentYear}年 {currentMonth + 1}月
-            </span>
-            <button
-              onClick={() => {
-                if (currentMonth === 11) {
-                  setCurrentMonth(0);
-                  setCurrentYear(currentYear + 1);
-                } else {
-                  setCurrentMonth(currentMonth + 1);
-                }
-              }}
-              className="px-3 py-1 bg-pink-300 text-white rounded-lg"
-            >
-              ＞
-            </button>
-          </div>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                {daysOfWeek.map((day) => (
-                  <th key={day} className="p-2 border">
-                    {day}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>{renderCalendar()}</tbody>
-          </table>
+      {/* カレンダー */}
+      <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => {
+              if (currentMonth === 0) {
+                setCurrentMonth(11);
+                setCurrentYear(currentYear - 1);
+              } else {
+                setCurrentMonth(currentMonth - 1);
+              }
+            }}
+            className="px-4 py-2 bg-[#FDB9C8] text-white rounded-xl shadow hover:bg-pink-400 transition"
+          >
+            ＜
+          </button>
+          <span className="text-xl font-semibold">
+            {currentYear}年 {currentMonth + 1}月
+          </span>
+          <button
+            onClick={() => {
+              if (currentMonth === 11) {
+                setCurrentMonth(0);
+                setCurrentYear(currentYear + 1);
+              } else {
+                setCurrentMonth(currentMonth + 1);
+              }
+            }}
+            className="px-4 py-2 bg-[#FDB9C8] text-white rounded-xl shadow hover:bg-pink-400 transition"
+          >
+            ＞
+          </button>
         </div>
 
-        {/* 選択した日程 */}
-        <div>
-          <h3 className="text-lg font-bold mb-2">選択した日程:</h3>
-          {selectedDates.length > 0 ? (
-            <ul className="list-disc pl-6">
-              {selectedDates.map((date) => (
-                <li key={date}>{date}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">まだ日程が選択されていません</p>
-          )}
+        {/* 曜日ヘッダー */}
+        <div className="grid grid-cols-7 gap-2 font-semibold text-gray-700 mb-2">
+          {daysOfWeek.map((day) => (
+            <div key={day} className="text-center">
+              {day}
+            </div>
+          ))}
         </div>
-      </main>
-      <Footer />
-    </div>
+
+        {/* カレンダー本体 */}
+        <div className="space-y-2">{renderCalendar()}</div>
+      </div>
+
+      {/* 選択した日程リスト */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="text-lg font-bold mb-3">選択した日程:</h3>
+        {selectedDates.length > 0 ? (
+          <ul className="list-disc pl-6 space-y-1">
+            {selectedDates.map((date) => (
+              <li key={date}>{date}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">まだ日程が選択されていません</p>
+        )}
+      </div>
+    </main>
   );
 };
 
