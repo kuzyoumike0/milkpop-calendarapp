@@ -134,3 +134,4 @@ const RegisterPage = () => {
           <div className="calendar-nav">
             <button onClick={prevMonth}>← 前の月</button>
             <button onClick={nextMonth}>次の月 →</button>
+          </div>
