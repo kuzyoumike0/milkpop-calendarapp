@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const path = require("path");
 const { Pool } = require("pg");
 
 const app = express();
@@ -59,6 +60,11 @@ const initVotesDB = async () => {
   `);
 };
 initVotesDB();
+
+// ====== ルート確認用 ======
+app.get("/", (req, res) => {
+  res.send("✅ MilkPOP Calendar API が稼働中です");
+});
 
 // ====== スケジュール保存 ======
 app.post("/api/schedules", async (req, res) => {
@@ -145,6 +151,12 @@ app.get("/api/votes/:scheduleId", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "DB fetch error" });
   }
+});
+
+// ====== React ビルドファイルを配信（Railwayで同居させる場合） ======
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 // ====== サーバー起動 ======
