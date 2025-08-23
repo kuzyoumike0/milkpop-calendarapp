@@ -7,11 +7,12 @@ WORKDIR /app
 
 # フロントエンド依存関係をインストール
 COPY frontend/package.json ./frontend/
-RUN cd frontend && npm install
+WORKDIR /app/frontend
+RUN npm install
 
 # フロントエンドのソースをコピーしてビルド
 COPY frontend ./frontend
-RUN cd frontend && npm run build
+RUN npm run build
 
 # ==============================
 # 2. 本番ステージ（バックエンド + フロント配信）
@@ -22,7 +23,8 @@ WORKDIR /app
 
 # バックエンド依存関係をインストール
 COPY backend/package.json ./backend/
-RUN cd backend && npm install --only=production
+WORKDIR /app/backend
+RUN npm install --only=production
 
 # バックエンドのソースをコピー
 COPY backend ./backend
@@ -34,8 +36,7 @@ COPY --from=build-frontend /app/frontend/build ./frontend/build
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# ポート公開
 EXPOSE 5000
 
-# バックエンド起動（Reactビルドを配信）
+# バックエンド起動
 CMD ["node", "backend/index.js"]
