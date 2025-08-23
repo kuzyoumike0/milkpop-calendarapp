@@ -1,34 +1,34 @@
 import React from "react";
-import Header from "./Header"; // 共通ヘッダー
-import "../index.css";
+import { Link } from "react-router-dom";  // ← これが必要！
 
 const TopPage = () => {
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* ===== ヘッダー ===== */}
-      <Header />
+    <div className="p-6 bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen">
+      <header className="bg-black text-white text-center py-4 mb-6 rounded-xl shadow-lg">
+        <h1 className="text-3xl font-bold">MilkPOP Calendar</h1>
+      </header>
 
-      {/* ===== メインコンテンツ ===== */}
-      <main className="flex flex-col items-center justify-center flex-1 text-center px-6 mt-28">
-       <div className="logo">
-  <Link to="/">
-    <img src="/logo.png" alt="MilkPOP Calendar" />
-  </Link>
-</div>
-        />
-
-        {/* 説明文 */}
-        <p className="text-lg text-gray-300 max-w-3xl leading-relaxed mx-auto">
-          MilkPOP Calendar は、複数人での日程調整や個人スケジュールの管理を
-          シンプルでわかりやすいUIでサポートするカレンダーサービスです。<br />
-          Discordアカウントでログインして、すぐに利用を開始できます。
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
+        <h2 className="text-2xl font-semibold text-[#004CA0]">ようこそ！</h2>
+        <p className="text-gray-600">
+          ここから日程登録ページや個人スケジュールページに移動できます。
         </p>
-      </main>
 
-      {/* ===== フッター ===== */}
-      <footer className="text-center text-gray-500 p-4">
-        <p>© 2025 MilkPOP Calendar</p>
-      </footer>
+        <div className="flex justify-center gap-6">
+          <Link
+            to="/register"
+            className="bg-[#004CA0] text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-[#FDB9C8] hover:text-black transition"
+          >
+            日程登録ページへ
+          </Link>
+          <Link
+            to="/personal"
+            className="bg-[#FDB9C8] text-black px-6 py-3 rounded-xl font-bold shadow hover:bg-[#004CA0] hover:text-white transition"
+          >
+            個人スケジュールページへ
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
