@@ -365,11 +365,11 @@ footer .sns-links {
 footer .sns-links a {
   display: inline-block;
   margin: 0 8px;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   color: #1DA1F2; /* Twitterブルー */
   transition: all 0.3s ease;
 }
 footer .sns-links a:hover {
   color: #FDB9C8; /* ホバー時ピンク */
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
