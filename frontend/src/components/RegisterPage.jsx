@@ -1,343 +1,177 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import "../index.css";
 import Header from "./Header";
 import Footer from "./Footer";
 
-const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-const timeOptions = Array.from({ length: 24 }, (_, i) => `${i + 1}:00`);
+const SharePage = () => {
+  const { shareId } = useParams(); // = share_token
+  const [linkInfo, setLinkInfo] = useState(null);
+  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const [votes, setVotes] = useState({});
+  const [voteResults, setVoteResults] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const RegisterPage = () => {
-  const today = new Date();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [dateOptions, setDateOptions] = useState({});
-  const [title, setTitle] = useState("");
-  const [issuedUrl, setIssuedUrl] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple");
-  const [rangeStart, setRangeStart] = useState(null);
-
-  // === 月の情報 ===
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  // === 日付クリック ===
-  const handleDateClick = (day) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-
-    if (selectionMode === "multiple") {
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-        const updated = { ...dateOptions };
-        delete updated[dateStr];
-        setDateOptions(updated);
-      } else {
-        setSelectedDates([...selectedDates, dateStr]);
-        setDateOptions({
-          ...dateOptions,
-          [dateStr]: { type: "終日", start: "9:00", end: "18:00" },
-        });
-      }
-    } else if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(dateStr);
-        setSelectedDates([dateStr]);
-        setDateOptions({
-          [dateStr]: { type: "終日", start: "9:00", end: "18:00" },
-        });
-      } else {
-        let start = new Date(rangeStart);
-        let end = new Date(dateStr);
-        if (start > end) [start, end] = [end, start];
-
-        const range = [];
-        const options = { ...dateOptions };
-        const cursor = new Date(start);
-        while (cursor <= end) {
-          const d = `${cursor.getFullYear()}-${String(
-            cursor.getMonth() + 1
-          ).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-          range.push(d);
-          if (!options[d]) {
-            options[d] = { type: "終日", start: "9:00", end: "18:00" };
-          }
-          cursor.setDate(cursor.getDate() + 1);
-        }
-        setSelectedDates(range);
-        setDateOptions(options);
-        setRangeStart(null);
-      }
-    }
-  };
-
-  // === 区分変更 ===
-  const handleOptionChange = (dateStr, value) => {
-    setDateOptions({
-      ...dateOptions,
-      [dateStr]: { ...dateOptions[dateStr], type: value },
-    });
-  };
-
-  // === 時刻変更 ===
-  const handleTimeChange = (dateStr, field, value) => {
-    const updated = { ...dateOptions[dateStr], [field]: value };
-
-    if (
-      field === "start" &&
-      timeOptions.indexOf(value) >= timeOptions.indexOf(updated.end)
-    ) {
-      updated.end = timeOptions[timeOptions.indexOf(value) + 1] || "24:00";
-    }
-    if (
-      field === "end" &&
-      timeOptions.indexOf(value) <= timeOptions.indexOf(updated.start)
-    ) {
-      updated.start = timeOptions[timeOptions.indexOf(value) - 1] || "1:00";
-    }
-
-    setDateOptions({ ...dateOptions, [dateStr]: updated });
-  };
-
-  // === 選択から削除 ===
-  const handleDeleteDate = (dateStr) => {
-    setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-    const updated = { ...dateOptions };
-    delete updated[dateStr];
-    setDateOptions(updated);
-  };
-
-  // === DB保存 + 共有リンク発行 ===
-  const handleSaveAndShare = async () => {
+  // ===== 共有スケジュール取得 =====
+  const fetchLinkInfo = async () => {
     try {
-      // 1回のPOSTでまとめて保存
-      const res = await fetch("/api/schedules", {
+      const res = await fetch(`/share/${shareId}`);
+      const json = await res.json();
+      if (!json.error) {
+        setLinkInfo(json);
+        // 投票結果を取得
+        fetchVoteResults(json.id);
+      }
+    } catch (err) {
+      console.error("共有取得エラー:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== 投票結果取得 =====
+  const fetchVoteResults = async (scheduleId) => {
+    try {
+      const res = await fetch(`/api/schedule_responses/${scheduleId}`);
+      const json = await res.json();
+      if (json.success) {
+        setVoteResults(json.data); // [{ username, responses }, ...]
+      }
+    } catch (err) {
+      console.error("投票結果取得エラー:", err);
+    }
+  };
+
+  // ===== 投票選択 =====
+  const handleVoteChange = (dateStr, choice) => {
+    setVotes((prev) => ({ ...prev, [dateStr]: choice }));
+  };
+
+  // ===== 投票保存 =====
+  const handleSaveVotes = async () => {
+    try {
+      localStorage.setItem("username", username || "匿名");
+      const res = await fetch("/api/schedule_responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
-          dates: selectedDates,
-          options: dateOptions,
+          scheduleId: linkInfo.id,
+          username: username || "匿名",
+          responses: votes,
         }),
       });
-
       const json = await res.json();
-      console.log("保存結果:", json);
-
       if (json.error) {
         alert("❌ 保存に失敗しました: " + json.error);
-        return;
+      } else {
+        alert("✅ 投票を保存しました！");
+        fetchVoteResults(linkInfo.id); // 最新結果を再取得
       }
-
-      // 共有リンクを発行
-      const res2 = await fetch("/api/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scheduleId: json.id }),
-      });
-
-      const json2 = await res2.json();
-      console.log("共有結果:", json2);
-
-      if (json2.error) {
-        alert("❌ 共有に失敗しました: " + json2.error);
-        return;
-      }
-
-      // 🔹 相対パスで保持
-      setIssuedUrl(json2.url);
-
-      setSelectedDates([]);
-      setDateOptions({});
-      alert("✅ スケジュールを保存して共有リンクを発行しました！");
     } catch (err) {
       console.error(err);
-      alert("❌ 保存/共有に失敗しました");
+      alert("❌ 保存に失敗しました");
     }
   };
 
-  // === カレンダーセル ===
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) {
-    cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-    const isToday =
-      today.getFullYear() === year &&
-      today.getMonth() === month &&
-      today.getDate() === day;
-    const isSelected = selectedDates.includes(dateStr);
+  // ===== 集計処理 =====
+  const countVotes = (dateStr) => {
+    const counts = { "〇": 0, "△": 0, "✖": 0 };
+    voteResults.forEach((v) => {
+      const choice = v.responses[dateStr];
+      if (counts[choice] !== undefined) counts[choice]++;
+    });
+    return counts;
+  };
 
-    cells.push(
-      <div
-        key={day}
-        className={`calendar-cell ${isToday ? "today" : ""} ${
-          isSelected ? "selected" : ""
-        }`}
-        onClick={() => handleDateClick(day)}
-      >
-        {day}
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchLinkInfo();
+  }, [shareId]);
 
   return (
     <>
       <Header />
-      <main className="register-page">
-        <div className="register-layout">
-          {/* カレンダー */}
-          <div className="calendar-section">
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                📌 タイトル
-              </label>
-              <input
-                type="text"
-                placeholder="タイトルを入力してください"
-                className="input-field"
-                value={title}
-                onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
-              />
-            </div>
+      <main className="share-page">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+          {loading ? (
+            <p className="text-center text-gray-600">読み込み中...</p>
+          ) : !linkInfo ? (
+            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
+          ) : (
+            <>
+              {/* タイトル */}
+              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-6">
+                📎 {linkInfo.title}
+              </h2>
 
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                🔽 選択モード
-              </label>
-              <div className="radio-options">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    value="multiple"
-                    checked={selectionMode === "multiple"}
-                    onChange={(e) => setSelectionMode(e.target.value)}
-                  />
-                  <span className="custom-radio"></span>
-                  複数選択
+              {/* 名前入力 */}
+              <div className="mb-6">
+                <label className="block mb-2 text-[#004CA0] font-semibold">
+                  あなたの名前
                 </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    value="range"
-                    checked={selectionMode === "range"}
-                    onChange={(e) => setSelectionMode(e.target.value)}
-                  />
-                  <span className="custom-radio"></span>
-                  範囲選択
-                </label>
+                <input
+                  type="text"
+                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+                  placeholder="名前を入力してください（未入力なら匿名）"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
               </div>
-            </div>
 
-            <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
-              {year}年 {month + 1}月
-            </h2>
+              {/* 日程リスト */}
+              <ul className="space-y-6">
+                {linkInfo?.dates?.map((d) => {
+                  const counts = countVotes(d);
 
-            <div className="flex justify-between items-center mb-4">
-              <button onClick={prevMonth} className="month-btn">
-                ◀ 前の月
+                  return (
+                    <li key={d} className="card">
+                      <div className="flex justify-between items-center mb-4 w-full">
+                        <div>
+                          <p className="schedule-title">{d}</p>
+                          <p className="date-tag">{linkInfo.options?.[d]?.type || "終日"}</p>
+                        </div>
+                        <select
+                          className="vote-select"
+                          value={votes[d] || ""}
+                          onChange={(e) => handleVoteChange(d, e.target.value)}
+                        >
+                          <option value="">選択してください</option>
+                          <option value="〇">〇</option>
+                          <option value="△">△</option>
+                          <option value="✖">✖</option>
+                        </select>
+                      </div>
+
+                      {/* 投票結果一覧 */}
+                      <div className="vote-results">
+                        {voteResults.length > 0 ? (
+                          <ul className="text-sm space-y-1">
+                            {voteResults.map((v, idx) =>
+                              v.responses[d] ? (
+                                <li key={idx} className="flex justify-between">
+                                  <span>{v.username}</span>
+                                  <span>{v.responses[d]}</span>
+                                </li>
+                              ) : null
+                            )}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-500">まだ投票がありません</p>
+                        )}
+                        <div className="mt-2 text-sm font-semibold">
+                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* 保存ボタン */}
+              <button onClick={handleSaveVotes} className="vote-save-btn mt-6">
+                💾 投票を保存する
               </button>
-              <button onClick={nextMonth} className="month-btn">
-                次の月 ▶
-              </button>
-            </div>
-
-            <div className="custom-calendar">
-              {daysOfWeek.map((d, idx) => (
-                <div key={idx} className="calendar-day-header">
-                  {d}
-                </div>
-              ))}
-              {cells}
-            </div>
-          </div>
-
-          {/* 選択日程 */}
-          <div className="schedule-section">
-            <h2>選択した日程</h2>
-            <ul>
-              {selectedDates.map((d, idx) => (
-                <li key={idx} className="schedule-card flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="schedule-title">{d}</span>
-                    <select
-                      className="vote-select"
-                      value={dateOptions[d]?.type || "終日"}
-                      onChange={(e) => handleOptionChange(d, e.target.value)}
-                    >
-                      <option value="終日">終日</option>
-                      <option value="午前">午前</option>
-                      <option value="午後">午後</option>
-                      <option value="時刻指定">時刻指定</option>
-                    </select>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDeleteDate(d)}
-                    >
-                      ✖
-                    </button>
-                  </div>
-
-                  {dateOptions[d]?.type === "時刻指定" && (
-                    <div className="flex gap-2 items-center">
-                      <select
-                        className="vote-select"
-                        value={dateOptions[d]?.start || "9:00"}
-                        onChange={(e) =>
-                          handleTimeChange(d, "start", e.target.value)
-                        }
-                      >
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                      <span>〜</span>
-                      <select
-                        className="vote-select"
-                        value={dateOptions[d]?.end || "18:00"}
-                        onChange={(e) =>
-                          handleTimeChange(d, "end", e.target.value)
-                        }
-                      >
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-
-            <button onClick={handleSaveAndShare} className="save-btn mt-6">
-              💾 保存して共有リンクを発行
-            </button>
-
-            {issuedUrl && (
-              <div className="issued-url mt-4">
-                <p>✅ 発行されたURL:</p>
-                <Link
-                  to={issuedUrl}
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  {window.location.origin}{issuedUrl}
-                </Link>
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </main>
       <Footer />
@@ -345,4 +179,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default SharePage;
