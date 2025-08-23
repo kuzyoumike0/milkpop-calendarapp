@@ -5,7 +5,7 @@ import "../index.css";
 const TopPage = () => {
   return (
     <main className="flex-grow flex flex-col items-center justify-center text-center px-4 py-12">
-      {/* ロゴ画像カード（中央ぞろえ・カード風・ホバー付き） */}
+      {/* ロゴ画像カード */}
       <div className="card hover:scale-105 transition-transform w-full max-w-4xl flex justify-center mb-10">
         <div className="relative w-full flex justify-center">
           <img
@@ -20,10 +20,10 @@ const TopPage = () => {
         </div>
       </div>
 
-      {/* 本文メッセージ（中央ぞろえ） */}
-      <p className="text-lg text-gray-700 max-w-2xl">
+      {/* 本文カード */}
+      <div className="top-message-card">
         あなたの予定を簡単に登録・共有できるカレンダーサービスです。
-      </p>
+      </div>
     </main>
   );
 };
