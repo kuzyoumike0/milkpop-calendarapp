@@ -153,7 +153,16 @@ select:focus {
   margin-bottom: 0.25rem;
 }
 
-/* ===== レスポンシブ ===== */
+/* ===== ヘッダー・ナビゲーション ===== */
+header {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+}
+
+header a {
+  text-decoration: none;
+}
+
+/* ===== レスポンシブ対応 ===== */
 @media (max-width: 768px) {
   body {
     font-size: 0.9rem;
