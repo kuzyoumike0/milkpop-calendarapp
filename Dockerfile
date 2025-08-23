@@ -3,15 +3,17 @@
 # ==============================
 FROM node:18 AS build-frontend
 
-WORKDIR /app
-
-# フロントエンド依存関係をインストール
-COPY frontend/package.json ./frontend/
 WORKDIR /app/frontend
+
+# 依存関係をインストール
+COPY frontend/package.json ./
+COPY frontend/package-lock.json ./  # あれば
 RUN npm install
 
-# フロントエンドのソースをコピーしてビルド
-COPY frontend ./frontend
+# ソース一式をコピー（craco.config.js も含む）
+COPY frontend ./
+
+# React ビルド
 RUN npm run build
 
 # ==============================
@@ -29,14 +31,15 @@ RUN npm install --only=production
 # バックエンドのソースをコピー
 COPY backend ./backend
 
-# フロントのビルド済みファイルをコピー
+# フロントエンドのビルド成果物をコピー
 COPY --from=build-frontend /app/frontend/build ./frontend/build
 
 # 環境変数
 ENV NODE_ENV=production
 ENV PORT=5000
 
+# ポート公開
 EXPOSE 5000
 
-# バックエンド起動
+# サーバ起動
 CMD ["node", "backend/index.js"]
