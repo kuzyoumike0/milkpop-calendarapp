@@ -31,8 +31,7 @@ const Header = () => {
           >
             共有リンク
           </Link>
-
-          {/* Discordログインボタン */}
+          {/* Discordログイン */}
           <a
             href="https://discord.com/api/oauth2/authorize?client_id=123456789012345678&redirect_uri=https%3A%2F%2Fmilkpop-calendar.up.railway.app%2Fcallback&response_type=code&scope=identify"
             className="px-5 py-2 bg-[#5865F2] text-white font-semibold rounded-full shadow-md hover:bg-[#4752C4] hover:scale-105 transition"
