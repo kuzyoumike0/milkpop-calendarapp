@@ -149,7 +149,7 @@ const RegisterPage = () => {
         {/* 左：タイトル＋カレンダー */}
         <div className="calendar-section">
           {/* タイトル */}
-          <div className="mb-4">
+          <div className="mb-2">
             <input
               type="text"
               placeholder="タイトルを入力"
@@ -159,8 +159,8 @@ const RegisterPage = () => {
             />
           </div>
 
-          {/* ✅ ラジオボタン（タイトルの下） */}
-          <div className="radio-options mb-4">
+          {/* ✅ ラジオボタン（左揃え） */}
+          <div className="radio-options-left mb-4">
             <label className="radio-label">
               <input
                 type="radio"
@@ -184,9 +184,9 @@ const RegisterPage = () => {
           </div>
 
           {/* 月切り替え */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center justify-between mb-6">
             <button onClick={prevMonth} className="nav-btn">⇦</button>
-            <span className="font-bold text-lg">
+            <span className="calendar-title">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </span>
             <button onClick={nextMonth} className="nav-btn">⇨</button>
