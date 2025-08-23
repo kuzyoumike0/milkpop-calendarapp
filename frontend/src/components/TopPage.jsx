@@ -1,5 +1,5 @@
 import React from "react";
-import Header from "./Header";  // 共通ヘッダー
+import Header from "./Header"; // 共通ヘッダー
 import "../index.css";
 
 const TopPage = () => {
@@ -10,7 +10,7 @@ const TopPage = () => {
 
       {/* ===== メインコンテンツ ===== */}
       <main className="flex flex-col items-center justify-center flex-1 text-center p-6">
-        {/* ロゴ画像 */}
+        {/* ロゴ画像（レスポンシブ対応 最大幅1040px） */}
         <img
           src="/logo.png"
           alt="MilkPOP Calendar"
