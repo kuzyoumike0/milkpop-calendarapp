@@ -1,8 +1,3 @@
--- ===== 古い日本語テーブルを削除 =====
-DROP TABLE IF EXISTS "スケジュール" CASCADE;
-DROP TABLE IF EXISTS "日付" CASCADE;
-DROP TABLE IF EXISTS "schedule" CASCADE;
-
 -- ===== schedules: 共有スケジュール =====
 CREATE TABLE IF NOT EXISTS schedules (
     id UUID PRIMARY KEY,
