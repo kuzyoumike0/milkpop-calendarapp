@@ -19,7 +19,7 @@ h1, h2, h3 {
   color: #004CA0;
 }
 
-/* ===== リンク ===== */
+/* ===== リンク共通 ===== */
 a {
   text-decoration: none;
   transition: all 0.2s ease;
@@ -186,9 +186,11 @@ select:focus {
 /* ===== ヘッダー・ナビゲーション ===== */
 header {
   font-family: 'M PLUS Rounded 1c', sans-serif;
+  background: black;              /* ← ヘッダー背景を黒固定 */
+  padding: 10px 20px;
 }
 header a {
-  color: #FDB9C8;
+  color: #FDB9C8;                /* ← ボタン文字はピンク */
   font-weight: 600;
   text-decoration: none;
   margin: 0 8px;
@@ -201,9 +203,10 @@ header a:hover {
 footer {
   font-family: 'M PLUS Rounded 1c', sans-serif;
   text-align: center;
-  padding: 10px;
+  padding: 12px;
   background: black;
   color: white;
+  font-size: 0.9rem;
 }
 
 /* ===== Discordログインボタン専用 ===== */
@@ -222,12 +225,23 @@ footer {
 }
 
 /* ===== レスポンシブ対応 ===== */
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 2rem;
+  }
+  .calendar-cell {
+    padding: 0.6rem;
+  }
+  .radio-group {
+    flex-wrap: wrap;
+  }
+}
 @media (max-width: 768px) {
   body {
     font-size: 0.9rem;
   }
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   .calendar-cell {
     padding: 0.5rem;
