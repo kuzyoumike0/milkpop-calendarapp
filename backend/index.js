@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
 import path from "path";
 import { fileURLToPath } from "url";
+import fetch from "node-fetch";
 
 const { Pool } = pkg;
 const app = express();
@@ -29,6 +30,7 @@ const pool = new Pool({
 (async () => {
   const client = await pool.connect();
   try {
+    // スケジュール
     await client.query(`
       CREATE TABLE IF NOT EXISTS schedules (
         id SERIAL PRIMARY KEY,
@@ -38,12 +40,26 @@ const pool = new Pool({
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // 共有リンク
     await client.query(`
       CREATE TABLE IF NOT EXISTS share_links (
         id SERIAL PRIMARY KEY,
         url TEXT UNIQUE NOT NULL,
         schedule_ids INT[] NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // 投票テーブル
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS votes (
+        id SERIAL PRIMARY KEY,
+        share_url TEXT NOT NULL,
+        username TEXT NOT NULL,
+        votes JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(share_url, username) -- 同じ人は上書き
       );
     `);
   } finally {
@@ -129,8 +145,103 @@ app.get("/api/share/:uuid", async (req, res) => {
   }
 });
 
+// ====================== 投票機能 ======================
+
+// 投票保存 (◯✖△)
+app.post("/api/share/:uuid/vote", async (req, res) => {
+  try {
+    const { uuid } = req.params;
+    const { username, votes } = req.body;
+    const share_url = `/share/${uuid}`;
+
+    if (!username || !votes) {
+      return res.status(400).json({ error: "名前と投票が必要です" });
+    }
+
+    await pool.query(
+      `INSERT INTO votes (share_url, username, votes)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (share_url, username)
+       DO UPDATE SET votes = $3, created_at = NOW()`,
+      [share_url, username, JSON.stringify(votes)]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ 投票保存エラー:", err);
+    res.status(500).json({ error: "サーバーエラー" });
+  }
+});
+
+// 投票取得
+app.get("/api/share/:uuid/votes", async (req, res) => {
+  try {
+    const { uuid } = req.params;
+    const share_url = `/share/${uuid}`;
+
+    const result = await pool.query(
+      "SELECT username, votes FROM votes WHERE share_url = $1",
+      [share_url]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ 投票取得エラー:", err);
+    res.status(500).json({ error: "サーバーエラー" });
+  }
+});
+
+// ====================== Discord OAuth2 ======================
+
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI =
+  process.env.DISCORD_REDIRECT_URI || "http://localhost:5000/callback";
+
+// Discordログイン開始
+app.get("/auth/discord", (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    DISCORD_REDIRECT_URI
+  )}&response_type=code&scope=identify`;
+  res.redirect(url);
+});
+
+// Discord OAuth2 コールバック
+app.get("/callback", async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send("No code provided");
+
+  try {
+    // アクセストークン取得
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: DISCORD_REDIRECT_URI,
+        scope: "identify",
+      }),
+    });
+    const tokenData = await tokenRes.json();
+
+    // ユーザー情報取得
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const userData = await userRes.json();
+
+    // ✅ discriminatorは使わず username のみ渡す
+    res.redirect(`/share-login?username=${encodeURIComponent(userData.username)}`);
+  } catch (err) {
+    console.error("OAuth error:", err);
+    res.status(500).send("OAuth failed");
+  }
+});
+
 // ====================== 静的ファイル配信 ======================
-// フロントエンドのビルド成果物を配信
 app.use(express.static(path.join(__dirname, "public")));
 
 // React ルーティング対応 (SPA fallback)
