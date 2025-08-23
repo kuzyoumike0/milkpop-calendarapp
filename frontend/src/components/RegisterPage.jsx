@@ -1,137 +1,93 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import "../index.css";
-
-const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-const hours = Array.from({ length: 24 }, (_, i) => i + 1);
+import Header from "./Header";
+import Footer from "./Footer";
 
 const RegisterPage = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [schedules, setSchedules] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォは複数選択
+  const [title, setTitle] = useState("");
+  const [timeRange, setTimeRange] = useState("");
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
-  const [globalTitle, setGlobalTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple");
 
   useEffect(() => {
     fetch(`/api/holidays/${today.getFullYear()}`)
       .then((res) => res.json())
       .then((data) => setHolidays(data))
       .catch((err) => console.error("Error fetching holidays:", err));
-  }, []);
+  }, [today]);
 
   const isHoliday = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
-  const generateCalendarDays = (month) => {
-    const year = month.getFullYear();
-    const monthIndex = month.getMonth();
-    const firstDay = new Date(year, monthIndex, 1);
-    const lastDay = new Date(year, monthIndex + 1, 0);
-
-    const days = [];
-    const startDayOfWeek = firstDay.getDay();
-
-    for (let i = 0; i < startDayOfWeek; i++) days.push(null);
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      days.push(new Date(year, monthIndex, d));
-    }
-    return days;
-  };
-
-  const days = generateCalendarDays(currentMonth);
-
+  // 📌 日付クリック処理
   const handleDateClick = (date) => {
-    if (!date) return;
-    const dateStr = date.toISOString().split("T")[0];
-
     if (selectionMode === "multiple") {
-      if (schedules.some((s) => s.date === dateStr)) {
-        setSchedules(schedules.filter((s) => s.date !== dateStr));
+      const exists = selectedDates.some(
+        (d) => d.toDateString() === date.toDateString()
+      );
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
       } else {
-        setSchedules([
-          ...schedules,
-          { date: dateStr, timeRange: "終日", startHour: null, endHour: null },
-        ]);
+        setSelectedDates([...selectedDates, date]);
       }
     } else if (selectionMode === "range") {
-      if (schedules.length === 0 || schedules.length > 1) {
-        setSchedules([{ date: dateStr, timeRange: "終日", startHour: null, endHour: null }]);
-      } else if (schedules.length === 1) {
-        const startDate = new Date(schedules[0].date);
-        const endDate = new Date(dateStr);
-
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0] < date ? selectedDates[0] : date;
+        const end = selectedDates[0] < date ? date : selectedDates[0];
         const range = [];
-        let cur = startDate < endDate ? new Date(startDate) : new Date(endDate);
-        const stop = startDate < endDate ? endDate : startDate;
-
-        while (cur <= stop) {
-          range.push({
-            date: cur.toISOString().split("T")[0],
-            timeRange: "終日",
-            startHour: null,
-            endHour: null,
-          });
+        let cur = new Date(start);
+        while (cur <= end) {
+          range.push(new Date(cur));
           cur.setDate(cur.getDate() + 1);
         }
-        setSchedules(range);
+        setSelectedDates(range);
+      } else {
+        setSelectedDates([date]);
       }
     }
   };
 
-  const prevMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-    );
-  };
-  const nextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-    );
-  };
+  // 📌 月の日付リスト生成
+  const generateCalendarDays = () => {
+    const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
-  const updateTimeRange = (dateStr, newRange) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.date === dateStr
-          ? {
-              ...s,
-              timeRange: newRange,
-              startHour: newRange === "時刻指定" ? 1 : null,
-              endHour: newRange === "時刻指定" ? 24 : null,
-            }
-          : s
-      )
-    );
-  };
+    const days = [];
+    const startDay = startOfMonth.getDay();
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
 
-  const updateHours = (dateStr, start, end) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.date === dateStr ? { ...s, startHour: start, endHour: end } : s
-      )
-    );
-  };
+    for (let d = 1; d <= endOfMonth.getDate(); d++) {
+      days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d));
+    }
 
-  const deleteSchedule = (dateStr) => {
-    setSchedules(schedules.filter((s) => s.date !== dateStr));
+    return days;
   };
 
   const saveSchedules = async () => {
     try {
+      const formattedDates = selectedDates.map((d) => d.toISOString().split("T")[0]);
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: globalTitle, schedules }),
+        body: JSON.stringify({ title, dates: formattedDates, timeRange }),
       });
       const data = await res.json();
       if (data.success) {
         const shareRes = await fetch("/api/share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scheduleIds: data.ids }),
+          body: JSON.stringify({ scheduleIds: [data.id] }),
         });
         const shareData = await shareRes.json();
         if (shareData.success) {
@@ -143,27 +99,30 @@ const RegisterPage = () => {
     }
   };
 
+  const days = generateCalendarDays();
+
   return (
     <div className="register-page">
-      <div className="register-layout">
-        {/* 左：タイトル＋カレンダー */}
-        <div className="calendar-section">
-          {/* タイトル */}
-          <div className="mb-2">
-            <input
-              type="text"
-              placeholder="タイトルを入力"
-              value={globalTitle}
-              onChange={(e) => setGlobalTitle(e.target.value)}
-              className="input-field w-full"
-            />
-          </div>
+      <Header />
 
-          {/* ✅ ラジオボタン（左揃え） */}
-          <div className="radio-options-left mb-4">
+      <div className="register-layout">
+        {/* 📌 左：カレンダー */}
+        <div className="calendar-section">
+          {/* タイトル入力 */}
+          <input
+            type="text"
+            placeholder="タイトルを入力"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input-field mb-4"
+          />
+
+          {/* 選択モード切替（ラジオボタン） */}
+          <div className="radio-options mb-4">
             <label className="radio-label">
               <input
                 type="radio"
+                name="mode"
                 value="multiple"
                 checked={selectionMode === "multiple"}
                 onChange={() => setSelectionMode("multiple")}
@@ -174,6 +133,7 @@ const RegisterPage = () => {
             <label className="radio-label">
               <input
                 type="radio"
+                name="mode"
                 value="range"
                 checked={selectionMode === "range"}
                 onChange={() => setSelectionMode("range")}
@@ -183,107 +143,116 @@ const RegisterPage = () => {
             </label>
           </div>
 
-          {/* 月切り替え */}
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={prevMonth} className="nav-btn">⇦</button>
-            <span className="calendar-title">
+          {/* 月切替 */}
+          <div className="flex items-center justify-center mb-4 space-x-6">
+            <button
+              className="nav-btn"
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+                )
+              }
+            >
+              &lt;
+            </button>
+            <h2 className="text-xl font-bold text-blue-900">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
-            </span>
-            <button onClick={nextMonth} className="nav-btn">⇨</button>
+            </h2>
+            <button
+              className="nav-btn"
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+                )
+              }
+            >
+              &gt;
+            </button>
           </div>
 
           {/* カレンダー */}
           <div className="custom-calendar">
-            {daysOfWeek.map((day, i) => (
-              <div key={i} className="calendar-day-header">{day}</div>
+            {["日", "月", "火", "水", "木", "金", "土"].map((d, i) => (
+              <div key={i} className="calendar-day-header">
+                {d}
+              </div>
             ))}
             {days.map((date, i) => {
-              const isToday = date && date.toDateString() === today.toDateString();
-              const isSelected =
-                date && schedules.some((s) => s.date === date.toISOString().split("T")[0]);
-              const isHolidayDay = date && isHoliday(date);
-
+              if (!date) return <div key={i}></div>;
+              const isToday = date.toDateString() === today.toDateString();
+              const isSelected = selectedDates.some(
+                (d) => d.toDateString() === date.toDateString()
+              );
               return (
                 <div
                   key={i}
                   className={`calendar-cell 
                     ${isToday ? "today" : ""} 
                     ${isSelected ? "selected" : ""} 
-                    ${isHolidayDay ? "holiday" : ""}`}
+                    ${isHoliday(date) ? "holiday" : ""}`}
                   onClick={() => handleDateClick(date)}
                 >
-                  {date ? date.getDate() : ""}
+                  {date.getDate()}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* 右：リスト */}
+        {/* 📌 右：選択リスト */}
         <div className="schedule-section">
-          <h2>選択中の日程</h2>
-          {schedules.map((s, i) => (
-            <div key={i} className="schedule-card relative">
-              <button
-                className="delete-btn absolute top-2 right-2"
-                onClick={() => deleteSchedule(s.date)}
-              >
-                ✖
-              </button>
-              <div className="schedule-title">{s.date}</div>
+          <h2 className="text-lg font-bold mb-2">選択中の日程</h2>
+          <ul className="mb-4">
+            {selectedDates.map((d, i) => (
+              <li key={i} className="flex justify-between items-center mb-2">
+                <span>{d.toLocaleDateString("ja-JP")}</span>
+                <button
+                  className="delete-btn"
+                  onClick={() =>
+                    setSelectedDates(
+                      selectedDates.filter(
+                        (date) => date.toDateString() !== d.toDateString()
+                      )
+                    )
+                  }
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
 
-              <select
-                value={s.timeRange}
-                onChange={(e) => updateTimeRange(s.date, e.target.value)}
-                className="vote-select mb-2"
-              >
-                <option value="終日">終日</option>
-                <option value="午前">午前</option>
-                <option value="午後">午後</option>
-                <option value="夜">夜</option>
-                <option value="時刻指定">時刻指定</option>
-              </select>
+          {selectedDates.length > 0 && (
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="w-full border rounded p-2 mb-3"
+            >
+              <option value="終日">終日</option>
+              <option value="午前">午前</option>
+              <option value="午後">午後</option>
+              <option value="夜">夜</option>
+              <option value="時刻指定">時刻指定</option>
+            </select>
+          )}
 
-              {s.timeRange === "時刻指定" && (
-                <div className="flex gap-3">
-                  <select
-                    value={s.startHour}
-                    onChange={(e) =>
-                      updateHours(s.date, Number(e.target.value), s.endHour)
-                    }
-                    className="vote-select flex-1"
-                  >
-                    {hours.map((h) => (
-                      <option key={h} value={h}>{h}時</option>
-                    ))}
-                  </select>
-                  <select
-                    value={s.endHour}
-                    onChange={(e) =>
-                      updateHours(s.date, s.startHour, Number(e.target.value))
-                    }
-                    className="vote-select flex-1"
-                  >
-                    {hours.filter((h) => h > s.startHour).map((h) => (
-                      <option key={h} value={h}>{h}時</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          ))}
-
-          <button onClick={saveSchedules} className="save-btn">
+          <button
+            onClick={saveSchedules}
+            className="save-btn"
+          >
             共有リンク発行
           </button>
 
           {shareUrl && (
-            <div className="issued-url">
+            <div className="issued-url mt-4">
+              <p className="text-sm">共有リンク:</p>
               <a href={shareUrl}>{shareUrl}</a>
             </div>
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
