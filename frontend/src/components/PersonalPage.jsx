@@ -12,7 +12,7 @@ const PersonalPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple");
+  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
   const [rangeStart, setRangeStart] = useState(null);
 
   // 時間帯
@@ -35,9 +35,7 @@ const PersonalPage = () => {
       day
     ).padStart(2, "0")}`;
 
-    if (selectionMode === "single") {
-      setSelectedDates([dateStr]);
-    } else if (selectionMode === "multiple") {
+    if (selectionMode === "multiple") {
       if (selectedDates.includes(dateStr)) {
         setSelectedDates(selectedDates.filter((d) => d !== dateStr));
       } else {
@@ -76,7 +74,7 @@ const PersonalPage = () => {
   const handleSave = async () => {
     try {
       for (const d of selectedDates) {
-        const res = await fetch("/api/personal-schedules", {
+        await fetch("/api/personal-schedules", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -89,7 +87,6 @@ const PersonalPage = () => {
             endTime: timeType === "時刻指定" ? endTime : null,
           }),
         });
-        await res.json();
       }
       alert("✅ 個人スケジュールを保存しました");
       setSelectedDates([]);
@@ -164,20 +161,33 @@ const PersonalPage = () => {
               />
             </div>
 
-            {/* 選択モード */}
-            <div className="mb-4 text-left">
+            {/* 選択モード（ラジオボタン） */}
+            <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 🔽 選択モード
               </label>
-              <select
-                className="input-field"
-                value={selectionMode}
-                onChange={(e) => setSelectionMode(e.target.value)}
-              >
-                <option value="single">単日選択</option>
-                <option value="multiple">複数選択</option>
-                <option value="range">範囲選択</option>
-              </select>
+              <div className="radio-options">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="multiple"
+                    checked={selectionMode === "multiple"}
+                    onChange={(e) => setSelectionMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span>
+                  複数選択
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="range"
+                    checked={selectionMode === "range"}
+                    onChange={(e) => setSelectionMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span>
+                  範囲選択
+                </label>
+              </div>
             </div>
 
             {/* 時間帯 */}
