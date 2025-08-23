@@ -47,15 +47,26 @@ a:hover {
   box-shadow: 0 12px 24px rgba(0,0,0,0.3);
 }
 
-/* ===== トップページ本文 ===== */
-.top-message {
+/* ===== トップページ本文カード ===== */
+.top-message-card {
+  background: #fff;
+  border-radius: 1.25rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 1.5rem 2rem;
+  margin-top: 1rem;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
   font-size: 1.2rem;
   font-weight: 500;
-  max-width: 40rem;
-  margin: 0 auto;
-  text-align: center;
   line-height: 1.9;
   color: #444;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+.top-message-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
 }
 
 /* ===== カレンダーUI ===== */
@@ -200,7 +211,7 @@ select:focus {
 }
 
 /* ===== ヘッダー ===== */
-header {
+.app-header {
   background: linear-gradient(90deg, #000000, #111827);
   color: white;
   padding: 14px 32px;
@@ -209,12 +220,12 @@ header {
   top: 0;
   z-index: 50;
 }
-header .nav-container {
+.app-header .nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-header .logo {
+.app-header .logo {
   font-size: 1.8rem;
   font-weight: 700;
   color: #FDB9C8;
@@ -222,14 +233,14 @@ header .logo {
   letter-spacing: 1px;
   transition: transform 0.3s ease;
 }
-header .logo:hover {
+.app-header .logo:hover {
   transform: scale(1.05);
 }
-header nav {
+.app-header nav {
   display: flex;
   gap: 14px;
 }
-header nav a {
+.app-header nav a {
   padding: 0.5rem 1.2rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -238,23 +249,22 @@ header nav a {
   box-shadow: 0 3px 6px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
 }
-header nav a:hover {
+.app-header nav a:hover {
   background: #FDB9C8;
   color: black;
   transform: translateY(-2px) scale(1.05);
 }
-/* Discord専用ボタン */
-header .discord-btn {
+.app-header .discord-btn {
   background: #5865F2;
   color: white;
 }
-header .discord-btn:hover {
+.app-header .discord-btn:hover {
   background: #4752C4;
   transform: translateY(-2px) scale(1.05);
 }
 
 /* ===== フッター ===== */
-footer {
+.app-footer {
   background: linear-gradient(90deg, #000000, #111827);
   color: #ccc;
   text-align: center;
@@ -263,35 +273,32 @@ footer {
   box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
   margin-top: auto;
 }
-footer p {
+.app-footer p {
   margin: 6px 0;
   color: #FDB9C8;
   font-weight: 500;
   letter-spacing: 0.5px;
 }
-/* SNSリンク */
-footer .sns-links {
+.app-footer .sns-links {
   margin-top: 10px;
 }
-footer .sns-links a {
+.app-footer .sns-links a {
   display: inline-block;
   margin: 0 10px;
   font-size: 1.6rem;
   transition: all 0.3s ease;
 }
-/* X (Twitter) */
-footer .sns-links a.twitter {
+.app-footer .sns-links a.twitter {
   color: #1DA1F2;
 }
-footer .sns-links a.twitter:hover {
+.app-footer .sns-links a.twitter:hover {
   color: #FDB9C8;
   transform: scale(1.2);
 }
-/* Discord */
-footer .sns-links a.discord {
+.app-footer .sns-links a.discord {
   color: #5865F2;
 }
-footer .sns-links a.discord:hover {
+.app-footer .sns-links a.discord:hover {
   color: #FDB9C8;
   transform: scale(1.2);
 }
@@ -331,25 +338,3 @@ footer .sns-links a.discord:hover {
     gap: 0.5rem;
   }
 }
-/* ===== トップページ本文カード ===== */
-.top-message-card {
-  background: #fff;
-  border-radius: 1.25rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-  padding: 1.5rem 2rem;
-  margin-top: 1rem;
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 1.2rem;
-  font-weight: 500;
-  line-height: 1.9;
-  color: #444;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  text-align: center;
-}
-.top-message-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-}
-
