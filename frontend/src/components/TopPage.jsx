@@ -21,6 +21,8 @@ const TopPage = () => {
               alt="MilkPOP Calendar ロゴ"
               className="top-logo rounded-2xl shadow-2xl"
             />
+          </div>
+        </div>
       </main>
 
       <Footer />
