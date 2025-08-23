@@ -46,7 +46,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <div className="register-layout">
         <div className="calendar-section">
-          {/* タイトル入力 */}
+          {/* 入力フォーム */}
           <input
             type="text"
             placeholder="タイトルを入力"
@@ -95,7 +95,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 選択中の日程 */}
+        {/* 選択中リスト */}
         <div className="schedule-section">
           <h3>選択中の日程</h3>
           {selectedDates.length === 0 ? (
