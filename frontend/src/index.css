@@ -375,12 +375,14 @@ body {
   }
 }
 /* === ラジオボタン（上部に配置用） === */
+/* ===== ラジオボタン ===== */
 .radio-options {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start !important; /* ← 中央寄せを上書き */
   gap: 30px;
   margin-bottom: 16px;
 }
+
 
 .radio-label {
   position: relative;
