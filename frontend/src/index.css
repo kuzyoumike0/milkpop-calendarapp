@@ -371,3 +371,40 @@ body {
   color: #004CA0;
   margin-bottom: 12px;
 }
+/* === 月切り替えボタン === */
+.month-btn {
+  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
+  color: #fff;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.month-btn:hover {
+  background: linear-gradient(135deg, #004CA0, #0066ff);
+  transform: scale(1.05);
+}
+
+/* === 発行URL強調 === */
+.issued-url {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff, #fdf7fa);
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  text-align: center;
+  font-weight: bold;
+  word-break: break-all;
+}
+.issued-url a {
+  color: #004CA0;
+  font-weight: bold;
+  text-decoration: underline;
+}
+.issued-url a:hover {
+  color: #ff5fa2;
+}
