@@ -8,12 +8,14 @@ const TopPage = () => {
       {/* ロゴ画像カード */}
       <div className="bg-white rounded-2xl shadow-xl p-6 mb-10 max-w-4xl w-full flex justify-center">
         <div className="relative w-full flex justify-center">
+          {/* ロゴ画像 */}
           <img
             src="/logo.png"
             alt="MilkPOP Calendar Logo"
             className="max-w-full rounded-xl"
             style={{ width: "1040px" }}
           />
+          {/* ロゴ上のテキスト */}
           <h1 className="absolute inset-0 flex items-center justify-center text-5xl md:text-6xl font-bold text-white drop-shadow-lg">
             MilkPOP Calendar
           </h1>
