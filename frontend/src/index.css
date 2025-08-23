@@ -425,3 +425,9 @@ main {
   border-radius: 50%;
   background: white;
 }
+/* タイトル入力を短く & 左寄せ */
+.short-input input {
+  width: 70%;        /* 少し短め */
+  display: inline-block;
+  margin-left: 0;    /* 左寄せ */
+}
