@@ -1,35 +1,39 @@
-// holidays-jp APIを使って日本の祝日を取得する
-// 参考: https://holidays-jp.github.io/
+// frontend/src/holiday.js
 
-let holidayCache = null;
-
-// 祝日一覧を取得（キャッシュ付き）
-export const fetchHolidays = async () => {
-  if (holidayCache) return holidayCache;
-
-  try {
-    const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
-    if (!res.ok) throw new Error("Failed to fetch holidays");
-    const data = await res.json();
-    // data は { "2025-01-01": "元日", ... } の形式
-    holidayCache = Object.keys(data);
-    return holidayCache;
-  } catch (err) {
-    console.error("祝日の取得に失敗しました:", err);
-    return [];
-  }
-};
-
-// 今日（日本時間）のISO日付を取得
+// 日本時間の今日の日付を YYYY-MM-DD 形式で返す
 export const getTodayIso = () => {
   const now = new Date();
-  const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
+  // JST (+9時間補正)
+  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   return jst.toISOString().split("T")[0];
 };
 
-// 指定日が祝日か判定
-export const isHoliday = async (date) => {
-  const holidays = await fetchHolidays();
-  const iso = date.toISOString().split("T")[0];
-  return holidays.includes(iso);
+// 日本の祝日を取得（Google Calendar API の Public Holidaysを利用予定）
+export const fetchHolidays = async () => {
+  try {
+    // Googleの祝日カレンダー (日本) iCal JSON API
+    const url =
+      "https://calendar.google.com/calendar/ical/ja.japanese%23holiday%40group.v.calendar.google.com/public/full.json";
+
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error("祝日データ取得に失敗しました");
+      return [];
+    }
+
+    const data = await res.json();
+
+    // JSON API から日付一覧を抽出
+    if (data && data.feed && data.feed.entry) {
+      return data.feed.entry.map((item) => {
+        const dateStr = item.gd$when?.[0]?.startTime;
+        return dateStr ? dateStr.split("T")[0] : null;
+      }).filter(Boolean);
+    }
+
+    return [];
+  } catch (err) {
+    console.error("祝日取得エラー:", err);
+    return [];
+  }
 };
