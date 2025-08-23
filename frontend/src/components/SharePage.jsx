@@ -8,6 +8,7 @@ const SharePage = () => {
   const [userName, setUserName] = useState("");
   const [answers, setAnswers] = useState({});
   const [savedResults, setSavedResults] = useState([]);
+  const shareId = "demo-share-id-123"; // 本来はURLから取得する
 
   useEffect(() => {
     // 仮データ（API接続予定）
@@ -16,11 +17,16 @@ const SharePage = () => {
       dates: ["2025-08-23", "2025-08-24", "2025-08-25"],
     });
 
-    // ログイン名を localStorage から取得
+    // localStorageからユーザ名取得
     const storedName = localStorage.getItem("userName");
     if (storedName) {
       setUserName(storedName);
     }
+
+    // 回答一覧をロード
+    fetch(`/api/responses/${shareId}`)
+      .then((res) => res.json())
+      .then((data) => setSavedResults(data));
   }, []);
 
   const handleAnswerChange = (date, value) => {
@@ -30,23 +36,31 @@ const SharePage = () => {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!userName) {
       alert("ユーザ名を入力してください");
       return;
     }
-    // 保存済みに追加
-    const newResult = {
-      user: userName,
-      answers: { ...answers },
-    };
-    setSavedResults([...savedResults, newResult]);
 
-    // 名前を保持
-    localStorage.setItem("userName", userName);
+    // APIに保存
+    const res = await fetch("/api/responses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ share_id: shareId, user_name: userName, answers }),
+    });
 
-    // 回答リセット
-    setAnswers({});
+    if (res.ok) {
+      localStorage.setItem("userName", userName);
+
+      // 最新の一覧を取得
+      const list = await fetch(`/api/responses/${shareId}`).then((r) => r.json());
+      setSavedResults(list);
+
+      // 入力をリセット
+      setAnswers({});
+    } else {
+      alert("保存に失敗しました");
+    }
   };
 
   // 全て選択されているかチェック
@@ -150,16 +164,12 @@ const SharePage = () => {
               <div className="mt-6 bg-white text-black p-3 rounded-lg shadow">
                 <h3 className="text-lg font-bold mb-2">📋 回答一覧</h3>
                 {savedResults.length === 0 && <p>まだ回答はありません</p>}
-                {savedResults.map((result, idx) => (
+                {savedResults.map((row, idx) => (
                   <div key={idx} className="mb-2">
-                    <p className="font-bold">{result.user}</p>
-                    <ul className="ml-4 list-disc">
-                      {Object.entries(result.answers).map(([date, ans]) => (
-                        <li key={date}>
-                          {date} : <span className="font-bold">{ans}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="font-bold">{row.user_name}</p>
+                    <p>
+                      {row.date} : <span className="font-bold">{row.answer}</span>
+                    </p>
                   </div>
                 ))}
               </div>
