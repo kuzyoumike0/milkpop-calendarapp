@@ -47,7 +47,6 @@ const Header = () => {
       <nav className="nav-links">
         <Link to="/register">日程登録</Link>
         <Link to="/personal">個人スケジュール</Link>
-        <Link to="/share">共有ページ</Link>
 
         {user ? (
           <div className="user-info">
