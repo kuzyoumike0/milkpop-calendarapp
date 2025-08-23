@@ -1,14 +1,13 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import "../index.css";
-import Header from "./Header";
 import Footer from "./Footer";
 
 const RegisterPage = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォは複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [title, setTitle] = useState("");
   const [timeRange, setTimeRange] = useState("");
   const [holidays, setHolidays] = useState([]);
@@ -26,7 +25,6 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
-  // 📌 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       const exists = selectedDates.some(
@@ -56,7 +54,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 月の日付リスト生成
   const generateCalendarDays = () => {
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -103,7 +100,7 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      <Header />
+      {/* 共通ヘッダーは App.jsx 側で呼ばれているので、ここでは削除 */}
 
       <div className="register-layout">
         {/* 📌 左：カレンダー */}
@@ -114,11 +111,11 @@ const RegisterPage = () => {
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-field mb-4"
+            className="input-field mb-3"
           />
 
-          {/* 選択モード切替（ラジオボタン） */}
-          <div className="radio-options mb-4">
+          {/* 選択モード切替（ラジオボタン → 左寄せ） */}
+          <div className="radio-options justify-start mb-5">
             <label className="radio-label">
               <input
                 type="radio"
@@ -144,7 +141,7 @@ const RegisterPage = () => {
           </div>
 
           {/* 月切替 */}
-          <div className="flex items-center justify-center mb-4 space-x-6">
+          <div className="flex items-center justify-center mb-6 space-x-8">
             <button
               className="nav-btn"
               onClick={() =>
@@ -155,7 +152,7 @@ const RegisterPage = () => {
             >
               &lt;
             </button>
-            <h2 className="text-xl font-bold text-blue-900">
+            <h2 className="text-2xl font-extrabold text-blue-900 tracking-wide">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </h2>
             <button
