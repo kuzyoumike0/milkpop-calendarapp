@@ -61,7 +61,9 @@ app.get("/auth/callback", async (req, res) => {
     const userData = await userRes.json();
 
     // フロントにユーザー名を返す（本番は JWT/Cookie が安全）
-    res.redirect(`/auth-success?username=${encodeURIComponent(userData.username)}`);
+    res.redirect(
+      `/auth-success?username=${encodeURIComponent(userData.username)}`
+    );
   } catch (err) {
     console.error(err);
     res.status(500).send("Auth error");
@@ -76,6 +78,87 @@ app.get("/auth-success", (req, res) => {
       window.close(); // ポップアップを閉じる
     </script>
   `);
+});
+
+// ===== スケジュール登録API =====
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates, timeRange, memo } = req.body;
+    if (!title || !dates) {
+      return res.status(400).json({ error: "title と dates は必須です" });
+    }
+
+    const result = await pool.query(
+      "INSERT INTO schedules (title, dates, time_range, memo) VALUES ($1, $2, $3, $4) RETURNING *",
+      [title, dates, timeRange, memo]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("保存エラー:", err);
+    res.status(500).json({ error: "保存に失敗しました" });
+  }
+});
+
+// スケジュール取得
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM schedules ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("取得エラー:", err);
+    res.status(500).json({ error: "取得に失敗しました" });
+  }
+});
+
+// ===== 共有リンク生成 =====
+app.post("/api/share", async (req, res) => {
+  try {
+    const { scheduleIds } = req.body;
+    if (!scheduleIds || scheduleIds.length === 0) {
+      return res.status(400).json({ error: "scheduleIds が必要です" });
+    }
+
+    // ランダムなURLキーを生成
+    const linkKey = crypto.randomBytes(6).toString("hex");
+
+    // DB保存
+    await pool.query(
+      "INSERT INTO share_links (link_key, schedule_ids) VALUES ($1, $2)",
+      [linkKey, scheduleIds]
+    );
+
+    res.json({ url: `/share/${linkKey}` });
+  } catch (err) {
+    console.error("共有エラー:", err);
+    res.status(500).json({ error: "共有に失敗しました" });
+  }
+});
+
+// 共有リンクからスケジュール取得
+app.get("/share/:linkKey", async (req, res) => {
+  try {
+    const { linkKey } = req.params;
+    const result = await pool.query(
+      "SELECT schedule_ids FROM share_links WHERE link_key=$1",
+      [linkKey]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "リンクが存在しません" });
+    }
+
+    const scheduleIds = result.rows[0].schedule_ids;
+    const schedules = await pool.query(
+      "SELECT * FROM schedules WHERE id = ANY($1::int[])",
+      [scheduleIds]
+    );
+
+    res.json(schedules.rows);
+  } catch (err) {
+    console.error("共有取得エラー:", err);
+    res.status(500).json({ error: "共有データ取得に失敗しました" });
+  }
 });
 
 // ===== React ビルド配信 =====
