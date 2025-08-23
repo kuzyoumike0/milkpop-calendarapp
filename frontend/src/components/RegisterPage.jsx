@@ -40,7 +40,7 @@ const RegisterPage = () => {
       alert("タイトルと日付を入力してください！");
       return;
     }
-    const sortedDates = [...selectedDates].sort((a, b) => a - b); // 日付を昇順ソート
+    const sortedDates = [...selectedDates].sort((a, b) => a - b); // 昇順ソート
     setSavedSchedules([
       ...savedSchedules,
       { id: Date.now(), title, dates: sortedDates, month, year },
@@ -60,6 +60,9 @@ const RegisterPage = () => {
     const dateB = new Date(b.year, b.month, b.dates[0]);
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
+
+  // ===== 選択済み日程を昇順で表示 =====
+  const sortedSelectedDates = [...selectedDates].sort((a, b) => a - b);
 
   return (
     <div className="register-page">
@@ -109,6 +112,22 @@ const RegisterPage = () => {
               );
             })}
           </div>
+
+          {/* 選択中の日程（カード表示） */}
+          {sortedSelectedDates.length > 0 && (
+            <div className="selected-dates mt-4">
+              <h3 className="form-title">選択中の日程</h3>
+              <ul>
+                {sortedSelectedDates.map((d, i) => (
+                  <li key={i} className="schedule-card">
+                    <span className="date-tag">
+                      {month + 1}/{d}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* タイトル入力 */}
           <div className="form-group mt-4">
