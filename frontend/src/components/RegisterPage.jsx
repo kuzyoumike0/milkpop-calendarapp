@@ -11,6 +11,7 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
   const [globalTitle, setGlobalTitle] = useState("");
+  const [selectionMode, setSelectionMode] = useState("multiple"); // ✅ デフォルト複数選択
 
   useEffect(() => {
     fetch(`/api/holidays/${today.getFullYear()}`)
@@ -45,13 +46,38 @@ const RegisterPage = () => {
   const handleDateClick = (date) => {
     if (!date) return;
     const dateStr = date.toISOString().split("T")[0];
-    if (schedules.some((s) => s.date === dateStr)) {
-      setSchedules(schedules.filter((s) => s.date !== dateStr));
-    } else {
-      setSchedules([
-        ...schedules,
-        { date: dateStr, timeRange: "終日", startHour: null, endHour: null },
-      ]);
+
+    if (selectionMode === "multiple") {
+      if (schedules.some((s) => s.date === dateStr)) {
+        setSchedules(schedules.filter((s) => s.date !== dateStr));
+      } else {
+        setSchedules([
+          ...schedules,
+          { date: dateStr, timeRange: "終日", startHour: null, endHour: null },
+        ]);
+      }
+    } else if (selectionMode === "range") {
+      if (schedules.length === 0 || schedules.length > 1) {
+        setSchedules([{ date: dateStr, timeRange: "終日", startHour: null, endHour: null }]);
+      } else if (schedules.length === 1) {
+        const startDate = new Date(schedules[0].date);
+        const endDate = new Date(dateStr);
+
+        const range = [];
+        let cur = startDate < endDate ? new Date(startDate) : new Date(endDate);
+        const stop = startDate < endDate ? endDate : startDate;
+
+        while (cur <= stop) {
+          range.push({
+            date: cur.toISOString().split("T")[0],
+            timeRange: "終日",
+            startHour: null,
+            endHour: null,
+          });
+          cur.setDate(cur.getDate() + 1);
+        }
+        setSchedules(range);
+      }
     }
   };
 
@@ -122,6 +148,7 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：タイトル＋カレンダー */}
         <div className="calendar-section">
+          {/* タイトル */}
           <div className="mb-4">
             <input
               type="text"
@@ -132,8 +159,32 @@ const RegisterPage = () => {
             />
           </div>
 
+          {/* ✅ 範囲選択/複数選択ラジオ */}
+          <div className="radio-options mb-4">
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="multiple"
+                checked={selectionMode === "multiple"}
+                onChange={() => setSelectionMode("multiple")}
+              />
+              複数選択
+              <span className="custom-radio"></span>
+            </label>
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="range"
+                checked={selectionMode === "range"}
+                onChange={() => setSelectionMode("range")}
+              />
+              範囲選択
+              <span className="custom-radio"></span>
+            </label>
+          </div>
+
           {/* 月切り替え */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-6">
             <button onClick={prevMonth} className="nav-btn">⇦</button>
             <span className="font-bold text-lg">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
