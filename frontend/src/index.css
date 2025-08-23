@@ -4,6 +4,7 @@
   padding: 40px 30px;
   background: linear-gradient(135deg, #FDB9C8 0%, #fff 50%, #004CA0 100%);
   font-family: 'Quicksand', sans-serif;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
 /* ===== 入力フォームカード（タイトル & ラジオ） ===== */
@@ -12,11 +13,16 @@
   justify-content: space-between;
   gap: 40px;
   margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px) saturate(120%);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(14px) saturate(120%);
   padding: 24px;
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.form-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.2);
 }
 
 /* タイトル入力 */
@@ -64,7 +70,7 @@
 .radio-label input:checked ~ .custom-radio {
   background: radial-gradient(circle, #FDB9C8, #ff5fa2);
   border-color: #ff5fa2;
-  box-shadow: 0 0 8px rgba(255,95,162,0.5);
+  box-shadow: 0 0 8px rgba(255,95,162,0.6);
 }
 
 /* ===== カレンダー ===== */
@@ -77,6 +83,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   margin-top: 20px;
+  animation: fadeInUp 0.8s ease;
 }
 .calendar-day-header {
   font-weight: bold;
@@ -92,25 +99,26 @@
   border-radius: 14px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   background: #fefefe;
   box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
 }
 .calendar-cell:hover {
   background: #fde4ec;
-  transform: scale(1.05);
+  transform: scale(1.07);
 }
 .calendar-cell.today {
   border: 2px solid gold;
   background: #fff9e6;
   font-weight: bold;
+  animation: pulse 1.5s infinite;
 }
 .calendar-cell.selected {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   color: #fff;
   font-weight: bold;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+  transform: scale(1.08);
 }
 .calendar-cell.empty {
   background: transparent;
@@ -127,11 +135,11 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-  transition: 0.2s;
+  transition: 0.25s ease;
 }
 .schedule-card:hover {
-  transform: translateX(5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  transform: translateX(6px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.25);
 }
 .schedule-title {
   font-weight: bold;
@@ -149,6 +157,10 @@
   font-size: 0.85rem;
   font-weight: bold;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: 0.2s;
+}
+.date-tag:hover {
+  transform: scale(1.1);
 }
 
 /* ===== 登録ボタン ===== */
@@ -164,14 +176,19 @@
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 6px 16px rgba(255,95,162,0.5);
+  position: relative;
+  overflow: hidden;
 }
 .save-btn:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+}
+.save-btn:active {
+  transform: scale(0.97);
 }
 
-/* ===== 小さな削除ボタン ===== */
+/* ===== 小さな削除ボタン（キャンディ風） ===== */
 .delete-btn-small {
   background: transparent;
   border: none;
@@ -184,7 +201,23 @@
   transition: all 0.2s ease;
 }
 .delete-btn-small:hover {
-  background: #f5f5f5;
+  background: #fdf0f5;
   color: #ff5fa2;
-  transform: scale(1.1);
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* ===== アニメーション ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
 }
