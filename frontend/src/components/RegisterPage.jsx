@@ -153,11 +153,24 @@ const RegisterPage = () => {
       }
       setSelectedDates([]);
       setDateOptions({});
-      await fetchSchedules(); // 保存後に即時反映
+      await fetchSchedules(); // 即時反映
       alert("✅ スケジュールを保存しました！");
     } catch (err) {
       console.error(err);
       alert("❌ 保存に失敗しました");
+    }
+  };
+
+  // === DB削除 ===
+  const handleDeleteSchedule = async (id) => {
+    try {
+      await fetch(`/api/schedules/${id}`, {
+        method: "DELETE",
+      });
+      await fetchSchedules(); // 即時反映
+    } catch (err) {
+      console.error(err);
+      alert("❌ 削除に失敗しました");
     }
   };
 
@@ -354,15 +367,23 @@ const RegisterPage = () => {
             <h2 className="mt-8">📋 保存済みスケジュール</h2>
             <ul>
               {savedSchedules.map((s) => (
-                <li key={s.id} className="schedule-card">
-                  <span className="schedule-title">
-                    {s.title} ({s.date})
-                  </span>
-                  <span className="ml-2 text-sm text-gray-600">
-                    {s.time_type === "時刻指定"
-                      ? `${s.start_time}〜${s.end_time}`
-                      : s.time_type}
-                  </span>
+                <li key={s.id} className="schedule-card flex justify-between items-center">
+                  <div>
+                    <span className="schedule-title">
+                      {s.title} ({s.date})
+                    </span>
+                    <span className="ml-2 text-sm text-gray-600">
+                      {s.time_type === "時刻指定"
+                        ? `${s.start_time}〜${s.end_time}`
+                        : s.time_type}
+                    </span>
+                  </div>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteSchedule(s.id)}
+                  >
+                    ✖
+                  </button>
                 </li>
               ))}
             </ul>
