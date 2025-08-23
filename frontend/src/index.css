@@ -6,12 +6,15 @@ body {
   margin: 0;
   padding: 0;
   background: radial-gradient(circle at top left, #FDB9C8, #ffffff 50%, #CDE7F0 90%);
-  font-family: 'Roboto', sans-serif;  /* ← 本文をRobotoに変更 */
+  font-family: 'Roboto', sans-serif !important;  /* ← 強制的にRobotoを本文に */
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
   overflow-x: hidden;
 }
+
+
+
 
 /* ===== リンク（アンダーバー削除） ===== */
 a,
@@ -79,7 +82,7 @@ main {
   font-size: 1.2rem;
   font-weight: 500;
   line-height: 1.9;
-  font-family: 'Roboto', sans-serif; /* ← 本文フォントをRobotoに */
+  font-family: 'Roboto', sans-serif !important; /* ← 本文カードもRoboto固定 */
   color: #333;
   text-align: center;
 }
