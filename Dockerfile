@@ -2,21 +2,22 @@ FROM node:18
 
 WORKDIR /app
 
-# まず backend と frontend の package.json をコピーして依存関係インストール
+# ===== backend の依存関係 =====
 COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
-
 RUN cd backend && npm install
+
+# ===== frontend の依存関係 =====
+COPY frontend/package*.json ./frontend/
 RUN cd frontend && npm install
 
-# プロジェクト全体をコピー（craco.config.js なども含まれる）
+# ===== ソースコードコピー =====
 COPY . .
 
-# frontend をビルド
+# ===== frontend ビルド =====
 RUN cd frontend && npm run build
 
-# ポート解放
+# ===== ポート公開 =====
 EXPOSE 5000
 
-# サーバー起動
+# ===== サーバー起動 =====
 CMD ["node", "backend/index.js"]
