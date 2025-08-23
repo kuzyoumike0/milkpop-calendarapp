@@ -452,3 +452,32 @@ body {
   box-shadow: 0 8px 20px rgba(0,76,160,0.25);
   transform: scale(1.02);
 }
+
+/* === 共通入力フォーム（おしゃれ） === */
+.input-field {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+.input-field::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+.input-field:focus {
+  outline: none;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
+  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
+  transform: scale(1.01);
+}
+
