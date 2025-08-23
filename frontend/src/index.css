@@ -5,7 +5,7 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.8;
-  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
+  background: #fff5f8; /* ← 全体の背景を薄いピンクに */
   font-family: 'Quicksand', sans-serif;
   font-size: 1.05rem;
   color: #333;
@@ -15,7 +15,7 @@ body {
 h1, h2 {
   font-weight: 600;
   color: #ff5fa2;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.1);
   letter-spacing: 1px;
   text-align: center;
   font-family: 'Baloo 2', 'Quicksand', sans-serif;
@@ -65,33 +65,16 @@ main {
   margin-bottom: 60px;
 }
 
-/* ===== トップロゴ ===== */
-.top-logo {
-  display: block;
-  margin: 2rem auto;
-  max-width: 1040px;
-  width: 100%;
-  height: auto;
-  border-radius: 24px;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.top-logo:hover {
-  transform: scale(1.02);
-  box-shadow: 0 16px 32px rgba(0,0,0,0.3);
-}
-
 /* ===== RegisterPage 全体 ===== */
 .register-page {
-  background: linear-gradient(to bottom, #FDB9C8, #fff, #004CA0);
   min-height: 100vh;
-  padding: 30px 20px;
+  padding: 40px 20px;
   font-family: 'Quicksand', sans-serif;
 }
 
 /* ===== バナー ===== */
 .banner {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: #ff85b3;
   color: #fff;
   text-align: center;
   padding: 18px;
@@ -99,7 +82,7 @@ main {
   margin-bottom: 30px;
   font-family: 'Baloo 2', cursive;
   font-size: 2rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
 }
 
 /* ===== レイアウト（カレンダー7割 + リスト3割） ===== */
@@ -109,13 +92,22 @@ main {
   gap: 40px;
   max-width: 1200px;
   margin: auto;
-  padding: 0 40px; /* 左右余白 */
+  padding: 0 40px;
 }
 .calendar-section {
   flex: 0 0 70%;
 }
 .schedule-section {
   flex: 0 0 30%;
+}
+
+/* ===== カード共通 ===== */
+.card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  margin-bottom: 24px;
 }
 
 /* ===== 入力フォーム ===== */
@@ -140,10 +132,10 @@ main {
 .form-group input:focus {
   outline: none;
   border-color: #ff5fa2;
-  box-shadow: 0 0 10px rgba(255,95,162,0.6);
+  box-shadow: 0 0 10px rgba(255,95,162,0.5);
 }
 
-/* ===== カレンダー（自作） ===== */
+/* ===== カレンダー（自作カード） ===== */
 .calendar-nav {
   display: flex;
   justify-content: space-between;
@@ -188,7 +180,7 @@ main {
 .calendar-cell:hover {
   background: #ffe4ec;
   transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(255,185,200,0.5);
+  box-shadow: 0 4px 12px rgba(255,185,200,0.4);
 }
 .calendar-cell.today {
   background: #fff0f5 !important;
@@ -206,7 +198,7 @@ main {
 
 /* ===== 登録済み日程カード ===== */
 .schedule-card {
-  background: #fff5f8;
+  background: #fff;
   border: 2px solid #FDB9C8;
   border-radius: 16px;
   padding: 14px;
