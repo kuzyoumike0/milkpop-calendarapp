@@ -118,10 +118,28 @@ const RegisterPage = () => {
             })}
           </div>
 
-          {/* 選択中の日程（カード表示） */}
+          {/* タイトル入力 */}
+          <div className="form-group mt-4">
+            <label>タイトル</label>
+            <input
+              type="text"
+              value={title}
+              placeholder="予定タイトルを入力"
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <button className="save-btn" onClick={handleSave}>
+            登録する
+          </button>
+        </div>
+
+        {/* ===== 右：登録済みリスト & 選択中日程 3割 ===== */}
+        <div className="schedule-section">
+          {/* 選択中日程 */}
           {sortedSelectedDates.length > 0 && (
-            <div className="selected-dates mt-4">
-              <h3 className="form-title">選択中の日程</h3>
+            <div className="selected-dates mb-4">
+              <h2 className="form-title">選択中の日程</h2>
               <ul>
                 {sortedSelectedDates.map((d, i) => (
                   <li key={i} className="schedule-card">
@@ -140,27 +158,8 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {/* タイトル入力 */}
-          <div className="form-group mt-4">
-            <label>タイトル</label>
-            <input
-              type="text"
-              value={title}
-              placeholder="予定タイトルを入力"
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          <button className="save-btn" onClick={handleSave}>
-            登録する
-          </button>
-        </div>
-
-        {/* ===== 右：登録済みリスト 3割 ===== */}
-        <div className="schedule-section">
+          {/* 登録済みリスト */}
           <h2 className="form-title">登録済み日程</h2>
-
-          {/* 並び順切り替え */}
           <div className="sort-toggle">
             <label>並び順: </label>
             <select
