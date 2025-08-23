@@ -86,11 +86,20 @@ main {
 
 .top-logo {
   display: block;
-  margin: 0 auto 2rem auto; /* 中央揃え */
-  max-width: 680px;        /* 最大幅 1040px */
-  width: 100%;              /* ウィンドウ幅に合わせて縮小 */
+  margin: 2rem auto;        /* 中央配置 & 上下余白 */
+  max-width: 1040px;        /* 最大横幅 */
+  width: 100%;              /* 画面幅に応じて縮小 */
   height: auto;             /* アスペクト比維持 */
+  border-radius: 24px;      /* 丸み */
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2); /* ちょっとリッチな影 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+.top-logo:hover {
+  transform: scale(1.02);   /* ホバー時に少し拡大 */
+  box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+}
+
 
 /* ===== ラジオボタン ===== */
 .radio-group {
