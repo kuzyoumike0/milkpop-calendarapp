@@ -9,7 +9,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
   const [savedSchedules, setSavedSchedules] = useState([]);
-  const [sortOrder, setSortOrder] = useState("asc"); // ← 並び順管理
+  const [sortOrder, setSortOrder] = useState("asc"); // 並び順管理
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
@@ -40,7 +40,7 @@ const RegisterPage = () => {
       alert("タイトルと日付を入力してください！");
       return;
     }
-    const sortedDates = [...selectedDates].sort((a, b) => a - b);
+    const sortedDates = [...selectedDates].sort((a, b) => a - b); // 日付を昇順ソート
     setSavedSchedules([
       ...savedSchedules,
       { id: Date.now(), title, dates: sortedDates, month, year },
