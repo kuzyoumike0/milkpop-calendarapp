@@ -86,6 +86,29 @@ body {
     width: 100%;  /* スマホでは全幅 */
   }
 }
+/* === ラベル下に自然に揃える === */
+.input-field {
+  width: 70%;
+  max-width: 500px;
+  padding: 14px 18px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  margin-left: 0;   /* 左寄せ */
+  display: block;   /* ラベルの下に配置 */
+}
+
+@media (max-width: 600px) {
+  .input-field {
+    width: 100%;
+  }
+}
 
 
 /* ===== ラジオボタン（おしゃれ） ===== */
