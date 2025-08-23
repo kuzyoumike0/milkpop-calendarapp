@@ -454,3 +454,20 @@ body {
   font-weight: bold;
   box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 }
+
+/* ✖ 削除ボタン */
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #ff5fa2;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: transform 0.2s, color 0.2s;
+}
+.delete-btn:hover {
+  color: #004CA0;
+  transform: scale(1.2);
+}
+
