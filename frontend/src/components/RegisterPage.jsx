@@ -11,7 +11,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
   const [issuedUrl, setIssuedUrl] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルト: 複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
   const [rangeStart, setRangeStart] = useState(null);
 
   // === 今の月の日数を計算 ===
@@ -29,24 +29,19 @@ const RegisterPage = () => {
       day
     ).padStart(2, "0")}`;
 
-    if (selectionMode === "single") {
-      // 単日選択
-      setSelectedDates([dateStr]);
-    } else if (selectionMode === "multiple") {
-      // 複数日選択
+    if (selectionMode === "multiple") {
       if (selectedDates.includes(dateStr)) {
         setSelectedDates(selectedDates.filter((d) => d !== dateStr));
       } else {
         setSelectedDates([...selectedDates, dateStr]);
       }
     } else if (selectionMode === "range") {
-      // 範囲選択
       if (!rangeStart) {
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
-        const start = new Date(rangeStart);
-        const end = new Date(dateStr);
+        let start = new Date(rangeStart);
+        let end = new Date(dateStr);
         if (start > end) [start, end] = [end, start];
 
         const range = [];
@@ -59,7 +54,7 @@ const RegisterPage = () => {
           cursor.setDate(cursor.getDate() + 1);
         }
         setSelectedDates(range);
-        setRangeStart(null); // リセット
+        setRangeStart(null);
       }
     }
   };
@@ -123,34 +118,47 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            {/* 🔹 タイトル入力欄 */}
+            {/* タイトル入力欄 */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                📌 スケジュールタイトル
+                📌 タイトル
               </label>
               <input
                 type="text"
-                placeholder="例: 夏休み旅行の予定"
+                placeholder="タイトルを入力してください"
                 className="input-field"
                 value={title}
                 onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
               />
             </div>
 
-            {/* 選択モード切替 */}
-            <div className="mb-4 text-left">
+            {/* 選択モード（ラジオボタン） */}
+            <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 🔽 選択モード
               </label>
-              <select
-                className="input-field"
-                value={selectionMode}
-                onChange={(e) => setSelectionMode(e.target.value)}
-              >
-                <option value="single">単日選択</option>
-                <option value="multiple">複数選択</option>
-                <option value="range">範囲選択</option>
-              </select>
+              <div className="radio-options">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="multiple"
+                    checked={selectionMode === "multiple"}
+                    onChange={(e) => setSelectionMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span>
+                  複数選択
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="range"
+                    checked={selectionMode === "range"}
+                    onChange={(e) => setSelectionMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span>
+                  範囲選択
+                </label>
+              </div>
             </div>
 
             {/* カレンダータイトル */}
