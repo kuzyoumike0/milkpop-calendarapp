@@ -129,7 +129,7 @@ const RegisterPage = () => {
                       {month + 1}/{d}
                     </span>
                     <button
-                      className="delete-btn"
+                      className="delete-btn-small"
                       onClick={() => handleRemoveSelected(d)}
                     >
                       ×
