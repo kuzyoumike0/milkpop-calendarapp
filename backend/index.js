@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
+const crypto = require("crypto");
 const { Pool } = require("pg");
 
 const app = express();
@@ -48,6 +49,15 @@ const initAllDB = async () => {
         schedule_id INT NOT NULL,
         username TEXT,
         choice TEXT CHECK (choice IN ('〇','△','✖')),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS share_links (
+        id SERIAL PRIMARY KEY,
+        url TEXT UNIQUE NOT NULL,
+        title TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
@@ -151,6 +161,50 @@ app.get("/api/votes/:scheduleId", async (req, res) => {
       [scheduleId]
     );
     res.json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "DB fetch error" });
+  }
+});
+
+// ===== 共有リンク作成 =====
+app.post("/api/share-links", async (req, res) => {
+  try {
+    const { title } = req.body;
+    const randomUrl = crypto.randomBytes(6).toString("hex"); // ランダムな12文字
+    const result = await pool.query(
+      `INSERT INTO share_links (url, title) VALUES ($1, $2) RETURNING *`,
+      [randomUrl, title]
+    );
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "DB insert error" });
+  }
+});
+
+// ===== 共有リンク一覧 =====
+app.get("/api/share-links", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM share_links ORDER BY created_at DESC`
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "DB fetch error" });
+  }
+});
+
+// ===== 個別リンク取得 =====
+app.get("/api/share-links/:url", async (req, res) => {
+  try {
+    const { url } = req.params;
+    const result = await pool.query(`SELECT * FROM share_links WHERE url = $1`, [url]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Not Found" });
+    }
+    res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "DB fetch error" });
