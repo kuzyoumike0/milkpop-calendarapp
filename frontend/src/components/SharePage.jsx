@@ -65,6 +65,15 @@ const SharePage = () => {
     }
   };
 
+  // 集計関数
+  const countVotes = (voteList) => {
+    const counts = { "〇": 0, "△": 0, "✖": 0 };
+    voteList.forEach((v) => {
+      if (counts[v.choice] !== undefined) counts[v.choice]++;
+    });
+    return counts;
+  };
+
   useEffect(() => {
     fetchSchedules();
   }, []);
@@ -93,47 +102,58 @@ const SharePage = () => {
         </div>
 
         <ul className="space-y-6">
-          {schedules.map((s) => (
-            <li
-              key={s.id}
-              className="border p-4 rounded-xl shadow-sm bg-gray-50"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <p className="font-bold">{s.title}</p>
-                  <p>{new Date(s.date).toLocaleDateString()}</p>
-                </div>
-                <select
-                  className="border rounded-xl px-3 py-2"
-                  value={votes[s.id] || ""}
-                  onChange={(e) => handleVoteChange(s.id, e.target.value)}
-                >
-                  <option value="">選択してください</option>
-                  <option value="〇">〇</option>
-                  <option value="△">△</option>
-                  <option value="✖">✖</option>
-                </select>
-              </div>
+          {schedules.map((s) => {
+            const result = voteResults[s.id] || [];
+            const counts = countVotes(result);
 
-              {/* 投票結果 */}
-              <div className="mt-2">
-                <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
-                  投票結果
-                </h3>
-                <ul className="text-sm space-y-1">
-                  {voteResults[s.id] && voteResults[s.id].length > 0 ? (
-                    voteResults[s.id].map((v, idx) => (
-                      <li key={idx}>
-                        {v.username} : {v.choice}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-gray-500">まだ投票がありません</li>
-                  )}
-                </ul>
-              </div>
-            </li>
-          ))}
+            return (
+              <li
+                key={s.id}
+                className="border p-4 rounded-xl shadow-sm bg-gray-50"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <p className="font-bold">{s.title}</p>
+                    <p>{new Date(s.date).toLocaleDateString()}</p>
+                  </div>
+                  <select
+                    className="border rounded-xl px-3 py-2"
+                    value={votes[s.id] || ""}
+                    onChange={(e) => handleVoteChange(s.id, e.target.value)}
+                  >
+                    <option value="">選択してください</option>
+                    <option value="〇">〇</option>
+                    <option value="△">△</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </div>
+
+                {/* 投票結果 */}
+                <div className="mt-2">
+                  <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
+                    投票結果
+                  </h3>
+                  <ul className="text-sm space-y-1">
+                    {result.length > 0 ? (
+                      result.map((v, idx) => (
+                        <li key={idx}>
+                          {v.username} : {v.choice}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-gray-500">まだ投票がありません</li>
+                    )}
+                  </ul>
+
+                  {/* 集計表示 */}
+                  <div className="mt-3 text-sm font-semibold">
+                    集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖{" "}
+                    {counts["✖"]}人
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
 
         {/* 保存ボタン */}
