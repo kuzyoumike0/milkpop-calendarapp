@@ -6,12 +6,12 @@ import Footer from "./Footer";
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-const RegisterPage = () => {
+const PersonalPage = () => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [issuedUrl, setIssuedUrl] = useState("");
+  const [memo, setMemo] = useState("");
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
 
@@ -67,24 +67,41 @@ const RegisterPage = () => {
     }
   };
 
-  // === URL発行 ===
-  const handleIssueUrl = async () => {
+  // === 選択解除 ===
+  const handleDeleteDate = (dateStr) => {
+    setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+  };
+
+  // === 保存 ===
+  const handleSave = async () => {
     try {
-      const res = await fetch("/api/share-links", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, scheduleIds: [] }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setIssuedUrl(`${window.location.origin}/share/${json.data.url}`);
+      for (const d of selectedDates) {
+        const res = await fetch("/api/personal-schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            memo,
+            date: d,
+            selectionMode,
+            timeType,
+            startTime: timeType === "時刻指定" ? startTime : null,
+            endTime: timeType === "時刻指定" ? endTime : null,
+          }),
+        });
+        await res.json();
       }
+      alert("✅ 個人スケジュールを保存しました");
+      setSelectedDates([]);
+      setTitle("");
+      setMemo("");
     } catch (err) {
       console.error(err);
+      alert("❌ 保存に失敗しました");
     }
   };
 
-  // === カレンダー描画 ===
+  // === カレンダーセル生成 ===
   const cells = [];
   for (let i = 0; i < firstDay; i++) {
     cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
@@ -117,19 +134,33 @@ const RegisterPage = () => {
       <Header />
       <main className="register-page">
         <div className="register-layout">
-          {/* 左：カレンダー */}
+          {/* 左：入力フォーム + カレンダー */}
           <div className="calendar-section">
             {/* タイトル */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                📌 スケジュールタイトル
+                📌 タイトル
               </label>
               <input
                 type="text"
-                placeholder="例: 夏休み旅行の予定"
+                placeholder="例: 出張予定"
                 className="input-field"
                 value={title}
                 onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
+              />
+            </div>
+
+            {/* メモ */}
+            <div className="mb-6 text-left">
+              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+                🗒 メモ
+              </label>
+              <textarea
+                placeholder="詳細を入力してください"
+                className="input-field"
+                rows="4"
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
               />
             </div>
 
@@ -227,27 +258,20 @@ const RegisterPage = () => {
               {selectedDates.map((d, idx) => (
                 <li key={idx} className="schedule-card">
                   <span className="schedule-title">{d}</span>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDeleteDate(d)}
+                  >
+                    ✖
+                  </button>
                 </li>
               ))}
             </ul>
 
-            {/* URL発行ボタン */}
-            <button onClick={handleIssueUrl} className="save-btn mt-6">
-              🔗 共有リンクを発行
+            {/* 保存ボタン */}
+            <button onClick={handleSave} className="save-btn mt-6">
+              💾 保存する
             </button>
-
-            {issuedUrl && (
-              <div className="issued-url mt-4">
-                <p>✅ 発行されたURL:</p>
-                <a
-                  href={issuedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {issuedUrl}
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </main>
@@ -256,4 +280,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default PersonalPage;
