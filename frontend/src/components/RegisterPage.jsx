@@ -86,11 +86,9 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      <div className="banner">MilkPOP Calendar</div>
-
       {/* ===== タイトル・モード選択エリア ===== */}
       <div className="form-top">
-        <div className="form-group short-input">
+        <div className="form-group short-input left-input">
           <label>タイトル</label>
           <input
             type="text"
