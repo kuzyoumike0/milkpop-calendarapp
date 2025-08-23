@@ -44,7 +44,7 @@ const Header = () => {
           <Link to="/">MilkPOP Calendar</Link>
         </h1>
 
-        {/* 右側：Discordログイン or ユーザー情報 + ☰ */}
+        {/* 右側：ユーザー情報 + ハンバーガー */}
         <div className="flex items-center gap-4 relative">
           {user ? (
             <span className="user-info flex items-center gap-2">
@@ -70,7 +70,7 @@ const Header = () => {
             </button>
           )}
 
-          {/* ハンバーガーメニュー */}
+          {/* ハンバーガーメニュー（右端） */}
           <button
             className="hamburger text-2xl"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -79,9 +79,9 @@ const Header = () => {
             ☰
           </button>
 
-          {/* ☰クリックで右寄せメニューを表示 */}
+          {/* ドロップダウンメニュー（右寄せ・アニメーション付き） */}
           {menuOpen && (
-            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2">
+            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2 animate-fadeIn">
               <Link to="/register" onClick={() => setMenuOpen(false)}>
                 日程登録
               </Link>
