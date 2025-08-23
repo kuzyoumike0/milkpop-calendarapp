@@ -320,4 +320,22 @@ main {
   transform: scale(1.1);
 }
 
+/* ===== 選択済み日程用の小さな削除ボタン ===== */
+.delete-btn-small {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-btn-small:hover {
+  background: #f5f5f5;
+  color: #ff5fa2;
+  transform: scale(1.1);
+}
 
