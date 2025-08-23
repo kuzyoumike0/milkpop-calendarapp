@@ -109,11 +109,6 @@ app.get("/api/responses/:shareId", async (req, res) => {
   }
 });
 
-// ====== ルート確認用 ======
-app.get("/", (req, res) => {
-  res.send("✅ MilkPOP Calendar API is running");
-});
-
 // ====== Reactビルド配信 ======
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
