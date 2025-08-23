@@ -92,12 +92,23 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            {/* タイトル（年・月） */}
+            {/* 🔹 タイトル入力欄（年月タイトルの上に配置） */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="タイトルを入力してください"
+                className="w-full border-2 border-[#FDB9C8] rounded-xl px-3 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            {/* カレンダータイトル */}
             <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
               {year}年 {month + 1}月
             </h2>
 
-            {/* 前の月・次の月 ボタンを横並び */}
+            {/* 前の月・次の月 ボタン */}
             <div className="flex justify-between items-center mb-4">
               <button onClick={prevMonth} className="month-btn">
                 ◀ 前の月
@@ -107,6 +118,7 @@ const RegisterPage = () => {
               </button>
             </div>
 
+            {/* 自作カレンダー */}
             <div className="custom-calendar">
               {daysOfWeek.map((d, idx) => (
                 <div key={idx} className="calendar-day-header">
@@ -133,17 +145,6 @@ const RegisterPage = () => {
                 </li>
               ))}
             </ul>
-
-            {/* タイトル入力 */}
-            <div className="mt-4">
-              <input
-                type="text"
-                placeholder="タイトルを入力"
-                className="w-full border-2 border-[#FDB9C8] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
 
             {/* URL発行ボタン */}
             <button onClick={handleIssueUrl} className="save-btn mt-6">
