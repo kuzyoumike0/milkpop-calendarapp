@@ -1,3 +1,4 @@
+// frontend/src/pages/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -9,6 +10,21 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [mode, setMode] = useState("multiple");
 
+  // 📌 年月をフォーマットする関数
+  const formatYearMonth = (date) => {
+    return `${date.getFullYear()}年 ${date.getMonth() + 1}月`;
+  };
+
+  // 📌 月移動
+  const handlePrevMonth = () => {
+    setDate(new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setDate(new Date(date.getFullYear(), date.getMonth() + 1, 1));
+  };
+
+  // 📌 日付クリック
   const handleDateChange = (newDate) => {
     if (mode === "multiple") {
       const exists = selectedDates.find(
@@ -27,7 +43,6 @@ const RegisterPage = () => {
         const end = newDate;
         const range = [];
         const current = new Date(start);
-
         while (current <= end) {
           range.push(new Date(current));
           current.setDate(current.getDate() + 1);
@@ -38,6 +53,7 @@ const RegisterPage = () => {
     setDate(newDate);
   };
 
+  // 📌 日付削除
   const handleDelete = (targetDate) => {
     setSelectedDates(selectedDates.filter((d) => d !== targetDate));
   };
@@ -45,8 +61,9 @@ const RegisterPage = () => {
   return (
     <div className="register-page">
       <div className="register-layout">
+        {/* === 左カラム === */}
         <div className="calendar-section">
-          {/* 入力フォーム */}
+          {/* タイトル入力 */}
           <input
             type="text"
             placeholder="タイトルを入力"
@@ -56,7 +73,7 @@ const RegisterPage = () => {
           />
 
           {/* ラジオボタン */}
-          <div className="radio-options">
+          <div className="radio-options-left">
             <label className="radio-label">
               <input
                 type="radio"
@@ -79,23 +96,33 @@ const RegisterPage = () => {
             </label>
           </div>
 
+          {/* 自作ナビゲーション */}
+          <div className="calendar-nav">
+            <button onClick={handlePrevMonth} className="nav-btn">←</button>
+            <span className="calendar-title">{formatYearMonth(date)}</span>
+            <button onClick={handleNextMonth} className="nav-btn">→</button>
+          </div>
+
           {/* カレンダー */}
           <Calendar
-            onChange={handleDateChange}
+            onClickDay={handleDateChange}
             value={date}
-            selectRange={mode === "range"}
-            className="react-calendar"
-            tileClassName={({ date }) => {
+            locale="ja-JP"
+            navigationLabel={null}
+            prevLabel={null}
+            nextLabel={null}
+            next2Label={null}
+            prev2Label={null}
+            tileClassName={({ date: d }) => {
               const isSelected = selectedDates.some(
-                (d) => d.toDateString() === date.toDateString()
+                (s) => s.toDateString() === d.toDateString()
               );
-              if (isSelected) return "selected";
-              return "";
+              return isSelected ? "selected" : "";
             }}
           />
         </div>
 
-        {/* 選択中リスト */}
+        {/* === 右カラム === */}
         <div className="schedule-section">
           <h3>選択中の日程</h3>
           {selectedDates.length === 0 ? (
