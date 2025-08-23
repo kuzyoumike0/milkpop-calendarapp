@@ -6,10 +6,10 @@ import Footer from "./Footer";
 const TopPage = () => {
   return (
     <div className="bg-gradient-to-b from-[#FDB9C8] via-white to-[#004CA0] min-h-screen flex flex-col">
-      {/* ===== 共通ヘッダー ===== */}
+      {/* ヘッダー */}
       <Header />
 
-      {/* ===== コンテンツ ===== */}
+      {/* メイン */}
       <main className="flex-grow flex flex-col items-center px-6">
         <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-10 text-center space-y-8 mt-20">
           <h2 className="text-2xl font-semibold text-[#004CA0]">ようこそ！</h2>
@@ -17,7 +17,7 @@ const TopPage = () => {
             ここから日程登録ページや個人スケジュールページに移動できます。
           </p>
 
-          {/* ===== ロゴ画像表示 ===== */}
+          {/* ロゴ画像 */}
           <div className="flex justify-center">
             <img
               src="/logo.png"
@@ -43,7 +43,7 @@ const TopPage = () => {
         </div>
       </main>
 
-      {/* ===== 共通フッター ===== */}
+      {/* フッター */}
       <Footer />
     </div>
   );
