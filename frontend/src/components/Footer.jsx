@@ -1,6 +1,6 @@
 // frontend/src/components/Footer.jsx
 import React from "react";
-import { FaTwitter } from "react-icons/fa"; // ← アイコン追加
+import { FaTwitter } from "react-icons/fa"; // Twitterアイコン
 
 const Footer = () => {
   return (
@@ -8,7 +8,7 @@ const Footer = () => {
       <p>© 2025 MilkPOP Calendar - All Rights Reserved</p>
       <div className="sns-links">
         <a
-          href="https://twitter.com/your_account" // ← あなたのTwitterアカウントURL
+          href="https://x.com/Soni_complaint"
           target="_blank"
           rel="noopener noreferrer"
         >
