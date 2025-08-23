@@ -5,24 +5,40 @@
 body {
   margin: 0;
   padding: 0;
-  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
+  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #CDE7F0, #004CA0);
   font-family: 'M PLUS Rounded 1c',sans-serif;
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
+  animation: fadeIn 1s ease-in-out;
 }
 
-/* ===== 見出し ===== */
-h1 {
+/* ===== アニメーション ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 10px #FDB9C8; }
+  50% { box-shadow: 0 0 20px #004CA0; }
+}
+
+/* ===== 見出し（タイトル強調） ===== */
+h1, .title-text {
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
   font-weight: 700;
-  color: #004CA0;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.25); /* ← 視認性UP */
+  color: #fff;
+  text-shadow: 3px 3px 10px rgba(0,0,0,0.6);
 }
 h2, h3 {
   font-family: 'M PLUS Rounded 1c', sans-serif;
   font-weight: 600;
   color: #004CA0;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
 }
 
 /* ===== リンク ===== */
@@ -31,44 +47,46 @@ a {
   transition: all 0.3s ease;
 }
 a:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+  transform: scale(1.05);
 }
 
 /* ===== カードデザイン ===== */
 .card {
   background: #fff;
-  border-radius: 1.25rem;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  text-align: center;
 }
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+  transform: translateY(-6px) rotate(0.5deg);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
 }
 
 /* ===== トップページ本文カード ===== */
 .top-message-card {
-  background: #fff;
-  border-radius: 1.25rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-  padding: 1.5rem 2rem;
-  margin-top: 1rem;
-  margin-bottom: 3rem;   /* ← フッターとの余白 */
+  background: linear-gradient(145deg, #fff, #FFF5F8);
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 18px rgba(253,185,200,0.4);
+  padding: 1.8rem 2.2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 5rem;
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 500;
   line-height: 1.9;
   color: #444;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   text-align: center;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 .top-message-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(253,185,200,0.6);
 }
 
 /* ===== カレンダーUI ===== */
@@ -83,17 +101,21 @@ a:hover {
   text-align: center;
   border-radius: 1rem;
   cursor: pointer;
+  background: #fff;
   transition: all 0.2s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.08);
 }
 .calendar-cell:hover {
   background: #FFE0EB;
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.2);
 }
 .calendar-cell.selected {
   background: #FDB9C8;
   color: #fff;
   font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.25);
+  animation: bounce 0.6s;
 }
 
 /* ===== 曜日ヘッダー ===== */
@@ -102,119 +124,65 @@ a:hover {
   text-align: center;
   padding: 0.5rem;
   color: #444;
-}
-
-/* ===== ナビゲーションボタン ===== */
-.nav-btn {
-  background: #FDB9C8;
-  color: #fff;
-  border: none;
-  padding: 6px 14px;
+  background: #FFF5F8;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 600;
-}
-.nav-btn:hover {
-  background: #ff87a2;
-}
-.nav-btn-blue {
-  background: #004CA0;
-}
-.nav-btn-blue:hover {
-  background: #003080;
 }
 
-/* ===== ラジオボタン ===== */
-.radio-group {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin: 1rem 0;
-}
-.radio-group input[type="radio"] {
-  display: none;
-}
-.radio-group label {
-  display: inline-block;
-  padding: 0.5rem 1rem;
+/* ===== ナビゲーションボタン（かわいい仕様） ===== */
+.app-header .nav-links a {
+  padding: 0.6rem 1.4rem;
   border-radius: 9999px;
-  background: #f5f5f5;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-.radio-group input[type="radio"]:checked + label {
-  background: #FDB9C8;
+  font-weight: 600;
+  background: linear-gradient(135deg, #FDB9C8, #ff87a2);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(253, 185, 200, 0.6);
+  transition: all 0.3s ease, transform 0.2s ease;
+}
+.app-header .nav-links a:hover {
+  background: linear-gradient(135deg, #004CA0, #0073e6);
+  color: #fff;
+  transform: translateY(-2px) scale(1.08);
 }
 
-/* ===== プルダウン ===== */
-select {
-  appearance: none;
-  padding: 0.6rem 1rem;
-  border-radius: 0.75rem;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.2s ease;
-  background: #fff url("data:image/svg+xml;utf8,<svg fill='gray' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><polygon points='0,0 20,0 10,10'/></svg>") no-repeat right 0.8rem center/12px 12px;
+/* Discord専用ボタン */
+.app-header .discord-btn {
+  background: linear-gradient(135deg, #5865F2, #4752C4);
+  color: white;
+  box-shadow: 0 4px 12px rgba(88,101,242,0.6);
 }
-select:hover {
-  border-color: #FDB9C8;
-}
-select:focus {
-  outline: none;
-  border-color: #004CA0;
-  box-shadow: 0 0 0 3px rgba(0, 76, 160, 0.3);
+.app-header .discord-btn:hover {
+  background: linear-gradient(135deg, #4752C4, #2f357e);
+  transform: translateY(-2px) scale(1.08);
 }
 
 /* ===== 共通ボタン ===== */
 .btn {
   padding: 0.6rem 1.5rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
 }
 .btn-pink {
-  background: #FDB9C8;
+  background: linear-gradient(135deg, #FDB9C8, #ff87a2);
   color: #fff;
 }
 .btn-pink:hover {
-  background: #ff87a2;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #ff87a2, #FDB9C8);
+  transform: scale(1.08);
 }
 .btn-blue {
-  background: #004CA0;
+  background: linear-gradient(135deg, #004CA0, #0073e6);
   color: #fff;
 }
 .btn-blue:hover {
-  background: #003080;
-  transform: scale(1.05);
-}
-
-/* ===== 選択リスト ===== */
-.selected-list {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-.selected-list ul {
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin: 0.5rem 0;
-}
-.selected-list li {
-  margin-bottom: 0.25rem;
+  background: linear-gradient(135deg, #0073e6, #004CA0);
+  transform: scale(1.08);
 }
 
 /* ===== ヘッダー ===== */
 .app-header {
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: linear-gradient(90deg, #FDB9C8, #CDE7F0, #004CA0);
   color: white;
   padding: 14px 32px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -224,52 +192,31 @@ select:focus {
 }
 .app-header .nav-container {
   display: flex;
-  justify-content: space-between; /* 左右に配置 */
+  justify-content: space-between;
   align-items: center;
 }
 .app-header .logo {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #FDB9C8;
+  color: #fff;
   font-family: 'M PLUS Rounded 1c', sans-serif;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
   transition: transform 0.3s ease;
 }
 .app-header .logo:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 .app-header .nav-links {
   display: flex;
   gap: 14px;
 }
-.app-header .nav-links a {
-  padding: 0.5rem 1.2rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  background: #222;
-  color: white;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-.app-header .nav-links a:hover {
-  background: #FDB9C8;
-  color: black;
-  transform: translateY(-2px) scale(1.05);
-}
-.app-header .discord-btn {
-  background: #5865F2;
-  color: white;
-}
-.app-header .discord-btn:hover {
-  background: #4752C4;
-  transform: translateY(-2px) scale(1.05);
-}
 
 /* ===== フッター ===== */
 .app-footer {
-  background: linear-gradient(90deg, #004CA0, #FDB9C8);
+  background: linear-gradient(90deg, #004CA0, #CDE7F0, #FDB9C8);
   color: #fff;
   text-align: center;
-  padding: 24px 16px;
+  padding: 32px 16px;
   font-size: 0.9rem;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
   margin-top: auto;
@@ -281,12 +228,12 @@ select:focus {
   letter-spacing: 0.5px;
 }
 .app-footer .sns-links {
-  margin-top: 10px;
+  margin-top: 12px;
 }
 .app-footer .sns-links a {
   display: inline-block;
   margin: 0 10px;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   transition: all 0.3s ease;
 }
 .app-footer .sns-links a.twitter {
@@ -294,20 +241,20 @@ select:focus {
 }
 .app-footer .sns-links a.twitter:hover {
   color: #FDB9C8;
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
 .app-footer .sns-links a.discord {
   color: #5865F2;
 }
 .app-footer .sns-links a.discord:hover {
   color: #FDB9C8;
-  transform: scale(1.2);
+  transform: scale(1.3);
 }
 
 /* ===== レスポンシブ対応 ===== */
 @media (max-width: 1024px) {
   h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   .calendar-cell {
     padding: 0.6rem;
@@ -321,7 +268,7 @@ select:focus {
     font-size: 0.9rem;
   }
   h1 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
   .calendar-cell {
     padding: 0.5rem;
@@ -332,10 +279,10 @@ select:focus {
   }
   .btn {
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.6rem;
   }
   nav {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
 }
