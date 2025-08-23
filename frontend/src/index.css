@@ -357,13 +357,19 @@ footer p {
   letter-spacing: 0.5px;
 }
 
-footer a {
-  color: #004CA0;
-  margin: 0 6px;
-  font-weight: 600;
+/* SNSリンク */
+footer .sns-links {
+  margin-top: 10px;
+}
+
+footer .sns-links a {
+  display: inline-block;
+  margin: 0 8px;
+  font-size: 1.2rem;
+  color: #1DA1F2; /* Twitterブルー */
   transition: all 0.3s ease;
 }
-footer a:hover {
-  color: #FDB9C8;
-  text-decoration: underline;
+footer .sns-links a:hover {
+  color: #FDB9C8; /* ホバー時ピンク */
+  transform: scale(1.15);
 }
