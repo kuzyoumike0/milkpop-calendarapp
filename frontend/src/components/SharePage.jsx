@@ -5,22 +5,27 @@ import "../index.css";
 import { useParams } from "react-router-dom";
 
 const SharePage = () => {
-  const { shareId } = useParams();   // ← URLパラメータから取得
+  const { shareId } = useParams();   // ← URLパラメータ
   const [schedule, setSchedule] = useState(null);
   const [userName, setUserName] = useState("");
   const [answers, setAnswers] = useState({});
   const [savedResults, setSavedResults] = useState([]);
 
+  // 仮ログインユーザ（Discordログインしたら取得する想定）
   useEffect(() => {
     if (!shareId) return;
 
-    // 仮データ（API接続予定）
+    // 仮データ（APIから取得する想定）
     setSchedule({
       title: "サンプルイベント",
-      dates: ["2025-08-23", "2025-08-24", "2025-08-25"],
+      dates: [
+        { date: "2025-08-23", type: "終日", start: "09:00", end: "18:00" },
+        { date: "2025-08-24", type: "午前", start: "09:00", end: "12:00" },
+        { date: "2025-08-25", type: "午後", start: "13:00", end: "18:00" }
+      ],
     });
 
-    // localStorageからユーザ名取得
+    // localStorage or Discordユーザー名を保持
     const storedName = localStorage.getItem("userName");
     if (storedName) setUserName(storedName);
 
@@ -41,16 +46,22 @@ const SharePage = () => {
       return;
     }
 
+    // 未回答のものには「-」を入れる
+    const finalAnswers = {};
+    schedule.dates.forEach((d) => {
+      finalAnswers[d.date] = answers[d.date] ? answers[d.date] : "-";
+    });
+
     const res = await fetch("/api/responses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ share_id: shareId, user_name: userName, answers }),
+      body: JSON.stringify({ share_id: shareId, user_name: userName, answers: finalAnswers }),
     });
 
     if (res.ok) {
       localStorage.setItem("userName", userName);
 
-      // 最新の一覧を取得
+      // 最新一覧を取得
       const list = await fetch(`/api/responses/${shareId}`).then((r) => r.json());
       setSavedResults(list);
 
@@ -59,9 +70,6 @@ const SharePage = () => {
       alert("保存に失敗しました");
     }
   };
-
-  const allAnswered =
-    schedule && schedule.dates.every((date) => answers[date] && answers[date] !== "");
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -82,17 +90,17 @@ const SharePage = () => {
           <p>読み込み中...</p>
         ) : (
           <div className="register-layout">
-            {/* 左: カレンダー */}
+            {/* 左: 登録日程 & カレンダー */}
             <div className="calendar-section">
               <div className="custom-calendar">
                 <h3 className="text-lg font-bold text-[#004CA0] mb-2">
                   {schedule.title}
                 </h3>
                 <Calendar
-                  value={schedule.dates.map((d) => new Date(d))}
+                  value={schedule.dates.map((d) => new Date(d.date))}
                   className="custom-calendar"
                   tileClassName={({ date }) =>
-                    schedule.dates.find((d) => new Date(d).toDateString() === date.toDateString())
+                    schedule.dates.find((d) => d.date === date.toISOString().split("T")[0])
                       ? "react-calendar__tile--active"
                       : null
                   }
@@ -100,10 +108,15 @@ const SharePage = () => {
               </div>
 
               <div className="mt-6">
-                <h2 className="text-xl font-bold mb-2 text-[#004CA0]">📅 日程一覧</h2>
-                {schedule.dates.map((date) => (
-                  <div key={date} className="schedule-card">
-                    <span>{date}</span>
+                <h2 className="text-xl font-bold mb-2 text-[#004CA0]">📅 登録日程</h2>
+                {schedule.dates.map((d) => (
+                  <div key={d.date} className="schedule-card">
+                    <span>{d.date}</span>
+                    <span className="ml-2 text-sm text-gray-300">
+                      {d.type === "時間指定"
+                        ? `${d.start}〜${d.end}`
+                        : d.type}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -113,6 +126,7 @@ const SharePage = () => {
             <div className="schedule-section">
               <h2 className="text-xl font-bold mb-4 text-[#004CA0]">✅ 出欠回答</h2>
 
+              {/* ユーザ名入力 */}
               <div className="mb-4">
                 <label className="block mb-1">ユーザ名</label>
                 <input
@@ -124,17 +138,17 @@ const SharePage = () => {
                 />
               </div>
 
-              {schedule.dates.map((date) => (
-                <div key={date} className="schedule-card">
-                  <span>{date}</span>
+              {schedule.dates.map((d) => (
+                <div key={d.date} className="schedule-card">
+                  <span>{d.date}</span>
                   <select
                     className="px-2 py-1 rounded text-black"
-                    value={answers[date] || ""}
-                    onChange={(e) => handleAnswerChange(date, e.target.value)}
+                    value={answers[d.date] || ""}
+                    onChange={(e) => handleAnswerChange(d.date, e.target.value)}
                   >
                     <option value="">選択してください</option>
                     <option value="〇">〇</option>
-                    <option value="▲">▲</option>
+                    <option value="△">△</option>
                     <option value="✖">✖</option>
                   </select>
                 </div>
@@ -143,8 +157,7 @@ const SharePage = () => {
               <div className="mt-6">
                 <button
                   onClick={handleSave}
-                  className={`share-btn ${!allAnswered ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={!allAnswered}
+                  className="share-btn"
                 >
                   保存する
                 </button>
@@ -157,9 +170,10 @@ const SharePage = () => {
                 {savedResults.map((row, idx) => (
                   <div key={idx} className="mb-2">
                     <p className="font-bold">{row.user_name}</p>
-                    <p>
-                      {row.date} : <span className="font-bold">{row.answer}</span>
-                    </p>
+                    {/* 複数日分まとめて表示 */}
+                    {Object.entries(row.answers || {}).map(([date, ans]) => (
+                      <p key={date}>{date} : <span className="font-bold">{ans}</span></p>
+                    ))}
                   </div>
                 ))}
               </div>
