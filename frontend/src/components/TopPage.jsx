@@ -9,7 +9,7 @@ const TopPage = () => {
       <Header />
 
       {/* ===== メインコンテンツ ===== */}
-      <main className="flex flex-col items-center justify-center flex-1 text-center p-6">
+      <main className="flex flex-col items-center justify-center flex-1 text-center p-6 mt-24">
         {/* ロゴ画像（レスポンシブ対応 最大幅1040px） */}
         <img
           src="/logo.png"
