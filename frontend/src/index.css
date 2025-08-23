@@ -49,6 +49,41 @@ body {
   box-shadow: 0 0 12px rgba(0,76,160,0.35);
 }
 
+/* === 共通入力フォーム（おしゃれ・中央寄せ） === */
+.input-field {
+  width: 70%;                /* ← 小さめに */
+  max-width: 500px;          /* PCで大きすぎないよう制限 */
+  display: block;            /* 中央寄せ */
+  margin: 0 auto;            /* 中央寄せ */
+  padding: 14px 18px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+.input-field::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+.input-field:focus {
+  outline: none;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
+  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
+  transform: scale(1.01);
+}
+/* === スマホ対応 === */
+@media (max-width: 600px) {
+  .input-field {
+    width: 100%;  /* スマホでは全幅 */
+  }
+}
+
 /* ===== ラジオボタン（おしゃれ） ===== */
 .radio-options {
   display: flex;
@@ -292,7 +327,7 @@ body {
   text-decoration: none;
 }
 
-/* ===== トップページロゴ画像（レスポンシブ対応） ===== */
+/* ===== トップページロゴ画像 ===== */
 .top-logo {
   display: block;
   margin: 2rem auto;
@@ -430,54 +465,3 @@ body {
   color: #004CA0;
   transform: scale(1.2);
 }
-
-/* === タイトル入力欄さらにお洒落に === */
-.title-input {
-  border: 2px solid transparent;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #333;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-}
-.title-input::placeholder {
-  color: #bbb;
-  font-style: italic;
-}
-.title-input:focus {
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
-  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
-  transform: scale(1.02);
-}
-
-/* === 共通入力フォーム（おしゃれ） === */
-.input-field {
-  width: 100%;
-  padding: 14px 18px;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-}
-
-.input-field::placeholder {
-  color: #aaa;
-  font-style: italic;
-}
-
-.input-field:focus {
-  outline: none;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
-  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
-  transform: scale(1.01);
-}
-
