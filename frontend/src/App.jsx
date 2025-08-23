@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import RegisterPage from "./RegisterPage";
+import RegisterPage from "./components/RegisterPage";
 import TopPage from "./pages/TopPage";
 import SharePage from "./pages/SharePage";
 
