@@ -88,7 +88,9 @@ const RegisterPage = () => {
 
   return (
     <>
+      {/* === ヘッダー呼び出し === */}
       <Header />
+
       <main className="register-page">
         {/* ===== 入力欄＆モード選択 ===== */}
         <div className="form-top">
@@ -238,6 +240,8 @@ const RegisterPage = () => {
           </div>
         </div>
       </main>
+
+      {/* === フッター呼び出し === */}
       <Footer />
     </>
   );
