@@ -331,3 +331,25 @@ footer .sns-links a.discord:hover {
     gap: 0.5rem;
   }
 }
+/* ===== トップページ本文カード ===== */
+.top-message-card {
+  background: #fff;
+  border-radius: 1.25rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 1.5rem 2rem;
+  margin-top: 1rem;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.9;
+  color: #444;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+.top-message-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+}
+
