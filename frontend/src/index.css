@@ -354,3 +354,74 @@ main {
 }
 
 
+/* タイトル入力欄を少し短く */
+.short-input input {
+  width: 75%;   /* デフォルト100%から短縮 */
+  margin: 0 auto;
+  display: block;
+}
+
+/* ラジオボタングループ */
+.radio-group {
+  margin-top: 10px;
+}
+
+.radio-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 6px;
+}
+
+.radio-label {
+  position: relative;
+  padding-left: 28px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #333;
+  user-select: none;
+}
+
+/* デフォルトのラジオ非表示 */
+.radio-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* カスタムラジオの見た目 */
+.custom-radio {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  height: 18px;
+  width: 18px;
+  background-color: #fff;
+  border: 2px solid #FDB9C8;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+/* チェック時の見た目 */
+.radio-label input:checked ~ .custom-radio {
+  background-color: #004CA0;
+  border-color: #004CA0;
+}
+
+.custom-radio:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.radio-label input:checked ~ .custom-radio:after {
+  display: block;
+}
+
+.radio-label .custom-radio:after {
+  top: 4px;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+}
