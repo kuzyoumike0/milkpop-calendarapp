@@ -4,17 +4,26 @@ const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
   const [votes, setVotes] = useState({});
   const [username, setUsername] = useState("");
+  const [voteResults, setVoteResults] = useState({});
 
+  // スケジュール取得
   const fetchSchedules = async () => {
     try {
       const res = await fetch("/api/schedules");
       const data = await res.json();
       setSchedules(data);
+
+      // スケジュールごとに投票結果取得
+      data.forEach(async (s) => {
+        const v = await fetchVotes(s.id);
+        setVoteResults((prev) => ({ ...prev, [s.id]: v }));
+      });
     } catch (err) {
       console.error(err);
     }
   };
 
+  // 投票結果取得
   const fetchVotes = async (scheduleId) => {
     try {
       const res = await fetch(`/api/votes/${scheduleId}`);
@@ -26,6 +35,7 @@ const SharePage = () => {
     }
   };
 
+  // 投票選択
   const handleVoteChange = (scheduleId, choice) => {
     setVotes((prev) => ({
       ...prev,
@@ -33,6 +43,7 @@ const SharePage = () => {
     }));
   };
 
+  // 投票保存
   const handleSaveVotes = async () => {
     try {
       for (const scheduleId in votes) {
@@ -81,26 +92,46 @@ const SharePage = () => {
           />
         </div>
 
-        <ul className="space-y-4">
+        <ul className="space-y-6">
           {schedules.map((s) => (
             <li
               key={s.id}
-              className="border p-4 rounded-xl shadow-sm flex justify-between items-center"
+              className="border p-4 rounded-xl shadow-sm bg-gray-50"
             >
-              <div>
-                <p className="font-bold">{s.title}</p>
-                <p>{new Date(s.date).toLocaleDateString()}</p>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <p className="font-bold">{s.title}</p>
+                  <p>{new Date(s.date).toLocaleDateString()}</p>
+                </div>
+                <select
+                  className="border rounded-xl px-3 py-2"
+                  value={votes[s.id] || ""}
+                  onChange={(e) => handleVoteChange(s.id, e.target.value)}
+                >
+                  <option value="">選択してください</option>
+                  <option value="〇">〇</option>
+                  <option value="△">△</option>
+                  <option value="✖">✖</option>
+                </select>
               </div>
-              <select
-                className="border rounded-xl px-3 py-2"
-                value={votes[s.id] || ""}
-                onChange={(e) => handleVoteChange(s.id, e.target.value)}
-              >
-                <option value="">選択してください</option>
-                <option value="〇">〇</option>
-                <option value="△">△</option>
-                <option value="✖">✖</option>
-              </select>
+
+              {/* 投票結果 */}
+              <div className="mt-2">
+                <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
+                  投票結果
+                </h3>
+                <ul className="text-sm space-y-1">
+                  {voteResults[s.id] && voteResults[s.id].length > 0 ? (
+                    voteResults[s.id].map((v, idx) => (
+                      <li key={idx}>
+                        {v.username} : {v.choice}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-gray-500">まだ投票がありません</li>
+                  )}
+                </ul>
+              </div>
             </li>
           ))}
         </ul>
