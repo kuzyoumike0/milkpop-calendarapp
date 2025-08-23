@@ -9,9 +9,7 @@ import SharePage from "./pages/SharePage";
 function App() {
   return (
     <div className="app">
-      {/* ✅ 全ページ共通ヘッダー */}
       <Header />
-
       <main>
         <Routes>
           <Route path="/" element={<TopPage />} />
@@ -19,8 +17,6 @@ function App() {
           <Route path="/share/:id" element={<SharePage />} />
         </Routes>
       </main>
-
-      {/* ✅ 全ページ共通フッター */}
       <Footer />
     </div>
   );
