@@ -60,28 +60,35 @@ const RegisterPage = () => {
         {/* ===== ラジオボタンエリア ===== */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-[#004CA0] mb-3">選択方法</h2>
-          <div className="flex gap-6">
-            <label className="cursor-pointer flex items-center space-x-2 bg-[#FDB9C8] px-4 py-2 rounded-full shadow hover:bg-[#004CA0] hover:text-white transition">
+          <div className="radio-group">
+            <label
+              className={`radio-label ${
+                selectionMode === "range" ? "radio-active" : ""
+              }`}
+            >
               <input
                 type="radio"
                 name="selectionMode"
                 value="range"
                 checked={selectionMode === "range"}
                 onChange={() => setSelectionMode("range")}
-                className="hidden"
               />
-              <span className="font-semibold">範囲選択</span>
+              <span>範囲選択</span>
             </label>
-            <label className="cursor-pointer flex items-center space-x-2 bg-[#FDB9C8] px-4 py-2 rounded-full shadow hover:bg-[#004CA0] hover:text-white transition">
+
+            <label
+              className={`radio-label ${
+                selectionMode === "multiple" ? "radio-active" : ""
+              }`}
+            >
               <input
                 type="radio"
                 name="selectionMode"
                 value="multiple"
                 checked={selectionMode === "multiple"}
                 onChange={() => setSelectionMode("multiple")}
-                className="hidden"
               />
-              <span className="font-semibold">複数選択</span>
+              <span>複数選択</span>
             </label>
           </div>
         </div>
@@ -95,7 +102,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 時間帯選択 */}
+        {/* ===== 時間帯選択 ===== */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-[#004CA0] mb-3">時間帯</h2>
           <select
