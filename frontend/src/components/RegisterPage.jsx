@@ -115,41 +115,44 @@ const RegisterPage = () => {
   // === DB保存 + 共有リンク発行 ===
   const handleSaveAndShare = async () => {
     try {
-      // まずスケジュールをDBに保存
-      const savedIds = [];
-      for (const d of selectedDates) {
-        const opt =
-          dateOptions[d] || { type: "終日", start: "9:00", end: "18:00" };
+      // 1回のPOSTでまとめて保存
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: selectedDates, // 配列
+          options: dateOptions, // 日付ごとの設定
+        }),
+      });
 
-        const res = await fetch("/api/schedules", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            date: d,
-            selectionMode,
-            timeType: opt.type,
-            startTime: opt.start,
-            endTime: opt.end,
-          }),
-        });
-        const json = await res.json();
-        if (json.success) savedIds.push(json.data.id);
+      const json = await res.json();
+      console.log("保存結果:", json);
+
+      if (json.error) {
+        alert("❌ 保存に失敗しました: " + json.error);
+        return;
       }
 
       // 共有リンクを発行
-      const res2 = await fetch("/api/share-links", {
+      const res2 = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, scheduleIds: savedIds }),
+        body: JSON.stringify({ scheduleId: json.id }),
       });
+
       const json2 = await res2.json();
-      if (json2.success) {
-        setIssuedUrl(`${window.location.origin}/share/${json2.data.url}`);
-        setSelectedDates([]);
-        setDateOptions({});
-        alert("✅ スケジュールを保存して共有リンクを発行しました！");
+      console.log("共有結果:", json2);
+
+      if (json2.error) {
+        alert("❌ 共有に失敗しました: " + json2.error);
+        return;
       }
+
+      setIssuedUrl(`${window.location.origin}${json2.url}`);
+      setSelectedDates([]);
+      setDateOptions({});
+      alert("✅ スケジュールを保存して共有リンクを発行しました！");
     } catch (err) {
       console.error(err);
       alert("❌ 保存/共有に失敗しました");
@@ -317,7 +320,7 @@ const RegisterPage = () => {
             </ul>
 
             <button onClick={handleSaveAndShare} className="save-btn mt-6">
-              💾 保存して共有リンクを発行
+              💾 共有リンクを発行
             </button>
 
             {issuedUrl && (
