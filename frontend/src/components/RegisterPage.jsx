@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "../index.css";
-import Header from "./Header";
 import Footer from "./Footer";
 
 const RegisterPage = () => {
@@ -83,7 +82,7 @@ const RegisterPage = () => {
     }
   };
 
-  // カレンダー描画用
+  // カレンダー描画
   const renderCalendar = () => {
     const startDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -91,12 +90,10 @@ const RegisterPage = () => {
     const weeks = [];
     let days = [];
 
-    // 1日目までの空白
     for (let i = 0; i < startDay.getDay(); i++) {
       days.push(<div key={`empty-start-${i}`} className="calendar-cell empty"></div>);
     }
 
-    // 日付セル
     for (let d = 1; d <= endDay.getDate(); d++) {
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d);
       const isSelected = selectedDates.some(
@@ -126,7 +123,6 @@ const RegisterPage = () => {
       }
     }
 
-    // 月末の空白
     if (days.length > 0) {
       while (days.length < 7) {
         days.push(
@@ -145,11 +141,10 @@ const RegisterPage = () => {
 
   return (
     <div>
-      <Header />
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
-          {/* タイトル入力 */}
+          {/* タイトル */}
           <input
             type="text"
             placeholder="タイトルを入力"
@@ -230,13 +225,12 @@ const RegisterPage = () => {
           <ul className="mb-4">
             {selectedDates.map((d, i) => (
               <li key={i} className="mb-1">
+                {title && <span className="schedule-title">{title}：</span>}
                 {d.toLocaleDateString("ja-JP")}
                 <button
                   className="delete-btn"
                   onClick={() =>
-                    setSelectedDates(
-                      selectedDates.filter((_, idx) => idx !== i)
-                    )
+                    setSelectedDates(selectedDates.filter((_, idx) => idx !== i))
                   }
                 >
                   ✖
@@ -259,10 +253,7 @@ const RegisterPage = () => {
             </select>
           )}
 
-          <button
-            onClick={saveSchedules}
-            className="save-btn"
-          >
+          <button onClick={saveSchedules} className="save-btn">
             共有リンク発行
           </button>
 
