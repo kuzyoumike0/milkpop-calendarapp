@@ -29,10 +29,10 @@ const SharePage = () => {
     }
   };
 
-  // ===== スケジュール取得 =====
+  // ===== スケジュール取得（共有リンク専用API） =====
   const fetchSchedules = async () => {
     try {
-      const res = await fetch("/api/schedules");
+      const res = await fetch(`/api/share-links/${url}/schedules`);
       const json = await res.json();
       if (json.success) {
         setSchedules(json.data);
@@ -114,7 +114,9 @@ const SharePage = () => {
           {loading ? (
             <p className="text-center text-gray-600">読み込み中...</p>
           ) : !linkInfo ? (
-            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
+            <p className="text-center text-red-500">
+              ❌ この共有リンクは存在しません
+            </p>
           ) : (
             <>
               {/* タイトル */}
@@ -138,72 +140,87 @@ const SharePage = () => {
 
               {/* スケジュールリスト */}
               <ul className="space-y-8">
-                {schedules.map((s) => {
-                  const result = voteResults[s.id] || [];
-                  const counts = countVotes(result);
+                {schedules.length === 0 ? (
+                  <li className="text-center text-gray-500">
+                    このリンクにはスケジュールが登録されていません
+                  </li>
+                ) : (
+                  schedules.map((s) => {
+                    const result = voteResults[s.id] || [];
+                    const counts = countVotes(result);
 
-                  return (
-                    <li
-                      key={s.id}
-                      className="bg-[#fdfdfd] border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition"
-                    >
-                      {/* スケジュール情報 + 投票 */}
-                      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
-                        <div>
-                          <p className="text-lg font-bold text-[#004CA0]">
-                            {s.title}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {new Date(s.date).toLocaleDateString()}
-                          </p>
+                    return (
+                      <li
+                        key={s.id}
+                        className="bg-[#fdfdfd] border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition"
+                      >
+                        {/* スケジュール情報 + 投票 */}
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
+                          <div>
+                            <p className="text-lg font-bold text-[#004CA0]">
+                              {s.title}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(s.date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <select
+                            className="border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0] transition"
+                            value={votes[s.id] || ""}
+                            onChange={(e) =>
+                              handleVoteChange(s.id, e.target.value)
+                            }
+                          >
+                            <option value="">選択してください</option>
+                            <option value="〇">〇</option>
+                            <option value="△">△</option>
+                            <option value="✖">✖</option>
+                          </select>
                         </div>
-                        <select
-                          className="border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0] transition"
-                          value={votes[s.id] || ""}
-                          onChange={(e) => handleVoteChange(s.id, e.target.value)}
-                        >
-                          <option value="">選択してください</option>
-                          <option value="〇">〇</option>
-                          <option value="△">△</option>
-                          <option value="✖">✖</option>
-                        </select>
-                      </div>
 
-                      {/* 投票結果 */}
-                      <div className="mt-4">
-                        <h3 className="text-sm font-semibold text-[#004CA0] mb-2">
-                          投票結果
-                        </h3>
-                        <ul className="text-sm bg-gray-50 rounded-xl p-3 space-y-1">
-                          {result.length > 0 ? (
-                            result.map((v, idx) => (
-                              <li key={idx} className="flex justify-between">
-                                <span className="font-medium">{v.username}</span>
-                                <span>{v.choice}</span>
+                        {/* 投票結果 */}
+                        <div className="mt-4">
+                          <h3 className="text-sm font-semibold text-[#004CA0] mb-2">
+                            投票結果
+                          </h3>
+                          <ul className="text-sm bg-gray-50 rounded-xl p-3 space-y-1">
+                            {result.length > 0 ? (
+                              result.map((v, idx) => (
+                                <li key={idx} className="flex justify-between">
+                                  <span className="font-medium">
+                                    {v.username}
+                                  </span>
+                                  <span>{v.choice}</span>
+                                </li>
+                              ))
+                            ) : (
+                              <li className="text-gray-500">
+                                まだ投票がありません
                               </li>
-                            ))
-                          ) : (
-                            <li className="text-gray-500">まだ投票がありません</li>
-                          )}
-                        </ul>
+                            )}
+                          </ul>
 
-                        {/* 集計表示 */}
-                        <div className="mt-3 text-sm font-semibold text-gray-800">
-                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
+                          {/* 集計表示 */}
+                          <div className="mt-3 text-sm font-semibold text-gray-800">
+                            集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖{" "}
+                            {counts["✖"]}人
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
+                      </li>
+                    );
+                  })
+                )}
               </ul>
 
               {/* 保存ボタン */}
-              <button
-                onClick={handleSaveVotes}
-                className="mt-10 w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white text-lg font-bold py-3 rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.02] transition"
-              >
-                💾 投票を保存する
-              </button>
+              {schedules.length > 0 && (
+                <button
+                  onClick={handleSaveVotes}
+                  className="mt-10 w-full bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white text-lg font-bold py-3 rounded-2xl shadow-md hover:shadow-xl hover:scale-[1.02] transition"
+                >
+                  💾 投票を保存する
+                </button>
+              )}
             </>
           )}
         </div>
