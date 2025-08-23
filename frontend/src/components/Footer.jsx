@@ -1,10 +1,10 @@
 import React from "react";
-import "../index.css";
 
 const Footer = () => {
   return (
-    <footer className="footer">
-      <p>© 2025 MilkPOP Calendar. All rights reserved.</p>
+    <footer className="bg-black text-white text-center py-3 mt-auto">
+       <p>© 2025 MilkPOP Calendar.</p>
+      <p className="text-sm">© 2025 MilkPOP Calendar</p>
     </footer>
   );
 };
