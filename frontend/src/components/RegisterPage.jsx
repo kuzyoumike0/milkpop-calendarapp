@@ -108,6 +108,11 @@ const RegisterPage = () => {
     );
   };
 
+  // ✅ 削除
+  const deleteSchedule = (dateStr) => {
+    setSchedules(schedules.filter((s) => s.date !== dateStr));
+  };
+
   const saveSchedules = async () => {
     try {
       const res = await fetch("/api/schedules", {
@@ -137,12 +142,13 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
+          {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
-            <button onClick={prevMonth} className="month-btn">◀ 前の月</button>
+            <button onClick={prevMonth} className="nav-btn">⇦</button>
             <span className="font-bold text-lg">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </span>
-            <button onClick={nextMonth} className="month-btn">次の月 ▶</button>
+            <button onClick={nextMonth} className="nav-btn">⇨</button>
           </div>
 
           <div className="custom-calendar">
@@ -174,7 +180,15 @@ const RegisterPage = () => {
         <div className="schedule-section">
           <h2>選択中の日程</h2>
           {schedules.map((s, i) => (
-            <div key={i} className="schedule-card">
+            <div key={i} className="schedule-card relative">
+              {/* ✖ 削除ボタン */}
+              <button
+                className="delete-btn absolute top-2 right-2"
+                onClick={() => deleteSchedule(s.date)}
+              >
+                ✖
+              </button>
+
               <div>
                 <span className="schedule-title">{s.date}</span>
                 {s.title && <span className="date-tag">{s.title}</span>}
