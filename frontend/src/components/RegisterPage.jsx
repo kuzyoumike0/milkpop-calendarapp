@@ -7,9 +7,10 @@ const hours = Array.from({ length: 24 }, (_, i) => i + 1);
 const RegisterPage = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [schedules, setSchedules] = useState([]); // ✅ 選択したスケジュール
+  const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
+  const [globalTitle, setGlobalTitle] = useState(""); // ✅ ページ全体のタイトル
 
   useEffect(() => {
     fetch(`/api/holidays/${today.getFullYear()}`)
@@ -41,24 +42,15 @@ const RegisterPage = () => {
 
   const days = generateCalendarDays(currentMonth);
 
-  // ✅ カレンダークリック
   const handleDateClick = (date) => {
     if (!date) return;
     const dateStr = date.toISOString().split("T")[0];
-
-    // 既にある場合は削除
     if (schedules.some((s) => s.date === dateStr)) {
       setSchedules(schedules.filter((s) => s.date !== dateStr));
     } else {
       setSchedules([
         ...schedules,
-        {
-          date: dateStr,
-          title: "",
-          timeRange: "終日",
-          startHour: null,
-          endHour: null,
-        },
+        { date: dateStr, timeRange: "終日", startHour: null, endHour: null },
       ]);
     }
   };
@@ -74,16 +66,6 @@ const RegisterPage = () => {
     );
   };
 
-  // ✅ 即時反映：タイトル変更
-  const updateTitle = (dateStr, newTitle) => {
-    setSchedules(
-      schedules.map((s) =>
-        s.date === dateStr ? { ...s, title: newTitle } : s
-      )
-    );
-  };
-
-  // ✅ 即時反映：時間帯変更
   const updateTimeRange = (dateStr, newRange) => {
     setSchedules(
       schedules.map((s) =>
@@ -99,7 +81,6 @@ const RegisterPage = () => {
     );
   };
 
-  // ✅ 即時反映：開始・終了時間
   const updateHours = (dateStr, start, end) => {
     setSchedules(
       schedules.map((s) =>
@@ -108,7 +89,6 @@ const RegisterPage = () => {
     );
   };
 
-  // ✅ 削除
   const deleteSchedule = (dateStr) => {
     setSchedules(schedules.filter((s) => s.date !== dateStr));
   };
@@ -118,7 +98,7 @@ const RegisterPage = () => {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schedules }),
+        body: JSON.stringify({ title: globalTitle, schedules }),
       });
       const data = await res.json();
       if (data.success) {
@@ -139,10 +119,20 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
+      {/* ✅ タイトルを左上に配置 */}
+      <div className="px-6 py-3">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={globalTitle}
+          onChange={(e) => setGlobalTitle(e.target.value)}
+          className="input-field w-1/3"
+        />
+      </div>
+
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
-          {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="nav-btn">⇦</button>
             <span className="font-bold text-lg">
@@ -176,74 +166,57 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右：選択リスト */}
+        {/* 右：リスト */}
         <div className="schedule-section">
           <h2>選択中の日程</h2>
           {schedules.map((s, i) => (
             <div key={i} className="schedule-card relative">
-              {/* ✖ 削除ボタン */}
               <button
                 className="delete-btn absolute top-2 right-2"
                 onClick={() => deleteSchedule(s.date)}
               >
                 ✖
               </button>
+              <div className="schedule-title">{s.date}</div>
 
-              <div>
-                <span className="schedule-title">{s.date}</span>
-                {s.title && <span className="date-tag">{s.title}</span>}
-              </div>
+              <select
+                value={s.timeRange}
+                onChange={(e) => updateTimeRange(s.date, e.target.value)}
+                className="vote-select mb-2"
+              >
+                <option value="終日">終日</option>
+                <option value="午前">午前</option>
+                <option value="午後">午後</option>
+                <option value="夜">夜</option>
+                <option value="時刻指定">時刻指定</option>
+              </select>
 
-              <div className="mt-2">
-                <input
-                  type="text"
-                  placeholder="タイトルを入力"
-                  value={s.title}
-                  onChange={(e) => updateTitle(s.date, e.target.value)}
-                  className="input-field mb-2"
-                />
-
-                <select
-                  value={s.timeRange}
-                  onChange={(e) => updateTimeRange(s.date, e.target.value)}
-                  className="vote-select mb-2"
-                >
-                  <option value="終日">終日</option>
-                  <option value="午前">午前</option>
-                  <option value="午後">午後</option>
-                  <option value="夜">夜</option>
-                  <option value="時刻指定">時刻指定</option>
-                </select>
-
-                {s.timeRange === "時刻指定" && (
-                  <div className="flex gap-3">
-                    <select
-                      value={s.startHour}
-                      onChange={(e) =>
-                        updateHours(s.date, Number(e.target.value), s.endHour)
-                      }
-                      className="vote-select flex-1"
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>{h}時</option>
-                      ))}
-                    </select>
-                    <select
-                      value={s.endHour}
-                      onChange={(e) =>
-                        updateHours(s.date, s.startHour, Number(e.target.value))
-                      }
-                      className="vote-select flex-1"
-                    >
-                      {hours
-                        .filter((h) => h > s.startHour)
-                        .map((h) => (
-                          <option key={h} value={h}>{h}時</option>
-                        ))}
-                    </select>
-                  </div>
-                )}
-              </div>
+              {s.timeRange === "時刻指定" && (
+                <div className="flex gap-3">
+                  <select
+                    value={s.startHour}
+                    onChange={(e) =>
+                      updateHours(s.date, Number(e.target.value), s.endHour)
+                    }
+                    className="vote-select flex-1"
+                  >
+                    {hours.map((h) => (
+                      <option key={h} value={h}>{h}時</option>
+                    ))}
+                  </select>
+                  <select
+                    value={s.endHour}
+                    onChange={(e) =>
+                      updateHours(s.date, s.startHour, Number(e.target.value))
+                    }
+                    className="vote-select flex-1"
+                  >
+                    {hours.filter((h) => h > s.startHour).map((h) => (
+                      <option key={h} value={h}>{h}時</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           ))}
 
