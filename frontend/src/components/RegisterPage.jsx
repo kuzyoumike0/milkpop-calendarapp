@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // 既存のカレンダーCSSを読み込み
-import "../index.css"; // 自作CSSで上書き
+import "react-calendar/dist/Calendar.css"; // react-calendarの元CSS
+import "../index.css"; // 自作おしゃれCSSで上書き
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -37,13 +37,12 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* バナー */}
       <header className="banner">
         <h1>MilkPOP Calendar</h1>
       </header>
 
       <div className="form-container">
-        {/* タイトル入力 */}
+        {/* タイトル */}
         <div className="form-group">
           <label>タイトル</label>
           <input
@@ -54,7 +53,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ラジオボタン */}
+        {/* 選択方法 */}
         <div className="form-group">
           <h2>選択方法</h2>
           <div className="radio-group">
@@ -82,7 +81,7 @@ const RegisterPage = () => {
         </div>
 
         {/* カレンダー */}
-        <div className="custom-calendar">
+        <div className="calendar-wrapper">
           <Calendar
             onChange={setDate}
             value={date}
@@ -114,7 +113,6 @@ const RegisterPage = () => {
           )}
         </div>
 
-        {/* 保存ボタン */}
         <button className="save-btn" onClick={handleSave}>
           登録する
         </button>
