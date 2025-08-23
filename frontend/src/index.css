@@ -140,3 +140,191 @@
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
+
+/* ===== RegisterPage 全体背景 ===== */
+.register-page {
+  min-height: 100vh;
+  padding: 40px 30px;
+  background: linear-gradient(135deg, #FDB9C8 0%, #fff 50%, #004CA0 100%);
+  font-family: 'Quicksand', sans-serif;
+}
+
+/* ===== 入力エリア（タイトル & ラジオ） ===== */
+.form-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+/* タイトル入力 */
+.short-input input {
+  width: 280px;
+  padding: 12px 16px;
+  border: 2px solid #FDB9C8;
+  border-radius: 16px;
+  background: #fff;
+  transition: 0.3s;
+}
+.short-input input:focus {
+  border-color: #004CA0;
+  box-shadow: 0 0 12px rgba(0,76,160,0.35);
+}
+
+/* ===== ラジオボタン（キャンディ風） ===== */
+.radio-options {
+  display: flex;
+  gap: 20px;
+}
+.radio-label {
+  position: relative;
+  padding-left: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+}
+.radio-label input {
+  position: absolute;
+  opacity: 0;
+}
+.custom-radio {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  transition: 0.3s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.radio-label input:checked ~ .custom-radio {
+  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
+  border-color: #ff5fa2;
+}
+
+/* ===== カレンダー ===== */
+.custom-calendar {
+  background: #fff;
+  border-radius: 28px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+}
+.calendar-day-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  background: #fdf7fa;
+  border-radius: 12px;
+  color: #004CA0;
+}
+.calendar-cell {
+  padding: 14px;
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #fefefe;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1);
+}
+.calendar-cell:hover {
+  background: #fde4ec;
+  transform: scale(1.05);
+}
+.calendar-cell.today {
+  border: 2px solid gold;
+  background: #fff9e6;
+  font-weight: bold;
+}
+.calendar-cell.selected {
+  background: linear-gradient(135deg, #004CA0, #0066ff);
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  transform: scale(1.05);
+}
+.calendar-cell.empty {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ===== 登録済み日程カード ===== */
+.schedule-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+.schedule-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.schedule-title {
+  font-weight: bold;
+  color: #004CA0;
+}
+
+/* 日付タグ（お洒落バッジ風） */
+.date-tag {
+  display: inline-block;
+  background: #FDB9C8;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* ===== 登録ボタン ===== */
+.save-btn {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
+  color: #fff;
+  font-weight: bold;
+  padding: 14px;
+  border: none;
+  border-radius: 20px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 6px 16px rgba(255,95,162,0.5);
+}
+.save-btn:hover {
+  background: linear-gradient(135deg, #004CA0, #0066ff);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* ===== 小さな削除ボタン ===== */
+.delete-btn-small {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.delete-btn-small:hover {
+  background: #f5f5f5;
+  color: #ff5fa2;
+  transform: scale(1.1);
+}
