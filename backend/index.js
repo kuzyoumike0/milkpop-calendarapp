@@ -60,7 +60,7 @@ app.get("/api", (req, res) => {
   res.send("✅ MilkPOP Calendar API 稼働中");
 });
 
-// スケジュール保存
+// ===== スケジュール保存 =====
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, date, selectionMode, timeType, startTime, endTime } = req.body;
@@ -76,7 +76,7 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// スケジュール一覧
+// ===== スケジュール一覧 =====
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM schedules ORDER BY date ASC`);
@@ -87,7 +87,7 @@ app.get("/api/schedules", async (req, res) => {
   }
 });
 
-// 個人スケジュール保存
+// ===== 個人スケジュール保存 =====
 app.post("/api/personal-schedules", async (req, res) => {
   try {
     const { title, memo, date, selectionMode, timeType, startTime, endTime } = req.body;
@@ -103,11 +103,11 @@ app.post("/api/personal-schedules", async (req, res) => {
   }
 });
 
-// 個人スケジュール一覧
+// ===== 個人スケジュール一覧 =====
 app.get("/api/personal-schedules", async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM personal_schedules ORDER BY id DESC`
+      `SELECT * FROM personal_schedules ORDER BY date ASC`
     );
     res.json(result.rows);
   } catch (err) {
@@ -116,7 +116,7 @@ app.get("/api/personal-schedules", async (req, res) => {
   }
 });
 
-// 投票保存
+// ===== 投票保存 =====
 app.post("/api/votes", async (req, res) => {
   try {
     const { scheduleId, username, choice } = req.body;
@@ -132,7 +132,7 @@ app.post("/api/votes", async (req, res) => {
   }
 });
 
-// 投票取得
+// ===== 投票取得 =====
 app.get("/api/votes/:scheduleId", async (req, res) => {
   try {
     const { scheduleId } = req.params;
