@@ -3,6 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const path = require("path");
 const crypto = require("crypto");
+const fs = require("fs");
 const { Pool } = require("pg");
 const fetch = require("node-fetch");
 require("dotenv").config();
@@ -16,6 +17,17 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
+
+// ===== 起動時に init.sql を実行してテーブル作成 =====
+(async () => {
+  try {
+    const initSql = fs.readFileSync(path.join(__dirname, "init.sql")).toString();
+    await pool.query(initSql);
+    console.log("✅ init.sql 実行完了: テーブル準備OK");
+  } catch (err) {
+    console.error("❌ init.sql 実行エラー:", err.message);
+  }
+})();
 
 // ===== Discord OAuth =====
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
