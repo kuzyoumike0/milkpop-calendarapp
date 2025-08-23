@@ -92,7 +92,7 @@ const RegisterPage = () => {
       <Header />
 
       <main className="register-page">
-        {/* ===== 入力欄＆モード選択 ===== */}
+        {/* ===== タイトル入力 ===== */}
         <div className="form-top">
           <div className="form-group short-input left-input">
             <label>タイトル</label>
@@ -103,36 +103,36 @@ const RegisterPage = () => {
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-
-          <div className="form-group radio-group">
-            <label>選択モード</label>
-            <div className="radio-options">
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  value="single"
-                  checked={selectMode === "single"}
-                  onChange={(e) => setSelectMode(e.target.value)}
-                />
-                <span className="custom-radio"></span> 複数選択
-              </label>
-              <label className="radio-label">
-                <input
-                  type="radio"
-                  value="range"
-                  checked={selectMode === "range"}
-                  onChange={(e) => setSelectMode(e.target.value)}
-                />
-                <span className="custom-radio"></span> 範囲選択
-              </label>
-            </div>
-          </div>
         </div>
 
         {/* ===== レイアウト：カレンダー7割 / 右リスト3割 ===== */}
         <div className="register-layout">
           {/* ===== カレンダーエリア ===== */}
           <div className="calendar-section">
+            {/* --- 選択モードラジオをカレンダー上に配置 --- */}
+            <div className="radio-group mb-3">
+              <div className="radio-options">
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="single"
+                    checked={selectMode === "single"}
+                    onChange={(e) => setSelectMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span> 複数選択
+                </label>
+                <label className="radio-label">
+                  <input
+                    type="radio"
+                    value="range"
+                    checked={selectMode === "range"}
+                    onChange={(e) => setSelectMode(e.target.value)}
+                  />
+                  <span className="custom-radio"></span> 範囲選択
+                </label>
+              </div>
+            </div>
+
             <h2 className="form-title">
               {year}年 {month + 1}月
             </h2>
