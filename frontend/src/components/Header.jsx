@@ -38,16 +38,17 @@ const Header = () => {
 
   return (
     <header className="banner bg-black text-white shadow-md px-4 py-2">
-      {/* ロゴとナビを左右に分ける */}
       <div className="flex justify-between items-center">
-        {/* 左端：ロゴ */}
-        <h1 className="logo text-2xl font-bold">
-          <Link to="/">MilkPOP Calendar</Link>
-        </h1>
+        {/* ===== 左端：ロゴ ===== */}
+        <div className="left">
+          <h1 className="logo text-2xl font-bold">
+            <Link to="/">MilkPOP Calendar</Link>
+          </h1>
+        </div>
 
-        {/* 右端：ナビゲーション */}
-        <div className="flex items-center gap-4 relative">
-          {/* PC表示のナビ */}
+        {/* ===== 右端：ナビ + ユーザー情報 ===== */}
+        <div className="right flex items-center gap-4 relative">
+          {/* PC表示：リンク横並び */}
           <nav className="hidden md:flex gap-6 items-center">
             <Link to="/register">日程登録</Link>
             <Link to="/personal">個人スケジュール</Link>
