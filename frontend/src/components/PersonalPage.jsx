@@ -3,6 +3,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
 import { fetchHolidays, getTodayIso } from "../holiday";
+import { v4 as uuidv4 } from "uuid";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -11,11 +12,12 @@ const RegisterPage = () => {
   const [multiDates, setMultiDates] = useState([]);
   const [dateOptions, setDateOptions] = useState({});
   const [holidays, setHolidays] = useState([]);
+  const [shareLink, setShareLink] = useState(null);
+
+  const todayIso = getTodayIso();
 
   const timeOptions = [...Array(24).keys()].map((h) => `${h}:00`);
   const endTimeOptions = [...Array(24).keys()].map((h) => `${h}:00`).concat("24:00");
-
-  const todayIso = getTodayIso();
 
   useEffect(() => {
     const loadHolidays = async () => {
@@ -25,8 +27,9 @@ const RegisterPage = () => {
     loadHolidays();
   }, []);
 
+  // ===== 複数選択モード =====
   const handleDateClick = (date) => {
-    const iso = date.toISOString().split("T")[0];
+    const iso = date.toLocaleDateString("sv-SE"); // YYYY-MM-DD (ローカル=JST)
     if (multiDates.includes(iso)) {
       setMultiDates(multiDates.filter((d) => d !== iso));
       const newOptions = { ...dateOptions };
@@ -36,11 +39,12 @@ const RegisterPage = () => {
       setMultiDates([...multiDates, iso]);
       setDateOptions({
         ...dateOptions,
-        [iso]: { type: "終日", start: "9:00", end: "18:00" },
+        [iso]: { type: "終日", start: "09:00", end: "18:00" },
       });
     }
   };
 
+  // ===== プルダウン変更 =====
   const handleOptionChange = (date, field, value) => {
     let newValue = value;
     if (field === "start" && dateOptions[date]?.end) {
@@ -62,20 +66,59 @@ const RegisterPage = () => {
     });
   };
 
-  const handleSave = () => {
-    const payload = {
-      title,
-      mode,
-      range: mode === "range" ? range : null,
-      dates: mode === "multi"
-        ? multiDates.map((d) => ({
-            date: d,
-            ...dateOptions[d],
-          }))
-        : [],
-    };
-    console.log("保存データ:", payload);
-    alert("保存しました！（デバッグ表示）");
+  // ===== 範囲選択をISO日付リストに展開 =====
+  const getRangeDates = () => {
+    if (!range[0] || !range[1]) return [];
+    const start = new Date(range[0]);
+    const end = new Date(range[1]);
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toLocaleDateString("sv-SE"));
+    }
+    return dates;
+  };
+
+  // ===== 保存 & 共有リンク発行 =====
+  const handleSave = async () => {
+    if (!title) {
+      alert("タイトルを入力してください");
+      return;
+    }
+
+    const selectedDates = mode === "range" ? getRangeDates() : multiDates;
+
+    if (selectedDates.length === 0) {
+      alert("日程を選択してください");
+      return;
+    }
+
+    const dates = selectedDates.map((date) => ({
+      date,
+      type: dateOptions[date]?.type || "終日",
+      start: dateOptions[date]?.start || "09:00",
+      end: dateOptions[date]?.end || "18:00",
+    }));
+
+    const shareId = uuidv4();
+    const newSchedule = { share_id: shareId, title, dates };
+
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSchedule),
+      });
+
+      if (res.ok) {
+        const url = `${window.location.origin}/share/${shareId}`;
+        setShareLink(url);
+      } else {
+        alert("スケジュール保存に失敗しました");
+      }
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("エラーが発生しました");
+    }
   };
 
   return (
@@ -119,7 +162,7 @@ const RegisterPage = () => {
           </button>
         </div>
 
-        {/* ===== レイアウト（左7割カレンダー + 右3割リスト） ===== */}
+        {/* ===== レイアウト（左:カレンダー + 右:リスト） ===== */}
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
@@ -129,7 +172,7 @@ const RegisterPage = () => {
                 onChange={setRange}
                 value={range}
                 tileClassName={({ date }) => {
-                  const iso = date.toISOString().split("T")[0];
+                  const iso = date.toLocaleDateString("sv-SE");
                   let classes = [];
                   if (iso === todayIso) classes.push("react-calendar__tile--today");
                   if (date.getDay() === 0 || holidays.includes(iso)) classes.push("holiday");
@@ -140,7 +183,7 @@ const RegisterPage = () => {
               <Calendar
                 onClickDay={handleDateClick}
                 tileClassName={({ date }) => {
-                  const iso = date.toISOString().split("T")[0];
+                  const iso = date.toLocaleDateString("sv-SE");
                   let classes = [];
                   if (multiDates.includes(iso)) classes.push("react-calendar__tile--active");
                   if (iso === todayIso) classes.push("react-calendar__tile--today");
@@ -151,9 +194,10 @@ const RegisterPage = () => {
             )}
           </div>
 
-          {/* 選択した日程 */}
+          {/* 選択した日程リスト */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
+
             {mode === "range" && range[0] && range[1] && (
               <div className="bg-gray-100 p-3 rounded-lg shadow-sm text-black">
                 {range[0].toLocaleDateString()} 〜 {range[1].toLocaleDateString()}
@@ -181,7 +225,7 @@ const RegisterPage = () => {
                         <>
                           <select
                             className="text-black px-2 py-1 rounded border"
-                            value={dateOptions[date]?.start || "9:00"}
+                            value={dateOptions[date]?.start || "09:00"}
                             onChange={(e) => handleOptionChange(date, "start", e.target.value)}
                           >
                             {timeOptions.map((t) => (
@@ -213,6 +257,22 @@ const RegisterPage = () => {
           <button onClick={handleSave} className="submit-btn">
             保存する
           </button>
+          {shareLink && (
+            <div className="mt-3 text-sm text-black bg-white p-3 rounded-lg shadow flex items-center gap-3">
+              <a href={shareLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                {shareLink}
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shareLink);
+                  alert("リンクをコピーしました！");
+                }}
+                className="copy-btn"
+              >
+                コピー
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
