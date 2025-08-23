@@ -12,7 +12,7 @@ const Header = () => {
         </Link>
 
         {/* 右側リンクボタン群 */}
-        <nav>
+        <nav className="nav-links">
           <Link to="/register">日程登録</Link>
           <Link to="/personal">個人スケジュール</Link>
           <Link to="/links">共有リンク</Link>
