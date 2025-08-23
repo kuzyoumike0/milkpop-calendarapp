@@ -29,7 +29,7 @@ const RegisterPage = () => {
     let days = [];
 
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="p-4"></div>);
+      days.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -42,11 +42,7 @@ const RegisterPage = () => {
         <div
           key={day}
           onClick={() => handleDateClick(day)}
-          className={`p-4 text-center rounded-2xl cursor-pointer transition ${
-            isSelected
-              ? "bg-[#FDB9C8] text-white shadow-lg scale-105"
-              : "hover:bg-pink-100 hover:scale-105"
-          }`}
+          className={`calendar-cell ${isSelected ? "selected" : ""}`}
         >
           {day}
         </div>
@@ -54,7 +50,7 @@ const RegisterPage = () => {
 
       if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
         weeks.push(
-          <div key={`week-${day}`} className="grid grid-cols-7 gap-2">
+          <div key={`week-${day}`} className="calendar-row">
             {days}
           </div>
         );
@@ -71,8 +67,8 @@ const RegisterPage = () => {
       </h2>
 
       {/* カレンダー */}
-      <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-        <div className="flex justify-between items-center mb-6">
+      <div className="calendar-wrapper">
+        <div className="calendar-nav">
           <button
             onClick={() => {
               if (currentMonth === 0) {
@@ -82,11 +78,11 @@ const RegisterPage = () => {
                 setCurrentMonth(currentMonth - 1);
               }
             }}
-            className="px-4 py-2 bg-[#FDB9C8] text-white rounded-xl shadow hover:bg-pink-400 transition"
+            className="nav-btn"
           >
             ＜
           </button>
-          <span className="text-xl font-semibold">
+          <span className="calendar-title">
             {currentYear}年 {currentMonth + 1}月
           </span>
           <button
@@ -98,27 +94,27 @@ const RegisterPage = () => {
                 setCurrentMonth(currentMonth + 1);
               }
             }}
-            className="px-4 py-2 bg-[#FDB9C8] text-white rounded-xl shadow hover:bg-pink-400 transition"
+            className="nav-btn"
           >
             ＞
           </button>
         </div>
 
         {/* 曜日ヘッダー */}
-        <div className="grid grid-cols-7 gap-2 font-semibold text-gray-700 mb-2">
+        <div className="calendar calendar-header">
           {daysOfWeek.map((day) => (
-            <div key={day} className="text-center">
+            <div key={day} className="calendar-header-cell">
               {day}
             </div>
           ))}
         </div>
 
         {/* カレンダー本体 */}
-        <div className="space-y-2">{renderCalendar()}</div>
+        <div className="calendar">{renderCalendar()}</div>
       </div>
 
       {/* 選択した日程リスト */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
+      <div className="bg-white rounded-2xl shadow-md p-6 mt-6">
         <h3 className="text-lg font-bold mb-3">選択した日程:</h3>
         {selectedDates.length > 0 ? (
           <ul className="list-disc pl-6 space-y-1">
