@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "../index.css";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -15,25 +15,6 @@ const RegisterPage = () => {
   const [issuedUrl, setIssuedUrl] = useState("");
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
-
-  // DBから保存済みスケジュールを取得
-  const [savedSchedules, setSavedSchedules] = useState([]);
-
-  const fetchSchedules = async () => {
-    try {
-      const res = await fetch("/api/schedules");
-      const json = await res.json();
-      if (json.success) {
-        setSavedSchedules(json.data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchSchedules();
-  }, []);
 
   // === 月の情報 ===
   const year = currentDate.getFullYear();
@@ -123,7 +104,7 @@ const RegisterPage = () => {
     setDateOptions({ ...dateOptions, [dateStr]: updated });
   };
 
-  // === 日付削除 ===
+  // === 選択から削除 ===
   const handleDeleteDate = (dateStr) => {
     setSelectedDates(selectedDates.filter((d) => d !== dateStr));
     const updated = { ...dateOptions };
@@ -131,14 +112,16 @@ const RegisterPage = () => {
     setDateOptions(updated);
   };
 
-  // === DB保存 ===
-  const handleSaveSchedules = async () => {
+  // === DB保存 + 共有リンク発行 ===
+  const handleSaveAndShare = async () => {
     try {
+      // まずスケジュールをDBに保存
+      const savedIds = [];
       for (const d of selectedDates) {
         const opt =
           dateOptions[d] || { type: "終日", start: "9:00", end: "18:00" };
 
-        await fetch("/api/schedules", {
+        const res = await fetch("/api/schedules", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -150,44 +133,26 @@ const RegisterPage = () => {
             endTime: opt.end,
           }),
         });
+        const json = await res.json();
+        if (json.success) savedIds.push(json.data.id);
       }
-      setSelectedDates([]);
-      setDateOptions({});
-      await fetchSchedules(); // 即時反映
-      alert("✅ スケジュールを保存しました！");
-    } catch (err) {
-      console.error(err);
-      alert("❌ 保存に失敗しました");
-    }
-  };
 
-  // === DB削除 ===
-  const handleDeleteSchedule = async (id) => {
-    try {
-      await fetch(`/api/schedules/${id}`, {
-        method: "DELETE",
-      });
-      await fetchSchedules(); // 即時反映
-    } catch (err) {
-      console.error(err);
-      alert("❌ 削除に失敗しました");
-    }
-  };
-
-  // === URL発行 ===
-  const handleIssueUrl = async () => {
-    try {
-      const res = await fetch("/api/share-links", {
+      // 共有リンクを発行
+      const res2 = await fetch("/api/share-links", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, scheduleIds: [] }),
+        body: JSON.stringify({ title, scheduleIds: savedIds }),
       });
-      const json = await res.json();
-      if (json.success) {
-        setIssuedUrl(`${window.location.origin}/share/${json.data.url}`);
+      const json2 = await res2.json();
+      if (json2.success) {
+        setIssuedUrl(`${window.location.origin}/share/${json2.data.url}`);
+        setSelectedDates([]);
+        setDateOptions({});
+        alert("✅ スケジュールを保存して共有リンクを発行しました！");
       }
     } catch (err) {
       console.error(err);
+      alert("❌ 保存/共有に失敗しました");
     }
   };
 
@@ -290,7 +255,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* 選択日程 & 保存済み日程 */}
+          {/* 選択日程 */}
           <div className="schedule-section">
             <h2>選択した日程</h2>
             <ul>
@@ -351,8 +316,8 @@ const RegisterPage = () => {
               ))}
             </ul>
 
-            <button onClick={handleSaveSchedules} className="save-btn mt-6">
-              💾 スケジュールを保存
+            <button onClick={handleSaveAndShare} className="save-btn mt-6">
+              💾 保存して共有リンクを発行
             </button>
 
             {issuedUrl && (
@@ -363,30 +328,6 @@ const RegisterPage = () => {
                 </a>
               </div>
             )}
-
-            <h2 className="mt-8">📋 保存済みスケジュール</h2>
-            <ul>
-              {savedSchedules.map((s) => (
-                <li key={s.id} className="schedule-card flex justify-between items-center">
-                  <div>
-                    <span className="schedule-title">
-                      {s.title} ({s.date})
-                    </span>
-                    <span className="ml-2 text-sm text-gray-600">
-                      {s.time_type === "時刻指定"
-                        ? `${s.start_time}〜${s.end_time}`
-                        : s.time_type}
-                    </span>
-                  </div>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteSchedule(s.id)}
-                  >
-                    ✖
-                  </button>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </main>
