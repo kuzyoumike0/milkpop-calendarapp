@@ -60,7 +60,7 @@ const RegisterPage = () => {
       alert("タイトルと日付を入力してください！");
       return;
     }
-    const sortedDates = [...selectedDates].sort((a, b) => a - b); // 昇順ソート
+    const sortedDates = [...selectedDates].sort((a, b) => a - b);
     setSavedSchedules([
       ...savedSchedules,
       { id: Date.now(), title, dates: sortedDates, month, year },
@@ -88,26 +88,41 @@ const RegisterPage = () => {
     <div className="register-page">
       <div className="banner">MilkPOP Calendar</div>
 
-      {/* ===== タイトル・モード選択エリア（カレンダー上部に表示） ===== */}
-      <div className="form-group mt-4" style={{ margin: "0 40px" }}>
-        <label>タイトル</label>
-        <input
-          type="text"
-          value={title}
-          placeholder="予定タイトルを入力"
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
+      {/* ===== タイトル・モード選択エリア ===== */}
+      <div className="form-top">
+        <div className="form-group short-input">
+          <label>タイトル</label>
+          <input
+            type="text"
+            value={title}
+            placeholder="予定タイトルを入力"
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
-      <div className="form-group" style={{ margin: "0 40px" }}>
-        <label>選択モード</label>
-        <select
-          value={selectMode}
-          onChange={(e) => setSelectMode(e.target.value)}
-        >
-          <option value="single">複数選択</option>
-          <option value="range">範囲選択</option>
-        </select>
+        <div className="form-group radio-group">
+          <label>選択モード</label>
+          <div className="radio-options">
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="single"
+                checked={selectMode === "single"}
+                onChange={(e) => setSelectMode(e.target.value)}
+              />
+              <span className="custom-radio"></span> 複数選択
+            </label>
+            <label className="radio-label">
+              <input
+                type="radio"
+                value="range"
+                checked={selectMode === "range"}
+                onChange={(e) => setSelectMode(e.target.value)}
+              />
+              <span className="custom-radio"></span> 範囲選択
+            </label>
+          </div>
+        </div>
       </div>
 
       <div className="register-layout">
@@ -119,112 +134,3 @@ const RegisterPage = () => {
           <div className="calendar-nav">
             <button onClick={prevMonth}>← 前の月</button>
             <button onClick={nextMonth}>次の月 →</button>
-          </div>
-
-          {/* カレンダー */}
-          <div className="calendar-grid custom-calendar">
-            {daysOfWeek.map((day) => (
-              <div key={day} className="calendar-day-header">
-                {day}
-              </div>
-            ))}
-
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="calendar-cell empty"></div>
-            ))}
-
-            {Array.from({ length: lastDate }).map((_, i) => {
-              const date = i + 1;
-              const isToday =
-                year === today.getFullYear() &&
-                month === today.getMonth() &&
-                date === today.getDate();
-              const isSelected = selectedDates.includes(date);
-
-              return (
-                <div
-                  key={date}
-                  className={`calendar-cell ${
-                    isToday ? "today" : ""
-                  } ${isSelected ? "selected" : ""}`}
-                  onClick={() => handleDateClick(date)}
-                >
-                  {date}
-                </div>
-              );
-            })}
-          </div>
-
-          <button className="save-btn mt-4" onClick={handleSave}>
-            登録する
-          </button>
-        </div>
-
-        {/* ===== 右：登録済みリスト & 選択中日程 ===== */}
-        <div className="schedule-section">
-          {/* 選択中日程（カードで囲う） */}
-          {sortedSelectedDates.length > 0 && (
-            <div className="card selected-dates mb-4">
-              <h2 className="form-title">選択中の日程</h2>
-              <ul>
-                {sortedSelectedDates.map((d, i) => (
-                  <li key={i} className="schedule-card">
-                    <span className="date-tag">
-                      {month + 1}/{d}
-                    </span>
-                    <button
-                      className="delete-btn-small"
-                      onClick={() => handleRemoveSelected(d)}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* 登録済みリスト */}
-          <h2 className="form-title">登録済み日程</h2>
-          <div className="sort-toggle">
-            <label>並び順: </label>
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-            >
-              <option value="asc">古い順</option>
-              <option value="desc">新しい順</option>
-            </select>
-          </div>
-
-          {sortedSchedules.length === 0 ? (
-            <p className="text-gray">まだ日程がありません</p>
-          ) : (
-            <ul>
-              {sortedSchedules.map((s) => (
-                <li key={s.id} className="schedule-card">
-                  <span className="schedule-title">{s.title}</span>
-                  <div>
-                    {s.dates.map((d, i) => (
-                      <span key={i} className="date-tag">
-                        {s.month + 1}/{d}
-                      </span>
-                    ))}
-                  </div>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(s.id)}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default RegisterPage;
