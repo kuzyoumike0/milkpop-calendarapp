@@ -121,8 +121,8 @@ const RegisterPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          dates: selectedDates, // 配列
-          options: dateOptions, // 日付ごとの設定
+          dates: selectedDates,
+          options: dateOptions,
         }),
       });
 
@@ -138,7 +138,7 @@ const RegisterPage = () => {
       const res2 = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scheduleId: json.id }),
+        body: JSON.stringify({ scheduleId: json.id }), // ← 保存したidを使う
       });
 
       const json2 = await res2.json();
@@ -320,7 +320,7 @@ const RegisterPage = () => {
             </ul>
 
             <button onClick={handleSaveAndShare} className="save-btn mt-6">
-              💾 共有リンクを発行
+              💾 保存して共有リンクを発行
             </button>
 
             {issuedUrl && (
