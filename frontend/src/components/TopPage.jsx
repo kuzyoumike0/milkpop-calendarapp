@@ -10,8 +10,8 @@ const TopPage = () => {
       </header>
 
       {/* ===== コンテンツ ===== */}
-      <main className="flex-grow flex flex-col items-center justify-center px-6">
-        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-10 text-center space-y-8 mt-10">
+      <main className="flex-grow flex flex-col items-center px-6">
+        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-10 text-center space-y-8 mt-20">
           <h2 className="text-2xl font-semibold text-[#004CA0]">ようこそ！</h2>
           <p className="text-gray-600">
             ここから日程登録ページや個人スケジュールページに移動できます。
