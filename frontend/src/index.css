@@ -50,11 +50,10 @@ body {
 }
 
 /* === 共通入力フォーム（おしゃれ・中央寄せ） === */
+/* === 共通入力フォーム（おしゃれ・左寄せ） === */
 .input-field {
   width: 70%;                /* ← 小さめに */
   max-width: 500px;          /* PCで大きすぎないよう制限 */
-  display: block;            /* 中央寄せ */
-  margin: 0 auto;            /* 中央寄せ */
   padding: 14px 18px;
   border: 2px solid transparent;
   border-radius: 16px;
@@ -65,11 +64,14 @@ body {
   color: #333;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
+  margin-left: 0;            /* 左寄せ */
 }
+
 .input-field::placeholder {
   color: #aaa;
   font-style: italic;
 }
+
 .input-field:focus {
   outline: none;
   background: linear-gradient(#fff, #fff) padding-box,
@@ -77,12 +79,14 @@ body {
   box-shadow: 0 8px 20px rgba(0,76,160,0.25);
   transform: scale(1.01);
 }
+
 /* === スマホ対応 === */
 @media (max-width: 600px) {
   .input-field {
     width: 100%;  /* スマホでは全幅 */
   }
 }
+
 
 /* ===== ラジオボタン（おしゃれ） ===== */
 .radio-options {
