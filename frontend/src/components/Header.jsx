@@ -1,68 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import "../index.css";
+// frontend/src/components/Header.jsx
+import React from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
-  const [user, setUser] = useState(null);
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const sessionId = params.get("session");
-    if (sessionId) {
-      localStorage.setItem("sessionId", sessionId);
-      window.history.replaceState({}, document.title, location.pathname);
-    }
-
-    const storedSession = localStorage.getItem("sessionId");
-    if (storedSession) {
-      fetch(`/api/me/${storedSession}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.ok) setUser(data.user);
-        })
-        .catch(() => setUser(null));
-    }
-  }, [location]);
-
-  const handleLogin = () => {
-    window.location.href = "/api/auth/discord";
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("sessionId");
-    setUser(null);
-    window.location.href = "/";
-  };
-
   return (
-    <header className="main-header">
-      {/* ===== 文字ロゴ（トップページリンク） ===== */}
-      <div className="logo">
-        <Link to="/" className="logo-text">
+    <header className="bg-black text-white shadow-md">
+      <div className="container mx-auto flex justify-between items-center py-4 px-6">
+        {/* ロゴタイトル */}
+        <Link to="/" className="text-2xl font-bold text-[#FDB9C8]">
           MilkPOP Calendar
         </Link>
-      </div>
 
-      <nav className="nav-links">
-        <Link to="/register">日程登録</Link>
-        <Link to="/personal">個人スケジュール</Link>
+        {/* ナビゲーション */}
+        <nav className="flex space-x-4 items-center">
+          <Link
+            to="/register"
+            className="px-4 py-2 bg-[#FDB9C8] text-black font-semibold rounded-xl shadow-md hover:bg-pink-400 hover:scale-105 transition"
+          >
+            日程登録
+          </Link>
+          <Link
+            to="/personal"
+            className="px-4 py-2 bg-[#004CA0] text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 hover:scale-105 transition"
+          >
+            個人スケジュール
+          </Link>
+          <Link
+            to="/links"
+            className="px-4 py-2 bg-gray-800 text-white font-semibold rounded-xl shadow-md hover:bg-gray-600 hover:scale-105 transition"
+          >
+            共有リンク
+          </Link>
 
-        {user ? (
-          <div className="user-info">
-            <span>{user.username}</span>
-            <button className="logout-btn" onClick={handleLogout}>
-              ログアウト
-            </button>
-          </div>
-        ) : (
-          <button className="login-btn" onClick={handleLogin}>
-            Discordでログイン
-          </button>
-        )}
-      </nav>
-    </header>
-  );
-};
-
-export default Header;
+          {/* Discordログインボタン */}
+          <a
+            href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URL&response_type=code&scope=identify"
+            cl
