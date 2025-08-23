@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom"; // ← 追加
 import "../index.css";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -138,7 +139,7 @@ const RegisterPage = () => {
       const res2 = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scheduleId: json.id }), // ← 保存したidを使う
+        body: JSON.stringify({ scheduleId: json.id }),
       });
 
       const json2 = await res2.json();
@@ -326,9 +327,12 @@ const RegisterPage = () => {
             {issuedUrl && (
               <div className="issued-url mt-4">
                 <p>✅ 発行されたURL:</p>
-                <a href={issuedUrl} target="_blank" rel="noopener noreferrer">
+                <Link
+                  to={issuedUrl.replace(window.location.origin, "")}
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
                   {issuedUrl}
-                </a>
+                </Link>
               </div>
             )}
           </div>
