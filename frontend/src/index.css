@@ -42,13 +42,7 @@ body {
   font-weight: 500;
   color: #333;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  display: block;
-  margin-bottom: 14px;
-}
-.input-field::placeholder {
-  color: #aaa;
-  font-style: italic;
+  margin-bottom: 14px; /* 📌 フォーム下に余白 */
 }
 .input-field:focus {
   outline: none;
@@ -57,10 +51,41 @@ body {
   box-shadow: 0 8px 20px rgba(0,76,160,0.25);
   transform: scale(1.01);
 }
-@media (max-width: 600px) {
-  .input-field {
-    width: 100%;
-  }
+
+/* ===== ラジオボタン ===== */
+.radio-options {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+  justify-content: flex-start; /* 左寄せ */
+}
+.radio-label {
+  position: relative;
+  padding-left: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+}
+.radio-label input {
+  position: absolute;
+  opacity: 0;
+}
+.custom-radio {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  transition: 0.3s;
+}
+.radio-label input:checked ~ .custom-radio {
+  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
+  border-color: #ff5fa2;
+  box-shadow: 0 0 8px rgba(255,95,162,0.6);
 }
 
 /* ===== 登録済み日程カード ===== */
@@ -69,7 +94,9 @@ body {
   border-radius: 20px;
   padding: 16px 20px;
   margin-bottom: 14px;
-  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   box-shadow: 0 6px 14px rgba(0,0,0,0.1);
 }
 .schedule-title {
@@ -88,13 +115,11 @@ body {
   border-radius: 20px;
   width: 100%;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 6px 16px rgba(255,95,162,0.5);
+  transition: 0.3s;
 }
 .save-btn:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
 }
 
 /* ===== ヘッダー ===== */
@@ -113,21 +138,17 @@ body {
   z-index: 1000;
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
-.main-header .logo a { color: #fdfdfd; text-decoration: none; }
-.main-header .logo a:hover { color: #FDB9C8; }
-.main-header .nav-links { display: flex; gap: 20px; }
-.main-header .nav-links a {
-  color: #fdfdfd; font-weight: bold; padding: 6px 10px;
-  border-radius: 8px; text-decoration: none;
+.main-header .logo a {
+  color: #fdfdfd;
+  text-decoration: none;
 }
-.main-header .nav-links a:hover { background: rgba(255,255,255,0.08); color: #FDB9C8; }
-.main-header .login-btn {
-  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
-  color: #fff; border: none; padding: 8px 14px;
-  border-radius: 10px; cursor: pointer;
-  font-weight: bold; transition: all 0.3s ease;
+.main-header .nav-links {
+  display: flex;
+  gap: 20px;
 }
-.main-header .login-btn:hover { background: linear-gradient(135deg, #004CA0, #0066ff); }
+.main-header .nav-links a:hover {
+  color: #FDB9C8;
+}
 
 /* ===== フッター ===== */
 .main-footer {
@@ -141,35 +162,13 @@ body {
   box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
 }
 
-/* ===== RegisterPage レイアウト ===== */
-.register-layout {
-  display: flex;
-  justify-content: space-between;
-  gap: 40px;
-  margin: 0 60px;
-}
-.calendar-section { flex: 0 0 70%; }
-.schedule-section {
-  flex: 0 0 30%;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  backdrop-filter: blur(8px);
-}
-@media (max-width: 768px) {
-  .register-layout { flex-direction: column; margin: 0 20px; gap: 20px; }
-  .calendar-section, .schedule-section { flex: 1 1 auto; }
-  .schedule-section { margin-top: 20px; }
-}
-
-/* ===== react-calendar 修正 ===== */
+/* ===== カレンダー (react-calendar) ===== */
 .react-calendar {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 28px;
   padding: 20px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  margin-top: 20px;
+  margin-top: 12px;
   font-family: 'M PLUS Rounded 1c', sans-serif;
   width: 100%;
 }
@@ -178,7 +177,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  gap: 20px;
+  gap: 14px;
 }
 .react-calendar__navigation__label {
   font-size: 1.4rem;
@@ -186,30 +185,23 @@ body {
   color: #004CA0;
 }
 .react-calendar__month-view__weekdays {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  text-align: center;
   font-weight: bold;
-  margin-bottom: 12px;
+  text-align: center;
+  margin-bottom: 8px;
   color: #004CA0;
 }
-.react-calendar__month-view__weekdays abbr { text-decoration: none; }
-.react-calendar__month-view__days {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 8px !important;
-}
 .react-calendar__tile {
-  padding: 16px;
+  padding: 14px;
   border-radius: 14px;
   text-align: center;
   cursor: pointer;
   background: #fff;
-  transition: all 0.3s;
-  font-size: 1rem;
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+  transition: 0.3s;
 }
-.react-calendar__tile:hover { background: #fde4ec; transform: scale(1.07); }
+.react-calendar__tile:hover {
+  background: #fde4ec;
+  transform: scale(1.07);
+}
 .react-calendar__tile--now {
   border: 2px solid gold;
   background: #fff9e6;
@@ -219,34 +211,5 @@ body {
   background: linear-gradient(135deg, #004CA0, #0066ff) !important;
   color: #fff !important;
   font-weight: bold;
-}
-
-/* ===== ラジオボタン ===== */
-.radio-options {
-  display: flex;
-  justify-content: flex-start;
-  gap: 30px;
-  margin-bottom: 16px;
-}
-.radio-label {
-  position: relative;
-  padding-left: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
-}
-.radio-label input { position: absolute; opacity: 0; }
-.custom-radio {
-  position: absolute;
-  top: 50%; left: 0;
-  transform: translateY(-50%);
-  height: 20px; width: 20px;
-  border-radius: 50%;
-  border: 2px solid #FDB9C8;
-  background: #fff;
-}
-.radio-label input:checked ~ .custom-radio {
-  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
-  border-color: #ff5fa2;
-  box-shadow: 0 0 8px rgba(255,95,162,0.6);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 }
