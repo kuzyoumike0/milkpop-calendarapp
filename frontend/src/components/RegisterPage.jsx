@@ -1,7 +1,5 @@
 // frontend/src/pages/RegisterPage.jsx
 import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "../index.css";
 
 const RegisterPage = () => {
@@ -44,7 +42,7 @@ const RegisterPage = () => {
     setViewDate(newDate);
   };
 
-  // 📌 表示するカレンダーセル
+  // 📌 カレンダーセル
   const generateCalendarCells = () => {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -108,7 +106,7 @@ const RegisterPage = () => {
           />
 
           {/* ラジオボタン */}
-          <div className="radio-options">
+          <div className="radio-options-left">
             <label className="radio-label">
               <input
                 type="radio"
