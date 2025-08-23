@@ -20,12 +20,13 @@ h1, h2 {
   letter-spacing: 1px;
 }
 
+/* ===== ヘッダー ===== */
 header {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
   padding: 16px 0;
   display: flex;
-  justify-content: space-between;  /* ← 左右を強制分離 */
+  justify-content: space-between;  /* ロゴ左 / リンク群右 */
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
@@ -38,21 +39,21 @@ header {
 }
 
 header .logo {
-  margin-left: 16px; /* ← 左端に余白 */
+  margin-left: 16px; /* 左端に少し余白 */
 }
 
-header .nav {
+header .nav,
+header .flex {
   display: flex;
-  gap: 32px;
+  gap: 24px; /* 横の余白 */
 }
 
-header .nav a {
-  color: #fff;
+header a, header button {
+  color: white;
   text-decoration: none;
   font-weight: bold;
-  transition: color 0.2s;
 }
-header .nav a:hover {
+header a:hover {
   color: #ff5fa2;
 }
 
