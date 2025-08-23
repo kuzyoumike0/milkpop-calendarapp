@@ -1,12 +1,12 @@
 /* ===== Google Fonts ===== */
-@import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
 
 /* ===== ベーススタイル ===== */
 body {
   margin: 0;
   padding: 0;
   background: radial-gradient(circle at top left, #FDB9C8, #ffffff 50%, #CDE7F0 90%);
-  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-family: 'Roboto', sans-serif;  /* ← 本文をRobotoに変更 */
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
@@ -25,7 +25,7 @@ a,
 /* ===== 見出し ===== */
 h1,
 .title-text {
-  font-family: 'Yomogi', 'M PLUS Rounded 1c', sans-serif;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif; /* ← ロゴ・タイトルはポップ */
   font-weight: 700;
   color: #fff;
   text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
@@ -43,10 +43,10 @@ h3 {
 main {
   display: flex;
   flex-direction: column;
-  align-items: center;   /* 横中央 */
-  justify-content: center; /* 縦中央 */
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  min-height: calc(100vh - 160px); /* ヘッダー・フッターを除いた高さで中央 */
+  min-height: calc(100vh - 160px);
   padding: 2rem;
 }
 
@@ -67,7 +67,7 @@ main {
 
 /* ===== 本文カード ===== */
 .top-message-card {
-  background: #fff; /* ← グラデ削除、白背景 */
+  background: #fff;
   border-radius: 1.5rem;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
   padding: 1.8rem 2.2rem;
@@ -77,9 +77,9 @@ main {
   margin-left: auto;
   margin-right: auto;
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.9;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-family: 'Roboto', sans-serif; /* ← 本文フォントをRobotoに */
   color: #333;
   text-align: center;
 }
