@@ -49,44 +49,7 @@ body {
   box-shadow: 0 0 12px rgba(0,76,160,0.35);
 }
 
-/* === 共通入力フォーム（おしゃれ・中央寄せ） === */
-/* === 共通入力フォーム（おしゃれ・左寄せ） === */
-.input-field {
-  width: 70%;                /* ← 小さめに */
-  max-width: 500px;          /* PCで大きすぎないよう制限 */
-  padding: 14px 18px;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  margin-left: 0;            /* 左寄せ */
-}
-
-.input-field::placeholder {
-  color: #aaa;
-  font-style: italic;
-}
-
-.input-field:focus {
-  outline: none;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
-  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
-  transform: scale(1.01);
-}
-
-/* === スマホ対応 === */
-@media (max-width: 600px) {
-  .input-field {
-    width: 100%;  /* スマホでは全幅 */
-  }
-}
-/* === ラベル下に自然に揃える === */
+/* === 共通入力フォーム === */
 .input-field {
   width: 70%;
   max-width: 500px;
@@ -100,18 +63,27 @@ body {
   color: #333;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
-  margin-left: 0;   /* 左寄せ */
-  display: block;   /* ラベルの下に配置 */
+  margin-left: 0;
+  display: block;
 }
-
+.input-field::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+.input-field:focus {
+  outline: none;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
+  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
+  transform: scale(1.01);
+}
 @media (max-width: 600px) {
   .input-field {
     width: 100%;
   }
 }
 
-
-/* ===== ラジオボタン（おしゃれ） ===== */
+/* ===== ラジオボタン ===== */
 .radio-options {
   display: flex;
   gap: 20px;
@@ -143,50 +115,6 @@ body {
   background: radial-gradient(circle, #FDB9C8, #ff5fa2);
   border-color: #ff5fa2;
   box-shadow: 0 0 8px rgba(255,95,162,0.6);
-}
-
-/* ===== カレンダー（自作UI） ===== */
-.custom-calendar {
-  background: #fff;
-  border-radius: 28px;
-  padding: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-  margin-top: 20px;
-}
-.calendar-day-header {
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-  background: #fdf7fa;
-  border-radius: 12px;
-  color: #004CA0;
-}
-.calendar-cell {
-  padding: 14px;
-  border-radius: 14px;
-  text-align: center;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.3s;
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
-}
-.calendar-cell:hover {
-  background: #fde4ec;
-  transform: scale(1.07);
-}
-.calendar-cell.today {
-  border: 2px solid gold;
-  background: #fff9e6;
-  font-weight: bold;
-}
-.calendar-cell.selected {
-  background: linear-gradient(135deg, #004CA0, #0066ff);
-  color: #fff;
-  font-weight: bold;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 }
 
 /* ===== 登録済み日程カード ===== */
@@ -283,12 +211,11 @@ body {
 }
 .main-header .logo a {
   color: #fdfdfd;
-  text-decoration: none;  /* 下線削除 */
+  text-decoration: none;
   transition: color 0.3s;
 }
 .main-header .logo a:hover {
   color: #FDB9C8;
-  text-decoration: none;
 }
 .main-header .nav-links {
   display: flex;
@@ -300,12 +227,11 @@ body {
   padding: 6px 10px;
   border-radius: 8px;
   transition: background 0.3s, color 0.3s;
-  text-decoration: none;   /* 下線削除 */
+  text-decoration: none;
 }
 .main-header .nav-links a:hover {
   background: rgba(255,255,255,0.08);
   color: #FDB9C8;
-  text-decoration: none;
 }
 .main-header .login-btn,
 .main-header .logout-btn {
@@ -344,23 +270,21 @@ body {
   font-size: 1.8rem;
   font-weight: bold;
   color: #fdfdfd;
-  text-decoration: none; /* 下線削除 */
+  text-decoration: none;
   transition: all 0.3s ease;
 }
 .logo-text:hover {
   color: #FDB9C8;
   text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
   transform: scale(1.05);
-  text-decoration: none;
 }
 
-/* ===== トップページロゴ画像 ===== */
+/* ===== トップページロゴ ===== */
 .top-logo {
   display: block;
   margin: 2rem auto;
   width: 90%;
   max-width: 1040px;
-  min-width: 200px;
   height: auto;
   border-radius: 20px;
   box-shadow: 0 12px 24px rgba(0,0,0,0.25);
@@ -376,21 +300,14 @@ body {
     width: 85%;
   }
 }
-@media (min-width: 10400px) {
-  .top-logo {
-    max-width: 500px;
-  }
-}
 
-/* ===== レイアウト全体 ===== */
+/* ===== レイアウト ===== */
 .register-layout {
   display: flex;
   justify-content: space-between;
   gap: 40px;
   margin: 0 60px;
 }
-
-/* ===== カレンダー7割 / リスト3割 ===== */
 .calendar-section {
   flex: 0 0 70%;
 }
@@ -407,8 +324,6 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(0,0,0,0.25);
 }
-
-/* ===== スマホ対応 ===== */
 @media (max-width: 768px) {
   .register-layout {
     flex-direction: column;
@@ -424,22 +339,19 @@ body {
   }
 }
 
-/* ===== 右側カード内 ===== */
-.selected-dates,
-.schedule-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* ===== react-calendar (MilkPOPカスタム) ===== */
+.react-calendar {
+  background: #fff;
+  border-radius: 28px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  margin-top: 20px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
 }
-.schedule-section h2 {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #004CA0;
+.react-calendar__navigation {
   margin-bottom: 12px;
 }
-
-/* === 月切り替えボタン === */
-.month-btn {
+.react-calendar__navigation button {
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
   color: #fff;
   font-weight: bold;
@@ -450,66 +362,16 @@ body {
   transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-.month-btn:hover {
+.react-calendar__navigation button:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: scale(1.05);
 }
-
-/* === 発行URL強調 === */
-.issued-url {
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #fff, #fdf7fa);
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  text-align: center;
-  font-weight: bold;
-  word-break: break-all;
-}
-.issued-url a {
-  color: #004CA0;
-  font-weight: bold;
-  text-decoration: none; /* 下線削除 */
-}
-.issued-url a:hover {
-  color: #ff5fa2;
-  text-decoration: none;
-}
-
-/* ✖ 削除ボタン */
-.delete-btn {
-  background: transparent;
-  border: none;
-  color: #ff5fa2;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: 10px;
-  transition: transform 0.2s, color 0.2s;
-}
-.delete-btn:hover {
-  color: #004CA0;
-  transform: scale(1.2);
-}
-/* ===== MilkPOP react-calendar Custom ===== */
-.react-calendar {
-  background: #fff;
-  border-radius: 28px;
-  padding: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  margin-top: 20px;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-
-/* 曜日ヘッダー */
 .react-calendar__month-view__weekdays {
   font-weight: bold;
   text-align: center;
+  margin-bottom: 8px;
   color: #004CA0;
 }
-
-/* 日付セル */
 .react-calendar__tile {
   padding: 14px;
   border-radius: 14px;
@@ -518,29 +380,43 @@ body {
   background: #fff;
   transition: all 0.3s;
   box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+  font-size: 1rem;
 }
-
 .react-calendar__tile:hover {
   background: #fde4ec;
   transform: scale(1.07);
 }
-
 .react-calendar__tile--now {
   border: 2px solid gold;
   background: #fff9e6;
   font-weight: bold;
 }
-
 .react-calendar__tile--active {
   background: linear-gradient(135deg, #004CA0, #0066ff) !important;
   color: #fff !important;
   font-weight: bold;
   box-shadow: 0 4px 14px rgba(0,0,0,0.35);
 }
-
+.react-calendar__tile--range {
+  background: #FDB9C8;
+  color: #fff;
+  border-radius: 12px;
+  font-weight: bold;
+}
 /* 祝日 */
 .react-calendar .holiday {
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2) !important;
   color: #fff !important;
   font-weight: bold;
+}
+/* ===== カレンダーレスポンシブ ===== */
+@media (max-width: 600px) {
+  .react-calendar {
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .react-calendar__tile {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
 }
