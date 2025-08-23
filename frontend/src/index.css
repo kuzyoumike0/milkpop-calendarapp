@@ -87,7 +87,7 @@ main {
 .top-logo {
   display: block;
   margin: 0 auto 2rem auto; /* 中央揃え */
-  max-width: 1040px;        /* 最大幅 1040px */
+  max-width: 680px;        /* 最大幅 1040px */
   width: 100%;              /* ウィンドウ幅に合わせて縮小 */
   height: auto;             /* アスペクト比維持 */
 }
