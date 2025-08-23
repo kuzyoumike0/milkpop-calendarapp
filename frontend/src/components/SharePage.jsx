@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
+  const [votes, setVotes] = useState({});
+  const [username, setUsername] = useState("");
 
   const fetchSchedules = async () => {
     try {
@@ -10,6 +12,45 @@ const SharePage = () => {
       setSchedules(data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchVotes = async (scheduleId) => {
+    try {
+      const res = await fetch(`/api/votes/${scheduleId}`);
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  };
+
+  const handleVoteChange = (scheduleId, choice) => {
+    setVotes((prev) => ({
+      ...prev,
+      [scheduleId]: choice,
+    }));
+  };
+
+  const handleSaveVotes = async () => {
+    try {
+      for (const scheduleId in votes) {
+        await fetch("/api/votes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scheduleId,
+            username: username || "匿名",
+            choice: votes[scheduleId],
+          }),
+        });
+      }
+      alert("投票を保存しました！");
+      fetchSchedules(); // 更新
+    } catch (err) {
+      console.error(err);
+      alert("投票の保存に失敗しました");
     }
   };
 
@@ -24,22 +65,53 @@ const SharePage = () => {
       </header>
 
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-xl font-bold text-[#004CA0] mb-4">登録済み日程</h2>
-        <ul className="space-y-3">
+        <h2 className="text-xl font-bold text-[#004CA0] mb-6">登録済み日程</h2>
+
+        {/* ユーザー名入力 */}
+        <div className="mb-6">
+          <label className="block mb-2 text-[#004CA0] font-semibold">
+            あなたの名前
+          </label>
+          <input
+            type="text"
+            className="w-full border rounded-xl px-4 py-2"
+            placeholder="名前を入力してください（未入力なら匿名）"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </div>
+
+        <ul className="space-y-4">
           {schedules.map((s) => (
-            <li key={s.id} className="border p-4 rounded-xl shadow-sm">
-              <p className="font-bold">{s.title}</p>
-              <p>{new Date(s.date).toLocaleDateString()}</p>
-              <p>選択方法: {s.selection_mode}</p>
-              <p>時間帯: {s.time_type}</p>
-              {s.time_type === "custom" && (
-                <p>
-                  {s.start_time} ~ {s.end_time}
-                </p>
-              )}
+            <li
+              key={s.id}
+              className="border p-4 rounded-xl shadow-sm flex justify-between items-center"
+            >
+              <div>
+                <p className="font-bold">{s.title}</p>
+                <p>{new Date(s.date).toLocaleDateString()}</p>
+              </div>
+              <select
+                className="border rounded-xl px-3 py-2"
+                value={votes[s.id] || ""}
+                onChange={(e) => handleVoteChange(s.id, e.target.value)}
+              >
+                <option value="">選択してください</option>
+                <option value="〇">〇</option>
+                <option value="△">△</option>
+                <option value="✖">✖</option>
+              </select>
             </li>
           ))}
         </ul>
+
+        {/* 保存ボタン */}
+        <button
+          onClick={handleSaveVotes}
+          className="mt-6 w-full bg-[#004CA0] text-white font-bold py-3 rounded-xl shadow hover:bg-[#FDB9C8] hover:text-black transition"
+        >
+          投票を保存する
+        </button>
       </div>
     </div>
   );
