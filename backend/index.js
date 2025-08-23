@@ -94,9 +94,15 @@ app.post("/api/schedules", async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1, $2, $3, $4, $5)
+       VALUES ($1, $2, $3::jsonb, $4::jsonb, $5)
        RETURNING *`,
-      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+      [
+        id,
+        title,
+        JSON.stringify(dates || []),
+        JSON.stringify(options || {}),
+        shareToken,
+      ]
     );
 
     res.json(result.rows[0]);
