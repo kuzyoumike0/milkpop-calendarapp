@@ -28,7 +28,6 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
-  // 今月の日付を生成
   const generateCalendarDays = (month) => {
     const year = month.getFullYear();
     const monthIndex = month.getMonth();
@@ -38,15 +37,12 @@ const RegisterPage = () => {
     const days = [];
     const startDayOfWeek = firstDay.getDay();
 
-    // 前月の空白
     for (let i = 0; i < startDayOfWeek; i++) {
       days.push(null);
     }
-    // 今月の日付
     for (let d = 1; d <= lastDay.getDate(); d++) {
       days.push(new Date(year, monthIndex, d));
     }
-
     return days;
   };
 
@@ -62,7 +58,9 @@ const RegisterPage = () => {
         (d) => d.toDateString() === date.toDateString()
       );
       if (exists) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
+        setSelectedDates(
+          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+        );
       } else {
         setSelectedDates([...selectedDates, date]);
       }
@@ -126,6 +124,7 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
+      {/* ✅ MilkPOP ヘッダー */}
       <Header />
 
       <div className="register-layout">
@@ -174,14 +173,21 @@ const RegisterPage = () => {
             <button onClick={nextMonth} className="month-btn">▶</button>
           </div>
 
-          {/* 自作カレンダー */}
+          {/* ✅ 自作カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
-              <div key={i} className="calendar-day-header">{day}</div>
+              <div key={i} className="calendar-day-header">
+                {day}
+              </div>
             ))}
             {days.map((date, i) => {
-              const isToday = date && date.toDateString() === today.toDateString();
-              const isSelected = date && selectedDates.some((d) => d.toDateString() === date.toDateString());
+              const isToday =
+                date && date.toDateString() === today.toDateString();
+              const isSelected =
+                date &&
+                selectedDates.some(
+                  (d) => d.toDateString() === date.toDateString()
+                );
               const isHolidayDay = date && isHoliday(date);
 
               return (
@@ -241,6 +247,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
+      {/* ✅ MilkPOP フッター */}
       <Footer />
     </div>
   );
