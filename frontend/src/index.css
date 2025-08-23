@@ -267,4 +267,35 @@ body {
   transform: scale(1.05);
 }
 
+/* ===== トップページロゴ画像（レスポンシブ対応） ===== */
+.top-logo {
+  display: block;
+  margin: 2rem auto;
+  width: 90%;          /* 画面幅に対して可変 */
+  max-width: 1040px;    /* 最大サイズ */
+  min-width: 200px;    /* 最小サイズ */
+  height: auto;        /* アスペクト比を維持 */
+  border-radius: 20px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.top-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+}
+
+/* ===== モバイル向け（小さい画面） ===== */
+@media (max-width: 600px) {
+  .top-logo {
+    max-width: 280px;  /* スマホでは少し小さめ */
+  }
+}
+
+/* ===== 大画面向け ===== */
+@media (min-width: 1200px) {
+  .top-logo {
+    max-width: 500px;  /* 大画面では大きめに */
+  }
+}
 
