@@ -129,6 +129,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
+        {/* ===== レイアウト：カレンダー7割 / 右リスト3割 ===== */}
         <div className="register-layout">
           {/* ===== カレンダーエリア ===== */}
           <div className="calendar-section">
