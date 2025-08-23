@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
 app.use(cors());
@@ -107,9 +108,14 @@ app.get("/api/responses/:share_id", async (req, res) => {
   }
 });
 
-// ====== 動作確認用エンドポイント ======
-app.get("/", (req, res) => {
-  res.send("✅ MilkPOPカレンダーAPI稼働中");
+// ====== フロントエンド配信設定 ======
+// Reactのbuildフォルダを静的ファイルとして提供
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
+
+// API以外のリクエストはReactに任せる
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // ====== サーバー起動 ======
