@@ -20,6 +20,7 @@ const RegisterPage = () => {
   const firstDay = new Date(year, month, 1).getDay();
   const lastDate = new Date(year, month + 1, 0).getDate();
 
+  // ===== 日付クリック =====
   const handleDateClick = (date) => {
     if (selectMode === "single") {
       if (selectedDates.includes(date)) {
@@ -42,10 +43,12 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 選択解除 =====
   const handleRemoveSelected = (date) => {
     setSelectedDates(selectedDates.filter((d) => d !== date));
   };
 
+  // ===== 月切替 =====
   const prevMonth = () => {
     setCurrentMonth(new Date(year, month - 1, 1));
   };
@@ -53,6 +56,7 @@ const RegisterPage = () => {
     setCurrentMonth(new Date(year, month + 1, 1));
   };
 
+  // ===== 保存 =====
   const handleSave = () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日付を入力してください！");
@@ -67,23 +71,26 @@ const RegisterPage = () => {
     setSelectedDates([]);
   };
 
+  // ===== 削除 =====
   const handleDelete = (id) => {
     setSavedSchedules(savedSchedules.filter((s) => s.id !== id));
   };
 
+  // ===== 並び替え済み登録リスト =====
   const sortedSchedules = [...savedSchedules].sort((a, b) => {
     const dateA = new Date(a.year, a.month, a.dates[0]);
     const dateB = new Date(b.year, b.month, b.dates[0]);
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
 
+  // ===== 選択中リスト昇順 =====
   const sortedSelectedDates = [...selectedDates].sort((a, b) => a - b);
 
   return (
     <>
       <Header />
       <main className="register-page">
-        {/* ===== タイトル入力と選択モード ===== */}
+        {/* ===== 入力欄＆モード選択 ===== */}
         <div className="form-top">
           <div className="form-group short-input left-input">
             <label>タイトル</label>
@@ -121,7 +128,7 @@ const RegisterPage = () => {
         </div>
 
         <div className="register-layout">
-          {/* ===== 左：カレンダー ===== */}
+          {/* ===== カレンダーエリア ===== */}
           <div className="calendar-section">
             <h2 className="form-title">
               {year}年 {month + 1}月
@@ -131,7 +138,6 @@ const RegisterPage = () => {
               <button onClick={nextMonth}>次の月 →</button>
             </div>
 
-            {/* カレンダー */}
             <div className="calendar-grid custom-calendar">
               {daysOfWeek.map((day) => (
                 <div key={day} className="calendar-day-header">
@@ -170,7 +176,7 @@ const RegisterPage = () => {
             </button>
           </div>
 
-          {/* ===== 右：登録済みリスト & 選択中日程 ===== */}
+          {/* ===== 右側：選択中 + 登録済み ===== */}
           <div className="schedule-section">
             {sortedSelectedDates.length > 0 && (
               <div className="card selected-dates mb-4">
