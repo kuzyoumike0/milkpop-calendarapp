@@ -18,6 +18,12 @@ const pool = new Pool({
 // ====== DB 初期化 ======
 const initAllDB = async () => {
   try {
+    // 古い「日付」カラムが残っているテーブルを消す（開発用）
+    await pool.query(`DROP TABLE IF EXISTS schedules CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS personal_schedules CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS votes CASCADE`);
+    await pool.query(`DROP TABLE IF EXISTS share_links CASCADE`);
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS schedules (
         id SERIAL PRIMARY KEY,
@@ -58,6 +64,7 @@ const initAllDB = async () => {
         id SERIAL PRIMARY KEY,
         url TEXT UNIQUE NOT NULL,
         title TEXT,
+        schedule_ids INT[],
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
@@ -170,11 +177,13 @@ app.get("/api/votes/:scheduleId", async (req, res) => {
 // ===== 共有リンク作成 =====
 app.post("/api/share-links", async (req, res) => {
   try {
-    const { title } = req.body;
-    const randomUrl = crypto.randomBytes(6).toString("hex"); // ランダムな12文字
+    const { title, scheduleIds } = req.body;
+    const randomUrl = crypto.randomBytes(6).toString("hex");
+
     const result = await pool.query(
-      `INSERT INTO share_links (url, title) VALUES ($1, $2) RETURNING *`,
-      [randomUrl, title]
+      `INSERT INTO share_links (url, title, schedule_ids)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [randomUrl, title, scheduleIds || []]
     );
     res.json({ success: true, data: result.rows[0] });
   } catch (err) {
@@ -205,6 +214,35 @@ app.get("/api/share-links/:url", async (req, res) => {
       return res.status(404).json({ success: false, error: "Not Found" });
     }
     res.json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "DB fetch error" });
+  }
+});
+
+// ===== 共有リンクのスケジュール取得 =====
+app.get("/api/share-links/:url/schedules", async (req, res) => {
+  try {
+    const { url } = req.params;
+    const linkResult = await pool.query(
+      `SELECT * FROM share_links WHERE url = $1`,
+      [url]
+    );
+    if (linkResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Link not found" });
+    }
+
+    const link = linkResult.rows[0];
+    if (!link.schedule_ids || link.schedule_ids.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const schedules = await pool.query(
+      `SELECT * FROM schedules WHERE id = ANY($1) ORDER BY date ASC`,
+      [link.schedule_ids]
+    );
+
+    res.json({ success: true, data: schedules.rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "DB fetch error" });
