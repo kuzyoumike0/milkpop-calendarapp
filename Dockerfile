@@ -23,7 +23,8 @@ COPY backend ./backend
 COPY --from=frontend-build /app/frontend/build ./frontend/build
 
 ENV NODE_ENV=production
-ENV PORT=5000
-EXPOSE 5000
+
+# Railway が自動で PORT を渡すので ENV PORT=5000 は不要
+EXPOSE 8080
 
 CMD ["node", "/app/backend/index.js"]
