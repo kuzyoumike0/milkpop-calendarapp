@@ -16,40 +16,46 @@ const pool = new Pool({
 
 // ====== DB 初期化 ======
 const initAllDB = async () => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      date DATE NOT NULL,
-      selection_mode TEXT,
-      time_type TEXT,
-      start_time TEXT,
-      end_time TEXT
-    );
-  `);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        date DATE NOT NULL,
+        selection_mode TEXT,
+        time_type TEXT,
+        start_time TEXT,
+        end_time TEXT
+      );
+    `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS personal_schedules (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      memo TEXT,
-      date DATE NOT NULL,
-      selection_mode TEXT,
-      time_type TEXT,
-      start_time TEXT,
-      end_time TEXT
-    );
-  `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS personal_schedules (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        memo TEXT,
+        date DATE NOT NULL,
+        selection_mode TEXT,
+        time_type TEXT,
+        start_time TEXT,
+        end_time TEXT
+      );
+    `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS votes (
-      id SERIAL PRIMARY KEY,
-      schedule_id INT NOT NULL,
-      username TEXT,
-      choice TEXT CHECK (choice IN ('〇','△','✖')),
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS votes (
+        id SERIAL PRIMARY KEY,
+        schedule_id INT NOT NULL,
+        username TEXT,
+        choice TEXT CHECK (choice IN ('〇','△','✖')),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    console.log("✅ Tables initialized");
+  } catch (err) {
+    console.error("❌ DB initialization error:", err);
+  }
 };
 initAllDB();
 
@@ -57,22 +63,24 @@ initAllDB();
 
 // 確認用ルート
 app.get("/api", (req, res) => {
-  res.send("✅ MilkPOP Calendar API 稼働中");
+  res.json({ success: true, message: "✅ MilkPOP Calendar API 稼働中" });
 });
 
 // ===== スケジュール保存 =====
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, date, selectionMode, timeType, startTime, endTime } = req.body;
+    const normalizedDate = new Date(date);
+
     const result = await pool.query(
       `INSERT INTO schedules (title, date, selection_mode, time_type, start_time, end_time)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [title, date, selectionMode, timeType, startTime, endTime]
+      [title, normalizedDate, selectionMode, timeType, startTime, endTime]
     );
-    res.json(result.rows[0]);
+    res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB insert error" });
+    res.status(500).json({ success: false, error: "DB insert error" });
   }
 });
 
@@ -80,10 +88,10 @@ app.post("/api/schedules", async (req, res) => {
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query(`SELECT * FROM schedules ORDER BY date ASC`);
-    res.json(result.rows);
+    res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB fetch error" });
+    res.status(500).json({ success: false, error: "DB fetch error" });
   }
 });
 
@@ -91,15 +99,17 @@ app.get("/api/schedules", async (req, res) => {
 app.post("/api/personal-schedules", async (req, res) => {
   try {
     const { title, memo, date, selectionMode, timeType, startTime, endTime } = req.body;
+    const normalizedDate = new Date(date);
+
     const result = await pool.query(
       `INSERT INTO personal_schedules (title, memo, date, selection_mode, time_type, start_time, end_time)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [title, memo, date, selectionMode, timeType, startTime, endTime]
+      [title, memo, normalizedDate, selectionMode, timeType, startTime, endTime]
     );
-    res.json(result.rows[0]);
+    res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB insert error" });
+    res.status(500).json({ success: false, error: "DB insert error" });
   }
 });
 
@@ -109,10 +119,10 @@ app.get("/api/personal-schedules", async (req, res) => {
     const result = await pool.query(
       `SELECT * FROM personal_schedules ORDER BY date ASC`
     );
-    res.json(result.rows);
+    res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB fetch error" });
+    res.status(500).json({ success: false, error: "DB fetch error" });
   }
 });
 
@@ -125,10 +135,10 @@ app.post("/api/votes", async (req, res) => {
        VALUES ($1, $2, $3) RETURNING *`,
       [scheduleId, username, choice]
     );
-    res.json(result.rows[0]);
+    res.json({ success: true, data: result.rows[0] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB insert error" });
+    res.status(500).json({ success: false, error: "DB insert error" });
   }
 });
 
@@ -140,10 +150,10 @@ app.get("/api/votes/:scheduleId", async (req, res) => {
       `SELECT username, choice FROM votes WHERE schedule_id = $1`,
       [scheduleId]
     );
-    res.json(result.rows);
+    res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "DB fetch error" });
+    res.status(500).json({ success: false, error: "DB fetch error" });
   }
 });
 
