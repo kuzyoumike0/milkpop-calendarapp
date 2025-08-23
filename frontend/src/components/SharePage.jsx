@@ -3,50 +3,70 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
 import { useParams } from "react-router-dom";
+import { getTodayIso } from "../holiday";
 
 const SharePage = () => {
-  const { shareId } = useParams();   // ← URLパラメータ
+  const { shareId } = useParams();   // URLから取得
   const [schedule, setSchedule] = useState(null);
   const [userName, setUserName] = useState("");
   const [answers, setAnswers] = useState({});
   const [savedResults, setSavedResults] = useState([]);
 
-  // 仮ログインユーザ（Discordログインしたら取得する想定）
+  const todayIso = getTodayIso();
+
+  // ===== スケジュール読み込み =====
   useEffect(() => {
     if (!shareId) return;
 
-    // 仮データ（APIから取得する想定）
-    setSchedule({
-      title: "サンプルイベント",
-      dates: [
-        { date: "2025-08-23", type: "終日", start: "09:00", end: "18:00" },
-        { date: "2025-08-24", type: "午前", start: "09:00", end: "12:00" },
-        { date: "2025-08-25", type: "午後", start: "13:00", end: "18:00" }
-      ],
-    });
+    const loadSchedule = async () => {
+      try {
+        const res = await fetch(`/api/schedules/${shareId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSchedule(data);
+        } else {
+          setSchedule(null);
+        }
+      } catch (err) {
+        console.error("スケジュール取得失敗:", err);
+        setSchedule(null);
+      }
+    };
 
-    // localStorage or Discordユーザー名を保持
+    const loadResponses = async () => {
+      try {
+        const res = await fetch(`/api/responses/${shareId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSavedResults(data);
+        }
+      } catch (err) {
+        console.error("回答取得失敗:", err);
+      }
+    };
+
+    loadSchedule();
+    loadResponses();
+
+    // ユーザー名を保持
     const storedName = localStorage.getItem("userName");
     if (storedName) setUserName(storedName);
-
-    // 回答一覧をロード
-    fetch(`/api/responses/${shareId}`)
-      .then((res) => res.json())
-      .then((data) => setSavedResults(data))
-      .catch(() => setSavedResults([]));
   }, [shareId]);
 
+  // ===== 回答変更 =====
   const handleAnswerChange = (date, value) => {
     setAnswers({ ...answers, [date]: value });
   };
 
+  // ===== 保存処理 =====
   const handleSave = async () => {
     if (!userName) {
       alert("ユーザ名を入力してください");
       return;
     }
+    if (!schedule) return;
 
-    // 未回答のものには「-」を入れる
+    // 未回答には「-」を入れる
     const finalAnswers = {};
     schedule.dates.forEach((d) => {
       finalAnswers[d.date] = answers[d.date] ? answers[d.date] : "-";
@@ -60,11 +80,8 @@ const SharePage = () => {
 
     if (res.ok) {
       localStorage.setItem("userName", userName);
-
-      // 最新一覧を取得
       const list = await fetch(`/api/responses/${shareId}`).then((r) => r.json());
       setSavedResults(list);
-
       setAnswers({});
     } else {
       alert("保存に失敗しました");
@@ -87,10 +104,10 @@ const SharePage = () => {
         <h2 className="page-title mt-6">共有ページ</h2>
 
         {!schedule ? (
-          <p>読み込み中...</p>
+          <p>スケジュールが見つかりません</p>
         ) : (
           <div className="register-layout">
-            {/* 左: 登録日程 & カレンダー */}
+            {/* 左: カレンダー & 日程表示 */}
             <div className="calendar-section">
               <div className="custom-calendar">
                 <h3 className="text-lg font-bold text-[#004CA0] mb-2">
@@ -99,11 +116,15 @@ const SharePage = () => {
                 <Calendar
                   value={schedule.dates.map((d) => new Date(d.date))}
                   className="custom-calendar"
-                  tileClassName={({ date }) =>
-                    schedule.dates.find((d) => d.date === date.toISOString().split("T")[0])
-                      ? "react-calendar__tile--active"
-                      : null
-                  }
+                  tileClassName={({ date }) => {
+                    const iso = date.toLocaleDateString("sv-SE");
+                    let classes = [];
+                    if (schedule.dates.find((d) => d.date === iso)) {
+                      classes.push("react-calendar__tile--active");
+                    }
+                    if (iso === todayIso) classes.push("react-calendar__tile--today");
+                    return classes.join(" ");
+                  }}
                 />
               </div>
 
@@ -168,11 +189,12 @@ const SharePage = () => {
                 <h3 className="text-lg font-bold mb-2">📋 回答一覧</h3>
                 {savedResults.length === 0 && <p>まだ回答はありません</p>}
                 {savedResults.map((row, idx) => (
-                  <div key={idx} className="mb-2">
+                  <div key={idx} className="mb-4">
                     <p className="font-bold">{row.user_name}</p>
-                    {/* 複数日分まとめて表示 */}
                     {Object.entries(row.answers || {}).map(([date, ans]) => (
-                      <p key={date}>{date} : <span className="font-bold">{ans}</span></p>
+                      <p key={date}>
+                        {date} : <span className="font-bold">{ans}</span>
+                      </p>
                     ))}
                   </div>
                 ))}
