@@ -39,15 +39,20 @@ const Header = () => {
   return (
     <header className="banner relative px-4 py-2 bg-black text-white shadow-md">
       <div className="flex justify-between items-center">
-        {/* 左側：ロゴ */}
+        {/* 左端：ロゴ */}
         <h1 className="logo text-2xl font-bold">
           <Link to="/">MilkPOP Calendar</Link>
         </h1>
 
-        {/* 右側：PC表示時のナビゲーション */}
-        <nav className="hidden md:flex gap-6 items-center">
-          <Link to="/register">日程登録</Link>
-          <Link to="/personal">個人スケジュール</Link>
+        {/* 右端：リンク + ユーザー情報 + ハンバーガー */}
+        <div className="flex items-center gap-4 relative">
+          {/* PC表示時のリンク */}
+          <nav className="hidden md:flex gap-6">
+            <Link to="/register">日程登録</Link>
+            <Link to="/personal">個人スケジュール</Link>
+          </nav>
+
+          {/* ユーザー情報 / ログイン */}
           {user ? (
             <span className="user-info flex items-center gap-2">
               <img
@@ -71,50 +76,50 @@ const Header = () => {
               Discordでログイン
             </button>
           )}
-        </nav>
 
-        {/* モバイル用 ☰ ボタン */}
-        <button
-          className="hamburger text-2xl md:hidden"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="メニュー"
-        >
-          ☰
-        </button>
-      </div>
+          {/* ハンバーガー（モバイル用） */}
+          <button
+            className="hamburger text-2xl md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="メニュー"
+          >
+            ☰
+          </button>
 
-      {/* モバイルメニュー */}
-      {menuOpen && (
-        <nav className="md:hidden flex flex-col items-end gap-3 mt-3 bg-gray-900 text-white rounded p-4">
-          <Link to="/register" onClick={() => setMenuOpen(false)}>
-            日程登録
-          </Link>
-          <Link to="/personal" onClick={() => setMenuOpen(false)}>
-            個人スケジュール
-          </Link>
-          {user ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMenuOpen(false);
-              }}
-              className="text-red-400"
-            >
-              ログアウト
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                handleLogin();
-                setMenuOpen(false);
-              }}
-              className="bg-[#5865F2] px-3 py-1 rounded"
-            >
-              Discordでログイン
-            </button>
+          {/* モバイル用メニュー（右端・縦並び） */}
+          {menuOpen && (
+            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2">
+              <Link to="/register" onClick={() => setMenuOpen(false)}>
+                日程登録
+              </Link>
+              <Link to="/personal" onClick={() => setMenuOpen(false)}>
+                個人スケジュール
+              </Link>
+              {user ? (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="text-red-400"
+                >
+                  ログアウト
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleLogin();
+                    setMenuOpen(false);
+                  }}
+                  className="bg-[#5865F2] px-3 py-1 rounded"
+                >
+                  Discordでログイン
+                </button>
+              )}
+            </nav>
           )}
-        </nav>
-      )}
+        </div>
+      </div>
     </header>
   );
 };
