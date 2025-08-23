@@ -10,6 +10,7 @@ const RegisterPage = () => {
   const [dateOptions, setDateOptions] = useState({});
   const [holidays, setHolidays] = useState([]);
   const [shareLink, setShareLink] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const todayIso = getTodayIso();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -111,6 +112,15 @@ const RegisterPage = () => {
       .toString(36)
       .substr(2, 8)}`;
     setShareLink(link);
+    setCopied(false);
+  };
+
+  const copyToClipboard = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -160,6 +170,7 @@ const RegisterPage = () => {
         </div>
 
         <div className="register-layout">
+          {/* カレンダー */}
           <div className="calendar-section">
             <div className="custom-calendar">
               <div className="calendar-header">
@@ -190,9 +201,11 @@ const RegisterPage = () => {
             </div>
           </div>
 
+          {/* 選択日リスト */}
           <div className="schedule-section">
             <h2 className="text-xl font-bold mb-4 text-[#004CA0]">📅 選択した日程</h2>
 
+            {/* 範囲選択 */}
             {mode === "range" && getRangeDates().length > 0 &&
               getRangeDates().map((date) => (
                 <div key={date} className="schedule-card">
@@ -231,6 +244,7 @@ const RegisterPage = () => {
                 </div>
               ))}
 
+            {/* 複数選択 */}
             {mode === "multi" && multiDates.length > 0 &&
               multiDates.map((date) => (
                 <div key={date} className="schedule-card">
@@ -271,14 +285,17 @@ const RegisterPage = () => {
                 </div>
               ))}
 
+            {/* 共有リンク */}
             <div className="mt-6">
               <button onClick={handleShare} className="share-btn">共有リンクを作成</button>
               {shareLink && (
-                <p className="mt-3 text-sm text-black bg-white p-2 rounded-lg shadow">
+                <div className="mt-3 text-sm text-black bg-white p-3 rounded-lg shadow flex items-center gap-3">
                   <a href={shareLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                     {shareLink}
                   </a>
-                </p>
+                  <button onClick={copyToClipboard} className="copy-btn">コピー</button>
+                  {copied && <span className="text-green-600">✔ コピーしました！</span>}
+                </div>
               )}
             </div>
           </div>
