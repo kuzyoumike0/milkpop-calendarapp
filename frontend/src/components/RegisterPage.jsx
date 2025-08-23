@@ -10,7 +10,6 @@ const RegisterPage = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("single");
   const [title, setTitle] = useState("");
   const [timeRange, setTimeRange] = useState("終日");
   const [holidays, setHolidays] = useState([]);
@@ -28,6 +27,7 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
+  // 今月の日付生成
   const generateCalendarDays = (month) => {
     const year = month.getFullYear();
     const monthIndex = month.getMonth();
@@ -48,28 +48,19 @@ const RegisterPage = () => {
 
   const days = generateCalendarDays(currentMonth);
 
+  // ✅ カレンダークリック（複数・範囲対応）
   const handleDateClick = (date) => {
     if (!date) return;
 
-    if (selectionMode === "single") {
+    if (selectedDates.length === 0) {
       setSelectedDates([date]);
-    } else if (selectionMode === "multiple") {
-      const exists = selectedDates.some(
-        (d) => d.toDateString() === date.toDateString()
-      );
-      if (exists) {
-        setSelectedDates(
-          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
-        );
-      } else {
-        setSelectedDates([...selectedDates, date]);
-      }
-    } else if (selectionMode === "range") {
-      if (selectedDates.length === 0) {
-        setSelectedDates([date]);
-      } else if (selectedDates.length === 1) {
-        const start = selectedDates[0] < date ? selectedDates[0] : date;
-        const end = selectedDates[0] < date ? date : selectedDates[0];
+    } else {
+      const lastSelected = selectedDates[selectedDates.length - 1];
+
+      // Shiftキー押しながらクリックで範囲選択
+      if (window.event && window.event.shiftKey) {
+        const start = lastSelected < date ? lastSelected : date;
+        const end = lastSelected < date ? date : lastSelected;
         const range = [];
         let cur = new Date(start);
         while (cur <= end) {
@@ -78,7 +69,19 @@ const RegisterPage = () => {
         }
         setSelectedDates(range);
       } else {
-        setSelectedDates([date]);
+        // 通常クリック → 複数選択 toggle
+        const exists = selectedDates.some(
+          (d) => d.toDateString() === date.toDateString()
+        );
+        if (exists) {
+          setSelectedDates(
+            selectedDates.filter(
+              (d) => d.toDateString() !== date.toDateString()
+            )
+          );
+        } else {
+          setSelectedDates([...selectedDates, date]);
+        }
       }
     }
   };
@@ -95,6 +98,7 @@ const RegisterPage = () => {
     );
   };
 
+  // ✅ 保存＆共有リンク発行
   const saveSchedules = async () => {
     try {
       const formattedDates = selectedDates.map((d) =>
@@ -124,46 +128,11 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* ✅ MilkPOP ヘッダー */}
       <Header />
 
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
-          {/* 選択モード */}
-          <div className="radio-options mb-4">
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="mode"
-                value="single"
-                checked={selectionMode === "single"}
-                onChange={() => setSelectionMode("single")}
-              />
-              <span className="custom-radio"></span>単日
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="mode"
-                value="multiple"
-                checked={selectionMode === "multiple"}
-                onChange={() => setSelectionMode("multiple")}
-              />
-              <span className="custom-radio"></span>複数
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="mode"
-                value="range"
-                checked={selectionMode === "range"}
-                onChange={() => setSelectionMode("range")}
-              />
-              <span className="custom-radio"></span>範囲
-            </label>
-          </div>
-
           {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="month-btn">◀</button>
@@ -173,21 +142,16 @@ const RegisterPage = () => {
             <button onClick={nextMonth} className="month-btn">▶</button>
           </div>
 
-          {/* ✅ 自作カレンダー */}
+          {/* 自作カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
-              <div key={i} className="calendar-day-header">
-                {day}
-              </div>
+              <div key={i} className="calendar-day-header">{day}</div>
             ))}
             {days.map((date, i) => {
-              const isToday =
-                date && date.toDateString() === today.toDateString();
-              const isSelected =
-                date &&
-                selectedDates.some(
-                  (d) => d.toDateString() === date.toDateString()
-                );
+              const isToday = date && date.toDateString() === today.toDateString();
+              const isSelected = date && selectedDates.some(
+                (d) => d.toDateString() === date.toDateString()
+              );
               const isHolidayDay = date && isHoliday(date);
 
               return (
@@ -247,7 +211,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* ✅ MilkPOP フッター */}
       <Footer />
     </div>
   );
