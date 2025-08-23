@@ -135,3 +135,111 @@ const RegisterPage = () => {
             <button onClick={prevMonth}>← 前の月</button>
             <button onClick={nextMonth}>次の月 →</button>
           </div>
+
+          {/* カレンダー */}
+          <div className="calendar-grid custom-calendar">
+            {daysOfWeek.map((day) => (
+              <div key={day} className="calendar-day-header">
+                {day}
+              </div>
+            ))}
+
+            {Array.from({ length: firstDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="calendar-cell empty"></div>
+            ))}
+
+            {Array.from({ length: lastDate }).map((_, i) => {
+              const date = i + 1;
+              const isToday =
+                year === today.getFullYear() &&
+                month === today.getMonth() &&
+                date === today.getDate();
+              const isSelected = selectedDates.includes(date);
+
+              return (
+                <div
+                  key={date}
+                  className={`calendar-cell ${
+                    isToday ? "today" : ""
+                  } ${isSelected ? "selected" : ""}`}
+                  onClick={() => handleDateClick(date)}
+                >
+                  {date}
+                </div>
+              );
+            })}
+          </div>
+
+          <button className="save-btn mt-4" onClick={handleSave}>
+            登録する
+          </button>
+        </div>
+
+        {/* ===== 右：登録済みリスト & 選択中日程 ===== */}
+        <div className="schedule-section">
+          {/* 選択中日程（カードで囲う） */}
+          {sortedSelectedDates.length > 0 && (
+            <div className="card selected-dates mb-4">
+              <h2 className="form-title">選択中の日程</h2>
+              <ul>
+                {sortedSelectedDates.map((d, i) => (
+                  <li key={i} className="schedule-card">
+                    <span className="date-tag">
+                      {month + 1}/{d}
+                    </span>
+                    <button
+                      className="delete-btn-small"
+                      onClick={() => handleRemoveSelected(d)}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* 登録済みリスト */}
+          <h2 className="form-title">登録済み日程</h2>
+          <div className="sort-toggle">
+            <label>並び順: </label>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="asc">古い順</option>
+              <option value="desc">新しい順</option>
+            </select>
+          </div>
+
+          {sortedSchedules.length === 0 ? (
+            <p className="text-gray">まだ日程がありません</p>
+          ) : (
+            <ul>
+              {sortedSchedules.map((s) => (
+                <li key={s.id} className="schedule-card">
+                  <span className="schedule-title">{s.title}</span>
+                  <div>
+                    {s.dates.map((d, i) => (
+                      <span key={i} className="date-tag">
+                        {s.month + 1}/{d}
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(s.id)}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterPage;
