@@ -10,30 +10,35 @@ const TopPage = () => {
 
       {/* ===== mainにはフッター分の余白を追加 ===== */}
       <main className="flex-grow flex flex-col items-center px-6 pb-20">
-        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl p-10 text-center space-y-8 mt-20">
-          <h2 className="text-2xl">ようこそ！</h2>
-          <p className="text-gray-600">
-            ここから日程登録ページや個人スケジュールページに移動できます。
-          </p>
+        <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl p-12 text-center space-y-10 mt-20">
+          {/* 中央揃えメッセージ */}
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-[#004CA0]">ようこそ！</h2>
+            <p className="text-lg text-gray-700">
+              ここから日程登録ページや個人スケジュールページに移動できます。
+            </p>
+          </div>
 
+          {/* ロゴ画像 */}
           <div className="flex justify-center">
-  <img
-    src="/logo.png"
-    alt="MilkPOP Calendar ロゴ"
-    className="top-logo rounded-2xl shadow-2xl"
-  />
-</div>
+            <img
+              src="/logo.png"
+              alt="MilkPOP Calendar ロゴ"
+              className="top-logo rounded-2xl shadow-2xl"
+            />
+          </div>
 
-          <div className="flex justify-center gap-6">
+          {/* ボタンリンク */}
+          <div className="flex justify-center gap-8">
             <Link
               to="/register"
-              className="bg-[#004CA0] text-white px-6 py-3 rounded-xl font-bold shadow hover:bg-[#FDB9C8] hover:text-black transition"
+              className="bg-[#004CA0] text-white px-8 py-4 rounded-xl font-bold shadow hover:bg-[#FDB9C8] hover:text-black transition transform hover:scale-105"
             >
               日程登録ページへ
             </Link>
             <Link
               to="/personal"
-              className="bg-[#FDB9C8] text-black px-6 py-3 rounded-xl font-bold shadow hover:bg-[#004CA0] hover:text-white transition"
+              className="bg-[#FDB9C8] text-black px-8 py-4 rounded-xl font-bold shadow hover:bg-[#004CA0] hover:text-white transition transform hover:scale-105"
             >
               個人スケジュールページへ
             </Link>
