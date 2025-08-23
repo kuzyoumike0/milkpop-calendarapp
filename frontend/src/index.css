@@ -26,7 +26,7 @@ header {
   color: white;
   padding: 16px 0;
   display: flex;
-  justify-content: space-between;  /* ロゴ左 / リンク群右 */
+  justify-content: space-between;  /* 左右を分ける */
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
@@ -39,24 +39,30 @@ header {
 }
 
 header .logo {
-  margin-left: 16px; /* 左端に少し余白 */
+  margin-left: 16px; /* 左側余白 */
 }
 
 header .nav,
 header .flex {
   display: flex;
-  gap: 24px; /* 横の余白 */
+  gap: 24px; /* 横並びリンクの間隔 */
 }
 
-header a, header button {
+header a,
+header button {
   color: white;
   text-decoration: none;
   font-weight: bold;
 }
+
 header a:hover {
   color: #ff5fa2;
 }
 
+/* 👇 ハンバーガーアイコン専用 */
+header .hamburger {
+  margin-right: 16px;  /* ← 右端に余白を確保 */
+}
 
 /* ===== フッター ===== */
 footer {
