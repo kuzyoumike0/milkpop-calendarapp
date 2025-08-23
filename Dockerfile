@@ -9,7 +9,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json ./
 RUN npm install
 
-# ソース一式をコピー（craco.config.js も含む）
+# ソース一式をコピー
 COPY frontend ./
 
 # React ビルド
@@ -24,13 +24,12 @@ WORKDIR /app
 
 # バックエンド依存関係をインストール
 COPY backend/package.json ./backend/
-WORKDIR /app/backend
-RUN npm install --only=production
+RUN cd backend && npm install --only=production
 
 # バックエンドのソースをコピー
 COPY backend ./backend
 
-# フロントエンドのビルド成果物をコピー
+# フロントのビルド成果物をコピー
 COPY --from=build-frontend /app/frontend/build ./frontend/build
 
 # 環境変数
@@ -39,4 +38,7 @@ ENV PORT=5000
 
 EXPOSE 5000
 
+# ====== ここを修正 ======
+# WORKDIR を backend にしてから index.js を起動
+WORKDIR /app/backend
 CMD ["node", "index.js"]
