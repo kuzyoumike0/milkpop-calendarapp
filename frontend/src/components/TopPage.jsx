@@ -1,11 +1,10 @@
-// frontend/src/components/TopPage.jsx
 import React from "react";
 import "../index.css";
 
 const TopPage = () => {
   return (
     <main className="flex-grow container mx-auto px-4 py-12 flex flex-col items-center">
-      {/* ロゴ画像をカード型に */}
+      {/* ロゴ画像カード */}
       <div className="bg-white rounded-2xl shadow-xl p-6 mb-10 max-w-4xl w-full flex justify-center">
         <div className="relative w-full flex justify-center">
           <img
