@@ -20,13 +20,12 @@ h1, h2 {
   letter-spacing: 1px;
 }
 
-/* ===== ヘッダー ===== */
 header {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
-  padding: 16px 0;              /* ← 左右paddingは0にする */
+  padding: 16px 0;
   display: flex;
-  justify-content: space-between; /* ← 左右を端に分ける */
+  justify-content: space-between;  /* ← 左右を強制分離 */
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
@@ -38,16 +37,13 @@ header {
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
 }
 
-/* 左端ロゴは少しだけ内側に */
 header .logo {
-  margin-left: 16px;
+  margin-left: 16px; /* ← 左端に余白 */
 }
 
-/* 右端ナビは margin-right:16px で端をそろえる */
 header .nav {
   display: flex;
   gap: 32px;
-  margin-right: 16px;
 }
 
 header .nav a {
@@ -59,6 +55,7 @@ header .nav a {
 header .nav a:hover {
   color: #ff5fa2;
 }
+
 
 /* ===== フッター ===== */
 footer {
