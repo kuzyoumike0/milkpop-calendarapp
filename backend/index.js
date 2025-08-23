@@ -1,192 +1,128 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const path = require("path");
-const crypto = require("crypto");
-const fs = require("fs");
-const { Pool } = require("pg");
-const fetch = require("node-fetch");
-require("dotenv").config();
+// backend/index.js
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import pkg from "pg";
+import { v4 as uuidv4 } from "uuid";
+import Holidays from "date-holidays";
 
+const { Pool } = pkg;
 const app = express();
+const port = process.env.PORT || 5000;
+
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== DB 接続 =====
+// PostgreSQL 接続設定
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
-// ===== 起動時に init.sql を実行してテーブル作成 =====
+// 初期テーブル作成
 (async () => {
+  const client = await pool.connect();
   try {
-    const initSql = fs.readFileSync(path.join(__dirname, "init.sql")).toString();
-    await pool.query(initSql);
-    console.log("✅ init.sql 実行完了: テーブル準備OK");
-  } catch (err) {
-    console.error("❌ init.sql 実行エラー:", err.message);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        dates DATE[] NOT NULL,
+        time_range TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS share_links (
+        id SERIAL PRIMARY KEY,
+        url TEXT UNIQUE NOT NULL,
+        schedule_ids INT[] NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+  } finally {
+    client.release();
   }
 })();
 
-// ===== Discord OAuth =====
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+// ====================== API ======================
 
-// ログイン開始
-app.get("/auth/login", (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    REDIRECT_URI
-  )}&response_type=code&scope=identify`;
-  res.redirect(url);
+// 祝日取得API（JP）
+app.get("/api/holidays/:year", (req, res) => {
+  const year = parseInt(req.params.year, 10);
+  const hd = new Holidays("JP");
+  const holidays = hd.getHolidays(year).map((h) => ({
+    date: h.date,
+    name: h.name,
+  }));
+  res.json(holidays);
 });
 
-// コールバック
-app.get("/auth/callback", async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send("Missing code");
-
-  try {
-    // アクセストークン取得
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: REDIRECT_URI,
-      }),
-    });
-
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) {
-      return res.status(400).json({ error: "Failed to get token" });
-    }
-
-    // ユーザー情報取得
-    const userRes = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const userData = await userRes.json();
-
-    res.redirect(
-      `/auth-success?username=${encodeURIComponent(userData.username)}`
-    );
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Auth error");
-  }
-});
-
-// 認証成功用エンドポイント
-app.get("/auth-success", (req, res) => {
-  res.send(`
-    <script>
-      localStorage.setItem("username", "${req.query.username}");
-      window.close();
-    </script>
-  `);
-});
-
-// ===== API: スケジュール登録 =====
+// 日程登録
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, options } = req.body;
-    console.log("受信データ:", req.body);
-
-    if (!title || !dates) {
-      return res.status(400).json({ error: "title と dates は必須です" });
+    const { title, dates, timeRange } = req.body;
+    if (!title || !dates || !timeRange) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
     }
 
-    const id = crypto.randomUUID();
-    const shareToken = crypto.randomBytes(6).toString("hex");
-
     const result = await pool.query(
-      `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1, $2, $3::jsonb, $4::jsonb, $5)
-       RETURNING *`,
-      [
-        id,
-        title,
-        JSON.stringify(dates || []),
-        JSON.stringify(options || {}),
-        shareToken,
-      ]
+      "INSERT INTO schedules (title, dates, time_range) VALUES ($1, $2, $3) RETURNING id",
+      [title, dates, timeRange]
     );
 
-    res.json(result.rows[0]);
+    res.json({ success: true, id: result.rows[0].id });
   } catch (err) {
-    console.error("保存エラー:", err);
-    res.status(500).json({ error: "保存に失敗しました" });
+    console.error("Error inserting schedule:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// ===== API: スケジュール取得 =====
-app.get("/api/schedules", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM schedules ORDER BY created_at DESC"
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("取得エラー:", err);
-    res.status(500).json({ error: "取得に失敗しました" });
-  }
-});
-
-// ===== API: 共有リンク生成 =====
+// 共有リンク作成
 app.post("/api/share", async (req, res) => {
   try {
-    const { scheduleId } = req.body;
-    if (!scheduleId) {
-      return res.status(400).json({ error: "scheduleId が必要です" });
+    const { scheduleIds } = req.body;
+    if (!scheduleIds || scheduleIds.length === 0) {
+      return res.status(400).json({ error: "スケジュールが指定されていません" });
     }
 
-    const shareToken = crypto.randomBytes(6).toString("hex");
-
+    const url = `/share/${uuidv4()}`;
     await pool.query(
-      "UPDATE schedules SET share_token=$1 WHERE id=$2",
-      [shareToken, scheduleId]
+      "INSERT INTO share_links (url, schedule_ids) VALUES ($1, $2)",
+      [url, scheduleIds]
     );
 
-    res.json({ url: `/share/${shareToken}` });
+    res.json({ success: true, url });
   } catch (err) {
-    console.error("共有エラー:", err);
-    res.status(500).json({ error: "共有に失敗しました" });
+    console.error("Error creating share link:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// ===== API: 共有リンクからスケジュール取得 =====
-app.get("/share/:token", async (req, res) => {
+// 共有リンクからスケジュール取得
+app.get("/api/share/:uuid", async (req, res) => {
   try {
-    const { token } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM schedules WHERE share_token=$1",
-      [token]
-    );
+    const uuid = req.params.uuid;
+    const url = `/share/${uuid}`;
 
+    const result = await pool.query("SELECT * FROM share_links WHERE url=$1", [url]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "リンクが存在しません" });
     }
 
-    res.json(result.rows[0]);
+    const scheduleIds = result.rows[0].schedule_ids;
+    const schedules = await pool.query(
+      "SELECT * FROM schedules WHERE id = ANY($1::int[])",
+      [scheduleIds]
+    );
+
+    res.json({ schedules: schedules.rows });
   } catch (err) {
-    console.error("共有取得エラー:", err);
-    res.status(500).json({ error: "共有データ取得に失敗しました" });
+    console.error("Error fetching shared schedules:", err);
+    res.status(500).json({ error: "サーバーエラー" });
   }
 });
 
-// ===== React ビルド配信 =====
-app.use(express.static(path.join(__dirname, "../frontend/build")));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
-});
-
-// ===== サーバー起動 =====
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`✅ MilkPOPカレンダーはポート${PORT}で動作しています`);
+app.listen(port, () => {
+  console.log(`✅ Backend running on http://localhost:${port}`);
 });
