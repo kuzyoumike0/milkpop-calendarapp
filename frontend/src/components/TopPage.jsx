@@ -10,11 +10,11 @@ const TopPage = () => {
 
       {/* ===== メインコンテンツ ===== */}
       <main className="flex flex-col items-center justify-center flex-1 text-center px-6 mt-28">
-        {/* ロゴ画像（レスポンシブ対応 最大幅1040px） */}
-        <img
-          src="/logo.png"
-          alt="MilkPOP Calendar"
-          className="w-full max-w-[680px] h-auto mb-8"
+       <div className="logo">
+  <Link to="/">
+    <img src="/logo.png" alt="MilkPOP Calendar" />
+  </Link>
+</div>
         />
 
         {/* 説明文 */}
