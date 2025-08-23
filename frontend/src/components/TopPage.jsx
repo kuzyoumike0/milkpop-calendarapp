@@ -10,10 +10,10 @@ const TopPage = () => {
         <img
           src="/logo.png"
           alt="MilkPOP Calendar Logo"
-          className="max-w-full rounded-2xl shadow-lg"
+          className="max-w-full rounded-2xl shadow-lg mx-auto"
           style={{ width: "1040px" }}
         />
-        <h1 className="mt-6 text-5xl md:text-6xl font-bold text-[#004CA0]">
+        <h1 className="mt-6 text-5xl md:text-6xl font-bold text-[#004CA0] text-center">
           MilkPOP Calendar
         </h1>
       </div>
