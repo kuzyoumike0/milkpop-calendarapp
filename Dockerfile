@@ -6,7 +6,7 @@ FROM node:18 AS frontend-build
 WORKDIR /app
 
 # frontend の依存関係をインストール
-COPY frontend/package.json frontend/package-lock.json ./frontend/
+COPY frontend/package.json ./frontend/
 RUN cd frontend && npm install
 
 # フロントエンドのソースをコピーしてビルド
@@ -21,7 +21,7 @@ FROM node:18
 WORKDIR /app
 
 # backend の依存関係をインストール
-COPY backend/package.json backend/package-lock.json ./backend/
+COPY backend/package.json ./backend/
 RUN cd backend && npm install
 
 # backend ソースコピー
