@@ -4,15 +4,21 @@ import Header from "./Header";
 import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
+const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-const PersonalPage = () => {
+const RegisterPage = () => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルト複数
+  const [issuedUrl, setIssuedUrl] = useState("");
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
+
+  // 時間帯
+  const [timeType, setTimeType] = useState("終日");
+  const [startTime, setStartTime] = useState("9:00");
+  const [endTime, setEndTime] = useState("18:00");
 
   // === 今の月の日数 ===
   const year = currentDate.getFullYear();
@@ -61,41 +67,24 @@ const PersonalPage = () => {
     }
   };
 
-  // === 選択解除 ===
-  const handleDeleteDate = (dateStr) => {
-    setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-  };
-
-  // === 保存 ===
-  const handleSave = async () => {
+  // === URL発行 ===
+  const handleIssueUrl = async () => {
     try {
-      for (const d of selectedDates) {
-        const res = await fetch("/api/personal-schedules", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            memo,
-            date: d,
-            selectionMode,
-            timeType: "終日",
-            startTime: null,
-            endTime: null,
-          }),
-        });
-        await res.json();
+      const res = await fetch("/api/share-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, scheduleIds: [] }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setIssuedUrl(`${window.location.origin}/share/${json.data.url}`);
       }
-      alert("✅ 個人スケジュールを保存しました");
-      setSelectedDates([]);
-      setTitle("");
-      setMemo("");
     } catch (err) {
       console.error(err);
-      alert("❌ 保存に失敗しました");
     }
   };
 
-  // === カレンダーセル生成 ===
+  // === カレンダー描画 ===
   const cells = [];
   for (let i = 0; i < firstDay; i++) {
     cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
@@ -133,28 +122,14 @@ const PersonalPage = () => {
             {/* タイトル */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                📌 タイトル
+                📌 スケジュールタイトル
               </label>
               <input
                 type="text"
-                placeholder="例: 出張予定"
+                placeholder="例: 夏休み旅行の予定"
                 className="input-field"
                 value={title}
                 onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
-              />
-            </div>
-
-            {/* メモ */}
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                🗒 メモ
-              </label>
-              <textarea
-                placeholder="詳細を入力してください"
-                className="input-field"
-                rows="4"
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
               />
             </div>
 
@@ -172,6 +147,51 @@ const PersonalPage = () => {
                 <option value="multiple">複数選択</option>
                 <option value="range">範囲選択</option>
               </select>
+            </div>
+
+            {/* 時間帯 */}
+            <div className="mb-6 text-left">
+              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
+                ⏰ 時間帯
+              </label>
+              <select
+                className="input-field"
+                value={timeType}
+                onChange={(e) => setTimeType(e.target.value)}
+              >
+                <option value="終日">終日</option>
+                <option value="午前">午前</option>
+                <option value="午後">午後</option>
+                <option value="時刻指定">時刻指定</option>
+              </select>
+
+              {timeType === "時刻指定" && (
+                <div className="flex gap-4 mt-3">
+                  <select
+                    className="input-field flex-1"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="self-center">〜</span>
+                  <select
+                    className="input-field flex-1"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* カレンダー年月 */}
@@ -207,20 +227,27 @@ const PersonalPage = () => {
               {selectedDates.map((d, idx) => (
                 <li key={idx} className="schedule-card">
                   <span className="schedule-title">{d}</span>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteDate(d)}
-                  >
-                    ✖
-                  </button>
                 </li>
               ))}
             </ul>
 
-            {/* 保存ボタン */}
-            <button onClick={handleSave} className="save-btn mt-6">
-              💾 保存する
+            {/* URL発行ボタン */}
+            <button onClick={handleIssueUrl} className="save-btn mt-6">
+              🔗 共有リンクを発行
             </button>
+
+            {issuedUrl && (
+              <div className="issued-url mt-4">
+                <p>✅ 発行されたURL:</p>
+                <a
+                  href={issuedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {issuedUrl}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -229,4 +256,4 @@ const PersonalPage = () => {
   );
 };
 
-export default PersonalPage;
+export default RegisterPage;
