@@ -1,9 +1,9 @@
+// frontend/src/components/Footer.jsx
 import React from "react";
-import "../index.css";
 
 const Footer = () => {
   return (
-    <footer className="main-footer">
+    <footer>
       <p>© 2025 MilkPOP Calendar - All Rights Reserved</p>
     </footer>
   );
