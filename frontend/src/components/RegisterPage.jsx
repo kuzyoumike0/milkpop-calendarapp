@@ -48,41 +48,25 @@ const RegisterPage = () => {
 
   const days = generateCalendarDays(currentMonth);
 
-  // ✅ カレンダークリック（複数・範囲対応）
+  // ✅ クリックのみで範囲選択
   const handleDateClick = (date) => {
     if (!date) return;
 
     if (selectedDates.length === 0) {
       setSelectedDates([date]);
-    } else {
-      const lastSelected = selectedDates[selectedDates.length - 1];
-
-      // Shiftキー押しながらクリックで範囲選択
-      if (window.event && window.event.shiftKey) {
-        const start = lastSelected < date ? lastSelected : date;
-        const end = lastSelected < date ? date : lastSelected;
-        const range = [];
-        let cur = new Date(start);
-        while (cur <= end) {
-          range.push(new Date(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setSelectedDates(range);
-      } else {
-        // 通常クリック → 複数選択 toggle
-        const exists = selectedDates.some(
-          (d) => d.toDateString() === date.toDateString()
-        );
-        if (exists) {
-          setSelectedDates(
-            selectedDates.filter(
-              (d) => d.toDateString() !== date.toDateString()
-            )
-          );
-        } else {
-          setSelectedDates([...selectedDates, date]);
-        }
+    } else if (selectedDates.length === 1) {
+      const start = selectedDates[0] < date ? selectedDates[0] : date;
+      const end = selectedDates[0] < date ? date : selectedDates[0];
+      const range = [];
+      let cur = new Date(start);
+      while (cur <= end) {
+        range.push(new Date(cur));
+        cur.setDate(cur.getDate() + 1);
       }
+      setSelectedDates(range);
+    } else {
+      // 新しい選択開始
+      setSelectedDates([date]);
     }
   };
 
@@ -133,6 +117,15 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
+          {/* タイトル入力を左上に配置 */}
+          <input
+            type="text"
+            placeholder="タイトルを入力"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input-field mb-3"
+          />
+
           {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="month-btn">◀</button>
@@ -142,7 +135,7 @@ const RegisterPage = () => {
             <button onClick={nextMonth} className="month-btn">▶</button>
           </div>
 
-          {/* 自作カレンダー */}
+          {/* ✅ 自作カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
               <div key={i} className="calendar-day-header">{day}</div>
@@ -178,14 +171,6 @@ const RegisterPage = () => {
               <li key={i}>{d.toLocaleDateString("ja-JP")}</li>
             ))}
           </ul>
-
-          <input
-            type="text"
-            placeholder="タイトルを入力"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="input-field mb-3"
-          />
 
           <select
             value={timeRange}
