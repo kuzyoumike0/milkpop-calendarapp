@@ -1,9 +1,11 @@
-/* ===== 基本 ===== */
+/* ===== 基本設定 ===== */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=M+PLUS+Rounded+1c:wght@500;700&family=Quicksand:wght@500&display=swap');
+
 body {
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #FDB9C8 0%, #fff 50%, #004CA0 100%);
-  font-family: 'Quicksand', sans-serif;
+  font-family: 'M PLUS Rounded 1c', 'Quicksand', sans-serif;
   color: #222;
   line-height: 1.8;
 }
@@ -19,224 +21,110 @@ main {
   padding: 20px;
 }
 
-/* ===== RegisterPage / TopPage 全体背景 ===== */
-.register-page, .top-page, .share-page {
-  min-height: 100vh;
-  padding: 40px 30px;
-  animation: fadeIn 0.8s ease-in-out;
-}
-
-/* ===== 共通カードデザイン ===== */
-.card, .share-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px) saturate(120%);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.card:hover, .share-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 36px rgba(0,0,0,0.2);
-}
-
-/* ===== 入力フォームエリア ===== */
-.input-field {
-  width: 100%;
-  max-width: 600px;
-  padding: 14px 18px;
-  border: 2px solid transparent;
-  border-radius: 16px;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
-  display: block;
-  margin-bottom: 14px; /* 📌 フォーム下に余白 */
-}
-.input-field::placeholder {
-  color: #aaa;
-  font-style: italic;
-}
-.input-field:focus {
-  outline: none;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #004CA0, #FDB9C8) border-box;
-  box-shadow: 0 8px 20px rgba(0,76,160,0.25);
-  transform: scale(1.01);
-}
-@media (max-width: 600px) {
-  .input-field {
-    width: 100%;
-  }
-}
-
-/* ===== ラジオボタン ===== */
-.radio-options {
-  display: flex;
-  justify-content: flex-start;
-  gap: 30px;
-  margin-bottom: 16px;
-}
-
-.radio-label {
-  position: relative;
-  padding-left: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
-  font-size: 1rem;
-}
-
-.radio-label input {
-  position: absolute;
-  opacity: 0;
-}
-
-.custom-radio {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  transition: 0.3s;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.radio-label input:checked ~ .custom-radio {
-  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
-  border-color: #ff5fa2;
-  box-shadow: 0 0 8px rgba(255,95,162,0.6);
-}
-
-/* ===== 登録済み日程カード ===== */
-.schedule-card {
-  background: rgba(255,255,255,0.9);
-  border-radius: 20px;
-  padding: 16px 20px;
-  margin-bottom: 14px;
-  position: relative;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-}
-.schedule-title {
-  font-weight: bold;
-  color: #004CA0;
-}
-
-/* ===== 日付タグ ===== */
-.date-tag {
-  display: inline-block;
-  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 12px;
-  margin-left: 6px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* ===== ボタン ===== */
-.save-btn {
-  margin-top: 20px;
-  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
-  color: #fff;
-  font-weight: bold;
-  padding: 14px;
-  border: none;
-  border-radius: 20px;
-  width: 100%;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 6px 16px rgba(255,95,162,0.5);
-}
-.save-btn:hover {
-  background: linear-gradient(135deg, #004CA0, #0066ff);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.35);
-}
-
 /* ===== ヘッダー ===== */
 .main-header {
-  background: linear-gradient(90deg, #111 0%, #222 40%, #004CA0 100%);
-  color: #fdfdfd;
-  padding: 16px 24px;
+  background: linear-gradient(90deg, #111 0%, #222 30%, #004CA0 100%);
+  color: #fff;
+  padding: 18px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: bold;
   font-family: 'Baloo 2', cursive;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  border-bottom: 3px solid #FDB9C8;
 }
+
 .main-header .logo a {
-  color: #fdfdfd;
+  color: #fff;
   text-decoration: none;
-  transition: color 0.3s;
+  transition: all 0.3s ease;
 }
 .main-header .logo a:hover {
   color: #FDB9C8;
+  text-shadow: 0 0 8px rgba(253,185,200,0.9);
 }
+
 .main-header .nav-links {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 .main-header .nav-links a {
-  color: #fdfdfd;
+  color: #fff;
   font-weight: bold;
-  padding: 6px 10px;
-  border-radius: 8px;
-  transition: background 0.3s, color 0.3s;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: all 0.3s;
   text-decoration: none;
 }
 .main-header .nav-links a:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.12);
   color: #FDB9C8;
+  transform: scale(1.05);
+}
+
+/* ===== ディスコードログインボタン ===== */
+.discord-btn {
+  background: linear-gradient(135deg, #5865F2, #404EED);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+}
+.discord-btn:hover {
+  background: linear-gradient(135deg, #404EED, #5865F2);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
 }
 
 /* ===== フッター ===== */
 .main-footer {
-  background: #111;
+  background: linear-gradient(90deg, #111, #222, #004CA0);
   color: #fdfdfd;
   text-align: center;
-  padding: 18px 20px;
+  padding: 22px 20px;
   font-family: 'Baloo 2', cursive;
-  font-size: 0.95rem;
+  font-size: 1rem;
   border-top: 3px solid #FDB9C8;
-  box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
+  box-shadow: 0 -6px 16px rgba(0,0,0,0.4);
+}
+.main-footer span {
+  color: #FDB9C8;
 }
 
-/* ===== ロゴ文字 ===== */
-.logo-text {
-  font-family: 'Baloo 2', cursive;
-  font-size: 1.8rem;
+/* ===== トップページ中央メッセージ ===== */
+.top-message {
+  text-align: center;
+  font-size: 2rem;
   font-weight: bold;
-  color: #fdfdfd;
-  text-decoration: none;
-  transition: all 0.3s ease;
+  font-family: 'Baloo 2', cursive;
+  margin-top: 60px;
+  margin-bottom: 40px;
+  color: #004CA0;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-.logo-text:hover {
-  color: #FDB9C8;
-  text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
-  transform: scale(1.05);
+@media (max-width: 600px) {
+  .top-message {
+    font-size: 1.5rem;
+  }
 }
 
 /* ===== トップページロゴ ===== */
 .top-logo {
   display: block;
   margin: 2rem auto;
-  width: 100%;          /* 📌 親幅に合わせる */
-  max-width: 1040px;    /* 📌 PCは1040pxまで */
+  width: 100%;
+  max-width: 1040px;
   height: auto;
   border-radius: 20px;
   box-shadow: 0 12px 24px rgba(0,0,0,0.25);
@@ -256,129 +144,4 @@ main {
     max-width: 95%;
     border-radius: 12px;
   }
-}
-
-/* ===== レイアウト ===== */
-.register-layout {
-  display: flex;
-  justify-content: space-between;
-  gap: 40px;
-  margin: 0 60px;
-}
-.calendar-section {
-  flex: 0 0 70%;
-}
-.schedule-section {
-  flex: 0 0 30%;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  backdrop-filter: blur(8px);
-}
-@media (max-width: 768px) {
-  .register-layout {
-    flex-direction: column;
-    margin: 0 20px;
-    gap: 20px;
-  }
-  .calendar-section,
-  .schedule-section {
-    flex: 1 1 auto;
-  }
-  .schedule-section {
-    margin-top: 20px;
-  }
-}
-
-/* ===== カレンダー (自作) ===== */
-.custom-calendar {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 8px !important;
-}
-.calendar-day-header {
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-  background: #fdf7fa;
-  border-radius: 12px;
-  color: #004CA0;
-}
-.calendar-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 60px;
-  border-radius: 14px;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.3s;
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
-}
-.calendar-cell:hover {
-  background: #fde4ec;
-  transform: scale(1.07);
-}
-.calendar-cell.today {
-  border: 2px solid gold;
-  background: #fff9e6;
-  font-weight: bold;
-}
-.calendar-cell.selected {
-  background: linear-gradient(135deg, #004CA0, #0066ff);
-  color: #fff;
-  font-weight: bold;
-}
-.calendar-cell.holiday {
-  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
-  color: #fff;
-  font-weight: bold;
-}
-
-/* ===== ナビゲーションボタン ===== */
-.calendar-nav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 12px 0 20px;
-  gap: 20px;
-}
-.calendar-title {
-  font-size: 1.6rem;
-  font-weight: bold;
-  color: #004ca0;
-  margin: 0 20px;
-}
-.nav-btn {
-  background: linear-gradient(135deg, #fdb9c8, #ff5fa2);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-.nav-btn:hover {
-  background: linear-gradient(135deg, #004ca0, #0066ff);
-  transform: scale(1.15);
-}
-
-/* ===== 削除ボタン ===== */
-.delete-btn {
-  background: transparent;
-  border: none;
-  color: #ff5fa2;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s, color 0.2s;
-}
-.delete-btn:hover {
-  color: #004CA0;
-  transform: scale(1.2);
 }
