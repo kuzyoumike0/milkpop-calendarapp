@@ -2,15 +2,18 @@ import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
+import { useParams } from "react-router-dom";
 
 const SharePage = () => {
+  const { shareId } = useParams();   // ← URLパラメータから取得
   const [schedule, setSchedule] = useState(null);
   const [userName, setUserName] = useState("");
   const [answers, setAnswers] = useState({});
   const [savedResults, setSavedResults] = useState([]);
-  const shareId = "demo-share-id-123"; // 本来はURLから取得する
 
   useEffect(() => {
+    if (!shareId) return;
+
     // 仮データ（API接続予定）
     setSchedule({
       title: "サンプルイベント",
@@ -19,21 +22,17 @@ const SharePage = () => {
 
     // localStorageからユーザ名取得
     const storedName = localStorage.getItem("userName");
-    if (storedName) {
-      setUserName(storedName);
-    }
+    if (storedName) setUserName(storedName);
 
     // 回答一覧をロード
     fetch(`/api/responses/${shareId}`)
       .then((res) => res.json())
-      .then((data) => setSavedResults(data));
-  }, []);
+      .then((data) => setSavedResults(data))
+      .catch(() => setSavedResults([]));
+  }, [shareId]);
 
   const handleAnswerChange = (date, value) => {
-    setAnswers({
-      ...answers,
-      [date]: value,
-    });
+    setAnswers({ ...answers, [date]: value });
   };
 
   const handleSave = async () => {
@@ -42,7 +41,6 @@ const SharePage = () => {
       return;
     }
 
-    // APIに保存
     const res = await fetch("/api/responses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -56,17 +54,14 @@ const SharePage = () => {
       const list = await fetch(`/api/responses/${shareId}`).then((r) => r.json());
       setSavedResults(list);
 
-      // 入力をリセット
       setAnswers({});
     } else {
       alert("保存に失敗しました");
     }
   };
 
-  // 全て選択されているかチェック
   const allAnswered =
-    schedule &&
-    schedule.dates.every((date) => answers[date] && answers[date] !== "");
+    schedule && schedule.dates.every((date) => answers[date] && answers[date] !== "");
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -83,9 +78,11 @@ const SharePage = () => {
       <main>
         <h2 className="page-title mt-6">共有ページ</h2>
 
-        {schedule ? (
+        {!schedule ? (
+          <p>読み込み中...</p>
+        ) : (
           <div className="register-layout">
-            {/* ===== 左: カレンダー + 日程一覧 ===== */}
+            {/* 左: カレンダー */}
             <div className="calendar-section">
               <div className="custom-calendar">
                 <h3 className="text-lg font-bold text-[#004CA0] mb-2">
@@ -94,17 +91,11 @@ const SharePage = () => {
                 <Calendar
                   value={schedule.dates.map((d) => new Date(d))}
                   className="custom-calendar"
-                  tileClassName={({ date }) => {
-                    if (
-                      schedule.dates.find(
-                        (d) =>
-                          new Date(d).toDateString() === date.toDateString()
-                      )
-                    ) {
-                      return "react-calendar__tile--active";
-                    }
-                    return null;
-                  }}
+                  tileClassName={({ date }) =>
+                    schedule.dates.find((d) => new Date(d).toDateString() === date.toDateString())
+                      ? "react-calendar__tile--active"
+                      : null
+                  }
                 />
               </div>
 
@@ -118,11 +109,10 @@ const SharePage = () => {
               </div>
             </div>
 
-            {/* ===== 右: 回答フォーム ===== */}
+            {/* 右: 回答フォーム */}
             <div className="schedule-section">
               <h2 className="text-xl font-bold mb-4 text-[#004CA0]">✅ 出欠回答</h2>
 
-              {/* ユーザ名入力 */}
               <div className="mb-4">
                 <label className="block mb-1">ユーザ名</label>
                 <input
@@ -160,7 +150,7 @@ const SharePage = () => {
                 </button>
               </div>
 
-              {/* ===== 保存結果一覧 ===== */}
+              {/* 保存結果一覧 */}
               <div className="mt-6 bg-white text-black p-3 rounded-lg shadow">
                 <h3 className="text-lg font-bold mb-2">📋 回答一覧</h3>
                 {savedResults.length === 0 && <p>まだ回答はありません</p>}
@@ -175,8 +165,6 @@ const SharePage = () => {
               </div>
             </div>
           </div>
-        ) : (
-          <p>読み込み中...</p>
         )}
       </main>
 
