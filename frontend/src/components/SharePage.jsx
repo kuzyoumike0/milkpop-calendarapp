@@ -32,6 +32,11 @@ const SharePage = () => {
               <p>{new Date(s.date).toLocaleDateString()}</p>
               <p>選択方法: {s.selection_mode}</p>
               <p>時間帯: {s.time_type}</p>
+              {s.time_type === "custom" && (
+                <p>
+                  {s.start_time} ~ {s.end_time}
+                </p>
+              )}
             </li>
           ))}
         </ul>
