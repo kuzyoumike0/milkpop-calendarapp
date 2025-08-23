@@ -5,73 +5,71 @@
 body {
   margin: 0;
   padding: 0;
-  background: linear-gradient(to bottom, #FDB9C8, #ffffff, #CDE7F0, #004CA0);
-  font-family: 'M PLUS Rounded 1c',sans-serif;
+  background: radial-gradient(circle at top left, #FDB9C8, #ffffff 50%, #CDE7F0 90%);
+  font-family: 'M PLUS Rounded 1c', sans-serif;
   font-size: 1rem;
   color: #333;
   line-height: 1.8;
   overflow-x: hidden;
-  position: relative;
-  animation: fadeIn 1s ease-in-out;
 }
 
-/* ===== アニメーション ===== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-@keyframes float {
-  0% { transform: translateY(0) translateX(0); }
-  50% { transform: translateY(-20px) translateX(10px); }
-  100% { transform: translateY(0) translateX(0); }
-}
-@keyframes swing {
-  0%,100% { transform: rotate(0deg); }
-  50% { transform: rotate(6deg); }
-}
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 10px #FDB9C8; }
-  50% { box-shadow: 0 0 20px #004CA0; }
-}
-
-/* ===== 背景アニメーション水玉 ===== */
-body::before, body::after {
-  content: "";
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(253, 185, 200, 0.3);
-  border-radius: 50%;
-  animation: float 12s ease-in-out infinite;
-  z-index: -1;
-}
-body::after {
-  width: 150px;
-  height: 150px;
-  left: 70%;
-  top: 20%;
-  background: rgba(0, 76, 160, 0.25);
-  animation-duration: 18s;
+/* ===== リンク（アンダーバー削除） ===== */
+a,
+.app-header .nav-links a,
+.app-header .logo {
+  text-decoration: none !important;
+  border: none !important;
+  outline: none !important;
 }
 
 /* ===== 見出し ===== */
-h1, .title-text {
-  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
+h1,
+.title-text {
+  font-family: 'Yomogi', 'M PLUS Rounded 1c', sans-serif;
   font-weight: 700;
   color: #fff;
-  text-shadow: 3px 3px 10px rgba(0,0,0,0.6);
-  text-decoration: none;   /* ← アンダーライン削除 */
+  text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.6);
+  text-decoration: none !important;
+}
+h2,
+h3 {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 600;
+  color: #004CA0;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-/* ===== トップページ本文カード ===== */
-.top-message-card {
-  background: #fff; /* ← グラデ削除して白背景 */
+/* ===== メイン中央揃え ===== */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* 横中央 */
+  justify-content: center; /* 縦中央 */
+  text-align: center;
+  min-height: calc(100vh - 160px); /* ヘッダー・フッターを除いた高さで中央 */
+  padding: 2rem;
+}
+
+/* ===== カードデザイン ===== */
+.card {
+  background: #fff;
   border-radius: 1.5rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  text-align: center;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== 本文カード ===== */
+.top-message-card {
+  background: #fff; /* ← グラデ削除、白背景 */
+  border-radius: 1.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
   padding: 1.8rem 2.2rem;
   margin-top: 1.5rem;
   margin-bottom: 5rem;
@@ -79,40 +77,14 @@ h1, .title-text {
   margin-left: auto;
   margin-right: auto;
   font-size: 1.2rem;
-  font-weight: 600;  /* ← 真面目フォント（少し太め） */
+  font-weight: 600;
   line-height: 1.9;
-  font-family: 'M PLUS Rounded 1c', sans-serif; /* ← 丸ゴシックだけにする */
+  font-family: 'M PLUS Rounded 1c', sans-serif;
   color: #333;
   text-align: center;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
-
-
-/* ===== トップページ本文カード ===== */
-.top-message-card {
-  background: linear-gradient(145deg, #fff, #FFF5F8);
-  border-radius: 1.5rem;
-  box-shadow: 0 6px 18px rgba(253,185,200,0.4);
-  padding: 1.8rem 2.2rem;
-  margin-top: 1.5rem;
-  margin-bottom: 5rem;
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.9;
-  color: #444;
-  text-align: center;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-.top-message-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(253,185,200,0.6);
-}
-
-/* ===== ナビゲーションボタン（かわいい仕様） ===== */
+/* ===== ナビゲーションボタン ===== */
 .app-header .nav-links a {
   padding: 0.6rem 1.4rem;
   border-radius: 9999px;
@@ -125,44 +97,18 @@ h1, .title-text {
 .app-header .nav-links a:hover {
   background: linear-gradient(135deg, #004CA0, #0073e6);
   color: #fff;
-  transform: translateY(-2px) scale(1.1) rotate(-2deg);
-  animation: bounce 0.6s;
+  transform: translateY(-2px) scale(1.08);
 }
 
-/* Discord専用ボタン */
+/* ===== Discordボタン ===== */
 .app-header .discord-btn {
   background: linear-gradient(135deg, #5865F2, #4752C4);
   color: white;
-  box-shadow: 0 4px 12px rgba(88,101,242,0.6);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.6);
 }
 .app-header .discord-btn:hover {
   background: linear-gradient(135deg, #4752C4, #2f357e);
-  transform: translateY(-2px) scale(1.1) rotate(2deg);
-}
-
-/* ===== 共通ボタン ===== */
-.btn {
-  padding: 0.6rem 1.5rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.btn-pink {
-  background: linear-gradient(135deg, #FDB9C8, #ff87a2);
-  color: #fff;
-}
-.btn-pink:hover {
-  background: linear-gradient(135deg, #ff87a2, #FDB9C8);
-  transform: scale(1.08);
-}
-.btn-blue {
-  background: linear-gradient(135deg, #004CA0, #0073e6);
-  color: #fff;
-}
-.btn-blue:hover {
-  background: linear-gradient(135deg, #0073e6, #004CA0);
-  transform: scale(1.08);
+  transform: translateY(-2px) scale(1.08);
 }
 
 /* ===== ヘッダー ===== */
@@ -170,7 +116,7 @@ h1, .title-text {
   background: linear-gradient(90deg, #FDB9C8, #CDE7F0, #004CA0);
   color: white;
   padding: 14px 32px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -185,7 +131,7 @@ h1, .title-text {
   font-weight: 700;
   color: #fff;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
   transition: transform 0.3s ease;
 }
 .app-header .logo:hover {
@@ -203,7 +149,7 @@ h1, .title-text {
   text-align: center;
   padding: 32px 16px;
   font-size: 0.9rem;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
   margin-top: auto;
 }
 .app-footer p {
@@ -220,19 +166,44 @@ h1, .title-text {
   margin: 0 10px;
   font-size: 1.8rem;
   transition: all 0.3s ease;
-  animation: swing 3s ease-in-out infinite; /* ← ゆらゆら */
 }
 .app-footer .sns-links a.twitter {
   color: #1DA1F2;
 }
 .app-footer .sns-links a.twitter:hover {
   color: #FDB9C8;
-  transform: scale(1.3) rotate(10deg);
+  transform: scale(1.3);
 }
 .app-footer .sns-links a.discord {
   color: #5865F2;
 }
 .app-footer .sns-links a.discord:hover {
   color: #FDB9C8;
-  transform: scale(1.3) rotate(-10deg);
+  transform: scale(1.3);
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 2.2rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+}
+@media (max-width: 768px) {
+  body {
+    font-size: 0.9rem;
+  }
+  h1 {
+    font-size: 1.6rem;
+  }
+  .btn {
+    width: 100%;
+    margin-bottom: 0.6rem;
+  }
+  nav {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
 }
