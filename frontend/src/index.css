@@ -173,7 +173,7 @@ main {
   background: #ffe4ec;
   transform: scale(1.05);
 }
-/* 今日の強調を見やすく */
+/* 今日の強調 */
 .day.today {
   background: #fff !important;
   border: 3px solid #004CA0;
@@ -213,10 +213,10 @@ main {
   color: #004CA0;
 }
 
-/* ===== プルダウン ===== */
+/* ===== プルダウン（開始/終了時刻も共通） ===== */
 .schedule-card select {
   padding: 6px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 2px solid #FDB9C8;
   background: #fff;
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
@@ -244,7 +244,7 @@ main {
   transform: scale(1.2);
 }
 
-/* ===== 共有リンクボタン ===== */
+/* ===== 共有リンク ===== */
 .share-btn {
   background: #FDB9C8;
   color: black;
@@ -257,5 +257,21 @@ main {
 .share-btn:hover {
   background: #004CA0;
   color: white;
+  transform: scale(1.05);
+}
+
+.copy-btn {
+  background: #ff85b3;
+  color: white;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 10px;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
+}
+.copy-btn:hover {
+  background: #004CA0;
   transform: scale(1.05);
 }
