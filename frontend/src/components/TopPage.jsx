@@ -21,13 +21,6 @@ const TopPage = () => {
               alt="MilkPOP Calendar ロゴ"
               className="top-logo rounded-2xl shadow-2xl"
             />
-          </div>
-
-          {/* メッセージ */}
-          <p className="text-lg text-gray-700 text-center">
-            ここから日程登録ページや個人スケジュールページに移動できます。
-          </p>
-        </div>
       </main>
 
       <Footer />
