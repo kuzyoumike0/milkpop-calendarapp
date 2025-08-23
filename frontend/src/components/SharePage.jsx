@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../index.css";   // 👈 これが無いとスタイルが適用されない
+import "../index.css";
 
 const SharePage = () => {
   const [schedules, setSchedules] = useState([]);
@@ -108,11 +108,8 @@ const SharePage = () => {
             const counts = countVotes(result);
 
             return (
-              <li
-                key={s.id}
-                className="border p-4 rounded-xl shadow-sm bg-gray-50"
-              >
-                <div className="flex justify-between items-center mb-4">
+              <li key={s.id} className="schedule-card">
+                <div className="flex justify-between items-center mb-4 w-full">
                   <div>
                     <p className="font-bold">{s.title}</p>
                     <p>{new Date(s.date).toLocaleDateString()}</p>
@@ -130,7 +127,7 @@ const SharePage = () => {
                 </div>
 
                 {/* 投票結果 */}
-                <div className="mt-2">
+                <div className="mt-2 w-full">
                   <h3 className="text-sm font-semibold text-[#004CA0] mb-1">
                     投票結果
                   </h3>
@@ -148,8 +145,7 @@ const SharePage = () => {
 
                   {/* 集計表示 */}
                   <div className="mt-3 text-sm font-semibold">
-                    集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖{" "}
-                    {counts["✖"]}人
+                    集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
                   </div>
                 </div>
               </li>
