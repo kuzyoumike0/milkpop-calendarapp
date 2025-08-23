@@ -6,19 +6,30 @@ import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
 import ShareLinkPage from "./components/ShareLinkPage";
-import LinkPage from "./components/LinkPage";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
-function App() {
+const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<TopPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/personal" element={<PersonalPage />} />
-      <Route path="/share/:shareId" element={<SharePage />} />
-      <Route path="/share-links" element={<ShareLinkPage />} />
-      <Route path="/link" element={<LinkPage />} />
-    </Routes>
+    <div className="app-container">
+      {/* ✅ 共通ヘッダー */}
+      <Header />
+
+      {/* ページごとのルーティング */}
+      <main>
+        <Routes>
+          <Route path="/" element={<TopPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/personal" element={<PersonalPage />} />
+          <Route path="/share/:id" element={<SharePage />} />
+          <Route path="/sharelink" element={<ShareLinkPage />} />
+        </Routes>
+      </main>
+
+      {/* ✅ 共通フッター */}
+      <Footer />
+    </div>
   );
-}
+};
 
 export default App;
