@@ -70,10 +70,7 @@ const PersonalPage = () => {
           </div>
 
           {/* 保存ボタン */}
-          <button
-            onClick={handleSave}
-            className="save-btn"
-          >
+          <button onClick={handleSave} className="save-btn">
             💾 保存する
           </button>
         </div>
