@@ -44,6 +44,10 @@ const RegisterPage = () => {
     setSelectedDates([]);
   };
 
+  const handleDelete = (id) => {
+    setSavedSchedules(savedSchedules.filter((s) => s.id !== id));
+  };
+
   return (
     <div className="register-page">
       <div className="banner">MilkPOP Calendar</div>
@@ -126,6 +130,12 @@ const RegisterPage = () => {
                       </span>
                     ))}
                   </div>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(s.id)}
+                  >
+                    ×
+                  </button>
                 </li>
               ))}
             </ul>
