@@ -212,7 +212,7 @@ select:focus {
 
 /* ===== ヘッダー ===== */
 .app-header {
-  background: linear-gradient(90deg, #000000, #111827);
+  background: linear-gradient(90deg, #FDB9C8, #004CA0);
   color: white;
   padding: 14px 32px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
@@ -220,53 +220,11 @@ select:focus {
   top: 0;
   z-index: 50;
 }
-.app-header .nav-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.app-header .logo {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #FDB9C8;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  letter-spacing: 1px;
-  transition: transform 0.3s ease;
-}
-.app-header .logo:hover {
-  transform: scale(1.05);
-}
-.app-header nav {
-  display: flex;
-  gap: 14px;
-}
-.app-header nav a {
-  padding: 0.5rem 1.2rem;
-  border-radius: 9999px;
-  font-weight: 600;
-  background: #222;
-  color: white;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-.app-header nav a:hover {
-  background: #FDB9C8;
-  color: black;
-  transform: translateY(-2px) scale(1.05);
-}
-.app-header .discord-btn {
-  background: #5865F2;
-  color: white;
-}
-.app-header .discord-btn:hover {
-  background: #4752C4;
-  transform: translateY(-2px) scale(1.05);
-}
 
 /* ===== フッター ===== */
 .app-footer {
-  background: linear-gradient(90deg, #000000, #111827);
-  color: #ccc;
+  background: linear-gradient(90deg, #004CA0, #FDB9C8);
+  color: #fff;
   text-align: center;
   padding: 24px 16px;
   font-size: 0.9rem;
@@ -275,32 +233,9 @@ select:focus {
 }
 .app-footer p {
   margin: 6px 0;
-  color: #FDB9C8;
+  color: #fff;
   font-weight: 500;
   letter-spacing: 0.5px;
-}
-.app-footer .sns-links {
-  margin-top: 10px;
-}
-.app-footer .sns-links a {
-  display: inline-block;
-  margin: 0 10px;
-  font-size: 1.6rem;
-  transition: all 0.3s ease;
-}
-.app-footer .sns-links a.twitter {
-  color: #1DA1F2;
-}
-.app-footer .sns-links a.twitter:hover {
-  color: #FDB9C8;
-  transform: scale(1.2);
-}
-.app-footer .sns-links a.discord {
-  color: #5865F2;
-}
-.app-footer .sns-links a.discord:hover {
-  color: #FDB9C8;
-  transform: scale(1.2);
 }
 
 /* ===== レスポンシブ対応 ===== */
