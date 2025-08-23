@@ -40,6 +40,7 @@ header {
 header .nav {
   display: flex;
   gap: 32px;
+  margin-left: auto;   /* 👈 追加：右端に固定 */
 }
 header .nav a {
   color: #fff;
@@ -174,7 +175,7 @@ main {
   transform: scale(1.05);
 }
 
-/* ✅ 今日の強調をさらに見やすく */
+/* ✅ 今日の強調 */
 .day.today {
   background: #fff !important;
   border: 3px solid #ff5fa2 !important;
@@ -217,7 +218,7 @@ main {
   color: #004CA0;
 }
 
-/* ===== プルダウン（開始/終了時刻も共通） ===== */
+/* ===== プルダウン ===== */
 .schedule-card select {
   padding: 6px 12px;
   border-radius: 12px;
