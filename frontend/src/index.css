@@ -185,3 +185,47 @@ body {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px) scale(1.05);
 }
+/* 📌 カレンダー部分 */
+.custom-calendar {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 8px !important;
+  margin-top: 16px;
+}
+
+.calendar-day-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  background: #fdf7fa;
+  border-radius: 12px;
+  color: #004CA0;
+}
+
+.calendar-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  border-radius: 14px;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s;
+  font-weight: bold;
+}
+.calendar-cell:hover {
+  background: #fde4ec;
+  transform: scale(1.07);
+}
+.calendar-cell.today {
+  border: 2px solid gold;
+  background: #fff9e6;
+}
+.calendar-cell.selected {
+  background: linear-gradient(135deg, #004CA0, #0066ff);
+  color: #fff;
+}
+.calendar-cell.empty {
+  background: transparent;
+  box-shadow: none;
+}
