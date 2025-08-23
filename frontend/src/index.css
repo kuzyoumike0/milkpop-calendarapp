@@ -344,3 +344,33 @@ body {
   color: #004CA0;
   transform: scale(1.2);
 }
+/* ===== トップページロゴ ===== */
+.top-logo {
+  display: block;
+  margin: 2rem auto;
+  width: 100%;              /* 📌 幅は常に親にフィット */
+  max-width: 1040px;        /* 📌 PCでは1040pxを上限 */
+  height: auto;             /* 📌 アスペクト比を維持 */
+  border-radius: 20px;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.top-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+}
+
+/* ===== スマホ対応 ===== */
+@media (max-width: 768px) {
+  .top-logo {
+    max-width: 90%;         /* 📌 タブレット・スマホでは画面幅に合わせる */
+  }
+}
+
+@media (max-width: 480px) {
+  .top-logo {
+    max-width: 95%;         /* 📌 極小スマホではさらに余白を確保 */
+    border-radius: 12px;    /* 📌 丸みを強調してかわいく */
+  }
+}
