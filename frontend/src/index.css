@@ -64,28 +64,30 @@ h1, .title-text {
   font-weight: 700;
   color: #fff;
   text-shadow: 3px 3px 10px rgba(0,0,0,0.6);
-}
-h2, h3 {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  font-weight: 600;
-  color: #004CA0;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  text-decoration: none;   /* ← アンダーライン削除 */
 }
 
-/* ===== カード ===== */
-.card {
-  background: #fff;
+/* ===== トップページ本文カード ===== */
+.top-message-card {
+  background: #fff; /* ← グラデ削除して白背景 */
   border-radius: 1.5rem;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 1.8rem 2.2rem;
+  margin-top: 1.5rem;
+  margin-bottom: 5rem;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.2rem;
+  font-weight: 600;  /* ← 真面目フォント（少し太め） */
+  line-height: 1.9;
+  font-family: 'M PLUS Rounded 1c', sans-serif; /* ← 丸ゴシックだけにする */
+  color: #333;
   text-align: center;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-.card:hover {
-  transform: translateY(-6px) rotate(0.5deg);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-}
+
+
 
 /* ===== トップページ本文カード ===== */
 .top-message-card {
