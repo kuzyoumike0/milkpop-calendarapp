@@ -1,19 +1,12 @@
-# Railway 設定ファイル
-
 [build]
-# デプロイ時のビルド手順
-# 1. frontend をインストール & ビルド
-# 2. backend をインストール
 commands = [
-  "cd frontend && npm install && npm run build",
-  "cd backend && npm install"
+  "npm run install-all", # frontend と backend の依存をインストール
+  "npm run build"        # frontend をビルド
 ]
 
 [start]
-# 起動コマンド
-# backend が ../frontend/build を配信
-command = "cd backend && node index.js"
+command = "npm run start"
 
 [env]
-# Railway の環境変数はここで指定することも可能
-# DATABASE_URL や DISCORD_CLIENT_ID などを Railway のダッシュボードに設定
+# 必要な環境変数は Railway ダッシュボードから設定
+# DATABASE_URL, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI など
