@@ -1,30 +1,48 @@
-# ===============================
-# 1. フロントエンド ビルド
-# ===============================
+# ===== フロントエンドビルド =====
 FROM node:18 AS frontend-build
+WORKDIR /app/frontend
 
+# 依存関係をコピーしてインストール
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+
+# フロントエンドのソースをコピーしてビルド
+COPY frontend/ ./
+RUN npm run build
+
+# ===== バックエンドビルド =====
+FROM node:18 AS backend
 WORKDIR /app
-COPY frontend/package.json ./frontend/
-RUN cd frontend && npm install
-COPY frontend ./frontend
-RUN cd frontend && npm run build
 
-# ===============================
-# 2. バックエンド 実行
-# ===============================
-FROM node:18
+# バックエンド依存関係をコピーしてインストール
+COPY backend/package.json backend/package-lock.json* ./backend/
+WORKDIR /app/backend
+RUN npm install
 
+# バックエンドコードをコピー
+COPY backend/ ./ 
+
+# ===== 最終ステージ =====
+FROM node:18-slim
 WORKDIR /app
-COPY backend/package.json ./backend/
-RUN cd backend && npm install
-COPY backend ./backend
 
-# フロントエンドのビルド成果物をコピー
-COPY --from=frontend-build /app/frontend/build ./frontend/build
+# PostgreSQL の依存ライブラリ（pg用）
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+# バックエンドコピー
+COPY --from=backend /app/backend /app/backend
+
+# フロントエンドのビルド成果物をバックエンドに渡す
+COPY --from=frontend-build /app/frontend/build /app/backend/public
+
+WORKDIR /app/backend
+
+# 環境変数
 ENV NODE_ENV=production
+ENV PORT=5000
 
-# Railway が自動で PORT を渡すので ENV PORT=5000 は不要
-EXPOSE 8080
+EXPOSE 5000
 
-CMD ["node", "/app/backend/index.js"]
+CMD ["node", "index.js"]
