@@ -136,8 +136,8 @@ const RegisterPage = () => {
               {year}年 {month + 1}月
             </h2>
             <div className="calendar-nav">
-              <button onClick={prevMonth}>← 前の月</button>
-              <button onClick={nextMonth}>次の月 →</button>
+              <button onClick={prevMonth} className="nav-btn">← 前の月</button>
+              <button onClick={nextMonth} className="nav-btn">次の月 →</button>
             </div>
 
             <div className="calendar-grid custom-calendar">
