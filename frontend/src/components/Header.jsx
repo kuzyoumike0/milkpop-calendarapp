@@ -35,4 +35,14 @@ const Header = () => {
           {/* Discordログインボタン */}
           <a
             href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URL&response_type=code&scope=identify"
-            cl
+            className="px-5 py-2 bg-[#5865F2] text-white font-semibold rounded-full shadow-md hover:bg-[#4752C4] hover:scale-105 transition"
+          >
+            Discordログイン
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
