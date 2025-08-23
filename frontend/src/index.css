@@ -300,4 +300,21 @@ body {
   }
 }
 
+/* レイアウト全体 */
+.register-layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin: 0 60px;   /* 両端に余白を持たせる */
+}
+
+/* カレンダー7割 */
+.calendar-section {
+  flex: 0 0 70%;
+}
+
+/* リスト3割 */
+.schedule-section {
+  flex: 0 0 30%;
+}
 
