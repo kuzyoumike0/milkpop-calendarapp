@@ -28,6 +28,7 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
+  // 今月の日付を生成
   const generateCalendarDays = (month) => {
     const year = month.getFullYear();
     const monthIndex = month.getMonth();
@@ -37,12 +38,15 @@ const RegisterPage = () => {
     const days = [];
     const startDayOfWeek = firstDay.getDay();
 
+    // 前月の空白
     for (let i = 0; i < startDayOfWeek; i++) {
       days.push(null);
     }
+    // 今月の日付
     for (let d = 1; d <= lastDay.getDate(); d++) {
       days.push(new Date(year, monthIndex, d));
     }
+
     return days;
   };
 
@@ -50,6 +54,7 @@ const RegisterPage = () => {
 
   const handleDateClick = (date) => {
     if (!date) return;
+
     if (selectionMode === "single") {
       setSelectedDates([date]);
     } else if (selectionMode === "multiple") {
@@ -81,11 +86,15 @@ const RegisterPage = () => {
   };
 
   const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+    );
   };
 
   const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+    );
   };
 
   const saveSchedules = async () => {
@@ -122,6 +131,7 @@ const RegisterPage = () => {
       <div className="register-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
+          {/* 選択モード */}
           <div className="radio-options mb-4">
             <label className="radio-label">
               <input
@@ -155,6 +165,7 @@ const RegisterPage = () => {
             </label>
           </div>
 
+          {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="month-btn">◀</button>
             <span className="font-bold text-lg">
