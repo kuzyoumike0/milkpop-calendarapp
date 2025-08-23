@@ -124,21 +124,25 @@ main {
 /* ===== レイアウト ===== */
 .register-layout {
   display: flex;
+  justify-content: space-between; /* 左右を分離 */
+  align-items: flex-start;
   gap: 24px;
   margin: 20px auto;
   padding: 0 20px;
-  align-items: flex-start;
 }
+
 .calendar-section {
   flex: 0 0 70%;
   max-width: 70%;
 }
+
 .schedule-section {
   flex: 0 0 30%;
   max-width: 30%;
-  min-width: 340px;
-  padding-right: 30px;
+  min-width: 320px;
+  margin-right: 32px;  /* 👈 右端に余白 */
 }
+
 
 /* ===== 自作カレンダー ===== */
 .custom-calendar {
