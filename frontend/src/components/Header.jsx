@@ -43,7 +43,7 @@ const Header = () => {
         <Link to="/">MilkPOP Calendar</Link>
       </div>
 
-      {/* PC表示ナビ */}
+      {/* ナビゲーション */}
       <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
         <Link to="/register">日程登録</Link>
         <Link to="/personal">個人スケジュール</Link>
@@ -68,7 +68,7 @@ const Header = () => {
         )}
       </nav>
 
-      {/* ハンバーガーメニュー */}
+      {/* ハンバーガーメニュー（モバイル用） */}
       <button
         className={`hamburger ${menuOpen ? "active" : ""}`}
         aria-label="メニュー"
