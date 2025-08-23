@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { v4: uuidv4 } = require("uuid");
 const { Pool } = require("pg");
+const path = require("path");
 
 const app = express();
 app.use(cors());
@@ -107,6 +107,17 @@ app.get("/api/responses/:shareId", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: "取得に失敗しました" });
   }
+});
+
+// ====== ルート確認用 ======
+app.get("/", (req, res) => {
+  res.send("✅ MilkPOP Calendar API is running");
+});
+
+// ====== Reactビルド配信 ======
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
