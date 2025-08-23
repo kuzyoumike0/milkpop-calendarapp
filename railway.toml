@@ -1,0 +1,19 @@
+# Railway 設定ファイル
+
+[build]
+# デプロイ時のビルド手順
+# 1. frontend をインストール & ビルド
+# 2. backend をインストール
+commands = [
+  "cd frontend && npm install && npm run build",
+  "cd backend && npm install"
+]
+
+[start]
+# 起動コマンド
+# backend が ../frontend/build を配信
+command = "cd backend && node index.js"
+
+[env]
+# Railway の環境変数はここで指定することも可能
+# DATABASE_URL や DISCORD_CLIENT_ID などを Railway のダッシュボードに設定
