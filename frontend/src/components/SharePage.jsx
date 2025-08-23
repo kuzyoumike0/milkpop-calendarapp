@@ -1,181 +1,145 @@
+// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import "../index.css";
-import Header from "./Header";
-import Footer from "./Footer";
+import { useParams, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const SharePage = () => {
-  const { shareId } = useParams(); // = share_token
-  const [linkInfo, setLinkInfo] = useState(null);
-  const [username, setUsername] = useState(localStorage.getItem("username") || "");
+  const { id } = useParams();
+  const location = useLocation();
+
+  const [schedule, setSchedule] = useState(null);
   const [votes, setVotes] = useState({});
-  const [voteResults, setVoteResults] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
+  const [allVotes, setAllVotes] = useState([]);
 
-  // ===== 共有スケジュール取得 =====
-  const fetchLinkInfo = async () => {
-    try {
-      const res = await fetch(`/share/${shareId}`);
-      const json = await res.json();
-      if (!json.error) {
-        setLinkInfo(json);
-        // 投票結果を取得
-        fetchVoteResults(json.id);
-      }
-    } catch (err) {
-      console.error("共有取得エラー:", err);
-    } finally {
-      setLoading(false);
+  // ✅ OAuthからusernameを受け取る
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const discordName = params.get("username");
+    if (discordName) {
+      setUsername(discordName);
     }
-  };
+  }, [location]);
 
-  // ===== 投票結果取得 =====
-  const fetchVoteResults = async (scheduleId) => {
+  // 初期ロード
+  useEffect(() => {
+    fetchData();
+  }, [id]);
+
+  const fetchData = async () => {
     try {
-      const res = await fetch(`/api/schedule_responses/${scheduleId}`);
-      const json = await res.json();
-      if (json.success) {
-        setVoteResults(json.data); // [{ username, responses }, ...]
-      }
-    } catch (err) {
-      console.error("投票結果取得エラー:", err);
-    }
-  };
+      const res = await axios.get(`/api/share/${id}`);
+      setSchedule(res.data);
 
-  // ===== 投票選択 =====
-  const handleVoteChange = (dateStr, choice) => {
-    setVotes((prev) => ({ ...prev, [dateStr]: choice }));
-  };
-
-  // ===== 投票保存 =====
-  const handleSaveVotes = async () => {
-    try {
-      localStorage.setItem("username", username || "匿名");
-      const res = await fetch("/api/schedule_responses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduleId: linkInfo.id,
-          username: username || "匿名",
-          responses: votes,
-        }),
-      });
-      const json = await res.json();
-      if (json.error) {
-        alert("❌ 保存に失敗しました: " + json.error);
-      } else {
-        alert("✅ 投票を保存しました！");
-        fetchVoteResults(linkInfo.id); // 保存後に最新結果を再取得
-      }
+      const voteRes = await axios.get(`/api/share/${id}/votes`);
+      setAllVotes(voteRes.data);
     } catch (err) {
       console.error(err);
-      alert("❌ 保存に失敗しました");
     }
   };
 
-  // ===== 集計処理 =====
-  const countVotes = (dateStr) => {
-    const counts = { "〇": 0, "△": 0, "✖": 0 };
-    voteResults.forEach((v) => {
-      const choice = v.responses[dateStr];
-      if (counts[choice] !== undefined) counts[choice]++;
-    });
-    return counts;
+  // 投票変更
+  const handleVoteChange = (date, value) => {
+    setVotes({ ...votes, [date]: value });
   };
 
-  useEffect(() => {
-    fetchLinkInfo();
-  }, [shareId]);
+  // 投票保存
+  const handleSave = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
+    try {
+      await axios.post(`/api/share/${id}/vote`, { username, votes });
+      fetchData(); // 即更新
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    }
+  };
+
+  if (!schedule) return <p>読み込み中...</p>;
 
   return (
-    <>
-      <Header />
-      <main className="share-page">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-          {loading ? (
-            <p className="text-center text-gray-600">読み込み中...</p>
-          ) : !linkInfo ? (
-            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
-          ) : (
-            <>
-              {/* タイトル */}
-              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-6">
-                📎 {linkInfo.title}
-              </h2>
+    <main className="container mx-auto px-6 py-10">
+      <h2 className="text-3xl font-bold text-center mb-6 text-[#004CA0]">
+        {schedule.schedules[0].title}
+      </h2>
 
-              {/* 名前入力 */}
-              <div className="mb-6">
-                <label className="block mb-2 text-[#004CA0] font-semibold">
-                  あなたの名前
-                </label>
-                <input
-                  type="text"
-                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
-                  placeholder="名前を入力してください（未入力なら匿名）"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-
-              {/* 日程リスト */}
-              <ul className="space-y-6">
-                {linkInfo.dates.map((d) => {
-                  const counts = countVotes(d);
-
-                  return (
-                    <li key={d} className="card">
-                      <div className="flex justify-between items-center mb-4 w-full">
-                        <div>
-                          <p className="schedule-title">{d}</p>
-                          <p className="date-tag">{linkInfo.options?.[d]?.type || "終日"}</p>
-                        </div>
-                        <select
-                          className="vote-select"
-                          value={votes[d] || ""}
-                          onChange={(e) => handleVoteChange(d, e.target.value)}
-                        >
-                          <option value="">選択してください</option>
-                          <option value="〇">〇</option>
-                          <option value="△">△</option>
-                          <option value="✖">✖</option>
-                        </select>
-                      </div>
-
-                      {/* 投票結果一覧 */}
-                      <div className="vote-results">
-                        {voteResults.length > 0 ? (
-                          <ul className="text-sm space-y-1">
-                            {voteResults.map((v, idx) => (
-                              v.responses[d] ? (
-                                <li key={idx} className="flex justify-between">
-                                  <span>{v.username}</span>
-                                  <span>{v.responses[d]}</span>
-                                </li>
-                              ) : null
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-500">まだ投票がありません</p>
-                        )}
-                        <div className="mt-2 text-sm font-semibold">
-                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* 保存ボタン */}
-              <button onClick={handleSaveVotes} className="vote-save-btn mt-6">
-                💾 投票を保存する
-              </button>
-            </>
-          )}
+      {/* 名前入力（Discordログイン済みなら表示しない） */}
+      {!username && (
+        <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
+          <label className="block font-semibold mb-2">名前</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="あなたの名前を入力"
+          />
+          <a
+            href="/auth/discord"
+            className="discord-btn inline-block mt-3"
+          >
+            Discordでログイン
+          </a>
         </div>
-      </main>
-      <Footer />
-    </>
+      )}
+
+      {/* 投票入力 */}
+      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
+        <h3 className="text-lg font-bold mb-4">日程に対する回答</h3>
+        <ul className="space-y-3">
+          {schedule.schedules[0].dates.map((date) => (
+            <li key={date} className="flex justify-between items-center">
+              <span className="font-semibold">{date}</span>
+              <select
+                onChange={(e) => handleVoteChange(date, e.target.value)}
+                className="border rounded-lg px-2 py-1"
+              >
+                <option value="">未選択</option>
+                <option value="◯">◯ 参加可能</option>
+                <option value="✖">✖ 不可</option>
+                <option value="△">△ 微妙</option>
+              </select>
+            </li>
+          ))}
+        </ul>
+        <button
+          onClick={handleSave}
+          className="btn btn-pink px-6 py-2 mt-6"
+        >
+          保存
+        </button>
+      </div>
+
+      {/* 投票結果一覧 */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h3 className="text-lg font-bold mb-4">回答一覧</h3>
+        <table className="w-full border-collapse border">
+          <thead>
+            <tr>
+              <th className="border px-3 py-2">名前</th>
+              {schedule.schedules[0].dates.map((date) => (
+                <th key={date} className="border px-3 py-2">{date}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {allVotes.map((row, i) => (
+              <tr key={i}>
+                <td className="border px-3 py-2">{row.username}</td>
+                {schedule.schedules[0].dates.map((date) => (
+                  <td key={date} className="border px-3 py-2 text-center">
+                    {row.votes[date] || "-"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </main>
   );
 };
 
