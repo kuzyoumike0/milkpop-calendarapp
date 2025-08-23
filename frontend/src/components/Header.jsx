@@ -44,8 +44,8 @@ const Header = () => {
           <Link to="/">MilkPOP Calendar</Link>
         </h1>
 
-        {/* 右側：Discordログイン or ユーザー情報 */}
-        <div className="flex items-center gap-4">
+        {/* 右側：Discordログイン or ユーザー情報 + ☰ */}
+        <div className="flex items-center gap-4 relative">
           {user ? (
             <span className="user-info flex items-center gap-2">
               <img
@@ -78,20 +78,20 @@ const Header = () => {
           >
             ☰
           </button>
+
+          {/* ☰クリックで右寄せメニューを表示 */}
+          {menuOpen && (
+            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2">
+              <Link to="/register" onClick={() => setMenuOpen(false)}>
+                日程登録
+              </Link>
+              <Link to="/personal" onClick={() => setMenuOpen(false)}>
+                個人スケジュール
+              </Link>
+            </nav>
+          )}
         </div>
       </div>
-
-      {/* ☰ をクリックしたら下に展開するメニュー */}
-      {menuOpen && (
-        <nav className="absolute right-4 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2">
-          <Link to="/register" onClick={() => setMenuOpen(false)}>
-            日程登録
-          </Link>
-          <Link to="/personal" onClick={() => setMenuOpen(false)}>
-            個人スケジュール
-          </Link>
-        </nav>
-      )}
     </header>
   );
 };
