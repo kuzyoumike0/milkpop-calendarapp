@@ -71,11 +71,12 @@ footer {
   padding: 14px 20px;
   text-align: center;
   font-family: 'Yomogi','M PLUS Rounded 1c',sans-serif;
-  position: fixed;   /* ← 常に画面下部に固定 */
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  width: 100%;  /* ← 幅は残す */
+  /* position: fixed; 削除 */
+  /* bottom: 0; 削除 */
+  /* left: 0; 削除 */
 }
+
 
 
 /* ===== main領域 ===== */
