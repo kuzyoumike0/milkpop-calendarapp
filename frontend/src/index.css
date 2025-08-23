@@ -1,26 +1,26 @@
 
 /* ===== フォント ===== */
-/* Poppins と Fredoka One を読み込み */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Poppins:wght@400;600;700&display=swap');
+/* Quicksand と Baloo 2 を読み込み */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Quicksand:wght@400;600&display=swap');
 
 body {
   margin: 0;
   padding: 0 0 0 20px;
   line-height: 1.8;
   background: linear-gradient(to bottom, #FDB9C8, #ffffff, #004CA0);
-  font-family: 'Poppins', 'Fredoka One', sans-serif; /* ← 手書き感を排除しポップに */
+  font-family: 'Quicksand', sans-serif; /* ← 本文はやさしい丸文字 */
   font-size: 1.05rem;
   color: #333;
 }
 
 /* ===== 見出し ===== */
 h1, h2 {
-  font-weight: 700;
+  font-weight: 600;
   color: #ff5fa2;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
   letter-spacing: 1px;
   text-align: center;
-  font-family: 'Fredoka One', 'Poppins', sans-serif; /* 見出しはさらにポップに */
+  font-family: 'Baloo 2', 'Quicksand', sans-serif; /* ← 見出しはより丸っこく */
 }
 
 
