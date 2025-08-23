@@ -12,6 +12,7 @@ const Footer = () => {
           href="https://x.com/Soni_complaint"
           target="_blank"
           rel="noopener noreferrer"
+          className="twitter"
         >
           <FaTwitter />
         </a>
@@ -21,6 +22,7 @@ const Footer = () => {
           href="https://discord.gg/ACRFgQbA"
           target="_blank"
           rel="noopener noreferrer"
+          className="discord"
         >
           <FaDiscord />
         </a>
