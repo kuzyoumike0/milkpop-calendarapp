@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "description": "MilkPOP Calendar backend service with Express + PostgreSQL",
   "main": "index.js",
   "private": true,
   "scripts": {
@@ -16,5 +17,10 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "license": "MIT",
+  "author": "MilkPOP Project"
 }
