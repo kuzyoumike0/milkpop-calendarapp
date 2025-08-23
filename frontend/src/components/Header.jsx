@@ -37,20 +37,33 @@ const Header = () => {
 
   return (
     <header className="main-header">
+      {/* ===== ロゴ画像をクリックでトップページへ ===== */}
       <div className="logo">
-        <Link to="/">MilkPOP Calendar</Link>
+        <Link to="/">
+          <img
+            src="/logo.png"
+            alt="MilkPOP Calendar"
+            className="logo-img"
+          />
+        </Link>
       </div>
+
       <nav className="nav-links">
         <Link to="/register">日程登録</Link>
         <Link to="/personal">個人スケジュール</Link>
         <Link to="/share">共有ページ</Link>
+
         {user ? (
           <div className="user-info">
             <span>{user.username}</span>
-            <button className="logout-btn" onClick={handleLogout}>ログアウト</button>
+            <button className="logout-btn" onClick={handleLogout}>
+              ログアウト
+            </button>
           </div>
         ) : (
-          <button className="login-btn" onClick={handleLogin}>Discordでログイン</button>
+          <button className="login-btn" onClick={handleLogin}>
+            Discordでログイン
+          </button>
         )}
       </nav>
     </header>
