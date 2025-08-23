@@ -11,7 +11,7 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
   const [globalTitle, setGlobalTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple"); // ✅ デフォルト複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple");
 
   useEffect(() => {
     fetch(`/api/holidays/${today.getFullYear()}`)
@@ -159,7 +159,7 @@ const RegisterPage = () => {
             />
           </div>
 
-          {/* ✅ 範囲選択/複数選択ラジオ */}
+          {/* ✅ ラジオボタン（タイトルの下） */}
           <div className="radio-options mb-4">
             <label className="radio-label">
               <input
