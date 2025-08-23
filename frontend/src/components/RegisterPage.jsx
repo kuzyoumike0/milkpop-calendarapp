@@ -1,184 +1,136 @@
-// frontend/src/pages/RegisterPage.jsx
 import React, { useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import "../index.css";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const RegisterPage = () => {
+  const [date, setDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [viewDate, setViewDate] = useState(new Date());
-  const [selectMode, setSelectMode] = useState("multiple"); // "multiple" or "range"
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
 
-  // 📌 日付クリック
-  const handleDateClick = (date) => {
-    if (selectMode === "multiple") {
-      if (selectedDates.find((d) => d.getTime() === date.getTime())) {
-        setSelectedDates(selectedDates.filter((d) => d.getTime() !== date.getTime()));
-      } else {
-        setSelectedDates([...selectedDates, date]);
-      }
-    } else if (selectMode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length > 1) {
-        setSelectedDates([date]);
-      } else {
-        const start = selectedDates[0];
-        if (date < start) {
-          setSelectedDates([date, start]);
-        } else {
-          setSelectedDates([start, date]);
-        }
-      }
-    }
-  };
-
-  // 📌 月切り替え
-  const handlePrevMonth = () => {
-    const newDate = new Date(viewDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setViewDate(newDate);
-  };
-  const handleNextMonth = () => {
-    const newDate = new Date(viewDate);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setViewDate(newDate);
-  };
-
-  // 📌 カレンダーセル
-  const generateCalendarCells = () => {
-    const year = viewDate.getFullYear();
-    const month = viewDate.getMonth();
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    const cells = [];
-    let current = new Date(firstDay);
-    current.setDate(current.getDate() - current.getDay()); // 日曜始まり
-
-    while (current <= lastDay || current.getDay() !== 0) {
-      const week = [];
-      for (let i = 0; i < 7; i++) {
-        const copyDate = new Date(current);
-        const isSelected = selectedDates.some(
-          (d) =>
-            (selectMode === "range" && selectedDates.length === 2
-              ? d >= selectedDates[0] && d <= selectedDates[1]
-              : d.getTime() === copyDate.getTime())
-        );
-        const isToday =
-          copyDate.toDateString() === new Date().toDateString() &&
-          copyDate.getMonth() === month;
-
-        week.push(
-          <div
-            key={copyDate.toISOString()}
-            className={`calendar-cell 
-              ${isToday ? "today" : ""} 
-              ${isSelected ? "selected" : ""}
-              ${copyDate.getMonth() !== month ? "other-month" : ""}`}
-            onClick={() => handleDateClick(copyDate)}
-          >
-            {copyDate.getMonth() === month ? copyDate.getDate() : ""}
-          </div>
-        );
-        current.setDate(current.getDate() + 1);
-      }
-      cells.push(
-        <div className="calendar-row" key={current.toISOString()}>
-          {week}
-        </div>
+  const handleDateChange = (newDate) => {
+    if (mode === "multiple") {
+      // 複数選択
+      const exists = selectedDates.find(
+        (d) => d.toDateString() === newDate.toDateString()
       );
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => d !== exists));
+      } else {
+        setSelectedDates([...selectedDates, newDate]);
+      }
+    } else if (mode === "range") {
+      // 範囲選択
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
+        setSelectedDates([newDate]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0];
+        const end = newDate;
+        const range = [];
+        const current = new Date(start);
+
+        while (current <= end) {
+          range.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(range);
+      }
     }
-    return cells;
+    setDate(newDate);
+  };
+
+  const handleDelete = (targetDate) => {
+    setSelectedDates(selectedDates.filter((d) => d !== targetDate));
   };
 
   return (
     <div className="register-page">
+      {/* 共通ヘッダー */}
+      <Header />
+
       <div className="register-layout">
-        {/* ===== 左側 カレンダーエリア ===== */}
+        {/* カレンダーセクション */}
         <div className="calendar-section">
           {/* タイトル入力 */}
           <input
             type="text"
-            className="input-field"
             placeholder="タイトルを入力"
+            className="input-field"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
           {/* ラジオボタン */}
-          <div className="radio-options-left">
+          <div className="radio-options">
             <label className="radio-label">
               <input
                 type="radio"
-                name="selectMode"
+                name="mode"
                 value="multiple"
-                checked={selectMode === "multiple"}
-                onChange={() => setSelectMode("multiple")}
+                checked={mode === "multiple"}
+                onChange={() => setMode("multiple")}
               />
-              <span className="custom-radio"></span>
-              複数選択
+              <span className="custom-radio"></span> 複数選択
             </label>
             <label className="radio-label">
               <input
                 type="radio"
-                name="selectMode"
+                name="mode"
                 value="range"
-                checked={selectMode === "range"}
-                onChange={() => setSelectMode("range")}
+                checked={mode === "range"}
+                onChange={() => setMode("range")}
               />
-              <span className="custom-radio"></span>
-              範囲選択
+              <span className="custom-radio"></span> 範囲選択
             </label>
           </div>
 
-          {/* 月切り替えナビ */}
-          <div className="calendar-nav">
-            <button className="nav-btn" onClick={handlePrevMonth}>
-              &lt;
-            </button>
-            <span className="calendar-title">
-              {viewDate.getFullYear()}年 {viewDate.getMonth() + 1}月
-            </span>
-            <button className="nav-btn" onClick={handleNextMonth}>
-              &gt;
-            </button>
-          </div>
-
-          {/* 曜日ヘッダー */}
-          <div className="calendar-row">
-            {["日", "月", "火", "水", "木", "金", "土"].map((day) => (
-              <div key={day} className="calendar-day-header">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* カレンダー本体 */}
-          <div className="custom-calendar">{generateCalendarCells()}</div>
+          {/* カレンダー */}
+          <Calendar
+            onChange={handleDateChange}
+            value={date}
+            selectRange={mode === "range"}
+            className="react-calendar"
+            tileClassName={({ date }) => {
+              const isSelected = selectedDates.some(
+                (d) => d.toDateString() === date.toDateString()
+              );
+              if (isSelected) return "selected";
+              return "";
+            }}
+          />
         </div>
 
-        {/* ===== 右側 選択した日程リスト ===== */}
+        {/* 選択中の日程 */}
         <div className="schedule-section">
           <h3>選択中の日程</h3>
           {selectedDates.length === 0 ? (
             <p>日付を選択してください</p>
           ) : (
             <ul>
-              {selectMode === "range" && selectedDates.length === 2 ? (
-                <li>
-                  {selectedDates[0].toLocaleDateString()} 〜{" "}
-                  {selectedDates[1].toLocaleDateString()}
+              {selectedDates.map((d, idx) => (
+                <li key={idx} className="schedule-card">
+                  <span>
+                    {d.getFullYear()}/{d.getMonth() + 1}/{d.getDate()}
+                  </span>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(d)}
+                  >
+                    ✕
+                  </button>
                 </li>
-              ) : (
-                selectedDates.map((d, i) => (
-                  <li key={i}>{d.toLocaleDateString()}</li>
-                ))
-              )}
+              ))}
             </ul>
           )}
           <button className="save-btn">共有リンク発行</button>
         </div>
       </div>
+
+      {/* 共通フッター */}
+      <Footer />
     </div>
   );
 };
