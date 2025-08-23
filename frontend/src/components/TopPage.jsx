@@ -14,7 +14,8 @@ const TopPage = () => {
         <img
           src="/logo.png"
           alt="MilkPOP Calendar"
-          className="w-[1040px] h-auto mb-6 mx-auto"
+          className="block mx-auto mb-6"
+          style={{ width: "1040px", height: "auto" }} // ← CSSで強制指定
         />
 
         {/* キャッチコピー */}
