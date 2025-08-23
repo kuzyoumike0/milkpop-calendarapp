@@ -1,39 +1,27 @@
-# ==============================
-# 1. ビルドステージ（フロントエンド）
-# ==============================
-FROM node:18 AS build-frontend
-
-WORKDIR /app/frontend
-
-COPY frontend/package.json ./
-RUN npm install
-
-COPY frontend ./
-RUN npm run build
-
-# ==============================
-# 2. 本番ステージ（バックエンド + フロント配信）
-# ==============================
+# Node.js ベースイメージ
 FROM node:18
 
+# 作業ディレクトリ
 WORKDIR /app
 
-# バックエンドの依存関係をインストール
-COPY backend/package.json ./backend/
-RUN cd backend && npm install --only=production
+# backend の依存関係インストール
+COPY backend/package*.json ./backend/
+RUN cd backend && npm install
 
-# バックエンドのソースをコピー
+# frontend の依存関係インストールとビルド
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm install && npm run build
+
+# ソースコードをコピー
 COPY backend ./backend
+COPY frontend ./frontend
 
-# フロントのビルド済みファイルをコピー
-COPY --from=build-frontend /app/frontend/build ./frontend/build
+# backend が frontend/build を配信できるようにする
+# → index.js で express.static("../frontend/build") を設定済みのはず
+#   （もし未設定なら教えてください。追記コード書きます）
 
-# 環境変数
-ENV NODE_ENV=production
-ENV PORT=5000
-
+# ポート解放
 EXPOSE 5000
 
-# ====== backend を WORKDIR にして起動 ======
-WORKDIR /app/backend
-CMD ["node", "index.js"]
+# サーバー起動
+CMD ["node", "backend/index.js"]
