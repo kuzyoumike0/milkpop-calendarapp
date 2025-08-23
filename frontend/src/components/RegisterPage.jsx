@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom"; // ← 追加
+import { Link } from "react-router-dom";
 import "../index.css";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -150,7 +150,9 @@ const RegisterPage = () => {
         return;
       }
 
-      setIssuedUrl(`${window.location.origin}${json2.url}`);
+      // 🔹 相対パスで保持
+      setIssuedUrl(json2.url);
+
       setSelectedDates([]);
       setDateOptions({});
       alert("✅ スケジュールを保存して共有リンクを発行しました！");
@@ -328,10 +330,10 @@ const RegisterPage = () => {
               <div className="issued-url mt-4">
                 <p>✅ 発行されたURL:</p>
                 <Link
-                  to={issuedUrl.replace(window.location.origin, "")}
+                  to={issuedUrl}
                   className="text-blue-600 underline hover:text-blue-800"
                 >
-                  {issuedUrl}
+                  {window.location.origin}{issuedUrl}
                 </Link>
               </div>
             )}
