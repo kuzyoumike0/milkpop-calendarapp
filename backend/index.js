@@ -5,10 +5,16 @@ import cors from "cors";
 import pkg from "pg";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const { Pool } = pkg;
 const app = express();
 const port = process.env.PORT || 5000;
+
+// ====== Utility for __dirname in ES modules ======
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -123,6 +129,16 @@ app.get("/api/share/:uuid", async (req, res) => {
   }
 });
 
+// ====================== 静的ファイル配信 ======================
+// フロントエンドのビルド成果物を配信
+app.use(express.static(path.join(__dirname, "public")));
+
+// React ルーティング対応 (SPA fallback)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// ====================== サーバー起動 ======================
 app.listen(port, () => {
   console.log(`✅ Backend running on http://localhost:${port}`);
 });
