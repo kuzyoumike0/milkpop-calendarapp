@@ -9,12 +9,13 @@ const RegisterPage = () => {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
+  const [dateOptions, setDateOptions] = useState({}); // 日付ごとの区分を管理
   const [title, setTitle] = useState("");
   const [issuedUrl, setIssuedUrl] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
 
-  // === 今の月の日数を計算 ===
+  // === 今の月の日数 ===
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -32,36 +33,52 @@ const RegisterPage = () => {
     if (selectionMode === "multiple") {
       if (selectedDates.includes(dateStr)) {
         setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+        const updated = { ...dateOptions };
+        delete updated[dateStr];
+        setDateOptions(updated);
       } else {
         setSelectedDates([...selectedDates, dateStr]);
+        setDateOptions({ ...dateOptions, [dateStr]: "終日" }); // デフォルト:終日
       }
     } else if (selectionMode === "range") {
       if (!rangeStart) {
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
+        setDateOptions({ [dateStr]: "終日" });
       } else {
         let start = new Date(rangeStart);
         let end = new Date(dateStr);
         if (start > end) [start, end] = [end, start];
 
         const range = [];
+        const options = { ...dateOptions };
         const cursor = new Date(start);
         while (cursor <= end) {
           const d = `${cursor.getFullYear()}-${String(
             cursor.getMonth() + 1
           ).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
           range.push(d);
+          if (!options[d]) options[d] = "終日";
           cursor.setDate(cursor.getDate() + 1);
         }
         setSelectedDates(range);
+        setDateOptions(options);
         setRangeStart(null);
       }
     }
   };
 
+  // === 区分プルダウン変更 ===
+  const handleOptionChange = (dateStr, value) => {
+    setDateOptions({ ...dateOptions, [dateStr]: value });
+  };
+
   // === 選択リストから削除 ===
   const handleDeleteDate = (dateStr) => {
     setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+    const updated = { ...dateOptions };
+    delete updated[dateStr];
+    setDateOptions(updated);
   };
 
   // === URL発行 ===
@@ -81,7 +98,7 @@ const RegisterPage = () => {
     }
   };
 
-  // === カレンダー描画用セル ===
+  // === カレンダーセル ===
   const cells = [];
   for (let i = 0; i < firstDay; i++) {
     cells.push(
@@ -118,7 +135,7 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            {/* タイトル入力欄 */}
+            {/* タイトル */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 📌 タイトル
@@ -132,7 +149,7 @@ const RegisterPage = () => {
               />
             </div>
 
-            {/* 選択モード（ラジオボタン） */}
+            {/* 選択モード */}
             <div className="mb-6 text-left">
               <label className="block text-[#004CA0] font-bold mb-2 text-lg">
                 🔽 選択モード
@@ -161,12 +178,11 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* カレンダータイトル */}
+            {/* カレンダー年月 */}
             <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
               {year}年 {month + 1}月
             </h2>
 
-            {/* 前の月・次の月 ボタン */}
             <div className="flex justify-between items-center mb-4">
               <button onClick={prevMonth} className="month-btn">
                 ◀ 前の月
@@ -176,7 +192,6 @@ const RegisterPage = () => {
               </button>
             </div>
 
-            {/* 自作カレンダー */}
             <div className="custom-calendar">
               {daysOfWeek.map((d, idx) => (
                 <div key={idx} className="calendar-day-header">
@@ -187,13 +202,23 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* 選択した日程 */}
+          {/* 選択日程 + 区分プルダウン */}
           <div className="schedule-section">
             <h2>選択した日程</h2>
             <ul>
               {selectedDates.map((d, idx) => (
                 <li key={idx} className="schedule-card">
                   <span className="schedule-title">{d}</span>
+                  <select
+                    className="vote-select ml-2"
+                    value={dateOptions[d] || "終日"}
+                    onChange={(e) => handleOptionChange(d, e.target.value)}
+                  >
+                    <option value="終日">終日</option>
+                    <option value="午前">午前</option>
+                    <option value="午後">午後</option>
+                    <option value="時刻指定">時刻指定</option>
+                  </select>
                   <button
                     className="delete-btn"
                     onClick={() => handleDeleteDate(d)}
@@ -204,7 +229,6 @@ const RegisterPage = () => {
               ))}
             </ul>
 
-            {/* URL発行ボタン */}
             <button onClick={handleIssueUrl} className="save-btn mt-6">
               🔗 共有リンクを発行
             </button>
@@ -212,11 +236,7 @@ const RegisterPage = () => {
             {issuedUrl && (
               <div className="issued-url mt-4">
                 <p>✅ 発行されたURL:</p>
-                <a
-                  href={issuedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href={issuedUrl} target="_blank" rel="noopener noreferrer">
                   {issuedUrl}
                 </a>
               </div>
