@@ -173,17 +173,21 @@ main {
   background: #ffe4ec;
   transform: scale(1.05);
 }
-/* 今日の強調 */
+
+/* ✅ 今日の強調をさらに見やすく */
 .day.today {
   background: #fff !important;
-  border: 3px solid #004CA0;
-  color: #004CA0 !important;
+  border: 3px solid #ff5fa2 !important;
+  color: #ff2e63 !important;
   font-weight: bold;
-  box-shadow: 0 0 8px rgba(0,0,0,0.25);
+  font-size: 1.2rem;
+  box-shadow: 0 0 12px rgba(255,95,162,0.6);
 }
+
+/* 選択した日 */
 .day.selected {
   background: linear-gradient(90deg, #FDB9C8, #ff85b3);
-  color: #fff;
+  color: #fff !important;
   font-weight: bold;
 }
 .day.holiday {
