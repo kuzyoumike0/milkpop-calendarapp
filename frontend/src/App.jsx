@@ -13,7 +13,7 @@ import Footer from "./components/Footer";
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ✅ 全ページ共通ヘッダー */}
+      {/* ✅ 全ページ共通のヘッダー */}
       <Header />
 
       <Routes>
@@ -25,7 +25,7 @@ function App() {
         <Route path="/links" element={<LinkPage />} />
       </Routes>
 
-      {/* ✅ 全ページ共通フッター */}
+      {/* ✅ 全ページ共通のフッター */}
       <Footer />
     </div>
   );
