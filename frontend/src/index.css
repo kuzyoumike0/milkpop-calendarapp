@@ -471,3 +471,24 @@ body {
   transform: scale(1.2);
 }
 
+/* === タイトル入力欄おしゃれスタイル === */
+.title-input {
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+}
+
+.title-input::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+.title-input:focus {
+  border-color: #004CA0;
+  box-shadow: 0 6px 18px rgba(0,76,160,0.25);
+  transform: scale(1.01);
+}
