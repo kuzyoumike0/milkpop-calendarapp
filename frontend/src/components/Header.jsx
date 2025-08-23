@@ -8,7 +8,6 @@ const Header = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // OAuthリダイレクト後に sessionId を保存
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session");
     if (sessionId) {
@@ -16,7 +15,6 @@ const Header = () => {
       window.history.replaceState({}, document.title, location.pathname);
     }
 
-    // 保存済みセッションからユーザー取得
     const storedSession = localStorage.getItem("sessionId");
     if (storedSession) {
       fetch(`/api/me/${storedSession}`)
@@ -39,7 +37,7 @@ const Header = () => {
   };
 
   return (
-    <header className="banner flex justify-between items-center px-4 py-2">
+    <header className="banner flex items-center justify-between px-4 py-2">
       {/* 左側：ロゴ */}
       <h1 className="logo text-2xl font-bold">
         <Link to="/" onClick={() => setMenuOpen(false)}>
@@ -47,50 +45,69 @@ const Header = () => {
         </Link>
       </h1>
 
-      {/* 右側：ナビゲーション + ハンバーガー */}
-      <div className="flex items-center gap-4">
-        <nav className={`nav ${menuOpen ? "open" : ""}`}>
+      {/* 中央：ナビゲーション（PC表示向け） */}
+      <nav className="hidden md:flex gap-6">
+        <Link to="/register" onClick={() => setMenuOpen(false)}>
+          日程登録
+        </Link>
+        <Link to="/personal" onClick={() => setMenuOpen(false)}>
+          個人スケジュール
+        </Link>
+
+        {user ? (
+          <span className="user-info flex items-center gap-2">
+            <img
+              src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
+              alt="avatar"
+              className="avatar w-8 h-8 rounded-full"
+            />
+            <span>{user.username}</span>
+            <button
+              className="logout-btn ml-2 px-2 py-1 bg-red-500 text-white rounded"
+              onClick={handleLogout}
+            >
+              ログアウト
+            </button>
+          </span>
+        ) : (
+          <button
+            className="login-btn bg-[#5865F2] text-white px-3 py-1 rounded hover:bg-[#4752C4]"
+            onClick={handleLogin}
+          >
+            Discordでログイン
+          </button>
+        )}
+      </nav>
+
+      {/* 右側：ハンバーガーメニュー */}
+      <button
+        className="hamburger text-2xl md:hidden"
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="メニュー"
+      >
+        ☰
+      </button>
+
+      {/* モバイル時のドロワーメニュー */}
+      {menuOpen && (
+        <div className="absolute top-14 right-4 bg-gray-900 text-white p-4 rounded shadow-lg flex flex-col gap-3 md:hidden">
           <Link to="/register" onClick={() => setMenuOpen(false)}>
             日程登録
           </Link>
           <Link to="/personal" onClick={() => setMenuOpen(false)}>
             個人スケジュール
           </Link>
-
           {user ? (
-            <span className="user-info flex items-center gap-2">
-              <img
-                src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
-                alt="avatar"
-                className="avatar w-8 h-8 rounded-full"
-              />
-              <span>{user.username}</span>
-              <button
-                className="logout-btn ml-2 px-2 py-1 bg-red-500 text-white rounded"
-                onClick={handleLogout}
-              >
-                ログアウト
-              </button>
-            </span>
+            <button onClick={handleLogout} className="text-red-400">
+              ログアウト
+            </button>
           ) : (
-            <button
-              className="login-btn bg-[#5865F2] text-white px-3 py-1 rounded hover:bg-[#4752C4]"
-              onClick={handleLogin}
-            >
+            <button onClick={handleLogin} className="bg-[#5865F2] px-3 py-1 rounded">
               Discordでログイン
             </button>
           )}
-        </nav>
-
-        {/* 👇 ハンバーガーメニューを右端に配置 */}
-        <button
-          className="hamburger text-2xl"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="メニュー"
-        >
-          ☰
-        </button>
-      </div>
+        </div>
+      )}
     </header>
   );
 };
