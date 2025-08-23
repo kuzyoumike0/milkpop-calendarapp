@@ -37,14 +37,10 @@ const Header = () => {
 
   return (
     <header className="main-header">
-      {/* ===== ロゴ画像をクリックでトップページへ ===== */}
+      {/* ===== 文字ロゴ（トップページリンク） ===== */}
       <div className="logo">
-        <Link to="/">
-          <img
-            src="/logo.png"
-            alt="MilkPOP Calendar"
-            className="logo-img"
-          />
+        <Link to="/" className="logo-text">
+          MilkPOP Calendar
         </Link>
       </div>
 
