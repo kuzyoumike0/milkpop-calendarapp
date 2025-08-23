@@ -17,6 +17,7 @@ h1, h2 {
   color: #ff5fa2;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
   letter-spacing: 1px;
+  text-align: center;   /* 👈 これを追加 */
 }
 
 /* ===== ヘッダー ===== */
