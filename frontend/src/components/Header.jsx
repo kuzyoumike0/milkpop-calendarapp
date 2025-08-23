@@ -37,47 +37,46 @@ const Header = () => {
   };
 
   return (
-    <header className="banner relative px-4 py-2 bg-black text-white shadow-md">
+    <header className="banner bg-black text-white shadow-md px-4 py-2">
+      {/* ロゴとナビを左右に分ける */}
       <div className="flex justify-between items-center">
         {/* 左端：ロゴ */}
         <h1 className="logo text-2xl font-bold">
           <Link to="/">MilkPOP Calendar</Link>
         </h1>
 
-        {/* 右端：リンク + ユーザー情報 + ハンバーガー */}
+        {/* 右端：ナビゲーション */}
         <div className="flex items-center gap-4 relative">
-          {/* PC表示時のリンク */}
-          <nav className="hidden md:flex gap-6">
+          {/* PC表示のナビ */}
+          <nav className="hidden md:flex gap-6 items-center">
             <Link to="/register">日程登録</Link>
             <Link to="/personal">個人スケジュール</Link>
+            {user ? (
+              <span className="user-info flex items-center gap-2">
+                <img
+                  src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
+                  alt="avatar"
+                  className="avatar w-8 h-8 rounded-full"
+                />
+                <span>{user.username}</span>
+                <button
+                  className="logout-btn ml-2 px-2 py-1 bg-red-500 text-white rounded"
+                  onClick={handleLogout}
+                >
+                  ログアウト
+                </button>
+              </span>
+            ) : (
+              <button
+                className="login-btn bg-[#5865F2] text-white px-3 py-1 rounded hover:bg-[#4752C4]"
+                onClick={handleLogin}
+              >
+                Discordでログイン
+              </button>
+            )}
           </nav>
 
-          {/* ユーザー情報 / ログイン */}
-          {user ? (
-            <span className="user-info flex items-center gap-2">
-              <img
-                src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
-                alt="avatar"
-                className="avatar w-8 h-8 rounded-full"
-              />
-              <span>{user.username}</span>
-              <button
-                className="logout-btn ml-2 px-2 py-1 bg-red-500 text-white rounded"
-                onClick={handleLogout}
-              >
-                ログアウト
-              </button>
-            </span>
-          ) : (
-            <button
-              className="login-btn bg-[#5865F2] text-white px-3 py-1 rounded hover:bg-[#4752C4]"
-              onClick={handleLogin}
-            >
-              Discordでログイン
-            </button>
-          )}
-
-          {/* ハンバーガー（モバイル用） */}
+          {/* モバイル ☰ */}
           <button
             className="hamburger text-2xl md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -86,9 +85,9 @@ const Header = () => {
             ☰
           </button>
 
-          {/* モバイル用メニュー（右端・縦並び） */}
+          {/* モバイルメニュー */}
           {menuOpen && (
-            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-3 flex flex-col gap-2">
+            <nav className="absolute top-full right-0 mt-2 bg-gray-900 text-white rounded shadow-lg p-4 flex flex-col gap-3">
               <Link to="/register" onClick={() => setMenuOpen(false)}>
                 日程登録
               </Link>
