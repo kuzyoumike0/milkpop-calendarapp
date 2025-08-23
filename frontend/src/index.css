@@ -29,7 +29,7 @@ body {
   box-shadow: 0 14px 36px rgba(0,0,0,0.2);
 }
 
-/* ===== 入力フォーム ===== */
+/* ===== 入力フォームエリア ===== */
 .input-field {
   width: 100%;
   max-width: 600px;
@@ -44,7 +44,7 @@ body {
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   display: block;
-  margin-bottom: 16px; /* 📌 下に余白 */
+  margin-bottom: 14px; /* 📌 入力欄の下に余白 */
 }
 .input-field::placeholder {
   color: #aaa;
@@ -57,43 +57,10 @@ body {
   box-shadow: 0 8px 20px rgba(0,76,160,0.25);
   transform: scale(1.01);
 }
-
-/* ===== ラジオボタン ===== */
-.radio-options-left {
-  display: flex;
-  gap: 20px;
-  justify-content: flex-start;
-  margin-bottom: 16px;
-}
-.radio-label {
-  position: relative;
-  padding-left: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  color: #333;
-  font-size: 1rem;
-}
-.radio-label input {
-  position: absolute;
-  opacity: 0;
-}
-.custom-radio {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  transition: 0.3s;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-}
-.radio-label input:checked ~ .custom-radio {
-  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
-  border-color: #ff5fa2;
-  box-shadow: 0 0 8px rgba(255,95,162,0.6);
+@media (max-width: 600px) {
+  .input-field {
+    width: 100%;
+  }
 }
 
 /* ===== 登録済み日程カード ===== */
@@ -109,22 +76,22 @@ body {
   font-weight: bold;
   color: #004CA0;
 }
-.delete-btn {
-  background: transparent;
-  border: none;
-  color: #ff5fa2;
-  font-size: 1.2rem;
+
+/* ===== 日付タグ ===== */
+.date-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-left: 6px;
+  font-size: 0.85rem;
   font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s, color 0.2s;
-}
-.delete-btn:hover {
-  color: #004CA0;
-  transform: scale(1.2);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 /* ===== ボタン ===== */
-.save-btn, .vote-save-btn {
+.save-btn {
   margin-top: 20px;
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
   color: #fff;
@@ -137,7 +104,7 @@ body {
   transition: all 0.3s;
   box-shadow: 0 6px 16px rgba(255,95,162,0.5);
 }
-.save-btn:hover, .vote-save-btn:hover {
+.save-btn:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 10px 24px rgba(0,0,0,0.35);
@@ -183,8 +150,7 @@ body {
   background: rgba(255,255,255,0.08);
   color: #FDB9C8;
 }
-.main-header .login-btn,
-.main-header .logout-btn {
+.main-header .login-btn {
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
   color: #fff;
   border: none;
@@ -195,8 +161,7 @@ body {
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.main-header .login-btn:hover,
-.main-header .logout-btn:hover {
+.main-header .login-btn:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0,0,0,0.3);
@@ -212,21 +177,6 @@ body {
   font-size: 0.95rem;
   border-top: 3px solid #FDB9C8;
   box-shadow: 0 -4px 14px rgba(0,0,0,0.3);
-}
-
-/* ===== ロゴ文字 ===== */
-.logo-text {
-  font-family: 'Baloo 2', cursive;
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #fdfdfd;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-.logo-text:hover {
-  color: #FDB9C8;
-  text-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
-  transform: scale(1.05);
 }
 
 /* ===== トップページロゴ ===== */
@@ -245,18 +195,13 @@ body {
   box-shadow: 0 16px 32px rgba(0,0,0,0.35);
 }
 @media (max-width: 768px) {
-  .top-logo {
-    max-width: 90%;
-  }
+  .top-logo { max-width: 90%; }
 }
 @media (max-width: 480px) {
-  .top-logo {
-    max-width: 95%;
-    border-radius: 12px;
-  }
+  .top-logo { max-width: 95%; border-radius: 12px; }
 }
 
-/* ===== レイアウト ===== */
+/* ===== RegisterPage レイアウト ===== */
 .register-layout {
   display: flex;
   justify-content: space-between;
@@ -273,11 +218,6 @@ body {
   padding: 20px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   backdrop-filter: blur(8px);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.schedule-section:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
 }
 @media (max-width: 768px) {
   .register-layout {
@@ -285,80 +225,33 @@ body {
     margin: 0 20px;
     gap: 20px;
   }
-  .calendar-section,
-  .schedule-section {
+  .calendar-section, .schedule-section {
     flex: 1 1 auto;
   }
-  .schedule-section {
-    margin-top: 20px;
-  }
+  .schedule-section { margin-top: 20px; }
 }
 
-/* ===== カレンダー ===== */
-.calendar-nav {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin: 10px 0 24px 0;
+/* ===== react-calendar (崩れ修正版) ===== */
+.react-calendar {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  margin-top: 20px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  width: 100%;
+  max-width: 100%;
 }
-.calendar-title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: #004CA0;
-  margin: 0 20px;
-}
-.custom-calendar {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 8px !important;
-}
-.calendar-day-header {
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-  background: #fdf7fa;
-  border-radius: 12px;
-  color: #004CA0;
-}
-.calendar-row {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  gap: 8px !important;
-}
-.calendar-cell {
+
+/* ナビゲーション */
+.react-calendar__navigation {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60px;
-  border-radius: 14px;
-  text-align: center;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.3s;
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
+  gap: 20px;
 }
-.calendar-cell:hover {
-  background: #fde4ec;
-  transform: scale(1.07);
-}
-.calendar-cell.today {
-  border: 2px solid gold;
-  background: #fff9e6;
-  font-weight: bold;
-}
-.calendar-cell.selected {
-  background: linear-gradient(135deg, #004CA0, #0066ff);
-  color: #fff;
-  font-weight: bold;
-}
-.calendar-cell.holiday {
-  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
-  color: #fff;
-  font-weight: bold;
-}
-
-/* ===== お洒落ナビゲーションボタン ===== */
-.nav-btn {
+.react-calendar__navigation button {
   background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
   color: #fff;
   font-weight: bold;
@@ -366,10 +259,99 @@ body {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-.nav-btn:hover {
+.react-calendar__navigation button:hover {
   background: linear-gradient(135deg, #004CA0, #0066ff);
-  transform: scale(1.15);
+  transform: scale(1.1);
+}
+.react-calendar__navigation__label {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #004CA0;
+}
+
+/* 曜日 */
+.react-calendar__month-view__weekdays {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #004CA0;
+}
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* 日付セル */
+.react-calendar__tile {
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.3s;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+  font-size: 1rem;
+}
+.react-calendar__tile:hover {
+  background: #fde4ec;
+  transform: scale(1.07);
+}
+.react-calendar__tile--now {
+  border: 2px solid gold;
+  background: #fff9e6;
+  font-weight: bold;
+}
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #004CA0, #0066ff) !important;
+  color: #fff !important;
+  font-weight: bold;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.react-calendar__tile--range {
+  background: #FDB9C8;
+  color: #fff;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+/* ラジオボタン */
+.radio-options {
+  display: flex;
+  justify-content: flex-start;
+  gap: 30px;
+  margin-bottom: 16px;
+}
+.radio-label {
+  position: relative;
+  padding-left: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  font-size: 1rem;
+}
+.radio-label input {
+  position: absolute;
+  opacity: 0;
+}
+.custom-radio {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  transition: 0.3s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.radio-label input:checked ~ .custom-radio {
+  background: radial-gradient(circle, #FDB9C8, #ff5fa2);
+  border-color: #ff5fa2;
+  box-shadow: 0 0 8px rgba(255,95,162,0.6);
 }
