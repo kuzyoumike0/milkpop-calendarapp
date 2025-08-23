@@ -1,40 +1,41 @@
-# ===========================
-# 1. Build Frontend
-# ===========================
-FROM node:18 AS frontend-build
+# ==============================
+# 1. ビルドステージ（フロントエンド）
+# ==============================
+FROM node:18 AS build-frontend
 
-WORKDIR /app/frontend
+WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json* ./ 
-RUN npm install
+# フロントエンドの依存関係をインストール
+COPY frontend/package.json frontend/package-lock.json ./frontend/
+RUN cd frontend && npm install
 
-COPY frontend ./ 
-RUN npm run build
+# フロントエンドのソースをコピーしてビルド
+COPY frontend ./frontend
+RUN cd frontend && npm run build
 
-
-# ===========================
-# 2. Setup Backend
-# ===========================
+# ==============================
+# 2. 本番ステージ（バックエンド + フロント配信）
+# ==============================
 FROM node:18
 
 WORKDIR /app
 
-# backend パッケージをコピーしてインストール
-COPY backend/package.json backend/package-lock.json* ./backend/
-WORKDIR /app/backend
-RUN npm install
+# バックエンド依存関係をインストール
+COPY backend/package.json backend/package-lock.json ./backend/
+RUN cd backend && npm install --only=production
 
-# frontend ビルド成果物を backend 側にコピー
-WORKDIR /app
-COPY --from=frontend-build /app/frontend/build ./frontend/build
+# バックエンドのソースをコピー
 COPY backend ./backend
 
-WORKDIR /app/backend
+# フロントのビルド済みファイルをコピー
+COPY --from=build-frontend /app/frontend/build ./frontend/build
 
 # 環境変数
 ENV NODE_ENV=production
 ENV PORT=5000
 
+# ポート公開
 EXPOSE 5000
 
-CMD ["npm", "start"]
+# バックエンド起動（Reactビルドを配信）
+CMD ["node", "backend/index.js"]
