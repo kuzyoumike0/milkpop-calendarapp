@@ -4,10 +4,9 @@ import { FaTwitter, FaDiscord } from "react-icons/fa";
 
 const Footer = () => {
   return (
-    <footer>
+    <footer className="app-footer">
       <p>© 2025 MilkPOP Calendar - All Rights Reserved</p>
       <div className="sns-links">
-        {/* X (Twitter) */}
         <a
           href="https://x.com/Soni_complaint"
           target="_blank"
@@ -16,8 +15,6 @@ const Footer = () => {
         >
           <FaTwitter />
         </a>
-
-        {/* Discord */}
         <a
           href="https://discord.gg/ACRFgQbA"
           target="_blank"
