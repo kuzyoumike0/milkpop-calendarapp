@@ -2,18 +2,15 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../index.css";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 const RegisterPage = () => {
   const [date, setDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [mode, setMode] = useState("multiple");
 
   const handleDateChange = (newDate) => {
     if (mode === "multiple") {
-      // 複数選択
       const exists = selectedDates.find(
         (d) => d.toDateString() === newDate.toDateString()
       );
@@ -23,7 +20,6 @@ const RegisterPage = () => {
         setSelectedDates([...selectedDates, newDate]);
       }
     } else if (mode === "range") {
-      // 範囲選択
       if (selectedDates.length === 0 || selectedDates.length === 2) {
         setSelectedDates([newDate]);
       } else if (selectedDates.length === 1) {
@@ -48,11 +44,7 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* 共通ヘッダー */}
-      <Header />
-
       <div className="register-layout">
-        {/* カレンダーセクション */}
         <div className="calendar-section">
           {/* タイトル入力 */}
           <input
@@ -128,9 +120,6 @@ const RegisterPage = () => {
           <button className="save-btn">共有リンク発行</button>
         </div>
       </div>
-
-      {/* 共通フッター */}
-      <Footer />
     </div>
   );
 };
