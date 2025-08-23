@@ -92,13 +92,16 @@ const RegisterPage = () => {
         <div className="register-layout">
           {/* カレンダー */}
           <div className="calendar-section">
-            <div className="calendar-header flex justify-between items-center mb-4">
+            {/* タイトル（年・月） */}
+            <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
+              {year}年 {month + 1}月
+            </h2>
+
+            {/* 前の月・次の月 ボタンを横並び */}
+            <div className="flex justify-between items-center mb-4">
               <button onClick={prevMonth} className="month-btn">
                 ◀ 前の月
               </button>
-              <h2 className="text-lg font-bold text-[#004CA0]">
-                {year}年 {month + 1}月
-              </h2>
               <button onClick={nextMonth} className="month-btn">
                 次の月 ▶
               </button>
