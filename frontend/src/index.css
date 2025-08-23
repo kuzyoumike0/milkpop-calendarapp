@@ -473,4 +473,35 @@ body {
   color: #fff !important;
   font-weight: bold !important;
 }
+/* お洒落ナビゲーションボタン */
+.nav-btn {
+  background: linear-gradient(135deg, #FDB9C8, #ff5fa2);
+  color: #fff;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.nav-btn:hover {
+  background: linear-gradient(135deg, #004CA0, #0066ff);
+  transform: scale(1.15);
+}
+
+/* 削除ボタン */
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: #ff5fa2;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+}
+.delete-btn:hover {
+  color: #004CA0;
+  transform: scale(1.2);
+}
 
