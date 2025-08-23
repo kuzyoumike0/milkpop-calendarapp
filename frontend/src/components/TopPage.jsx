@@ -14,7 +14,7 @@ const TopPage = () => {
         <img
           src="/logo.png"
           alt="MilkPOP Calendar"
-          className="w-full max-w-[1040px] h-auto mb-8"
+          className="w-full max-w-[680px] h-auto mb-8"
         />
 
         {/* 説明文 */}
