@@ -1,182 +1,191 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+// frontend/src/components/RegisterPage.jsx
+import React, { useState, useEffect } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import "../index.css";
 import Header from "./Header";
-import Footer from "./Footer";
 
-const SharePage = () => {
-  const { shareId } = useParams(); // = share_token
-  const [linkInfo, setLinkInfo] = useState(null);
-  const [username, setUsername] = useState(localStorage.getItem("username") || "");
-  const [votes, setVotes] = useState({});
-  const [voteResults, setVoteResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // ===== 共有スケジュール取得 =====
-  const fetchLinkInfo = async () => {
-    try {
-      const res = await fetch(`/share/${shareId}`);
-      const json = await res.json();
-      if (!json.error) {
-        setLinkInfo(json);
-        // 投票結果を取得
-        fetchVoteResults(json.id);
-      }
-    } catch (err) {
-      console.error("共有取得エラー:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ===== 投票結果取得 =====
-  const fetchVoteResults = async (scheduleId) => {
-    try {
-      const res = await fetch(`/api/schedule_responses/${scheduleId}`);
-      const json = await res.json();
-      if (json.success) {
-        setVoteResults(json.data); // [{ username, responses }, ...]
-      }
-    } catch (err) {
-      console.error("投票結果取得エラー:", err);
-    }
-  };
-
-  // ===== 投票選択 =====
-  const handleVoteChange = (dateStr, choice) => {
-    setVotes((prev) => ({ ...prev, [dateStr]: choice }));
-  };
-
-  // ===== 投票保存 =====
-  const handleSaveVotes = async () => {
-    try {
-      localStorage.setItem("username", username || "匿名");
-      const res = await fetch("/api/schedule_responses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scheduleId: linkInfo.id,
-          username: username || "匿名",
-          responses: votes,
-        }),
-      });
-      const json = await res.json();
-      if (json.error) {
-        alert("❌ 保存に失敗しました: " + json.error);
-      } else {
-        alert("✅ 投票を保存しました！");
-        fetchVoteResults(linkInfo.id); // 最新結果を再取得
-      }
-    } catch (err) {
-      console.error(err);
-      alert("❌ 保存に失敗しました");
-    }
-  };
-
-  // ===== 集計処理 =====
-  const countVotes = (dateStr) => {
-    const counts = { "〇": 0, "△": 0, "✖": 0 };
-    voteResults.forEach((v) => {
-      const choice = v.responses[dateStr];
-      if (counts[choice] !== undefined) counts[choice]++;
-    });
-    return counts;
-  };
+const RegisterPage = () => {
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(today);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("single");
+  const [title, setTitle] = useState("");
+  const [timeRange, setTimeRange] = useState("終日");
+  const [holidays, setHolidays] = useState([]);
+  const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
-    fetchLinkInfo();
-  }, [shareId]);
+    fetch(`/api/holidays/${today.getFullYear()}`)
+      .then((res) => res.json())
+      .then((data) => setHolidays(data))
+      .catch((err) => console.error("Error fetching holidays:", err));
+  }, []);
+
+  const isHoliday = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    return holidays.some((h) => h.date.startsWith(dateStr));
+  };
+
+  const handleDateChange = (date) => {
+    if (selectionMode === "single") {
+      setSelectedDates([date]);
+    } else if (selectionMode === "multiple") {
+      const exists = selectedDates.some(
+        (d) => d.toDateString() === date.toDateString()
+      );
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
+      } else {
+        setSelectedDates([...selectedDates, date]);
+      }
+    } else if (selectionMode === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0] < date ? selectedDates[0] : date;
+        const end = selectedDates[0] < date ? date : selectedDates[0];
+        const range = [];
+        let cur = new Date(start);
+        while (cur <= end) {
+          range.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+        setSelectedDates(range);
+      } else {
+        setSelectedDates([date]);
+      }
+    }
+  };
+
+  const saveSchedules = async () => {
+    try {
+      const formattedDates = selectedDates.map((d) =>
+        d.toISOString().split("T")[0]
+      );
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, dates: formattedDates, timeRange }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // 共有リンク発行
+        const shareRes = await fetch("/api/share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduleIds: [data.id] }),
+        });
+        const shareData = await shareRes.json();
+        if (shareData.success) {
+          setShareUrl(window.location.origin + shareData.url);
+        }
+      }
+    } catch (err) {
+      console.error("Error saving schedule:", err);
+    }
+  };
 
   return (
-    <>
+    <div>
       <Header />
-      <main className="share-page">
-        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-          {loading ? (
-            <p className="text-center text-gray-600">読み込み中...</p>
-          ) : !linkInfo ? (
-            <p className="text-center text-red-500">❌ この共有リンクは存在しません</p>
-          ) : (
-            <>
-              {/* タイトル */}
-              <h2 className="text-2xl font-bold text-center text-[#004CA0] mb-6">
-                📎 {linkInfo.title}
-              </h2>
+      <div className="flex flex-col md:flex-row p-6">
+        {/* 左：カレンダー */}
+        <div className="md:w-2/3 p-4 bg-white rounded-2xl shadow-lg">
+          <div className="flex space-x-4 mb-4">
+            <label>
+              <input
+                type="radio"
+                name="mode"
+                value="single"
+                checked={selectionMode === "single"}
+                onChange={() => setSelectionMode("single")}
+              /> 単日
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mode"
+                value="multiple"
+                checked={selectionMode === "multiple"}
+                onChange={() => setSelectionMode("multiple")}
+              /> 複数
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mode"
+                value="range"
+                checked={selectionMode === "range"}
+                onChange={() => setSelectionMode("range")}
+              /> 範囲
+            </label>
+          </div>
 
-              {/* 名前入力 */}
-              <div className="mb-6">
-                <label className="block mb-2 text-[#004CA0] font-semibold">
-                  あなたの名前
-                </label>
-                <input
-                  type="text"
-                  className="w-full border-2 border-[#FDB9C8] rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#004CA0]"
-                  placeholder="名前を入力してください（未入力なら匿名）"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
+          <Calendar
+            onClickDay={handleDateChange}
+            value={currentDate}
+            tileClassName={({ date }) =>
+              isHoliday(date)
+                ? "bg-red-200 rounded-xl"
+                : ""
+            }
+          />
+        </div>
 
-              {/* 日程リスト */}
-              <ul className="space-y-6">
-                {linkInfo?.dates?.map((d) => {
-                  const counts = countVotes(d);
+        {/* 右：選択リスト */}
+        <div className="md:w-1/3 p-4 ml-6 bg-white rounded-2xl shadow-lg">
+          <h2 className="text-lg font-bold mb-2">選択中の日程</h2>
+          <ul className="mb-4">
+            {selectedDates.map((d, i) => (
+              <li key={i} className="mb-1">
+                {d.toLocaleDateString("ja-JP")}
+              </li>
+            ))}
+          </ul>
 
-                  return (
-                    <li key={d} className="card">
-                      <div className="flex justify-between items-center mb-4 w-full">
-                        <div>
-                          <p className="schedule-title">{d}</p>
-                          <p className="date-tag">{linkInfo.options?.[d]?.type || "終日"}</p>
-                        </div>
-                        <select
-                          className="vote-select"
-                          value={votes[d] || ""}
-                          onChange={(e) => handleVoteChange(d, e.target.value)}
-                        >
-                          <option value="">選択してください</option>
-                          <option value="〇">〇</option>
-                          <option value="△">△</option>
-                          <option value="✖">✖</option>
-                        </select>
-                      </div>
+          <input
+            type="text"
+            placeholder="タイトルを入力"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border rounded p-2 mb-3"
+          />
 
-                      {/* 投票結果一覧 */}
-                      <div className="vote-results">
-                        {voteResults.length > 0 ? (
-                          <ul className="text-sm space-y-1">
-                            {voteResults.map((v, idx) =>
-                              v.responses[d] ? (
-                                <li key={idx} className="flex justify-between">
-                                  <span>{v.username}</span>
-                                  <span>{v.responses[d]}</span>
-                                </li>
-                              ) : null
-                            )}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-500">まだ投票がありません</p>
-                        )}
-                        <div className="mt-2 text-sm font-semibold">
-                          集計：〇 {counts["〇"]}人 / △ {counts["△"]}人 / ✖ {counts["✖"]}人
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value)}
+            className="w-full border rounded p-2 mb-3"
+          >
+            <option value="終日">終日</option>
+            <option value="午前">午前</option>
+            <option value="午後">午後</option>
+            <option value="夜">夜</option>
+            <option value="時刻指定">時刻指定</option>
+          </select>
 
-              {/* 保存ボタン */}
-              <button onClick={handleSaveVotes} className="vote-save-btn mt-6">
-                💾 投票を保存する
-              </button>
-            </>
+          <button
+            onClick={saveSchedules}
+            className="w-full bg-pink-400 text-white font-bold py-2 px-4 rounded-xl hover:bg-pink-500"
+          >
+            共有リンク発行
+          </button>
+
+          {shareUrl && (
+            <div className="mt-4">
+              <p className="text-sm">共有リンク:</p>
+              <a
+                href={shareUrl}
+                className="text-blue-600 underline break-all"
+              >
+                {shareUrl}
+              </a>
+            </div>
           )}
         </div>
-      </main>
-      <Footer />
-    </>
+      </div>
+    </div>
   );
 };
 
-export default SharePage;
+export default RegisterPage;
