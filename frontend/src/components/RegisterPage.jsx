@@ -10,7 +10,7 @@ const RegisterPage = () => {
   const [schedules, setSchedules] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
-  const [globalTitle, setGlobalTitle] = useState(""); // ✅ ページ全体のタイトル
+  const [globalTitle, setGlobalTitle] = useState("");
 
   useEffect(() => {
     fetch(`/api/holidays/${today.getFullYear()}`)
@@ -119,21 +119,21 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* ✅ タイトルを左上に配置 */}
-      <div className="px-6 py-3">
-        <input
-          type="text"
-          placeholder="タイトルを入力"
-          value={globalTitle}
-          onChange={(e) => setGlobalTitle(e.target.value)}
-          className="input-field w-1/3"
-        />
-      </div>
-
       <div className="register-layout">
-        {/* 左：カレンダー */}
+        {/* 左：タイトル＋カレンダー */}
         <div className="calendar-section">
-          <div className="flex justify-between items-center mb-2">
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="タイトルを入力"
+              value={globalTitle}
+              onChange={(e) => setGlobalTitle(e.target.value)}
+              className="input-field w-full"
+            />
+          </div>
+
+          {/* 月切り替え */}
+          <div className="flex justify-between items-center mb-3">
             <button onClick={prevMonth} className="nav-btn">⇦</button>
             <span className="font-bold text-lg">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
@@ -141,13 +141,15 @@ const RegisterPage = () => {
             <button onClick={nextMonth} className="nav-btn">⇨</button>
           </div>
 
+          {/* カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
               <div key={i} className="calendar-day-header">{day}</div>
             ))}
             {days.map((date, i) => {
               const isToday = date && date.toDateString() === today.toDateString();
-              const isSelected = date && schedules.some((s) => s.date === date.toISOString().split("T")[0]);
+              const isSelected =
+                date && schedules.some((s) => s.date === date.toISOString().split("T")[0]);
               const isHolidayDay = date && isHoliday(date);
 
               return (
