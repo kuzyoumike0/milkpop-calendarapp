@@ -1,206 +1,133 @@
-// frontend/src/pages/RegisterPage.jsx
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
+
+const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
 const RegisterPage = () => {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multiple");
-  const [title, setTitle] = useState("");
 
-  // 📌 月の日数を取得
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // 📌 月初の曜日
-  const getStartDayOfWeek = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  // 📌 前月へ
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
-
-  // 📌 翌月へ
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  // 📌 日付クリック処理
   const handleDateClick = (day) => {
-    const dateObj = new Date(currentYear, currentMonth, day);
+    const clickedDate = new Date(currentYear, currentMonth, day);
+    const dateString = clickedDate.toISOString().split("T")[0];
 
-    if (mode === "multiple") {
-      const exists = selectedDates.find(
-        (d) => d.toDateString() === dateObj.toDateString()
-      );
-      if (exists) {
-        setSelectedDates(selectedDates.filter((d) => d !== exists));
-      } else {
-        setSelectedDates([...selectedDates, dateObj]);
-      }
-    }
-
-    if (mode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length === 2) {
-        setSelectedDates([dateObj]);
-      } else if (selectedDates.length === 1) {
-        const start = selectedDates[0];
-        const end = dateObj;
-        const range = [];
-        let current = new Date(start);
-        while (current <= end) {
-          range.push(new Date(current));
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(range);
-      }
+    if (selectedDates.includes(dateString)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateString));
+    } else {
+      setSelectedDates([...selectedDates, dateString]);
     }
   };
 
-  // 📌 削除
-  const handleDelete = (targetDate) => {
-    setSelectedDates(selectedDates.filter((d) => d !== targetDate));
-  };
+  const renderCalendar = () => {
+    const weeks = [];
+    let days = [];
 
-  // 📌 カレンダーの日付セルを生成
-  const renderCalendarCells = () => {
-    const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-    const startDay = getStartDayOfWeek(currentYear, currentMonth);
-
-    const cells = [];
-
-    // 空白セル
-    for (let i = 0; i < startDay; i++) {
-      cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<td key={`empty-${i}`}></td>);
     }
 
-    // 日付セル
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateObj = new Date(currentYear, currentMonth, day);
-      const isToday =
-        today.getDate() === day &&
-        today.getMonth() === currentMonth &&
-        today.getFullYear() === currentYear;
-      const isSelected = selectedDates.some(
-        (d) => d.toDateString() === dateObj.toDateString()
-      );
+      const dateString = new Date(currentYear, currentMonth, day)
+        .toISOString()
+        .split("T")[0];
+      const isSelected = selectedDates.includes(dateString);
 
-      cells.push(
-        <div
+      days.push(
+        <td
           key={day}
-          className={`calendar-cell 
-            ${isToday ? "today" : ""} 
-            ${isSelected ? "selected" : ""}`}
+          className={`p-2 text-center cursor-pointer rounded-lg ${
+            isSelected ? "bg-pink-300 text-white" : "hover:bg-pink-100"
+          }`}
           onClick={() => handleDateClick(day)}
         >
           {day}
-        </div>
+        </td>
       );
-    }
 
-    return cells;
+      if ((day + firstDay) % 7 === 0 || day === daysInMonth) {
+        weeks.push(<tr key={`week-${day}`}>{days}</tr>);
+        days = [];
+      }
+    }
+    return weeks;
   };
 
   return (
-    <div className="register-page">
-      <div className="register-layout">
-        {/* === 左 === */}
-        <div className="calendar-section">
-          {/* タイトル */}
-          <input
-            type="text"
-            placeholder="タイトルを入力"
-            className="input-field"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <h2 className="text-2xl font-bold text-center mb-6">日程登録ページ</h2>
 
-          {/* ラジオボタン */}
-          <div className="radio-options-left">
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="mode"
-                value="multiple"
-                checked={mode === "multiple"}
-                onChange={() => setMode("multiple")}
-              />
-              <span className="custom-radio"></span> 複数選択
-            </label>
-            <label className="radio-label">
-              <input
-                type="radio"
-                name="mode"
-                value="range"
-                checked={mode === "range"}
-                onChange={() => setMode("range")}
-              />
-              <span className="custom-radio"></span> 範囲選択
-            </label>
-          </div>
-
-          {/* ナビ */}
-          <div className="calendar-nav">
-            <button onClick={handlePrevMonth} className="nav-btn">←</button>
-            <span className="calendar-title">
+        {/* カレンダー */}
+        <div className="overflow-x-auto mb-6">
+          <div className="flex justify-between mb-2">
+            <button
+              onClick={() => {
+                if (currentMonth === 0) {
+                  setCurrentMonth(11);
+                  setCurrentYear(currentYear - 1);
+                } else {
+                  setCurrentMonth(currentMonth - 1);
+                }
+              }}
+              className="px-3 py-1 bg-pink-300 text-white rounded-lg"
+            >
+              ＜
+            </button>
+            <span className="text-lg font-semibold">
               {currentYear}年 {currentMonth + 1}月
             </span>
-            <button onClick={handleNextMonth} className="nav-btn">→</button>
+            <button
+              onClick={() => {
+                if (currentMonth === 11) {
+                  setCurrentMonth(0);
+                  setCurrentYear(currentYear + 1);
+                } else {
+                  setCurrentMonth(currentMonth + 1);
+                }
+              }}
+              className="px-3 py-1 bg-pink-300 text-white rounded-lg"
+            >
+              ＞
+            </button>
           </div>
-
-          {/* カレンダー */}
-          <div className="custom-calendar">
-            <div className="calendar-day-header">日</div>
-            <div className="calendar-day-header">月</div>
-            <div className="calendar-day-header">火</div>
-            <div className="calendar-day-header">水</div>
-            <div className="calendar-day-header">木</div>
-            <div className="calendar-day-header">金</div>
-            <div className="calendar-day-header">土</div>
-            {renderCalendarCells()}
-          </div>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                {daysOfWeek.map((day) => (
+                  <th key={day} className="p-2 border">
+                    {day}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>{renderCalendar()}</tbody>
+          </table>
         </div>
 
-        {/* === 右 === */}
-        <div className="schedule-section">
-          <h3>選択中の日程</h3>
-          {selectedDates.length === 0 ? (
-            <p>日付を選択してください</p>
-          ) : (
-            <ul>
-              {selectedDates.map((d, idx) => (
-                <li key={idx} className="schedule-card">
-                  <span>
-                    {d.getFullYear()}/{d.getMonth() + 1}/{d.getDate()}
-                  </span>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(d)}
-                  >
-                    ✕
-                  </button>
-                </li>
+        {/* 選択した日程 */}
+        <div>
+          <h3 className="text-lg font-bold mb-2">選択した日程:</h3>
+          {selectedDates.length > 0 ? (
+            <ul className="list-disc pl-6">
+              {selectedDates.map((date) => (
+                <li key={date}>{date}</li>
               ))}
             </ul>
+          ) : (
+            <p className="text-gray-500">まだ日程が選択されていません</p>
           )}
-          <button className="save-btn">共有リンク発行</button>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 };
