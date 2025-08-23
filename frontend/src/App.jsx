@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
@@ -13,9 +14,10 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
-        {/* ✅ 全ページ共通のヘッダー */}
+        {/* ✅ 全ページ共通ヘッダー */}
         <Header />
 
+        {/* ページごとのコンテンツ */}
         <Routes>
           <Route path="/" element={<TopPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -25,7 +27,7 @@ function App() {
           <Route path="/links" element={<LinkPage />} />
         </Routes>
 
-        {/* ✅ 全ページ共通のフッター */}
+        {/* ✅ 全ページ共通フッター */}
         <Footer />
       </div>
     </Router>
