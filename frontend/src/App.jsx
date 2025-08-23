@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 import React from "react";
-import { Routes, Route } from "react-router-dom"; // Routerは削除
+import { Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
@@ -13,10 +13,9 @@ import Footer from "./components/Footer";
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ✅ 全ページ共通のヘッダー */}
+      {/* ✅ 全ページ共通ヘッダー */}
       <Header />
 
-      {/* ✅ ページごとのルーティング */}
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -26,7 +25,7 @@ function App() {
         <Route path="/links" element={<LinkPage />} />
       </Routes>
 
-      {/* ✅ 全ページ共通のフッター */}
+      {/* ✅ 全ページ共通フッター */}
       <Footer />
     </div>
   );
