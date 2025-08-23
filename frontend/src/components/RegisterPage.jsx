@@ -1,15 +1,17 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import "../index.css";
+import Header from "./Header";
 import Footer from "./Footer";
 
 const RegisterPage = () => {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date(today.getFullYear(), today.getMonth(), 1)
+  );
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [title, setTitle] = useState("");
-  const [timeRange, setTimeRange] = useState("");
+  const [timeRange, setTimeRange] = useState("終日");
   const [holidays, setHolidays] = useState([]);
   const [shareUrl, setShareUrl] = useState("");
 
@@ -18,7 +20,7 @@ const RegisterPage = () => {
       .then((res) => res.json())
       .then((data) => setHolidays(data))
       .catch((err) => console.error("Error fetching holidays:", err));
-  }, [today]);
+  }, []);
 
   const isHoliday = (date) => {
     const dateStr = date.toISOString().split("T")[0];
@@ -54,26 +56,11 @@ const RegisterPage = () => {
     }
   };
 
-  const generateCalendarDays = () => {
-    const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-
-    const days = [];
-    const startDay = startOfMonth.getDay();
-    for (let i = 0; i < startDay; i++) {
-      days.push(null);
-    }
-
-    for (let d = 1; d <= endOfMonth.getDate(); d++) {
-      days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d));
-    }
-
-    return days;
-  };
-
   const saveSchedules = async () => {
     try {
-      const formattedDates = selectedDates.map((d) => d.toISOString().split("T")[0]);
+      const formattedDates = selectedDates.map((d) =>
+        d.toISOString().split("T")[0]
+      );
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,14 +83,71 @@ const RegisterPage = () => {
     }
   };
 
-  const days = generateCalendarDays();
+  // カレンダー描画用
+  const renderCalendar = () => {
+    const startDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const endDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+    const weeks = [];
+    let days = [];
+
+    // 1日目までの空白
+    for (let i = 0; i < startDay.getDay(); i++) {
+      days.push(<div key={`empty-start-${i}`} className="calendar-cell empty"></div>);
+    }
+
+    // 日付セル
+    for (let d = 1; d <= endDay.getDate(); d++) {
+      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), d);
+      const isSelected = selectedDates.some(
+        (sd) => sd.toDateString() === date.toDateString()
+      );
+      const isToday = date.toDateString() === today.toDateString();
+
+      days.push(
+        <div
+          key={d}
+          className={`calendar-cell ${isSelected ? "selected" : ""} ${
+            isToday ? "today" : ""
+          } ${isHoliday(date) ? "holiday" : ""}`}
+          onClick={() => handleDateClick(date)}
+        >
+          {d}
+        </div>
+      );
+
+      if (days.length === 7) {
+        weeks.push(
+          <div key={`week-${weeks.length}`} className="calendar-row">
+            {days}
+          </div>
+        );
+        days = [];
+      }
+    }
+
+    // 月末の空白
+    if (days.length > 0) {
+      while (days.length < 7) {
+        days.push(
+          <div key={`empty-end-${days.length}`} className="calendar-cell empty"></div>
+        );
+      }
+      weeks.push(
+        <div key="last-week" className="calendar-row">
+          {days}
+        </div>
+      );
+    }
+
+    return weeks;
+  };
 
   return (
-    <div className="register-page">
-      {/* 共通ヘッダーは App.jsx 側で呼ばれているので、ここでは削除 */}
-
+    <div>
+      <Header />
       <div className="register-layout">
-        {/* 📌 左：カレンダー */}
+        {/* 左：カレンダー */}
         <div className="calendar-section">
           {/* タイトル入力 */}
           <input
@@ -111,11 +155,11 @@ const RegisterPage = () => {
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-field mb-3"
+            className="input-field mb-4"
           />
 
-          {/* 選択モード切替（ラジオボタン → 左寄せ） */}
-          <div className="radio-options justify-start mb-5">
+          {/* ラジオボタン */}
+          <div className="radio-options mb-4">
             <label className="radio-label">
               <input
                 type="radio"
@@ -141,9 +185,9 @@ const RegisterPage = () => {
           </div>
 
           {/* 月切替 */}
-          <div className="flex items-center justify-center mb-6 space-x-8">
+          <div className="flex items-center justify-center mb-6">
             <button
-              className="nav-btn"
+              className="nav-btn mr-6"
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
@@ -152,11 +196,11 @@ const RegisterPage = () => {
             >
               &lt;
             </button>
-            <h2 className="text-2xl font-extrabold text-blue-900 tracking-wide">
+            <h2 className="text-2xl font-extrabold text-blue-900 tracking-wide mx-6">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </h2>
             <button
-              className="nav-btn"
+              className="nav-btn ml-6"
               onClick={() =>
                 setCurrentMonth(
                   new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
@@ -167,53 +211,35 @@ const RegisterPage = () => {
             </button>
           </div>
 
-          {/* カレンダー */}
-          <div className="custom-calendar">
-            {["日", "月", "火", "水", "木", "金", "土"].map((d, i) => (
+          {/* 曜日 */}
+          <div className="calendar-row font-bold text-center text-blue-900 mb-2">
+            {["日", "月", "火", "水", "木", "金", "土"].map((day, i) => (
               <div key={i} className="calendar-day-header">
-                {d}
+                {day}
               </div>
             ))}
-            {days.map((date, i) => {
-              if (!date) return <div key={i}></div>;
-              const isToday = date.toDateString() === today.toDateString();
-              const isSelected = selectedDates.some(
-                (d) => d.toDateString() === date.toDateString()
-              );
-              return (
-                <div
-                  key={i}
-                  className={`calendar-cell 
-                    ${isToday ? "today" : ""} 
-                    ${isSelected ? "selected" : ""} 
-                    ${isHoliday(date) ? "holiday" : ""}`}
-                  onClick={() => handleDateClick(date)}
-                >
-                  {date.getDate()}
-                </div>
-              );
-            })}
           </div>
+
+          {/* 日付 */}
+          <div className="custom-calendar">{renderCalendar()}</div>
         </div>
 
-        {/* 📌 右：選択リスト */}
+        {/* 右：選択リスト */}
         <div className="schedule-section">
           <h2 className="text-lg font-bold mb-2">選択中の日程</h2>
           <ul className="mb-4">
             {selectedDates.map((d, i) => (
-              <li key={i} className="flex justify-between items-center mb-2">
-                <span>{d.toLocaleDateString("ja-JP")}</span>
+              <li key={i} className="mb-1">
+                {d.toLocaleDateString("ja-JP")}
                 <button
                   className="delete-btn"
                   onClick={() =>
                     setSelectedDates(
-                      selectedDates.filter(
-                        (date) => date.toDateString() !== d.toDateString()
-                      )
+                      selectedDates.filter((_, idx) => idx !== i)
                     )
                   }
                 >
-                  ✕
+                  ✖
                 </button>
               </li>
             ))}
@@ -241,14 +267,13 @@ const RegisterPage = () => {
           </button>
 
           {shareUrl && (
-            <div className="issued-url mt-4">
+            <div className="issued-url">
               <p className="text-sm">共有リンク:</p>
               <a href={shareUrl}>{shareUrl}</a>
             </div>
           )}
         </div>
       </div>
-
       <Footer />
     </div>
   );
