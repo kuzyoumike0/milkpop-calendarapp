@@ -408,3 +408,49 @@ body {
 .issued-url a:hover {
   color: #ff5fa2;
 }
+/* カレンダー本体 */
+.react-calendar {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  padding: 12px;
+}
+
+/* 曜日ラベル */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+  margin-bottom: 8px;
+}
+
+/* 各日付セル */
+.react-calendar__tile {
+  padding: 14px;
+  border-radius: 14px;
+  transition: all 0.3s;
+  background: #fff;
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.05);
+}
+
+/* hover時 */
+.react-calendar__tile:hover {
+  background: #fde4ec;
+  transform: scale(1.07);
+}
+
+/* 今日 */
+.react-calendar__tile--now {
+  border: 2px solid gold !important;
+  background: #fff9e6 !important;
+  font-weight: bold;
+}
+
+/* 選択中 */
+.react-calendar__tile--active {
+  background: linear-gradient(135deg, #004CA0, #0066ff) !important;
+  color: #fff !important;
+  font-weight: bold;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
