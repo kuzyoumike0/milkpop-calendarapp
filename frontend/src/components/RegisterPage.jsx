@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "../index.css";
 import Header from "./Header";
+import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -27,7 +28,6 @@ const RegisterPage = () => {
     return holidays.some((h) => h.date.startsWith(dateStr));
   };
 
-  // 月の日付を生成する
   const generateCalendarDays = (month) => {
     const year = month.getFullYear();
     const monthIndex = month.getMonth();
@@ -37,16 +37,12 @@ const RegisterPage = () => {
     const days = [];
     const startDayOfWeek = firstDay.getDay();
 
-    // 前月の空白
     for (let i = 0; i < startDayOfWeek; i++) {
       days.push(null);
     }
-
-    // 今月の日付
     for (let d = 1; d <= lastDay.getDate(); d++) {
       days.push(new Date(year, monthIndex, d));
     }
-
     return days;
   };
 
@@ -54,7 +50,6 @@ const RegisterPage = () => {
 
   const handleDateClick = (date) => {
     if (!date) return;
-
     if (selectionMode === "single") {
       setSelectedDates([date]);
     } else if (selectionMode === "multiple") {
@@ -62,9 +57,7 @@ const RegisterPage = () => {
         (d) => d.toDateString() === date.toDateString()
       );
       if (exists) {
-        setSelectedDates(
-          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
-        );
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
       } else {
         setSelectedDates([...selectedDates, date]);
       }
@@ -88,15 +81,11 @@ const RegisterPage = () => {
   };
 
   const prevMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-    );
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   };
 
   const nextMonth = () => {
-    setCurrentMonth(
-      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-    );
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
   const saveSchedules = async () => {
@@ -111,7 +100,6 @@ const RegisterPage = () => {
       });
       const data = await res.json();
       if (data.success) {
-        // 共有リンク発行
         const shareRes = await fetch("/api/share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -130,10 +118,10 @@ const RegisterPage = () => {
   return (
     <div className="register-page">
       <Header />
+
       <div className="register-layout">
-        {/* 左：自作カレンダー */}
+        {/* 左：カレンダー */}
         <div className="calendar-section">
-          {/* 選択モード */}
           <div className="radio-options mb-4">
             <label className="radio-label">
               <input
@@ -167,34 +155,22 @@ const RegisterPage = () => {
             </label>
           </div>
 
-          {/* 月切り替え */}
           <div className="flex justify-between items-center mb-2">
-            <button onClick={prevMonth} className="month-btn">
-              ◀
-            </button>
+            <button onClick={prevMonth} className="month-btn">◀</button>
             <span className="font-bold text-lg">
               {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </span>
-            <button onClick={nextMonth} className="month-btn">
-              ▶
-            </button>
+            <button onClick={nextMonth} className="month-btn">▶</button>
           </div>
 
           {/* 自作カレンダー */}
           <div className="custom-calendar">
             {daysOfWeek.map((day, i) => (
-              <div key={i} className="calendar-day-header">
-                {day}
-              </div>
+              <div key={i} className="calendar-day-header">{day}</div>
             ))}
             {days.map((date, i) => {
-              const isToday =
-                date && date.toDateString() === today.toDateString();
-              const isSelected =
-                date &&
-                selectedDates.some(
-                  (d) => d.toDateString() === date.toDateString()
-                );
+              const isToday = date && date.toDateString() === today.toDateString();
+              const isSelected = date && selectedDates.some((d) => d.toDateString() === date.toDateString());
               const isHolidayDay = date && isHoliday(date);
 
               return (
@@ -213,7 +189,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右：選択リスト */}
+        {/* 右：選択済みリスト */}
         <div className="schedule-section">
           <h2>選択中の日程</h2>
           <ul>
@@ -253,6 +229,8 @@ const RegisterPage = () => {
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
