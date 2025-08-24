@@ -91,7 +91,7 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        <div className="radio-group">
+        <div className="radio-group fancy-radio">
           <label>
             <input
               type="radio"
@@ -99,6 +99,7 @@ const RegisterPage = () => {
               checked={selectionMode === "multiple"}
               onChange={() => setSelectionMode("multiple")}
             />
+            <span className="custom-radio"></span>
             複数選択
           </label>
           <label>
@@ -108,38 +109,44 @@ const RegisterPage = () => {
               checked={selectionMode === "range"}
               onChange={() => setSelectionMode("range")}
             />
+            <span className="custom-radio"></span>
             範囲選択
           </label>
         </div>
       </div>
 
-      {/* カレンダー */}
-      <div className="calendar">
-        <div className="calendar-header">
-          <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
-          <h3 className="month-title">
-            {currentYear}年 {currentMonth + 1}月
-          </h3>
-          <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
+      {/* 横並びレイアウト */}
+      <div className="main-layout">
+        {/* カレンダー 左7割 */}
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
+            </div>
+
+            <div className="week-header">
+              <span>日</span><span>月</span><span>火</span>
+              <span>水</span><span>木</span><span>金</span><span>土</span>
+            </div>
+
+            <div className="calendar-grid">{renderDays()}</div>
+          </div>
         </div>
 
-        <div className="week-header">
-          <span>日</span><span>月</span><span>火</span>
-          <span>水</span><span>木</span><span>金</span><span>土</span>
+        {/* 選択リスト 右3割 */}
+        <div className="options-section">
+          <h3>選択した日程</h3>
+          <ul>
+            {selectedDates.map((d, i) => (
+              <li key={i} className="selected-date">{d}</li>
+            ))}
+          </ul>
+          <button className="share-button fancy">✨ 共有リンクを発行 ✨</button>
         </div>
-
-        <div className="calendar-grid">{renderDays()}</div>
-      </div>
-
-      {/* 選択した日程 */}
-      <div className="options-section">
-        <h3>選択した日程</h3>
-        <ul>
-          {selectedDates.map((d, i) => (
-            <li key={i} className="selected-date">{d}</li>
-          ))}
-        </ul>
-        <button className="share-button fancy">✨ 共有リンクを発行 ✨</button>
       </div>
 
       <img src="/cat.png" alt="cat" className="cat-deco" />
