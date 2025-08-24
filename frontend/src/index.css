@@ -154,37 +154,44 @@ footer {
 .register-page {
   padding: 2rem;
 }
+
 .register-card {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;   /* 中央寄せ */
+  align-items: flex-start;   /* 上揃え */
   gap: 2rem;
   max-width: 1200px;
   margin: 2rem auto;
+  width: 100%;
 }
 
 /* 左側：カレンダー */
-.register-card .calendar-section {
+.calendar-section {
   flex: 7;
 }
-.register-card .calendar {
+
+.calendar {
   background: #fff;
   border-radius: 16px;
-  padding: 1rem;
+  padding: 1.5rem;
   box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
-.register-card .calendar-header {
+
+.calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: .8rem;
 }
-.register-card .month-title {
+
+.month-title {
   font-size: 1.5rem;
   font-weight: bold;
   color: #ff69b4;
   font-family: 'M PLUS Rounded 1c', sans-serif;
 }
-.register-card .week-header {
+
+.week-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
@@ -192,12 +199,14 @@ footer {
   color: #ff69b4;
   margin-bottom: 0.5rem;
 }
-.register-card .calendar-grid {
+
+.calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.4rem;
 }
-.register-card .day-cell {
+
+.day-cell {
   background: #ffe6ef;
   border: 2px solid #FDB9C8;
   border-radius: 10px;
@@ -211,34 +220,39 @@ footer {
   align-items: center;
   justify-content: center;
 }
-.register-card .day-cell:hover {
+
+.day-cell:hover {
   background: #FDB9C8;
   color: #fff;
   transform: scale(1.05);
 }
-.register-card .day-cell.selected {
+
+.day-cell.selected {
   background: #ff69b4;
   color: #fff;
   box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
 }
-.register-card .calendar-sunday { color: #ff4d6d; font-weight: bold; }
-.register-card .calendar-saturday { color: #4d79ff; font-weight: bold; }
-.register-card .calendar-holiday { color: #ff4d6d; font-weight: bold; }
-.register-card .calendar-today {
+
+.calendar-sunday { color: #ff4d6d; font-weight: bold; }
+.calendar-saturday { color: #4d79ff; font-weight: bold; }
+.calendar-holiday { color: #ff4d6d; font-weight: bold; }
+
+.calendar-today {
   background: #ffeb3b;
   color: #000;
   font-weight: bold;
   border: 2px solid #FDB9C8;
 }
-.register-card .holiday-name {
+
+.holiday-name {
   font-size: 0.7rem;
   color: #ff4d6d;
   margin-top: 0.2rem;
   text-align: center;
 }
 
-/* 右側：オプション */
-.register-card .options-section {
+/* 右側：選択日程リスト */
+.options-section {
   flex: 3;
   background: linear-gradient(135deg, #1a1a1a, #000);
   border: 2px solid #FDB9C8;
@@ -246,29 +260,63 @@ footer {
   padding: 1.5rem;
   color: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  max-height: 600px;         /* 高さを固定 */
+  overflow-y: auto;          /* リストが多いときスクロール */
 }
 
-/* ====== 入力フォーム ====== */
-.input-title.short {
-  max-width: 280px;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  color: #333;
-  font-size: 1rem;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  box-shadow: 0 4px 8px rgba(253, 185, 200, 0.4);
+.options-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.selected-date {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #FDB9C8;
+  padding: 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selected-date span {
+  flex: 1;
+}
+
+.remove-date-btn {
+  background: #ff4d6d;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
   transition: 0.3s;
-  display: block;
-  margin: 0 auto 1rem auto;
 }
-.input-title.short:focus {
-  border-color: #ff69b4;
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
-  outline: none;
+
+.remove-date-btn:hover {
+  background: #ff1a40;
 }
+
+/* ====== スマホ対応 ====== */
+@media (max-width: 768px) {
+  .register-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .calendar-section,
+  .options-section {
+    width: 100%;
+  }
+
+  .options-section {
+    max-height: none;
+  }
+}
+
 
 /* ====== ラジオグループ ====== */
 .radio-group {
