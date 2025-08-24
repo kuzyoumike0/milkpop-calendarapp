@@ -75,43 +75,65 @@ h1, h2, h3 {
   flex-direction: column;
   cursor: pointer;
   gap: 5px;
+  z-index: 1001;
 }
 .hamburger span {
   width: 25px;
   height: 3px;
   background: #fff;
   border-radius: 5px;
-  transition: 0.3s;
+  transition: 0.4s;
 }
 
+/* 開閉時のアニメーション（ハンバーガー → ×） */
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* モバイルメニュー */
 .nav-links-mobile {
-  display: none;
+  display: flex;
   flex-direction: column;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.95);
   position: absolute;
   top: 100%;
   right: 0;
-  width: 200px;
-  border-radius: 8px;
+  width: 220px;
+  border-radius: 0 0 12px 12px;
   padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  animation: fadeIn 0.3s ease-in-out;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+  transform: translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s ease;
 }
+
+/* 開いた時の状態 */
+.nav-links-mobile.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .nav-links-mobile a {
   color: #fff;
-  padding: 0.6rem;
-  margin: 0.3rem 0;
+  padding: 0.8rem;
+  margin: 0.4rem 0;
   border-radius: 6px;
   transition: 0.3s;
   text-align: right;
+  font-weight: bold;
 }
 .nav-links-mobile a:hover {
   background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #000;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  transform: translateX(-5px);
 }
 
 /* ====== Discordログインボタン ====== */
