@@ -9,15 +9,22 @@ const getDaysInMonth = (year, month) => {
 };
 
 // ==== カレンダーセル ====
-const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName }) => {
+const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSaturday }) => {
+  let textColor = "";
+  if (isHoliday) {
+    textColor = "text-red-500 font-bold"; // 祝日優先
+  } else if (isSaturday) {
+    textColor = "text-blue-500 font-bold";
+  }
+
   return (
     <div
       onClick={() => onClick(date)}
       title={holidayName || ""}
       className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg cursor-pointer transition
         ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
-        ${isHoliday ? "text-red-500 font-bold" : ""}
-        ${!isSelected && !isHoliday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
+        ${textColor}
+        ${!isSelected && !isHoliday && !isSaturday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
     >
       <span>{date.getDate()}</span>
       {holidayName && (
@@ -133,6 +140,7 @@ export default function RegisterPage() {
           <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* タイトル */}
             <input
               type="text"
               placeholder="タイトルを入力"
@@ -217,6 +225,7 @@ export default function RegisterPage() {
                       onClick={handleDateClick}
                       isHoliday={!!getHolidayInfo(date)}
                       holidayName={getHolidayInfo(date)}
+                      isSaturday={date.getDay() === 6} // 土曜日を判定
                     />
                   ) : (
                     <div key={i} className="w-14 h-14"></div>
