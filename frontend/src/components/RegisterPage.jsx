@@ -1,25 +1,80 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
+// ==== ヘルパー ====
+// 月ごとの日数を取得（うるう年対応）
+const getDaysInMonth = (year, month) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+// ==== カレンダーセル ==== 
+const CalendarCell = ({ date, isSelected, onClick }) => {
+  return (
+    <div
+      onClick={() => onClick(date)}
+      className={`w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer transition 
+        ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : "hover:bg-[#004CA0] hover:text-white"}`}
+    >
+      {date.getDate()}
+    </div>
+  );
+};
+
 export default function RegisterPage() {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
   const [title, setTitle] = useState("");
-  const [selectionType, setSelectionType] = useState("multiple"); // デフォルト: 複数選択
+  const [selectionType, setSelectionType] = useState("multiple"); // 複数 or 範囲
   const [selectedDates, setSelectedDates] = useState([]);
-  const [range, setRange] = useState({ start: "", end: "" });
+  const [range, setRange] = useState({ start: null, end: null });
 
-  const handleRadioChange = (e) => {
-    setSelectionType(e.target.value);
-    setSelectedDates([]);
-    setRange({ start: "", end: "" });
-  };
-
+  // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
     if (selectionType === "multiple") {
       setSelectedDates((prev) =>
-        prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
+        prev.some((d) => d.getTime() === date.getTime())
+          ? prev.filter((d) => d.getTime() !== date.getTime())
+          : [...prev, date]
       );
+    } else if (selectionType === "range") {
+      if (!range.start || (range.start && range.end)) {
+        setRange({ start: date, end: null });
+      } else if (range.start && !range.end) {
+        if (date < range.start) {
+          setRange({ start: date, end: range.start });
+        } else {
+          setRange({ ...range, end: date });
+        }
+      }
     }
   };
+
+  // ==== 選択状態確認 ====
+  const isDateSelected = (date) => {
+    if (selectionType === "multiple") {
+      return selectedDates.some((d) => d.getTime() === date.getTime());
+    } else if (selectionType === "range") {
+      if (range.start && range.end) {
+        return date >= range.start && date <= range.end;
+      }
+      return range.start && date.getTime() === range.start.getTime();
+    }
+    return false;
+  };
+
+  // ==== カレンダー生成 ====
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    calendarDays.push(null);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    calendarDays.push(new Date(currentYear, currentMonth, d));
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,7 +89,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
-      {/* バナー */}
+      {/* ==== バナー ==== */}
       <header className="w-full bg-black bg-opacity-70 py-4 px-6 flex justify-between items-center shadow-lg">
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
         <nav className="space-x-4">
@@ -43,11 +98,11 @@ export default function RegisterPage() {
         </nav>
       </header>
 
-      {/* カード */}
-      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-2xl p-6">
+      {/* ==== メインカード ==== */}
+      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-3xl p-6">
         <div className="bg-black bg-opacity-50 rounded-2xl shadow-xl p-6 w-full">
           <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* タイトル入力 */}
             <input
@@ -65,7 +120,7 @@ export default function RegisterPage() {
                   type="radio"
                   value="multiple"
                   checked={selectionType === "multiple"}
-                  onChange={handleRadioChange}
+                  onChange={(e) => setSelectionType(e.target.value)}
                 />
                 複数選択
               </label>
@@ -74,46 +129,66 @@ export default function RegisterPage() {
                   type="radio"
                   value="range"
                   checked={selectionType === "range"}
-                  onChange={handleRadioChange}
+                  onChange={(e) => setSelectionType(e.target.value)}
                 />
                 範囲選択
               </label>
             </div>
 
-            {/* 選択UI */}
-            {selectionType === "multiple" ? (
-              <div className="bg-white text-black rounded-xl p-3">
-                <p className="mb-2 font-semibold">選択した日付（例: 2025-08-25）:</p>
+            {/* ==== カレンダー ==== */}
+            <div className="bg-white text-black rounded-xl p-4 shadow-md">
+              {/* 月切替 */}
+              <div className="flex justify-between items-center mb-2">
                 <button
                   type="button"
-                  onClick={() => handleDateClick("2025-08-25")}
-                  className={`px-3 py-1 rounded-lg ${
-                    selectedDates.includes("2025-08-25")
-                      ? "bg-[#FDB9C8] text-white"
-                      : "bg-gray-200"
-                  }`}
+                  onClick={() =>
+                    setCurrentMonth((prev) =>
+                      prev === 0 ? 11 : prev - 1
+                    ) || (prev === 0 && setCurrentYear(currentYear - 1))
+                  }
+                  className="px-2 py-1 bg-gray-200 rounded"
                 >
-                  2025-08-25
+                  ←
+                </button>
+                <h3 className="font-bold">
+                  {currentYear}年 {currentMonth + 1}月
+                </h3>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentMonth((prev) =>
+                      prev === 11 ? 0 : prev + 1
+                    ) || (prev === 11 && setCurrentYear(currentYear + 1))
+                  }
+                  className="px-2 py-1 bg-gray-200 rounded"
+                >
+                  →
                 </button>
               </div>
-            ) : (
-              <div className="bg-white text-black rounded-xl p-3 space-y-2">
-                <p className="font-semibold">範囲を選択してください:</p>
-                <input
-                  type="date"
-                  value={range.start}
-                  onChange={(e) => setRange({ ...range, start: e.target.value })}
-                  className="px-2 py-1 rounded-lg border"
-                />
-                <span className="mx-2">〜</span>
-                <input
-                  type="date"
-                  value={range.end}
-                  onChange={(e) => setRange({ ...range, end: e.target.value })}
-                  className="px-2 py-1 rounded-lg border"
-                />
+
+              {/* 曜日 */}
+              <div className="grid grid-cols-7 gap-1 font-semibold text-center">
+                {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+                  <div key={d}>{d}</div>
+                ))}
               </div>
-            )}
+
+              {/* 日付セル */}
+              <div className="grid grid-cols-7 gap-1 mt-2">
+                {calendarDays.map((date, i) =>
+                  date ? (
+                    <CalendarCell
+                      key={i}
+                      date={date}
+                      isSelected={isDateSelected(date)}
+                      onClick={handleDateClick}
+                    />
+                  ) : (
+                    <div key={i} className="w-10 h-10"></div>
+                  )
+                )}
+              </div>
+            </div>
 
             {/* 登録ボタン */}
             <button
@@ -126,7 +201,7 @@ export default function RegisterPage() {
         </div>
       </main>
 
-      {/* フッター */}
+      {/* ==== フッター ==== */}
       <footer className="w-full py-4 bg-black bg-opacity-70 text-center text-sm">
         © 2025 MilkPOP Calendar
       </footer>
