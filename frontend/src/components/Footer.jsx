@@ -7,9 +7,9 @@ const Footer = () => {
       <p>© 2025 MilkPOP Calendar</p>
 
       <div className="footer-links">
-        {/* Discordサーバーログイン */}
+        {/* Discordサーバー招待URL */}
         <a
-          href="https://discord.gg/xxxxxx"  // ← あなたのDiscord招待URLに変更
+          href="https://discord.gg/xxxxxx" // ← あなたのDiscordサーバー招待URLに変更
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
@@ -20,7 +20,7 @@ const Footer = () => {
 
         {/* Twitterアカウント */}
         <a
-          href="https://twitter.com/your_account" // ← あなたのTwitterリンクに変更
+          href="https://twitter.com/your_account" // ← あなたのTwitterアカウントURLに変更
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
