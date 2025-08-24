@@ -1,31 +1,43 @@
--- ===== schedules: 共有スケジュール =====
+-- =========================
+-- schedules（共有スケジュール）
+-- =========================
 CREATE TABLE IF NOT EXISTS schedules (
     id UUID PRIMARY KEY,
     title TEXT NOT NULL,
-    dates JSONB NOT NULL,          -- 選択した日付の配列
-    options JSONB,                 -- 各日付の時間帯や区分の設定
-    share_token TEXT UNIQUE,       -- 共有リンク発行用トークン
+    dates JSONB NOT NULL,
+    options JSONB,
+    share_token VARCHAR(64) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ===== schedule_responses: 出欠回答 =====
+-- =========================
+-- schedule_responses（出欠回答）
+-- =========================
 CREATE TABLE IF NOT EXISTS schedule_responses (
+    id SERIAL PRIMARY KEY,
     schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
-    user_id TEXT NOT NULL,         -- Discord ID または匿名ユーザーID
-    username TEXT NOT NULL,        -- 表示名
-    responses JSONB NOT NULL,      -- { "2025-08-01": "〇", "2025-08-02": "✖" } 形式
+    user_id VARCHAR(64) NOT NULL,
+    username TEXT,
+    responses JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (schedule_id, user_id)
+    UNIQUE(schedule_id, user_id)
 );
 
--- ===== personal_schedules: 個人用スケジュール =====
+-- =========================
+-- personal_schedules（個人スケジュール）
+-- =========================
 CREATE TABLE IF NOT EXISTS personal_schedules (
     id UUID PRIMARY KEY,
-    share_id UUID NOT NULL,        -- 紐づく共有スケジュールID
+    share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     memo TEXT,
-    dates JSONB NOT NULL,          -- 個人の選択した日程
-    options JSONB,                 -- 個人の時間帯設定
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_share FOREIGN KEY (share_id) REFERENCES schedules(id) ON DELETE CASCADE
+    dates JSONB NOT NULL,
+    options JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- =========================
+-- 出欠削除用インデックス（高速化）
+-- =========================
+CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
+ON schedule_responses(schedule_id, user_id);
