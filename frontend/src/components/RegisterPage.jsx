@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "../index.css";
+import "../index.css"; // 共通スタイルに統一
 
 // ==== ヘルパー ====
 const getDaysInMonth = (year, month) => {
@@ -141,8 +141,8 @@ export default function RegisterPage() {
       </header>
 
       {/* ===== メインカード ===== */}
-      <main className="register-card">
-        <h2>日程登録</h2>
+      <main className="card">
+        <h2 className="page-title">日程登録</h2>
 
         <form onSubmit={handleSubmit}>
           {/* タイトル入力 */}
@@ -151,7 +151,7 @@ export default function RegisterPage() {
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-title short"
+            className="input-title"
           />
 
           {/* 複数/範囲選択 */}
@@ -246,7 +246,7 @@ export default function RegisterPage() {
           </div>
 
           {/* ==== 時間帯 ==== */}
-          <div className="time-card">
+          <div className="card" style={{ marginTop: "1rem" }}>
             <p className="font-semibold">時間帯を選択してください:</p>
             <div>
               <label>
@@ -311,7 +311,7 @@ export default function RegisterPage() {
             )}
           </div>
 
-          <button type="submit" className="share-button">
+          <button type="submit" className="share-button" style={{ marginTop: "1rem" }}>
             共有リンクを発行
           </button>
         </form>
