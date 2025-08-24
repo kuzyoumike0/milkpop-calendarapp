@@ -668,3 +668,23 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+/* ====== 時間指定ドロップダウン専用 ====== */
+.custom-dropdown {
+  background-color: #fff !important; /* 白背景 */
+  color: #000 !important;           /* 黒文字 */
+  font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  border: 2px solid #FDB9C8;
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  appearance: auto !important;      /* ← これが重要！ */
+  -webkit-appearance: menulist !important; /* Chrome/Safari */
+  -moz-appearance: menulist !important;    /* Firefox */
+}
+
+/* option の文字色も強制 */
+.custom-dropdown option {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
