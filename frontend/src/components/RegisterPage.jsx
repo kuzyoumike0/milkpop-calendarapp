@@ -197,35 +197,43 @@ const RegisterPage = () => {
         />
 
         {/* 複数選択 / 範囲選択ラジオ */}
-        <div className="radio-group">
-          <label
-            className={`radio-label ${
-              selectionMode === "multiple" ? "active" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectionMode === "multiple"}
-              onChange={() => setSelectionMode("multiple")}
-            />
-            複数選択
-          </label>
-          <label
-            className={`radio-label ${
-              selectionMode === "range" ? "active" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              value="range"
-              checked={selectionMode === "range"}
-              onChange={() => setSelectionMode("range")}
-            />
-            範囲選択
-          </label>
-        </div>
-      </div>
+    <div className="radio-group">
+  <label
+    className={`radio-label ${
+      selectionMode === "multiple" ? "active" : ""
+    }`}
+  >
+    <input
+      type="radio"
+      value="multiple"
+      checked={selectionMode === "multiple"}
+      onChange={() => setSelectionMode("multiple")}
+    />
+    複数選択
+  </label>
+  <label
+    className={`radio-label ${
+      selectionMode === "range" ? "active" : ""
+    }`}
+  >
+    <input
+      type="radio"
+      value="range"
+      checked={selectionMode === "range"}
+      onChange={() => setSelectionMode("range")}
+    />
+    範囲選択
+  </label>
+</div>
+
+{/* ✅ モードを文字でも表示 */}
+<div className="mt-2 text-sm text-gray-200">
+  現在のモード:{" "}
+  <span className="font-bold text-yellow-300">
+    {selectionMode === "multiple" ? "複数選択" : "範囲選択"}
+  </span>
+</div>
+
 
       {/* カレンダー + 選択リスト横並び */}
       <div className="main-layout">
