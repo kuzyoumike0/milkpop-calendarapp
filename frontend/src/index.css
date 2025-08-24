@@ -411,3 +411,84 @@ button:hover, .share-button:hover {
   color: white !important;
   border-radius: 0.75rem;
 }
+/* ====== カレンダー全体（自作UI用） ====== */
+.calendar {
+  background: #1a1a1a;
+  border: 2px solid #50C878;
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .5rem;
+}
+
+/* 週ヘッダー（曜日行） */
+.week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  color: #50C878;
+  margin-bottom: 0.5rem;
+}
+
+/* 日付グリッド */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+  text-align: center;
+}
+
+/* 日付セル */
+.day-cell {
+  padding: 0.6rem 0;
+  border-radius: 8px;
+  background: #1a1a1a;
+  border: 1px solid #50C878;
+  cursor: pointer;
+  transition: 0.3s;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.day-cell:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+  transform: scale(1.05);
+}
+.day-cell.selected {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(80, 200, 120, 0.6);
+  transform: scale(1.05);
+}
+
+/* 曜日別 */
+.calendar-sunday { color: red; font-weight: bold; }
+.calendar-saturday { color: blue; font-weight: bold; }
+.calendar-holiday { color: red; font-weight: bold; }
+
+/* 今日 */
+.calendar-today {
+  background: #ffeb3b;
+  color: #000;
+  font-weight: bold;
+}
+
+/* 祝日名 */
+.holiday-name {
+  font-size: 0.6rem;
+  color: red;
+  text-align: center;
+  margin-top: 0.2rem;
+}
+
