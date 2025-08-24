@@ -1,4 +1,3 @@
-
 /* ====== 共通設定 ====== */
 body {
   background: linear-gradient(135deg, #FDB9C8, #004CA0);
@@ -268,27 +267,41 @@ footer {
   box-shadow: 0 0 12px rgba(80,200,120,0.8);
 }
 
-/* ===== ラジオボタン（見やすいボタン風） ===== */
-<div className="radio-group fancy-radio">
-  <label className={selectionMode === "multiple" ? "active" : ""}>
-    <input
-      type="radio"
-      value="multiple"
-      checked={selectionMode === "multiple"}
-      onChange={() => setSelectionMode("multiple")}
-    />
-    複数選択
-  </label>
-  <label className={selectionMode === "range" ? "active" : ""}>
-    <input
-      type="radio"
-      value="range"
-      checked={selectionMode === "range"}
-      onChange={() => setSelectionMode("range")}
-    />
-    範囲選択
-  </label>
-</div>
+/* ===== ラジオボタンお洒落版 ===== */
+.radio-group {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.radio-group input[type="radio"] {
+  display: none; /* デフォルトは非表示 */
+}
+
+.radio-group label {
+  background: #222;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.4);
+}
+
+.radio-group label:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+
+/* ✅ 選択されている時 */
+.radio-group input[type="radio"]:checked + label {
+  background: #FDB9C8;
+  color: #000;
+  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+}
 
 /* ===== カレンダー ===== */
 .calendar {
@@ -464,39 +477,3 @@ footer {
   padding: 0.2rem 0.6rem;
   border-radius: 6px;
 }
-/* ===== ラジオボタンお洒落版 ===== */
-.radio-group {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.radio-group input[type="radio"] {
-  display: none; /* デフォルトは非表示 */
-}
-
-.radio-group label {
-  background: #222;
-  color: #fff;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 6px rgba(253, 185, 200, 0.4);
-}
-
-.radio-group label:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-
-/* ✅ 選択されている時 */
-.radio-group input[type="radio"]:checked + label {
-  background: #FDB9C8;
-  color: #000;
-  box-shadow: 0 0 12px rgba(253,185,200,0.9);
-}
-
