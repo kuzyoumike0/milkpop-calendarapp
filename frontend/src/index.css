@@ -457,6 +457,24 @@ footer {
   transform: scale(1.05);
 }
 
+/* ====== ページタイトル（RegisterPageなど共通） ====== */
+.page-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #FFD700; /* ゴールド */
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif; /* ✅ フッターと統一 */
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+/* ====== ページ本文テキスト ====== */
+.page-text {
+  font-size: 1.1rem;
+  color: #eee;
+  line-height: 1.6;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif; /* ✅ フッターと統一 */
+}
 
 
 
