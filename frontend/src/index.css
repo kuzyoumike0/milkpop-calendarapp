@@ -3,7 +3,7 @@
 
 /* ====== 共通設定 ====== */
 body {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0); /* ポップな背景 */
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
   color: #fff;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   margin: 0;
@@ -231,96 +231,6 @@ button:hover, .share-button:hover {
   color: #000;
 }
 
-/* ====== カレンダー（自作UI用） ====== */
-.calendar-container { flex: 7; }
-.selected-container { flex: 3; }
-
-.nav-button {
-  padding: 0.3rem 0.8rem;
-  background: #50C878;
-  color: #000;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.nav-button:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-.month-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #50C878;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-.week-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-weight: bold;
-  color: #50C878;
-  margin-bottom: 0.5rem;
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
-  text-align: center;
-}
-.day-cell {
-  padding: 0.6rem 0;
-  border-radius: 8px;
-  background: #1a1a1a;
-  border: 1px solid #50C878;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.day-cell:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  color: #000;
-  transform: scale(1.05);
-}
-.day-cell.selected {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  color: #000;
-  font-weight: bold;
-  box-shadow: 0 0 10px rgba(80, 200, 120, 0.6);
-  transform: scale(1.05);
-}
-
-/* ====== 選択日リスト ====== */
-.selected-container h2 {
-  color: #50C878;
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-}
-.selected-date {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
-}
-.remove-date-btn {
-  background: transparent;
-  border: none;
-  color: #000;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.remove-date-btn:hover {
-  color: red;
-  transform: scale(1.2);
-}
-
 /* ====== 入力フォーム ====== */
 .input-title {
   width: 100%;
@@ -380,118 +290,7 @@ button:hover, .share-button:hover {
   transform: scale(1.02);
 }
 
-/* ====== レスポンシブ ====== */
-@media (max-width: 768px) {
-  .nav-links { display: none; }
-  .hamburger { display: flex; }
-  .page-container { flex-direction: column; padding: 1rem; }
-  .calendar-container, .selected-container { flex: none; width: 100%; }
-}
-
-/* ====== react-calendar 用 ====== */
-.react-calendar {
-  background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  padding: 1rem;
-  font-family: 'Zen Maru Gothic', sans-serif;
-}
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
-  color: #004CA0;
-}
-.react-calendar__tile--now {
-  background: #FDB9C8 !important;
-  color: white !important;
-  border-radius: 0.75rem;
-}
-.react-calendar__tile--active {
-  background: #004CA0 !important;
-  color: white !important;
-  border-radius: 0.75rem;
-}
-/* ====== カレンダー全体（自作UI用） ====== */
-.calendar {
-  background: #1a1a1a;
-  border: 2px solid #50C878;
-  border-radius: 1rem;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: .5rem;
-}
-
-/* 週ヘッダー（曜日行） */
-.week-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-weight: bold;
-  color: #50C878;
-  margin-bottom: 0.5rem;
-}
-
-/* 日付グリッド */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.3rem;
-  text-align: center;
-}
-
-/* 日付セル */
-.day-cell {
-  padding: 0.6rem 0;
-  border-radius: 8px;
-  background: #1a1a1a;
-  border: 1px solid #50C878;
-  cursor: pointer;
-  transition: 0.3s;
-  min-height: 60px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.day-cell:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  color: #000;
-  transform: scale(1.05);
-}
-.day-cell.selected {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  color: #000;
-  font-weight: bold;
-  box-shadow: 0 0 10px rgba(80, 200, 120, 0.6);
-  transform: scale(1.05);
-}
-
-/* 曜日別 */
-.calendar-sunday { color: red; font-weight: bold; }
-.calendar-saturday { color: blue; font-weight: bold; }
-.calendar-holiday { color: red; font-weight: bold; }
-
-/* 今日 */
-.calendar-today {
-  background: #ffeb3b;
-  color: #000;
-  font-weight: bold;
-}
-
-/* 祝日名 */
-.holiday-name {
-  font-size: 0.6rem;
-  color: red;
-  text-align: center;
-  margin-top: 0.2rem;
-}
-/* ====== ポップかわいい自作カレンダー ====== */
+/* ====== カレンダー（ポップかわいい自作UI） ====== */
 .calendar {
   background: #fff;
   border-radius: 16px;
@@ -501,21 +300,20 @@ button:hover, .share-button:hover {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* カレンダーヘッダー */
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: .8rem;
 }
+
 .month-title {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #ff69b4; /* かわいいピンク */
+  color: #ff69b4;
   font-family: 'M PLUS Rounded 1c', sans-serif;
 }
 
-/* 曜日ヘッダー */
 .week-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -525,14 +323,12 @@ button:hover, .share-button:hover {
   margin-bottom: 0.5rem;
 }
 
-/* カレンダーのマス */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.4rem;
 }
 
-/* 日付セル */
 .day-cell {
   background: #ffe6ef;
   border-radius: 12px;
@@ -557,12 +353,10 @@ button:hover, .share-button:hover {
   box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
 }
 
-/* 日曜・土曜・祝日 */
 .calendar-sunday { color: #ff4d6d; font-weight: bold; }
 .calendar-saturday { color: #4d79ff; font-weight: bold; }
 .calendar-holiday { color: #ff4d6d; font-weight: bold; }
 
-/* 今日 */
 .calendar-today {
   background: #ffeb3b;
   color: #000;
@@ -570,7 +364,6 @@ button:hover, .share-button:hover {
   border: 2px solid #FDB9C8;
 }
 
-/* 祝日名 */
 .holiday-name {
   font-size: 0.7rem;
   color: #ff4d6d;
@@ -578,3 +371,10 @@ button:hover, .share-button:hover {
   text-align: center;
 }
 
+/* ====== レスポンシブ ====== */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .page-container { flex-direction: column; padding: 1rem; }
+  .calendar { width: 100%; }
+}
