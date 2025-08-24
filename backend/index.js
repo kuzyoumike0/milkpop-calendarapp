@@ -1,60 +1,55 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const { Pool } = require("pg");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// PostgreSQL接続
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Railwayに設定される環境変数
+  ssl: { rejectUnauthorized: false }
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
-let schedules = {}; // メモリ保存（本番ではPostgreSQL推奨）
+// ===== API =====
 
-// ================== API ==================
-
-// 新規作成
-app.post("/api/schedule", (req, res) => {
-  const { id, title, dates, range, timeType, timeRange } = req.body;
-  schedules[id] = { id, title, dates, range, timeType, timeRange, responses: [] };
-  res.json({ ok: true, id });
-});
-
-// 取得
-app.get("/api/schedule/:id", (req, res) => {
-  res.json(schedules[req.params.id]);
-});
-
-// 回答保存
-app.post("/api/schedule/:id/response", (req, res) => {
-  const { user, responses } = req.body;
-  const schedule = schedules[req.params.id];
-  if (!schedule) return res.status(404).json({ error: "not found" });
-
-  const existing = schedule.responses.find((r) => r.user === user);
-  if (existing) {
-    existing.responses = responses;
-  } else {
-    schedule.responses.push({ user, responses });
+// 日程を取得
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM schedules ORDER BY id DESC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB読み込みエラー" });
   }
-  res.json({ ok: true });
 });
 
-// ================== フロントエンド配信 ==================
+// 日程を保存
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates, memo, timerange } = req.body;
+    const result = await pool.query(
+      "INSERT INTO schedules (title, dates, memo, timerange) VALUES ($1, $2, $3, $4) RETURNING *",
+      [title, JSON.stringify(dates), memo || "", timerange || ""]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB保存エラー" });
+  }
+});
 
-// React ビルド済みファイルのパス
-const frontendPath = path.join(__dirname, "../frontend/build");
-
-// 静的ファイルを配信
-app.use(express.static(frontendPath));
-
-// React Router 対応（すべて index.html に返す）
+// Reactビルドを配信
+const path = require("path");
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
-// ================== サーバー起動 ==================
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
