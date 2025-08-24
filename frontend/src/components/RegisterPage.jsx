@@ -187,13 +187,16 @@ export default function RegisterPage() {
           <h2 className="page-title">日程登録</h2>
 
           {/* タイトル入力 */}
-          <input
-            type="text"
-            placeholder="タイトルを入力"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="input-title short"
-          />
+<div className="title-input-wrapper">
+  <input
+    type="text"
+    placeholder="タイトルを入力"
+    value={title}
+    onChange={(e) => setTitle(e.target.value)}
+    className="input-title short"
+  />
+</div>
+
 
           {/* 複数/範囲選択 */}
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
