@@ -21,7 +21,6 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "single") {
       setSelectedDates([date]);
@@ -35,9 +34,7 @@ const RegisterPage = () => {
       } else if (selectedDates.length === 1) {
         let start = new Date(selectedDates[0]);
         let end = new Date(date);
-        if (end < start) {
-          [start, end] = [end, start];
-        }
+        if (end < start) [start, end] = [end, start];
         const range = [];
         const cur = new Date(start);
         while (cur <= end) {
@@ -51,7 +48,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 月移動
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -69,7 +65,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 共有リンク発行
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -79,11 +74,7 @@ const RegisterPage = () => {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          dates: selectedDates,
-          options: {},
-        }),
+        body: JSON.stringify({ title, dates: selectedDates, options: {} }),
       });
       const data = await res.json();
       if (data.share_token) {
@@ -99,10 +90,10 @@ const RegisterPage = () => {
 
   return (
     <div className="page-container p-6">
-      <h2 className="text-2xl font-bold mb-6">日程登録ページ</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">日程登録ページ</h2>
 
       {/* 入力フォーム */}
-      <div className="bg-white/90 shadow-lg rounded-2xl p-4 mb-6 w-full max-w-md">
+      <div className="bg-white/90 shadow-lg rounded-2xl p-4 mb-6 max-w-md mx-auto">
         <input
           type="text"
           placeholder="タイトルを入力"
@@ -112,7 +103,7 @@ const RegisterPage = () => {
         />
 
         {/* ラジオボタン */}
-        <div className="flex space-x-4 mb-2">
+        <div className="flex justify-center space-x-4 mb-2">
           <label>
             <input
               type="radio"
@@ -143,10 +134,10 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* カレンダー + 選択リスト レイアウト */}
-      <div className="grid grid-cols-10 gap-4">
+      {/* 横並びレイアウト */}
+      <div className="flex gap-6">
         {/* 左：カレンダー */}
-        <div className="col-span-7 bg-white/90 shadow-lg rounded-2xl p-4">
+        <div className="flex-grow bg-white/90 shadow-lg rounded-2xl p-4">
           <div className="flex justify-between items-center mb-2">
             <button onClick={prevMonth} className="px-2">←</button>
             <span className="font-bold">{currentYear}年 {currentMonth + 1}月</span>
@@ -183,8 +174,8 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右：選択済みリスト */}
-        <div className="col-span-3 bg-white/90 shadow-lg rounded-2xl p-4">
+        {/* 右：選択リスト */}
+        <div className="w-1/3 bg-white/90 shadow-lg rounded-2xl p-4">
           <h3 className="font-bold mb-2">選択した日程</h3>
           <ul className="list-disc pl-5">
             {selectedDates.map((d) => (
@@ -195,7 +186,7 @@ const RegisterPage = () => {
       </div>
 
       {/* ボタン */}
-      <div className="mt-6">
+      <div className="mt-6 text-center">
         <button
           onClick={handleShare}
           className="bg-gradient-to-r from-pink-400 to-blue-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:opacity-90"
