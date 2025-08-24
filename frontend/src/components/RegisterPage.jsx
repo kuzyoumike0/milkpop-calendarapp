@@ -132,6 +132,7 @@ const RegisterPage = () => {
             />
             複数選択
           </label>
+
           <label className={selectionMode === "range" ? "active" : ""}>
             <input
               type="radio"
@@ -184,4 +185,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
