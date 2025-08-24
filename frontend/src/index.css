@@ -23,17 +23,33 @@ h1, h2, h3 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(90deg, #FDB9C8, #004CA0);
+  background: rgba(0, 0, 0, 0.7); /* フッターと同じ黒ベース */
+  border-bottom: 2px solid #FDB9C8; /* フッターと統一感のあるピンクライン */
   padding: 0.8rem 1.5rem;
   color: #fff;
-  position: relative;
 }
 
+/* ロゴリンク */
+.logo-link {
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif !important;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #FDB9C8; /* ピンク強調 */
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border-radius: 10px;
+  transition: 0.3s;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+}
+.logo-link:hover {
+  color: #50C878; /* グリーンに変化 */
+  transform: scale(1.05);
+}
+
+/* ナビリンク */
 .nav-links {
   display: flex;
   gap: 1.2rem;
-  margin-left: auto;
-  align-items: center;
 }
 .nav-links a {
   font-family: 'M PLUS Rounded 1c', sans-serif;
@@ -45,28 +61,9 @@ h1, h2, h3 {
   transition: 0.3s;
 }
 .nav-links a:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
+  background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-
-/* ====== ロゴリンク ====== */
-.logo-link {
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif !important;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #fff;
-  text-decoration: none;
-  padding: 0.4rem 1rem;
-  border-radius: 10px;
-  transition: 0.3s;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-.logo-link:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-  transform: scale(1.05);
 }
 
 /* ====== ハンバーガー ====== */
