@@ -386,3 +386,38 @@ button:hover, .share-button:hover {
   display: block;
   margin: 0 auto 1rem auto; /* 中央寄せ */
 }
+/* ====== タイトル入力フォーム（短縮版） ====== */
+.input-title.short {
+  max-width: 300px;
+  display: block;
+  margin: 0 auto 1rem auto;
+}
+
+/* ====== 選択日アイテムに削除ボタン追加 ====== */
+.selected-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #50C878, #FDB9C8);
+  color: #000;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.remove-date-btn {
+  background: transparent;
+  border: none;
+  color: #000;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.remove-date-btn:hover {
+  color: red;
+  transform: scale(1.2);
+}
+
