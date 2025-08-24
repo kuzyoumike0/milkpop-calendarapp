@@ -4,31 +4,40 @@ import { useParams } from "react-router-dom";
 import "../index.css";
 
 const SharePage = () => {
-  const { shareId } = useParams(); // URLから共有IDを取得
+  const { shareId } = useParams();
   const [schedules, setSchedules] = useState([]);
   const [responses, setResponses] = useState({});
 
-  // 初期ロード
   useEffect(() => {
-    // 本来はAPIで取得
-    const stored = localStorage.getItem(`share-${shareId}`);
-    if (stored) {
-      setSchedules(JSON.parse(stored));
-    }
+    const fetchSchedules = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL || ""}/api/schedules/${shareId}`
+        );
+        const data = await res.json();
+        setSchedules(data.dates || []);
+      } catch (err) {
+        console.error("共有データ取得エラー:", err);
+      }
+    };
+    fetchSchedules();
   }, [shareId]);
 
-  // 保存処理
-  const handleSave = () => {
-    const stored = localStorage.getItem(`share-${shareId}`);
-    const parsed = stored ? JSON.parse(stored) : [];
-
-    const updated = parsed.map((item) => ({
-      ...item,
-      response: responses[item.date] || item.response || "未選択",
-    }));
-
-    localStorage.setItem(`share-${shareId}`, JSON.stringify(updated));
-    setSchedules(updated);
+  const handleSave = async () => {
+    try {
+      await fetch(
+        `${process.env.REACT_APP_API_URL || ""}/api/schedules/${shareId}/responses`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(responses),
+        }
+      );
+      alert("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
+    }
   };
 
   const handleChange = (date, value) => {
@@ -41,40 +50,38 @@ const SharePage = () => {
         <h1 className="text-3xl font-bold text-center mb-8 drop-shadow-md">
           📅 共有された日程
         </h1>
-
         {schedules.length === 0 ? (
-          <p className="text-center text-lg">
-            このリンクにはまだ日程が登録されていません。
-          </p>
+          <p className="text-center text-lg">日程が登録されていません。</p>
         ) : (
           <div className="space-y-4">
-            {schedules
-              .sort((a, b) => new Date(a.date) - new Date(b.date))
-              .map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-black bg-opacity-40 p-4 rounded-2xl shadow-lg flex justify-between items-center"
-                >
-                  <div>
-                    <p className="text-lg font-semibold">{item.title}</p>
-                    <p className="text-sm opacity-80">{item.date}</p>
-                  </div>
-                  <div>
-                    <select
-                      className="bg-white text-black px-3 py-1 rounded-lg shadow focus:outline-none"
-                      value={responses[item.date] || item.response || "未選択"}
-                      onChange={(e) => handleChange(item.date, e.target.value)}
-                    >
-                      <option value="未選択">未選択</option>
-                      <option value="〇">〇</option>
-                      <option value="✖">✖</option>
-                    </select>
-                  </div>
+            {schedules.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-black bg-opacity-40 p-4 rounded-2xl shadow-lg flex justify-between items-center"
+              >
+                <div>
+                  <p className="text-lg font-semibold">{item.date}</p>
+                  <p className="text-sm opacity-80">
+                    {item.timerange?.type === "custom"
+                      ? `${item.timerange.start}〜${item.timerange.end}`
+                      : item.timerange?.type || "終日"}
+                  </p>
                 </div>
-              ))}
+                <div>
+                  <select
+                    className="bg-white text-black px-3 py-1 rounded-lg shadow"
+                    value={responses[item.date] || "未選択"}
+                    onChange={(e) => handleChange(item.date, e.target.value)}
+                  >
+                    <option value="未選択">未選択</option>
+                    <option value="〇">〇</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
         {schedules.length > 0 && (
           <div className="text-center mt-8">
             <button
