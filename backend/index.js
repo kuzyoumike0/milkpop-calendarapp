@@ -188,6 +188,21 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
+// --- 個人スケジュール一覧取得 ---
+app.get("/api/personal/:share_id", async (req, res) => {
+  try {
+    const { share_id } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM personal_schedules WHERE share_id=$1 ORDER BY created_at DESC",
+      [share_id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("個人スケジュール取得エラー:", err);
+    res.status(500).json({ error: "個人スケジュール取得エラー" });
+  }
+});
+
 // --- 共有リンクから取得 ---
 app.get("/share/:token", async (req, res) => {
   try {
