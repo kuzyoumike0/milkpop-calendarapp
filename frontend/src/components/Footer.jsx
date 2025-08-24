@@ -1,19 +1,34 @@
+// frontend/src/components/Footer.jsx
 import React from "react";
-import twitterIcon from "../assets/twitter.svg";
-import discordIcon from "../assets/discord.svg";
+import { FaTwitter, FaDiscord } from "react-icons/fa";
+import "../index.css";
 
-export default function Footer() {
+function Footer() {
   return (
     <footer>
       <p>© 2025 MilkPOP Calendar</p>
-      <div className="footer-icons">
-        <a href="https://twitter.com/youraccount" target="_blank" rel="noreferrer">
-          <img src={twitterIcon} alt="Twitter" />
+      <div className="footer-links">
+        <a
+          href="https://twitter.com/xxxx"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-link"
+        >
+          <FaTwitter className="footer-icon" />
+          Twitter
         </a>
-        <a href="https://discord.gg/yourserver" target="_blank" rel="noreferrer">
-          <img src={discordIcon} alt="Discord" />
+        <a
+          href="https://discord.gg/xxxx"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-link"
+        >
+          <FaDiscord className="footer-icon" />
+          Discord
         </a>
       </div>
     </footer>
   );
 }
+
+export default Footer;
