@@ -1,28 +1,29 @@
-# ========== ビルド用 Node イメージ ==========
-FROM node:18 AS build
-
-WORKDIR /app
-
-# ====== フロントエンド ======
-COPY frontend/package*.json ./frontend/
+# ========== フロントエンドビルド ==========
+FROM node:18 AS frontend-build
 WORKDIR /app/frontend
+
+# 依存関係を先にコピーしてインストール
+COPY frontend/package*.json ./
 RUN npm ci
 
-# ソースコピー & ビルド
+# ソースコードコピー & ビルド
 COPY frontend/ ./
-# ✅ CI=false を追加して警告でビルドが止まらないように
 RUN CI=false npm run build
 
-# ====== バックエンド ======
+
+# ========== バックエンド ==========
+FROM node:18 AS backend
 WORKDIR /app/backend
-COPY backend/package*.json ./ 
+
+# バックエンド依存関係
+COPY backend/package*.json ./
 RUN npm ci
 
-# ソースコピー
+# ソースコードコピー
 COPY backend/ ./
 
-# ====== フロントエンドのビルド成果物を backend に配置 ======
-COPY --from=build /app/frontend/build ./frontend/build
+# ✅ フロントエンドのビルド成果物を backend/public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
 
 # ====== 本番実行 ======
 EXPOSE 5000
