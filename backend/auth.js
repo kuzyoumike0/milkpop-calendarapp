@@ -39,12 +39,14 @@ router.get("/discord/callback", async (req, res) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    console.log(accessToken); // ここで出力してみる
 
     // --- ユーザー情報取得 ---
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const userData = await userRes.json();
+    console.log(userData); // id と username があるか確認
 
     // --- フロントにリダイレクト ---
     const redirectURL = `${FRONTEND_URL}/auth/success?userId=${userData.id}&username=${userData.username}`;
