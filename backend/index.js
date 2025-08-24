@@ -6,6 +6,7 @@ import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
+import authRouter from "./auth.js";　//OAuth2の設定
 
 const { Pool } = pkg;
 const app = express();
@@ -21,6 +22,9 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // ===== API =====
+
+// --- OAuthhへのルーティング ---
+app.use("/auth", authRouter);
 
 // --- 共有スケジュール一覧取得 ---
 app.get("/api/schedules", async (req, res) => {
