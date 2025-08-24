@@ -34,15 +34,17 @@ app.get("/api/schedules", async (req, res) => {
 // 日程を保存
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, memo, timerange } = req.body;
+    const { title, dates, memo } = req.body;
     if (!title || !dates) {
       return res.status(400).json({ error: "タイトルと日程は必須です" });
     }
+
     const result = await pool.query(
-      `INSERT INTO schedules (title, dates, memo, timerange) 
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [title, JSON.stringify(dates), memo || "", timerange || ""]
+      `INSERT INTO schedules (title, dates, memo) 
+       VALUES ($1, $2, $3) RETURNING *`,
+      [title, JSON.stringify(dates), memo || ""]
     );
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("DB保存エラー:", err);
@@ -54,13 +56,15 @@ app.post("/api/schedules", async (req, res) => {
 app.put("/api/schedules/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, dates, memo, timerange } = req.body;
+    const { title, dates, memo } = req.body;
+
     const result = await pool.query(
       `UPDATE schedules 
-       SET title=$1, dates=$2, memo=$3, timerange=$4 
-       WHERE id=$5 RETURNING *`,
-      [title, JSON.stringify(dates), memo || "", timerange || "", id]
+       SET title=$1, dates=$2, memo=$3
+       WHERE id=$4 RETURNING *`,
+      [title, JSON.stringify(dates), memo || "", id]
     );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "スケジュールが見つかりません" });
     }
