@@ -267,3 +267,38 @@ button:hover {
     width: 100%;
   }
 }
+/* ====== 入力フォーム ====== */
+.input-title {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background: #000;
+  color: #fff;
+  border: 2px solid #FFD700;
+  outline: none;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  transition: 0.3s;
+}
+.input-title:focus {
+  border-color: #FDB9C8;
+  box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
+}
+
+/* ====== 共有リンクボタン ====== */
+.share-button {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.8rem;
+  background: linear-gradient(90deg, #FFD700, #FDB9C8);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+}
+.share-button:hover {
+  background: linear-gradient(90deg, #FDB9C8, #FFD700);
+}
