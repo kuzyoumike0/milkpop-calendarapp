@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "./index.css";
+import "../index.css";
 
 // ==== ヘルパー ====
 const getDaysInMonth = (year, month) => {
