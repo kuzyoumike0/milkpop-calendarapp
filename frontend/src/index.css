@@ -54,6 +54,23 @@ h1, h2, h3 {
   color: #FFD700;
 }
 
+/* ====== Discordログインボタン ====== */
+.discord-login {
+  background: linear-gradient(90deg, #5865F2, #4e5bd5);
+  color: #fff;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  transition: 0.3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.discord-login:hover {
+  background: linear-gradient(90deg, #4e5bd5, #5865F2);
+  color: #fff;
+}
+
 /* ====== ハンバーガーメニュー ====== */
 .hamburger {
   display: none;
@@ -250,23 +267,6 @@ button:hover {
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
-/* ====== レスポンシブ ====== */
-@media (max-width: 768px) {
-  .nav-links {
-    display: none;
-  }
-  .hamburger {
-    display: flex;
-  }
-  .page-container {
-    flex-direction: column;
-    padding: 1rem;
-  }
-  .calendar-container, .selected-container {
-    flex: none;
-    width: 100%;
-  }
-}
 /* ====== 入力フォーム ====== */
 .input-title {
   width: 100%;
@@ -302,6 +302,7 @@ button:hover {
 .share-button:hover {
   background: linear-gradient(90deg, #FDB9C8, #FFD700);
 }
+
 /* ====== トップページ ====== */
 .top-container {
   display: flex;
@@ -331,5 +332,21 @@ button:hover {
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   max-width: 900px;
 }
-e;
 
+/* ====== レスポンシブ ====== */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  .hamburger {
+    display: flex;
+  }
+  .page-container {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .calendar-container, .selected-container {
+    flex: none;
+    width: 100%;
+  }
+}
