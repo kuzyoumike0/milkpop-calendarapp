@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "../index.css"; // 共通スタイルに統一
+import "../index.css"; // 共通スタイル
 
 // ==== ヘルパー ====
 const getDaysInMonth = (year, month) => {
@@ -50,7 +50,7 @@ export default function RegisterPage() {
   const [selectionType, setSelectionType] = useState("multiple");
   const [selectedDates, setSelectedDates] = useState([]);
   const [range, setRange] = useState({ start: null, end: null });
-  const [holidays, setHolidays] = useState([]); // {date, name}
+  const [holidays, setHolidays] = useState([]);
 
   const [timeType, setTimeType] = useState("allday");
   const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
@@ -247,9 +247,31 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* 右側（時間帯 & ボタン） */}
+        {/* 右側（選択日リスト & 時間帯 & ボタン） */}
         <div className="card" style={{ flex: "3" }}>
-          <p className="font-semibold">時間帯を選択してください:</p>
+          {/* 選択日リスト */}
+          <h3 style={{ color: "#ff69b4" }}>選択した日程</h3>
+          <div>
+            {selectionType === "multiple" &&
+              selectedDates
+                .sort((a, b) => a - b)
+                .map((d, i) => (
+                  <div key={i} className="selected-date">
+                    {d.toLocaleDateString("ja-JP")}
+                  </div>
+                ))}
+            {selectionType === "range" && range.start && (
+              <div className="selected-date">
+                {range.start.toLocaleDateString("ja-JP")}
+                {range.end && ` 〜 ${range.end.toLocaleDateString("ja-JP")}`}
+              </div>
+            )}
+          </div>
+
+          {/* 時間帯 */}
+          <p className="font-semibold" style={{ marginTop: "1rem" }}>
+            時間帯を選択してください:
+          </p>
           <div>
             <label>
               <input
