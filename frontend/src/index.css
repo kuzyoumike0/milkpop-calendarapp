@@ -480,3 +480,50 @@ button:hover, .share-button:hover {
   background: #e60033;
   transform: scale(1.1);
 }
+/* 右側：オプション */
+.register-card .options-section {
+  flex: 3;
+  background: linear-gradient(135deg, #1a1a1a, #000);
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+
+  /* スクロール対応 */
+  max-height: 500px;   /* PC用: 高さ制限 */
+  overflow-y: auto;    /* 縦スクロール */
+}
+
+/* 選択日アイテムの間隔 */
+.selected-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, #FDB9C8, #ffecf5);
+  color: #000;
+  font-weight: bold;
+  padding: 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .register-card {
+    flex-direction: column;
+  }
+
+  .register-card .calendar-section,
+  .register-card .options-section {
+    width: 100%;
+    flex: none;
+  }
+
+  /* スマホ時は高さ小さめにしてスクロール */
+  .register-card .options-section {
+    max-height: 300px;
+  }
+}
