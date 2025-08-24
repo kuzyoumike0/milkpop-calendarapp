@@ -602,6 +602,12 @@ footer {
   box-shadow: 0 0 12px rgba(253,185,200,0.7);
   transform: scale(1.05);
 }
+.time-select option {
+  font-weight: bold;
+  background: #fff;   /* 🆕 白背景 */
+  color: #000;        /* 🆕 黒文字 */
+  padding: 0.6rem;
+}
 
 /* option 自体 */
 .time-select option {
