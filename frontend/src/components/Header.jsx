@@ -1,29 +1,39 @@
-// frontend/src/components/Header.jsx
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import "../index.css";
 
 const Header = () => {
-  return (
-    <header className="app-header">
-      <div className="nav-container">
-        {/* 左側ロゴ */}
-        <Link to="/" className="logo">
-          MilkPOP Calendar
-        </Link>
+  const [isOpen, setIsOpen] = useState(false);
 
-        {/* 右側リンクボタン群 */}
-        <nav className="nav-links">
-          <Link to="/register">日程登録</Link>
-          <Link to="/personal">個人スケジュール</Link>
-          <Link to="/links">共有リンク</Link>
-          <a
-            href="https://discord.com/api/oauth2/authorize?client_id=123456789012345678&redirect_uri=https%3A%2F%2Fmilkpop-calendar.up.railway.app%2Fcallback&response_type=code&scope=identify"
-            className="discord-btn"
-          >
-            Discordログイン
-          </a>
-        </nav>
+  return (
+    <header className="header">
+      {/* 左側：ロゴ */}
+      <div className="logo">
+        <Link to="/">MilkPOP Calendar</Link>
       </div>
+
+      {/* PC用ナビ */}
+      <nav className="nav-links">
+        <Link to="/">トップ</Link>
+        <Link to="/personal">個人スケジュール</Link>
+        <Link to="/register">日程登録</Link>
+      </nav>
+
+      {/* ハンバーガーメニュー（スマホ用） */}
+      <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      {/* ドロップダウンメニュー */}
+      {isOpen && (
+        <div className="dropdown">
+          <Link to="/" onClick={() => setIsOpen(false)}>トップ</Link>
+          <Link to="/personal" onClick={() => setIsOpen(false)}>個人スケジュール</Link>
+          <Link to="/register" onClick={() => setIsOpen(false)}>日程登録</Link>
+        </div>
+      )}
     </header>
   );
 };
