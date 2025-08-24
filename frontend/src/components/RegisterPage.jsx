@@ -1,133 +1,122 @@
 import React, { useState } from "react";
 import "../index.css";
+import Header from "./Header";
+import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
 const RegisterPage = () => {
   const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
 
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-  const startDay = firstDayOfMonth.getDay();
-  const daysInMonth = lastDayOfMonth.getDate();
+  // 月の最初の日と日数を取得
+  const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
+  // カレンダーの日付を配列にする
+  const dates = [];
+  for (let i = 0; i < startOfMonth.getDay(); i++) {
+    dates.push(null); // 前月の余白
+  }
+  for (let i = 1; i <= endOfMonth.getDate(); i++) {
+    dates.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
+  }
 
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const handleDateClick = (day) => {
-    const date = `${currentYear}-${String(currentMonth + 1).padStart(
-      2,
-      "0"
-    )}-${String(day).padStart(2, "0")}`;
-    if (selectedDates.includes(date)) {
-      setSelectedDates(selectedDates.filter((d) => d !== date));
+  const handleDateClick = (date) => {
+    const exists = selectedDates.find((d) => d.getTime() === date.getTime());
+    if (exists) {
+      setSelectedDates(selectedDates.filter((d) => d.getTime() !== date.getTime()));
     } else {
       setSelectedDates([...selectedDates, date]);
     }
   };
 
+  const handlePrevMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const handleShare = () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
+    alert("共有リンクを発行しました！（DB保存は別途実装済み）");
+  };
+
   return (
     <div className="page-container">
-      {/* カレンダー部分 */}
-      <div className="calendar-container card">
-        <h1 className="page-title">日程登録ページ</h1>
-
+      <div className="calendar-container">
+        {/* タイトル入力 */}
         <input
           type="text"
+          className="input-title"
+          placeholder="タイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="イベントのタイトルを入力"
-          className="input-title"
         />
 
         {/* 月切り替え */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1rem",
-          }}
-        >
-          <button onClick={handlePrevMonth} className="nav-button">
-            &lt;
-          </button>
-          <h2 className="month-title">
-            {currentYear}年 {currentMonth + 1}月
-          </h2>
-          <button onClick={handleNextMonth} className="nav-button">
-            &gt;
-          </button>
+        <div className="month-nav">
+          <button className="nav-button" onClick={handlePrevMonth}>← 前の月</button>
+          <span className="month-title">
+            {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
+          </span>
+          <button className="nav-button" onClick={handleNextMonth}>次の月 →</button>
         </div>
 
         {/* 曜日ヘッダー */}
         <div className="week-header">
-          {daysOfWeek.map((day, i) => (
-            <div key={i}>{day}</div>
+          {daysOfWeek.map((day) => (
+            <div key={day}>{day}</div>
           ))}
         </div>
 
-        {/* 日付セル */}
+        {/* カレンダー */}
         <div className="calendar-grid">
-          {Array(startDay)
-            .fill(null)
-            .map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-            const date = `${currentYear}-${String(currentMonth + 1).padStart(
-              2,
-              "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const isSelected = selectedDates.includes(date);
-
-            return (
-              <div
-                key={day}
-                onClick={() => handleDateClick(day)}
-                className={`day-cell ${isSelected ? "selected" : ""}`}
-              >
-                {day}
-              </div>
-            );
-          })}
+          {dates.map((date, index) => (
+            <div
+              key={index}
+              className={
+                date
+                  ? `day-cell ${
+                      selectedDates.find((d) => d.getTime() === date.getTime())
+                        ? "selected"
+                        : ""
+                    }`
+                  : "empty-cell"
+              }
+              onClick={() => date && handleDateClick(date)}
+            >
+              {date ? date.getDate() : ""}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* 選択した日程リスト */}
-      <div className="selected-container card">
-        <h2>選択した日程</h2>
+      {/* 選択日リスト */}
+      <div className="selected-container">
+        <h2>選択中の日程</h2>
         {selectedDates.length === 0 ? (
-          <p className="page-text">まだ日程が選択されていません</p>
+          <p className="page-text">まだ日程が選択されていません。</p>
         ) : (
-          <ul>
-            {selectedDates.map((date, idx) => (
-              <li key={idx} className="selected-date">
-                {date}
-              </li>
-            ))}
-          </ul>
+          selectedDates
+            .sort((a, b) => a - b)
+            .map((date, index) => (
+              <div key={index} className="selected-date">
+                {date.getFullYear()}/{date.getMonth() + 1}/{date.getDate()}
+              </div>
+            ))
         )}
-        <button className="share-button">共有リンクを発行</button>
+        {/* 共有リンクボタン */}
+        <button className="share-button" onClick={handleShare}>
+          共有リンクを発行
+        </button>
       </div>
     </div>
   );
