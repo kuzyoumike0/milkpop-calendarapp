@@ -51,7 +51,7 @@ const RegisterPage = () => {
           setSelectedDates([selectedDates[0], date]);
         }
       } else {
-        setSelectedDates([date]); // 新しい範囲開始
+        setSelectedDates([date]);
       }
     }
   };
@@ -198,7 +198,11 @@ const RegisterPage = () => {
 
         {/* 複数選択 / 範囲選択ラジオ */}
         <div className="radio-group">
-          <label>
+          <label
+            className={`radio-label ${
+              selectionMode === "multiple" ? "active" : ""
+            }`}
+          >
             <input
               type="radio"
               value="multiple"
@@ -207,7 +211,11 @@ const RegisterPage = () => {
             />
             複数選択
           </label>
-          <label>
+          <label
+            className={`radio-label ${
+              selectionMode === "range" ? "active" : ""
+            }`}
+          >
             <input
               type="radio"
               value="range"
@@ -246,7 +254,6 @@ const RegisterPage = () => {
                   value={timeRanges[d]?.type || "allday"}
                   onChange={(val) => handleTimeChange(d, val)}
                 />
-                {/* カスタム（時間指定）の場合 */}
                 {timeRanges[d]?.type === "custom" && (
                   <span className="custom-time">
                     <select
