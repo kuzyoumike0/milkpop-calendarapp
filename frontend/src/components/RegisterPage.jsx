@@ -50,7 +50,7 @@ const RegisterPage = () => {
           setSelectedDates([selectedDates[0], date]);
         }
       } else {
-        setSelectedDates([date]);
+        setSelectedDates([date]); // 新しい範囲開始
       }
     }
   };
@@ -149,45 +149,45 @@ const RegisterPage = () => {
     return days;
   };
 
-// 📌 共有リンク発行
-const generateShareLink = async () => {
-  const displayedDates = getDisplayedDates();
-  if (!title || displayedDates.length === 0) {
-    alert("タイトルと日程を入力してください！");
-    return;
-  }
+  // 📌 共有リンク発行
+  const generateShareLink = async () => {
+    const displayedDates = getDisplayedDates();
+    if (!title || displayedDates.length === 0) {
+      alert("タイトルと日程を入力してください！");
+      return;
+    }
 
-  const body = { title, dates: displayedDates, timeRanges };
+    const body = { title, dates: displayedDates, timeRanges };
 
-  try {
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      const data = await res.json();
+
+      if (data.share_token) {
+        // ✅ React Router ルートに合わせる
+        const url = `/share/${data.share_token}`;
+        setShareLink(url);
+      } else {
+        alert("共有リンクの発行に失敗しました");
       }
-    );
-    const data = await res.json();
-
-    if (data.share_token) {
-      // ✅ React Router のルートに合わせる
-      const url = `/share/${data.share_token}`;
-      setShareLink(url);
-    } else {
+    } catch (err) {
+      console.error("共有リンク発行エラー:", err);
       alert("共有リンクの発行に失敗しました");
     }
-  } catch (err) {
-    console.error("共有リンク発行エラー:", err);
-    alert("共有リンクの発行に失敗しました");
-  }
-};
-
+  };
 
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
 
+      {/* タイトル入力 */}
       <div className="input-card">
         <input
           type="text"
@@ -227,6 +227,7 @@ const generateShareLink = async () => {
           </label>
         </div>
 
+        {/* ✅ 現在のモードを明示 */}
         <div className="mt-2 text-sm text-gray-200">
           現在のモード:{" "}
           <span className="font-bold text-yellow-300">
@@ -305,8 +306,9 @@ const generateShareLink = async () => {
       {shareLink && (
         <div className="share-link">
           <p>共有リンク:</p>
+          {/* ✅ React Router 用に /share/:token へ遷移 */}
           <a href={shareLink} className="underline text-blue-200">
-            {shareLink}
+            {window.location.origin}{shareLink}
           </a>
         </div>
       )}
