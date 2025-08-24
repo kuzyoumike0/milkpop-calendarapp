@@ -149,35 +149,40 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 📌 共有リンク発行
-  const generateShareLink = async () => {
-    const displayedDates = getDisplayedDates();
-    if (!title || displayedDates.length === 0) {
-      alert("タイトルと日程を入力してください！");
-      return;
-    }
+// 📌 共有リンク発行
+const generateShareLink = async () => {
+  const displayedDates = getDisplayedDates();
+  if (!title || displayedDates.length === 0) {
+    alert("タイトルと日程を入力してください！");
+    return;
+  }
 
-    const body = { title, dates: displayedDates, timeRanges };
+  const body = { title, dates: displayedDates, timeRanges };
 
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }
-      );
-      const data = await res.json();
-
-      if (data.share_token) {
-        const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareLink(url);
+  try {
+    const res = await fetch(
+      `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       }
-    } catch (err) {
-      console.error("共有リンク発行エラー:", err);
+    );
+    const data = await res.json();
+
+    if (data.share_token) {
+      // ✅ React Router のルートに合わせる
+      const url = `/share/${data.share_token}`;
+      setShareLink(url);
+    } else {
+      alert("共有リンクの発行に失敗しました");
     }
-  };
+  } catch (err) {
+    console.error("共有リンク発行エラー:", err);
+    alert("共有リンクの発行に失敗しました");
+  }
+};
+
 
   return (
     <div className="page-container">
