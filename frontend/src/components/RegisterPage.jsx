@@ -150,6 +150,7 @@ const RegisterPage = () => {
     return days;
   };
 
+
   // 📌 共有リンク発行
   const generateShareLink = async () => {
     const displayedDates = getDisplayedDates();
@@ -173,7 +174,7 @@ const RegisterPage = () => {
 
       if (data.share_token) {
         const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareLink(url);
+        setShareLink(url);  // 画面にURL表示
       } else {
         alert("共有リンクの発行に失敗しました");
       }
@@ -182,19 +183,29 @@ const RegisterPage = () => {
       alert("共有リンクの発行に失敗しました");
     }
   };
-
+...
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
+      {/* ... カレンダーとリスト部分 ... */}
 
-      <div className="input-card">
-        <input
-          type="text"
-          placeholder="タイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="title-input"
-        />
+      <button onClick={generateShareLink} className="share-button fancy">
+        🔗 共有リンク発行
+      </button>
+
+      {shareLink && (
+        <div className="share-link">
+          <p>共有リンク:</p>
+          {/* ✅ クリックしたら遷移 */}
+          <a href={shareLink} className="underline text-blue-200">
+            {shareLink}
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
         {/* 複数選択 / 範囲選択ラジオ */}
         <div className="radio-group">
