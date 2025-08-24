@@ -141,6 +141,11 @@ const SharePage = () => {
                   {u}
                 </th>
               ))}
+              {!users.includes(username) && username && (
+                <th style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
+                  {username}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -154,7 +159,7 @@ const SharePage = () => {
                   <strong>{getDateLabel(row.date)}</strong>
                 </td>
 
-                {/* 各ユーザーの出欠 */}
+                {/* 既存ユーザーの出欠 */}
                 {users.map((u) => (
                   <td
                     key={u}
@@ -163,34 +168,37 @@ const SharePage = () => {
                       textAlign: "center",
                     }}
                   >
-                    {u === username ? (
-                      <select
-                        value={responses[row.date] || ""}
-                        onChange={(e) =>
-                          setResponses((prev) => ({
-                            ...prev,
-                            [row.date]: e.target.value,
-                          }))
-                        }
-                        className="custom-dropdown"
-                        style={{ width: "80px" }}
-                      >
-                        <option value="">---</option>
-                        <option value="yes">〇</option>
-                        <option value="maybe">△</option>
-                        <option value="no">✕</option>
-                      </select>
-                    ) : row.responses[u] === "yes" ? (
-                      "〇"
-                    ) : row.responses[u] === "no" ? (
-                      "✕"
-                    ) : row.responses[u] === "maybe" ? (
-                      "△"
-                    ) : (
-                      "-"
-                    )}
+                    {row.responses[u] === "yes"
+                      ? "〇"
+                      : row.responses[u] === "no"
+                      ? "✕"
+                      : row.responses[u] === "maybe"
+                      ? "△"
+                      : "-"}
                   </td>
                 ))}
+
+                {/* 自分用プルダウン（初期表示あり） */}
+                {!users.includes(username) && username && (
+                  <td style={{ padding: "0.6rem 1rem", textAlign: "center" }}>
+                    <select
+                      value={responses[row.date] || ""}
+                      onChange={(e) =>
+                        setResponses((prev) => ({
+                          ...prev,
+                          [row.date]: e.target.value,
+                        }))
+                      }
+                      className="custom-dropdown"
+                      style={{ width: "80px" }}
+                    >
+                      <option value="">---</option>
+                      <option value="yes">〇</option>
+                      <option value="maybe">△</option>
+                      <option value="no">✕</option>
+                    </select>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
