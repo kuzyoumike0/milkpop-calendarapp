@@ -146,3 +146,8 @@ footer {
   line-height: 1.6;
 }
 
+.page-text {
+  font-size: 1.1rem;
+  color: #000;   /* 黒文字にして背景に埋もれないようにする */
+  line-height: 1.6;
+}
