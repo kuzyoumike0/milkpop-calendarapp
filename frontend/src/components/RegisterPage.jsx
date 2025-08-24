@@ -46,82 +46,88 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="page">
-      <h1 className="page-title">日程登録ページ</h1>
+    <div className="page-container">
+      {/* カレンダー部分 */}
+      <div className="calendar-container card">
+        <h1 className="page-title">日程登録ページ</h1>
 
-      <div className="page-container">
-        {/* カレンダー部分 */}
-        <div className="calendar-container card">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="イベントのタイトルを入力"
-            className="input-title"
-          />
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="イベントのタイトルを入力"
+          className="input-title"
+        />
 
-          <div className="calendar-nav" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <button onClick={handlePrevMonth} className="nav-button">
-              &lt;
-            </button>
-            <h2 className="month-title">
-              {currentYear}年 {currentMonth + 1}月
-            </h2>
-            <button onClick={handleNextMonth} className="nav-button">
-              &gt;
-            </button>
-          </div>
+        {/* 月切り替え */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
+          <button onClick={handlePrevMonth} className="nav-button">
+            &lt;
+          </button>
+          <h2 className="month-title">
+            {currentYear}年 {currentMonth + 1}月
+          </h2>
+          <button onClick={handleNextMonth} className="nav-button">
+            &gt;
+          </button>
+        </div>
 
-          {/* 曜日ヘッダー */}
-          <div className="week-header">
-            {daysOfWeek.map((day, i) => (
-              <div key={i}>{day}</div>
+        {/* 曜日ヘッダー */}
+        <div className="week-header">
+          {daysOfWeek.map((day, i) => (
+            <div key={i}>{day}</div>
+          ))}
+        </div>
+
+        {/* 日付セル */}
+        <div className="calendar-grid">
+          {Array(startDay)
+            .fill(null)
+            .map((_, i) => (
+              <div key={`empty-${i}`} />
             ))}
-          </div>
+          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+            const date = `${currentYear}-${String(currentMonth + 1).padStart(
+              2,
+              "0"
+            )}-${String(day).padStart(2, "0")}`;
+            const isSelected = selectedDates.includes(date);
 
-          {/* 日付セル */}
-          <div className="calendar-grid">
-            {Array(startDay)
-              .fill(null)
-              .map((_, i) => (
-                <div key={`empty-${i}`} />
-              ))}
-            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
-              const date = `${currentYear}-${String(currentMonth + 1).padStart(
-                2,
-                "0"
-              )}-${String(day).padStart(2, "0")}`;
-              const isSelected = selectedDates.includes(date);
-
-              return (
-                <div
-                  key={day}
-                  onClick={() => handleDateClick(day)}
-                  className={`day-cell ${isSelected ? "selected" : ""}`}
-                >
-                  {day}
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <div
+                key={day}
+                onClick={() => handleDateClick(day)}
+                className={`day-cell ${isSelected ? "selected" : ""}`}
+              >
+                {day}
+              </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* 選択した日程リスト */}
-        <div className="selected-container card">
-          <h2>選択した日程</h2>
-          {selectedDates.length === 0 ? (
-            <p style={{ color: "#888" }}>まだ日程が選択されていません</p>
-          ) : (
-            <ul>
-              {selectedDates.map((date, idx) => (
-                <li key={idx} className="selected-date">
-                  {date}
-                </li>
-              ))}
-            </ul>
-          )}
-          <button className="share-button">共有リンクを発行</button>
-        </div>
+      {/* 選択した日程リスト */}
+      <div className="selected-container card">
+        <h2>選択した日程</h2>
+        {selectedDates.length === 0 ? (
+          <p className="page-text">まだ日程が選択されていません</p>
+        ) : (
+          <ul>
+            {selectedDates.map((date, idx) => (
+              <li key={idx} className="selected-date">
+                {date}
+              </li>
+            ))}
+          </ul>
+        )}
+        <button className="share-button">共有リンクを発行</button>
       </div>
     </div>
   );
