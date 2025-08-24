@@ -114,7 +114,7 @@ footer {
 .page-title {
   font-size: 2rem;
   font-weight: bold;
-  color: #fff;
+  color: #004CA0;
   margin-bottom: 1.5rem;
   text-align: center;
   font-family: 'Reggae One', cursive;
@@ -126,8 +126,27 @@ footer {
   justify-content: center;
   gap: 1.5rem;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 2rem auto;
   width: 100%;
+}
+
+/* ====== カード（中身を表示する白背景の枠） ====== */
+.card {
+  background: rgba(255, 255, 255, 0.9); /* 白背景 */
+  border: 2px solid #FDB9C8;
+  border-radius: 16px;
+  padding: 2rem;
+  color: #000;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* ====== テキスト ====== */
+.page-text {
+  font-size: 1.1rem;
+  color: #000; /* 黒文字で背景と区別 */
+  line-height: 1.6;
 }
 
 /* ====== レスポンシブ ====== */
@@ -138,26 +157,7 @@ footer {
   .hamburger {
     display: flex;
   }
+  .page-container {
+    padding: 1rem;
+  }
 }
-
-.page-text {
-  font-size: 1.1rem;
-  color: #000; /* 背景と区別するため黒文字 */
-  line-height: 1.6;
-}
-
-.page-text {
-  font-size: 1.1rem;
-  color: #000;   /* 黒文字にして背景に埋もれないようにする */
-  line-height: 1.6;
-}
-/* ====== カード（白背景の枠） ====== */
-.card {
-  background: rgba(255, 255, 255, 0.9); /* 半透明の白背景 */
-  border: 2px solid #FDB9C8; /* ピンクの枠線 */
-  border-radius: 16px;
-  padding: 2rem;
-  color: #000; /* 中の文字は黒 */
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-}
-
