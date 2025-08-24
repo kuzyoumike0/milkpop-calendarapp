@@ -1,5 +1,6 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";   // ← 追加
+import { useNavigate } from "react-router-dom";
 import Holidays from "date-holidays";
 import "../index.css";
 import Dropdown from "./Dropdown";
@@ -9,7 +10,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
-  const navigate = useNavigate();  // ← 追加
+  const navigate = useNavigate();
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -23,9 +24,12 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 📌 日付クリック処理
+  // 📌 日付クリック
   const handleDateClick = (day) => {
-    const date = `${currentYear}-${currentMonth + 1}-${day}`;
+    const date = `${currentYear}-${String(currentMonth + 1).padStart(
+      2,
+      "0"
+    )}-${String(day).padStart(2, "0")}`;
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
         prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
@@ -47,20 +51,20 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 選択範囲を展開して表示用に変換
+  // 📌 選択範囲展開
   const getDisplayedDates = () => {
-    if (selectionMode === "multiple") {
-      return selectedDates;
-    }
+    if (selectionMode === "multiple") return selectedDates;
     if (selectionMode === "range" && selectedDates.length === 2) {
       const start = new Date(selectedDates[0]);
       const end = new Date(selectedDates[1]);
       const dates = [];
       let current = new Date(start);
-
       while (current <= end) {
         dates.push(
-          `${current.getFullYear()}-${current.getMonth() + 1}-${current.getDate()}`
+          `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}-${String(current.getDate()).padStart(2, "0")}`
         );
         current.setDate(current.getDate() + 1);
       }
@@ -69,7 +73,7 @@ const RegisterPage = () => {
     return [];
   };
 
-  // 📌 終日/午前/午後/カスタムの変更
+  // 📌 時間変更
   const handleTimeChange = (date, value) => {
     setTimeRanges((prev) => {
       if (value === "custom") {
@@ -82,7 +86,6 @@ const RegisterPage = () => {
     });
   };
 
-  // 📌 カスタム時間の変更
   const handleCustomTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
@@ -90,7 +93,6 @@ const RegisterPage = () => {
     }));
   };
 
-  // 📌 時間リスト生成（00:00〜23:00 → 表示は「〇〇時」）
   const generateTimeOptions = () => {
     const times = [];
     for (let h = 0; h < 24; h++) {
@@ -100,7 +102,6 @@ const RegisterPage = () => {
     return times;
   };
 
-  // 📌 カレンダー描画
   const renderDays = () => {
     const days = [];
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -110,14 +111,16 @@ const RegisterPage = () => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
       const holiday = hd.isHoliday(date);
-      const formattedDate = `${currentYear}-${currentMonth + 1}-${day}`;
+      const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(
+        2,
+        "0"
+      )}-${String(day).padStart(2, "0")}`;
       const isSelected =
         selectionMode === "multiple"
           ? selectedDates.includes(formattedDate)
           : selectedDates.length === 2 &&
             date >= new Date(selectedDates[0]) &&
             date <= new Date(selectedDates[1]);
-
       const isToday = date.toDateString() === new Date().toDateString();
 
       days.push(
@@ -138,7 +141,7 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 📌 共有リンク発行処理（完了後に SharePage へ遷移）
+  // 📌 共有リンク発行 (DB保存)
   const generateShareLink = async () => {
     const displayedDates = getDisplayedDates();
     if (!title || displayedDates.length === 0) {
@@ -151,21 +154,24 @@ const RegisterPage = () => {
       timerange: timeRanges[d] || { type: "allday" },
     }));
 
-    const body = { title, dates: datesWithTime, memo: "" };
+    const body = { title, dates: datesWithTime };
 
     try {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
       const data = await res.json();
 
       if (data.share_token) {
-        navigate(`/share/${data.share_token}`); // ← SharePage に遷移
+        navigate(`/share/${data.share_token}`);
+      } else {
+        alert("共有リンクの発行に失敗しました");
       }
-
-      console.log("共有リンク発行成功:", data);
     } catch (err) {
       console.error("共有リンク発行エラー:", err);
       alert("共有リンクの発行に失敗しました");
@@ -176,7 +182,6 @@ const RegisterPage = () => {
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
 
-      {/* 入力エリア */}
       <div className="input-card">
         <input
           type="text"
@@ -185,7 +190,6 @@ const RegisterPage = () => {
           onChange={(e) => setTitle(e.target.value)}
           className="title-input"
         />
-
         <div className="radio-group">
           <input
             type="radio"
@@ -195,7 +199,6 @@ const RegisterPage = () => {
             onChange={() => setSelectionMode("multiple")}
           />
           <label htmlFor="multiple">複数選択</label>
-
           <input
             type="radio"
             id="range"
@@ -207,7 +210,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 横並び */}
       <div className="main-layout">
         <div className="calendar-section">
           <div className="calendar">
@@ -219,13 +221,8 @@ const RegisterPage = () => {
               <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
             </div>
             <div className="week-header">
-              <span>日</span>
-              <span>月</span>
-              <span>火</span>
-              <span>水</span>
-              <span>木</span>
-              <span>金</span>
-              <span>土</span>
+              <span>日</span><span>月</span><span>火</span>
+              <span>水</span><span>木</span><span>金</span><span>土</span>
             </div>
             <div className="calendar-grid">{renderDays()}</div>
           </div>
@@ -251,9 +248,7 @@ const RegisterPage = () => {
                       }
                     >
                       {generateTimeOptions().map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
+                        <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
                     〜
@@ -265,9 +260,7 @@ const RegisterPage = () => {
                       }
                     >
                       {generateTimeOptions().map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
+                        <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
                   </span>
@@ -275,14 +268,11 @@ const RegisterPage = () => {
               </li>
             ))}
           </ul>
-
           <button onClick={generateShareLink} className="share-button fancy">
             ✨ 共有リンク発行 ✨
           </button>
         </div>
       </div>
-
-      <img src="/cat.png" alt="cat" className="cat-deco" />
     </div>
   );
 };
