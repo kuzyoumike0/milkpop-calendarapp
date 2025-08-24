@@ -455,3 +455,34 @@ button:hover, .share-button:hover {
   color: red;
   transform: scale(1.2);
 }
+
+/* カレンダーの基本スタイル */
+.react-calendar {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 1rem;
+  font-family: 'Zen Maru Gothic', sans-serif;
+}
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  color: #004CA0;
+}
+
+/* 今日 */
+.react-calendar__tile--now {
+  background: #FDB9C8 !important;
+  color: white !important;
+  border-radius: 0.75rem;
+}
+
+/* 選択中 */
+.react-calendar__tile--active {
+  background: #004CA0 !important;
+  color: white !important;
+  border-radius: 0.75rem;
+}
+
