@@ -122,24 +122,23 @@ const RegisterPage = () => {
         />
 
         <div className="radio-group fancy-radio">
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectionMode === "multiple"}
-              onChange={() => setSelectionMode("multiple")}
-            />
-            複数選択
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={selectionMode === "range"}
-              onChange={() => setSelectionMode("range")}
-            />
-            範囲選択
-          </label>
+          <input
+            type="radio"
+            id="multiple"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          <label htmlFor="multiple">複数選択</label>
+
+          <input
+            type="radio"
+            id="range"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          <label htmlFor="range">範囲選択</label>
         </div>
       </div>
 
