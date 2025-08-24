@@ -541,4 +541,49 @@ select option {
   background: #fff;
   color: #000;
 }
+/* ====== おしゃれドロップダウン ====== */
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.custom-dropdown {
+  width: 100%;
+  padding: 0.8rem 2.5rem 0.8rem 1rem;
+  border-radius: 1rem;
+  border: 2px solid transparent;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
+  color: #333;
+  font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='%23004CA0'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+}
+
+.custom-dropdown:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+.custom-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 8px rgba(253,185,200,0.7);
+}
+
+.custom-dropdown option {
+  padding: 0.6rem;
+  background: #fff;
+  color: #000;
+  font-size: 1rem;
+}
 
