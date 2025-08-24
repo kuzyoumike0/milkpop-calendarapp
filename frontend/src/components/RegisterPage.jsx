@@ -7,7 +7,7 @@ import "../index.css";
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]); // 範囲モードでは端点のみ保持
+  const [selectedDates, setSelectedDates] = useState([]); // 範囲モードでは端点のみ
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeOptions, setTimeOptions] = useState({});
 
@@ -22,7 +22,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 範囲を展開
+  // 範囲展開
   const expandRange = (start, end) => {
     let s = new Date(start);
     let e = new Date(end);
@@ -36,13 +36,15 @@ const RegisterPage = () => {
     return range;
   };
 
-  // UI表示用に展開・ソート
+  // 表示用日程
   const getDisplayedDates = () => {
     if (selectionMode === "range" && selectedDates.length === 2) {
-      return expandRange(selectedDates[0], selectedDates[1]);
+      return expandRange(selectedDates[0], selectedDates[1]).sort();
     }
     return [...selectedDates].sort();
   };
+
+  const displayedDates = getDisplayedDates();
 
   // 日付クリック処理
   const handleDateClick = (date) => {
@@ -52,9 +54,9 @@ const RegisterPage = () => {
       );
     } else if (selectionMode === "range") {
       if (selectedDates.length === 0) {
-        setSelectedDates([date]); // 開始
+        setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        setSelectedDates([selectedDates[0], date]); // 終了
+        setSelectedDates([selectedDates[0], date]); // 始点+終点
       } else {
         setSelectedDates([date]); // 新しく選び直し
       }
@@ -82,7 +84,6 @@ const RegisterPage = () => {
 
   // 共有リンク生成
   const handleShare = async () => {
-    const displayedDates = getDisplayedDates();
     if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
@@ -108,8 +109,6 @@ const RegisterPage = () => {
       alert("サーバーエラー");
     }
   };
-
-  const displayedDates = getDisplayedDates();
 
   return (
     <div className="page-container">
