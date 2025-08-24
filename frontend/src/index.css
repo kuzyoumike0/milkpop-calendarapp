@@ -353,7 +353,7 @@ footer {
   background: #FDB9C8;
   color: #fff;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(253,185,200,0.7);
+  box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
 }
 .calendar-sunday { color: #ff4d6d; }
 .calendar-saturday { color: #4d79ff; }
@@ -391,7 +391,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem; /* 日付とプルダウンの余白 */
+  gap: 1rem;
 }
 
 /* ===== ボタン ===== */
@@ -457,7 +457,7 @@ footer {
   .selected-date { font-size: 0.85rem; }
 }
 
-/* ===== 現在モード表示 ===== */
+/* ===== モード表示 ===== */
 .mode-indicator {
   margin-top: 0.8rem;
   font-size: 1rem;
@@ -496,22 +496,22 @@ footer {
 }
 .time-select option {
   font-weight: bold;
-  background: #fff; /* 白背景 */
-  color: #000;      /* 黒文字 */
-  padding: 0.6rem;
+  background: #333;
+  color: #fff;
+  padding: 0.5rem;
 }
 
 /* ===== カスタムドロップダウン ===== */
 .dropdown { position: relative; display: inline-block; }
 .dropdown-btn {
-  background: linear-gradient(135deg, #fff, #ffe6ef);
+  background: linear-gradient(135deg, #fdfdfd, #ffe6ef);
   border: 2px solid #FDB9C8;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.5rem 1rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #333;
+  color: #222;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 .dropdown-btn:hover {
@@ -523,11 +523,11 @@ footer {
   position: absolute;
   top: 110%;
   left: 0;
-  width: 180px;
-  background: #fff;
+  width: 200px;
+  background: #fafafa;
   border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
   z-index: 999;
   list-style: none;
   padding: 0.5rem 0;
@@ -538,96 +538,41 @@ footer {
   padding: 0.6rem 1rem;
   cursor: pointer;
   font-weight: bold;
+  color: #222;
   transition: 0.2s;
-  color: #333;
-  background: #fff;
 }
 .dropdown-item:hover {
   background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #fff;
 }
-.arrow {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-}
-
+.arrow { font-size: 0.8rem; margin-left: 0.5rem; }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ====== 時間指定入力（input type="time"） ====== */
-.custom-time input[type="time"] {
-  margin: 0 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
-  border: 2px solid #FDB9C8;
-  background: linear-gradient(135deg, #fff, #ffe6ef);
-  font-weight: bold;
-  font-size: 0.95rem;
-  color: #333;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
-}
-
-.custom-time input[type="time"]:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  color: #fff;
-  border-color: #50C878;
-  box-shadow: 0 0 10px rgba(253,185,200,0.6);
-  transform: scale(1.05);
-}
-
-.custom-time input[type="time"]:focus {
-  outline: none;
-  border-color: #50C878;
-  box-shadow: 0 0 12px rgba(80,200,120,0.8);
-}
-
-/* ====== カスタム時間入力セット ====== */
+/* ===== 時間指定入力欄（開始〜終了を一体化） ===== */
 .custom-time {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #fff, #ffe6ef);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 0.4rem 0.8rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  margin-left: 1rem;  /* 日付やプルダウンとの余白 */
+  gap: 0.3rem;
+  margin-left: 1rem;
 }
-
-/* 開始・終了の input 共通デザイン */
 .custom-time input[type="time"] {
-  border: none;
-  background: transparent;
-  font-weight: bold;
-  font-size: 0.95rem;
-  color: #333;
   padding: 0.4rem 0.6rem;
-  text-align: center;
-  width: 90px;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  font-weight: bold;
+  color: #222;
   transition: all 0.3s ease;
 }
-
-/* hover / focus */
-.custom-time input[type="time"]:hover {
-  background: rgba(253,185,200,0.2);
-  border-radius: 6px;
-}
-
 .custom-time input[type="time"]:focus {
-  outline: none;
-  background: rgba(80,200,120,0.2);
-  border-radius: 6px;
-  color: #000;
+  border-color: #50C878;
+  box-shadow: 0 0 6px rgba(80,200,120,0.6);
 }
-
-/* 区切りの「〜」 */
-.custom-time span.separator {
-  font-weight: bold;
-  color: #FDB9C8;
-  font-size: 1rem;
+.custom-time input[type="time"]:first-child {
+  border-radius: 8px 0 0 8px;
 }
-
-
+.custom-time input[type="time"]:last-child {
+  border-radius: 0 8px 8px 0;
+}
