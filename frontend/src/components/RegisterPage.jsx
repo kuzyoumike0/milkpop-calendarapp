@@ -8,8 +8,9 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({});   // 日付 → 終日/昼/夜/custom
-  const [customTimes, setCustomTimes] = useState({});   // 日付 → HH:MM
+
+  const [timeOptions, setTimeOptions] = useState({});
+  const [customTimes, setCustomTimes] = useState({});
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -65,21 +66,23 @@ const RegisterPage = () => {
     }
   };
 
-  // 共有リンク作成
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
     }
-    try {
-      // 日付と時間帯をセットで保存
-      const formattedDates = selectedDates.map((d) => {
-        if (timeOptions[d] === "custom") {
-          return `${d}|${customTimes[d] || "00:00"}`;
-        }
-        return `${d}|${timeOptions[d] || "終日"}`;
-      });
 
+    // 日付 + 時間帯をフォーマット
+    const formattedDates = selectedDates.map((d) => {
+      if (timeOptions[d] === "custom") {
+        const start = customTimes[d]?.start || "00:00";
+        const end = customTimes[d]?.end || "23:59";
+        return `${d}|${start}-${end}`;
+      }
+      return `${d}|${timeOptions[d] || "終日"}`;
+    });
+
+    try {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -201,7 +204,7 @@ const RegisterPage = () => {
                 onChange={(e) =>
                   setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
                 }
-                className="custom-dropdown"
+                className="custom-dropdown fancy-dropdown"
               >
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
@@ -209,16 +212,32 @@ const RegisterPage = () => {
                 <option value="custom">時刻指定</option>
               </select>
 
-              {/* 時刻指定プルダウン */}
               {timeOptions[d] === "custom" && (
-                <input
-                  type="time"
-                  value={customTimes[d] || ""}
-                  onChange={(e) =>
-                    setCustomTimes((prev) => ({ ...prev, [d]: e.target.value }))
-                  }
-                  style={{ marginLeft: "1rem" }}
-                />
+                <div style={{ display: "inline-flex", gap: "0.5rem", marginLeft: "1rem" }}>
+                  <input
+                    type="time"
+                    value={customTimes[d]?.start || ""}
+                    onChange={(e) =>
+                      setCustomTimes((prev) => ({
+                        ...prev,
+                        [d]: { ...prev[d], start: e.target.value },
+                      }))
+                    }
+                    className="time-input"
+                  />
+                  ～
+                  <input
+                    type="time"
+                    value={customTimes[d]?.end || ""}
+                    onChange={(e) =>
+                      setCustomTimes((prev) => ({
+                        ...prev,
+                        [d]: { ...prev[d], end: e.target.value },
+                      }))
+                    }
+                    className="time-input"
+                  />
+                </div>
               )}
             </div>
           ))}
