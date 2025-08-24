@@ -459,38 +459,46 @@ footer {
 /* ====== おしゃれプルダウン（セレクトボックス） ====== */
 select {
   width: 100%;
-  padding: 0.8rem 1rem;
-  border-radius: 1rem;
-  border: 2px solid transparent;
-  background: linear-gradient(#fff, #fff) padding-box,
-              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
+  padding: 0.7rem 2.5rem 0.7rem 1rem; /* 右に余白を多めに確保 */
+  border-radius: 0.8rem;
+  border: 2px solid #FDB9C8;
+  background-color: #fff;
   color: #000;
   font-size: 1rem;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  appearance: none;
+  appearance: none;       /* デフォルトの矢印を消す */
+  -webkit-appearance: none; /* Safari対応 */
+  -moz-appearance: none;  /* Firefox対応 */
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  position: relative;
   transition: all 0.3s ease;
-  background-position: right 1rem center;
-  background-repeat: no-repeat;
-  background-size: 1rem;
-  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='black'/></svg>");
 }
 
+/* カスタム矢印を右側に追加 */
+select::after {
+  content: "▼";
+  font-size: 0.9rem;
+  color: #004CA0;
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+}
+
+/* ホバー時のアニメーション */
 select:hover {
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.5);
   transform: scale(1.02);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
 }
 
 select:focus {
   outline: none;
-  box-shadow: 0 0 8px rgba(0,76,160,0.6);
+  border-color: #FDB9C8;
+  box-shadow: 0 0 8px rgba(253,185,200,0.6);
 }
 
 select option {
   padding: 0.6rem;
   background: #fff;
   color: #000;
-  font-size: 1rem;
 }
-
