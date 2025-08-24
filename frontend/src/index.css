@@ -151,3 +151,13 @@ footer {
   color: #000;   /* 黒文字にして背景に埋もれないようにする */
   line-height: 1.6;
 }
+/* ====== カード（白背景の枠） ====== */
+.card {
+  background: rgba(255, 255, 255, 0.9); /* 半透明の白背景 */
+  border: 2px solid #FDB9C8; /* ピンクの枠線 */
+  border-radius: 16px;
+  padding: 2rem;
+  color: #000; /* 中の文字は黒 */
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
