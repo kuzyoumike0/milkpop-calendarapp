@@ -9,6 +9,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
+  const [timeOption, setTimeOption] = useState("all");
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -21,10 +22,9 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 日付クリック
   const handleDateClick = (date) => {
-    if (selectionMode === "single") {
-      setSelectedDates([date]);
-    } else if (selectionMode === "multiple") {
+    if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
         prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
       );
@@ -74,7 +74,11 @@ const RegisterPage = () => {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, dates: selectedDates, options: {} }),
+        body: JSON.stringify({
+          title,
+          dates: selectedDates,
+          options: { time: timeOption },
+        }),
       });
       const data = await res.json();
       if (data.share_token) {
@@ -102,16 +106,8 @@ const RegisterPage = () => {
           className="title-input"
         />
 
+        {/* 範囲 / 複数 ラジオ */}
         <div className="radio-group">
-          <input
-            type="radio"
-            id="single"
-            value="single"
-            checked={selectionMode === "single"}
-            onChange={() => setSelectionMode("single")}
-          />
-          <label htmlFor="single">単日</label>
-
           <input
             type="radio"
             id="multiple"
@@ -129,6 +125,20 @@ const RegisterPage = () => {
             onChange={() => setSelectionMode("range")}
           />
           <label htmlFor="range">範囲</label>
+        </div>
+
+        {/* 時間帯プルダウン */}
+        <div className="mt-4">
+          <select
+            value={timeOption}
+            onChange={(e) => setTimeOption(e.target.value)}
+            className="custom-dropdown"
+          >
+            <option value="all">終日</option>
+            <option value="day">昼</option>
+            <option value="night">夜</option>
+            <option value="custom">時刻指定</option>
+          </select>
         </div>
       </div>
 
@@ -201,9 +211,6 @@ const RegisterPage = () => {
       <button onClick={handleShare} className="share-button fancy">
         共有リンクを発行
       </button>
-
-      {/* 猫の飾り */}
-      <img src="/cat.png" alt="cat" className="cat-deco" />
     </div>
   );
 };
