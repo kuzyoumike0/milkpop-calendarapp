@@ -243,7 +243,10 @@ footer {
   padding: 1rem;
   margin: 1rem auto;
   box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 900px;
 }
+
 .calendar-header {
   display: flex;
   justify-content: space-between;
@@ -251,26 +254,29 @@ footer {
   margin-bottom: .8rem;
   color: #000;
 }
+
 .month-title {
   font-size: 1.5rem;
   font-weight: bold;
   color: #ff69b4;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
 }
+
 .week-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-weight: bold;
-  color: #ff69b4;
+  color: #004CA0;
   margin-bottom: 0.5rem;
 }
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.4rem;
 }
+
 .day-cell {
   background: #ffe6ef;
   border-radius: 12px;
@@ -296,21 +302,16 @@ footer {
   font-weight: bold;
   box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
 }
-.calendar-sunday { color: #ff4d6d; font-weight: bold; }
-.calendar-saturday { color: #4d79ff; font-weight: bold; }
+
+.calendar-sunday { color: #ff4d6d; }
+.calendar-saturday { color: #4d79ff; }
 .calendar-holiday { color: #ff4d6d; font-weight: bold; }
-.calendar-today {
-  background: #ffeb3b;
-  color: #000;
-  font-weight: bold;
-  border: 2px solid #FDB9C8;
-}
 .holiday-name {
   font-size: 0.7rem;
-  color: #ff4d6d;
   margin-top: 0.2rem;
   text-align: center;
 }
+
 
 /* 選択日リスト */
 .options-section {
