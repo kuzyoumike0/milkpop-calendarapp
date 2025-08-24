@@ -71,7 +71,7 @@ const RegisterPage = () => {
   const handleTimeChange = (date, value) => {
     setTimeRanges((prev) => ({
       ...prev,
-      [date]: { type: value, start: prev[date]?.start, end: prev[date]?.end },
+      [date]: { type: value, start: prev[date]?.start || "00:00", end: prev[date]?.end || "01:00" },
     }));
   };
 
@@ -84,15 +84,14 @@ const RegisterPage = () => {
   };
 
   // 📌 時間リスト生成（00:00〜23:00、1時間刻み）
-const generateTimeOptions = () => {
-  const times = [];
-  for (let h = 0; h < 24; h++) {
-    const hour = h.toString().padStart(2, "0");
-    times.push(`${hour}:00`);
-  }
-  return times;
-};
-
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      const hour = h.toString().padStart(2, "0");
+      times.push(`${hour}:00`);
+    }
+    return times;
+  };
 
   // 📌 カレンダー描画
   const renderDays = () => {
@@ -142,7 +141,7 @@ const generateTimeOptions = () => {
 
     const datesWithTime = displayedDates.map((d) => ({
       date: d,
-      timerange: timeRanges[d] || { type: "allday" },
+      timerange: timeRanges[d] || { type: "allday", start: "00:00", end: "01:00" },
     }));
 
     const body = { title, dates: datesWithTime, memo: "" };
@@ -235,7 +234,7 @@ const generateTimeOptions = () => {
                   <span className="custom-time">
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.start || ""}
+                      value={timeRanges[d]?.start || "00:00"}  // デフォルト 00:00
                       onChange={(e) =>
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
@@ -247,7 +246,7 @@ const generateTimeOptions = () => {
                     〜
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.end || ""}
+                      value={timeRanges[d]?.end || "01:00"}  // デフォルト 01:00
                       onChange={(e) =>
                         handleCustomTimeChange(d, "end", e.target.value)
                       }
