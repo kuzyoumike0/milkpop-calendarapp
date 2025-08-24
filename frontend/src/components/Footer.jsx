@@ -7,7 +7,7 @@ export default function Footer() {
       <p>© 2025 MilkPOP Calendar</p>
       <div className="footer-links">
         <a
-          href="https://twitter.com/"
+          href="https://x.com/Soni_complaint"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
