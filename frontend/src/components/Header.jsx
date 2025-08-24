@@ -26,7 +26,7 @@ const Header = () => {
         <span></span>
       </div>
 
-      {/* ドロップダウンメニュー */}
+      {/* ドロップダウンメニュー（スマホ表示時のみ） */}
       {isOpen && (
         <div className="dropdown">
           <Link to="/" onClick={() => setIsOpen(false)}>トップ</Link>
