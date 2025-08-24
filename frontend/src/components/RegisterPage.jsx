@@ -13,13 +13,18 @@ const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName }) => 
   return (
     <div
       onClick={() => onClick(date)}
-      title={holidayName || ""} // ← ツールチップで祝日名を表示
-      className={`w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer transition
+      title={holidayName || ""}
+      className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg cursor-pointer transition
         ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
         ${isHoliday ? "text-red-500 font-bold" : ""}
         ${!isSelected && !isHoliday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
     >
-      {date.getDate()}
+      <span>{date.getDate()}</span>
+      {holidayName && (
+        <span className="text-[0.6rem] text-red-500 font-normal leading-tight">
+          {holidayName}
+        </span>
+      )}
     </div>
   );
 };
@@ -34,7 +39,7 @@ export default function RegisterPage() {
   const [selectionType, setSelectionType] = useState("multiple");
   const [selectedDates, setSelectedDates] = useState([]);
   const [range, setRange] = useState({ start: null, end: null });
-  const [holidays, setHolidays] = useState([]); // {date: Date, name: string}
+  const [holidays, setHolidays] = useState([]); // {date, name}
 
   const [timeType, setTimeType] = useState("allday");
   const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
@@ -123,12 +128,11 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-3xl p-6">
+      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl p-6">
         <div className="bg-black bg-opacity-50 rounded-2xl shadow-xl p-6 w-full">
           <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* タイトル */}
             <input
               type="text"
               placeholder="タイトルを入力"
@@ -215,7 +219,7 @@ export default function RegisterPage() {
                       holidayName={getHolidayInfo(date)}
                     />
                   ) : (
-                    <div key={i} className="w-10 h-10"></div>
+                    <div key={i} className="w-14 h-14"></div>
                   )
                 )}
               </div>
