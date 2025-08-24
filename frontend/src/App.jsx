@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import TopPage from "./components/TopPage";
 import PersonalPage from "./components/PersonalPage";
-import { RegisterPage } from "./components/RegisterPage";
+import RegisterPage from "./components/RegisterPage"; // ← default import に修正
 import SharePage from "./components/SharePage";
 
 function App() {
