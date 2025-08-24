@@ -586,4 +586,34 @@ select option {
   color: #000;
   font-size: 1rem;
 }
+/* カスタム時間用プルダウン */
+.custom-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.custom-time .custom-dropdown {
+  flex: 1;
+  padding: 0.6rem 2rem 0.6rem 1rem;
+  border-radius: 0.8rem;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #000;
+  font-size: 0.95rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='%23004CA0'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.custom-time .custom-dropdown:hover {
+  border-color: #004CA0;
+  transform: scale(1.02);
+}
 
