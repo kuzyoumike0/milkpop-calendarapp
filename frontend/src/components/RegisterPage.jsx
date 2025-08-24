@@ -83,6 +83,19 @@ const RegisterPage = () => {
     }));
   };
 
+  // 📌 時間リスト生成（00:00〜23:45、15分刻み）
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const hour = h.toString().padStart(2, "0");
+        const minute = m.toString().padStart(2, "0");
+        times.push(`${hour}:${minute}`);
+      }
+    }
+    return times;
+  };
+
   // 📌 カレンダー描画
   const renderDays = () => {
     const days = [];
@@ -222,21 +235,29 @@ const RegisterPage = () => {
                 />
                 {timeRanges[d]?.type === "custom" && (
                   <span className="custom-time">
-                    <input
-                      type="time"
+                    <select
+                      className="custom-dropdown"
                       value={timeRanges[d]?.start || ""}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
-                    />
+                    >
+                      {generateTimeOptions().map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
                     〜
-                    <input
-                      type="time"
+                    <select
+                      className="custom-dropdown"
                       value={timeRanges[d]?.end || ""}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "end", e.target.value)
                       }
-                    />
+                    >
+                      {generateTimeOptions().map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
                   </span>
                 )}
               </li>
