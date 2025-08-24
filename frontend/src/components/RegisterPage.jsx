@@ -89,111 +89,121 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="page-container p-6">
-      <h2 className="text-2xl font-bold mb-6 text-center">日程登録ページ</h2>
+    <div className="page-container">
+      <h2 className="page-title">日程登録ページ</h2>
 
       {/* 入力フォーム */}
-      <div className="bg-white/90 shadow-lg rounded-2xl p-4 mb-6 max-w-md mx-auto">
+      <div className="input-card">
         <input
           type="text"
           placeholder="タイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="p-2 border rounded w-full mb-2"
+          className="title-input"
         />
 
-        {/* ラジオボタン */}
-        <div className="flex justify-center space-x-4 mb-2">
-          <label>
-            <input
-              type="radio"
-              value="single"
-              checked={selectionMode === "single"}
-              onChange={() => setSelectionMode("single")}
-            />
-            単日
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectionMode === "multiple"}
-              onChange={() => setSelectionMode("multiple")}
-            />
-            複数
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="range"
-              checked={selectionMode === "range"}
-              onChange={() => setSelectionMode("range")}
-            />
-            範囲
-          </label>
+        <div className="radio-group">
+          <input
+            type="radio"
+            id="single"
+            value="single"
+            checked={selectionMode === "single"}
+            onChange={() => setSelectionMode("single")}
+          />
+          <label htmlFor="single">単日</label>
+
+          <input
+            type="radio"
+            id="multiple"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          <label htmlFor="multiple">複数</label>
+
+          <input
+            type="radio"
+            id="range"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          <label htmlFor="range">範囲</label>
         </div>
       </div>
 
       {/* 横並びレイアウト */}
-      <div className="flex gap-6">
-        {/* 左：カレンダー */}
-        <div className="flex-grow bg-white/90 shadow-lg rounded-2xl p-4">
-          <div className="flex justify-between items-center mb-2">
-            <button onClick={prevMonth} className="px-2">←</button>
-            <span className="font-bold">{currentYear}年 {currentMonth + 1}月</span>
-            <button onClick={nextMonth} className="px-2">→</button>
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
-              <div key={d} className="font-bold text-center">{d}</div>
-            ))}
-            {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-              <div key={`empty-${idx}`} />
-            ))}
-            {Array.from({ length: daysInMonth }, (_, idx) => {
-              const date = new Date(currentYear, currentMonth, idx + 1);
-              const dateStr = date.toISOString().split("T")[0];
-              const isSelected = selectedDates.includes(dateStr);
-              const holiday = hd.isHoliday(date);
+      <div className="main-layout">
+        {/* カレンダー */}
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={prevMonth}>←</button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={nextMonth}>→</button>
+            </div>
 
-              return (
-                <div
-                  key={dateStr}
-                  onClick={() => handleDateClick(dateStr)}
-                  className={`p-2 text-center rounded cursor-pointer ${
-                    isSelected ? "bg-pink-400 text-white" : "bg-gray-100"
-                  }`}
-                >
-                  {idx + 1}
-                  {holiday && (
-                    <div className="text-red-500 text-xs">{holiday.name}</div>
-                  )}
-                </div>
-              );
-            })}
+            <div className="week-header">
+              {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+
+            <div className="calendar-grid">
+              {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+                <div key={`empty-${idx}`} />
+              ))}
+              {Array.from({ length: daysInMonth }, (_, idx) => {
+                const date = new Date(currentYear, currentMonth, idx + 1);
+                const dateStr = date.toISOString().split("T")[0];
+                const isSelected = selectedDates.includes(dateStr);
+                const holiday = hd.isHoliday(date);
+                const isSunday = date.getDay() === 0;
+                const isSaturday = date.getDay() === 6;
+                const isToday =
+                  date.toDateString() === new Date().toDateString();
+
+                return (
+                  <div
+                    key={dateStr}
+                    onClick={() => handleDateClick(dateStr)}
+                    className={`day-cell ${isSelected ? "selected" : ""} ${
+                      holiday ? "calendar-holiday" : ""
+                    } ${isSunday ? "calendar-sunday" : ""} ${
+                      isSaturday ? "calendar-saturday" : ""
+                    } ${isToday ? "calendar-today" : ""}`}
+                  >
+                    {idx + 1}
+                    {holiday && (
+                      <div className="holiday-name">{holiday.name}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* 右：選択リスト */}
-        <div className="w-1/3 bg-white/90 shadow-lg rounded-2xl p-4">
-          <h3 className="font-bold mb-2">選択した日程</h3>
-          <ul className="list-disc pl-5">
-            {selectedDates.map((d) => (
-              <li key={d}>{d}</li>
-            ))}
-          </ul>
+        {/* 選択リスト */}
+        <div className="options-section">
+          <h3>選択した日程</h3>
+          {selectedDates.map((d) => (
+            <div key={d} className="selected-date">
+              {d}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ボタン */}
-      <div className="mt-6 text-center">
-        <button
-          onClick={handleShare}
-          className="bg-gradient-to-r from-pink-400 to-blue-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:opacity-90"
-        >
-          共有リンクを発行
-        </button>
-      </div>
+      {/* 共有ボタン */}
+      <button onClick={handleShare} className="share-button fancy">
+        共有リンクを発行
+      </button>
+
+      {/* 猫の飾り */}
+      <img src="/cat.png" alt="cat" className="cat-deco" />
     </div>
   );
 };
