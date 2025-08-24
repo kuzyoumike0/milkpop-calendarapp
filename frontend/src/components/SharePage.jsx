@@ -1,153 +1,131 @@
-// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Holidays from "date-holidays";
-import "../index.css";
 
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
-  const [responses, setResponses] = useState({});
-  const [username, setUsername] = useState("");
-  const hd = new Holidays("JP");
+  const [responses, setResponses] = useState([]);
+  const [userName, setUserName] = useState("");
+  const [answers, setAnswers] = useState({});
 
-  // 日本時間の今日
-  const jstNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-
-  // 📌 スケジュール取得
+  // スケジュール取得
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSchedule = async () => {
       try {
-        const res = await fetch(
-          `${process.env.REACT_APP_API_URL || ""}/share/${token}`
-        );
+        const res = await fetch(`/share/${token}`);
         const data = await res.json();
         setSchedule(data);
-
-        // 初期回答状態（全て未回答）
-        const init = {};
-        data.dates.forEach((d) => {
-          init[d] = "未回答";
-        });
-        setResponses(init);
+        if (data.id) {
+          fetchResponses(data.id);
+        }
       } catch (err) {
-        console.error("共有リンク取得エラー:", err);
+        console.error(err);
       }
     };
-    fetchData();
+    fetchSchedule();
   }, [token]);
 
-  // 📌 回答選択変更
-  const handleResponseChange = (date, value) => {
-    setResponses((prev) => ({ ...prev, [date]: value }));
+  // 出欠一覧取得
+  const fetchResponses = async (id) => {
+    try {
+      const res = await fetch(`/api/schedules/${id}/responses`);
+      const data = await res.json();
+      setResponses(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // 📌 回答保存
-  const saveResponses = async () => {
-    if (!username) {
+  // 出欠保存
+  const handleSave = async () => {
+    if (!userName) {
       alert("名前を入力してください");
       return;
     }
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL || ""}/api/schedules/${schedule.id}/responses`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: username, // 仮に名前をIDとして使う（本来はOAuthユーザーIDなど）
-            username,
-            responses,
-          }),
-        }
-      );
-      const data = await res.json();
-      console.log("保存成功:", data);
-      alert("保存しました！");
+      const res = await fetch(`/api/schedules/${schedule.id}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userName, // 簡易的に user_id = userName とする
+          username: userName,
+          responses: answers,
+        }),
+      });
+      await res.json();
+      fetchResponses(schedule.id);
     } catch (err) {
-      console.error("保存エラー:", err);
-      alert("保存に失敗しました");
+      console.error(err);
     }
   };
 
-  if (!schedule) {
-    return <p className="text-center mt-10">⏳ 読み込み中...</p>;
-  }
+  if (!schedule) return <div>読み込み中...</div>;
 
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 drop-shadow-md">
-          📅 {schedule.title}
-        </h1>
+    <div className="page-container">
+      <h2 className="text-xl font-bold mb-4">共有スケジュール: {schedule.title}</h2>
 
-        {/* 名前入力 */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="あなたの名前を入力"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-2 rounded-lg text-black"
-          />
-        </div>
-
-        {/* 日程リスト */}
-        <div className="space-y-4">
-          {schedule.dates.map((d, i) => {
-            const dateObj = new Date(d);
-            const holiday = hd.isHoliday(dateObj);
-            const isToday =
-              dateObj.getFullYear() === jstNow.getFullYear() &&
-              dateObj.getMonth() === jstNow.getMonth() &&
-              dateObj.getDate() === jstNow.getDate();
-
-            return (
-              <div
-                key={i}
-                className={`p-4 rounded-2xl shadow-lg flex justify-between items-center ${
-                  isToday ? "bg-yellow-300 text-black" : "bg-black bg-opacity-50"
-                }`}
-              >
-                <div>
-                  <p className="text-lg font-semibold">
-                    {d}
-                    {holiday && (
-                      <span className="ml-2 text-red-400 font-bold">
-                        {holiday[0].name}
-                      </span>
-                    )}
-                    {isToday && <span className="ml-2">✨ 今日</span>}
-                  </p>
-                </div>
-
-                {/* 回答プルダウン */}
-                <select
-                  className="p-2 rounded-lg text-black"
-                  value={responses[d] || "未回答"}
-                  onChange={(e) => handleResponseChange(d, e.target.value)}
-                >
-                  <option value="未回答">未回答</option>
-                  <option value="〇">〇 参加可</option>
-                  <option value="✕">✕ 不可</option>
-                </select>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 保存ボタン */}
-        <div className="text-center mt-6">
-          <button
-            onClick={saveResponses}
-            className="px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-lg shadow-md"
-          >
-            💾 保存
-          </button>
-        </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="あなたの名前"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          className="p-2 rounded w-64"
+        />
       </div>
+
+      {/* 出欠選択 */}
+      <div>
+        {schedule.dates.map((date) => (
+          <div key={date} className="mb-2">
+            <span className="mr-2">{date}</span>
+            <select
+              value={answers[date] || ""}
+              onChange={(e) =>
+                setAnswers((prev) => ({ ...prev, [date]: e.target.value }))
+              }
+              className="p-1 rounded"
+            >
+              <option value="">選択してください</option>
+              <option value="〇">〇</option>
+              <option value="✕">✕</option>
+            </select>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={handleSave}
+        className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
+      >
+        出欠を保存
+      </button>
+
+      {/* 全員の一覧 */}
+      <h3 className="text-lg font-bold mt-6 mb-2">全員の出欠一覧</h3>
+      <table className="border-collapse border border-gray-400 w-full">
+        <thead>
+          <tr>
+            <th className="border p-2">名前</th>
+            {schedule.dates.map((d) => (
+              <th key={d} className="border p-2">{d}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {responses.map((r, idx) => (
+            <tr key={idx}>
+              <td className="border p-2">{r.username}</td>
+              {schedule.dates.map((d) => (
+                <td key={d} className="border p-2">
+                  {r.responses[d] || "-"}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
