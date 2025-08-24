@@ -380,3 +380,9 @@ button:hover, .share-button:hover {
     width: 100%;
   }
 }
+/* ====== タイトル入力フォーム（短縮版） ====== */
+.input-title.short {
+  max-width: 300px; /* ✅ 幅を短めに */
+  display: block;
+  margin: 0 auto 1rem auto; /* 中央寄せ */
+}
