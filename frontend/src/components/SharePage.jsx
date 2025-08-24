@@ -9,7 +9,6 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
 
   // スケジュール取得
   useEffect(() => {
@@ -35,7 +34,7 @@ const SharePage = () => {
       const data = await res.json();
       setAllResponses(data);
 
-      // 自分の既存回答を反映
+      // 自分の回答を反映
       const myResp = data.find((r) => r.user_id === username);
       if (myResp) setResponses(myResp.responses);
     } catch (err) {
@@ -60,7 +59,6 @@ const SharePage = () => {
         }),
       });
       fetchResponses(schedule.id);
-      setIsEditing(false);
     } catch (err) {
       console.error(err);
     }
@@ -81,7 +79,6 @@ const SharePage = () => {
       );
       setResponses({});
       fetchResponses(schedule.id);
-      setIsEditing(false);
     } catch (err) {
       console.error(err);
     }
@@ -101,7 +98,11 @@ const SharePage = () => {
   return (
     <div
       className="page-container"
-      style={{ alignItems: "flex-start", maxWidth: "95%", margin: "0 2rem" }}
+      style={{
+        alignItems: "flex-start",
+        maxWidth: "95%",
+        marginLeft: "2rem",
+      }}
     >
       <h2 className="page-title" style={{ textAlign: "left" }}>
         共有スケジュール
@@ -113,7 +114,14 @@ const SharePage = () => {
       </div>
 
       {/* 名前入力 */}
-      <div className="input-card" style={{ marginBottom: "1.5rem", textAlign: "left" }}>
+      <div
+        className="input-card"
+        style={{
+          marginBottom: "1.5rem",
+          textAlign: "left",
+          width: "100%",
+        }}
+      >
         <input
           type="text"
           placeholder="あなたの名前を入力"
@@ -125,58 +133,62 @@ const SharePage = () => {
       </div>
 
       {/* 日程一覧 */}
-      <div className="card" style={{ textAlign: "left", width: "100%" }}>
+      <div
+        className="card"
+        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
+      >
         <h3>日程一覧</h3>
-        <table style={{ borderCollapse: "collapse", marginTop: "1rem", width: "100%" }}>
+        <table
+          style={{
+            borderCollapse: "collapse",
+            marginTop: "1rem",
+            width: "100%",
+          }}
+        >
           <thead>
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsEditing(true);
-                  }}
-                  style={{ textDecoration: "underline", color: "#FDB9C8" }}
-                >
-                  あなたの出欠
-                </a>
+                日付
               </th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>みんなの出欠</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
+                あなたの出欠
+              </th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
+                みんなの出欠
+              </th>
             </tr>
           </thead>
           <tbody>
             {schedule.dates.map((d) => (
-              <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+              <tr
+                key={d}
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
+              >
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <strong>{d}</strong>
                 </td>
+
+                {/* あなたの出欠 - 常にプルダウン表示 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
-                  {isEditing ? (
-                    <select
-                      value={responses[d] || ""}
-                      onChange={(e) =>
-                        setResponses((prev) => ({ ...prev, [d]: e.target.value }))
-                      }
-                      className="custom-dropdown"
-                      style={{ width: "90px" }}
-                    >
-                      <option value="">---</option>
-                      <option value="yes">〇</option>
-                      <option value="maybe">△</option>
-                      <option value="no">✕</option>
-                    </select>
-                  ) : (
-                    responses[d] === "yes"
-                      ? "〇"
-                      : responses[d] === "maybe"
-                      ? "△"
-                      : responses[d] === "no"
-                      ? "✕"
-                      : "-"
-                  )}
+                  <select
+                    value={responses[d] || ""}
+                    onChange={(e) =>
+                      setResponses((prev) => ({
+                        ...prev,
+                        [d]: e.target.value,
+                      }))
+                    }
+                    className="custom-dropdown"
+                    style={{ width: "90px" }}
+                  >
+                    <option value="">---</option>
+                    <option value="yes">〇</option>
+                    <option value="maybe">△</option>
+                    <option value="no">✕</option>
+                  </select>
                 </td>
+
+                {/* みんなの出欠 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   {groupByDate[d] ? (
                     groupByDate[d].map((entry, idx) => (
@@ -202,7 +214,12 @@ const SharePage = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        {entry.user}:{entry.value === "yes" ? "〇" : entry.value === "maybe" ? "△" : "✕"}
+                        {entry.user}:
+                        {entry.value === "yes"
+                          ? "〇"
+                          : entry.value === "maybe"
+                          ? "△"
+                          : "✕"}
                       </span>
                     ))
                   ) : (
@@ -216,27 +233,25 @@ const SharePage = () => {
       </div>
 
       {/* 保存・削除ボタン */}
-      {isEditing && (
-        <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
-          <button onClick={handleSave} className="share-button fancy">
-            保存
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
-              border: "none",
-              borderRadius: "50px",
-              padding: "0.8rem 1.6rem",
-              color: "#fff",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            削除
-          </button>
-        </div>
-      )}
+      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+        <button onClick={handleSave} className="share-button fancy">
+          保存
+        </button>
+        <button
+          onClick={handleDelete}
+          style={{
+            background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
+            border: "none",
+            borderRadius: "50px",
+            padding: "0.8rem 1.6rem",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          削除
+        </button>
+      </div>
     </div>
   );
 };
