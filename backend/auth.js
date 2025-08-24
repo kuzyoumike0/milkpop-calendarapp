@@ -1,6 +1,6 @@
 // backend/auth.js
 import express from "express";
-import fetch from "node-fetch"; // npm install node-fetch@2
+//import fetch from "node-fetch"; // npm install node-fetch@2
 import dotenv from "dotenv";
 
 dotenv.config();
