@@ -271,64 +271,26 @@ footer {
 }
 
 /* ===== ラジオボタン（見やすいボタン風） ===== */
-/* ===== ラジオボタン（視認性強化版） ===== */
-.radio-group {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 1rem;
-  border-radius: 16px;
-  border: 2px solid #FDB9C8;
-  background: rgba(0,0,0,0.85);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-}
-
-.fancy-radio input {
-  display: none;
-}
-
-.fancy-radio label {
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #fff;
-  background: rgba(255,255,255,0.08);
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-  min-width: 120px;
-  text-align: center;
-}
-
-/* 選択中の強調 */
-.fancy-radio input:checked + label {
-  background: #FDB9C8;
-  color: #000;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 15px rgba(253,185,200,0.9);
-  transform: scale(1.08);
-}
-
-/* ホバー時 */
-.fancy-radio label:hover {
-  background: rgba(253,185,200,0.25);
-  transform: scale(1.05);
-}
-
-/* 選択中 */
-.fancy-radio input:checked ~ label,
-.fancy-radio input:checked + label {
-  background: #FDB9C8;
-  color: #000;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 10px rgba(253,185,200,0.8);
-  transform: scale(1.05);
-}
-.fancy-radio label:hover {
-  background: rgba(253,185,200,0.3);
-  transform: scale(1.05);
-}
+<div className="radio-group fancy-radio">
+  <label className={selectionMode === "multiple" ? "active" : ""}>
+    <input
+      type="radio"
+      value="multiple"
+      checked={selectionMode === "multiple"}
+      onChange={() => setSelectionMode("multiple")}
+    />
+    複数選択
+  </label>
+  <label className={selectionMode === "range" ? "active" : ""}>
+    <input
+      type="radio"
+      value="range"
+      checked={selectionMode === "range"}
+      onChange={() => setSelectionMode("range")}
+    />
+    範囲選択
+  </label>
+</div>
 
 /* ===== カレンダー ===== */
 .calendar {
