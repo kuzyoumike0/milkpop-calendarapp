@@ -13,7 +13,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 // --- Discord認証ページにリダイレクト ---
 router.get("/discord", (req, res) => {
   const scope = encodeURIComponent("identify"); // ユーザー情報取得
-  const discordAuthURL = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${scope}`;
+  const discordAuthURL = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}`;
   res.redirect(discordAuthURL);
 });
 
