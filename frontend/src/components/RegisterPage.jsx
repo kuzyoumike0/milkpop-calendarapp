@@ -67,7 +67,7 @@ const RegisterPage = () => {
     return [];
   };
 
-  // 📌 終日/昼/夜/カスタムの変更
+  // 📌 終日/午前/午後/カスタムの変更
   const handleTimeChange = (date, value) => {
     setTimeRanges((prev) => {
       if (value === "custom") {
@@ -76,7 +76,7 @@ const RegisterPage = () => {
           [date]: { type: "custom", start: "00:00", end: "01:00" },
         };
       }
-      return { ...prev, [date]: { type: value } }; // allday / night / day
+      return { ...prev, [date]: { type: value } };
     });
   };
 
@@ -231,10 +231,12 @@ const RegisterPage = () => {
             {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
                 {d}
+                {/* 種別選択（終日/午前/午後/時間指定） */}
                 <Dropdown
                   value={timeRanges[d]?.type || "allday"}
                   onChange={(val) => handleTimeChange(d, val)}
                 />
+                {/* カスタム時間 */}
                 {timeRanges[d]?.type === "custom" && (
                   <span className="custom-time">
                     <select
