@@ -36,7 +36,7 @@ const CalendarCell = ({
   );
 };
 
-export function RegisterPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
