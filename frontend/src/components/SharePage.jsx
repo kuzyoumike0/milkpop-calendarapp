@@ -1,55 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../index.css";
 
 const SharePage = () => {
-  const [schedules, setSchedules] = useState([
-    { id: 1, title: "飲み会", date: "2025-09-01" },
-    { id: 2, title: "会議", date: "2025-09-03" },
-  ]);
-  const [responses, setResponses] = useState({});
+  const [schedules, setSchedules] = useState([]);
 
-  const handleResponseChange = (id, value) => {
-    setResponses((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const saveResponses = () => {
-    alert("保存しました！（即反映イメージ）");
-  };
+  useEffect(() => {
+    fetch("/api/schedules")
+      .then((res) => res.json())
+      .then((data) => setSchedules(data))
+      .catch((err) => console.error("取得エラー:", err));
+  }, []);
 
   return (
     <div className="page-container">
       <h2 className="page-title">日程共有ページ</h2>
 
       <div className="main-layout">
+        {/* 左カレンダー風枠（将来拡張用） */}
         <div className="calendar-section">
           <div className="calendar dummy-calendar">
             <h3 className="month-title">登録された日程</h3>
-            <p>（ここには登録済みのカレンダーUIが表示される想定）</p>
+            <p>（APIから取得した日程リストは右に表示）</p>
           </div>
         </div>
 
+        {/* 右リスト */}
         <div className="options-section">
-          <h3>選択リスト</h3>
-          {schedules.map((schedule) => (
-            <div key={schedule.id} className="selected-date">
+          <h3>登録済みリスト</h3>
+          {schedules.length === 0 && <p>まだ登録がありません</p>}
+          {schedules.map((s) => (
+            <div key={s.id} className="selected-date">
               <span>
-                {schedule.title} ({schedule.date})
+                {s.title} ({s.dates.join(", ")})
               </span>
-              <select
-                value={responses[schedule.id] || ""}
-                onChange={(e) =>
-                  handleResponseChange(schedule.id, e.target.value)
-                }
-              >
-                <option value="">選択してください</option>
-                <option value="yes">〇</option>
-                <option value="no">✖</option>
-              </select>
             </div>
           ))}
-          <button onClick={saveResponses} className="share-button fancy">
-            💾 保存
-          </button>
         </div>
       </div>
     </div>
