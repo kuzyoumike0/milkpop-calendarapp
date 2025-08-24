@@ -7,9 +7,9 @@ import "../index.css";
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]); // 範囲モードでは端点のみ
+  const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({});
+  const [timeOptions, setTimeOptions] = useState({}); // { date: { type: "all"|"day"|"night"|"custom", start: "09:00", end: "18:00" } }
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -46,7 +46,7 @@ const RegisterPage = () => {
 
   const displayedDates = getDisplayedDates();
 
-  // 日付クリック処理
+  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -56,7 +56,7 @@ const RegisterPage = () => {
       if (selectedDates.length === 0) {
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        setSelectedDates([selectedDates[0], date]); // 始点+終点
+        setSelectedDates([selectedDates[0], date]);
       } else {
         setSelectedDates([date]); // 新しく選び直し
       }
@@ -78,8 +78,14 @@ const RegisterPage = () => {
   };
 
   // 時間帯変更
-  const handleTimeChange = (date, value) => {
-    setTimeOptions((prev) => ({ ...prev, [date]: value }));
+  const handleTimeChange = (date, field, value) => {
+    setTimeOptions((prev) => ({
+      ...prev,
+      [date]: {
+        ...(prev[date] || { type: "all", start: "09:00", end: "18:00" }),
+        [field]: value,
+      },
+    }));
   };
 
   // 共有リンク生成
@@ -109,6 +115,10 @@ const RegisterPage = () => {
       alert("サーバーエラー");
     }
   };
+
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${i.toString().padStart(2, "0")}:00`
+  );
 
   return (
     <div className="page-container">
@@ -203,21 +213,58 @@ const RegisterPage = () => {
         {/* 選択リスト */}
         <div className="options-section">
           <h3>選択した日程</h3>
-          {displayedDates.map((d) => (
-            <div key={d} className="selected-date">
-              <span>{d}</span>
-              <select
-                value={timeOptions[d] || "all"}
-                onChange={(e) => handleTimeChange(d, e.target.value)}
-                className="custom-dropdown"
-              >
-                <option value="all">終日</option>
-                <option value="day">昼</option>
-                <option value="night">夜</option>
-                <option value="custom">時刻指定</option>
-              </select>
-            </div>
-          ))}
+          {displayedDates.map((d) => {
+            const opt = timeOptions[d] || { type: "all", start: "09:00", end: "18:00" };
+            return (
+              <div key={d} className="selected-date">
+                <span>{d}</span>
+                {/* 時間帯プルダウン */}
+                <select
+                  value={opt.type}
+                  onChange={(e) => handleTimeChange(d, "type", e.target.value)}
+                  className="custom-dropdown"
+                >
+                  <option value="all">終日</option>
+                  <option value="day">昼</option>
+                  <option value="night">夜</option>
+                  <option value="custom">時刻指定</option>
+                </select>
+
+                {/* 時刻指定のときに追加のプルダウン表示 */}
+                {opt.type === "custom" && (
+                  <div className="custom-time">
+                    <select
+                      value={opt.start}
+                      onChange={(e) =>
+                        handleTimeChange(d, "start", e.target.value)
+                      }
+                      className="custom-dropdown"
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                    ～
+                    <select
+                      value={opt.end}
+                      onChange={(e) =>
+                        handleTimeChange(d, "end", e.target.value)
+                      }
+                      className="custom-dropdown"
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
