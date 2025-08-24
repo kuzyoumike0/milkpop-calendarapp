@@ -45,7 +45,7 @@ const RegisterPage = () => {
   const renderDays = () => {
     const days = [];
     for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
+      days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -62,13 +62,15 @@ const RegisterPage = () => {
       days.push(
         <div
           key={day}
-          className={`calendar-cell ${isSelected ? "selected" : ""} ${
-            holiday ? "holiday" : ""
+          className={`day-cell ${isSelected ? "selected" : ""} ${
+            holiday ? "calendar-holiday" : ""
+          } ${date.getDay() === 0 ? "calendar-sunday" : ""} ${
+            date.getDay() === 6 ? "calendar-saturday" : ""
           }`}
           onClick={() => handleDateClick(day)}
         >
           <span>{day}</span>
-          {holiday && <small>{holiday[0].name}</small>}
+          {holiday && <small className="holiday-name">{holiday[0].name}</small>}
         </div>
       );
     }
@@ -112,26 +114,32 @@ const RegisterPage = () => {
       </div>
 
       {/* カレンダー */}
-      <div className="calendar-card">
+      <div className="calendar">
         <div className="calendar-header">
           <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
-          <h3>
+          <h3 className="month-title">
             {currentYear}年 {currentMonth + 1}月
           </h3>
           <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
         </div>
+
+        <div className="week-header">
+          <span>日</span><span>月</span><span>火</span>
+          <span>水</span><span>木</span><span>金</span><span>土</span>
+        </div>
+
         <div className="calendar-grid">{renderDays()}</div>
       </div>
 
       {/* 選択した日程 */}
-      <div className="selected-card">
+      <div className="options-section">
         <h3>選択した日程</h3>
         <ul>
           {selectedDates.map((d, i) => (
-            <li key={i}>{d}</li>
+            <li key={i} className="selected-date">{d}</li>
           ))}
         </ul>
-        <button className="share-btn">✨ 共有リンクを発行 ✨</button>
+        <button className="share-button fancy">✨ 共有リンクを発行 ✨</button>
       </div>
 
       <img src="/cat.png" alt="cat" className="cat-deco" />
