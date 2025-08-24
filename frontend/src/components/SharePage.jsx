@@ -1,5 +1,5 @@
 // frontend/src/components/SharePage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Holidays from "date-holidays";
 import "../index.css";
@@ -8,13 +8,14 @@ const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
 
+  // 日本時間の今日
   const jstNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
   const hd = new Holidays("JP");
 
   useEffect(() => {
-    const fetchSchedule = async () => {
+    const fetchData = async () => {
       try {
         const res = await fetch(
           `${process.env.REACT_APP_API_URL || ""}/share/${token}`
@@ -22,10 +23,10 @@ const SharePage = () => {
         const data = await res.json();
         setSchedule(data);
       } catch (err) {
-        console.error("共有スケジュール取得エラー:", err);
+        console.error("共有リンク取得エラー:", err);
       }
     };
-    fetchSchedule();
+    fetchData();
   }, [token]);
 
   if (!schedule) {
@@ -34,10 +35,11 @@ const SharePage = () => {
 
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 drop-shadow-md">
           📅 {schedule.title}
         </h1>
+
         <div className="space-y-4">
           {schedule.dates.map((d, i) => {
             const dateObj = new Date(d);
@@ -51,7 +53,7 @@ const SharePage = () => {
               <div
                 key={i}
                 className={`p-4 rounded-2xl shadow-lg ${
-                  isToday ? "bg-yellow-400 text-black" : "bg-black bg-opacity-50"
+                  isToday ? "bg-yellow-300 text-black" : "bg-black bg-opacity-50"
                 }`}
               >
                 <p className="text-lg font-semibold">
