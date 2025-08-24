@@ -302,3 +302,24 @@ button:hover {
 .share-button:hover {
   background: linear-gradient(90deg, #FDB9C8, #FFD700);
 }
+import React from "react";
+import "../index.css";
+import logo from "../assets/logo.png"; // publicに置く場合は "/logo.png" を使う
+
+const TopPage = () => {
+  return (
+    <div className="top-container">
+      {/* ロゴ画像 */}
+      <img src={logo} alt="MilkPOP Calendar Logo" className="top-logo" />
+
+      {/* 説明文 */}
+      <p className="top-description">
+        MilkPOP Calendar は、仲間と予定を共有できる便利なスケジュールアプリです。<br />
+        日程登録や個人スケジュール管理を簡単に行い、共有リンクですぐに友達と予定を合わせられます。
+      </p>
+    </div>
+  );
+};
+
+export default TopPage;
+
