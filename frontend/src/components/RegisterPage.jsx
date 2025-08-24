@@ -141,10 +141,11 @@ export default function RegisterPage() {
       </header>
 
       {/* ===== メインカード ===== */}
-      <main className="card">
-        <h2 className="page-title">日程登録</h2>
+      <main className="page-container">
+        {/* 左側（カレンダー） */}
+        <div className="calendar card" style={{ flex: "7" }}>
+          <h2 className="page-title">日程登録</h2>
 
-        <form onSubmit={handleSubmit}>
           {/* タイトル入力 */}
           <input
             type="text"
@@ -244,77 +245,82 @@ export default function RegisterPage() {
               )}
             </div>
           </div>
+        </div>
 
-          {/* ==== 時間帯 ==== */}
-          <div className="card" style={{ marginTop: "1rem" }}>
-            <p className="font-semibold">時間帯を選択してください:</p>
-            <div>
-              <label>
-                <input
-                  type="radio"
-                  value="allday"
-                  checked={timeType === "allday"}
-                  onChange={(e) => setTimeType(e.target.value)}
-                />
-                全日
-              </label>
-              <br />
-              <label>
-                <input
-                  type="radio"
-                  value="daytime"
-                  checked={timeType === "daytime"}
-                  onChange={(e) => setTimeType(e.target.value)}
-                />
-                昼（09:00〜18:00）
-              </label>
-              <br />
-              <label>
-                <input
-                  type="radio"
-                  value="night"
-                  checked={timeType === "night"}
-                  onChange={(e) => setTimeType(e.target.value)}
-                />
-                夜（18:00〜23:59）
-              </label>
-              <br />
-              <label>
-                <input
-                  type="radio"
-                  value="custom"
-                  checked={timeType === "custom"}
-                  onChange={(e) => setTimeType(e.target.value)}
-                />
-                時刻指定
-              </label>
-            </div>
-
-            {timeType === "custom" && (
-              <div style={{ marginTop: "0.5rem" }}>
-                <input
-                  type="time"
-                  value={timeRange.start}
-                  onChange={(e) =>
-                    setTimeRange({ ...timeRange, start: e.target.value })
-                  }
-                />
-                <span>〜</span>
-                <input
-                  type="time"
-                  value={timeRange.end}
-                  onChange={(e) =>
-                    setTimeRange({ ...timeRange, end: e.target.value })
-                  }
-                />
-              </div>
-            )}
+        {/* 右側（時間帯 & ボタン） */}
+        <div className="card" style={{ flex: "3" }}>
+          <p className="font-semibold">時間帯を選択してください:</p>
+          <div>
+            <label>
+              <input
+                type="radio"
+                value="allday"
+                checked={timeType === "allday"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              全日
+            </label>
+            <br />
+            <label>
+              <input
+                type="radio"
+                value="daytime"
+                checked={timeType === "daytime"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              昼（09:00〜18:00）
+            </label>
+            <br />
+            <label>
+              <input
+                type="radio"
+                value="night"
+                checked={timeType === "night"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              夜（18:00〜23:59）
+            </label>
+            <br />
+            <label>
+              <input
+                type="radio"
+                value="custom"
+                checked={timeType === "custom"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              時刻指定
+            </label>
           </div>
 
-          <button type="submit" className="share-button" style={{ marginTop: "1rem" }}>
+          {timeType === "custom" && (
+            <div style={{ marginTop: "0.5rem" }}>
+              <input
+                type="time"
+                value={timeRange.start}
+                onChange={(e) =>
+                  setTimeRange({ ...timeRange, start: e.target.value })
+                }
+              />
+              <span>〜</span>
+              <input
+                type="time"
+                value={timeRange.end}
+                onChange={(e) =>
+                  setTimeRange({ ...timeRange, end: e.target.value })
+                }
+              />
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="share-button"
+            style={{ marginTop: "1rem" }}
+            onClick={handleSubmit}
+          >
             共有リンクを発行
           </button>
-        </form>
+        </div>
       </main>
     </div>
   );
