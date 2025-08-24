@@ -1,292 +1,155 @@
 import React, { useState } from "react";
+import Holidays from "date-holidays";
 import "../index.css";
-import Header from "./Header";
-import Footer from "./Footer";
-
-const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-const timeOptions = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
 const PersonalPage = () => {
-  const today = new Date();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
-  const [rangeStart, setRangeStart] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeRange, setTimeRange] = useState("allday");
 
-  // 時間帯
-  const [timeType, setTimeType] = useState("終日");
-  const [startTime, setStartTime] = useState("9:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const hd = new Holidays("JP");
 
-  // === 今の月の日数 ===
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const getDaysInMonth = (year, month) =>
+    new Date(year, month + 1, 0).getDate();
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-  // === 日付クリック ===
   const handleDateClick = (day) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-
-    if (selectionMode === "multiple") {
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, dateStr]);
-      }
-    } else if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(dateStr);
-        setSelectedDates([dateStr]);
-      } else {
-        let start = new Date(rangeStart);
-        let end = new Date(dateStr);
-        if (start > end) [start, end] = [end, start];
-
-        const range = [];
-        const cursor = new Date(start);
-        while (cursor <= end) {
-          const d = `${cursor.getFullYear()}-${String(
-            cursor.getMonth() + 1
-          ).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-          range.push(d);
-          cursor.setDate(cursor.getDate() + 1);
-        }
-        setSelectedDates(range);
-        setRangeStart(null);
-      }
-    }
-  };
-
-  // === 選択解除 ===
-  const handleDeleteDate = (dateStr) => {
-    setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-  };
-
-  // === 保存 ===
-  const handleSave = async () => {
-    try {
-      for (const d of selectedDates) {
-        await fetch("/api/personal-schedules", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            memo,
-            date: d,
-            selectionMode,
-            timeType,
-            startTime: timeType === "時刻指定" ? startTime : null,
-            endTime: timeType === "時刻指定" ? endTime : null,
-          }),
-        });
-      }
-      alert("✅ 個人スケジュールを保存しました");
-      setSelectedDates([]);
-      setTitle("");
-      setMemo("");
-    } catch (err) {
-      console.error(err);
-      alert("❌ 保存に失敗しました");
-    }
-  };
-
-  // === カレンダーセル生成 ===
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) {
-    cells.push(<div key={`empty-${i}`} className="calendar-cell empty"></div>);
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-      day
-    ).padStart(2, "0")}`;
-    const isToday =
-      today.getFullYear() === year &&
-      today.getMonth() === month &&
-      today.getDate() === day;
-    const isSelected = selectedDates.includes(dateStr);
-
-    cells.push(
-      <div
-        key={day}
-        className={`calendar-cell ${isToday ? "today" : ""} ${
-          isSelected ? "selected" : ""
-        }`}
-        onClick={() => handleDateClick(day)}
-      >
-        {day}
-      </div>
+    const date = `${currentYear}-${currentMonth + 1}-${day}`;
+    setSelectedDates((prev) =>
+      prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
     );
-  }
+  };
+
+  const renderDays = () => {
+    const days = [];
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const holiday = hd.isHoliday(date);
+      const formattedDate = `${currentYear}-${currentMonth + 1}-${day}`;
+      const isSelected = selectedDates.includes(formattedDate);
+      const isToday = date.toDateString() === new Date().toDateString();
+
+      days.push(
+        <div
+          key={day}
+          className={`day-cell ${isSelected ? "selected" : ""} ${
+            holiday ? "calendar-holiday" : ""
+          } ${date.getDay() === 0 ? "calendar-sunday" : ""} ${
+            date.getDay() === 6 ? "calendar-saturday" : ""
+          } ${isToday ? "calendar-today" : ""}`}
+          onClick={() => handleDateClick(day)}
+        >
+          <span>{day}</span>
+          {holiday && <small className="holiday-name">{holiday[0].name}</small>}
+        </div>
+      );
+    }
+    return days;
+  };
 
   return (
-    <>
-      <Header />
-      <main className="register-page">
-        <div className="register-layout">
-          {/* 左：入力フォーム + カレンダー */}
-          <div className="calendar-section">
-            {/* タイトル */}
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                📌 タイトル
-              </label>
-              <input
-                type="text"
-                placeholder="例: 出張予定"
-                className="input-field"
-                value={title}
-                onChange={(e) => setTitle(e.target.value.replace(/_/g, ""))}
-              />
+    <div className="page-container">
+      <h2 className="page-title">個人日程登録</h2>
+
+      <div className="input-card">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="title-input"
+        />
+        <textarea
+          placeholder="メモを入力"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
+          className="title-input"
+          style={{ height: "80px", marginTop: "1rem" }}
+        />
+
+        <div className="radio-group fancy-radio">
+          <label>
+            <input
+              type="radio"
+              value="allday"
+              checked={timeRange === "allday"}
+              onChange={() => setTimeRange("allday")}
+            />
+            <span className="custom-radio"></span>
+            終日
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="day"
+              checked={timeRange === "day"}
+              onChange={() => setTimeRange("day")}
+            />
+            <span className="custom-radio"></span>
+            昼
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="night"
+              checked={timeRange === "night"}
+              onChange={() => setTimeRange("night")}
+            />
+            <span className="custom-radio"></span>
+            夜
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="custom"
+              checked={timeRange === "custom"}
+              onChange={() => setTimeRange("custom")}
+            />
+            <span className="custom-radio"></span>
+            時間指定
+          </label>
+        </div>
+      </div>
+
+      <div className="main-layout">
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
             </div>
-
-            {/* メモ */}
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                🗒 メモ
-              </label>
-              <textarea
-                placeholder="詳細を入力してください"
-                className="input-field"
-                rows="4"
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
-              />
+            <div className="week-header">
+              <span>日</span><span>月</span><span>火</span>
+              <span>水</span><span>木</span><span>金</span><span>土</span>
             </div>
-
-            {/* 選択モード（ラジオボタン） */}
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                🔽 選択モード
-              </label>
-              <div className="radio-options">
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    value="multiple"
-                    checked={selectionMode === "multiple"}
-                    onChange={(e) => setSelectionMode(e.target.value)}
-                  />
-                  <span className="custom-radio"></span>
-                  複数選択
-                </label>
-                <label className="radio-label">
-                  <input
-                    type="radio"
-                    value="range"
-                    checked={selectionMode === "range"}
-                    onChange={(e) => setSelectionMode(e.target.value)}
-                  />
-                  <span className="custom-radio"></span>
-                  範囲選択
-                </label>
-              </div>
-            </div>
-
-            {/* 時間帯 */}
-            <div className="mb-6 text-left">
-              <label className="block text-[#004CA0] font-bold mb-2 text-lg">
-                ⏰ 時間帯
-              </label>
-              <select
-                className="input-field"
-                value={timeType}
-                onChange={(e) => setTimeType(e.target.value)}
-              >
-                <option value="終日">終日</option>
-                <option value="午前">午前</option>
-                <option value="午後">午後</option>
-                <option value="時刻指定">時刻指定</option>
-              </select>
-
-              {timeType === "時刻指定" && (
-                <div className="flex gap-4 mt-3">
-                  <select
-                    className="input-field flex-1"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  >
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="self-center">〜</span>
-                  <select
-                    className="input-field flex-1"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  >
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* カレンダー年月 */}
-            <h2 className="text-xl font-bold text-center text-[#004CA0] mb-2">
-              {year}年 {month + 1}月
-            </h2>
-
-            {/* 月切替 */}
-            <div className="flex justify-between items-center mb-4">
-              <button onClick={prevMonth} className="month-btn">
-                ◀ 前の月
-              </button>
-              <button onClick={nextMonth} className="month-btn">
-                次の月 ▶
-              </button>
-            </div>
-
-            {/* カレンダー */}
-            <div className="custom-calendar">
-              {daysOfWeek.map((d, idx) => (
-                <div key={idx} className="calendar-day-header">
-                  {d}
-                </div>
-              ))}
-              {cells}
-            </div>
-          </div>
-
-          {/* 右：選択済み */}
-          <div className="schedule-section">
-            <h2>選択した日程</h2>
-            <ul>
-              {selectedDates.map((d, idx) => (
-                <li key={idx} className="schedule-card">
-                  <span className="schedule-title">{d}</span>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteDate(d)}
-                  >
-                    ✖
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {/* 保存ボタン */}
-            <button onClick={handleSave} className="save-btn mt-6">
-              💾 保存する
-            </button>
+            <div className="calendar-grid">{renderDays()}</div>
           </div>
         </div>
-      </main>
-      <Footer />
-    </>
+
+        <div className="options-section">
+          <h3>選択した日程</h3>
+          <ul>
+            {selectedDates.map((d, i) => (
+              <li key={i} className="selected-date">{d} ({timeRange})</li>
+            ))}
+          </ul>
+          <button className="share-button fancy">💾 保存</button>
+        </div>
+      </div>
+    </div>
   );
 };
 
