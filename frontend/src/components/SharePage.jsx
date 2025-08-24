@@ -34,7 +34,6 @@ const SharePage = () => {
       const data = await res.json();
       setAllResponses(data);
 
-      // 自分の回答を反映
       const myResp = data.find((r) => r.user_id === username);
       if (myResp) setResponses(myResp.responses);
     } catch (err) {
@@ -86,7 +85,7 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 日付ごとの回答を整理
+  // 日付ごとの回答
   const groupByDate = {};
   allResponses.forEach((r) => {
     Object.entries(r.responses).forEach(([date, value]) => {
@@ -101,7 +100,8 @@ const SharePage = () => {
       style={{
         alignItems: "flex-start",
         maxWidth: "95%",
-        marginLeft: "2rem",
+        margin: "0",        // 中央寄せ防止
+        paddingLeft: "2rem" // 左余白を確保
       }}
     >
       <h2 className="page-title" style={{ textAlign: "left" }}>
@@ -109,7 +109,14 @@ const SharePage = () => {
       </h2>
 
       {/* タイトル */}
-      <div className="card" style={{ textAlign: "left", width: "100%" }}>
+      <div
+        className="card"
+        style={{
+          textAlign: "left",
+          width: "100%",
+          margin: "0 0 1.5rem 0"
+        }}
+      >
         <h3>{schedule.title}</h3>
       </div>
 
@@ -120,6 +127,7 @@ const SharePage = () => {
           marginBottom: "1.5rem",
           textAlign: "left",
           width: "100%",
+          margin: "0"
         }}
       >
         <input
@@ -135,7 +143,12 @@ const SharePage = () => {
       {/* 日程一覧 */}
       <div
         className="card"
-        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
+        style={{
+          marginBottom: "2rem",
+          textAlign: "left",
+          width: "100%",
+          margin: "0"
+        }}
       >
         <h3>日程一覧</h3>
         <table
@@ -147,15 +160,9 @@ const SharePage = () => {
         >
           <thead>
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                日付
-              </th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                あなたの出欠
-              </th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                みんなの出欠
-              </th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>あなたの出欠</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>みんなの出欠</th>
             </tr>
           </thead>
           <tbody>
@@ -167,8 +174,6 @@ const SharePage = () => {
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <strong>{d}</strong>
                 </td>
-
-                {/* あなたの出欠 - 常にプルダウン表示 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <select
                     value={responses[d] || ""}
@@ -187,8 +192,6 @@ const SharePage = () => {
                     <option value="no">✕</option>
                   </select>
                 </td>
-
-                {/* みんなの出欠 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   {groupByDate[d] ? (
                     groupByDate[d].map((entry, idx) => (
@@ -232,7 +235,7 @@ const SharePage = () => {
         </table>
       </div>
 
-      {/* 保存・削除ボタン */}
+      {/* 保存・削除 */}
       <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
         <button onClick={handleSave} className="share-button fancy">
           保存
