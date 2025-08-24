@@ -464,4 +464,39 @@ footer {
   padding: 0.2rem 0.6rem;
   border-radius: 6px;
 }
+/* ===== ラジオボタンお洒落版 ===== */
+.radio-group {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.radio-group input[type="radio"] {
+  display: none; /* デフォルトは非表示 */
+}
+
+.radio-group label {
+  background: #222;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.4);
+}
+
+.radio-group label:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+
+/* ✅ 選択されている時 */
+.radio-group input[type="radio"]:checked + label {
+  background: #FDB9C8;
+  color: #000;
+  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+}
 
