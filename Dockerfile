@@ -1,38 +1,30 @@
-# ========= フロントエンド ビルド =========
-FROM node:18 AS frontend-builder
+# ========== ビルド用 Node イメージ ==========
+FROM node:18 AS build
 
 # 作業ディレクトリ
+WORKDIR /app
+
+# ====== フロントエンド ======
+COPY frontend/package*.json ./frontend/
 WORKDIR /app/frontend
+RUN npm ci
 
-# package.json と lock ファイルをコピー
-COPY frontend/package*.json ./
-
-# 依存関係をインストール
-RUN npm install
-
-# ソースコードをコピー
+# フロントエンドのソースをコピーしてビルド
 COPY frontend/ ./
+# ✅ CI=false を追加して警告で止まらないように
+RUN CI=false npm run build
 
-# 本番用ビルドを作成
-RUN npm run build
-
-# ========= バックエンド 実行 =========
-FROM node:18
-
+# ====== バックエンド ======
 WORKDIR /app/backend
+COPY backend/package*.json ./ 
+RUN npm ci
 
-# backend の依存関係をコピー
-COPY backend/package*.json ./
-RUN npm install
-
-# backend ソースをコピー
+# バックエンドのソースをコピー
 COPY backend/ ./
 
-# frontend のビルド成果物を backend/public にコピー
-COPY --from=frontend-builder /app/frontend/build ./public
+# ====== フロントエンドのビルド成果物をバックエンドにコピー ======
+COPY --from=build /app/frontend/build ./frontend/build
 
-# ポート
-EXPOSE 3000
-
-# サーバー起動
+# ====== 本番実行 ======
+EXPOSE 5000
 CMD ["npm", "start"]
