@@ -9,7 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [editingUser, setEditingUser] = useState(null); // 編集対象ユーザー
+  const [editingUser, setEditingUser] = useState(null); // 編集対象
 
   // スケジュール取得
   useEffect(() => {
@@ -35,7 +35,7 @@ const SharePage = () => {
       const data = await res.json();
       setAllResponses(data);
 
-      // 編集中のユーザーの回答を state に反映
+      // 編集中ユーザーを反映
       if (editingUser) {
         const targetResp = data.find((r) => r.username === editingUser);
         setResponses(targetResp ? targetResp.responses : {});
@@ -45,10 +45,11 @@ const SharePage = () => {
     }
   };
 
-  // 保存（編集対象ユーザー）
+  // 出欠保存
   const handleSave = async () => {
-    if (!editingUser) {
-      alert("編集するユーザーを選択してください");
+    const targetUser = editingUser || username;
+    if (!targetUser) {
+      alert("名前を入力してください");
       return;
     }
     try {
@@ -56,31 +57,12 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUser,
-          username: editingUser,
+          user_id: targetUser,
+          username: targetUser,
           responses,
         }),
       });
-      alert(`${editingUser} さんの出欠を保存しました`);
-      fetchResponses(schedule.id);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // 削除（編集対象ユーザー）
-  const handleDelete = async () => {
-    if (!editingUser) return;
-    if (!window.confirm(`${editingUser} さんの回答を削除しますか？`)) return;
-
-    try {
-      await fetch(
-        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(editingUser)}`,
-        { method: "DELETE" }
-      );
-      alert(`${editingUser} さんの出欠を削除しました`);
-      setEditingUser(null);
-      setResponses({});
+      alert(`${targetUser} さんの出欠を保存しました`);
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
@@ -89,7 +71,7 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 日付ごとの回答
+  // 日付ごとの回答まとめ
   const groupByDate = {};
   allResponses.forEach((r) => {
     Object.entries(r.responses).forEach(([date, value]) => {
@@ -98,15 +80,19 @@ const SharePage = () => {
     });
   });
 
+  // 時間帯が schedule.dates に含まれる場合の処理
+  const getDateLabel = (dateStr) => {
+    if (typeof dateStr === "string" && dateStr.includes("|")) {
+      const [date, time] = dateStr.split("|");
+      return `${date} (${time})`;
+    }
+    return dateStr;
+  };
+
   return (
     <div
       className="page-container"
-      style={{
-        alignItems: "flex-start",
-        maxWidth: "95%",
-        margin: "0",
-        paddingLeft: "2rem",
-      }}
+      style={{ alignItems: "flex-start", maxWidth: "95%", marginLeft: "2rem" }}
     >
       <h2 className="page-title" style={{ textAlign: "left" }}>
         共有スケジュール
@@ -129,13 +115,16 @@ const SharePage = () => {
           type="text"
           placeholder="あなたの名前を入力"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setEditingUser(null); // 名前入力時は自分を編集対象に
+          }}
           className="title-input"
           style={{ maxWidth: "300px" }}
         />
       </div>
 
-      {/* 日程一覧 */}
+      {/* 日程一覧テーブル */}
       <div className="card" style={{ marginBottom: "2rem", textAlign: "left" }}>
         <h3>日程一覧</h3>
         <table
@@ -150,6 +139,7 @@ const SharePage = () => {
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>あなたの出欠</th>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>みんなの出欠</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -158,11 +148,12 @@ const SharePage = () => {
                 key={d}
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
               >
+                {/* 日付＋時間帯 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
-                  <strong>{d}</strong>
+                  <strong>{getDateLabel(d)}</strong>
                 </td>
 
-                {/* あなたの出欠プルダウン */}
+                {/* 出欠プルダウン */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <select
                     value={responses[d] || ""}
@@ -179,7 +170,7 @@ const SharePage = () => {
                   </select>
                 </td>
 
-                {/* みんなの出欠（名前をリンク化） */}
+                {/* みんなの出欠 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   {groupByDate[d] ? (
                     groupByDate[d].map((entry, idx) => (
@@ -204,50 +195,36 @@ const SharePage = () => {
                           textDecoration: "underline",
                         }}
                       >
-                        {entry.user}
+                        {entry.user}:
+                        {entry.value === "yes"
+                          ? "〇"
+                          : entry.value === "maybe"
+                          ? "△"
+                          : entry.value === "no"
+                          ? "✕"
+                          : "-"}
                       </span>
                     ))
                   ) : (
                     <span style={{ color: "#aaa" }}>未回答</span>
                   )}
                 </td>
+
+                {/* 保存ボタン */}
+                <td style={{ padding: "0.6rem 1rem" }}>
+                  <button
+                    onClick={handleSave}
+                    className="share-button fancy"
+                    style={{ padding: "0.3rem 0.8rem", fontSize: "0.85rem" }}
+                  >
+                    保存
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {/* 編集・削除操作 */}
-      {editingUser && (
-        <div
-          className="card"
-          style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            textAlign: "left",
-          }}
-        >
-          <h3>{editingUser} さんの出欠を編集中</h3>
-          <button onClick={handleSave} className="share-button fancy">
-            保存
-          </button>
-          <button
-            onClick={handleDelete}
-            style={{
-              background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
-              border: "none",
-              borderRadius: "50px",
-              padding: "0.8rem 1.6rem",
-              color: "#fff",
-              fontWeight: "bold",
-              cursor: "pointer",
-              marginLeft: "1rem",
-            }}
-          >
-            削除
-          </button>
-        </div>
-      )}
     </div>
   );
 };
