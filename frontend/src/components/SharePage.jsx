@@ -6,10 +6,9 @@ import "../index.css";
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
-  const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [editingUser, setEditingUser] = useState(null); // 編集対象ユーザー
+  const [username, setUsername] = useState("");
 
   // スケジュール取得
   useEffect(() => {
@@ -34,21 +33,14 @@ const SharePage = () => {
       const res = await fetch(`/api/schedules/${scheduleId}/responses`);
       const data = await res.json();
       setAllResponses(data);
-
-      // 編集対象の回答を反映
-      if (editingUser) {
-        const targetResp = data.find((r) => r.username === editingUser);
-        setResponses(targetResp ? targetResp.responses : {});
-      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 出欠保存
+  // 保存
   const handleSave = async () => {
-    const targetUser = editingUser || username;
-    if (!targetUser) {
+    if (!username) {
       alert("名前を入力してください");
       return;
     }
@@ -57,12 +49,12 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: targetUser,
-          username: targetUser,
+          user_id: username,
+          username,
           responses,
         }),
       });
-      alert(`${targetUser} さんの出欠を保存しました`);
+      alert("保存しました");
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
@@ -74,13 +66,14 @@ const SharePage = () => {
   // すべてのユーザー名
   const users = [...new Set(allResponses.map((r) => r.username))];
 
-  // 日付ごとの回答を集計
-  const groupByDate = {};
-  allResponses.forEach((r) => {
-    Object.entries(r.responses).forEach(([date, value]) => {
-      if (!groupByDate[date]) groupByDate[date] = {};
-      groupByDate[date][r.username] = value;
+  // 日付ごとの回答マッピング
+  const dateRows = schedule.dates.map((d) => {
+    const row = {};
+    users.forEach((u) => {
+      const resp = allResponses.find((r) => r.username === u);
+      row[u] = resp?.responses?.[d] || "";
     });
+    return { date: d, responses: row };
   });
 
   // 日付＋時間帯表示
@@ -118,17 +111,13 @@ const SharePage = () => {
           type="text"
           placeholder="あなたの名前を入力"
           value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-            setEditingUser(null); // 名前入力時は自分を対象に
-            setResponses({});
-          }}
+          onChange={(e) => setUsername(e.target.value)}
           className="title-input"
           style={{ maxWidth: "300px" }}
         />
       </div>
 
-      {/* 日程一覧 */}
+      {/* 日程一覧テーブル */}
       <div
         className="card"
         style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
@@ -144,85 +133,71 @@ const SharePage = () => {
           <thead>
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                あなたの出欠
-              </th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
-                みんなの出欠
-              </th>
+              {users.map((u) => (
+                <th
+                  key={u}
+                  style={{ textAlign: "center", padding: "0.5rem 1rem" }}
+                >
+                  {u}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {schedule.dates.map((d) => (
+            {dateRows.map((row) => (
               <tr
-                key={d}
+                key={row.date}
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
               >
                 {/* 日付＋時間帯 */}
                 <td style={{ padding: "0.6rem 1rem" }}>
-                  <strong>{getDateLabel(d)}</strong>
+                  <strong>{getDateLabel(row.date)}</strong>
                 </td>
 
-                {/* 出欠プルダウン */}
-                <td style={{ padding: "0.6rem 1rem" }}>
-                  <select
-                    value={responses[d] || ""}
-                    onChange={(e) =>
-                      setResponses((prev) => ({ ...prev, [d]: e.target.value }))
-                    }
-                    className="custom-dropdown"
-                    style={{ width: "90px" }}
+                {/* 各ユーザーの出欠 */}
+                {users.map((u) => (
+                  <td
+                    key={u}
+                    style={{
+                      padding: "0.6rem 1rem",
+                      textAlign: "center",
+                    }}
                   >
-                    <option value="">---</option>
-                    <option value="yes">〇</option>
-                    <option value="maybe">△</option>
-                    <option value="no">✕</option>
-                  </select>
-                </td>
-
-                {/* みんなの出欠（名前クリックで編集対象に） */}
-                <td style={{ padding: "0.6rem 1rem" }}>
-                  {users.length > 0 ? (
-                    users.map((u) => (
-                      <span
-                        key={u}
-                        onClick={() => {
-                          setEditingUser(u);
-                          const targetResp = allResponses.find(
-                            (r) => r.username === u
-                          );
-                          setResponses(targetResp ? targetResp.responses : {});
-                        }}
-                        style={{
-                          display: "inline-block",
-                          marginRight: "0.8rem",
-                          padding: "0.2rem 0.5rem",
-                          borderRadius: "6px",
-                          background:
-                            editingUser === u
-                              ? "rgba(80,200,120,0.3)"
-                              : "rgba(255,255,255,0.1)",
-                          color:
-                            editingUser === u ? "#50C878" : "#FDB9C8",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                          textDecoration: "underline",
-                        }}
+                    {u === username ? (
+                      <select
+                        value={responses[row.date] || ""}
+                        onChange={(e) =>
+                          setResponses((prev) => ({
+                            ...prev,
+                            [row.date]: e.target.value,
+                          }))
+                        }
+                        className="custom-dropdown"
+                        style={{ width: "80px" }}
                       >
-                        {u}
-                      </span>
-                    ))
-                  ) : (
-                    <span style={{ color: "#aaa" }}>未回答</span>
-                  )}
-                </td>
+                        <option value="">---</option>
+                        <option value="yes">〇</option>
+                        <option value="maybe">△</option>
+                        <option value="no">✕</option>
+                      </select>
+                    ) : row.responses[u] === "yes" ? (
+                      "〇"
+                    ) : row.responses[u] === "no" ? (
+                      "✕"
+                    ) : row.responses[u] === "maybe" ? (
+                      "△"
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* 保存ボタン（下にまとめて配置） */}
+      {/* 保存ボタン */}
       <div style={{ marginTop: "1.5rem" }}>
         <button
           onClick={handleSave}
