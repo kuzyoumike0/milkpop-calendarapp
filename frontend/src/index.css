@@ -271,7 +271,7 @@ footer {
 }
 
 /* ===== ラジオボタン（見やすいボタン風） ===== */
-/* ===== ラジオボタン（視認性強化） ===== */
+/* ===== ラジオボタン（視認性強化版） ===== */
 .radio-group {
   display: flex;
   justify-content: center;
@@ -281,6 +281,10 @@ footer {
   border: 2px solid #FDB9C8;
   background: rgba(0,0,0,0.85);
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.fancy-radio input {
+  display: none;
 }
 
 .fancy-radio label {
@@ -293,41 +297,24 @@ footer {
   border-radius: 12px;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  min-width: 120px;          /* サイズを揃える */
+  min-width: 120px;
   text-align: center;
 }
 
-.fancy-radio input {
-  display: none;
-}
-
-/* 選択中 */
+/* 選択中の強調 */
 .fancy-radio input:checked + label {
   background: #FDB9C8;
   color: #000;
   border: 2px solid #FDB9C8;
-  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+  box-shadow: 0 0 15px rgba(253,185,200,0.9);
   transform: scale(1.08);
 }
 
-/* ホバー */
+/* ホバー時 */
 .fancy-radio label:hover {
   background: rgba(253,185,200,0.25);
   transform: scale(1.05);
 }
-
-.fancy-radio label {
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: bold;
-  color: #fff;
-  background: rgba(255,255,255,0.05);
-  padding: 0.6rem 1.5rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-.fancy-radio input { display: none; }
 
 /* 選択中 */
 .fancy-radio input:checked ~ label,
