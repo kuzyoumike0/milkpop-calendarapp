@@ -31,7 +31,6 @@ h1, h2, h3 {
   position: relative;
   z-index: 1000;
 }
-
 .logo-link {
   font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif !important;
   font-size: 2rem;
@@ -47,7 +46,6 @@ h1, h2, h3 {
   color: #50C878;
   transform: scale(1.05);
 }
-
 .nav-links {
   display: flex;
   gap: 1.2rem;
@@ -229,7 +227,6 @@ footer {
   flex-direction: column;
   align-items: center;
 }
-
 .page-title {
   font-size: 1.8rem;
   font-weight: bold;
@@ -318,6 +315,13 @@ footer {
 .calendar-sunday { color: #ff4d6d; }
 .calendar-saturday { color: #4d79ff; }
 .calendar-holiday { color: #ff4d6d; font-weight: bold; }
+.calendar-today {
+  background: #ffeb3b !important;
+  color: #000 !important;
+  font-weight: bold;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 10px rgba(253,185,200,0.6);
+}
 .holiday-name {
   font-size: 0.7rem;
   margin-top: 0.2rem;
@@ -332,7 +336,6 @@ footer {
   padding: 1.5rem;
   color: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  margin-top: 1.5rem;
   width: 100%;
   max-width: 600px;
 }
@@ -362,7 +365,7 @@ footer {
   background-position: right center;
   transform: scale(1.05);
   color: #fff;
-  box-shadow: 0 0 20px rgba(253, 185, 200, 0.8);
+  box-shadow: 0 0 20px rgba(253,185,200,0.8);
 }
 
 /* 猫アイコン */
@@ -373,62 +376,19 @@ footer {
   width: 80px;
 }
 
-/* ====== レスポンシブ対応 ====== */
-@media (max-width: 1024px) {
-  .calendar-grid {
-    gap: 0.2rem;
-  }
-  .day-cell {
-    min-height: 55px;
-    font-size: 0.9rem;
-  }
-}
-@media (max-width: 768px) {
-  .page-container {
-    padding: 1rem;
-  }
-  .title-input {
-    width: 100%;
-  }
-  .calendar {
-    padding: 0.5rem;
-  }
-  .calendar-header h3 {
-    font-size: 1.1rem;
-  }
-  .day-cell {
-    min-height: 50px;
-    font-size: 0.8rem;
-  }
-  .holiday-name {
-    font-size: 0.6rem;
-  }
-  .options-section {
-    padding: 1rem;
-  }
-  .selected-date {
-    font-size: 0.85rem;
-  }
-}
-
 /* ====== 横並びレイアウト ====== */
 .main-layout {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 2rem;
+  gap: 3rem; /* カレンダーとリストの余白 */
   width: 100%;
   padding: 0 2rem; /* 左右に余白 */
 }
+.calendar-section { flex: 7; }
+.options-section { flex: 3; }
 
-.calendar-section {
-  flex: 7;
-}
-.options-section {
-  flex: 3;
-}
-
-/* ====== ラジオボタンをお洒落に ====== */
+/* ====== ラジオボタン ====== */
 .fancy-radio label {
   position: relative;
   padding-left: 28px;
@@ -438,9 +398,7 @@ footer {
   display: inline-flex;
   align-items: center;
 }
-.fancy-radio input {
-  display: none;
-}
+.fancy-radio input { display: none; }
 .custom-radio {
   position: absolute;
   left: 0;
@@ -458,31 +416,18 @@ footer {
 
 /* ====== レスポンシブ ====== */
 @media (max-width: 1024px) {
-  .main-layout {
-    flex-direction: column;
-    padding: 0 1rem;
-  }
-  .calendar-section, .options-section {
-    flex: 1;
-    width: 100%;
-  }
+  .calendar-grid { gap: 0.2rem; }
+  .day-cell { min-height: 55px; font-size: 0.9rem; }
+  .main-layout { flex-direction: column; padding: 0 1rem; gap: 1.5rem; }
+  .calendar-section, .options-section { width: 100%; }
 }
-/* 今日の日付 */
-.calendar-today {
-  background: #ffeb3b !important; /* 黄色 */
-  color: #000 !important;
-  font-weight: bold;
-  border: 2px solid #FDB9C8; /* ピンクの枠 */
-  box-shadow: 0 0 10px rgba(253,185,200,0.6);
+@media (max-width: 768px) {
+  .page-container { padding: 1rem; }
+  .title-input { width: 100%; }
+  .calendar { padding: 0.5rem; }
+  .calendar-header h3 { font-size: 1.1rem; }
+  .day-cell { min-height: 50px; font-size: 0.8rem; }
+  .holiday-name { font-size: 0.6rem; }
+  .options-section { padding: 1rem; }
+  .selected-date { font-size: 0.85rem; }
 }
-
-/* カレンダーとリストの間に余白 */
-.main-layout {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 3rem;   /* ← ここを広げて余白を確保 */
-  width: 100%;
-  padding: 0 2rem;
-}
-
