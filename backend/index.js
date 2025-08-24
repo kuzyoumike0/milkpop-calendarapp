@@ -232,6 +232,22 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
+// --- 出欠削除 ---
+app.delete("/api/schedules/:id/responses/:user_id", async (req, res) => {
+  try {
+    const { id, user_id } = req.params;
+    await pool.query(
+      "DELETE FROM schedule_responses WHERE schedule_id=$1 AND user_id=$2",
+      [id, user_id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("回答削除エラー:", err);
+    res.status(500).json({ error: "回答削除エラー" });
+  }
+});
+
+
 // ===== サーバー起動 =====
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
