@@ -9,7 +9,8 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({}); // { date: { type: "all"|"day"|"night"|"custom", start: "09:00", end: "18:00" } }
+  const [timeOptions, setTimeOptions] = useState({});
+  const [shareUrl, setShareUrl] = useState(""); // ← 追加
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -36,14 +37,12 @@ const RegisterPage = () => {
     return range;
   };
 
-  // 表示用日程
   const getDisplayedDates = () => {
     if (selectionMode === "range" && selectedDates.length === 2) {
       return expandRange(selectedDates[0], selectedDates[1]).sort();
     }
     return [...selectedDates].sort();
   };
-
   const displayedDates = getDisplayedDates();
 
   // 日付クリック
@@ -58,7 +57,7 @@ const RegisterPage = () => {
       } else if (selectedDates.length === 1) {
         setSelectedDates([selectedDates[0], date]);
       } else {
-        setSelectedDates([date]); // 新しく選び直し
+        setSelectedDates([date]); // リセット
       }
     }
   };
@@ -88,7 +87,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // 共有リンク生成
+  // 共有リンク発行
   const handleShare = async () => {
     if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -106,7 +105,8 @@ const RegisterPage = () => {
       });
       const data = await res.json();
       if (data.share_token) {
-        navigate(`/share/${data.share_token}`);
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareUrl(url); // ← 発行したURLを表示用に保存
       } else {
         alert("共有リンクの生成に失敗しました");
       }
@@ -214,11 +214,11 @@ const RegisterPage = () => {
         <div className="options-section">
           <h3>選択した日程</h3>
           {displayedDates.map((d) => {
-            const opt = timeOptions[d] || { type: "all", start: "09:00", end: "18:00" };
+            const opt =
+              timeOptions[d] || { type: "all", start: "09:00", end: "18:00" };
             return (
               <div key={d} className="selected-date">
                 <span>{d}</span>
-                {/* 時間帯プルダウン */}
                 <select
                   value={opt.type}
                   onChange={(e) => handleTimeChange(d, "type", e.target.value)}
@@ -229,8 +229,6 @@ const RegisterPage = () => {
                   <option value="night">夜</option>
                   <option value="custom">時刻指定</option>
                 </select>
-
-                {/* 時刻指定のときに追加のプルダウン表示 */}
                 {opt.type === "custom" && (
                   <div className="custom-time">
                     <select
@@ -272,6 +270,16 @@ const RegisterPage = () => {
       <button onClick={handleShare} className="share-button fancy">
         共有リンクを発行
       </button>
+
+      {/* 発行済みリンク表示 */}
+      {shareUrl && (
+        <div className="share-link">
+          共有リンク:{" "}
+          <a href={shareUrl} onClick={(e) => { e.preventDefault(); navigate(shareUrl.replace(window.location.origin, "")); }}>
+            {shareUrl}
+          </a>
+        </div>
+      )}
     </div>
   );
 };
