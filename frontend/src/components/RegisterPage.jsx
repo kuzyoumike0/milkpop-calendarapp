@@ -1,6 +1,24 @@
-// 中略 … import 部分・ヘルパー関数はそのまま
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import Holidays from "date-holidays";
 
-const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSaturday, isSunday }) => {
+// ==== ヘルパー ====
+const getDaysInMonth = (year, month) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+// ==== カレンダーセル ====
+const CalendarCell = ({
+  date,
+  isSelected,
+  onClick,
+  isHoliday,
+  holidayName,
+  isSaturday,
+  isSunday,
+  isToday,
+}) => {
   let textColor = "";
   if (isHoliday) {
     textColor = "text-red-500 font-bold"; // 祝日優先
@@ -10,14 +28,24 @@ const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSat
     textColor = "text-blue-500 font-bold";
   }
 
+  let bgColor = "";
+  if (isSelected) {
+    bgColor = "bg-[#FDB9C8] text-white font-bold"; // 選択ピンク優先
+  } else if (isToday) {
+    bgColor = "bg-yellow-300 text-black font-bold"; // 今日の強調
+  }
+
   return (
     <div
       onClick={() => onClick(date)}
       title={holidayName || ""}
       className={`w-16 h-16 sm:w-14 sm:h-14 flex flex-col items-center justify-center rounded-lg cursor-pointer transition
-        ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
-        ${textColor}
-        ${!isSelected && !isHoliday && !isSaturday && !isSunday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
+        ${bgColor} ${textColor}
+        ${
+          !isSelected && !isHoliday && !isSaturday && !isSunday && !isToday
+            ? "hover:bg-[#004CA0] hover:text-white"
+            : ""
+        }`}
     >
       <span className="text-base sm:text-sm">{date.getDate()}</span>
       {holidayName && (
@@ -30,7 +58,97 @@ const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSat
 };
 
 export default function RegisterPage() {
-  // 中略 … state, hooks, handleSubmit はそのまま
+  const navigate = useNavigate();
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+
+  const [title, setTitle] = useState("");
+  const [selectionType, setSelectionType] = useState("multiple");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [range, setRange] = useState({ start: null, end: null });
+  const [holidays, setHolidays] = useState([]); // {date, name}
+
+  const [timeType, setTimeType] = useState("allday");
+  const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
+
+  // ==== 日本の祝日を取得 ====
+  useEffect(() => {
+    const hd = new Holidays("JP");
+    const yearHolidays = hd.getHolidays(currentYear).map((h) => ({
+      date: new Date(h.date),
+      name: h.name,
+    }));
+    setHolidays(yearHolidays);
+  }, [currentYear]);
+
+  const handleDateClick = (date) => {
+    if (selectionType === "multiple") {
+      setSelectedDates((prev) =>
+        prev.some((d) => d.getTime() === date.getTime())
+          ? prev.filter((d) => d.getTime() !== date.getTime())
+          : [...prev, date]
+      );
+    } else if (selectionType === "range") {
+      if (!range.start || (range.start && range.end)) {
+        setRange({ start: date, end: null });
+      } else if (range.start && !range.end) {
+        if (date < range.start) {
+          setRange({ start: date, end: range.start });
+        } else {
+          setRange({ ...range, end: date });
+        }
+      }
+    }
+  };
+
+  const isDateSelected = (date) => {
+    if (selectionType === "multiple") {
+      return selectedDates.some((d) => d.getTime() === date.getTime());
+    } else if (selectionType === "range") {
+      if (range.start && range.end) {
+        return date >= range.start && date <= range.end;
+      }
+      return range.start && date.getTime() === range.start.getTime();
+    }
+    return false;
+  };
+
+  const getHolidayInfo = (date) => {
+    const holiday = holidays.find(
+      (h) =>
+        h.date.getFullYear() === date.getFullYear() &&
+        h.date.getMonth() === date.getMonth() &&
+        h.date.getDate() === date.getDate()
+    );
+    return holiday ? holiday.name : null;
+  };
+
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    calendarDays.push(new Date(currentYear, currentMonth, d));
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const scheduleId = uuidv4();
+    const payload =
+      selectionType === "multiple"
+        ? { id: scheduleId, title, dates: selectedDates, timeType, timeRange }
+        : { id: scheduleId, title, range, timeType, timeRange };
+
+    await fetch("/api/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    navigate(`/share/${scheduleId}`);
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
@@ -130,6 +248,11 @@ export default function RegisterPage() {
                       holidayName={getHolidayInfo(date)}
                       isSaturday={date.getDay() === 6}
                       isSunday={date.getDay() === 0}
+                      isToday={
+                        date.getFullYear() === today.getFullYear() &&
+                        date.getMonth() === today.getMonth() &&
+                        date.getDate() === today.getDate()
+                      }
                     />
                   ) : (
                     <div key={i} className="w-16 h-16 sm:w-14 sm:h-14"></div>
