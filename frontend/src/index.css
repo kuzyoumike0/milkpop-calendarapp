@@ -245,7 +245,7 @@ footer {
   width: 100%;
 }
 
-/* タイトル入力を強調 */
+/* タイトル入力 */
 .title-input {
   padding: 0.8rem 1rem;
   border-radius: 12px;
@@ -267,18 +267,14 @@ footer {
   box-shadow: 0 0 12px rgba(80,200,120,0.8);
 }
 
-/* ===== ラジオボタンお洒落版 ===== */
+/* ===== ラジオボタン ===== */
 .radio-group {
   display: flex;
   justify-content: center;
   gap: 1rem;
   margin-top: 1rem;
 }
-
-.radio-group input[type="radio"] {
-  display: none; /* デフォルトは非表示 */
-}
-
+.radio-group input[type="radio"] { display: none; }
 .radio-group label {
   background: #222;
   color: #fff;
@@ -286,17 +282,14 @@ footer {
   border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
-  transition: all 0.3s ease;
   border: 2px solid #FDB9C8;
   box-shadow: 0 0 6px rgba(253, 185, 200, 0.4);
+  transition: 0.3s;
 }
-
 .radio-group label:hover {
   background: #FDB9C8;
   color: #000;
 }
-
-/* ✅ 選択されている時 */
 .radio-group input[type="radio"]:checked + label {
   background: #FDB9C8;
   color: #000;
@@ -323,7 +316,6 @@ footer {
   font-size: 1.4rem;
   font-weight: bold;
   color: #ff69b4;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
 }
 .week-header {
   display: grid;
@@ -361,7 +353,7 @@ footer {
   background: #FDB9C8;
   color: #fff;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
+  box-shadow: 0 0 10px rgba(253,185,200,0.7);
 }
 .calendar-sunday { color: #ff4d6d; }
 .calendar-saturday { color: #4d79ff; }
@@ -369,7 +361,6 @@ footer {
 .holiday-name {
   font-size: 0.7rem;
   margin-top: 0.2rem;
-  text-align: center;
 }
 .calendar-today {
   background: #ffeb3b !important;
@@ -440,7 +431,7 @@ footer {
 .calendar-section { flex: 7; }
 .options-section { flex: 3; }
 
-/* ===== レスポンシブ対応 ===== */
+/* ===== レスポンシブ ===== */
 @media (max-width: 1024px) {
   .main-layout {
     flex-direction: column;
@@ -461,7 +452,8 @@ footer {
   .options-section { padding: 1rem; }
   .selected-date { font-size: 0.85rem; }
 }
-/* 現在モード表示 */
+
+/* ===== 現在モード表示 ===== */
 .mode-indicator {
   margin-top: 0.8rem;
   font-size: 1rem;
@@ -476,7 +468,9 @@ footer {
   background: linear-gradient(90deg, #FDB9C8, #ff69b4);
   padding: 0.2rem 0.6rem;
   border-radius: 6px;
-  /* ===== お洒落なプルダウン ===== */
+}
+
+/* ===== お洒落なプルダウン ===== */
 .time-select {
   margin-left: 0.8rem;
   padding: 0.5rem 1rem;
@@ -490,88 +484,21 @@ footer {
   color: #333;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
-
 .time-select:hover {
   background: linear-gradient(135deg, #FDB9C8, #50C878);
   color: #fff;
   box-shadow: 0 0 10px rgba(253, 185, 200, 0.6);
   transform: scale(1.05);
 }
-
-/* option 自体の見た目 */
 .time-select option {
   font-weight: bold;
   background: #fff;
   color: #333;
   padding: 0.5rem;
 }
-/* カスタムドロップダウン */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
 
-.dropdown-btn {
-  background: linear-gradient(135deg, #fff, #ffe6ef);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #333;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-}
-
-.dropdown-btn:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(253,185,200,0.7);
-}
-
-.dropdown-list {
-  position: absolute;
-  top: 110%;
-  left: 0;
-  width: 180px;
-  background: #fff;
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  z-index: 999;
-  list-style: none;
-  padding: 0.5rem 0;
-  margin: 0;
-  animation: fadeIn 0.2s ease;
-}
-
-.dropdown-item {
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-
-.dropdown-item:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
-  color: #fff;
-}
-
-.arrow {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 /* ===== カスタムドロップダウン ===== */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
+.dropdown { position: relative; display: inline-block; }
 .dropdown-btn {
   background: linear-gradient(135deg, #fff, #ffe6ef);
   border: 2px solid #FDB9C8;
@@ -583,13 +510,11 @@ footer {
   color: #333;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
-
 .dropdown-btn:hover {
   background: linear-gradient(135deg, #FDB9C8, #50C878);
   color: #fff;
   box-shadow: 0 0 12px rgba(253,185,200,0.7);
 }
-
 .dropdown-list {
   position: absolute;
   top: 110%;
@@ -605,19 +530,16 @@ footer {
   margin: 0;
   animation: fadeIn 0.2s ease;
 }
-
 .dropdown-item {
   padding: 0.6rem 1rem;
   cursor: pointer;
   font-weight: bold;
   transition: 0.2s;
 }
-
 .dropdown-item:hover {
   background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #fff;
 }
-
 .arrow {
   font-size: 0.8rem;
   margin-left: 0.5rem;
@@ -627,4 +549,3 @@ footer {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
