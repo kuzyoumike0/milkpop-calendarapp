@@ -1,9 +1,11 @@
+// backend/index.js
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
 
 const { Pool } = pkg;
 const app = express();
@@ -20,10 +22,10 @@ app.use(bodyParser.json());
 
 // ===== API =====
 
-// 全日程を取得
+// --- 共有スケジュール一覧取得 ---
 app.get("/api/schedules", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM schedules ORDER BY id DESC");
+    const result = await pool.query("SELECT * FROM schedules ORDER BY created_at DESC");
     res.json(result.rows);
   } catch (err) {
     console.error("DB読み込みエラー:", err);
@@ -31,20 +33,22 @@ app.get("/api/schedules", async (req, res) => {
   }
 });
 
-// 日程を保存
+// --- 共有スケジュール作成 ---
 app.post("/api/schedules", async (req, res) => {
   try {
-    const { title, dates, memo } = req.body;
+    const { title, dates, options } = req.body;
     if (!title || !dates) {
       return res.status(400).json({ error: "タイトルと日程は必須です" });
     }
 
-    const result = await pool.query(
-      `INSERT INTO schedules (title, dates, memo) 
-       VALUES ($1, $2, $3) RETURNING *`,
-      [title, JSON.stringify(dates), memo || ""]
-    );
+    const id = uuidv4();
+    const shareToken = uuidv4();
 
+    const result = await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token) 
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+    );
     res.json(result.rows[0]);
   } catch (err) {
     console.error("DB保存エラー:", err);
@@ -52,41 +56,79 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// 日程を更新
-app.put("/api/schedules/:id", async (req, res) => {
+// --- 特定スケジュール取得 ---
+app.get("/api/schedules/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, dates, memo } = req.body;
-
-    const result = await pool.query(
-      `UPDATE schedules 
-       SET title=$1, dates=$2, memo=$3
-       WHERE id=$4 RETURNING *`,
-      [title, JSON.stringify(dates), memo || "", id]
-    );
-
+    const result = await pool.query("SELECT * FROM schedules WHERE id=$1", [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "スケジュールが見つかりません" });
     }
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("DB更新エラー:", err);
-    res.status(500).json({ error: "DB更新エラー" });
+    console.error("DB取得エラー:", err);
+    res.status(500).json({ error: "DB取得エラー" });
   }
 });
 
-// 日程を削除
-app.delete("/api/schedules/:id", async (req, res) => {
+// --- 出欠回答を追加/更新 ---
+app.post("/api/schedules/:id/responses", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query("DELETE FROM schedules WHERE id=$1 RETURNING *", [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    const { user_id, username, responses } = req.body;
+
+    if (!user_id || !responses) {
+      return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
     }
-    res.json({ message: "削除しました", deleted: result.rows[0] });
+
+    const result = await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username = EXCLUDED.username, responses = EXCLUDED.responses, created_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [id, user_id, username || "匿名", JSON.stringify(responses)]
+    );
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error("DB削除エラー:", err);
-    res.status(500).json({ error: "DB削除エラー" });
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存エラー" });
+  }
+});
+
+// --- 個人スケジュール保存 ---
+app.post("/api/personal", async (req, res) => {
+  try {
+    const { share_id, title, memo, dates, options } = req.body;
+    if (!share_id || !title || !dates) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    const id = uuidv4();
+    const result = await pool.query(
+      `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, share_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("個人スケジュール保存エラー:", err);
+    res.status(500).json({ error: "個人スケジュール保存エラー" });
+  }
+});
+
+// --- 共有リンクから取得 ---
+app.get("/share/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query("SELECT * FROM schedules WHERE share_token=$1", [token]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("共有リンク取得エラー:", err);
+    res.status(500).json({ error: "共有リンク取得エラー" });
   }
 });
 
