@@ -9,7 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [editingUser, setEditingUser] = useState(null); // 編集対象
+  const [editingUser, setEditingUser] = useState(null); // 編集対象ユーザー
 
   // スケジュール取得
   useEffect(() => {
@@ -35,7 +35,7 @@ const SharePage = () => {
       const data = await res.json();
       setAllResponses(data);
 
-      // 編集中ユーザーを反映
+      // 編集対象の回答を反映
       if (editingUser) {
         const targetResp = data.find((r) => r.username === editingUser);
         setResponses(targetResp ? targetResp.responses : {});
@@ -71,16 +71,19 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 日付ごとの回答まとめ
+  // すべてのユーザー名
+  const users = [...new Set(allResponses.map((r) => r.username))];
+
+  // 日付ごとの回答を集計
   const groupByDate = {};
   allResponses.forEach((r) => {
     Object.entries(r.responses).forEach(([date, value]) => {
-      if (!groupByDate[date]) groupByDate[date] = [];
-      groupByDate[date].push({ user: r.username, value });
+      if (!groupByDate[date]) groupByDate[date] = {};
+      groupByDate[date][r.username] = value;
     });
   });
 
-  // 時間帯が schedule.dates に含まれる場合の処理
+  // 日付＋時間帯表示
   const getDateLabel = (dateStr) => {
     if (typeof dateStr === "string" && dateStr.includes("|")) {
       const [date, time] = dateStr.split("|");
@@ -117,15 +120,19 @@ const SharePage = () => {
           value={username}
           onChange={(e) => {
             setUsername(e.target.value);
-            setEditingUser(null); // 名前入力時は自分を編集対象に
+            setEditingUser(null); // 名前入力時は自分を対象に
+            setResponses({});
           }}
           className="title-input"
           style={{ maxWidth: "300px" }}
         />
       </div>
 
-      {/* 日程一覧テーブル */}
-      <div className="card" style={{ marginBottom: "2rem", textAlign: "left" }}>
+      {/* 日程一覧 */}
+      <div
+        className="card"
+        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
+      >
         <h3>日程一覧</h3>
         <table
           style={{
@@ -137,9 +144,12 @@ const SharePage = () => {
           <thead>
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>あなたの出欠</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>みんなの出欠</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>操作</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
+                あなたの出欠
+              </th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>
+                みんなの出欠
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -170,60 +180,57 @@ const SharePage = () => {
                   </select>
                 </td>
 
-                {/* みんなの出欠 */}
+                {/* みんなの出欠（名前クリックで編集対象に） */}
                 <td style={{ padding: "0.6rem 1rem" }}>
-                  {groupByDate[d] ? (
-                    groupByDate[d].map((entry, idx) => (
+                  {users.length > 0 ? (
+                    users.map((u) => (
                       <span
-                        key={idx}
+                        key={u}
                         onClick={() => {
-                          setEditingUser(entry.user);
-                          setResponses(
-                            allResponses.find((r) => r.username === entry.user)
-                              ?.responses || {}
+                          setEditingUser(u);
+                          const targetResp = allResponses.find(
+                            (r) => r.username === u
                           );
+                          setResponses(targetResp ? targetResp.responses : {});
                         }}
                         style={{
                           display: "inline-block",
-                          marginRight: "0.5rem",
+                          marginRight: "0.8rem",
                           padding: "0.2rem 0.5rem",
                           borderRadius: "6px",
-                          background: "rgba(255,255,255,0.1)",
-                          color: "#FDB9C8",
+                          background:
+                            editingUser === u
+                              ? "rgba(80,200,120,0.3)"
+                              : "rgba(255,255,255,0.1)",
+                          color:
+                            editingUser === u ? "#50C878" : "#FDB9C8",
                           fontWeight: "bold",
                           cursor: "pointer",
                           textDecoration: "underline",
                         }}
                       >
-                        {entry.user}:
-                        {entry.value === "yes"
-                          ? "〇"
-                          : entry.value === "maybe"
-                          ? "△"
-                          : entry.value === "no"
-                          ? "✕"
-                          : "-"}
+                        {u}
                       </span>
                     ))
                   ) : (
                     <span style={{ color: "#aaa" }}>未回答</span>
                   )}
                 </td>
-
-                {/* 保存ボタン */}
-                <td style={{ padding: "0.6rem 1rem" }}>
-                  <button
-                    onClick={handleSave}
-                    className="share-button fancy"
-                    style={{ padding: "0.3rem 0.8rem", fontSize: "0.85rem" }}
-                  >
-                    保存
-                  </button>
-                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 保存ボタン（下にまとめて配置） */}
+      <div style={{ marginTop: "1.5rem" }}>
+        <button
+          onClick={handleSave}
+          className="share-button fancy"
+          style={{ padding: "0.8rem 1.6rem", fontSize: "1rem" }}
+        >
+          保存
+        </button>
       </div>
     </div>
   );
