@@ -1,40 +1,31 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Holidays from "date-holidays";
 import "../index.css";
-import Dropdown from "./Dropdown";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
-  const [shareLink, setShareLink] = useState("");
-  const navigate = useNavigate();
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-  // 日本時間の今日
-  const jstNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  const [currentMonth, setCurrentMonth] = useState(jstNow.getMonth());
-  const [currentYear, setCurrentYear] = useState(jstNow.getFullYear());
   const hd = new Holidays("JP");
 
+  // 月の日数
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
-
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 📌 日付クリック
-  const handleDateClick = (day) => {
-    const date = `${currentYear}-${String(currentMonth + 1).padStart(
-      2,
-      "0"
-    )}-${String(day).padStart(2, "0")}`;
-
-    if (selectionMode === "multiple") {
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    if (selectionMode === "single") {
+      setSelectedDates([date]);
+    } else if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
         prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
       );
@@ -45,273 +36,150 @@ const RegisterPage = () => {
         const start = new Date(selectedDates[0]);
         const end = new Date(date);
         if (end < start) {
-          setSelectedDates([date, selectedDates[0]]);
-        } else {
-          setSelectedDates([selectedDates[0], date]);
+          [start, end] = [end, start];
         }
+        const range = [];
+        const cur = new Date(start);
+        while (cur <= end) {
+          range.push(cur.toISOString().split("T")[0]);
+          cur.setDate(cur.getDate() + 1);
+        }
+        setSelectedDates(range);
       } else {
-        setSelectedDates([date]); // 新しい範囲開始
+        setSelectedDates([date]);
       }
     }
   };
 
-  // 📌 範囲展開
-  const getDisplayedDates = () => {
-    if (selectionMode === "multiple") return selectedDates;
-
-    if (selectionMode === "range" && selectedDates.length === 2) {
-      const start = new Date(selectedDates[0]);
-      const end = new Date(selectedDates[1]);
-      const dates = [];
-      let current = new Date(start);
-      while (current <= end) {
-        dates.push(
-          `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(
-            2,
-            "0"
-          )}-${String(current.getDate()).padStart(2, "0")}`
-        );
-        current.setDate(current.getDate() + 1);
-      }
-      return dates;
-    }
-    return selectedDates;
+  // 月移動
+  const prevMonth = () => {
+    setCurrentMonth((prev) =>
+      prev === 0 ? 11 : prev - 1
+    );
+    if (currentMonth === 0) setCurrentYear(currentYear - 1);
+  };
+  const nextMonth = () => {
+    setCurrentMonth((prev) =>
+      prev === 11 ? 0 : prev + 1
+    );
+    if (currentMonth === 11) setCurrentYear(currentYear + 1);
   };
 
-  // 📌 時間帯変更
-  const handleTimeChange = (date, value) => {
-    setTimeRanges((prev) => {
-      if (value === "custom") {
-        return {
-          ...prev,
-          [date]: { type: "custom", start: "00:00", end: "01:00" },
-        };
-      }
-      return { ...prev, [date]: { type: value } };
-    });
-  };
-
-  // 📌 時間指定の変更
-  const handleCustomTimeChange = (date, field, value) => {
-    setTimeRanges((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], type: "custom", [field]: value },
-    }));
-  };
-
-  // 📌 時刻リスト生成
-  const generateTimeOptions = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      const hour = h.toString().padStart(2, "0");
-      times.push({ value: `${hour}:00`, label: `${hour}時` });
-    }
-    return times;
-  };
-
-  // 📌 カレンダー描画
-  const renderDays = () => {
-    const days = [];
-    for (let i = 0; i < firstDayOfWeek; i++) {
-      days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentYear, currentMonth, day);
-      const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(
-        2,
-        "0"
-      )}-${String(day).padStart(2, "0")}`;
-      const holiday = hd.isHoliday(date);
-      const isSelected =
-        selectionMode === "multiple"
-          ? selectedDates.includes(formattedDate)
-          : selectedDates.length === 2 &&
-            date >= new Date(selectedDates[0]) &&
-            date <= new Date(selectedDates[1]);
-      const isToday =
-        date.getFullYear() === jstNow.getFullYear() &&
-        date.getMonth() === jstNow.getMonth() &&
-        date.getDate() === jstNow.getDate();
-
-      days.push(
-        <div
-          key={day}
-          className={`day-cell ${isSelected ? "selected" : ""} ${
-            holiday ? "calendar-holiday" : ""
-          } ${isToday ? "calendar-today" : ""}`}
-          onClick={() => handleDateClick(day)}
-        >
-          <span>{day}</span>
-          {holiday && <small className="holiday-name">{holiday[0].name}</small>}
-        </div>
-      );
-    }
-    return days;
-  };
-
-  // 📌 共有リンク発行
-  const generateShareLink = async () => {
-    const displayedDates = getDisplayedDates();
-    if (!title || displayedDates.length === 0) {
-      alert("タイトルと日程を入力してください！");
+  // 共有リンク発行
+  const handleShare = async () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日程を入力してください");
       return;
     }
-
-    const body = { title, dates: displayedDates, timeRanges };
-
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL || ""}/api/schedules`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }
-      );
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: selectedDates,
+          options: { timeRanges },
+        }),
+      });
       const data = await res.json();
-
       if (data.share_token) {
-        // ✅ React Router ルートに合わせる
-        const url = `/share/${data.share_token}`;
-        setShareLink(url);
+        navigate(`/share/${data.share_token}`);
       } else {
-        alert("共有リンクの発行に失敗しました");
+        alert("共有リンクの生成に失敗しました");
       }
     } catch (err) {
-      console.error("共有リンク発行エラー:", err);
-      alert("共有リンクの発行に失敗しました");
+      console.error(err);
+      alert("サーバーエラー");
     }
   };
 
   return (
     <div className="page-container">
-      <h2 className="page-title">日程登録</h2>
-
-      {/* タイトル入力 */}
-      <div className="input-card">
+      <h2 className="text-xl font-bold mb-4">日程登録ページ</h2>
+      <div className="mb-2">
         <input
           type="text"
           placeholder="タイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="title-input"
+          className="p-2 rounded w-64"
         />
+      </div>
 
-        {/* 複数選択 / 範囲選択ラジオ */}
-        <div className="radio-group">
-          <label
-            className={`radio-label ${
-              selectionMode === "multiple" ? "active" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectionMode === "multiple"}
-              onChange={() => setSelectionMode("multiple")}
-            />
-            複数選択
-          </label>
-          <label
-            className={`radio-label ${
-              selectionMode === "range" ? "active" : ""
-            }`}
-          >
-            <input
-              type="radio"
-              value="range"
-              checked={selectionMode === "range"}
-              onChange={() => setSelectionMode("range")}
-            />
-            範囲選択
-          </label>
+      {/* 選択モード */}
+      <div className="mb-4">
+        <label>
+          <input
+            type="radio"
+            value="single"
+            checked={selectionMode === "single"}
+            onChange={() => setSelectionMode("single")}
+          />
+          単日
+        </label>
+        <label className="ml-4">
+          <input
+            type="radio"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          複数選択
+        </label>
+        <label className="ml-4">
+          <input
+            type="radio"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          範囲
+        </label>
+      </div>
+
+      {/* カレンダー */}
+      <div className="calendar">
+        <div className="flex justify-between mb-2">
+          <button onClick={prevMonth}>←</button>
+          <span>{currentYear}年 {currentMonth + 1}月</span>
+          <button onClick={nextMonth}>→</button>
         </div>
+        <div className="grid grid-cols-7 gap-1">
+          {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+            <div key={d} className="font-bold text-center">{d}</div>
+          ))}
+          {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+            <div key={`empty-${idx}`} />
+          ))}
+          {Array.from({ length: daysInMonth }, (_, idx) => {
+            const date = new Date(currentYear, currentMonth, idx + 1);
+            const dateStr = date.toISOString().split("T")[0];
+            const isSelected = selectedDates.includes(dateStr);
+            const holiday = hd.isHoliday(date);
 
-        {/* ✅ 現在のモードを明示 */}
-        <div className="mt-2 text-sm text-gray-200">
-          現在のモード:{" "}
-          <span className="font-bold text-yellow-300">
-            {selectionMode === "multiple" ? "複数選択" : "範囲選択"}
-          </span>
+            return (
+              <div
+                key={dateStr}
+                onClick={() => handleDateClick(dateStr)}
+                className={`p-2 text-center rounded cursor-pointer ${
+                  isSelected ? "bg-pink-400" : "bg-gray-200"
+                }`}
+              >
+                {idx + 1}
+                {holiday && <div className="text-red-500 text-xs">{holiday.name}</div>}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* カレンダー + 選択リスト */}
-      <div className="main-layout">
-        <div className="calendar-section">
-          <div className="calendar">
-            <div className="calendar-header">
-              <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
-              <h3>
-                {currentYear}年 {currentMonth + 1}月
-              </h3>
-              <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
-            </div>
-            <div className="calendar-grid">{renderDays()}</div>
-          </div>
-        </div>
-
-        <div className="options-section">
-          <h3>選択した日程</h3>
-          <ul>
-            {getDisplayedDates().map((d, i) => (
-              <li key={i} className="selected-date">
-                {d}
-                <Dropdown
-                  value={timeRanges[d]?.type || "allday"}
-                  onChange={(val) => handleTimeChange(d, val)}
-                />
-                {timeRanges[d]?.type === "custom" && (
-                  <span className="custom-time">
-                    <select
-                      className="custom-dropdown"
-                      value={timeRanges[d]?.start || "00:00"}
-                      onChange={(e) =>
-                        handleCustomTimeChange(d, "start", e.target.value)
-                      }
-                    >
-                      {generateTimeOptions().map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                    〜
-                    <select
-                      className="custom-dropdown"
-                      value={timeRanges[d]?.end || "01:00"}
-                      onChange={(e) =>
-                        handleCustomTimeChange(d, "end", e.target.value)
-                      }
-                    >
-                      {generateTimeOptions().map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* 共有リンク発行 */}
-      <button onClick={generateShareLink} className="share-button fancy">
-        🔗 共有リンク発行
+      {/* 発行ボタン */}
+      <button
+        onClick={handleShare}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        共有リンクを発行
       </button>
-
-      {shareLink && (
-        <div className="share-link">
-          <p>共有リンク:</p>
-          {/* ✅ React Router 用に /share/:token へ遷移 */}
-          <a href={shareLink} className="underline text-blue-200">
-            {window.location.origin}{shareLink}
-          </a>
-        </div>
-      )}
     </div>
   );
 };
