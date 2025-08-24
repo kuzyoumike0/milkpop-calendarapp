@@ -113,23 +113,23 @@ const RegisterPage = () => {
       days.push(
         <div
           key={day}
-          className={`p-2 text-center rounded cursor-pointer ${
-            isSelected ? "bg-pink-400 text-white" : "bg-white text-black"
-          } ${holidayName ? "text-red-500" : ""} ${
+          className={`p-3 text-center rounded-lg shadow cursor-pointer transition ${
+            isSelected ? "bg-pink-500 text-white" : "bg-white text-black"
+          } ${holidayName ? "text-red-500 font-bold" : ""} ${
             isSat ? "text-blue-500" : ""
           } ${isSun ? "text-red-600" : ""}`}
           onClick={() => handleDateClick(day)}
         >
-          <div>{day}</div>
+          <div className="font-semibold">{day}</div>
           {holidayName && (
-            <div className="text-xs mt-1 text-red-500">{holidayName}</div>
+            <div className="text-[10px] mt-1 text-red-500">{holidayName}</div>
           )}
         </div>
       );
 
       if ((days.length + firstDayOfMonth) % 7 === 0 || day === daysInMonth) {
         weeks.push(
-          <div key={`week-${day}`} className="grid grid-cols-7 gap-1">
+          <div key={`week-${day}`} className="grid grid-cols-7 gap-2">
             {days}
           </div>
         );
@@ -141,54 +141,58 @@ const RegisterPage = () => {
 
   return (
     <div className="p-6 flex flex-col items-center">
-      <div className="bg-white bg-opacity-90 shadow-lg rounded-2xl p-6 w-full max-w-6xl">
-        <h2 className="text-2xl font-bold text-center mb-4 text-black">
+      <div className="bg-white bg-opacity-95 shadow-xl rounded-2xl p-6 w-full max-w-7xl">
+        <h2 className="text-3xl font-bold text-center mb-6 text-black">
           📅 日程登録ページ
         </h2>
 
         {/* タイトル入力 */}
-        <input
-          type="text"
-          placeholder="タイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="border rounded-lg p-2 mb-4 w-1/2 block mx-auto text-black"
-        />
+        <div className="flex justify-center mb-6">
+          <input
+            type="text"
+            placeholder="タイトルを入力"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="border rounded-xl p-3 w-1/3 text-black shadow focus:outline-none focus:ring-2 focus:ring-pink-400"
+          />
+        </div>
 
         {/* 選択モード */}
-        <div className="flex justify-center gap-6 mb-6">
-          <label className="text-black">
+        <div className="flex justify-center gap-8 mb-8">
+          <label className="text-black font-medium">
             <input
               type="radio"
               value="multiple"
               checked={selectionMode === "multiple"}
               onChange={(e) => setSelectionMode(e.target.value)}
+              className="mr-2"
             />
             複数選択
           </label>
-          <label className="text-black">
+          <label className="text-black font-medium">
             <input
               type="radio"
               value="range"
               checked={selectionMode === "range"}
               onChange={(e) => setSelectionMode(e.target.value)}
+              className="mr-2"
             />
             範囲選択
           </label>
         </div>
 
         {/* カレンダーとリスト */}
-        <div className="grid grid-cols-10 gap-6">
+        <div className="grid grid-cols-10 gap-8">
           {/* カレンダー */}
           <div className="col-span-7">
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center mb-4">
               <button
                 onClick={() =>
                   setCurrentMonth((prev) =>
                     prev === 0 ? 11 : prev - 1
                   )
                 }
-                className="px-2 py-1 bg-gray-200 rounded"
+                className="px-3 py-1 bg-gray-200 rounded-lg shadow hover:bg-gray-300"
               >
                 ←
               </button>
@@ -201,12 +205,12 @@ const RegisterPage = () => {
                     prev === 11 ? 0 : prev + 1
                   )
                 }
-                className="px-2 py-1 bg-gray-200 rounded"
+                className="px-3 py-1 bg-gray-200 rounded-lg shadow hover:bg-gray-300"
               >
                 →
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-black">
+            <div className="grid grid-cols-7 gap-2 text-center font-semibold text-black mb-2">
               <div>日</div>
               <div>月</div>
               <div>火</div>
@@ -220,19 +224,19 @@ const RegisterPage = () => {
 
           {/* 選択リスト */}
           <div className="col-span-3">
-            <h3 className="font-bold mb-2 text-black">選択中の日程</h3>
-            <div className="space-y-2">
+            <h3 className="font-bold mb-3 text-black text-lg">✅ 選択中の日程</h3>
+            <div className="space-y-3">
               {selectedDates.length > 0 ? (
                 selectedDates.map((date) => (
                   <div
                     key={date}
-                    className="bg-gray-100 rounded-lg p-2 shadow flex flex-col"
+                    className="bg-white rounded-xl p-3 shadow border border-gray-200"
                   >
-                    <span className="text-black">{date}</span>
+                    <span className="text-black font-medium">{date}</span>
                     <select
                       value={timeRanges[date] || ""}
                       onChange={(e) => handleTimeChange(date, e.target.value)}
-                      className="mt-2 border rounded p-1 text-black"
+                      className="mt-2 border rounded-lg p-2 text-black w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
                     >
                       <option value="">時間を指定</option>
                       {timeOptions.map((t) => (
@@ -244,33 +248,33 @@ const RegisterPage = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-black">日程が選択されていません</p>
+                <p className="text-black italic">日程が選択されていません</p>
               )}
             </div>
           </div>
         </div>
 
         {/* 共有リンク */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <button
             onClick={generateShareLink}
-            className="px-6 py-3 bg-gradient-to-r from-pink-400 to-blue-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition"
+            className="px-8 py-3 bg-gradient-to-r from-[#FDB9C8] to-[#004CA0] text-white text-lg font-bold rounded-2xl shadow-lg hover:opacity-90 transition"
           >
             🔗 共有リンクを発行
           </button>
           {shareLink && (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col items-center">
               <a
                 href={shareLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 underline break-all"
+                className="text-blue-700 underline break-all"
               >
                 {shareLink}
               </a>
               <button
                 onClick={() => navigator.clipboard.writeText(shareLink)}
-                className="ml-3 px-3 py-1 bg-gray-300 rounded shadow hover:bg-gray-400"
+                className="mt-2 px-4 py-2 bg-gray-200 rounded-lg shadow hover:bg-gray-300"
               >
                 コピー
               </button>
