@@ -292,13 +292,47 @@ button:hover, .share-button:hover {
 
 /* ====== カレンダー（ポップかわいい自作UI） ====== */
 .calendar {
-  background: #fff;
+  background: #fff; /* 白ベースで視認性UP */
   border-radius: 16px;
   padding: 1rem;
-  margin: 1rem auto 2rem auto;
-  max-width: 900px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  margin: 1rem auto;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
+
+.day-cell {
+  background: #ffe6ef; /* 薄ピンクで統一 */
+  border: 2px solid #FDB9C8;
+  border-radius: 10px;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.day-cell:hover {
+  background: #FDB9C8;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.day-cell.selected {
+  background: #ff69b4; /* 濃いピンクで選択を強調 */
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
+}
+
+.calendar-sunday {
+  color: #ff4d6d; /* ビビッド赤ピンク */
+}
+
+.calendar-saturday {
+  color: #4d79ff; /* ビビッド青 */
+}
+
+.calendar-holiday {
+  color: #e60033; /* 日本の祝日らしい赤 */
+}
+
 
 .calendar-header {
   display: flex;
