@@ -350,3 +350,16 @@ button:hover {
     width: 100%;
   }
 }
+.top-description {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #000;                  /* 黒文字 */
+  background: #fff;             /* 白背景に固定 */
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  max-width: 900px;
+  text-align: center;
+}
+
