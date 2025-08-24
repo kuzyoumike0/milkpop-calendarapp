@@ -39,6 +39,22 @@ export default function SharePage() {
 
   const allDates = (schedule.dates || []).sort();
 
+  // ==== 集計処理 ====
+  const counts = {};
+  allDates.forEach((d) => {
+    counts[d] = { "〇": 0, "△": 0, "✖": 0, "未回答": 0 };
+  });
+  if (schedule.responses) {
+    schedule.responses.forEach((r) => {
+      allDates.forEach((d) => {
+        const v = r.responses[d] || "未回答";
+        if (counts[d][v] !== undefined) {
+          counts[d][v] += 1;
+        }
+      });
+    });
+  }
+
   return (
     <div className="p-6 text-white">
       <h2 className="text-xl font-bold mb-4">{schedule.title}</h2>
@@ -83,7 +99,7 @@ export default function SharePage() {
 
       {/* ==== 回答一覧テーブル ==== */}
       <h3 className="text-lg font-semibold mb-2">回答一覧</h3>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mb-6">
         <table className="min-w-full border border-white text-sm text-center">
           <thead>
             <tr className="bg-black bg-opacity-60">
@@ -107,6 +123,33 @@ export default function SharePage() {
                   ))}
                 </tr>
               ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ==== 集計表示 ==== */}
+      <h3 className="text-lg font-semibold mb-2">日程ごとの集計</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-white text-sm text-center">
+          <thead>
+            <tr className="bg-black bg-opacity-60">
+              <th className="border px-2 py-1">日程</th>
+              <th className="border px-2 py-1">〇</th>
+              <th className="border px-2 py-1">△</th>
+              <th className="border px-2 py-1">✖</th>
+              <th className="border px-2 py-1">未回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allDates.map((d) => (
+              <tr key={d} className="bg-black bg-opacity-30">
+                <td className="border px-2 py-1">{d}</td>
+                <td className="border px-2 py-1">{counts[d]["〇"]}</td>
+                <td className="border px-2 py-1">{counts[d]["△"]}</td>
+                <td className="border px-2 py-1">{counts[d]["✖"]}</td>
+                <td className="border px-2 py-1">{counts[d]["未回答"]}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
