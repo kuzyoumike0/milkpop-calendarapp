@@ -129,7 +129,6 @@ const RegisterPage = () => {
               checked={selectionMode === "multiple"}
               onChange={() => setSelectionMode("multiple")}
             />
-            <span className="custom-radio"></span>
             複数選択
           </label>
           <label>
@@ -139,7 +138,6 @@ const RegisterPage = () => {
               checked={selectionMode === "range"}
               onChange={() => setSelectionMode("range")}
             />
-            <span className="custom-radio"></span>
             範囲選択
           </label>
         </div>
