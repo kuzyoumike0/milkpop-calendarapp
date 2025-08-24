@@ -1,134 +1,135 @@
 import React, { useState } from "react";
-import "../index.css";
+import { Link } from "react-router-dom";
 
-const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
-
-const RegisterPage = () => {
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today);
-  const [selectedDates, setSelectedDates] = useState([]);
+export default function RegisterPage() {
   const [title, setTitle] = useState("");
+  const [selectionType, setSelectionType] = useState("multiple"); // デフォルト: 複数選択
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [range, setRange] = useState({ start: "", end: "" });
 
-  // 月の最初の日と日数を取得
-  const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-  const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-
-  // カレンダーの日付を配列にする
-  const dates = [];
-  for (let i = 0; i < startOfMonth.getDay(); i++) {
-    dates.push(null); // 前月の余白
-  }
-  for (let i = 1; i <= endOfMonth.getDate(); i++) {
-    dates.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
-  }
+  const handleRadioChange = (e) => {
+    setSelectionType(e.target.value);
+    setSelectedDates([]);
+    setRange({ start: "", end: "" });
+  };
 
   const handleDateClick = (date) => {
-    const exists = selectedDates.find((d) => d.getTime() === date.getTime());
-    if (exists) {
-      setSelectedDates(selectedDates.filter((d) => d.getTime() !== date.getTime()));
-    } else {
-      setSelectedDates([...selectedDates, date]);
+    if (selectionType === "multiple") {
+      setSelectedDates((prev) =>
+        prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
+      );
     }
   };
 
-  const handleRemoveDate = (dateToRemove) => {
-    setSelectedDates(selectedDates.filter((d) => d.getTime() !== dateToRemove.getTime()));
-  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const payload =
+      selectionType === "multiple"
+        ? { title, dates: selectedDates }
+        : { title, range };
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
-
-  const handleShare = () => {
-    if (!title || selectedDates.length === 0) {
-      alert("タイトルと日付を入力してください");
-      return;
-    }
-    alert("共有リンクを発行しました！（DB保存は別途実装済み）");
+    console.log("登録データ:", payload);
+    alert("登録しました！");
   };
 
   return (
-    <div className="page-container">
-      {/* カレンダー部分をカードに包む */}
-      <div className="calendar-container card">
-        {/* タイトル入力（短く中央寄せ） */}
-        <input
-          type="text"
-          className="input-title short"
-          placeholder="タイトル"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+    <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
+      {/* バナー */}
+      <header className="w-full bg-black bg-opacity-70 py-4 px-6 flex justify-between items-center shadow-lg">
+        <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
+        <nav className="space-x-4">
+          <Link to="/" className="hover:underline">トップ</Link>
+          <Link to="/personal" className="hover:underline">個人スケジュール</Link>
+        </nav>
+      </header>
 
-        {/* 月切り替え */}
-        <div className="month-nav">
-          <button className="nav-button" onClick={handlePrevMonth}>← 前の月</button>
-          <span className="month-title">
-            {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
-          </span>
-          <button className="nav-button" onClick={handleNextMonth}>次の月 →</button>
-        </div>
+      {/* カード */}
+      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-2xl p-6">
+        <div className="bg-black bg-opacity-50 rounded-2xl shadow-xl p-6 w-full">
+          <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* タイトル入力 */}
+            <input
+              type="text"
+              placeholder="タイトルを入力"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-black"
+            />
 
-        {/* 曜日ヘッダー */}
-        <div className="week-header">
-          {daysOfWeek.map((day) => (
-            <div key={day}>{day}</div>
-          ))}
-        </div>
-
-        {/* カレンダー */}
-        <div className="calendar-grid">
-          {dates.map((date, index) => (
-            <div
-              key={index}
-              className={
-                date
-                  ? `day-cell ${
-                      selectedDates.find((d) => d.getTime() === date.getTime())
-                        ? "selected"
-                        : ""
-                    }`
-                  : "empty-cell"
-              }
-              onClick={() => date && handleDateClick(date)}
-            >
-              {date ? date.getDate() : ""}
+            {/* ラジオボタン */}
+            <div className="flex space-x-6 items-center">
+              <label>
+                <input
+                  type="radio"
+                  value="multiple"
+                  checked={selectionType === "multiple"}
+                  onChange={handleRadioChange}
+                />
+                複数選択
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  value="range"
+                  checked={selectionType === "range"}
+                  onChange={handleRadioChange}
+                />
+                範囲選択
+              </label>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* 選択日リストもカードで包む */}
-      <div className="selected-container card">
-        <h2>選択中の日程</h2>
-        {selectedDates.length === 0 ? (
-          <p className="page-text">まだ日程が選択されていません。</p>
-        ) : (
-          selectedDates
-            .sort((a, b) => a - b)
-            .map((date, index) => (
-              <div key={index} className="selected-date">
-                {date.getFullYear()}/{date.getMonth() + 1}/{date.getDate()}
+            {/* 選択UI */}
+            {selectionType === "multiple" ? (
+              <div className="bg-white text-black rounded-xl p-3">
+                <p className="mb-2 font-semibold">選択した日付（例: 2025-08-25）:</p>
                 <button
-                  className="remove-date-btn"
-                  onClick={() => handleRemoveDate(date)}
+                  type="button"
+                  onClick={() => handleDateClick("2025-08-25")}
+                  className={`px-3 py-1 rounded-lg ${
+                    selectedDates.includes("2025-08-25")
+                      ? "bg-[#FDB9C8] text-white"
+                      : "bg-gray-200"
+                  }`}
                 >
-                  ×
+                  2025-08-25
                 </button>
               </div>
-            ))
-        )}
-        {/* 共有リンクボタン */}
-        <button className="share-button" onClick={handleShare}>
-          共有リンクを発行
-        </button>
-      </div>
+            ) : (
+              <div className="bg-white text-black rounded-xl p-3 space-y-2">
+                <p className="font-semibold">範囲を選択してください:</p>
+                <input
+                  type="date"
+                  value={range.start}
+                  onChange={(e) => setRange({ ...range, start: e.target.value })}
+                  className="px-2 py-1 rounded-lg border"
+                />
+                <span className="mx-2">〜</span>
+                <input
+                  type="date"
+                  value={range.end}
+                  onChange={(e) => setRange({ ...range, end: e.target.value })}
+                  className="px-2 py-1 rounded-lg border"
+                />
+              </div>
+            )}
+
+            {/* 登録ボタン */}
+            <button
+              type="submit"
+              className="w-full py-2 rounded-xl bg-[#FDB9C8] hover:bg-[#e89cab] text-black font-bold"
+            >
+              登録する
+            </button>
+          </form>
+        </div>
+      </main>
+
+      {/* フッター */}
+      <footer className="w-full py-4 bg-black bg-opacity-70 text-center text-sm">
+        © 2025 MilkPOP Calendar
+      </footer>
     </div>
   );
-};
-
-export default RegisterPage;
+}
