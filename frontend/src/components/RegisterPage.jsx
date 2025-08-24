@@ -1,283 +1,256 @@
-/* ====== 共通設定 ====== */
-body {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+import React, { useState } from "react";
+import Holidays from "date-holidays";
+import "../index.css";
+import Dropdown from "./Dropdown";
 
-h1, h2, h3 {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  margin: 0.5rem 0;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-}
+const RegisterPage = () => {
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("multiple");
+  const [timeRanges, setTimeRanges] = useState({});
 
-/* ====== ヘッダー ====== */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.7);
-  border-bottom: 2px solid #FDB9C8;
-  padding: 0.8rem 1.5rem;
-  color: #fff;
-  position: relative;
-  z-index: 1000;
-}
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
-.logo-link {
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif !important;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #FDB9C8;
-  text-decoration: none;
-  padding: 0.4rem 1rem;
-  border-radius: 10px;
-  transition: 0.3s;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-}
-.logo-link:hover {
-  color: #50C878;
-  transform: scale(1.05);
-}
+  const hd = new Holidays("JP");
 
-.nav-links {
-  display: flex;
-  gap: 1.2rem;
-}
-.nav-links a {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
-  text-decoration: none;
-  font-weight: bold;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  transition: 0.3s;
-}
-.nav-links a:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
-  color: #000;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
+  const getDaysInMonth = (year, month) =>
+    new Date(year, month + 1, 0).getDate();
 
-/* ====== ハンバーガー ====== */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-  gap: 5px;
-  z-index: 1001;
-}
-.hamburger span {
-  width: 25px;
-  height: 3px;
-  background: #fff;
-  border-radius: 5px;
-  transition: 0.4s;
-}
-.hamburger.open span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
-}
-.hamburger.open span:nth-child(2) {
-  opacity: 0;
-}
-.hamburger.open span:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
-}
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-/* モバイルメニュー */
-.nav-links-mobile {
-  display: flex;
-  flex-direction: column;
-  background: rgba(0, 0, 0, 0.95);
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 220px;
-  border-radius: 0 0 12px 12px;
-  padding: 1rem;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.6);
-  transform: translateY(-20px);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.4s ease;
-}
-.nav-links-mobile.open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-.nav-links-mobile a {
-  color: #fff;
-  padding: 0.8rem;
-  margin: 0.4rem 0;
-  border-radius: 6px;
-  transition: 0.3s;
-  text-align: right;
-  font-weight: bold;
-}
-.nav-links-mobile a:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
-  color: #000;
-  transform: translateX(-5px);
-}
+  // 📌 日付クリック処理
+  const handleDateClick = (day) => {
+    const date = `${currentYear}-${currentMonth + 1}-${day}`;
+    if (selectionMode === "multiple") {
+      setSelectedDates((prev) =>
+        prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
+      );
+    } else if (selectionMode === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = new Date(selectedDates[0]);
+        const end = new Date(date);
+        if (end < start) {
+          setSelectedDates([date, selectedDates[0]]);
+        } else {
+          setSelectedDates([selectedDates[0], date]);
+        }
+      } else {
+        setSelectedDates([date]);
+      }
+    }
+  };
 
-/* ====== Discordログインボタン ====== */
-.discord-login {
-  background: linear-gradient(90deg, #5865F2, #4e5bd5);
-  color: #fff;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  transition: 0.3s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-.discord-login:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
-  color: #000;
-}
+  // 📌 選択範囲を展開して表示用に変換
+  const getDisplayedDates = () => {
+    if (selectionMode === "multiple") {
+      return selectedDates;
+    }
+    if (selectionMode === "range" && selectedDates.length === 2) {
+      const start = new Date(selectedDates[0]);
+      const end = new Date(selectedDates[1]);
+      const dates = [];
+      let current = new Date(start);
 
-/* ====== フッター ====== */
-footer {
-  background: rgba(0, 0, 0, 0.7);
-  color: #FDB9C8;
-  text-align: center;
-  padding: 1.2rem;
-  font-size: 1rem;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  border-top: 2px solid #004CA0;
-  margin-top: auto;
-}
-.footer-links {
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-}
-.footer-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #FDB9C8;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: 0.3s;
-}
-.footer-link:hover {
-  color: #50C878;
-  transform: scale(1.05);
-}
-.footer-icon {
-  font-size: 18px;
-  transition: 0.3s;
-}
-.footer-link:hover .footer-icon {
-  color: #50C878;
-}
+      while (current <= end) {
+        dates.push(
+          `${current.getFullYear()}-${current.getMonth() + 1}-${current.getDate()}`
+        );
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    }
+    return [];
+  };
 
-/* ====== RegisterPage レイアウト ====== */
-.page-container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  // 📌 プルダウン変更
+  const handleTimeChange = (date, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: { type: value, start: prev[date]?.start, end: prev[date]?.end },
+    }));
+  };
 
-.page-title {
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-  margin-bottom: 1rem;
-}
+  // 📌 時刻変更
+  const handleCustomTimeChange = (date, field, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], type: "custom", [field]: value },
+    }));
+  };
 
-/* ====== 選択日程リスト ====== */
-.options-section {
-  background: linear-gradient(135deg, #1a1a1a, #000);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 1.5rem;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  margin-top: 1.5rem;
-  width: 100%;
-  max-width: 600px;
-}
-.selected-date {
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.8rem;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
+  // 📌 カレンダー描画
+  const renderDays = () => {
+    const days = [];
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
+    }
 
-/* ===== 共通プルダウン ===== */
-.time-select,
-.dropdown-btn {
-  background: linear-gradient(135deg, #fff, #ffe6ef);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  font-size: 0.95rem;
-  color: #333;
-  cursor: pointer;
-  transition: 0.3s;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-}
-.time-select:hover,
-.dropdown-btn:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(253,185,200,0.7);
-  transform: scale(1.05);
-}
-.time-select option {
-  background: #333;
-  color: #fff;
-  font-weight: bold;
-  padding: 0.5rem;
-}
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const holiday = hd.isHoliday(date);
+      const formattedDate = `${currentYear}-${currentMonth + 1}-${day}`;
+      const isSelected =
+        selectionMode === "multiple"
+          ? selectedDates.includes(formattedDate)
+          : selectedDates.length === 2 &&
+            date >= new Date(selectedDates[0]) &&
+            date <= new Date(selectedDates[1]);
 
-/* ===== 開始〜終了の時間入力を一体感あるデザインに ===== */
-.custom-time {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: 1rem;
-}
+      const isToday = date.toDateString() === new Date().toDateString();
 
-.custom-time input[type="time"] {
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  color: #333;
-  font-weight: bold;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  transition: 0.3s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
+      days.push(
+        <div
+          key={day}
+          className={`day-cell ${isSelected ? "selected" : ""} ${
+            holiday ? "calendar-holiday" : ""
+          } ${date.getDay() === 0 ? "calendar-sunday" : ""} ${
+            date.getDay() === 6 ? "calendar-saturday" : ""
+          } ${isToday ? "calendar-today" : ""}`}
+          onClick={() => handleDateClick(day)}
+        >
+          <span>{day}</span>
+          {holiday && <small className="holiday-name">{holiday[0].name}</small>}
+        </div>
+      );
+    }
+    return days;
+  };
 
-.custom-time input[type="time"]:focus {
-  border-color: #50C878;
-  box-shadow: 0 0 8px rgba(80,200,120,0.6);
-  outline: none;
-}
+  // 📌 保存処理
+  const saveSchedule = async () => {
+    const displayedDates = getDisplayedDates();
+    if (!title || displayedDates.length === 0) {
+      alert("タイトルと日程を入力してください！");
+      return;
+    }
 
-.custom-time .separator {
-  font-weight: bold;
-  color: #FDB9C8;
-  font-size: 1rem;
-  padding: 0 0.3rem;
-}
+    const datesWithTime = displayedDates.map((d) => ({
+      date: d,
+      timerange: timeRanges[d] || { type: "allday" },
+    }));
+
+    const body = { title, dates: datesWithTime, memo: "" };
+
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      console.log("保存成功:", data);
+      alert("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
+    }
+  };
+
+  return (
+    <div className="page-container">
+      <h2 className="page-title">日程登録</h2>
+
+      {/* 入力エリア */}
+      <div className="input-card">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="title-input"
+        />
+
+        <div className="radio-group">
+          <input
+            type="radio"
+            id="multiple"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          <label htmlFor="multiple">複数選択</label>
+
+          <input
+            type="radio"
+            id="range"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          <label htmlFor="range">範囲選択</label>
+        </div>
+      </div>
+
+      {/* 横並び */}
+      <div className="main-layout">
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
+            </div>
+            <div className="week-header">
+              <span>日</span>
+              <span>月</span>
+              <span>火</span>
+              <span>水</span>
+              <span>木</span>
+              <span>金</span>
+              <span>土</span>
+            </div>
+            <div className="calendar-grid">{renderDays()}</div>
+          </div>
+        </div>
+
+        <div className="options-section">
+          <h3>選択した日程</h3>
+          <ul>
+            {getDisplayedDates().map((d, i) => (
+              <li key={i} className="selected-date">
+                {d}
+                <Dropdown
+                  value={timeRanges[d]?.type || "allday"}
+                  onChange={(val) => handleTimeChange(d, val)}
+                />
+                {timeRanges[d]?.type === "custom" && (
+                  <span className="custom-time">
+                    <input
+                      type="time"
+                      value={timeRanges[d]?.start || ""}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "start", e.target.value)
+                      }
+                    />
+                    〜
+                    <input
+                      type="time"
+                      value={timeRanges[d]?.end || ""}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "end", e.target.value)
+                      }
+                    />
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <button onClick={saveSchedule} className="share-button fancy">
+            ✨ 保存 ✨
+          </button>
+        </div>
+      </div>
+
+      <img src="/cat.png" alt="cat" className="cat-deco" />
+    </div>
+  );
+};
+
+export default RegisterPage;
