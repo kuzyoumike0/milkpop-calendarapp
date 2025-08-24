@@ -152,6 +152,21 @@ app.post("/api/schedules/:id/responses", async (req, res) => {
   }
 });
 
+// --- 出欠回答の一覧取得（全員分） ---
+app.get("/api/schedules/:id/responses", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "SELECT user_id, username, responses, created_at FROM schedule_responses WHERE schedule_id=$1 ORDER BY created_at DESC",
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("回答一覧取得エラー:", err);
+    res.status(500).json({ error: "回答一覧取得エラー" });
+  }
+});
+
 // --- 個人スケジュール保存 ---
 app.post("/api/personal", async (req, res) => {
   try {
