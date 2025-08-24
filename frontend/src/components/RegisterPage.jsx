@@ -46,49 +46,41 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center p-6 text-white font-sans">
-      <h1 className="text-3xl font-bold text-yellow-400 mb-6 tracking-wide drop-shadow-lg">
-        日程登録ページ
-      </h1>
+    <div className="page">
+      <h1 className="page-title">日程登録ページ</h1>
 
-      <div className="flex w-full max-w-6xl gap-6">
+      <div className="page-container">
         {/* カレンダー部分 */}
-        <div className="w-2/3 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-xl border border-yellow-700 p-6">
+        <div className="calendar-container card">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="イベントのタイトルを入力"
-            className="w-full mb-4 px-4 py-2 rounded-lg bg-black text-white border border-yellow-600 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+            className="input-title"
           />
 
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={handlePrevMonth}
-              className="px-3 py-1 bg-yellow-600 text-black font-bold rounded-lg hover:bg-yellow-500 transition"
-            >
+          <div className="calendar-nav" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <button onClick={handlePrevMonth} className="nav-button">
               &lt;
             </button>
-            <h2 className="text-xl font-bold text-yellow-400">
+            <h2 className="month-title">
               {currentYear}年 {currentMonth + 1}月
             </h2>
-            <button
-              onClick={handleNextMonth}
-              className="px-3 py-1 bg-yellow-600 text-black font-bold rounded-lg hover:bg-yellow-500 transition"
-            >
+            <button onClick={handleNextMonth} className="nav-button">
               &gt;
             </button>
           </div>
 
           {/* 曜日ヘッダー */}
-          <div className="grid grid-cols-7 gap-2 mb-2 text-center font-semibold text-yellow-400">
+          <div className="week-header">
             {daysOfWeek.map((day, i) => (
               <div key={i}>{day}</div>
             ))}
           </div>
 
           {/* 日付セル */}
-          <div className="grid grid-cols-7 gap-2 text-center">
+          <div className="calendar-grid">
             {Array(startDay)
               .fill(null)
               .map((_, i) => (
@@ -105,11 +97,7 @@ const RegisterPage = () => {
                 <div
                   key={day}
                   onClick={() => handleDateClick(day)}
-                  className={`cursor-pointer rounded-lg py-2 font-medium transition transform ${
-                    isSelected
-                      ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-bold shadow-lg scale-105"
-                      : "bg-[#1a1a1a] border border-yellow-700 hover:bg-yellow-700 hover:text-black hover:scale-105"
-                  }`}
+                  className={`day-cell ${isSelected ? "selected" : ""}`}
                 >
                   {day}
                 </div>
@@ -119,25 +107,20 @@ const RegisterPage = () => {
         </div>
 
         {/* 選択した日程リスト */}
-        <div className="w-1/3 bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] rounded-2xl shadow-xl border border-yellow-700 p-6">
-          <h2 className="text-xl font-bold text-yellow-400 mb-4">選択した日程</h2>
+        <div className="selected-container card">
+          <h2>選択した日程</h2>
           {selectedDates.length === 0 ? (
-            <p className="text-gray-400">まだ日程が選択されていません</p>
+            <p style={{ color: "#888" }}>まだ日程が選択されていません</p>
           ) : (
-            <ul className="space-y-2">
+            <ul>
               {selectedDates.map((date, idx) => (
-                <li
-                  key={idx}
-                  className="bg-gradient-to-r from-yellow-500 to-yellow-700 text-black px-4 py-2 rounded-lg shadow-md font-semibold"
-                >
+                <li key={idx} className="selected-date">
                   {date}
                 </li>
               ))}
             </ul>
           )}
-          <button className="mt-6 w-full bg-yellow-500 text-black font-bold py-2 rounded-lg hover:bg-yellow-400 transition shadow-lg">
-            共有リンクを発行
-          </button>
+          <button className="share-button">共有リンクを発行</button>
         </div>
       </div>
     </div>
