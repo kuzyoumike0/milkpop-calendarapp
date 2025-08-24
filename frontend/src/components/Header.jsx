@@ -17,6 +17,7 @@ const Header = () => {
         <Link to="/">トップ</Link>
         <Link to="/personal">個人スケジュール</Link>
         <Link to="/register">日程登録</Link>
+        <a href="/auth/discord" className="discord-login">Discordログイン</a>
       </nav>
 
       {/* ハンバーガーメニュー（スマホ用） */}
@@ -36,6 +37,9 @@ const Header = () => {
           <Link to="/" onClick={() => setIsOpen(false)}>トップ</Link>
           <Link to="/personal" onClick={() => setIsOpen(false)}>個人スケジュール</Link>
           <Link to="/register" onClick={() => setIsOpen(false)}>日程登録</Link>
+          <a href="/auth/discord" className="discord-login" onClick={() => setIsOpen(false)}>
+            Discordログイン
+          </a>
         </div>
       )}
     </header>
