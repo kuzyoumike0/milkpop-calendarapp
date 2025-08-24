@@ -19,7 +19,6 @@ const Footer = () => {
           
             className="footer-icon"
           />
-          Discordサーバー
         </a>
 
         {/* Twitterアカウント */}
@@ -34,7 +33,7 @@ const Footer = () => {
           
             className="footer-icon"
           />
-          Twitter
+
         </a>
       </div>
     </footer>
