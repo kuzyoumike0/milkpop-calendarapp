@@ -20,6 +20,7 @@ router.get("/discord", (req, res) => {
 // --- Discordからのコールバック処理 ---
 router.get("/discord/callback", async (req, res) => {
   const code = req.query.code;
+  console.log("Discordから受け取ったcode:", code); // codeを出力
   if (!code) return res.status(400).send("Codeがありません");
 
   try {
@@ -31,6 +32,8 @@ router.get("/discord/callback", async (req, res) => {
   params.append("code", code);
   params.append("redirect_uri", REDIRECT_URI);
   params.append("scope", "identify"); // 忘れずに
+
+  console.log("Discordに渡すredirect_uri:", REDIRECT_URI); // ← 確認用
 
   const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
     method: "POST",
