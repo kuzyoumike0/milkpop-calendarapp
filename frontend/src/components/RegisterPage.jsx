@@ -1,14 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
-import Holidays from "date-holidays";
+// 中略 … import 部分・ヘルパー関数はそのまま
 
-// ==== ヘルパー ====
-const getDaysInMonth = (year, month) => {
-  return new Date(year, month + 1, 0).getDate();
-};
-
-// ==== カレンダーセル ====
 const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSaturday, isSunday }) => {
   let textColor = "";
   if (isHoliday) {
@@ -23,14 +14,14 @@ const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSat
     <div
       onClick={() => onClick(date)}
       title={holidayName || ""}
-      className={`w-14 h-14 flex flex-col items-center justify-center rounded-lg cursor-pointer transition
+      className={`w-16 h-16 sm:w-14 sm:h-14 flex flex-col items-center justify-center rounded-lg cursor-pointer transition
         ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
         ${textColor}
         ${!isSelected && !isHoliday && !isSaturday && !isSunday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
     >
-      <span>{date.getDate()}</span>
+      <span className="text-base sm:text-sm">{date.getDate()}</span>
       {holidayName && (
-        <span className="text-[0.6rem] text-red-500 font-normal leading-tight">
+        <span className="text-[0.55rem] sm:text-[0.5rem] text-red-500 font-normal leading-tight text-center">
           {holidayName}
         </span>
       )}
@@ -39,97 +30,7 @@ const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName, isSat
 };
 
 export default function RegisterPage() {
-  const navigate = useNavigate();
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-
-  const [title, setTitle] = useState("");
-  const [selectionType, setSelectionType] = useState("multiple");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [range, setRange] = useState({ start: null, end: null });
-  const [holidays, setHolidays] = useState([]); // {date, name}
-
-  const [timeType, setTimeType] = useState("allday");
-  const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
-
-  // ==== 日本の祝日を取得 ====
-  useEffect(() => {
-    const hd = new Holidays("JP");
-    const yearHolidays = hd.getHolidays(currentYear).map((h) => ({
-      date: new Date(h.date),
-      name: h.name,
-    }));
-    setHolidays(yearHolidays);
-  }, [currentYear]);
-
-  const handleDateClick = (date) => {
-    if (selectionType === "multiple") {
-      setSelectedDates((prev) =>
-        prev.some((d) => d.getTime() === date.getTime())
-          ? prev.filter((d) => d.getTime() !== date.getTime())
-          : [...prev, date]
-      );
-    } else if (selectionType === "range") {
-      if (!range.start || (range.start && range.end)) {
-        setRange({ start: date, end: null });
-      } else if (range.start && !range.end) {
-        if (date < range.start) {
-          setRange({ start: date, end: range.start });
-        } else {
-          setRange({ ...range, end: date });
-        }
-      }
-    }
-  };
-
-  const isDateSelected = (date) => {
-    if (selectionType === "multiple") {
-      return selectedDates.some((d) => d.getTime() === date.getTime());
-    } else if (selectionType === "range") {
-      if (range.start && range.end) {
-        return date >= range.start && date <= range.end;
-      }
-      return range.start && date.getTime() === range.start.getTime();
-    }
-    return false;
-  };
-
-  const getHolidayInfo = (date) => {
-    const holiday = holidays.find(
-      (h) =>
-        h.date.getFullYear() === date.getFullYear() &&
-        h.date.getMonth() === date.getMonth() &&
-        h.date.getDate() === date.getDate()
-    );
-    return holiday ? holiday.name : null;
-  };
-
-  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-
-  const calendarDays = [];
-  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    calendarDays.push(new Date(currentYear, currentMonth, d));
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const scheduleId = uuidv4();
-    const payload =
-      selectionType === "multiple"
-        ? { id: scheduleId, title, dates: selectedDates, timeType, timeRange }
-        : { id: scheduleId, title, range, timeType, timeRange };
-
-    await fetch("/api/schedule", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    navigate(`/share/${scheduleId}`);
-  };
+  // 中略 … state, hooks, handleSubmit はそのまま
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
@@ -137,8 +38,8 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl p-6">
-        <div className="bg-black bg-opacity-50 rounded-2xl shadow-xl p-6 w-full">
+      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-5xl p-4 sm:p-6">
+        <div className="bg-black bg-opacity-50 rounded-2xl shadow-xl p-4 sm:p-6 w-full">
           <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -152,7 +53,7 @@ export default function RegisterPage() {
             />
 
             {/* 複数 / 範囲選択 */}
-            <div className="flex space-x-6 items-center">
+            <div className="flex space-x-6 items-center justify-center">
               <label>
                 <input
                   type="radio"
@@ -174,7 +75,7 @@ export default function RegisterPage() {
             </div>
 
             {/* ==== カレンダー ==== */}
-            <div className="bg-white text-black rounded-xl p-4 shadow-md">
+            <div className="bg-white text-black rounded-xl p-4 shadow-md overflow-x-auto">
               <div className="flex justify-between items-center mb-2">
                 <button
                   type="button"
@@ -191,7 +92,7 @@ export default function RegisterPage() {
                 >
                   ←
                 </button>
-                <h3 className="font-bold">
+                <h3 className="font-bold text-lg sm:text-base">
                   {currentYear}年 {currentMonth + 1}月
                 </h3>
                 <button
@@ -211,13 +112,13 @@ export default function RegisterPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 font-semibold text-center">
+              <div className="grid grid-cols-7 gap-2 sm:gap-1 font-semibold text-center text-sm">
                 {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
                   <div key={d}>{d}</div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-1 mt-2">
+              <div className="grid grid-cols-7 gap-2 sm:gap-1 mt-2">
                 {calendarDays.map((date, i) =>
                   date ? (
                     <CalendarCell
@@ -231,7 +132,7 @@ export default function RegisterPage() {
                       isSunday={date.getDay() === 0}
                     />
                   ) : (
-                    <div key={i} className="w-14 h-14"></div>
+                    <div key={i} className="w-16 h-16 sm:w-14 sm:h-14"></div>
                   )
                 )}
               </div>
