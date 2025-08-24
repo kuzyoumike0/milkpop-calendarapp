@@ -584,3 +584,50 @@ footer {
   box-shadow: 0 0 12px rgba(80,200,120,0.8);
 }
 
+/* ====== カスタム時間入力セット ====== */
+.custom-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #fff, #ffe6ef);
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  padding: 0.4rem 0.8rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  margin-left: 1rem;  /* 日付やプルダウンとの余白 */
+}
+
+/* 開始・終了の input 共通デザイン */
+.custom-time input[type="time"] {
+  border: none;
+  background: transparent;
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #333;
+  padding: 0.4rem 0.6rem;
+  text-align: center;
+  width: 90px;
+  transition: all 0.3s ease;
+}
+
+/* hover / focus */
+.custom-time input[type="time"]:hover {
+  background: rgba(253,185,200,0.2);
+  border-radius: 6px;
+}
+
+.custom-time input[type="time"]:focus {
+  outline: none;
+  background: rgba(80,200,120,0.2);
+  border-radius: 6px;
+  color: #000;
+}
+
+/* 区切りの「〜」 */
+.custom-time span.separator {
+  font-weight: bold;
+  color: #FDB9C8;
+  font-size: 1rem;
+}
+
+
