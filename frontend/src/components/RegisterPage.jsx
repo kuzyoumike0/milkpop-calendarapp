@@ -19,6 +19,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 📌 日付クリック処理
   const handleDateClick = (day) => {
     const date = `${currentYear}-${currentMonth + 1}-${day}`;
     if (selectionMode === "multiple") {
@@ -42,6 +43,29 @@ const RegisterPage = () => {
     }
   };
 
+  // 📌 選択範囲を展開して表示用に変換
+  const getDisplayedDates = () => {
+    if (selectionMode === "multiple") {
+      return selectedDates;
+    }
+    if (selectionMode === "range" && selectedDates.length === 2) {
+      const start = new Date(selectedDates[0]);
+      const end = new Date(selectedDates[1]);
+      const dates = [];
+      let current = new Date(start);
+
+      while (current <= end) {
+        dates.push(
+          `${current.getFullYear()}-${current.getMonth() + 1}-${current.getDate()}`
+        );
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    }
+    return [];
+  };
+
+  // 📌 カレンダー描画
   const renderDays = () => {
     const days = [];
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -79,15 +103,17 @@ const RegisterPage = () => {
     return days;
   };
 
+  // 📌 保存処理
   const saveSchedule = async () => {
-    if (!title || selectedDates.length === 0) {
+    const displayedDates = getDisplayedDates();
+    if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください！");
       return;
     }
 
     const body = {
       title,
-      dates: selectedDates,
+      dates: displayedDates,
       memo: "", // RegisterPageはメモなし
       timerange: "allday",
     };
@@ -171,7 +197,7 @@ const RegisterPage = () => {
         <div className="options-section">
           <h3>選択した日程</h3>
           <ul>
-            {selectedDates.map((d, i) => (
+            {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
                 {d}
               </li>
@@ -189,4 +215,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
