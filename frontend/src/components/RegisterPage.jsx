@@ -8,6 +8,7 @@ import Dropdown from "./Dropdown";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
   const [shareLink, setShareLink] = useState("");
   const navigate = useNavigate();
@@ -30,17 +31,80 @@ const RegisterPage = () => {
       2,
       "0"
     )}-${String(day).padStart(2, "0")}`;
-    setSelectedDates((prev) =>
-      prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
-    );
+
+    if (selectionMode === "multiple") {
+      setSelectedDates((prev) =>
+        prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
+      );
+    } else if (selectionMode === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = new Date(selectedDates[0]);
+        const end = new Date(date);
+        if (end < start) {
+          setSelectedDates([date, selectedDates[0]]);
+        } else {
+          setSelectedDates([selectedDates[0], date]);
+        }
+      } else {
+        setSelectedDates([date]);
+      }
+    }
+  };
+
+  // 📌 範囲展開
+  const getDisplayedDates = () => {
+    if (selectionMode === "multiple") return selectedDates;
+
+    if (selectionMode === "range" && selectedDates.length === 2) {
+      const start = new Date(selectedDates[0]);
+      const end = new Date(selectedDates[1]);
+      const dates = [];
+      let current = new Date(start);
+      while (current <= end) {
+        dates.push(
+          `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(
+            2,
+            "0"
+          )}-${String(current.getDate()).padStart(2, "0")}`
+        );
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    }
+    return selectedDates;
   };
 
   // 📌 時間帯変更
   const handleTimeChange = (date, value) => {
+    setTimeRanges((prev) => {
+      if (value === "custom") {
+        return {
+          ...prev,
+          [date]: { type: "custom", start: "00:00", end: "01:00" },
+        };
+      }
+      return { ...prev, [date]: { type: value } };
+    });
+  };
+
+  // 📌 時間指定の変更
+  const handleCustomTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
-      [date]: { type: value },
+      [date]: { ...prev[date], type: "custom", [field]: value },
     }));
+  };
+
+  // 📌 時刻リスト生成
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      const hour = h.toString().padStart(2, "0");
+      times.push({ value: `${hour}:00`, label: `${hour}時` });
+    }
+    return times;
   };
 
   // 📌 カレンダー描画
@@ -56,7 +120,13 @@ const RegisterPage = () => {
         2,
         "0"
       )}-${String(day).padStart(2, "0")}`;
-      const isSelected = selectedDates.includes(formattedDate);
+      const isSelected =
+        selectionMode === "multiple"
+          ? selectedDates.includes(formattedDate)
+          : selectedDates.length === 2 &&
+            date >= new Date(selectedDates[0]) &&
+            date <= new Date(selectedDates[1]);
+
       days.push(
         <div
           key={day}
@@ -74,12 +144,13 @@ const RegisterPage = () => {
 
   // 📌 共有リンク発行
   const generateShareLink = async () => {
-    if (!title || selectedDates.length === 0) {
+    const displayedDates = getDisplayedDates();
+    if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください！");
       return;
     }
 
-    const body = { title, dates: selectedDates };
+    const body = { title, dates: displayedDates, timeRanges };
 
     try {
       const res = await fetch(
@@ -116,9 +187,31 @@ const RegisterPage = () => {
           onChange={(e) => setTitle(e.target.value)}
           className="title-input"
         />
+
+        {/* 複数選択 / 範囲選択ラジオ */}
+        <div className="radio-group">
+          <label>
+            <input
+              type="radio"
+              value="multiple"
+              checked={selectionMode === "multiple"}
+              onChange={() => setSelectionMode("multiple")}
+            />
+            複数選択
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="range"
+              checked={selectionMode === "range"}
+              onChange={() => setSelectionMode("range")}
+            />
+            範囲選択
+          </label>
+        </div>
       </div>
 
-      {/* カレンダー＋リスト横並び */}
+      {/* カレンダー + 選択リスト横並び */}
       <div className="main-layout">
         {/* 左：カレンダー */}
         <div className="calendar-section">
@@ -134,17 +227,49 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右：リスト */}
+        {/* 右：選択リスト */}
         <div className="options-section">
-          <h3 className="mb-2">選択した日程</h3>
+          <h3>選択した日程</h3>
           <ul>
-            {selectedDates.map((d, i) => (
+            {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
-                <span>{d}</span>
+                {d}
                 <Dropdown
                   value={timeRanges[d]?.type || "allday"}
                   onChange={(val) => handleTimeChange(d, val)}
                 />
+                {/* カスタム（時間指定）の場合 */}
+                {timeRanges[d]?.type === "custom" && (
+                  <span className="custom-time">
+                    <select
+                      className="custom-dropdown"
+                      value={timeRanges[d]?.start || "00:00"}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "start", e.target.value)
+                      }
+                    >
+                      {generateTimeOptions().map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                    〜
+                    <select
+                      className="custom-dropdown"
+                      value={timeRanges[d]?.end || "01:00"}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "end", e.target.value)
+                      }
+                    >
+                      {generateTimeOptions().map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </span>
+                )}
               </li>
             ))}
           </ul>
