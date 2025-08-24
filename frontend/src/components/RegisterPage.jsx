@@ -71,7 +71,11 @@ const RegisterPage = () => {
   const handleTimeChange = (date, value) => {
     setTimeRanges((prev) => ({
       ...prev,
-      [date]: { type: value, start: prev[date]?.start || "00:00", end: prev[date]?.end || "01:00" },
+      [date]: {
+        type: value,
+        start: prev[date]?.start || "00:00",
+        end: prev[date]?.end || "01:00",
+      },
     }));
   };
 
@@ -141,7 +145,7 @@ const RegisterPage = () => {
 
     const datesWithTime = displayedDates.map((d) => ({
       date: d,
-      timerange: timeRanges[d] || { type: "allday", start: "00:00", end: "01:00" },
+      timerange: timeRanges[d] || { type: "custom", start: "00:00", end: "01:00" },
     }));
 
     const body = { title, dates: datesWithTime, memo: "" };
@@ -234,7 +238,7 @@ const RegisterPage = () => {
                   <span className="custom-time">
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.start || "00:00"}  // デフォルト 00:00
+                      defaultValue="00:00"
                       onChange={(e) =>
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
@@ -246,7 +250,7 @@ const RegisterPage = () => {
                     〜
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.end || "01:00"}  // デフォルト 01:00
+                      defaultValue="01:00"
                       onChange={(e) =>
                         handleCustomTimeChange(d, "end", e.target.value)
                       }
