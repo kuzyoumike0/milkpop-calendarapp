@@ -10,7 +10,8 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeOptions, setTimeOptions] = useState({});
-  const [shareUrl, setShareUrl] = useState(""); // ← 追加
+  const [shareUrl, setShareUrl] = useState(""); // ← 発行URLを保存
+  const [copied, setCopied] = useState(false);  // ← コピー状態
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -37,6 +38,7 @@ const RegisterPage = () => {
     return range;
   };
 
+  // 表示用日程
   const getDisplayedDates = () => {
     if (selectionMode === "range" && selectedDates.length === 2) {
       return expandRange(selectedDates[0], selectedDates[1]).sort();
@@ -57,7 +59,7 @@ const RegisterPage = () => {
       } else if (selectedDates.length === 1) {
         setSelectedDates([selectedDates[0], date]);
       } else {
-        setSelectedDates([date]); // リセット
+        setSelectedDates([date]);
       }
     }
   };
@@ -106,13 +108,27 @@ const RegisterPage = () => {
       const data = await res.json();
       if (data.share_token) {
         const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareUrl(url); // ← 発行したURLを表示用に保存
+        setShareUrl(url);
+        setCopied(false); // 新しいURLを生成したらコピー状態をリセット
       } else {
         alert("共有リンクの生成に失敗しました");
       }
     } catch (err) {
       console.error(err);
       alert("サーバーエラー");
+    }
+  };
+
+  // コピー機能
+  const handleCopy = async () => {
+    if (shareUrl) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("コピー失敗:", err);
+      }
     }
   };
 
@@ -271,13 +287,22 @@ const RegisterPage = () => {
         共有リンクを発行
       </button>
 
-      {/* 発行済みリンク表示 */}
+      {/* 発行済みリンク表示 + コピー */}
       {shareUrl && (
         <div className="share-link">
           共有リンク:{" "}
-          <a href={shareUrl} onClick={(e) => { e.preventDefault(); navigate(shareUrl.replace(window.location.origin, "")); }}>
+          <a
+            href={shareUrl}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(shareUrl.replace(window.location.origin, ""));
+            }}
+          >
             {shareUrl}
           </a>
+          <button onClick={handleCopy} style={{ marginLeft: "10px" }}>
+            {copied ? "✅ コピーしました" : "コピー"}
+          </button>
         </div>
       )}
     </div>
