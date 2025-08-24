@@ -153,11 +153,22 @@ h1, h2, h3 {
   color: #000;
 }
 /* ====== フッター ====== */
+footer {
+  background: rgba(0, 0, 0, 0.7);
+  color: #FDB9C8;
+  text-align: center;
+  padding: 1.2rem;
+  font-size: 1rem;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  border-top: 2px solid #004CA0;
+  margin-top: auto;
+}
+
 .footer-links {
   margin-top: 0.8rem;
   display: flex;
   justify-content: center;
-  gap: 2rem; /* ← アイコンの間隔を広げる */
+  gap: 2.5rem; /* ← アイコン間の余白をしっかり */
 }
 
 .footer-link {
@@ -165,7 +176,6 @@ h1, h2, h3 {
   align-items: center;
   gap: 0.5rem; /* ← アイコンと文字の間 */
   color: #FDB9C8;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
   font-size: 1rem;
   text-decoration: none;
   transition: 0.3s;
@@ -177,13 +187,14 @@ h1, h2, h3 {
 }
 
 .footer-icon {
-  font-size: 20px; /* ← 大きすぎないサイズ */
+  font-size: 18px; /* ← 小さめに統一 */
   transition: 0.3s;
 }
 
 .footer-link:hover .footer-icon {
   color: #50C878;
 }
+
 
 /* ====== レスポンシブ ====== */
 @media (max-width: 768px) {
