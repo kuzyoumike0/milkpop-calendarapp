@@ -38,7 +38,7 @@ const SharePage = () => {
     }
   };
 
-  // 回答送信
+  // 保存（新規・編集）
   const handleSave = async () => {
     if (!username) {
       alert("名前を入力してください");
@@ -62,6 +62,30 @@ const SharePage = () => {
     }
   };
 
+  // 削除
+  const handleDelete = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
+    if (!window.confirm("本当に削除しますか？")) return;
+
+    try {
+      const res = await fetch(
+        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(username)}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (res.ok) {
+        setResponses({});
+        fetchResponses(schedule.id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (!schedule) return <div>読み込み中...</div>;
 
   // 出欠データを日付ごとに整形
@@ -76,7 +100,7 @@ const SharePage = () => {
   return (
     <div
       className="page-container"
-      style={{ alignItems: "flex-start", maxWidth: "900px", marginLeft: "2rem" }} // 👈 左寄せ
+      style={{ alignItems: "flex-start", maxWidth: "900px", marginLeft: "2rem" }}
     >
       <h2 className="page-title" style={{ textAlign: "left" }}>
         共有スケジュール
@@ -153,8 +177,9 @@ const SharePage = () => {
                         setResponses((prev) => ({ ...prev, [d]: e.target.value }))
                       }
                       className="custom-dropdown"
+                      style={{ width: "120px" }} // 👈 短くした
                     >
-                      <option value="">選択してください</option>
+                      <option value="">---</option>
                       <option value="yes">〇 出席</option>
                       <option value="no">✕ 欠席</option>
                       <option value="maybe">△ 未定</option>
@@ -206,10 +231,24 @@ const SharePage = () => {
         </table>
       </div>
 
-      {/* 保存ボタン */}
-      <div style={{ marginTop: "2.5rem", textAlign: "center", width: "100%" }}>
+      {/* 保存・削除ボタン */}
+      <div style={{ marginTop: "2.5rem", display: "flex", gap: "1rem" }}>
         <button onClick={handleSave} className="share-button fancy">
-          保存する
+          保存 / 編集
+        </button>
+        <button
+          onClick={handleDelete}
+          style={{
+            background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
+            border: "none",
+            borderRadius: "50px",
+            padding: "0.8rem 1.6rem",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          削除
         </button>
       </div>
     </div>
