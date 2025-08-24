@@ -413,6 +413,35 @@ footer {
   border-top: 2px solid #004CA0;
   margin-top: auto;
 }
+/* ====== フッターリンク ====== */
+.footer-links {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #FDB9C8;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.footer-link:hover {
+  color: #FFD700;
+  transform: scale(1.05);
+}
+
+.footer-icon {
+  width: 20px;
+  height: 20px;
+}
+
 
 /* ====== ロゴリンク（フッターと同じフォントに統一） ====== */
 .logo-link {
