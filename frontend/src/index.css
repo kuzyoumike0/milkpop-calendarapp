@@ -697,4 +697,18 @@ button:hover {
   font-weight: bold;
   text-decoration: underline;
 }
+.radio-label {
+  padding: 6px 12px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.radio-label.active {
+  background: #004ca0;
+  color: #fff;
+  font-weight: bold;
+  border-color: #004ca0;
+}
 
