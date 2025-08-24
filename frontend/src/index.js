@@ -1,15 +1,22 @@
-// frontend/src/index.js
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import "./index.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import TopPage from "./components/TopPage";
+import PersonalPage from "./components/PersonalPage";
+import RegisterPage from "./components/RegisterPage";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
+function App() {
+  return (
+    <Router>
+      <Header />
+      <Routes>
+        <Route path="/" element={<TopPage />} />
+        <Route path="/personal" element={<PersonalPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Routes>
+      <Footer />
+    </Router>
+  );
+}
+
+export default App;
