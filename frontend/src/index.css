@@ -549,3 +549,21 @@ footer {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.selected-date {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 0.8rem 0.8rem;   /* 内側の余白を少し広めに */
+  margin-bottom: 0.8rem;    /* 各項目の間も少し広めに */
+  font-size: 0.95rem;
+  display: flex;            /* 横並び用 */
+  align-items: center;      /* 縦位置を揃える */
+  justify-content: space-between;
+}
+
+/* プルダウンと日付の間に余白 */
+.selected-date .dropdown,
+.selected-date .time-select {
+  margin-left: 1rem;
+}
+
