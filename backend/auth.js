@@ -1,11 +1,10 @@
 // backend/auth.js
 import express from "express";
-//　import fetch from "node-fetch"; // npm install node-fetch@2
-import dotenv from "dotenv";
+//import fetch from "node-fetch"; // npm install node-fetch@2
 
-dotenv.config();
 const router = express.Router();
 
+// Railway の環境変数を直接使用
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
