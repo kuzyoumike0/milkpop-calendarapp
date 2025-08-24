@@ -142,6 +142,7 @@ export default function RegisterPage() {
           <h2 className="text-xl font-semibold mb-4 text-center">日程登録</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* タイトル */}
             <input
               type="text"
               placeholder="タイトルを入力"
