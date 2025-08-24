@@ -44,7 +44,7 @@ h1, h2, h3 {
   transition: 0.3s;
 }
 .nav-links a:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  background: linear-gradient(90deg, #50C878, #FDB9C8);
   color: #000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
@@ -63,7 +63,7 @@ h1, h2, h3 {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 .logo-link:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  background: linear-gradient(90deg, #50C878, #FDB9C8);
   color: #000;
   box-shadow: 0 3px 8px rgba(0,0,0,0.4);
   transform: scale(1.05);
@@ -82,7 +82,7 @@ h1, h2, h3 {
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 .discord-login:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878); /* ✅ 統一 */
+  background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #000;
 }
 
@@ -125,7 +125,7 @@ h1, h2, h3 {
   transition: 0.3s;
 }
 .dropdown a:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  background: linear-gradient(90deg, #50C878, #FDB9C8);
   color: #000;
 }
 
@@ -141,7 +141,6 @@ footer {
   margin-top: auto;
 }
 
-/* ====== フッターリンク ====== */
 .footer-links {
   margin-top: 0.8rem;
   display: flex;
@@ -176,7 +175,7 @@ footer {
 .page-title {
   font-size: 2rem;
   font-weight: bold;
-  color: #50C878; /* エメラルド */
+  color: #50C878;
   margin-bottom: 1.5rem;
   text-align: center;
   font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
@@ -197,7 +196,7 @@ footer {
   width: 100%;
 }
 
-/* ====== カード（黒基調＋エメラルド） ====== */
+/* ====== カード ====== */
 .card {
   background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
   border: 2px solid #50C878;
@@ -210,7 +209,7 @@ footer {
   transition: 0.3s;
 }
 .card:hover {
-  border-color: #FDB9C8; /* ✅ 統一 */
+  border-color: #FDB9C8;
   transform: scale(1.01);
 }
 
@@ -232,13 +231,10 @@ button:hover, .share-button:hover {
   color: #000;
 }
 
-/* ====== カレンダー ====== */
-.calendar-container {
-  flex: 7;
-}
-.selected-container {
-  flex: 3;
-}
+/* ====== カレンダー（自作UI用） ====== */
+.calendar-container { flex: 7; }
+.selected-container { flex: 3; }
+
 .nav-button {
   padding: 0.3rem 0.8rem;
   background: #50C878;
@@ -281,7 +277,7 @@ button:hover, .share-button:hover {
   transition: 0.3s;
 }
 .day-cell:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
   color: #000;
   transform: scale(1.05);
 }
@@ -300,6 +296,9 @@ button:hover, .share-button:hover {
   margin-bottom: 1rem;
 }
 .selected-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: linear-gradient(90deg, #50C878, #FDB9C8);
   color: #000;
   font-weight: bold;
@@ -307,6 +306,19 @@ button:hover, .share-button:hover {
   border-radius: 8px;
   margin-bottom: 0.5rem;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+.remove-date-btn {
+  background: transparent;
+  border: none;
+  color: #000;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.remove-date-btn:hover {
+  color: red;
+  transform: scale(1.2);
 }
 
 /* ====== 入力フォーム ====== */
@@ -325,6 +337,11 @@ button:hover, .share-button:hover {
 .input-title:focus {
   border-color: #FDB9C8;
   box-shadow: 0 0 8px rgba(253, 185, 200, 0.6);
+}
+.input-title.short {
+  max-width: 300px;
+  display: block;
+  margin: 0 auto 1rem auto;
 }
 
 /* ====== トップページ ====== */
@@ -358,105 +375,20 @@ button:hover, .share-button:hover {
   transition: 0.3s;
 }
 .top-description:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
   color: #000;
   transform: scale(1.02);
 }
 
 /* ====== レスポンシブ ====== */
 @media (max-width: 768px) {
-  .nav-links {
-    display: none;
-  }
-  .hamburger {
-    display: flex;
-  }
-  .page-container {
-    flex-direction: column;
-    padding: 1rem;
-  }
-  .calendar-container, .selected-container {
-    flex: none;
-    width: 100%;
-  }
-}
-/* ====== タイトル入力フォーム（短縮版） ====== */
-.input-title.short {
-  max-width: 300px; /* ✅ 幅を短めに */
-  display: block;
-  margin: 0 auto 1rem auto; /* 中央寄せ */
-}
-/* ====== タイトル入力フォーム（短縮版） ====== */
-.input-title.short {
-  max-width: 300px;
-  display: block;
-  margin: 0 auto 1rem auto;
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+  .page-container { flex-direction: column; padding: 1rem; }
+  .calendar-container, .selected-container { flex: none; width: 100%; }
 }
 
-/* ====== 選択日アイテムに削除ボタン追加 ====== */
-.selected-date {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
-}
-
-.remove-date-btn {
-  background: transparent;
-  border: none;
-  color: #000;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.remove-date-btn:hover {
-  color: red;
-  transform: scale(1.2);
-}
-
-/* ====== タイトル入力フォーム（短縮版） ====== */
-.input-title.short {
-  max-width: 300px;
-  display: block;
-  margin: 0 auto 1rem auto;
-}
-
-/* ====== 選択日アイテムに削除ボタン追加 ====== */
-.selected-date {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
-  font-weight: bold;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
-}
-
-.remove-date-btn {
-  background: transparent;
-  border: none;
-  color: #000;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.remove-date-btn:hover {
-  color: red;
-  transform: scale(1.2);
-}
-
-/* カレンダーの基本スタイル */
+/* ====== react-calendar 用 ====== */
 .react-calendar {
   background: white;
   border-radius: 1rem;
@@ -464,25 +396,18 @@ button:hover, .share-button:hover {
   padding: 1rem;
   font-family: 'Zen Maru Gothic', sans-serif;
 }
-
-/* 曜日ヘッダー */
 .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: bold;
   color: #004CA0;
 }
-
-/* 今日 */
 .react-calendar__tile--now {
   background: #FDB9C8 !important;
   color: white !important;
   border-radius: 0.75rem;
 }
-
-/* 選択中 */
 .react-calendar__tile--active {
   background: #004CA0 !important;
   color: white !important;
   border-radius: 0.75rem;
 }
-
