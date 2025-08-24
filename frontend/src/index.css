@@ -570,6 +570,7 @@ main {
 }
 
 /* ====== プルダウン（全体統一） ====== */
+/* ====== 全プルダウン（背景白＋文字黒＋矢印黒） ====== */
 .custom-dropdown,
 select {
   width: 100%;
@@ -577,7 +578,7 @@ select {
   border-radius: 0.8rem;
   border: 2px solid #FDB9C8;
   background-color: #fff;   /* 背景白 */
-  color: #000;              /* 文字黒 */
+  color: #000 !important;   /* 文字黒を強制 */
   font-size: 1rem;
   font-family: 'M PLUS Rounded 1c', sans-serif;
   appearance: none;
@@ -592,12 +593,14 @@ select {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.custom-dropdown:hover,
-select:hover {
-  border-color: #004CA0;
-  box-shadow: 0 0 6px rgba(0,76,160,0.3);
-  transform: scale(1.02);
+/* 選択肢（ドロップダウン内部） */
+.custom-dropdown option,
+select option {
+  background: #fff !important;  /* 背景白 */
+  color: #000 !important;       /* 文字黒 */
+  font-size: 1rem;
 }
+
 
 .custom-dropdown:focus,
 select:focus {
