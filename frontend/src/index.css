@@ -588,15 +588,10 @@ select option {
 }
 /* カスタム時間用プルダウン */
 /* ====== 時刻指定プルダウン（開始〜終了用） ====== */
-.custom-time {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.custom-time .custom-dropdown {
-  flex: 1;
+/* ====== 全プルダウン共通デザイン ====== */
+.custom-dropdown,
+select {
+  width: 100%;
   padding: 0.7rem 2rem 0.7rem 1rem;
   border-radius: 0.8rem;
   border: 2px solid #FDB9C8;
@@ -616,21 +611,32 @@ select option {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.custom-time .custom-dropdown:hover {
+.custom-dropdown:hover,
+select:hover {
   border-color: #004CA0;
   box-shadow: 0 0 6px rgba(0,76,160,0.3);
   transform: scale(1.02);
 }
 
-.custom-time .custom-dropdown:focus {
+.custom-dropdown:focus,
+select:focus {
   outline: none;
   border-color: #FDB9C8;
   box-shadow: 0 0 8px rgba(253,185,200,0.5);
 }
 
-.custom-time .custom-dropdown option {
+.custom-dropdown option,
+select option {
   padding: 0.6rem;
   background: #fff;   /* 選択肢も背景白 */
   color: #000;        /* 文字黒 */
   font-size: 1rem;
+}
+
+/* ====== 時刻指定用ラッパー ====== */
+.custom-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
