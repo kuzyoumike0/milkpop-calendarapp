@@ -9,7 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [editingUser, setEditingUser] = useState(null); // 編集中ユーザー
+  const [editingUser, setEditingUser] = useState(null); // 編集対象ユーザー
 
   // スケジュール取得
   useEffect(() => {
@@ -35,17 +35,20 @@ const SharePage = () => {
       const data = await res.json();
       setAllResponses(data);
 
-      const myResp = data.find((r) => r.user_id === username);
-      if (myResp) setResponses(myResp.responses);
+      // 編集中のユーザーの回答を state に反映
+      if (editingUser) {
+        const targetResp = data.find((r) => r.username === editingUser);
+        setResponses(targetResp ? targetResp.responses : {});
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 保存
+  // 保存（編集対象ユーザー）
   const handleSave = async () => {
-    if (!username) {
-      alert("名前を入力してください");
+    if (!editingUser) {
+      alert("編集するユーザーを選択してください");
       return;
     }
     try {
@@ -53,26 +56,31 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: username,
-          username,
+          user_id: editingUser,
+          username: editingUser,
           responses,
         }),
       });
+      alert(`${editingUser} さんの出欠を保存しました`);
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 削除
-  const handleDelete = async (user) => {
-    if (!window.confirm(`${user} さんの回答を削除しますか？`)) return;
+  // 削除（編集対象ユーザー）
+  const handleDelete = async () => {
+    if (!editingUser) return;
+    if (!window.confirm(`${editingUser} さんの回答を削除しますか？`)) return;
+
     try {
       await fetch(
-        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(user)}`,
+        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(editingUser)}`,
         { method: "DELETE" }
       );
-      if (user === username) setResponses({});
+      alert(`${editingUser} さんの出欠を削除しました`);
+      setEditingUser(null);
+      setResponses({});
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
@@ -107,7 +115,7 @@ const SharePage = () => {
       {/* タイトル */}
       <div
         className="card"
-        style={{ textAlign: "left", width: "100%", margin: "0 0 1.5rem 0" }}
+        style={{ textAlign: "left", width: "100%", marginBottom: "1.5rem" }}
       >
         <h3>{schedule.title}</h3>
       </div>
@@ -128,15 +136,7 @@ const SharePage = () => {
       </div>
 
       {/* 日程一覧 */}
-      <div
-        className="card"
-        style={{
-          marginBottom: "2rem",
-          textAlign: "left",
-          width: "100%",
-          margin: "0",
-        }}
-      >
+      <div className="card" style={{ marginBottom: "2rem", textAlign: "left" }}>
         <h3>日程一覧</h3>
         <table
           style={{
@@ -167,10 +167,7 @@ const SharePage = () => {
                   <select
                     value={responses[d] || ""}
                     onChange={(e) =>
-                      setResponses((prev) => ({
-                        ...prev,
-                        [d]: e.target.value,
-                      }))
+                      setResponses((prev) => ({ ...prev, [d]: e.target.value }))
                     }
                     className="custom-dropdown"
                     style={{ width: "90px" }}
@@ -189,9 +186,11 @@ const SharePage = () => {
                       <span
                         key={idx}
                         onClick={() => {
-                          if (entry.user === username) {
-                            setEditingUser(entry.user);
-                          }
+                          setEditingUser(entry.user);
+                          setResponses(
+                            allResponses.find((r) => r.username === entry.user)
+                              ?.responses || {}
+                          );
                         }}
                         style={{
                           display: "inline-block",
@@ -228,12 +227,12 @@ const SharePage = () => {
             textAlign: "left",
           }}
         >
-          <h3>{editingUser} さんの出欠を編集</h3>
+          <h3>{editingUser} さんの出欠を編集中</h3>
           <button onClick={handleSave} className="share-button fancy">
             保存
           </button>
           <button
-            onClick={() => handleDelete(editingUser)}
+            onClick={handleDelete}
             style={{
               background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
               border: "none",
