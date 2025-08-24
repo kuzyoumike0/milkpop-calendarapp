@@ -7,9 +7,9 @@ import "../index.css";
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]); // 選択済み日程
+  const [selectedDates, setSelectedDates] = useState([]); // 範囲モードでは端点のみ保持
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({}); // 日付ごとの時間帯設定
+  const [timeOptions, setTimeOptions] = useState({});
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -22,21 +22,29 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 範囲展開関数
-  const expandRange = (startDate, endDate) => {
-    let start = new Date(startDate);
-    let end = new Date(endDate);
-    if (end < start) [start, end] = [end, start];
+  // 範囲を展開
+  const expandRange = (start, end) => {
+    let s = new Date(start);
+    let e = new Date(end);
+    if (e < s) [s, e] = [e, s];
     const range = [];
-    const cur = new Date(start);
-    while (cur <= end) {
+    const cur = new Date(s);
+    while (cur <= e) {
       range.push(cur.toISOString().split("T")[0]);
       cur.setDate(cur.getDate() + 1);
     }
     return range;
   };
 
-  // 日付クリック
+  // UI表示用に展開・ソート
+  const getDisplayedDates = () => {
+    if (selectionMode === "range" && selectedDates.length === 2) {
+      return expandRange(selectedDates[0], selectedDates[1]);
+    }
+    return [...selectedDates].sort();
+  };
+
+  // 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -44,14 +52,11 @@ const RegisterPage = () => {
       );
     } else if (selectionMode === "range") {
       if (selectedDates.length === 0) {
-        setSelectedDates([date]);
+        setSelectedDates([date]); // 開始
       } else if (selectedDates.length === 1) {
-        // 範囲を展開
-        const range = expandRange(selectedDates[0], date);
-        setSelectedDates(range);
+        setSelectedDates([selectedDates[0], date]); // 終了
       } else {
-        // 新しく選び直し
-        setSelectedDates([date]);
+        setSelectedDates([date]); // 新しく選び直し
       }
     }
   };
@@ -61,17 +66,13 @@ const RegisterPage = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((y) => y - 1);
-    } else {
-      setCurrentMonth((m) => m - 1);
-    }
+    } else setCurrentMonth((m) => m - 1);
   };
   const nextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear((y) => y + 1);
-    } else {
-      setCurrentMonth((m) => m + 1);
-    }
+    } else setCurrentMonth((m) => m + 1);
   };
 
   // 時間帯変更
@@ -81,7 +82,8 @@ const RegisterPage = () => {
 
   // 共有リンク生成
   const handleShare = async () => {
-    if (!title || selectedDates.length === 0) {
+    const displayedDates = getDisplayedDates();
+    if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
     }
@@ -91,7 +93,7 @@ const RegisterPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          dates: selectedDates,
+          dates: displayedDates,
           options: { times: timeOptions },
         }),
       });
@@ -107,6 +109,8 @@ const RegisterPage = () => {
     }
   };
 
+  const displayedDates = getDisplayedDates();
+
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録ページ</h2>
@@ -121,7 +125,7 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        {/* 範囲 / 複数 ラジオ */}
+        {/* 複数 / 範囲 ラジオ */}
         <div className="radio-group">
           <input
             type="radio"
@@ -169,7 +173,7 @@ const RegisterPage = () => {
               {Array.from({ length: daysInMonth }, (_, idx) => {
                 const date = new Date(currentYear, currentMonth, idx + 1);
                 const dateStr = date.toISOString().split("T")[0];
-                const isSelected = selectedDates.includes(dateStr);
+                const isSelected = displayedDates.includes(dateStr);
                 const holiday = hd.isHoliday(date);
                 const isSunday = date.getDay() === 0;
                 const isSaturday = date.getDay() === 6;
@@ -197,10 +201,10 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択リスト＋プルダウン */}
+        {/* 選択リスト */}
         <div className="options-section">
           <h3>選択した日程</h3>
-          {selectedDates.map((d) => (
+          {displayedDates.map((d) => (
             <div key={d} className="selected-date">
               <span>{d}</span>
               <select
