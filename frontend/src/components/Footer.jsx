@@ -1,15 +1,13 @@
-// frontend/src/components/Footer.jsx
 import React from "react";
 import { FaTwitter, FaDiscord } from "react-icons/fa";
-import "../index.css";
 
-function Footer() {
+export default function Footer() {
   return (
     <footer>
       <p>© 2025 MilkPOP Calendar</p>
       <div className="footer-links">
         <a
-          href="https://twitter.com/xxxx"
+          href="https://twitter.com/"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
@@ -18,7 +16,7 @@ function Footer() {
           Twitter
         </a>
         <a
-          href="https://discord.gg/xxxx"
+          href="https://discord.gg/"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
@@ -30,5 +28,3 @@ function Footer() {
     </footer>
   );
 }
-
-export default Footer;
