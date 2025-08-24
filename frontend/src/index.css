@@ -587,6 +587,7 @@ select option {
   font-size: 1rem;
 }
 /* カスタム時間用プルダウン */
+/* ====== 時刻指定プルダウン（開始〜終了用） ====== */
 .custom-time {
   display: flex;
   align-items: center;
@@ -596,24 +597,40 @@ select option {
 
 .custom-time .custom-dropdown {
   flex: 1;
-  padding: 0.6rem 2rem 0.6rem 1rem;
+  padding: 0.7rem 2rem 0.7rem 1rem;
   border-radius: 0.8rem;
   border: 2px solid #FDB9C8;
-  background: #fff;
-  color: #000;
-  font-size: 0.95rem;
+  background-color: #fff;     /* 背景を白に固定 */
+  color: #000;                /* 文字を黒に固定 */
+  font-size: 1rem;
   font-family: 'M PLUS Rounded 1c', sans-serif;
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='%23004CA0'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-  background-size: 0.8rem;
   transition: all 0.3s ease;
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='black'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.8rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .custom-time .custom-dropdown:hover {
   border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.3);
   transform: scale(1.02);
 }
 
+.custom-time .custom-dropdown:focus {
+  outline: none;
+  border-color: #FDB9C8;
+  box-shadow: 0 0 8px rgba(253,185,200,0.5);
+}
+
+.custom-time .custom-dropdown option {
+  padding: 0.6rem;
+  background: #fff;   /* 選択肢も背景白 */
+  color: #000;        /* 文字黒 */
+  font-size: 1rem;
+}
