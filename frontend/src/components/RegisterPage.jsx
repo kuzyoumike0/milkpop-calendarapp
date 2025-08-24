@@ -24,7 +24,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 日付クリック
+  // 📌 日付クリック
   const handleDateClick = (day) => {
     const date = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -35,7 +35,15 @@ const RegisterPage = () => {
     );
   };
 
-  // カレンダー描画
+  // 📌 時間帯変更
+  const handleTimeChange = (date, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: { type: value },
+    }));
+  };
+
+  // 📌 カレンダー描画
   const renderDays = () => {
     const days = [];
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -64,7 +72,7 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 共有リンク発行
+  // 📌 共有リンク発行
   const generateShareLink = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください！");
@@ -110,15 +118,37 @@ const RegisterPage = () => {
         />
       </div>
 
-      <div className="calendar">
-        <div className="calendar-header">
-          <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
-          <h3>
-            {currentYear}年 {currentMonth + 1}月
-          </h3>
-          <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
+      {/* カレンダー＋リスト横並び */}
+      <div className="main-layout">
+        {/* 左：カレンダー */}
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={() => setCurrentMonth(currentMonth - 1)}>←</button>
+              <h3>
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
+            </div>
+            <div className="calendar-grid">{renderDays()}</div>
+          </div>
         </div>
-        <div className="calendar-grid">{renderDays()}</div>
+
+        {/* 右：リスト */}
+        <div className="options-section">
+          <h3 className="mb-2">選択した日程</h3>
+          <ul>
+            {selectedDates.map((d, i) => (
+              <li key={i} className="selected-date">
+                <span>{d}</span>
+                <Dropdown
+                  value={timeRanges[d]?.type || "allday"}
+                  onChange={(val) => handleTimeChange(d, val)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <button onClick={generateShareLink} className="share-button fancy">
