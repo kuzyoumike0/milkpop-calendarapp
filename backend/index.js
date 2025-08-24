@@ -7,7 +7,6 @@ import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
 import path from "path";
 import { fileURLToPath } from "url";
-import fetch from "node-fetch";
 
 const { Pool } = pkg;
 const app = express();
@@ -212,7 +211,7 @@ app.get("/callback", async (req, res) => {
   if (!code) return res.status(400).send("No code provided");
 
   try {
-    // アクセストークン取得
+    // アクセストークン取得（ネイティブfetch）
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -227,13 +226,13 @@ app.get("/callback", async (req, res) => {
     });
     const tokenData = await tokenRes.json();
 
-    // ユーザー情報取得
+    // ユーザー情報取得（ネイティブfetch）
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const userData = await userRes.json();
 
-    // ✅ discriminatorは使わず username のみ渡す
+    // ✅ discriminatorは廃止されているので username のみ
     res.redirect(`/share-login?username=${encodeURIComponent(userData.username)}`);
   } catch (err) {
     console.error("OAuth error:", err);
