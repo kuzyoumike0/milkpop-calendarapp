@@ -93,20 +93,22 @@ const SharePage = () => {
         />
       </div>
 
-      {/* 日付ごとの出欠フォーム + 一覧 */}
-      {schedule.dates.map((d) => (
-        <div key={d} className="card" style={{ marginBottom: "1.5rem" }}>
+      {/* 登録した日程一覧をカードにまとめる */}
+      <div className="card" style={{ marginBottom: "2rem" }}>
+        <h3>日程一覧</h3>
+        {schedule.dates.map((d) => (
           <div
+            key={d}
+            className="selected-date"
             style={{
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "flex-start",
-              gap: "1rem",
+              alignItems: "center",
             }}
           >
-            {/* 左側: 出欠入力 */}
+            {/* 左: 日付 + 出欠入力 */}
             <div style={{ flex: 1 }}>
-              <h4>{d}</h4>
+              <span style={{ marginRight: "1rem" }}>{d}</span>
               <select
                 value={responses[d] || ""}
                 onChange={(e) =>
@@ -120,31 +122,30 @@ const SharePage = () => {
               </select>
             </div>
 
-            {/* 右側: 出欠一覧 */}
+            {/* 右: 出欠一覧 */}
             <div
               style={{
                 flex: 1,
                 background: "rgba(255,255,255,0.05)",
                 borderRadius: "8px",
-                padding: "0.8rem",
-                minHeight: "70px",
+                padding: "0.5rem",
+                marginLeft: "1rem",
               }}
             >
-              <h5 style={{ marginTop: 0 }}>出欠一覧</h5>
               {groupByDate[d] ? (
                 groupByDate[d].map((entry, idx) => (
-                  <div key={idx} style={{ marginBottom: "0.3rem" }}>
+                  <div key={idx}>
                     <strong>{entry.user}</strong>:{" "}
                     {entry.value === "yes" ? "〇" : "✕"}
                   </div>
                 ))
               ) : (
-                <p style={{ color: "#aaa" }}>まだ回答はありません</p>
+                <p style={{ color: "#aaa", margin: 0 }}>未回答</p>
               )}
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {/* 保存ボタン（余裕を持たせる） */}
       <div style={{ marginTop: "2.5rem", textAlign: "center" }}>
