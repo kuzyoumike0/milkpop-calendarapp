@@ -74,16 +74,24 @@ const SharePage = () => {
   });
 
   return (
-    <div className="page-container" style={{ alignItems: "flex-start" }}>
-      <h2 className="page-title">共有スケジュール</h2>
+    <div
+      className="page-container"
+      style={{ alignItems: "flex-start", maxWidth: "900px", marginLeft: "2rem" }} // 👈 左寄せ
+    >
+      <h2 className="page-title" style={{ textAlign: "left" }}>
+        共有スケジュール
+      </h2>
 
       {/* タイトル */}
-      <div className="card" style={{ textAlign: "left" }}>
+      <div className="card" style={{ textAlign: "left", width: "100%" }}>
         <h3>{schedule.title}</h3>
       </div>
 
       {/* 名前入力 */}
-      <div className="input-card" style={{ marginBottom: "1.5rem", textAlign: "left" }}>
+      <div
+        className="input-card"
+        style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}
+      >
         <input
           type="text"
           placeholder="あなたの名前を入力"
@@ -95,13 +103,16 @@ const SharePage = () => {
       </div>
 
       {/* 日程一覧テーブル */}
-      <div className="card" style={{ marginBottom: "2rem", textAlign: "left" }}>
+      <div
+        className="card"
+        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
+      >
         <h3>日程一覧</h3>
         <table
           style={{
             borderCollapse: "collapse",
             marginTop: "1rem",
-            width: "auto",
+            width: "100%",
           }}
         >
           <thead>
@@ -120,7 +131,10 @@ const SharePage = () => {
               const maybeCount = entries.filter((e) => e.value === "maybe").length;
 
               return (
-                <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+                <tr
+                  key={d}
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
+                >
                   {/* 日付 */}
                   <td style={{ padding: "0.6rem 1rem" }}>
                     <strong>{d}</strong>
@@ -193,7 +207,7 @@ const SharePage = () => {
       </div>
 
       {/* 保存ボタン */}
-      <div style={{ marginTop: "2.5rem", textAlign: "center" }}>
+      <div style={{ marginTop: "2.5rem", textAlign: "center", width: "100%" }}>
         <button onClick={handleSave} className="share-button fancy">
           保存する
         </button>
