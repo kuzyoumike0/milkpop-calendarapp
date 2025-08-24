@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../index.css";
+import Dropdown from "./Dropdown";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -94,12 +95,11 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(date);
       const formattedDate = `${currentYear}-${currentMonth + 1}-${day}`;
       const isSelected =
-  selectionMode === "multiple"
-    ? selectedDates.includes(formattedDate)
-    : selectedDates.length === 2 &&
-      date >= new Date(selectedDates[0]) &&
-      date <= new Date(selectedDates[1]);
-
+        selectionMode === "multiple"
+          ? selectedDates.includes(formattedDate)
+          : selectedDates.length === 2 &&
+            date >= new Date(selectedDates[0]) &&
+            date <= new Date(selectedDates[1]);
 
       const isToday = date.toDateString() === new Date().toDateString();
 
@@ -216,17 +216,10 @@ const RegisterPage = () => {
             {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
                 {d}
-                <select
+                <Dropdown
                   value={timeRanges[d]?.type || "allday"}
-                  onChange={(e) => handleTimeChange(d, e.target.value)}
-                  className="time-select"
-                >
-                  <option value="allday">🌞 終日</option>
-                  <option value="morning">☀ 午前</option>
-                  <option value="afternoon">🌇 午後</option>
-                  <option value="custom">⏰ 時間指定</option>
-                </select>
-
+                  onChange={(val) => handleTimeChange(d, val)}
+                />
                 {timeRanges[d]?.type === "custom" && (
                   <span className="custom-time">
                     <input
