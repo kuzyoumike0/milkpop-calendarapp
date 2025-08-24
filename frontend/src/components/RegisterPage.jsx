@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";   // ← 追加
 import Holidays from "date-holidays";
 import "../index.css";
 import Dropdown from "./Dropdown";
@@ -8,7 +9,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
-  const [shareLink, setShareLink] = useState(""); // 共有リンク表示用
+  const navigate = useNavigate();  // ← 追加
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -89,7 +90,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // 📌 時間リスト生成（00:00〜23:00、1時間刻み → 表示は「〇〇時」）
+  // 📌 時間リスト生成（00:00〜23:00 → 表示は「〇〇時」）
   const generateTimeOptions = () => {
     const times = [];
     for (let h = 0; h < 24; h++) {
@@ -137,7 +138,7 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 📌 共有リンク発行処理
+  // 📌 共有リンク発行処理（完了後に SharePage へ遷移）
   const generateShareLink = async () => {
     const displayedDates = getDisplayedDates();
     if (!title || displayedDates.length === 0) {
@@ -161,8 +162,7 @@ const RegisterPage = () => {
       const data = await res.json();
 
       if (data.share_token) {
-        const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareLink(url);
+        navigate(`/share/${data.share_token}`); // ← SharePage に遷移
       }
 
       console.log("共有リンク発行成功:", data);
@@ -237,12 +237,10 @@ const RegisterPage = () => {
             {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
                 {d}
-                {/* 種別選択（終日/午前/午後/時間指定） */}
                 <Dropdown
                   value={timeRanges[d]?.type || "allday"}
                   onChange={(val) => handleTimeChange(d, val)}
                 />
-                {/* カスタム時間 */}
                 {timeRanges[d]?.type === "custom" && (
                   <span className="custom-time">
                     <select
@@ -278,20 +276,9 @@ const RegisterPage = () => {
             ))}
           </ul>
 
-          {/* 共有リンク発行ボタン */}
           <button onClick={generateShareLink} className="share-button fancy">
             ✨ 共有リンク発行 ✨
           </button>
-
-          {/* 発行された共有リンク表示 */}
-          {shareLink && (
-            <div className="share-link">
-              <p>共有リンクが生成されました：</p>
-              <a href={shareLink} target="_blank" rel="noopener noreferrer">
-                {shareLink}
-              </a>
-            </div>
-          )}
         </div>
       </div>
 
