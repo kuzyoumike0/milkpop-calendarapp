@@ -2,14 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "../index.css"; // 共通スタイル
+import "../index.css";
 
-// ==== ヘルパー ====
 const getDaysInMonth = (year, month) => {
   return new Date(year, month + 1, 0).getDate();
 };
 
-// ==== カレンダーセル ====
 const CalendarCell = ({
   date,
   isSelected,
@@ -52,8 +50,19 @@ export default function RegisterPage() {
   const [range, setRange] = useState({ start: null, end: null });
   const [holidays, setHolidays] = useState([]);
 
-  const [timeType, setTimeType] = useState("allday");
-  const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
+  // 日付ごとの時間帯設定 { "yyyy-mm-dd": "allday" }
+  const [dateTimes, setDateTimes] = useState({});
+
+  const handleTimeChange = (dateKey, value) => {
+    setDateTimes((prev) => ({ ...prev, [dateKey]: value }));
+  };
+
+  const timeOptions = [
+    { value: "allday", label: "全日" },
+    { value: "daytime", label: "昼（09:00〜18:00）" },
+    { value: "night", label: "夜（18:00〜23:59）" },
+    { value: "custom", label: "時刻指定" },
+  ];
 
   // ==== 日本の祝日を取得 ====
   useEffect(() => {
@@ -66,12 +75,16 @@ export default function RegisterPage() {
   }, [currentYear]);
 
   const handleDateClick = (date) => {
+    const key = date.toISOString().split("T")[0];
     if (selectionType === "multiple") {
       setSelectedDates((prev) =>
         prev.some((d) => d.getTime() === date.getTime())
           ? prev.filter((d) => d.getTime() !== date.getTime())
           : [...prev, date]
       );
+      if (!dateTimes[key]) {
+        setDateTimes((prev) => ({ ...prev, [key]: "allday" }));
+      }
     } else if (selectionType === "range") {
       if (!range.start || (range.start && range.end)) {
         setRange({ start: date, end: null });
@@ -89,6 +102,12 @@ export default function RegisterPage() {
     setSelectedDates((prev) =>
       prev.filter((d) => d.getTime() !== dateToRemove.getTime())
     );
+    const key = dateToRemove.toISOString().split("T")[0];
+    setDateTimes((prev) => {
+      const newTimes = { ...prev };
+      delete newTimes[key];
+      return newTimes;
+    });
   };
 
   const isDateSelected = (date) => {
@@ -125,10 +144,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const scheduleId = uuidv4();
-    const payload =
-      selectionType === "multiple"
-        ? { id: scheduleId, title, dates: selectedDates, timeType, timeRange }
-        : { id: scheduleId, title, range, timeType, timeRange };
+    const payload = {
+      id: scheduleId,
+      title,
+      dates: selectedDates.map((d) => {
+        const key = d.toISOString().split("T")[0];
+        return { date: d, timeType: dateTimes[key] || "allday" };
+      }),
+    };
 
     await fetch("/api/schedule", {
       method: "POST",
@@ -141,12 +164,10 @@ export default function RegisterPage() {
 
   return (
     <div className="register-page">
-      {/* ===== ヘッダー ===== */}
       <header className="register-header">
         <h1>MilkPOP Calendar</h1>
       </header>
 
-      {/* ===== メインカード ===== */}
       <main className="page-container">
         {/* 左側（カレンダー） */}
         <div className="calendar card" style={{ flex: "7" }}>
@@ -158,7 +179,7 @@ export default function RegisterPage() {
             placeholder="タイトルを入力"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="input-title"
+            className="input-title short"
           />
 
           {/* 複数/範囲選択 */}
@@ -253,106 +274,56 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* 右側（選択日リスト & 時間帯 & ボタン） */}
+        {/* 右側（選択日リスト + プルダウン） */}
         <div className="card" style={{ flex: "3" }}>
-          {/* 選択日リスト */}
           <h3 style={{ color: "#ff69b4" }}>選択した日程</h3>
           <div>
             {selectionType === "multiple" &&
               selectedDates
                 .sort((a, b) => a - b)
-                .map((d, i) => (
-                  <div key={i} className="selected-date">
-                    {d.toLocaleDateString("ja-JP")}
-                    <button
-                      className="remove-date-btn"
-                      onClick={() => handleRemoveDate(d)}
+                .map((d, i) => {
+                  const key = d.toISOString().split("T")[0];
+                  return (
+                    <div
+                      key={i}
+                      className="selected-date"
+                      style={{ marginBottom: "0.8rem" }}
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      <span>{d.toLocaleDateString("ja-JP")}</span>
+                      <select
+                        value={dateTimes[key] || "allday"}
+                        onChange={(e) =>
+                          handleTimeChange(key, e.target.value)
+                        }
+                      >
+                        {timeOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="remove-date-btn"
+                        onClick={() => handleRemoveDate(d)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
             {selectionType === "range" && range.start && (
-              <div className="selected-date">
+              <div className="selected-date" style={{ marginBottom: "0.8rem" }}>
                 {range.start.toLocaleDateString("ja-JP")}
                 {range.end && ` 〜 ${range.end.toLocaleDateString("ja-JP")}`}
-                {range.start && (
-                  <button
-                    className="remove-date-btn"
-                    onClick={() => setRange({ start: null, end: null })}
-                  >
-                    ×
-                  </button>
-                )}
+                <button
+                  className="remove-date-btn"
+                  onClick={() => setRange({ start: null, end: null })}
+                >
+                  ×
+                </button>
               </div>
             )}
           </div>
-
-          {/* 時間帯 */}
-          <p className="font-semibold" style={{ marginTop: "1rem" }}>
-            時間帯を選択してください:
-          </p>
-          <div>
-            <label>
-              <input
-                type="radio"
-                value="allday"
-                checked={timeType === "allday"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              全日
-            </label>
-            <br />
-            <label>
-              <input
-                type="radio"
-                value="daytime"
-                checked={timeType === "daytime"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              昼（09:00〜18:00）
-            </label>
-            <br />
-            <label>
-              <input
-                type="radio"
-                value="night"
-                checked={timeType === "night"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              夜（18:00〜23:59）
-            </label>
-            <br />
-            <label>
-              <input
-                type="radio"
-                value="custom"
-                checked={timeType === "custom"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              時刻指定
-            </label>
-          </div>
-
-          {timeType === "custom" && (
-            <div style={{ marginTop: "0.5rem" }}>
-              <input
-                type="time"
-                value={timeRange.start}
-                onChange={(e) =>
-                  setTimeRange({ ...timeRange, start: e.target.value })
-                }
-              />
-              <span>〜</span>
-              <input
-                type="time"
-                value={timeRange.end}
-                onChange={(e) =>
-                  setTimeRange({ ...timeRange, end: e.target.value })
-                }
-              />
-            </div>
-          )}
 
           <button
             type="submit"
