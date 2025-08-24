@@ -7,9 +7,9 @@ import "../index.css";
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]); // 選択済み日程
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOption, setTimeOption] = useState("all");
+  const [timeOptions, setTimeOptions] = useState({}); // 日付ごとの時間帯設定
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -22,6 +22,20 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 範囲展開関数
+  const expandRange = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+    if (end < start) [start, end] = [end, start];
+    const range = [];
+    const cur = new Date(start);
+    while (cur <= end) {
+      range.push(cur.toISOString().split("T")[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    return range;
+  };
+
   // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
@@ -32,22 +46,17 @@ const RegisterPage = () => {
       if (selectedDates.length === 0) {
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        let start = new Date(selectedDates[0]);
-        let end = new Date(date);
-        if (end < start) [start, end] = [end, start];
-        const range = [];
-        const cur = new Date(start);
-        while (cur <= end) {
-          range.push(cur.toISOString().split("T")[0]);
-          cur.setDate(cur.getDate() + 1);
-        }
+        // 範囲を展開
+        const range = expandRange(selectedDates[0], date);
         setSelectedDates(range);
       } else {
+        // 新しく選び直し
         setSelectedDates([date]);
       }
     }
   };
 
+  // 月移動
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -65,6 +74,12 @@ const RegisterPage = () => {
     }
   };
 
+  // 時間帯変更
+  const handleTimeChange = (date, value) => {
+    setTimeOptions((prev) => ({ ...prev, [date]: value }));
+  };
+
+  // 共有リンク生成
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -77,7 +92,7 @@ const RegisterPage = () => {
         body: JSON.stringify({
           title,
           dates: selectedDates,
-          options: { time: timeOption },
+          options: { times: timeOptions },
         }),
       });
       const data = await res.json();
@@ -188,10 +203,9 @@ const RegisterPage = () => {
           {selectedDates.map((d) => (
             <div key={d} className="selected-date">
               <span>{d}</span>
-              {/* 各日程の横にプルダウン */}
               <select
-                value={timeOption}
-                onChange={(e) => setTimeOption(e.target.value)}
+                value={timeOptions[d] || "all"}
+                onChange={(e) => handleTimeChange(d, e.target.value)}
                 className="custom-dropdown"
               >
                 <option value="all">終日</option>
