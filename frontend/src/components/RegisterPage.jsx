@@ -140,6 +140,12 @@ const RegisterPage = () => {
           />
           <label htmlFor="range">範囲選択</label>
         </div>
+
+        {/* 現在のモード表示 */}
+        <p className="mode-indicator">
+          現在のモード:{" "}
+          <strong>{selectionMode === "multiple" ? "複数選択" : "範囲選択"}</strong>
+        </p>
       </div>
 
       {/* 横並び */}
