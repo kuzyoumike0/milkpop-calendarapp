@@ -63,6 +63,18 @@ const PersonalPage = () => {
     if (currentMonth === 11) setCurrentYear(currentYear + 1);
   };
 
+  // 個人スケジュール一覧取得
+  const fetchPersonalList = async (id) => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/personal/${id}`);
+      const data = await res.json();
+      setPersonalList(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // 保存処理
   const handleSave = async () => {
     if (!shareId || !title || selectedDates.length === 0) {
@@ -70,7 +82,7 @@ const PersonalPage = () => {
       return;
     }
     try {
-      const res = await fetch("/api/personal", {
+      await fetch("/api/personal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,8 +93,8 @@ const PersonalPage = () => {
           options: { timeRanges },
         }),
       });
-      const data = await res.json();
-      setPersonalList((prev) => [...prev, data]);
+      // 保存後に一覧を再取得
+      fetchPersonalList(shareId);
 
       // 入力クリア
       setTitle("");
@@ -104,7 +116,10 @@ const PersonalPage = () => {
           type="text"
           placeholder="共有スケジュールID (share_id)"
           value={shareId}
-          onChange={(e) => setShareId(e.target.value)}
+          onChange={(e) => {
+            setShareId(e.target.value);
+            fetchPersonalList(e.target.value);
+          }}
           className="p-2 rounded w-80 mb-2"
         />
         <input
