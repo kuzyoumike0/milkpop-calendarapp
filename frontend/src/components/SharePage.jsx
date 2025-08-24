@@ -141,6 +141,7 @@ const SharePage = () => {
                   {u}
                 </th>
               ))}
+              {/* 自分がまだ表にいなければ追加 */}
               {!users.includes(username) && username && (
                 <th style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
                   {username}
@@ -168,17 +169,37 @@ const SharePage = () => {
                       textAlign: "center",
                     }}
                   >
-                    {row.responses[u] === "yes"
-                      ? "〇"
-                      : row.responses[u] === "no"
-                      ? "✕"
-                      : row.responses[u] === "maybe"
-                      ? "△"
-                      : "-"}
+                    {u === username ? (
+                      // 自分はプルダウン表示
+                      <select
+                        value={responses[row.date] || row.responses[u] || ""}
+                        onChange={(e) =>
+                          setResponses((prev) => ({
+                            ...prev,
+                            [row.date]: e.target.value,
+                          }))
+                        }
+                        className="custom-dropdown"
+                        style={{ width: "80px" }}
+                      >
+                        <option value="">---</option>
+                        <option value="yes">〇</option>
+                        <option value="maybe">△</option>
+                        <option value="no">✕</option>
+                      </select>
+                    ) : row.responses[u] === "yes" ? (
+                      "〇"
+                    ) : row.responses[u] === "no" ? (
+                      "✕"
+                    ) : row.responses[u] === "maybe" ? (
+                      "△"
+                    ) : (
+                      "-"
+                    )}
                   </td>
                 ))}
 
-                {/* 自分用プルダウン（初期表示あり） */}
+                {/* 自分がまだ未登録なら新しい列にプルダウン */}
                 {!users.includes(username) && username && (
                   <td style={{ padding: "0.6rem 1rem", textAlign: "center" }}>
                     <select
