@@ -126,20 +126,6 @@ const RegisterPage = () => {
           />
           <label htmlFor="range">範囲</label>
         </div>
-
-        {/* 時間帯プルダウン */}
-        <div className="mt-4">
-          <select
-            value={timeOption}
-            onChange={(e) => setTimeOption(e.target.value)}
-            className="custom-dropdown"
-          >
-            <option value="all">終日</option>
-            <option value="day">昼</option>
-            <option value="night">夜</option>
-            <option value="custom">時刻指定</option>
-          </select>
-        </div>
       </div>
 
       {/* 横並びレイアウト */}
@@ -196,12 +182,23 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択リスト */}
+        {/* 選択リスト＋プルダウン */}
         <div className="options-section">
           <h3>選択した日程</h3>
           {selectedDates.map((d) => (
             <div key={d} className="selected-date">
-              {d}
+              <span>{d}</span>
+              {/* 各日程の横にプルダウン */}
+              <select
+                value={timeOption}
+                onChange={(e) => setTimeOption(e.target.value)}
+                className="custom-dropdown"
+              >
+                <option value="all">終日</option>
+                <option value="day">昼</option>
+                <option value="night">夜</option>
+                <option value="custom">時刻指定</option>
+              </select>
             </div>
           ))}
         </div>
