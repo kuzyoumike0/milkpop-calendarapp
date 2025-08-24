@@ -8,7 +8,7 @@ export default function Header() {
     <header className="header">
       {/* 左側ロゴ */}
       <Link to="/" className="logo-link">
-        MilkPOP
+        MilkPOP Calendar
       </Link>
 
       {/* PC用ナビゲーション */}
