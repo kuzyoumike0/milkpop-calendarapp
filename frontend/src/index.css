@@ -404,20 +404,24 @@ header, footer {
 }
 /* ====== ロゴリンクをポップに ====== */
 .logo-link {
-  font-family: 'Mochiy Pop P One', sans-serif;
+  font-family: 'Mochiy Pop P One', sans-serif; /* ← かわいい太字ポップフォント */
   font-size: 2rem;
   font-weight: bold;
   color: #fff;
   text-decoration: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: 8px;
+  padding: 0.4rem 1rem;
+  border-radius: 10px;
   transition: 0.3s;
   letter-spacing: 1px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* 少し影を付けてポップに */
 }
+
 .logo-link:hover {
   background: #FFD700;
   color: #000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  transform: scale(1.05);
 }
+
 
 
