@@ -23,6 +23,11 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 時刻の選択肢（1時間刻み）
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
   // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
@@ -213,9 +218,14 @@ const RegisterPage = () => {
               </select>
 
               {timeOptions[d] === "custom" && (
-                <div style={{ display: "inline-flex", gap: "0.5rem", marginLeft: "1rem" }}>
-                  <input
-                    type="time"
+                <div
+                  style={{
+                    display: "inline-flex",
+                    gap: "0.5rem",
+                    marginLeft: "1rem",
+                  }}
+                >
+                  <select
                     value={customTimes[d]?.start || ""}
                     onChange={(e) =>
                       setCustomTimes((prev) => ({
@@ -223,11 +233,17 @@ const RegisterPage = () => {
                         [d]: { ...prev[d], start: e.target.value },
                       }))
                     }
-                    className="time-input"
-                  />
+                    className="custom-dropdown"
+                  >
+                    <option value="">開始</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
                   ～
-                  <input
-                    type="time"
+                  <select
                     value={customTimes[d]?.end || ""}
                     onChange={(e) =>
                       setCustomTimes((prev) => ({
@@ -235,8 +251,15 @@ const RegisterPage = () => {
                         [d]: { ...prev[d], end: e.target.value },
                       }))
                     }
-                    className="time-input"
-                  />
+                    className="custom-dropdown"
+                  >
+                    <option value="">終了</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
