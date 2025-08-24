@@ -1,27 +1,38 @@
-# ========== フロントエンドのビルド ==========
-FROM node:18 AS builder
+# ========= フロントエンド ビルド =========
+FROM node:18 AS frontend-builder
+
+# 作業ディレクトリ
 WORKDIR /app/frontend
 
-# package.json をコピーして依存関係インストール（lock ファイルがなくてもOK）
-COPY frontend/package.json ./
-RUN npm install
+# package.json と lock ファイルをコピー
+COPY frontend/package*.json ./
 
-# フロントエンドのソースをコピーしてビルド
-COPY frontend ./ 
-RUN npm run build
-
-# ========== バックエンドの実行 ==========
-FROM node:18
-WORKDIR /app/backend
-
-# backend の依存関係をインストール
-COPY backend/package.json ./
+# 依存関係をインストール
 RUN npm install
 
 # ソースコードをコピー
-COPY backend ./ 
-# フロントエンドのビルド成果物をコピー
-COPY --from=builder /app/frontend/build ./../frontend/build
+COPY frontend/ ./
+
+# 本番用ビルドを作成
+RUN npm run build
+
+# ========= バックエンド 実行 =========
+FROM node:18
+
+WORKDIR /app/backend
+
+# backend の依存関係をコピー
+COPY backend/package*.json ./
+RUN npm install
+
+# backend ソースをコピー
+COPY backend/ ./
+
+# frontend のビルド成果物を backend/public にコピー
+COPY --from=frontend-builder /app/frontend/build ./public
+
+# ポート
+EXPOSE 3000
 
 # サーバー起動
-CMD ["node", "index.js"]
+CMD ["npm", "start"]
