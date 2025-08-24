@@ -11,6 +11,7 @@ const RegisterPage = () => {
 
   const [timeOptions, setTimeOptions] = useState({});
   const [customTimes, setCustomTimes] = useState({});
+  const [shareUrl, setShareUrl] = useState(""); // ← 共有リンクを保存
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -23,12 +24,10 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 時刻の選択肢（1時間刻み）
   const hours = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -77,7 +76,6 @@ const RegisterPage = () => {
       return;
     }
 
-    // 日付 + 時間帯をフォーマット
     const formattedDates = selectedDates.map((d) => {
       if (timeOptions[d] === "custom") {
         const start = customTimes[d]?.start || "00:00";
@@ -98,7 +96,8 @@ const RegisterPage = () => {
       });
       const data = await res.json();
       if (data.share_token) {
-        navigate(`/share/${data.share_token}`);
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareUrl(url); // ← URL を保存
       } else {
         alert("共有リンクの生成に失敗しました");
       }
@@ -106,6 +105,12 @@ const RegisterPage = () => {
       console.error(err);
       alert("サーバーエラー");
     }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert("コピーしました！");
+    });
   };
 
   return (
@@ -144,9 +149,8 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 横並びレイアウト */}
+      {/* カレンダー */}
       <div className="main-layout">
-        {/* カレンダー */}
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
@@ -156,13 +160,11 @@ const RegisterPage = () => {
               </h3>
               <button onClick={nextMonth}>→</button>
             </div>
-
             <div className="week-header">
               {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
                 <div key={d}>{d}</div>
               ))}
             </div>
-
             <div className="calendar-grid">
               {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
                 <div key={`empty-${idx}`} />
@@ -198,7 +200,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択リスト＋プルダウン */}
+        {/* 選択リスト */}
         <div className="options-section">
           <h3>選択した日程</h3>
           {selectedDates.map((d) => (
@@ -209,22 +211,15 @@ const RegisterPage = () => {
                 onChange={(e) =>
                   setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
                 }
-                className="custom-dropdown fancy-dropdown"
+                className="custom-dropdown"
               >
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
                 <option value="夜">夜</option>
                 <option value="custom">時刻指定</option>
               </select>
-
               {timeOptions[d] === "custom" && (
-                <div
-                  style={{
-                    display: "inline-flex",
-                    gap: "0.5rem",
-                    marginLeft: "1rem",
-                  }}
-                >
+                <div style={{ display: "inline-flex", gap: "0.5rem" }}>
                   <select
                     value={customTimes[d]?.start || ""}
                     onChange={(e) =>
@@ -271,6 +266,29 @@ const RegisterPage = () => {
       <button onClick={handleShare} className="share-button fancy">
         共有リンクを発行
       </button>
+
+      {/* 発行後リンク表示 */}
+      {shareUrl && (
+        <div className="share-link">
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
+          <button
+            onClick={copyToClipboard}
+            style={{
+              marginLeft: "1rem",
+              padding: "0.4rem 0.8rem",
+              borderRadius: "6px",
+              border: "none",
+              background: "#004CA0",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            コピー
+          </button>
+        </div>
+      )}
     </div>
   );
 };
