@@ -44,7 +44,7 @@ h1, h2, h3 {
   transition: 0.3s;
 }
 .nav-links a:hover {
-  background: #50C878; /* エメラルド */
+  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
   color: #000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
@@ -63,7 +63,7 @@ h1, h2, h3 {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 .logo-link:hover {
-  background: #50C878;
+  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
   color: #000;
   box-shadow: 0 3px 8px rgba(0,0,0,0.4);
   transform: scale(1.05);
@@ -82,8 +82,8 @@ h1, h2, h3 {
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 .discord-login:hover {
-  background: linear-gradient(90deg, #4e5bd5, #5865F2);
-  color: #fff;
+  background: linear-gradient(90deg, #FDB9C8, #50C878); /* ✅ 統一 */
+  color: #000;
 }
 
 /* ====== ハンバーガーメニュー ====== */
@@ -125,8 +125,8 @@ h1, h2, h3 {
   transition: 0.3s;
 }
 .dropdown a:hover {
-  background: #004CA0;
-  color: #FDB9C8;
+  background: linear-gradient(90deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  color: #000;
 }
 
 /* ====== フッター ====== */
@@ -207,6 +207,11 @@ footer {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
   max-width: 800px;
   margin: 0 auto;
+  transition: 0.3s;
+}
+.card:hover {
+  border-color: #FDB9C8; /* ✅ 統一 */
+  transform: scale(1.01);
 }
 
 /* ====== ボタン ====== */
@@ -276,7 +281,7 @@ button:hover, .share-button:hover {
   transition: 0.3s;
 }
 .day-cell:hover {
-  background: #50C878;
+  background: linear-gradient(135deg, #50C878, #FDB9C8); /* ✅ 統一 */
   color: #000;
   transform: scale(1.05);
 }
@@ -342,13 +347,20 @@ button:hover, .share-button:hover {
   font-size: 1.3rem;
   line-height: 1.8;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  color: #000;
-  background: #fff;
+  color: #fff;
+  background: #1a1a1a;
+  border: 2px solid #50C878;
   padding: 1.5rem 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
   max-width: 900px;
   text-align: center;
+  transition: 0.3s;
+}
+.top-description:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8); /* ✅ 統一 */
+  color: #000;
+  transform: scale(1.02);
 }
 
 /* ====== レスポンシブ ====== */
