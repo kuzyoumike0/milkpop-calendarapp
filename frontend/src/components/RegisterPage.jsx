@@ -83,18 +83,16 @@ const RegisterPage = () => {
     }));
   };
 
-  // 📌 時間リスト生成（00:00〜23:45、15分刻み）
-  const generateTimeOptions = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        const hour = h.toString().padStart(2, "0");
-        const minute = m.toString().padStart(2, "0");
-        times.push(`${hour}:${minute}`);
-      }
-    }
-    return times;
-  };
+  // 📌 時間リスト生成（00:00〜23:00、1時間刻み）
+const generateTimeOptions = () => {
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    const hour = h.toString().padStart(2, "0");
+    times.push(`${hour}:00`);
+  }
+  return times;
+};
+
 
   // 📌 カレンダー描画
   const renderDays = () => {
