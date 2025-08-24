@@ -9,10 +9,11 @@ const getDaysInMonth = (year, month) => {
 };
 
 // ==== カレンダーセル ====
-const CalendarCell = ({ date, isSelected, onClick, isHoliday }) => {
+const CalendarCell = ({ date, isSelected, onClick, isHoliday, holidayName }) => {
   return (
     <div
       onClick={() => onClick(date)}
+      title={holidayName || ""} // ← ツールチップで祝日名を表示
       className={`w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer transition
         ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
         ${isHoliday ? "text-red-500 font-bold" : ""}
@@ -33,7 +34,7 @@ export default function RegisterPage() {
   const [selectionType, setSelectionType] = useState("multiple");
   const [selectedDates, setSelectedDates] = useState([]);
   const [range, setRange] = useState({ start: null, end: null });
-  const [holidays, setHolidays] = useState([]);
+  const [holidays, setHolidays] = useState([]); // {date: Date, name: string}
 
   const [timeType, setTimeType] = useState("allday");
   const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
@@ -41,8 +42,11 @@ export default function RegisterPage() {
   // ==== 日本の祝日を取得 ====
   useEffect(() => {
     const hd = new Holidays("JP");
-    const yearHolidays = hd.getHolidays(currentYear);
-    setHolidays(yearHolidays.map((h) => new Date(h.date)));
+    const yearHolidays = hd.getHolidays(currentYear).map((h) => ({
+      date: new Date(h.date),
+      name: h.name,
+    }));
+    setHolidays(yearHolidays);
   }, [currentYear]);
 
   const handleDateClick = (date) => {
@@ -77,13 +81,14 @@ export default function RegisterPage() {
     return false;
   };
 
-  const isHoliday = (date) => {
-    return holidays.some(
+  const getHolidayInfo = (date) => {
+    const holiday = holidays.find(
       (h) =>
-        h.getFullYear() === date.getFullYear() &&
-        h.getMonth() === date.getMonth() &&
-        h.getDate() === date.getDate()
+        h.date.getFullYear() === date.getFullYear() &&
+        h.date.getMonth() === date.getMonth() &&
+        h.date.getDate() === date.getDate()
     );
+    return holiday ? holiday.name : null;
   };
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
@@ -192,14 +197,12 @@ export default function RegisterPage() {
                 </button>
               </div>
 
-              {/* 曜日 */}
               <div className="grid grid-cols-7 gap-1 font-semibold text-center">
                 {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
                   <div key={d}>{d}</div>
                 ))}
               </div>
 
-              {/* 日付セル */}
               <div className="grid grid-cols-7 gap-1 mt-2">
                 {calendarDays.map((date, i) =>
                   date ? (
@@ -208,7 +211,8 @@ export default function RegisterPage() {
                       date={date}
                       isSelected={isDateSelected(date)}
                       onClick={handleDateClick}
-                      isHoliday={isHoliday(date)}
+                      isHoliday={!!getHolidayInfo(date)}
+                      holidayName={getHolidayInfo(date)}
                     />
                   ) : (
                     <div key={i} className="w-10 h-10"></div>
