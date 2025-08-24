@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../index.css";
 import Dropdown from "./Dropdown";
@@ -96,6 +96,19 @@ const RegisterPage = () => {
     }
     return times;
   };
+
+  // 📌 選択した日程にデフォルト時間をセット（00:00〜01:00）
+  useEffect(() => {
+    const updated = {};
+    selectedDates.forEach((d) => {
+      if (!timeRanges[d]) {
+        updated[d] = { type: "custom", start: "00:00", end: "01:00" };
+      }
+    });
+    if (Object.keys(updated).length > 0) {
+      setTimeRanges((prev) => ({ ...prev, ...updated }));
+    }
+  }, [selectedDates]);
 
   // 📌 カレンダー描画
   const renderDays = () => {
