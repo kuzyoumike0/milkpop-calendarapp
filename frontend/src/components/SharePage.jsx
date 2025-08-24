@@ -18,6 +18,7 @@ const SharePage = () => {
         const data = await res.json();
         if (!data.error) {
           setSchedule(data);
+          fetchResponses(data.id);
         }
       } catch (err) {
         console.error(err);
@@ -26,7 +27,7 @@ const SharePage = () => {
     fetchSchedule();
   }, [token]);
 
-  // 既存の回答一覧を取得
+  // 回答一覧取得
   const fetchResponses = async (scheduleId) => {
     try {
       const res = await fetch(`/api/schedules/${scheduleId}/responses`);
@@ -48,13 +49,13 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: username, // 簡易的に名前をID代わり
+          user_id: username,
           username,
           responses,
         }),
       });
       if (res.ok) {
-        fetchResponses(schedule.id); // 更新
+        fetchResponses(schedule.id);
       }
     } catch (err) {
       console.error(err);
@@ -63,11 +64,20 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
+  // 出欠データを日付ごとに整形
+  const groupByDate = {};
+  allResponses.forEach((r) => {
+    Object.entries(r.responses).forEach(([date, value]) => {
+      if (!groupByDate[date]) groupByDate[date] = [];
+      groupByDate[date].push({ user: r.username, value });
+    });
+  });
+
   return (
     <div className="page-container">
       <h2 className="page-title">共有スケジュール</h2>
 
-      {/* タイトル表示 */}
+      {/* タイトル */}
       <div className="card">
         <h3>{schedule.title}</h3>
       </div>
@@ -83,47 +93,64 @@ const SharePage = () => {
         />
       </div>
 
-      {/* 日付ごとの回答フォーム */}
-      <div className="options-section">
-        <h3>日程に対する出欠を選択</h3>
-        {schedule.dates.map((d) => (
-          <div key={d} className="selected-date">
-            <span>{d}</span>
-            <select
-              value={responses[d] || ""}
-              onChange={(e) =>
-                setResponses((prev) => ({ ...prev, [d]: e.target.value }))
-              }
-              className="custom-dropdown"
-            >
-              <option value="">選択してください</option>
-              <option value="yes">〇 出席</option>
-              <option value="no">✕ 欠席</option>
-            </select>
-          </div>
-        ))}
-      </div>
-
-      {/* 保存ボタン */}
-      <button onClick={handleSave} className="share-button fancy">
-        保存する
-      </button>
-
-      {/* 回答一覧 */}
-      <div className="options-section" style={{ marginTop: "2rem" }}>
-        <h3>全員の回答一覧</h3>
-        {allResponses.length === 0 ? (
-          <p>まだ回答はありません</p>
-        ) : (
-          allResponses.map((r, idx) => (
-            <div key={idx} className="selected-date">
-              <strong>{r.username}</strong>
-              <pre style={{ margin: 0 }}>
-                {JSON.stringify(r.responses, null, 2)}
-              </pre>
+      {/* 日付ごとの出欠フォーム + 一覧 */}
+      {schedule.dates.map((d) => (
+        <div key={d} className="card" style={{ marginBottom: "1.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: "1rem",
+            }}
+          >
+            {/* 左側: 出欠入力 */}
+            <div style={{ flex: 1 }}>
+              <h4>{d}</h4>
+              <select
+                value={responses[d] || ""}
+                onChange={(e) =>
+                  setResponses((prev) => ({ ...prev, [d]: e.target.value }))
+                }
+                className="custom-dropdown"
+              >
+                <option value="">選択してください</option>
+                <option value="yes">〇 出席</option>
+                <option value="no">✕ 欠席</option>
+              </select>
             </div>
-          ))
-        )}
+
+            {/* 右側: 出欠一覧 */}
+            <div
+              style={{
+                flex: 1,
+                background: "rgba(255,255,255,0.05)",
+                borderRadius: "8px",
+                padding: "0.8rem",
+                minHeight: "70px",
+              }}
+            >
+              <h5 style={{ marginTop: 0 }}>出欠一覧</h5>
+              {groupByDate[d] ? (
+                groupByDate[d].map((entry, idx) => (
+                  <div key={idx} style={{ marginBottom: "0.3rem" }}>
+                    <strong>{entry.user}</strong>:{" "}
+                    {entry.value === "yes" ? "〇" : "✕"}
+                  </div>
+                ))
+              ) : (
+                <p style={{ color: "#aaa" }}>まだ回答はありません</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* 保存ボタン（余裕を持たせる） */}
+      <div style={{ marginTop: "2.5rem", textAlign: "center" }}>
+        <button onClick={handleSave} className="share-button fancy">
+          保存する
+        </button>
       </div>
     </div>
   );
