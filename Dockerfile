@@ -1,24 +1,24 @@
-# ========== フロントエンドビルド ==========
-FROM node:18 AS frontend-build
+# ====== フロントエンド ビルド ======
+FROM node:18 AS build
 WORKDIR /app/frontend
-
 COPY frontend/package*.json ./
-RUN npm install   # ← 変更
-
+RUN npm install
 COPY frontend/ ./
-RUN CI=false npm run build
+RUN npm run build
 
+# ====== バックエンド ======
+FROM node:18
+WORKDIR /app
 
-# ========== バックエンド ==========
-FROM node:18 AS backend
+# backend の依存関係
+COPY backend/package*.json ./backend/
 WORKDIR /app/backend
+RUN npm install
 
-COPY backend/package*.json ./
-RUN npm install   # ← 変更
+# フロントのビルド成果物をコピー
+WORKDIR /app
+COPY --from=build /app/frontend/build ./frontend/build
+COPY backend ./backend
 
-COPY backend/ ./
-
-COPY --from=frontend-build /app/frontend/build ./public
-
-EXPOSE 5000
-CMD ["npm", "start"]
+WORKDIR /app/backend
+CMD ["node", "index.js"]
