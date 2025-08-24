@@ -152,31 +152,37 @@ h1, h2, h3 {
   background: linear-gradient(90deg, #FDB9C8, #50C878);
   color: #000;
 }
-
 /* ====== フッター ====== */
-footer {
-  background: rgba(0, 0, 0, 0.7);
-  color: #FDB9C8;
-  text-align: center;
-  padding: 1rem;
-  font-size: 1rem;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  border-top: 2px solid #004CA0;
-  margin-top: auto;
-}
-footer .footer-icons {
+.footer-links {
+  margin-top: 0.8rem;
   display: flex;
   justify-content: center;
-  gap: 1.5rem; /* ← 余白追加 */
-  margin-top: 0.5rem;
+  gap: 2rem; /* ← アイコンの間隔を広げる */
 }
-footer .footer-icons img {
-  width: 24px;
-  height: 24px;
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* ← アイコンと文字の間 */
+  color: #FDB9C8;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  font-size: 1rem;
+  text-decoration: none;
   transition: 0.3s;
 }
-footer .footer-icons img:hover {
-  transform: scale(1.2) rotate(5deg);
+
+.footer-link:hover {
+  color: #50C878;
+  transform: scale(1.05);
+}
+
+.footer-icon {
+  font-size: 20px; /* ← 大きすぎないサイズ */
+  transition: 0.3s;
+}
+
+.footer-link:hover .footer-icon {
+  color: #50C878;
 }
 
 /* ====== レスポンシブ ====== */
