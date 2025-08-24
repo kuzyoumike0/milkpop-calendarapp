@@ -59,6 +59,8 @@ const RegisterPage = () => {
             date >= new Date(selectedDates[0]) &&
             date <= new Date(selectedDates[1]);
 
+      const isToday = date.toDateString() === new Date().toDateString();
+
       days.push(
         <div
           key={day}
@@ -66,7 +68,7 @@ const RegisterPage = () => {
             holiday ? "calendar-holiday" : ""
           } ${date.getDay() === 0 ? "calendar-sunday" : ""} ${
             date.getDay() === 6 ? "calendar-saturday" : ""
-          }`}
+          } ${isToday ? "calendar-today" : ""}`}
           onClick={() => handleDateClick(day)}
         >
           <span>{day}</span>
@@ -115,9 +117,9 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 横並びレイアウト */}
+      {/* 横並び */}
       <div className="main-layout">
-        {/* カレンダー 左7割 */}
+        {/* カレンダー */}
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
@@ -127,17 +129,15 @@ const RegisterPage = () => {
               </h3>
               <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
             </div>
-
             <div className="week-header">
               <span>日</span><span>月</span><span>火</span>
               <span>水</span><span>木</span><span>金</span><span>土</span>
             </div>
-
             <div className="calendar-grid">{renderDays()}</div>
           </div>
         </div>
 
-        {/* 選択リスト 右3割 */}
+        {/* 選択リスト */}
         <div className="options-section">
           <h3>選択した日程</h3>
           <ul>
