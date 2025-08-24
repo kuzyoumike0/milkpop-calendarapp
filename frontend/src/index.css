@@ -26,11 +26,14 @@ h1, h2, h3 {
   background: linear-gradient(90deg, #FDB9C8, #004CA0);
   padding: 0.8rem 1.5rem;
   color: #fff;
+  position: relative;
 }
 
 .nav-links {
   display: flex;
   gap: 1.2rem;
+  margin-left: auto;
+  align-items: center;
 }
 .nav-links a {
   font-family: 'M PLUS Rounded 1c', sans-serif;
@@ -66,6 +69,51 @@ h1, h2, h3 {
   transform: scale(1.05);
 }
 
+/* ====== ハンバーガー ====== */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+}
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: #fff;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+.nav-links-mobile {
+  display: none;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.9);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 200px;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  animation: fadeIn 0.3s ease-in-out;
+}
+.nav-links-mobile a {
+  color: #fff;
+  padding: 0.6rem;
+  margin: 0.3rem 0;
+  border-radius: 6px;
+  transition: 0.3s;
+  text-align: right;
+}
+.nav-links-mobile a:hover {
+  background: linear-gradient(90deg, #FDB9C8, #50C878);
+  color: #000;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ====== Discordログインボタン ====== */
 .discord-login {
   background: linear-gradient(90deg, #5865F2, #4e5bd5);
@@ -94,133 +142,26 @@ footer {
   border-top: 2px solid #004CA0;
   margin-top: auto;
 }
-footer img {
-  width: 24px; /* 📌 Discordアイコンの大きさ調整 */
+footer .footer-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem; /* ← 余白追加 */
+  margin-top: 0.5rem;
+}
+footer .footer-icons img {
+  width: 24px;
   height: 24px;
+  transition: 0.3s;
 }
-
-/* ====== ページ共通 ====== */
-.page-title {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #50C878;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
-}
-
-/* ====== トップページ専用 ====== */
-.top-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  margin: 2rem auto;
-  padding: 2rem;
-}
-.top-logo {
-  width: 1040px;
-  max-width: 90%;
-  height: auto;
-  margin-bottom: 2rem;
-}
-.top-description {
-  font-size: 1.3rem;
-  line-height: 1.8;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
-  background: #1a1a1a;
-  border: 2px solid #50C878;
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-  max-width: 900px;
-  text-align: center;
-}
-
-/* ====== 日程登録ページ専用 ====== */
-.register-page {
-  padding: 2rem;
-  display: flex;
-  justify-content: center;
-}
-
-.register-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
-  max-width: 1200px;
-  width: 100%;
-  margin: 2rem auto;
-}
-
-/* 左側：カレンダー */
-.calendar-section {
-  flex: 7;
-  background: #fff;
-  border-radius: 16px;
-  padding: 1rem;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-}
-
-/* 右側：選択した日程 */
-.options-section {
-  flex: 3;
-  max-height: 600px;
-  overflow-y: auto;
-  background: linear-gradient(135deg, #1a1a1a, #000);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 1.5rem;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-}
-
-.selected-date {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-/* ====== 入力フォーム ====== */
-.input-title.short {
-  max-width: 280px;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  border: 2px solid #FDB9C8;
-  background: #fff;
-  color: #333;
-  font-size: 1rem;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  box-shadow: 0 4px 8px rgba(253, 185, 200, 0.4);
-  display: block;
-  margin: 0 auto 1rem auto;
-}
-
-/* ====== ラジオグループ ====== */
-.radio-group {
-  background: linear-gradient(135deg, #1a1a1a, #000);
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  margin: 1rem auto;
-  text-align: center;
-  color: #fff;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+footer .footer-icons img:hover {
+  transform: scale(1.2) rotate(5deg);
 }
 
 /* ====== レスポンシブ ====== */
 @media (max-width: 768px) {
   .nav-links { display: none; }
+  .hamburger { display: flex; margin-left: auto; }
+  .nav-links-mobile { display: flex; }
   .register-card { flex-direction: column; gap: 1rem; }
   .calendar-section, .options-section { width: 100%; }
   .options-section { max-height: 300px; }
