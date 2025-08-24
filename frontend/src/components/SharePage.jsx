@@ -9,6 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
+  const [editingUser, setEditingUser] = useState(null); // 編集中ユーザー
 
   // スケジュール取得
   useEffect(() => {
@@ -64,19 +65,14 @@ const SharePage = () => {
   };
 
   // 削除
-  const handleDelete = async () => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
-    if (!window.confirm("本当に削除しますか？")) return;
-
+  const handleDelete = async (user) => {
+    if (!window.confirm(`${user} さんの回答を削除しますか？`)) return;
     try {
       await fetch(
-        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(username)}`,
+        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(user)}`,
         { method: "DELETE" }
       );
-      setResponses({});
+      if (user === username) setResponses({});
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
@@ -100,8 +96,8 @@ const SharePage = () => {
       style={{
         alignItems: "flex-start",
         maxWidth: "95%",
-        margin: "0",        // 中央寄せ防止
-        paddingLeft: "2rem" // 左余白を確保
+        margin: "0",
+        paddingLeft: "2rem",
       }}
     >
       <h2 className="page-title" style={{ textAlign: "left" }}>
@@ -111,11 +107,7 @@ const SharePage = () => {
       {/* タイトル */}
       <div
         className="card"
-        style={{
-          textAlign: "left",
-          width: "100%",
-          margin: "0 0 1.5rem 0"
-        }}
+        style={{ textAlign: "left", width: "100%", margin: "0 0 1.5rem 0" }}
       >
         <h3>{schedule.title}</h3>
       </div>
@@ -123,12 +115,7 @@ const SharePage = () => {
       {/* 名前入力 */}
       <div
         className="input-card"
-        style={{
-          marginBottom: "1.5rem",
-          textAlign: "left",
-          width: "100%",
-          margin: "0"
-        }}
+        style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}
       >
         <input
           type="text"
@@ -147,7 +134,7 @@ const SharePage = () => {
           marginBottom: "2rem",
           textAlign: "left",
           width: "100%",
-          margin: "0"
+          margin: "0",
         }}
       >
         <h3>日程一覧</h3>
@@ -174,6 +161,8 @@ const SharePage = () => {
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <strong>{d}</strong>
                 </td>
+
+                {/* あなたの出欠プルダウン */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   <select
                     value={responses[d] || ""}
@@ -192,37 +181,31 @@ const SharePage = () => {
                     <option value="no">✕</option>
                   </select>
                 </td>
+
+                {/* みんなの出欠（名前をリンク化） */}
                 <td style={{ padding: "0.6rem 1rem" }}>
                   {groupByDate[d] ? (
                     groupByDate[d].map((entry, idx) => (
                       <span
                         key={idx}
+                        onClick={() => {
+                          if (entry.user === username) {
+                            setEditingUser(entry.user);
+                          }
+                        }}
                         style={{
                           display: "inline-block",
                           marginRight: "0.5rem",
                           padding: "0.2rem 0.5rem",
                           borderRadius: "6px",
-                          background:
-                            entry.value === "yes"
-                              ? "rgba(80,200,120,0.3)"
-                              : entry.value === "maybe"
-                              ? "rgba(255,215,0,0.3)"
-                              : "rgba(255,100,100,0.3)",
-                          color:
-                            entry.value === "yes"
-                              ? "#50C878"
-                              : entry.value === "maybe"
-                              ? "#FFD700"
-                              : "#ff4d6d",
+                          background: "rgba(255,255,255,0.1)",
+                          color: "#FDB9C8",
                           fontWeight: "bold",
+                          cursor: "pointer",
+                          textDecoration: "underline",
                         }}
                       >
-                        {entry.user}:
-                        {entry.value === "yes"
-                          ? "〇"
-                          : entry.value === "maybe"
-                          ? "△"
-                          : "✕"}
+                        {entry.user}
                       </span>
                     ))
                   ) : (
@@ -235,26 +218,37 @@ const SharePage = () => {
         </table>
       </div>
 
-      {/* 保存・削除 */}
-      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
-        <button onClick={handleSave} className="share-button fancy">
-          保存
-        </button>
-        <button
-          onClick={handleDelete}
+      {/* 編集・削除操作 */}
+      {editingUser && (
+        <div
+          className="card"
           style={{
-            background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
-            border: "none",
-            borderRadius: "50px",
-            padding: "0.8rem 1.6rem",
-            color: "#fff",
-            fontWeight: "bold",
-            cursor: "pointer",
+            marginTop: "1.5rem",
+            padding: "1rem",
+            textAlign: "left",
           }}
         >
-          削除
-        </button>
-      </div>
+          <h3>{editingUser} さんの出欠を編集</h3>
+          <button onClick={handleSave} className="share-button fancy">
+            保存
+          </button>
+          <button
+            onClick={() => handleDelete(editingUser)}
+            style={{
+              background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
+              border: "none",
+              borderRadius: "50px",
+              padding: "0.8rem 1.6rem",
+              color: "#fff",
+              fontWeight: "bold",
+              cursor: "pointer",
+              marginLeft: "1rem",
+            }}
+          >
+            削除
+          </button>
+        </div>
+      )}
     </div>
   );
 };
