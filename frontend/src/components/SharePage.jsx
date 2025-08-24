@@ -1,146 +1,81 @@
-// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
-import axios from "axios";
+import { useParams } from "react-router-dom";
 
-const SharePage = () => {
+export default function SharePage() {
   const { id } = useParams();
-  const location = useLocation();
-
   const [schedule, setSchedule] = useState(null);
-  const [votes, setVotes] = useState({});
-  const [username, setUsername] = useState("");
-  const [allVotes, setAllVotes] = useState([]);
+  const [userName, setUserName] = useState("");
+  const [responses, setResponses] = useState({});
 
-  // ✅ OAuthからusernameを受け取る
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const discordName = params.get("username");
-    if (discordName) {
-      setUsername(discordName);
-    }
-  }, [location]);
-
-  // 初期ロード
-  useEffect(() => {
-    fetchData();
+    fetch(`https://your-railway-app-url/api/schedule/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setSchedule(data);
+        const initialResponses = {};
+        (data.dates || []).forEach((d) => (initialResponses[d] = "未回答"));
+        setResponses(initialResponses);
+      });
   }, [id]);
 
-  const fetchData = async () => {
-    try {
-      const res = await axios.get(`/api/share/${id}`);
-      setSchedule(res.data);
-
-      const voteRes = await axios.get(`/api/share/${id}/votes`);
-      setAllVotes(voteRes.data);
-    } catch (err) {
-      console.error(err);
-    }
+  const handleChange = (date, value) => {
+    setResponses((prev) => ({ ...prev, [date]: value }));
   };
 
-  // 投票変更
-  const handleVoteChange = (date, value) => {
-    setVotes({ ...votes, [date]: value });
-  };
-
-  // 投票保存
   const handleSave = async () => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
-    try {
-      await axios.post(`/api/share/${id}/vote`, { username, votes });
-      fetchData(); // 即更新
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
-    }
+    await fetch(`https://your-railway-app-url/api/schedule/${id}/response`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: userName, responses }),
+    });
+
+    // 即反映
+    fetch(`https://your-railway-app-url/api/schedule/${id}`)
+      .then((res) => res.json())
+      .then((data) => setSchedule(data));
   };
 
   if (!schedule) return <p>読み込み中...</p>;
 
   return (
-    <main className="container mx-auto px-6 py-10">
-      <h2 className="text-3xl font-bold text-center mb-6 text-[#004CA0]">
-        {schedule.schedules[0].title}
-      </h2>
+    <div className="p-6 text-white">
+      <h2 className="text-xl font-bold mb-4">{schedule.title}</h2>
 
-      {/* 名前入力（Discordログイン済みなら表示しない） */}
-      {!username && (
-        <div className="bg-white rounded-2xl shadow-md p-4 mb-6">
-          <label className="block font-semibold mb-2">名前</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full border rounded-lg px-4 py-2"
-            placeholder="あなたの名前を入力"
-          />
-          <a
-            href="/auth/discord"
-            className="discord-btn inline-block mt-3"
+      <input
+        type="text"
+        placeholder="名前を入力（ログイン時は自動）"
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+        className="px-2 py-1 rounded text-black mb-4"
+      />
+
+      <div className="space-y-2">
+        {(schedule.dates || []).sort().map((d) => (
+          <div
+            key={d}
+            className="flex justify-between items-center bg-black bg-opacity-40 p-2 rounded"
           >
-            Discordでログイン
-          </a>
-        </div>
-      )}
-
-      {/* 投票入力 */}
-      <div className="bg-white rounded-2xl shadow-md p-6 mb-8">
-        <h3 className="text-lg font-bold mb-4">日程に対する回答</h3>
-        <ul className="space-y-3">
-          {schedule.schedules[0].dates.map((date) => (
-            <li key={date} className="flex justify-between items-center">
-              <span className="font-semibold">{date}</span>
-              <select
-                onChange={(e) => handleVoteChange(date, e.target.value)}
-                className="border rounded-lg px-2 py-1"
-              >
-                <option value="">未選択</option>
-                <option value="◯">◯ 参加可能</option>
-                <option value="✖">✖ 不可</option>
-                <option value="△">△ 微妙</option>
-              </select>
-            </li>
-          ))}
-        </ul>
-        <button
-          onClick={handleSave}
-          className="btn btn-pink px-6 py-2 mt-6"
-        >
-          保存
-        </button>
+            <span>{d}</span>
+            <select
+              value={responses[d]}
+              onChange={(e) => handleChange(d, e.target.value)}
+              className="text-black px-2 py-1 rounded"
+            >
+              <option value="未回答">未回答</option>
+              <option value="〇">〇</option>
+              <option value="△">△</option>
+              <option value="✖">✖</option>
+            </select>
+          </div>
+        ))}
       </div>
 
-      {/* 投票結果一覧 */}
-      <div className="bg-white rounded-2xl shadow-md p-6">
-        <h3 className="text-lg font-bold mb-4">回答一覧</h3>
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr>
-              <th className="border px-3 py-2">名前</th>
-              {schedule.schedules[0].dates.map((date) => (
-                <th key={date} className="border px-3 py-2">{date}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {allVotes.map((row, i) => (
-              <tr key={i}>
-                <td className="border px-3 py-2">{row.username}</td>
-                {schedule.schedules[0].dates.map((date) => (
-                  <td key={date} className="border px-3 py-2 text-center">
-                    {row.votes[date] || "-"}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </main>
+      <button
+        onClick={handleSave}
+        className="mt-4 px-4 py-2 rounded bg-pink-400 text-black font-bold"
+      >
+        保存
+      </button>
+    </div>
   );
-};
-
-export default SharePage;
+}
