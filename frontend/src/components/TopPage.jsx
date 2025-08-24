@@ -7,8 +7,8 @@ const TopPage = () => {
       <div className="card">
         <h1 className="page-title">ようこそ！MilkPOP Calendar</h1>
         <p className="page-text">
-          予定を登録して、友達や仲間と簡単に共有できます。<br />
-          上のメニューから「日程登録」または「個人スケジュール」を選んでください。
+          予定を登録して、友達や仲間と簡単に共有できるカレンダーです。<br />
+          上のメニューから「日程登録」や「個人スケジュール」を使ってください。
         </p>
       </div>
     </div>
