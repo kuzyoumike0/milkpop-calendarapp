@@ -24,22 +24,23 @@ router.get("/discord/callback", async (req, res) => {
 
   try {
     // --- トークン取得 ---
-    const params = new URLSearchParams();
-    params.append("client_id", CLIENT_ID);
-    params.append("client_secret", CLIENT_SECRET);
-    params.append("grant_type", "authorization_code");
-    params.append("code", code);
-    params.append("redirect_uri", REDIRECT_URI);
+  const params = new URLSearchParams();
+  params.append("client_id", CLIENT_ID);
+  params.append("client_secret", CLIENT_SECRET);
+  params.append("grant_type", "authorization_code");
+  params.append("code", code);
+  params.append("redirect_uri", REDIRECT_URI);
+  params.append("scope", "identify"); // 忘れずに
 
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      body: params,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
+  const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+    method: "POST",
+    body: params.toString(), // ← URLSearchParams を文字列に変換する
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
 
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-    console.log(accessToken); // ここで出力してみる
+  const tokenData = await tokenRes.json();
+  console.log(tokenData); // access_token があるか確認
+  const accessToken = tokenData.access_token;
 
     // --- ユーザー情報取得 ---
     const userRes = await fetch("https://discord.com/api/users/@me", {
