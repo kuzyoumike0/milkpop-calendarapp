@@ -69,10 +69,8 @@ const RegisterPage = () => {
 
   // 📌 終日/午前/午後/カスタムの変更
   const handleTimeChange = (date, value) => {
-    console.log("handleTimeChange:", date, value);
     setTimeRanges((prev) => {
       if (value === "custom") {
-        console.log("custom 選択 → 初期値を 00:00〜01:00 に設定");
         return {
           ...prev,
           [date]: { type: "custom", start: "00:00", end: "01:00" },
@@ -84,21 +82,19 @@ const RegisterPage = () => {
 
   // 📌 カスタム時間の変更
   const handleCustomTimeChange = (date, field, value) => {
-    console.log("handleCustomTimeChange:", date, field, value);
     setTimeRanges((prev) => ({
       ...prev,
       [date]: { ...prev[date], type: "custom", [field]: value },
     }));
   };
 
-  // 📌 時間リスト生成（00:00〜23:00、1時間刻み）
+  // 📌 時間リスト生成（00:00〜23:00、1時間刻み → 表示は「〇〇時」）
   const generateTimeOptions = () => {
     const times = [];
     for (let h = 0; h < 24; h++) {
       const hour = h.toString().padStart(2, "0");
-      times.push(`${hour}:00`);
+      times.push({ value: `${hour}:00`, label: `${hour}時` });
     }
-    console.log("time options:", times);
     return times;
   };
 
@@ -246,26 +242,28 @@ const RegisterPage = () => {
                     <select
                       className="custom-dropdown"
                       value={timeRanges[d]?.start || "00:00"}
-                      onChange={(e) => {
-                        console.log("start change:", e.target.value);
-                        handleCustomTimeChange(d, "start", e.target.value);
-                      }}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "start", e.target.value)
+                      }
                     >
                       {generateTimeOptions().map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
                       ))}
                     </select>
                     〜
                     <select
                       className="custom-dropdown"
                       value={timeRanges[d]?.end || "01:00"}
-                      onChange={(e) => {
-                        console.log("end change:", e.target.value);
-                        handleCustomTimeChange(d, "end", e.target.value);
-                      }}
+                      onChange={(e) =>
+                        handleCustomTimeChange(d, "end", e.target.value)
+                      }
                     >
                       {generateTimeOptions().map((t) => (
-                        <option key={t} value={t}>{t}</option>
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
                       ))}
                     </select>
                   </span>
