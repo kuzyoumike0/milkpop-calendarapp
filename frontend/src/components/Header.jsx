@@ -20,11 +20,15 @@ const Header = () => {
       </nav>
 
       {/* ハンバーガーメニュー（スマホ用） */}
-      <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
+      <button
+        className="hamburger"
+        aria-label="メニューを開く"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <span></span>
         <span></span>
         <span></span>
-      </div>
+      </button>
 
       {/* ドロップダウンメニュー（スマホ表示時のみ） */}
       {isOpen && (
