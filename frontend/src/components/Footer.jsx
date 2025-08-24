@@ -1,27 +1,32 @@
-// frontend/src/components/Footer.jsx
 import React from "react";
-import { FaTwitter, FaDiscord } from "react-icons/fa";
+import "../index.css";
 
 const Footer = () => {
   return (
-    <footer className="app-footer">
-      <p>© 2025 MilkPOP Calendar - All Rights Reserved</p>
-      <div className="sns-links">
+    <footer>
+      <p>© 2025 MilkPOP Calendar</p>
+
+      <div className="footer-links">
+        {/* Discordサーバーログイン */}
         <a
-          href="https://x.com/Soni_complaint"
+          href="https://discord.gg/xxxxxx"  // ← あなたのDiscord招待URLに変更
           target="_blank"
           rel="noopener noreferrer"
-          className="twitter"
+          className="footer-link"
         >
-          <FaTwitter />
+          <img src="/discord-icon.png" alt="Discord" className="footer-icon" />
+          Discordサーバー
         </a>
+
+        {/* Twitterアカウント */}
         <a
-          href="https://discord.gg/ACRFgQbA"
+          href="https://twitter.com/your_account" // ← あなたのTwitterリンクに変更
           target="_blank"
           rel="noopener noreferrer"
-          className="discord"
+          className="footer-link"
         >
-          <FaDiscord />
+          <img src="/twitter-icon.png" alt="Twitter" className="footer-icon" />
+          Twitter
         </a>
       </div>
     </footer>
