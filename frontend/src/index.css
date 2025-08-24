@@ -670,8 +670,8 @@ button:hover {
 }
 /* ====== 時間指定ドロップダウン ====== */
 .custom-dropdown {
-  min-width: 90px;                 /* ← 最低幅を確保 */
-  padding: 0.6rem 1.2rem;          /* ← 内側余白を広げる */
+  min-width: 120px;   /* ← 幅をしっかり確保 */
+  padding: 0.6rem 1rem;
   border-radius: 0.6rem;
   border: 2px solid #FDB9C8;
   background-color: #fff !important;
@@ -682,13 +682,3 @@ button:hover {
   -webkit-appearance: menulist !important;
   -moz-appearance: menulist !important;
 }
-
-/* option の文字 */
-.custom-dropdown option {
-  background-color: #fff !important;
-  color: #000 !important;
-  font-size: 1rem;
-  padding: 0.4rem;
-}
-
-
