@@ -2,16 +2,14 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import { v4 as uuidv4 } from "uuid";
-import { useNavigate } from "react-router-dom";
 import "../index.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple"); // multiple or range
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
   const [shareLink, setShareLink] = useState("");
-  const navigate = useNavigate();
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -70,6 +68,18 @@ const RegisterPage = () => {
     setShareLink(`${window.location.origin}/share/${token}`);
   };
 
+  const handleTimeChange = (date, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: value,
+    }));
+  };
+
+  const timeOptions = Array.from({ length: 24 }, (_, i) => {
+    const hour = String(i).padStart(2, "0");
+    return `${hour}:00`;
+  });
+
   const renderCalendar = () => {
     const weeks = [];
     let days = [];
@@ -126,21 +136,8 @@ const RegisterPage = () => {
         days = [];
       }
     }
-
     return weeks;
   };
-
-  const handleTimeChange = (date, value) => {
-    setTimeRanges((prev) => ({
-      ...prev,
-      [date]: value,
-    }));
-  };
-
-  const timeOptions = Array.from({ length: 24 }, (_, i) => {
-    const hour = String(i).padStart(2, "0");
-    return `${hour}:00`;
-  });
 
   return (
     <div className="p-6 flex flex-col items-center">
@@ -158,7 +155,7 @@ const RegisterPage = () => {
           className="border rounded-lg p-2 mb-4 w-1/2 block mx-auto text-black"
         />
 
-        {/* 範囲選択 / 複数選択 */}
+        {/* 選択モード */}
         <div className="flex justify-center gap-6 mb-6">
           <label className="text-black">
             <input
@@ -182,7 +179,7 @@ const RegisterPage = () => {
 
         {/* カレンダーとリスト */}
         <div className="grid grid-cols-10 gap-6">
-          {/* 左: カレンダー */}
+          {/* カレンダー */}
           <div className="col-span-7">
             <div className="flex justify-between mb-2">
               <button
@@ -221,7 +218,7 @@ const RegisterPage = () => {
             {renderCalendar()}
           </div>
 
-          {/* 右: 選択リスト */}
+          {/* 選択リスト */}
           <div className="col-span-3">
             <h3 className="font-bold mb-2 text-black">選択中の日程</h3>
             <div className="space-y-2">
@@ -253,7 +250,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 共有リンク発行 */}
+        {/* 共有リンク */}
         <div className="mt-6 text-center">
           <button
             onClick={generateShareLink}
