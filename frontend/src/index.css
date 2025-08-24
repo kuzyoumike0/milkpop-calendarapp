@@ -682,3 +682,19 @@ button:hover {
   -webkit-appearance: menulist !important;
   -moz-appearance: menulist !important;
 }
+.share-link {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed #FDB9C8;
+  border-radius: 0.6rem;
+  color: #fff;
+  text-align: center;
+  word-break: break-all;
+}
+.share-link a {
+  color: #FDB9C8;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
