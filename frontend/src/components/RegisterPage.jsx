@@ -94,11 +94,12 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(date);
       const formattedDate = `${currentYear}-${currentMonth + 1}-${day}`;
       const isSelected =
-        selectionMode === "multiple"
-          ? selectedDates.includes(formattedDate)
-          : selectedDates.length === 2 &&
-            date >= new Date(selectedDates[0]) &&
-            date <= new Date(selectedDates[1]];
+  selectionMode === "multiple"
+    ? selectedDates.includes(formattedDate)
+    : selectedDates.length === 2 &&
+      date >= new Date(selectedDates[0]) &&
+      date <= new Date(selectedDates[1]);
+
 
       const isToday = date.toDateString() === new Date().toDateString();
 
