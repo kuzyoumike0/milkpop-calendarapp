@@ -229,7 +229,7 @@ const RegisterPage = () => {
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
                     />
-                    〜
+                    <span className="separator">〜</span>
                     <input
                       type="time"
                       value={timeRanges[d]?.end || ""}
@@ -254,4 +254,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
