@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
+  const [shareLink, setShareLink] = useState(""); // 共有リンク表示用
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -136,8 +137,8 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 📌 保存処理
-  const saveSchedule = async () => {
+  // 📌 共有リンク発行処理
+  const generateShareLink = async () => {
     const displayedDates = getDisplayedDates();
     if (!title || displayedDates.length === 0) {
       alert("タイトルと日程を入力してください！");
@@ -158,11 +159,16 @@ const RegisterPage = () => {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      console.log("保存成功:", data);
-      alert("保存しました！");
+
+      if (data.share_token) {
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareLink(url);
+      }
+
+      console.log("共有リンク発行成功:", data);
     } catch (err) {
-      console.error("保存エラー:", err);
-      alert("保存に失敗しました");
+      console.error("共有リンク発行エラー:", err);
+      alert("共有リンクの発行に失敗しました");
     }
   };
 
@@ -271,9 +277,21 @@ const RegisterPage = () => {
               </li>
             ))}
           </ul>
-          <button onClick={saveSchedule} className="share-button fancy">
-            ✨ 保存 ✨
+
+          {/* 共有リンク発行ボタン */}
+          <button onClick={generateShareLink} className="share-button fancy">
+            ✨ 共有リンク発行 ✨
           </button>
+
+          {/* 発行された共有リンク表示 */}
+          {shareLink && (
+            <div className="share-link">
+              <p>共有リンクが生成されました：</p>
+              <a href={shareLink} target="_blank" rel="noopener noreferrer">
+                {shareLink}
+              </a>
+            </div>
+          )}
         </div>
       </div>
 
