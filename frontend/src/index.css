@@ -580,20 +580,6 @@ footer {
 }
 
 /* ===== 共通プルダウンスタイル（時間指定も含む） ===== */
-.time-select,
-.dropdown-btn {
-  margin-left: 0.5rem;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  border: 2px solid #FDB9C8;
-  background: linear-gradient(135deg, #2c2c2c, #1a1a1a); /* 🆕 濃い背景 */
-  font-weight: bold;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #fff;  /* 🆕 白文字で視認性UP */
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-}
 
 .time-select:hover,
 .dropdown-btn:hover {
