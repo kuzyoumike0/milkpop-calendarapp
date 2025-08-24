@@ -6,6 +6,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
+  const [timeRanges, setTimeRanges] = useState({}); // 📌 日付ごとの時間帯管理
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -65,6 +66,14 @@ const RegisterPage = () => {
     return [];
   };
 
+  // 📌 時刻プルダウン変更
+  const handleTimeChange = (date, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: value,
+    }));
+  };
+
   // 📌 カレンダー描画
   const renderDays = () => {
     const days = [];
@@ -111,11 +120,16 @@ const RegisterPage = () => {
       return;
     }
 
+    // 各日付に時間帯を紐付け
+    const datesWithTime = displayedDates.map((d) => ({
+      date: d,
+      timerange: timeRanges[d] || "allday",
+    }));
+
     const body = {
       title,
-      dates: displayedDates,
-      memo: "", // RegisterPageはメモなし
-      timerange: "allday",
+      dates: datesWithTime,
+      memo: "",
     };
 
     try {
@@ -200,6 +214,20 @@ const RegisterPage = () => {
             {getDisplayedDates().map((d, i) => (
               <li key={i} className="selected-date">
                 {d}
+                <select
+                  value={timeRanges[d] || "allday"}
+                  onChange={(e) => handleTimeChange(d, e.target.value)}
+                  style={{
+                    marginLeft: "0.5rem",
+                    padding: "0.2rem 0.5rem",
+                    borderRadius: "6px",
+                  }}
+                >
+                  <option value="allday">終日</option>
+                  <option value="day">昼</option>
+                  <option value="night">夜</option>
+                  <option value="custom">時間指定</option>
+                </select>
               </li>
             ))}
           </ul>
