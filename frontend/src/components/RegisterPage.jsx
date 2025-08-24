@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import "../index.css";
-import Header from "./Header";
-import Footer from "./Footer";
 
 const daysOfWeek = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -51,12 +49,13 @@ const RegisterPage = () => {
 
   return (
     <div className="page-container">
-      <div className="calendar-container">
-        {/* タイトル入力 */}
+      {/* カレンダー部分をカードに包む */}
+      <div className="calendar-container card">
+        {/* タイトル入力（短く中央寄せ） */}
         <input
           type="text"
-          className="input-title"
-          placeholder="タイトルを入力"
+          className="input-title short"
+          placeholder="タイトル"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -99,8 +98,8 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 選択日リスト */}
-      <div className="selected-container">
+      {/* 選択日リストもカードで包む */}
+      <div className="selected-container card">
         <h2>選択中の日程</h2>
         {selectedDates.length === 0 ? (
           <p className="page-text">まだ日程が選択されていません。</p>
