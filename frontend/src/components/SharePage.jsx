@@ -93,58 +93,76 @@ const SharePage = () => {
         />
       </div>
 
-      {/* 登録した日程一覧をカードにまとめる */}
+      {/* 日程一覧（伝助風のテーブル形式） */}
       <div className="card" style={{ marginBottom: "2rem" }}>
         <h3>日程一覧</h3>
-        {schedule.dates.map((d) => (
-          <div
-            key={d}
-            className="selected-date"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            {/* 左: 日付 + 出欠入力 */}
-            <div style={{ flex: 1 }}>
-              <span style={{ marginRight: "1rem" }}>{d}</span>
-              <select
-                value={responses[d] || ""}
-                onChange={(e) =>
-                  setResponses((prev) => ({ ...prev, [d]: e.target.value }))
-                }
-                className="custom-dropdown"
-              >
-                <option value="">選択してください</option>
-                <option value="yes">〇 出席</option>
-                <option value="no">✕ 欠席</option>
-              </select>
-            </div>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            marginTop: "1rem",
+          }}
+        >
+          <thead>
+            <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
+              <th style={{ textAlign: "left", padding: "0.5rem" }}>日付</th>
+              <th style={{ textAlign: "left", padding: "0.5rem" }}>あなたの出欠</th>
+              <th style={{ textAlign: "left", padding: "0.5rem" }}>みんなの出欠一覧</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedule.dates.map((d) => (
+              <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+                {/* 左: 日付 */}
+                <td style={{ padding: "0.6rem" }}>
+                  <strong>{d}</strong>
+                </td>
 
-            {/* 右: 出欠一覧 */}
-            <div
-              style={{
-                flex: 1,
-                background: "rgba(255,255,255,0.05)",
-                borderRadius: "8px",
-                padding: "0.5rem",
-                marginLeft: "1rem",
-              }}
-            >
-              {groupByDate[d] ? (
-                groupByDate[d].map((entry, idx) => (
-                  <div key={idx}>
-                    <strong>{entry.user}</strong>:{" "}
-                    {entry.value === "yes" ? "〇" : "✕"}
-                  </div>
-                ))
-              ) : (
-                <p style={{ color: "#aaa", margin: 0 }}>未回答</p>
-              )}
-            </div>
-          </div>
-        ))}
+                {/* 中: 自分のプルダウン */}
+                <td style={{ padding: "0.6rem" }}>
+                  <select
+                    value={responses[d] || ""}
+                    onChange={(e) =>
+                      setResponses((prev) => ({ ...prev, [d]: e.target.value }))
+                    }
+                    className="custom-dropdown"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="yes">〇 出席</option>
+                    <option value="no">✕ 欠席</option>
+                  </select>
+                </td>
+
+                {/* 右: 他ユーザーの出欠 */}
+                <td style={{ padding: "0.6rem" }}>
+                  {groupByDate[d] ? (
+                    groupByDate[d].map((entry, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          display: "inline-block",
+                          marginRight: "0.8rem",
+                          padding: "0.2rem 0.5rem",
+                          borderRadius: "6px",
+                          background:
+                            entry.value === "yes"
+                              ? "rgba(80,200,120,0.3)"
+                              : "rgba(255,100,100,0.3)",
+                          color: entry.value === "yes" ? "#50C878" : "#ff4d6d",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {entry.user}: {entry.value === "yes" ? "〇" : "✕"}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: "#aaa" }}>未回答</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* 保存ボタン（余裕を持たせる） */}
