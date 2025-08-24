@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Holidays from "date-holidays";
@@ -9,9 +8,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({});
-  const [shareUrl, setShareUrl] = useState(""); // ← 発行URLを保存
-  const [copied, setCopied] = useState(false);  // ← コピー状態
+  const [timeOptions, setTimeOptions] = useState({}); // 日付ごとに時間帯を保存
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -24,29 +21,6 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 範囲展開
-  const expandRange = (start, end) => {
-    let s = new Date(start);
-    let e = new Date(end);
-    if (e < s) [s, e] = [e, s];
-    const range = [];
-    const cur = new Date(s);
-    while (cur <= e) {
-      range.push(cur.toISOString().split("T")[0]);
-      cur.setDate(cur.getDate() + 1);
-    }
-    return range;
-  };
-
-  // 表示用日程
-  const getDisplayedDates = () => {
-    if (selectionMode === "range" && selectedDates.length === 2) {
-      return expandRange(selectedDates[0], selectedDates[1]).sort();
-    }
-    return [...selectedDates].sort();
-  };
-  const displayedDates = getDisplayedDates();
-
   // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
@@ -57,59 +31,61 @@ const RegisterPage = () => {
       if (selectedDates.length === 0) {
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        setSelectedDates([selectedDates[0], date]);
+        let start = new Date(selectedDates[0]);
+        let end = new Date(date);
+        if (end < start) [start, end] = [end, start];
+        const range = [];
+        const cur = new Date(start);
+        while (cur <= end) {
+          range.push(cur.toISOString().split("T")[0]);
+          cur.setDate(cur.getDate() + 1);
+        }
+        setSelectedDates(range);
       } else {
         setSelectedDates([date]);
       }
     }
   };
 
-  // 月移動
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
       setCurrentYear((y) => y - 1);
-    } else setCurrentMonth((m) => m - 1);
+    } else {
+      setCurrentMonth((m) => m - 1);
+    }
   };
   const nextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0);
       setCurrentYear((y) => y + 1);
-    } else setCurrentMonth((m) => m + 1);
+    } else {
+      setCurrentMonth((m) => m + 1);
+    }
   };
 
-  // 時間帯変更
-  const handleTimeChange = (date, field, value) => {
-    setTimeOptions((prev) => ({
-      ...prev,
-      [date]: {
-        ...(prev[date] || { type: "all", start: "09:00", end: "18:00" }),
-        [field]: value,
-      },
-    }));
-  };
-
-  // 共有リンク発行
   const handleShare = async () => {
-    if (!title || displayedDates.length === 0) {
+    if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
     }
     try {
+      // 日付と時間帯をセットで保存
+      const formattedDates = selectedDates.map(
+        (d) => `${d}|${timeOptions[d] || "終日"}`
+      );
+
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          dates: displayedDates,
-          options: { times: timeOptions },
+          dates: formattedDates,
         }),
       });
       const data = await res.json();
       if (data.share_token) {
-        const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareUrl(url);
-        setCopied(false); // 新しいURLを生成したらコピー状態をリセット
+        navigate(`/share/${data.share_token}`);
       } else {
         alert("共有リンクの生成に失敗しました");
       }
@@ -118,23 +94,6 @@ const RegisterPage = () => {
       alert("サーバーエラー");
     }
   };
-
-  // コピー機能
-  const handleCopy = async () => {
-    if (shareUrl) {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error("コピー失敗:", err);
-      }
-    }
-  };
-
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    `${i.toString().padStart(2, "0")}:00`
-  );
 
   return (
     <div className="page-container">
@@ -150,7 +109,7 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        {/* 複数 / 範囲 ラジオ */}
+        {/* 範囲 / 複数 ラジオ */}
         <div className="radio-group">
           <input
             type="radio"
@@ -198,7 +157,7 @@ const RegisterPage = () => {
               {Array.from({ length: daysInMonth }, (_, idx) => {
                 const date = new Date(currentYear, currentMonth, idx + 1);
                 const dateStr = date.toISOString().split("T")[0];
-                const isSelected = displayedDates.includes(dateStr);
+                const isSelected = selectedDates.includes(dateStr);
                 const holiday = hd.isHoliday(date);
                 const isSunday = date.getDay() === 0;
                 const isSaturday = date.getDay() === 6;
@@ -226,59 +185,26 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択リスト */}
+        {/* 選択リスト＋プルダウン */}
         <div className="options-section">
           <h3>選択した日程</h3>
-          {displayedDates.map((d) => {
-            const opt =
-              timeOptions[d] || { type: "all", start: "09:00", end: "18:00" };
-            return (
-              <div key={d} className="selected-date">
-                <span>{d}</span>
-                <select
-                  value={opt.type}
-                  onChange={(e) => handleTimeChange(d, "type", e.target.value)}
-                  className="custom-dropdown"
-                >
-                  <option value="all">終日</option>
-                  <option value="day">昼</option>
-                  <option value="night">夜</option>
-                  <option value="custom">時刻指定</option>
-                </select>
-                {opt.type === "custom" && (
-                  <div className="custom-time">
-                    <select
-                      value={opt.start}
-                      onChange={(e) =>
-                        handleTimeChange(d, "start", e.target.value)
-                      }
-                      className="custom-dropdown"
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}
-                        </option>
-                      ))}
-                    </select>
-                    ～
-                    <select
-                      value={opt.end}
-                      onChange={(e) =>
-                        handleTimeChange(d, "end", e.target.value)
-                      }
-                      className="custom-dropdown"
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {selectedDates.map((d) => (
+            <div key={d} className="selected-date">
+              <span>{d}</span>
+              <select
+                value={timeOptions[d] || "終日"}
+                onChange={(e) =>
+                  setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
+                }
+                className="custom-dropdown"
+              >
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                <option value="custom">時刻指定</option>
+              </select>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -286,25 +212,6 @@ const RegisterPage = () => {
       <button onClick={handleShare} className="share-button fancy">
         共有リンクを発行
       </button>
-
-      {/* 発行済みリンク表示 + コピー */}
-      {shareUrl && (
-        <div className="share-link">
-          共有リンク:{" "}
-          <a
-            href={shareUrl}
-            onClick={(e) => {
-              e.preventDefault();
-              navigate(shareUrl.replace(window.location.origin, ""));
-            }}
-          >
-            {shareUrl}
-          </a>
-          <button onClick={handleCopy} style={{ marginLeft: "10px" }}>
-            {copied ? "✅ コピーしました" : "コピー"}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
