@@ -79,6 +79,34 @@ const RegisterPage = () => {
     return days;
   };
 
+  const saveSchedule = async () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日程を入力してください！");
+      return;
+    }
+
+    const body = {
+      title,
+      dates: selectedDates,
+      memo: "", // RegisterPageはメモなし
+      timerange: "allday"
+    };
+
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      console.log("保存成功:", data);
+      alert("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
+    }
+  };
+
   return (
     <div className="page-container">
       <h2 className="page-title">日程登録</h2>
@@ -145,7 +173,9 @@ const RegisterPage = () => {
               <li key={i} className="selected-date">{d}</li>
             ))}
           </ul>
-          <button className="share-button fancy">✨ 共有リンクを発行 ✨</button>
+          <button onClick={saveSchedule} className="share-button fancy">
+            ✨ 保存 ✨
+          </button>
         </div>
       </div>
 
