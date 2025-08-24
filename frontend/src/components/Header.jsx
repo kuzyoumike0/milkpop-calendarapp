@@ -7,14 +7,15 @@ const Header = () => {
 
   return (
     <header className="header">
-      {/* 左側：ロゴ */}
+      {/* 左上ロゴ（トップページリンク付きボタン風） */}
       <div className="logo">
-        <Link to="/">MilkPOP Calendar</Link>
+        <Link to="/" className="logo-link">
+          MilkPOP Calendar
+        </Link>
       </div>
 
-      {/* PC用ナビ */}
+      {/* PC用ナビ（トップは削除済み） */}
       <nav className="nav-links">
-        <Link to="/">トップ</Link>
         <Link to="/personal">個人スケジュール</Link>
         <Link to="/register">日程登録</Link>
         <a href="/auth/discord" className="discord-login">Discordログイン</a>
@@ -34,7 +35,6 @@ const Header = () => {
       {/* ドロップダウンメニュー（スマホ表示時のみ） */}
       {isOpen && (
         <div className="dropdown">
-          <Link to="/" onClick={() => setIsOpen(false)}>トップ</Link>
           <Link to="/personal" onClick={() => setIsOpen(false)}>個人スケジュール</Link>
           <Link to="/register" onClick={() => setIsOpen(false)}>日程登録</Link>
           <a href="/auth/discord" className="discord-login" onClick={() => setIsOpen(false)}>
