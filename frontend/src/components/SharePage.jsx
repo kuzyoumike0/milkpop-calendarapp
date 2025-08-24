@@ -9,6 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [editCell, setEditCell] = useState({}); // {date, user}
+  const [newDate, setNewDate] = useState(""); // 追加用
 
   // スケジュール取得
   useEffect(() => {
@@ -45,7 +46,6 @@ const SharePage = () => {
       return;
     }
     try {
-      // 自分の既存回答を探す
       const myResponse = allResponses.find((r) => r.user_id === username);
       let responses = {};
       if (myResponse) {
@@ -63,9 +63,28 @@ const SharePage = () => {
           responses,
         }),
       });
-
       setEditCell({});
       fetchResponses(schedule.id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 日付追加
+  const handleAddDate = async () => {
+    if (!newDate) return;
+    try {
+      const updatedDates = [...schedule.dates, newDate];
+      const res = await fetch(`/api/schedules/${schedule.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dates: updatedDates }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSchedule(updated);
+        setNewDate("");
+      }
     } catch (err) {
       console.error(err);
     }
@@ -76,7 +95,7 @@ const SharePage = () => {
   // ユーザー一覧
   const users = [...new Set(allResponses.map((r) => r.username))];
 
-  // 日付ごとの行データ
+  // 日付ごとのマッピング
   const dateRows = schedule.dates.map((d) => {
     const row = {};
     users.forEach((u) => {
@@ -96,14 +115,26 @@ const SharePage = () => {
       </h2>
 
       {/* タイトル */}
-      <div className="card" style={{ textAlign: "left", width: "100%" }}>
-        <h3>{schedule.title}</h3>
+      <div
+        className="card"
+        style={{
+          textAlign: "left",
+          width: "100%",
+          marginLeft: 0, // 👈 左寄せ
+        }}
+      >
+        <h3 style={{ marginLeft: "0.5rem" }}>{schedule.title}</h3>
       </div>
 
       {/* 名前入力 */}
       <div
         className="input-card"
-        style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}
+        style={{
+          marginBottom: "1.5rem",
+          textAlign: "left",
+          width: "100%",
+          marginLeft: 0, // 👈 左寄せ
+        }}
       >
         <input
           type="text"
@@ -115,10 +146,40 @@ const SharePage = () => {
         />
       </div>
 
-      {/* 日程一覧（伝助風） */}
+      {/* 日程追加フォーム */}
+      <div
+        className="input-card"
+        style={{
+          textAlign: "left",
+          width: "100%",
+          marginLeft: 0, // 👈 左寄せ
+        }}
+      >
+        <input
+          type="date"
+          value={newDate}
+          onChange={(e) => setNewDate(e.target.value)}
+          className="title-input"
+          style={{ maxWidth: "200px" }}
+        />
+        <button
+          onClick={handleAddDate}
+          className="share-button fancy"
+          style={{ marginLeft: "1rem" }}
+        >
+          日程追加
+        </button>
+      </div>
+
+      {/* 日程一覧テーブル */}
       <div
         className="card"
-        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
+        style={{
+          marginBottom: "2rem",
+          textAlign: "left",
+          width: "100%",
+          marginLeft: 0, // 👈 左寄せ
+        }}
       >
         <h3>日程一覧</h3>
         <table
@@ -130,11 +191,11 @@ const SharePage = () => {
         >
           <thead>
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
-              <th style={{ padding: "0.5rem 1rem", textAlign: "left" }}>日付</th>
+              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
               {users.map((u) => (
                 <th
                   key={u}
-                  style={{ padding: "0.5rem 1rem", textAlign: "center" }}
+                  style={{ textAlign: "center", padding: "0.5rem 1rem" }}
                 >
                   {u}
                 </th>
