@@ -409,14 +409,14 @@ footer {
   text-align: center;
   padding: 1rem;
   font-size: 1rem;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif; /* ← フッターのフォント */
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif; /* ← 統一 */
   border-top: 2px solid #004CA0;
   margin-top: auto;
 }
 
 /* ====== ロゴリンク（フッターと同じフォントに統一） ====== */
 .logo-link {
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif; /* ← フッターと同じ */
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif !important; /* ← 強制 */
   font-size: 2rem;
   font-weight: bold;
   color: #fff;
@@ -434,6 +434,7 @@ footer {
   box-shadow: 0 3px 8px rgba(0,0,0,0.4);
   transform: scale(1.05);
 }
+
 
 
 
