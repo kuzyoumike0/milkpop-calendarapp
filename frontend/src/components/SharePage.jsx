@@ -1,11 +1,17 @@
 // frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import Holidays from "date-holidays";
 import "../index.css";
 
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
+
+  const jstNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+  const hd = new Holidays("JP");
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -30,17 +36,36 @@ const SharePage = () => {
     <div className="min-h-screen p-6 bg-gradient-to-br from-[#FDB9C8] to-[#004CA0] text-white">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 drop-shadow-md">
-          📅 共有スケジュール
+          📅 {schedule.title}
         </h1>
         <div className="space-y-4">
-          {schedule.dates.map((d, i) => (
-            <div
-              key={i}
-              className="bg-black bg-opacity-50 p-4 rounded-2xl shadow-lg"
-            >
-              <p className="text-lg font-semibold">{d}</p>
-            </div>
-          ))}
+          {schedule.dates.map((d, i) => {
+            const dateObj = new Date(d);
+            const holiday = hd.isHoliday(dateObj);
+            const isToday =
+              dateObj.getFullYear() === jstNow.getFullYear() &&
+              dateObj.getMonth() === jstNow.getMonth() &&
+              dateObj.getDate() === jstNow.getDate();
+
+            return (
+              <div
+                key={i}
+                className={`p-4 rounded-2xl shadow-lg ${
+                  isToday ? "bg-yellow-400 text-black" : "bg-black bg-opacity-50"
+                }`}
+              >
+                <p className="text-lg font-semibold">
+                  {d}
+                  {holiday && (
+                    <span className="ml-2 text-red-400 font-bold">
+                      {holiday[0].name}
+                    </span>
+                  )}
+                  {isToday && <span className="ml-2">✨ 今日</span>}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
