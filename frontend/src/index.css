@@ -378,3 +378,30 @@ button:hover, .share-button:hover {
   .page-container { flex-direction: column; padding: 1rem; }
   .calendar { width: 100%; }
 }
+/* ====== タイトル入力フォーム（短縮版＋視認性UP） ====== */
+.title-input-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.input-title.short {
+  max-width: 280px;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #333;
+  font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  box-shadow: 0 4px 8px rgba(253, 185, 200, 0.4);
+  transition: 0.3s;
+}
+
+.input-title.short:focus {
+  border-color: #ff69b4;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
+  outline: none;
+}
+
