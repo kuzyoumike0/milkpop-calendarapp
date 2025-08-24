@@ -16,7 +16,7 @@ const Footer = () => {
         >
           <img
             src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg"
-            alt="Discord"
+          
             className="footer-icon"
           />
           Discordサーバー
@@ -31,7 +31,7 @@ const Footer = () => {
         >
           <img
             src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitter.svg"
-            alt="Twitter"
+          
             className="footer-icon"
           />
           Twitter
