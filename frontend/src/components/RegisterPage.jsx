@@ -85,6 +85,12 @@ export default function RegisterPage() {
     }
   };
 
+  const handleRemoveDate = (dateToRemove) => {
+    setSelectedDates((prev) =>
+      prev.filter((d) => d.getTime() !== dateToRemove.getTime())
+    );
+  };
+
   const isDateSelected = (date) => {
     if (selectionType === "multiple") {
       return selectedDates.some((d) => d.getTime() === date.getTime());
@@ -258,12 +264,26 @@ export default function RegisterPage() {
                 .map((d, i) => (
                   <div key={i} className="selected-date">
                     {d.toLocaleDateString("ja-JP")}
+                    <button
+                      className="remove-date-btn"
+                      onClick={() => handleRemoveDate(d)}
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
             {selectionType === "range" && range.start && (
               <div className="selected-date">
                 {range.start.toLocaleDateString("ja-JP")}
                 {range.end && ` 〜 ${range.end.toLocaleDateString("ja-JP")}`}
+                {range.start && (
+                  <button
+                    className="remove-date-btn"
+                    onClick={() => setRange({ start: null, end: null })}
+                  >
+                    ×
+                  </button>
+                )}
               </div>
             )}
           </div>
