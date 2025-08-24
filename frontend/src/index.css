@@ -411,3 +411,59 @@ footer {
   }
 }
 
+/* ====== 横並びレイアウト ====== */
+.main-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+  padding: 0 2rem; /* 左右に余白 */
+}
+
+.calendar-section {
+  flex: 7;
+}
+.options-section {
+  flex: 3;
+}
+
+/* ====== ラジオボタンをお洒落に ====== */
+.fancy-radio label {
+  position: relative;
+  padding-left: 28px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+}
+.fancy-radio input {
+  display: none;
+}
+.custom-radio {
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #FDB9C8;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+.fancy-radio input:checked + .custom-radio {
+  background: #FDB9C8;
+  box-shadow: 0 0 8px rgba(253,185,200,0.8);
+}
+
+/* ====== レスポンシブ ====== */
+@media (max-width: 1024px) {
+  .main-layout {
+    flex-direction: column;
+    padding: 0 1rem;
+  }
+  .calendar-section, .options-section {
+    flex: 1;
+    width: 100%;
+  }
+}
