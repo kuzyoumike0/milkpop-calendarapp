@@ -31,6 +31,10 @@ const RegisterPage = () => {
     }
   };
 
+  const handleRemoveDate = (dateToRemove) => {
+    setSelectedDates(selectedDates.filter((d) => d.getTime() !== dateToRemove.getTime()));
+  };
+
   const handlePrevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   };
@@ -109,6 +113,12 @@ const RegisterPage = () => {
             .map((date, index) => (
               <div key={index} className="selected-date">
                 {date.getFullYear()}/{date.getMonth() + 1}/{date.getDate()}
+                <button
+                  className="remove-date-btn"
+                  onClick={() => handleRemoveDate(date)}
+                >
+                  ×
+                </button>
               </div>
             ))
         )}
