@@ -1,117 +1,253 @@
-<main className="register-card">
-  {/* 左側カレンダー（7割） */}
-  <div className="calendar-section">
-    <h2 className="page-title">日程登録</h2>
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import Holidays from "date-holidays";
+import "../index.css";
 
-    {/* タイトル入力 */}
-    <div className="title-input-wrapper">
-      <input
-        type="text"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="input-title short"
-      />
-    </div>
+const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 
-    {/* 複数/範囲選択 */}
-    <div className="radio-group">
-      <label>
-        <input
-          type="radio"
-          value="multiple"
-          checked={selectionType === "multiple"}
-          onChange={(e) => setSelectionType(e.target.value)}
-        />
-        複数選択
-      </label>
-      <label>
-        <input
-          type="radio"
-          value="range"
-          checked={selectionType === "range"}
-          onChange={(e) => setSelectionType(e.target.value)}
-        />
-        範囲選択
-      </label>
-    </div>
+const CalendarCell = ({
+  date,
+  isSelected,
+  onClick,
+  isHoliday,
+  holidayName,
+  isSaturday,
+  isSunday,
+  isToday,
+}) => {
+  let cellClass = "day-cell";
+  if (isHoliday) cellClass += " calendar-holiday";
+  else if (isSunday) cellClass += " calendar-sunday";
+  else if (isSaturday) cellClass += " calendar-saturday";
 
-    {/* ==== カレンダー ==== */}
-    <div className="calendar">
-      <div className="calendar-header">
-        <button type="button" onClick={() =>
-          setCurrentMonth((prev) => {
-            if (prev === 0) {
-              setCurrentYear((y) => y - 1);
-              return 11;
-            }
-            return prev - 1;
-          })
-        }>←</button>
-        <h3 className="month-title">{currentYear}年 {currentMonth + 1}月</h3>
-        <button type="button" onClick={() =>
-          setCurrentMonth((prev) => {
-            if (prev === 11) {
-              setCurrentYear((y) => y + 1);
-              return 0;
-            }
-            return prev + 1;
-          })
-        }>→</button>
-      </div>
+  if (isSelected) cellClass += " selected";
+  else if (isToday) cellClass += " calendar-today";
 
-      <div className="week-header">
-        {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
-          <div key={d}>{d}</div>
-        ))}
-      </div>
-
-      <div className="calendar-grid">
-        {calendarDays.map((date, i) =>
-          date ? (
-            <CalendarCell
-              key={i}
-              date={date}
-              isSelected={isDateSelected(date)}
-              onClick={handleDateClick}
-              isHoliday={!!getHolidayInfo(date)}
-              holidayName={getHolidayInfo(date)}
-              isSaturday={date.getDay() === 6}
-              isSunday={date.getDay() === 0}
-              isToday={
-                date.getFullYear() === today.getFullYear() &&
-                date.getMonth() === today.getMonth() &&
-                date.getDate() === today.getDate()
-              }
-            />
-          ) : (
-            <div key={i}></div>
-          )
-        )}
-      </div>
-    </div>
-  </div>
-
-  {/* 右側リスト（3割） */}
-  <div className="options-section">
-    <h3 style={{ color: "#ff69b4" }}>選択した日程</h3>
-    <div>
-      {selectedDates
-        .sort((a, b) => a - b)
-        .map((d, i) => (
-          <div key={i} className="selected-date">
-            {d.toLocaleDateString("ja-JP")}
-          </div>
-        ))}
-    </div>
-
-    <button
-      type="submit"
-      className="share-button fancy"
-      style={{ marginTop: "1rem" }}
-      onClick={handleSubmit}
+  return (
+    <div
+      onClick={() => onClick(date)}
+      title={holidayName || ""}
+      className={cellClass}
     >
-      🌸 共有リンクを発行 🌸
-    </button>
-  </div>
-</main>
+      <span>{date.getDate()}</span>
+      {holidayName && <span className="holiday-name">{holidayName}</span>}
+    </div>
+  );
+};
+
+export default function RegisterPage() {
+  const navigate = useNavigate();
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [holidays, setHolidays] = useState([]);
+  const [selectionType, setSelectionType] = useState("multiple"); // ← 複数/範囲
+
+  useEffect(() => {
+    const hd = new Holidays("JP");
+    const yearHolidays = hd.getHolidays(currentYear).map((h) => ({
+      date: new Date(h.date),
+      name: h.name,
+    }));
+    setHolidays(yearHolidays);
+  }, [currentYear]);
+
+  const handleDateClick = (date) => {
+    if (selectionType === "multiple") {
+      setSelectedDates((prev) =>
+        prev.some((d) => d.getTime() === date.getTime())
+          ? prev.filter((d) => d.getTime() !== date.getTime())
+          : [...prev, date]
+      );
+    } else if (selectionType === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const [start] = selectedDates;
+        setSelectedDates(
+          date < start ? [date, start] : [start, date]
+        );
+      } else {
+        setSelectedDates([date]);
+      }
+    }
+  };
+
+  const isDateSelected = (date) => {
+    if (selectionType === "multiple") {
+      return selectedDates.some((d) => d.getTime() === date.getTime());
+    } else if (selectionType === "range" && selectedDates.length === 2) {
+      const [start, end] = selectedDates;
+      return date >= start && date <= end;
+    }
+    return false;
+  };
+
+  const getHolidayInfo = (date) => {
+    const holiday = holidays.find(
+      (h) =>
+        h.date.getFullYear() === date.getFullYear() &&
+        h.date.getMonth() === date.getMonth() &&
+        h.date.getDate() === date.getDate()
+    );
+    return holiday ? holiday.name : null;
+  };
+
+  const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDayOfMonth; i++) calendarDays.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    calendarDays.push(new Date(currentYear, currentMonth, d));
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const scheduleId = uuidv4();
+    const payload = {
+      id: scheduleId,
+      title,
+      dates: selectedDates,
+    };
+    await fetch("/api/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    navigate(`/share/${scheduleId}`);
+  };
+
+  return (
+    <div className="register-page">
+      <main className="register-card">
+        {/* 左側カレンダー */}
+        <div className="calendar-section" style={{ flex: 7 }}>
+          <h2 className="page-title">日程登録</h2>
+          <div className="title-input-wrapper">
+            <input
+              type="text"
+              placeholder="タイトルを入力"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="input-title short"
+            />
+          </div>
+
+          {/* 複数/範囲ラジオ */}
+          <div className="radio-group">
+            <label>
+              <input
+                type="radio"
+                value="multiple"
+                checked={selectionType === "multiple"}
+                onChange={(e) => setSelectionType(e.target.value)}
+              />
+              複数選択
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="range"
+                checked={selectionType === "range"}
+                onChange={(e) => setSelectionType(e.target.value)}
+              />
+              範囲選択
+            </label>
+          </div>
+
+          {/* ==== カレンダー ==== */}
+          <div className="calendar">
+            <div className="calendar-header">
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentMonth((prev) => {
+                    if (prev === 0) {
+                      setCurrentYear((y) => y - 1);
+                      return 11;
+                    }
+                    return prev - 1;
+                  })
+                }
+              >
+                ←
+              </button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentMonth((prev) => {
+                    if (prev === 11) {
+                      setCurrentYear((y) => y + 1);
+                      return 0;
+                    }
+                    return prev + 1;
+                  })
+                }
+              >
+                →
+              </button>
+            </div>
+
+            <div className="week-header">
+              {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+
+            <div className="calendar-grid">
+              {calendarDays.map((date, i) =>
+                date ? (
+                  <CalendarCell
+                    key={i}
+                    date={date}
+                    isSelected={isDateSelected(date)}
+                    onClick={handleDateClick}
+                    isHoliday={!!getHolidayInfo(date)}
+                    holidayName={getHolidayInfo(date)}
+                    isSaturday={date.getDay() === 6}
+                    isSunday={date.getDay() === 0}
+                    isToday={
+                      date.getFullYear() === today.getFullYear() &&
+                      date.getMonth() === today.getMonth() &&
+                      date.getDate() === today.getDate()
+                    }
+                  />
+                ) : (
+                  <div key={i}></div>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 右側リスト */}
+        <div className="options-section" style={{ flex: 3 }}>
+          <h3 style={{ color: "#ff69b4" }}>選択した日程</h3>
+          <div>
+            {selectedDates
+              .sort((a, b) => a - b)
+              .map((d, i) => (
+                <div key={i} className="selected-date">
+                  {d.toLocaleDateString("ja-JP")}
+                </div>
+              ))}
+          </div>
+          <button
+            type="submit"
+            className="share-button"
+            onClick={handleSubmit}
+          >
+            ✨ 共有リンクを発行 ✨
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
