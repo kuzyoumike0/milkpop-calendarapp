@@ -1,25 +1,16 @@
-// frontend/src/components/TopPage.jsx
 import React from "react";
 import "../index.css";
 
 const TopPage = () => {
   return (
-    <main>
-      {/* ロゴ画像カード */}
-      <div className="card hover:scale-105 transition-transform w-full max-w-4xl mx-auto mb-10">
-        <img
-          src="/logo.png"
-          alt="MilkPOP Calendar Logo"
-          className="max-w-full rounded-2xl shadow-lg mx-auto"
-          style={{ width: "1040px" }}
-        />
+    <div className="page-container">
+      <div className="card">
+        <h1 className="page-title">ようこそ！MilkPOP Calendar</h1>
+        <p style={{ color: "#000" }}>
+          このカレンダーでは予定を登録して共有することができます。
+        </p>
       </div>
-
-      {/* 本文カード */}
-      <div className="top-message-card">
-        あなたの予定を簡単に登録・共有できるカレンダーサービスです。
-      </div>
-    </main>
+    </div>
   );
 };
 
