@@ -421,6 +421,14 @@ footer {
   gap: 1.5rem;
 }
 
+/* ====== フッターリンク ====== */
+.footer-links {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
 .footer-link {
   display: flex;
   align-items: center;
