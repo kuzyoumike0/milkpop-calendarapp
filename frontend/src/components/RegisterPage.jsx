@@ -50,15 +50,23 @@ export default function RegisterPage() {
   const [range, setRange] = useState({ start: null, end: null });
   const [holidays, setHolidays] = useState([]);
 
-  // 日付ごとの時間帯設定
-  // { "yyyy-mm-dd": { type: "allday" | "daytime" | "night" | "custom", start: 9, end: 18 } }
+  // 日付ごとの時間帯設定 or 範囲用時間帯設定
   const [dateTimes, setDateTimes] = useState({});
+  const [rangeTime, setRangeTime] = useState({
+    type: "allday",
+    start: 9,
+    end: 18,
+  });
 
   const handleTimeChange = (dateKey, field, value) => {
     setDateTimes((prev) => ({
       ...prev,
       [dateKey]: { ...prev[dateKey], [field]: value },
     }));
+  };
+
+  const handleRangeTimeChange = (field, value) => {
+    setRangeTime((prev) => ({ ...prev, [field]: value }));
   };
 
   const timeOptions = [
@@ -68,7 +76,6 @@ export default function RegisterPage() {
     { value: "custom", label: "時刻指定" },
   ];
 
-  // 1時〜24時（0時）までの時間リスト
   const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
   // ==== 日本の祝日を取得 ====
@@ -154,17 +161,26 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const scheduleId = uuidv4();
-    const payload = {
-      id: scheduleId,
-      title,
-      dates: selectedDates.map((d) => {
-        const key = d.toISOString().split("T")[0];
-        return {
-          date: d,
-          ...dateTimes[key],
-        };
-      }),
-    };
+
+    const payload =
+      selectionType === "multiple"
+        ? {
+            id: scheduleId,
+            title,
+            dates: selectedDates.map((d) => {
+              const key = d.toISOString().split("T")[0];
+              return {
+                date: d,
+                ...dateTimes[key],
+              };
+            }),
+          }
+        : {
+            id: scheduleId,
+            title,
+            range,
+            time: rangeTime,
+          };
 
     await fetch("/api/schedule", {
       method: "POST",
@@ -186,7 +202,6 @@ export default function RegisterPage() {
         <div className="calendar card" style={{ flex: "7" }}>
           <h2 className="page-title">日程登録</h2>
 
-          {/* タイトル入力 */}
           <div className="title-input-wrapper">
             <input
               type="text"
@@ -293,6 +308,7 @@ export default function RegisterPage() {
         <div className="card" style={{ flex: "3" }}>
           <h3 style={{ color: "#ff69b4" }}>選択した日程</h3>
           <div>
+            {/* 複数選択モード */}
             {selectionType === "multiple" &&
               selectedDates
                 .sort((a, b) => a - b)
@@ -362,6 +378,56 @@ export default function RegisterPage() {
                     </div>
                   );
                 })}
+
+            {/* 範囲選択モード */}
+            {selectionType === "range" && range.start && range.end && (
+              <div className="selected-date" style={{ marginBottom: "0.8rem" }}>
+                <span>
+                  {range.start.toLocaleDateString("ja-JP")} 〜{" "}
+                  {range.end.toLocaleDateString("ja-JP")}
+                </span>
+                <select
+                  value={rangeTime.type}
+                  onChange={(e) => handleRangeTimeChange("type", e.target.value)}
+                >
+                  {timeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+
+                {rangeTime.type === "custom" && (
+                  <>
+                    <select
+                      value={rangeTime.start}
+                      onChange={(e) =>
+                        handleRangeTimeChange("start", Number(e.target.value))
+                      }
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                    〜
+                    <select
+                      value={rangeTime.end}
+                      onChange={(e) =>
+                        handleRangeTimeChange("end", Number(e.target.value))
+                      }
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}時
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <button
