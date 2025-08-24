@@ -362,4 +362,45 @@ button:hover {
   max-width: 900px;
   text-align: center;
 }
+/* ====== フォント ====== */
+body {
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+}
+header, footer {
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+}
+
+/* ====== ロゴリンクをボタン風に ====== */
+.logo-link {
+  font-family: 'Mochiy Pop P One', cursive;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+.logo-link:hover {
+  background: #FFD700;
+  color: #000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* ====== ナビリンクをボタン風に ====== */
+.nav-links a {
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+.nav-links a:hover {
+  background: #FFD700;
+  color: #000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
 
