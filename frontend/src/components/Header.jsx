@@ -1,36 +1,53 @@
+// frontend/src/components/Header.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import "../index.css";
 
-export default function Header() {
-  const [isOpen, setIsOpen] = useState(false);
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="header">
-      <Link to="/" className="logo-link">MilkPOP Calendar</Link>
+      <Link to="/" className="logo-link">
+        MilkPOP Calendar
+      </Link>
 
-      {/* PC用ナビゲーション */}
       <nav className="nav-links">
         <Link to="/personal">個人スケジュール</Link>
         <Link to="/register">日程登録</Link>
-        <a href="/auth/discord" className="discord-login">Discordログイン</a>
+        <a
+          href="https://discord.com/api/oauth2/authorize?client_id=XXXX&permissions=8&scope=bot"
+          className="discord-login"
+        >
+          Discordログイン
+        </a>
       </nav>
 
-      {/* ハンバーガーメニュー */}
-      <div
-        className={`hamburger ${isOpen ? "open" : ""}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      {/* ハンバーガーメニュー（スマホ表示用） */}
+      <div className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
         <span></span>
         <span></span>
         <span></span>
       </div>
 
-      {/* モバイルメニュー */}
-      <nav className={`nav-links-mobile ${isOpen ? "open" : ""}`}>
-        <Link to="/personal" onClick={() => setIsOpen(false)}>個人スケジュール</Link>
-        <Link to="/register" onClick={() => setIsOpen(false)}>日程登録</Link>
-        <a href="/auth/discord" className="discord-login" onClick={() => setIsOpen(false)}>Discordログイン</a>
-      </nav>
+      {menuOpen && (
+        <div className="dropdown">
+          <Link to="/personal" onClick={() => setMenuOpen(false)}>
+            個人スケジュール
+          </Link>
+          <Link to="/register" onClick={() => setMenuOpen(false)}>
+            日程登録
+          </Link>
+          <a
+            href="https://discord.com/api/oauth2/authorize?client_id=XXXX&permissions=8&scope=bot"
+            onClick={() => setMenuOpen(false)}
+          >
+            Discordログイン
+          </a>
+        </div>
+      )}
     </header>
   );
 }
+
+export default Header;
