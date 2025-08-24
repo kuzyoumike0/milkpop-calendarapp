@@ -467,3 +467,22 @@ footer {
     width: 100%;
   }
 }
+/* 今日の日付 */
+.calendar-today {
+  background: #ffeb3b !important; /* 黄色 */
+  color: #000 !important;
+  font-weight: bold;
+  border: 2px solid #FDB9C8; /* ピンクの枠 */
+  box-shadow: 0 0 10px rgba(253,185,200,0.6);
+}
+
+/* カレンダーとリストの間に余白 */
+.main-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 3rem;   /* ← ここを広げて余白を確保 */
+  width: 100%;
+  padding: 0 2rem;
+}
+
