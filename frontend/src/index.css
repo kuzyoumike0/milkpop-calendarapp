@@ -139,3 +139,10 @@ footer {
     display: flex;
   }
 }
+
+.page-text {
+  font-size: 1.1rem;
+  color: #000; /* 背景と区別するため黒文字 */
+  line-height: 1.6;
+}
+
