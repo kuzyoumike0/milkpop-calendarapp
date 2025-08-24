@@ -1,19 +1,30 @@
+// frontend/src/components/TopPage.jsx
 import React from "react";
 import "../index.css";
 
-const TopPage = () => {
+function TopPage() {
   return (
     <div className="top-container">
-      {/* ロゴ画像 */}
-      <img src="/logo.png" alt="MilkPOP Calendar Logo" className="top-logo" />
+      {/* トップ画像 */}
+      <img
+        src="/assets/logo.png" // 📌 public/assets/logo.png に置いてください
+        alt="MilkPOP Calendar"
+        className="top-logo"
+      />
 
-      {/* 説明文 */}
-      <p className="top-description">
-        MilkPOP Calendar は、仲間と予定を共有できる便利なスケジュールアプリです。<br />
-        日程登録や個人スケジュール管理を簡単に行い、共有リンクですぐに友達と予定を合わせられます。
-      </p>
+      {/* 中央カード */}
+      <div className="top-description card">
+        <h2>ようこそ MilkPOP Calendar へ！</h2>
+        <p>
+          ポップで可愛いデザインのカレンダーで、
+          あなたのスケジュールを管理しましょう。
+        </p>
+        <p>
+          個人用スケジュール登録や共有リンク発行も簡単！
+        </p>
+      </div>
     </div>
   );
-};
+}
 
 export default TopPage;
