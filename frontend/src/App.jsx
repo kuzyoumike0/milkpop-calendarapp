@@ -1,33 +1,23 @@
-// frontend/src/App.jsx
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import TopPage from "./components/TopPage";
-import RegisterPage from "./components/RegisterPage";
-import PersonalPage from "./components/PersonalPage";
-import SharePage from "./components/SharePage";
-import ShareLinkPage from "./components/ShareLinkPage";
-import LinkPage from "./components/LinkPage";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import TopPage from "./components/TopPage";
+import PersonalPage from "./components/PersonalPage";
+import RegisterPage from "./components/RegisterPage";
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* ✅ 全ページ共通のヘッダー */}
+    <Router>
       <Header />
-
-      <Routes>
-        <Route path="/" element={<TopPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/personal" element={<PersonalPage />} />
-        <Route path="/share" element={<SharePage />} />
-        <Route path="/share/:id" element={<ShareLinkPage />} />
-        <Route path="/links" element={<LinkPage />} />
-      </Routes>
-
-      {/* ✅ 全ページ共通のフッター */}
+      <main style={{ flex: 1, padding: "2rem" }}>
+        <Routes>
+          <Route path="/" element={<TopPage />} />
+          <Route path="/personal" element={<PersonalPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </main>
       <Footer />
-    </div>
+    </Router>
   );
 }
 
