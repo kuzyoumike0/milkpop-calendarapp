@@ -8,7 +8,8 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeOptions, setTimeOptions] = useState({}); // 日付ごとに時間帯を保存
+  const [timeOptions, setTimeOptions] = useState({});   // 日付 → 終日/昼/夜/custom
+  const [customTimes, setCustomTimes] = useState({});   // 日付 → HH:MM
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -64,6 +65,7 @@ const RegisterPage = () => {
     }
   };
 
+  // 共有リンク作成
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -71,9 +73,12 @@ const RegisterPage = () => {
     }
     try {
       // 日付と時間帯をセットで保存
-      const formattedDates = selectedDates.map(
-        (d) => `${d}|${timeOptions[d] || "終日"}`
-      );
+      const formattedDates = selectedDates.map((d) => {
+        if (timeOptions[d] === "custom") {
+          return `${d}|${customTimes[d] || "00:00"}`;
+        }
+        return `${d}|${timeOptions[d] || "終日"}`;
+      });
 
       const res = await fetch("/api/schedules", {
         method: "POST",
@@ -203,6 +208,18 @@ const RegisterPage = () => {
                 <option value="夜">夜</option>
                 <option value="custom">時刻指定</option>
               </select>
+
+              {/* 時刻指定プルダウン */}
+              {timeOptions[d] === "custom" && (
+                <input
+                  type="time"
+                  value={customTimes[d] || ""}
+                  onChange={(e) =>
+                    setCustomTimes((prev) => ({ ...prev, [d]: e.target.value }))
+                  }
+                  style={{ marginLeft: "1rem" }}
+                />
+              )}
             </div>
           ))}
         </div>
