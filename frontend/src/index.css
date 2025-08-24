@@ -85,32 +85,6 @@ h1, h2, h3 {
   color: #000;
 }
 
-/* ====== ドロップダウンメニュー ====== */
-.dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: #111;
-  border: 1px solid #004CA0;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  width: 200px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-  z-index: 50;
-}
-.dropdown a {
-  padding: 0.8rem 1rem;
-  text-decoration: none;
-  color: #fff;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-  transition: 0.3s;
-}
-.dropdown a:hover {
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
-}
-
 /* ====== フッター ====== */
 footer {
   background: rgba(0, 0, 0, 0.7);
@@ -133,46 +107,148 @@ footer {
   font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
 }
+.page-text {
+  font-size: 1.1rem;
+  color: #eee;
+  line-height: 1.6;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+}
 
-/* ====== カード（高級感の黒） ====== */
-.card {
-  background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
-  border: 2px solid #FDB9C8;
-  border-radius: 16px;
+/* ====== トップページ専用 ====== */
+.top-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 2rem auto;
   padding: 2rem;
+}
+.top-logo {
+  width: 1040px;
+  max-width: 90%;
+  height: auto;
+  margin-bottom: 2rem;
+}
+.top-description {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+  background: #1a1a1a;
+  border: 2px solid #50C878;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  max-width: 900px;
+  text-align: center;
   transition: 0.3s;
 }
-.card:hover {
-  border-color: #FDB9C8;
-  transform: scale(1.01);
+.top-description:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+  transform: scale(1.02);
 }
 
-/* ====== ボタン ====== */
-button, .share-button {
-  background: linear-gradient(90deg, #50C878, #FDB9C8);
-  color: #000;
+/* ====== 日程登録ページ専用 ====== */
+.register-page {
+  padding: 2rem;
+}
+.register-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+/* 左側：カレンダー */
+.register-card .calendar-section {
+  flex: 7;
+}
+.register-card .calendar {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+.register-card .calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .8rem;
+}
+.register-card .month-title {
+  font-size: 1.5rem;
   font-weight: bold;
-  border: none;
-  border-radius: 8px;
+  color: #ff69b4;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+}
+.register-card .week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  color: #ff69b4;
+  margin-bottom: 0.5rem;
+}
+.register-card .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+.register-card .day-cell {
+  background: #ffe6ef;
+  border: 2px solid #FDB9C8;
+  border-radius: 10px;
+  color: #333;
+  font-weight: bold;
   cursor: pointer;
   transition: 0.3s;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  padding: 0.6rem 1.2rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
-button:hover, .share-button:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
+.register-card .day-cell:hover {
+  background: #FDB9C8;
+  color: #fff;
+  transform: scale(1.05);
+}
+.register-card .day-cell.selected {
+  background: #ff69b4;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
+}
+.register-card .calendar-sunday { color: #ff4d6d; font-weight: bold; }
+.register-card .calendar-saturday { color: #4d79ff; font-weight: bold; }
+.register-card .calendar-holiday { color: #ff4d6d; font-weight: bold; }
+.register-card .calendar-today {
+  background: #ffeb3b;
   color: #000;
+  font-weight: bold;
+  border: 2px solid #FDB9C8;
+}
+.register-card .holiday-name {
+  font-size: 0.7rem;
+  color: #ff4d6d;
+  margin-top: 0.2rem;
+  text-align: center;
+}
+
+/* 右側：オプション */
+.register-card .options-section {
+  flex: 3;
+  background: linear-gradient(135deg, #1a1a1a, #000);
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 
 /* ====== 入力フォーム ====== */
-.title-input-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
 .input-title.short {
   max-width: 280px;
   width: 100%;
@@ -185,6 +261,8 @@ button:hover, .share-button:hover {
   font-family: 'M PLUS Rounded 1c', sans-serif;
   box-shadow: 0 4px 8px rgba(253, 185, 200, 0.4);
   transition: 0.3s;
+  display: block;
+  margin: 0 auto 1rem auto;
 }
 .input-title.short:focus {
   border-color: #ff69b4;
@@ -192,81 +270,7 @@ button:hover, .share-button:hover {
   outline: none;
 }
 
-/* ====== カレンダー（ポップかわいい） ====== */
-.calendar {
-  background: #fff;
-  border-radius: 16px;
-  padding: 1rem;
-  margin: 1rem auto;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-}
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: .8rem;
-}
-.month-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #ff69b4;
-  font-family: 'M PLUS Rounded 1c', sans-serif;
-}
-.week-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-  font-weight: bold;
-  color: #ff69b4;
-  margin-bottom: 0.5rem;
-}
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.4rem;
-}
-.day-cell {
-  background: #ffe6ef;
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  padding: 0.6rem 0;
-  min-height: 70px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #333;
-  transition: 0.3s;
-  cursor: pointer;
-}
-.day-cell:hover {
-  background: #FDB9C8;
-  color: #fff;
-  transform: scale(1.05);
-}
-.day-cell.selected {
-  background: #ff69b4;
-  color: #fff;
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.6);
-}
-.calendar-sunday { color: #ff4d6d; }
-.calendar-saturday { color: #4d79ff; }
-.calendar-holiday { color: #e60033; }
-.calendar-today {
-  background: #ffeb3b;
-  color: #000;
-  font-weight: bold;
-  border: 2px solid #FDB9C8;
-}
-.holiday-name {
-  font-size: 0.7rem;
-  color: #ff4d6d;
-  margin-top: 0.2rem;
-  text-align: center;
-}
-
-/* ====== ラジオボタン（高級感黒カード内） ====== */
+/* ====== ラジオグループ ====== */
 .radio-group {
   background: linear-gradient(135deg, #1a1a1a, #000);
   border: 2px solid #FDB9C8;
@@ -291,10 +295,29 @@ button:hover, .share-button:hover {
   color: #FDB9C8;
 }
 
+/* ====== ボタン ====== */
+button, .share-button {
+  background: linear-gradient(90deg, #50C878, #FDB9C8);
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  padding: 0.6rem 1.2rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+button:hover, .share-button:hover {
+  background: linear-gradient(90deg, #FDB9C8, #50C878);
+  color: #000;
+}
+
 /* ====== レスポンシブ ====== */
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .hamburger { display: flex; }
-  .page-container { flex-direction: column; padding: 1rem; }
-  .calendar { width: 100%; }
+  .register-card { flex-direction: column; }
+  .register-card .calendar-section,
+  .register-card .options-section { width: 100%; }
 }
