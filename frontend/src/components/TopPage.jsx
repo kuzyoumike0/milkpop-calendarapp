@@ -7,7 +7,7 @@ function TopPage() {
     <div className="top-container">
       {/* トップ画像 */}
       <img
-        src="/assets/logo.png" // 📌 public/assets/logo.png に置いてください
+        src="/public/logo.png" // 📌 public/logo.png に置いてください
         alt="MilkPOP Calendar"
         className="top-logo"
       />
