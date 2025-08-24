@@ -422,33 +422,18 @@ footer {
 }
 
 /* ====== フッターリンク ====== */
-.footer-links {
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-}
-
-.footer-link {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: #FDB9C8;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: 0.3s;
-}
-
-.footer-link:hover {
-  color: #FFD700;
-  transform: scale(1.05);
-}
-
 .footer-icon {
   width: 20px;
   height: 20px;
+  filter: invert(80%) sepia(20%) saturate(300%) hue-rotate(300deg); 
+  /* ← ゴールドピンク調に着色 */
+  transition: 0.3s;
 }
+
+.footer-link:hover .footer-icon {
+  filter: invert(85%) sepia(80%) saturate(500%) hue-rotate(20deg); 
+}
+
 
 
 /* ====== ロゴリンク（フッターと同じフォントに統一） ====== */
