@@ -454,4 +454,13 @@ footer {
   .nav-links { display: none; }   /* PC用ナビ非表示 */
   .hamburger { display: flex; }   /* ハンバーガー表示 */
 }
-
+.main-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 3rem;
+  width: 100%;
+  padding: 0 2rem;
+}
+.calendar-section { flex: 7; }
+.options-section { flex: 3; }
