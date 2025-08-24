@@ -285,3 +285,43 @@ footer {
   margin-top: 0.2rem;
   text-align: center;
 }
+
+/* トップページ部分 ×） */
+.top-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.top-logo {
+  width: 1040px;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 2rem;
+}
+
+.top-description {
+  font-size: 1.3rem;
+  line-height: 1.8;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #fff;
+  background: #1a1a1a;
+  border: 2px solid #50C878;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+  max-width: 900px;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.top-description:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+  transform: scale(1.02);
+}
+
