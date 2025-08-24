@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../index.css";
 import Dropdown from "./Dropdown";
@@ -67,19 +67,20 @@ const RegisterPage = () => {
     return [];
   };
 
-  // 📌 プルダウン変更
+  // 📌 終日/昼/夜/カスタムの変更
   const handleTimeChange = (date, value) => {
-    setTimeRanges((prev) => ({
-      ...prev,
-      [date]: {
-        type: value,
-        start: prev[date]?.start ?? "00:00",
-        end: prev[date]?.end ?? "01:00",
-      },
-    }));
+    setTimeRanges((prev) => {
+      if (value === "custom") {
+        return {
+          ...prev,
+          [date]: { type: "custom", start: "00:00", end: "01:00" },
+        };
+      }
+      return { ...prev, [date]: { type: value } }; // allday / night / day
+    });
   };
 
-  // 📌 時刻変更
+  // 📌 カスタム時間の変更
   const handleCustomTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
@@ -96,19 +97,6 @@ const RegisterPage = () => {
     }
     return times;
   };
-
-  // 📌 選択した日程にデフォルト時間をセット（00:00〜01:00）
-  useEffect(() => {
-    const updated = {};
-    selectedDates.forEach((d) => {
-      if (!timeRanges[d]) {
-        updated[d] = { type: "custom", start: "00:00", end: "01:00" };
-      }
-    });
-    if (Object.keys(updated).length > 0) {
-      setTimeRanges((prev) => ({ ...prev, ...updated }));
-    }
-  }, [selectedDates]);
 
   // 📌 カレンダー描画
   const renderDays = () => {
@@ -158,7 +146,7 @@ const RegisterPage = () => {
 
     const datesWithTime = displayedDates.map((d) => ({
       date: d,
-      timerange: timeRanges[d] || { type: "custom", start: "00:00", end: "01:00" },
+      timerange: timeRanges[d] || { type: "allday" },
     }));
 
     const body = { title, dates: datesWithTime, memo: "" };
@@ -251,7 +239,7 @@ const RegisterPage = () => {
                   <span className="custom-time">
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.start ?? "00:00"}
+                      value={timeRanges[d]?.start || "00:00"}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
@@ -263,7 +251,7 @@ const RegisterPage = () => {
                     〜
                     <select
                       className="custom-dropdown"
-                      value={timeRanges[d]?.end ?? "01:00"}
+                      value={timeRanges[d]?.end || "01:00"}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "end", e.target.value)
                       }
