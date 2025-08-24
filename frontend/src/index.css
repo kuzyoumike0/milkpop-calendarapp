@@ -555,3 +555,32 @@ footer {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ====== 時間指定入力（input type="time"） ====== */
+.custom-time input[type="time"] {
+  margin: 0 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  border: 2px solid #FDB9C8;
+  background: linear-gradient(135deg, #fff, #ffe6ef);
+  font-weight: bold;
+  font-size: 0.95rem;
+  color: #333;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.custom-time input[type="time"]:hover {
+  background: linear-gradient(135deg, #FDB9C8, #50C878);
+  color: #fff;
+  border-color: #50C878;
+  box-shadow: 0 0 10px rgba(253,185,200,0.6);
+  transform: scale(1.05);
+}
+
+.custom-time input[type="time"]:focus {
+  outline: none;
+  border-color: #50C878;
+  box-shadow: 0 0 12px rgba(80,200,120,0.8);
+}
+
