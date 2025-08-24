@@ -385,9 +385,13 @@ footer {
 .selected-date {
   background: rgba(255,255,255,0.05);
   border-radius: 8px;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
   font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem; /* 日付とプルダウンの余白 */
 }
 
 /* ===== ボタン ===== */
@@ -492,9 +496,9 @@ footer {
 }
 .time-select option {
   font-weight: bold;
-  background: #fff;
-  color: #333;
-  padding: 0.5rem;
+  background: #fff; /* 白背景 */
+  color: #000;      /* 黒文字 */
+  padding: 0.6rem;
 }
 
 /* ===== カスタムドロップダウン ===== */
@@ -510,97 +514,4 @@ footer {
   color: #333;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
-.dropdown-btn:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(253,185,200,0.7);
-}
-.dropdown-list {
-  position: absolute;
-  top: 110%;
-  left: 0;
-  width: 180px;
-  background: #fff;
-  border: 2px solid #FDB9C8;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  z-index: 999;
-  list-style: none;
-  padding: 0.5rem 0;
-  margin: 0;
-  animation: fadeIn 0.2s ease;
-}
-.dropdown-item {
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-.dropdown-item:hover {
-  background: linear-gradient(90deg, #FDB9C8, #50C878);
-  color: #fff;
-}
-.arrow {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.selected-date {
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 0.8rem 0.8rem;   /* 内側の余白を少し広めに */
-  margin-bottom: 0.8rem;    /* 各項目の間も少し広めに */
-  font-size: 0.95rem;
-  display: flex;            /* 横並び用 */
-  align-items: center;      /* 縦位置を揃える */
-  justify-content: space-between;
-}
-
-/* プルダウンと日付の間に余白 */
-.selected-date .dropdown,
-.selected-date .time-select {
-  margin-left: 1rem;
-}
-/* ===== 選択日程リスト ===== */
-.selected-date {
-  background: rgba(255,255,255,0.05);
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.8rem;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;  /* 🆕 日付とプルダウンの間に余白 */
-}
-
-/* ===== 共通プルダウンスタイル（時間指定も含む） ===== */
-
-.time-select:hover,
-.dropdown-btn:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(253,185,200,0.7);
-  transform: scale(1.05);
-}
-.time-select option {
-  font-weight: bold;
-  background: #fff;   /* 🆕 白背景 */
-  color: #000;        /* 🆕 黒文字 */
-  padding: 0.6rem;
-}
-
-/* option 自体 */
-.time-select option {
-  font-weight: bold;
-  background: #333;  /* 🆕 濃い背景 */
-  color: #fff;       /* 🆕 白文字で見やすく */
-  padding: 0.5rem;
-}
-
-
+.dropdown-btn:hover
