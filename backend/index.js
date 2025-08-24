@@ -1,265 +1,223 @@
-// frontend/src/components/SharePage.jsx
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import "../index.css";
+// backend/index.js
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import pkg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
+import authRouter from "./auth.js"; // OAuth2設定
 
-const SharePage = () => {
-  const { token } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [username, setUsername] = useState("");
-  const [allResponses, setAllResponses] = useState([]);
-  const [editCell, setEditCell] = useState({}); // {date, user}
-  const [newDate, setNewDate] = useState(""); // 追加用
+const { Pool } = pkg;
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-  // スケジュール取得
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        const res = await fetch(`/share/${token}`);
-        const data = await res.json();
-        if (!data.error) {
-          setSchedule(data);
-          fetchResponses(data.id);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchSchedule();
-  }, [token]);
+// ===== DB接続設定 =====
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.DATABASE_SSL === "true"
+      ? { rejectUnauthorized: false }
+      : false,
+});
 
-  // 回答一覧取得
-  const fetchResponses = async (scheduleId) => {
-    try {
-      const res = await fetch(`/api/schedules/${scheduleId}/responses`);
-      const data = await res.json();
-      setAllResponses(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+app.use(cors());
+app.use(bodyParser.json());
 
-  // 出欠保存
-  const handleSaveResponse = async (date, value) => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
-    try {
-      const myResponse = allResponses.find((r) => r.user_id === username);
-      let responses = {};
-      if (myResponse) {
-        responses = { ...myResponse.responses, [date]: value };
-      } else {
-        responses = { [date]: value };
-      }
+// ===== DB初期化 =====
+const initDB = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id UUID PRIMARY KEY,
+        title TEXT NOT NULL,
+        dates JSONB NOT NULL,
+        options JSONB,
+        share_token VARCHAR(64) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
-      await fetch(`/api/schedules/${schedule.id}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: username,
-          username,
-          responses,
-        }),
-      });
-      setEditCell({});
-      fetchResponses(schedule.id);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedule_responses (
+        id SERIAL PRIMARY KEY,
+        schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        user_id VARCHAR(64) NOT NULL,
+        username TEXT,
+        responses JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(schedule_id, user_id)
+      );
+    `);
 
-  // 日付追加
-  const handleAddDate = async () => {
-    if (!newDate) return;
-    try {
-      const updatedDates = [...schedule.dates, newDate];
-      const res = await fetch(`/api/schedules/${schedule.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dates: updatedDates }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setSchedule(updated);
-        setNewDate("");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS personal_schedules (
+        id UUID PRIMARY KEY,
+        share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        memo TEXT,
+        dates JSONB NOT NULL,
+        options JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
-  if (!schedule) return <div>読み込み中...</div>;
-
-  // ユーザー一覧
-  const users = [...new Set(allResponses.map((r) => r.username))];
-
-  // 日付ごとのマッピング
-  const dateRows = schedule.dates.map((d) => {
-    const row = {};
-    users.forEach((u) => {
-      const resp = allResponses.find((r) => r.username === u);
-      row[u] = resp?.responses?.[d] || "";
-    });
-    return { date: d, responses: row };
-  });
-
-  return (
-    <div
-      className="page-container"
-      style={{ alignItems: "flex-start", maxWidth: "95%", marginLeft: "2rem" }}
-    >
-      <h2 className="page-title" style={{ textAlign: "left" }}>
-        共有スケジュール
-      </h2>
-
-      {/* タイトル */}
-      <div
-        className="card"
-        style={{
-          textAlign: "left",
-          width: "100%",
-          marginLeft: 0, // 👈 左寄せ
-        }}
-      >
-        <h3 style={{ marginLeft: "0.5rem" }}>{schedule.title}</h3>
-      </div>
-
-      {/* 名前入力 */}
-      <div
-        className="input-card"
-        style={{
-          marginBottom: "1.5rem",
-          textAlign: "left",
-          width: "100%",
-          marginLeft: 0, // 👈 左寄せ
-        }}
-      >
-        <input
-          type="text"
-          placeholder="あなたの名前を入力"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="title-input"
-          style={{ maxWidth: "400px" }}
-        />
-      </div>
-
-      {/* 日程追加フォーム */}
-      <div
-        className="input-card"
-        style={{
-          textAlign: "left",
-          width: "100%",
-          marginLeft: 0, // 👈 左寄せ
-        }}
-      >
-        <input
-          type="date"
-          value={newDate}
-          onChange={(e) => setNewDate(e.target.value)}
-          className="title-input"
-          style={{ maxWidth: "200px" }}
-        />
-        <button
-          onClick={handleAddDate}
-          className="share-button fancy"
-          style={{ marginLeft: "1rem" }}
-        >
-          日程追加
-        </button>
-      </div>
-
-      {/* 日程一覧テーブル */}
-      <div
-        className="card"
-        style={{
-          marginBottom: "2rem",
-          textAlign: "left",
-          width: "100%",
-          marginLeft: 0, // 👈 左寄せ
-        }}
-      >
-        <h3>日程一覧</h3>
-        <table
-          style={{
-            borderCollapse: "collapse",
-            marginTop: "1rem",
-            width: "100%",
-          }}
-        >
-          <thead>
-            <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
-              {users.map((u) => (
-                <th
-                  key={u}
-                  style={{ textAlign: "center", padding: "0.5rem 1rem" }}
-                >
-                  {u}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {dateRows.map((row) => (
-              <tr
-                key={row.date}
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
-              >
-                <td style={{ padding: "0.6rem 1rem" }}>
-                  <strong>{row.date}</strong>
-                </td>
-                {users.map((u) => {
-                  const value = row.responses[u];
-                  const isEditing =
-                    editCell.date === row.date && editCell.user === u;
-                  return (
-                    <td
-                      key={u}
-                      style={{
-                        padding: "0.6rem 1rem",
-                        textAlign: "center",
-                        cursor: u === username ? "pointer" : "default",
-                      }}
-                      onClick={() => {
-                        if (u === username) setEditCell({ date: row.date, user: u });
-                      }}
-                    >
-                      {isEditing ? (
-                        <select
-                          defaultValue={value}
-                          onChange={(e) =>
-                            handleSaveResponse(row.date, e.target.value)
-                          }
-                          className="custom-dropdown"
-                          style={{ width: "80px" }}
-                        >
-                          <option value="">---</option>
-                          <option value="yes">〇</option>
-                          <option value="no">✕</option>
-                          <option value="maybe">△</option>
-                        </select>
-                      ) : value === "yes" ? (
-                        "〇"
-                      ) : value === "no" ? (
-                        "✕"
-                      ) : value === "maybe" ? (
-                        "△"
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    console.log("✅ Database initialized");
+  } catch (err) {
+    console.error("❌ DB初期化エラー:", err);
+  }
 };
+initDB();
 
-export default SharePage;
+// ===== API =====
+
+// --- OAuthルート ---
+app.use("/auth", authRouter);
+
+// --- 共有スケジュール一覧取得 ---
+app.get("/api/schedules", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM schedules ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("DB読み込みエラー:", err);
+    res.status(500).json({ error: "DB読み込みエラー" });
+  }
+});
+
+// --- 共有スケジュール作成 ---
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates, options } = req.body;
+    if (!title || !dates) {
+      return res.status(400).json({ error: "タイトルと日程は必須です" });
+    }
+
+    const id = uuidv4();
+    const shareToken = uuidv4();
+
+    const result = await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("DB保存エラー:", err);
+    res.status(500).json({ error: "DB保存エラー" });
+  }
+});
+
+// --- 特定スケジュール取得 ---
+app.get("/api/schedules/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM schedules WHERE id=$1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("DB取得エラー:", err);
+    res.status(500).json({ error: "DB取得エラー" });
+  }
+});
+
+// --- 出欠回答を追加/更新 ---
+app.post("/api/schedules/:id/responses", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user_id, username, responses } = req.body;
+
+    if (!user_id || !responses) {
+      return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username = EXCLUDED.username,
+                     responses = EXCLUDED.responses,
+                     created_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [id, user_id, username || "匿名", JSON.stringify(responses)]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存エラー" });
+  }
+});
+
+// --- 出欠回答の一覧取得（全員分） ---
+app.get("/api/schedules/:id/responses", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "SELECT user_id, username, responses, created_at FROM schedule_responses WHERE schedule_id=$1 ORDER BY created_at DESC",
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("回答一覧取得エラー:", err);
+    res.status(500).json({ error: "回答一覧取得エラー" });
+  }
+});
+
+// --- 個人スケジュール保存 ---
+app.post("/api/personal", async (req, res) => {
+  try {
+    const { share_id, title, memo, dates, options } = req.body;
+    if (!share_id || !title || !dates) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    const id = uuidv4();
+    const result = await pool.query(
+      `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, share_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("個人スケジュール保存エラー:", err);
+    res.status(500).json({ error: "個人スケジュール保存エラー" });
+  }
+});
+
+// --- 共有リンクから取得 ---
+app.get("/share/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("共有リンク取得エラー:", err);
+    res.status(500).json({ error: "共有リンク取得エラー" });
+  }
+});
+
+// ===== Reactビルドを配信 (Railway用) =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// ===== サーバー起動 =====
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
