@@ -566,4 +566,49 @@ footer {
 .selected-date .time-select {
   margin-left: 1rem;
 }
+/* ===== 選択日程リスト ===== */
+.selected-date {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;  /* 🆕 日付とプルダウンの間に余白 */
+}
+
+/* ===== 共通プルダウンスタイル（時間指定も含む） ===== */
+.time-select,
+.dropdown-btn {
+  margin-left: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  border: 2px solid #FDB9C8;
+  background: linear-gradient(135deg, #2c2c2c, #1a1a1a); /* 🆕 濃い背景 */
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;  /* 🆕 白文字で視認性UP */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.time-select:hover,
+.dropdown-btn:hover {
+  background: linear-gradient(135deg, #FDB9C8, #50C878);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(253,185,200,0.7);
+  transform: scale(1.05);
+}
+
+/* option 自体 */
+.time-select option {
+  font-weight: bold;
+  background: #333;  /* 🆕 濃い背景 */
+  color: #fff;       /* 🆕 白文字で見やすく */
+  padding: 0.5rem;
+}
+
 
