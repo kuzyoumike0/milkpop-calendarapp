@@ -16,7 +16,7 @@ export default function Footer() {
           Twitter
         </a>
         <a
-          href="https://discord.gg/"
+          href="https://discord.gg/337YYw2Z5H"
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
