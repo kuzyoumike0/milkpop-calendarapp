@@ -1,10 +1,9 @@
 # ========== フロントエンドのビルド ==========
 FROM node:18 AS builder
-WORKDIR /app
-
-# 依存関係のインストール
-COPY frontend/package.json frontend/package-lock.json ./frontend/
 WORKDIR /app/frontend
+
+# package.json をコピーして依存関係インストール（lock ファイルがなくてもOK）
+COPY frontend/package.json ./
 RUN npm install
 
 # フロントエンドのソースをコピーしてビルド
@@ -13,11 +12,10 @@ RUN npm run build
 
 # ========== バックエンドの実行 ==========
 FROM node:18
-WORKDIR /app
+WORKDIR /app/backend
 
 # backend の依存関係をインストール
-COPY backend/package.json backend/package-lock.json ./backend/
-WORKDIR /app/backend
+COPY backend/package.json ./
 RUN npm install
 
 # ソースコードをコピー
