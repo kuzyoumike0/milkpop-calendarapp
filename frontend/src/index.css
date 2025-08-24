@@ -194,3 +194,83 @@ h1, h2, h3 {
   .calendar-section, .options-section { width: 100%; }
   .options-section { max-height: 300px; }
 }
+.calendar {
+  background: #fff; /* 白ベースで視認性UP */
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 1rem auto;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .8rem;
+}
+
+.month-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff69b4;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+}
+
+.week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  color: #ff69b4;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+
+.day-cell {
+  background: #ffe6ef;
+  border-radius: 12px;
+  padding: 0.6rem 0;
+  cursor: pointer;
+  transition: 0.3s;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-cell:hover {
+  background: linear-gradient(135deg, #FDB9C8, #50C878);
+  color: #000;
+  transform: scale(1.05);
+}
+
+.day-cell.selected {
+  background: #FDB9C8;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(253, 185, 200, 0.7);
+}
+
+.calendar-sunday { color: #ff4d6d; font-weight: bold; }
+.calendar-saturday { color: #4d79ff; font-weight: bold; }
+.calendar-holiday { color: #ff4d6d; font-weight: bold; }
+
+.calendar-today {
+  background: #ffeb3b;
+  color: #000;
+  font-weight: bold;
+  border: 2px solid #FDB9C8;
+}
+
+.holiday-name {
+  font-size: 0.7rem;
+  color: #ff4d6d;
+  margin-top: 0.2rem;
+  text-align: center;
+}
