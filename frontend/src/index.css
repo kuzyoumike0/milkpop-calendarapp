@@ -455,3 +455,31 @@ footer {
   .hamburger { display: flex; }
   .nav-links { display: none; }
 }
+
+/* ====== プルダウン（セレクトボックス） ====== */
+select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #000;
+  font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  appearance: none; /* デフォルト矢印を消す */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+select:focus {
+  outline: none;
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.6);
+}
+
+select option {
+  padding: 0.5rem;
+  background: #fff;
+  color: #000;
+}
+
