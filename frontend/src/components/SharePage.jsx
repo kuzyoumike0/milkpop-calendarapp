@@ -6,9 +6,9 @@ import "../index.css";
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
+  const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
-  const [username, setUsername] = useState("");
 
   // スケジュール取得
   useEffect(() => {
@@ -54,7 +54,26 @@ const SharePage = () => {
           responses,
         }),
       });
-      alert("保存しました");
+      fetchResponses(schedule.id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 削除
+  const handleDelete = async () => {
+    if (!username) {
+      alert("名前を入力してください");
+      return;
+    }
+    if (!window.confirm("本当に削除しますか？")) return;
+
+    try {
+      await fetch(
+        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(username)}`,
+        { method: "DELETE" }
+      );
+      setResponses({});
       fetchResponses(schedule.id);
     } catch (err) {
       console.error(err);
@@ -63,27 +82,8 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // すべてのユーザー名
+  // ユーザー一覧
   const users = [...new Set(allResponses.map((r) => r.username))];
-
-  // 日付ごとの回答マッピング
-  const dateRows = schedule.dates.map((d) => {
-    const row = {};
-    users.forEach((u) => {
-      const resp = allResponses.find((r) => r.username === u);
-      row[u] = resp?.responses?.[d] || "";
-    });
-    return { date: d, responses: row };
-  });
-
-  // 日付＋時間帯表示
-  const getDateLabel = (dateStr) => {
-    if (typeof dateStr === "string" && dateStr.includes("|")) {
-      const [date, time] = dateStr.split("|");
-      return `${date} (${time})`;
-    }
-    return dateStr;
-  };
 
   return (
     <div
@@ -95,33 +95,24 @@ const SharePage = () => {
       </h2>
 
       {/* タイトル */}
-      <div
-        className="card"
-        style={{ textAlign: "left", width: "100%", marginBottom: "1.5rem" }}
-      >
+      <div className="card" style={{ textAlign: "left", width: "100%" }}>
         <h3>{schedule.title}</h3>
       </div>
 
       {/* 名前入力 */}
-      <div
-        className="input-card"
-        style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}
-      >
+      <div className="input-card" style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}>
         <input
           type="text"
           placeholder="あなたの名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="title-input"
-          style={{ maxWidth: "300px" }}
+          style={{ maxWidth: "400px" }}
         />
       </div>
 
-      {/* 日程一覧テーブル */}
-      <div
-        className="card"
-        style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}
-      >
+      {/* 日程一覧 */}
+      <div className="card" style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}>
         <h3>日程一覧</h3>
         <table
           style={{
@@ -134,106 +125,76 @@ const SharePage = () => {
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
               {users.map((u) => (
-                <th
-                  key={u}
-                  style={{ textAlign: "center", padding: "0.5rem 1rem" }}
-                >
+                <th key={u} style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
                   {u}
                 </th>
               ))}
-              {/* 自分がまだ表にいなければ追加 */}
-              {!users.includes(username) && username && (
-                <th style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
-                  {username}
-                </th>
-              )}
             </tr>
           </thead>
           <tbody>
-            {dateRows.map((row) => (
-              <tr
-                key={row.date}
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
-              >
-                {/* 日付＋時間帯 */}
-                <td style={{ padding: "0.6rem 1rem" }}>
-                  <strong>{getDateLabel(row.date)}</strong>
-                </td>
-
-                {/* 既存ユーザーの出欠 */}
-                {users.map((u) => (
-                  <td
-                    key={u}
-                    style={{
-                      padding: "0.6rem 1rem",
-                      textAlign: "center",
-                    }}
-                  >
-                    {u === username ? (
-                      // 自分はプルダウン表示
-                      <select
-                        value={responses[row.date] || row.responses[u] || ""}
-                        onChange={(e) =>
-                          setResponses((prev) => ({
-                            ...prev,
-                            [row.date]: e.target.value,
-                          }))
-                        }
-                        className="custom-dropdown"
-                        style={{ width: "80px" }}
-                      >
-                        <option value="">---</option>
-                        <option value="yes">〇</option>
-                        <option value="maybe">△</option>
-                        <option value="no">✕</option>
-                      </select>
-                    ) : row.responses[u] === "yes" ? (
-                      "〇"
-                    ) : row.responses[u] === "no" ? (
-                      "✕"
-                    ) : row.responses[u] === "maybe" ? (
-                      "△"
-                    ) : (
-                      "-"
-                    )}
+            {schedule.dates.map((d) => {
+              const [date, time] = d.split("|"); // ← 日付と時間帯を分割
+              return (
+                <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+                  <td style={{ padding: "0.6rem 1rem" }}>
+                    <strong>{date}</strong> {time && `(${time})`}
                   </td>
-                ))}
 
-                {/* 自分がまだ未登録なら新しい列にプルダウン */}
-                {!users.includes(username) && username && (
-                  <td style={{ padding: "0.6rem 1rem", textAlign: "center" }}>
-                    <select
-                      value={responses[row.date] || ""}
-                      onChange={(e) =>
-                        setResponses((prev) => ({
-                          ...prev,
-                          [row.date]: e.target.value,
-                        }))
-                      }
-                      className="custom-dropdown"
-                      style={{ width: "80px" }}
-                    >
-                      <option value="">---</option>
-                      <option value="yes">〇</option>
-                      <option value="maybe">△</option>
-                      <option value="no">✕</option>
-                    </select>
-                  </td>
-                )}
-              </tr>
-            ))}
+                  {users.map((u) => {
+                    const userResp = allResponses.find((r) => r.username === u);
+                    const value = userResp?.responses?.[d] || "";
+
+                    if (u === username) {
+                      return (
+                        <td key={u} style={{ padding: "0.6rem 1rem", textAlign: "center" }}>
+                          <select
+                            value={responses[d] || value || ""}
+                            onChange={(e) =>
+                              setResponses((prev) => ({ ...prev, [d]: e.target.value }))
+                            }
+                            className="custom-dropdown"
+                            style={{ width: "80px" }}
+                          >
+                            <option value="">---</option>
+                            <option value="yes">〇</option>
+                            <option value="no">✕</option>
+                            <option value="maybe">△</option>
+                          </select>
+                        </td>
+                      );
+                    } else {
+                      return (
+                        <td key={u} style={{ textAlign: "center" }}>
+                          {value === "yes" ? "〇" : value === "no" ? "✕" : value === "maybe" ? "△" : "-"}
+                        </td>
+                      );
+                    }
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* 保存ボタン */}
-      <div style={{ marginTop: "1.5rem" }}>
-        <button
-          onClick={handleSave}
-          className="share-button fancy"
-          style={{ padding: "0.8rem 1.6rem", fontSize: "1rem" }}
-        >
+      {/* 保存 / 削除 */}
+      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+        <button onClick={handleSave} className="share-button fancy">
           保存
+        </button>
+        <button
+          onClick={handleDelete}
+          style={{
+            background: "linear-gradient(135deg, #ff4d6d, #ff8080)",
+            border: "none",
+            borderRadius: "50px",
+            padding: "0.8rem 1.6rem",
+            color: "#fff",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          削除
         </button>
       </div>
     </div>
