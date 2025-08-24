@@ -89,14 +89,14 @@ const RegisterPage = () => {
       title,
       dates: selectedDates,
       memo: "", // RegisterPageはメモなし
-      timerange: "allday"
+      timerange: "allday",
     };
 
     try {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       console.log("保存成功:", data);
@@ -121,27 +121,24 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        {/* お洒落な切替ラジオ */}
-        <div className="radio-group fancy-radio">
-          <label className={selectionMode === "multiple" ? "active" : ""}>
-            <input
-              type="radio"
-              value="multiple"
-              checked={selectionMode === "multiple"}
-              onChange={() => setSelectionMode("multiple")}
-            />
-            複数選択
-          </label>
+        <div className="radio-group">
+          <input
+            type="radio"
+            id="multiple"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          <label htmlFor="multiple">複数選択</label>
 
-          <label className={selectionMode === "range" ? "active" : ""}>
-            <input
-              type="radio"
-              value="range"
-              checked={selectionMode === "range"}
-              onChange={() => setSelectionMode("range")}
-            />
-            範囲選択
-          </label>
+          <input
+            type="radio"
+            id="range"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          <label htmlFor="range">範囲選択</label>
         </div>
       </div>
 
@@ -158,8 +155,13 @@ const RegisterPage = () => {
               <button onClick={() => setCurrentMonth(currentMonth + 1)}>→</button>
             </div>
             <div className="week-header">
-              <span>日</span><span>月</span><span>火</span>
-              <span>水</span><span>木</span><span>金</span><span>土</span>
+              <span>日</span>
+              <span>月</span>
+              <span>火</span>
+              <span>水</span>
+              <span>木</span>
+              <span>金</span>
+              <span>土</span>
             </div>
             <div className="calendar-grid">{renderDays()}</div>
           </div>
@@ -170,7 +172,9 @@ const RegisterPage = () => {
           <h3>選択した日程</h3>
           <ul>
             {selectedDates.map((d, i) => (
-              <li key={i} className="selected-date">{d}</li>
+              <li key={i} className="selected-date">
+                {d}
+              </li>
             ))}
           </ul>
           <button onClick={saveSchedule} className="share-button fancy">
