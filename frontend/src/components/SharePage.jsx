@@ -1,3 +1,4 @@
+// frontend/src/components/SharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
@@ -47,7 +48,7 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userName, // 簡易的に user_id = userName とする
+          user_id: userName, // 簡易的に user_id = userName
           username: userName,
           responses: answers,
         }),
@@ -59,73 +60,77 @@ const SharePage = () => {
     }
   };
 
-  if (!schedule) return <div>読み込み中...</div>;
+  if (!schedule) return <div className="p-6">読み込み中...</div>;
 
   return (
-    <div className="page-container">
-      <h2 className="text-xl font-bold mb-4">共有スケジュール: {schedule.title}</h2>
+    <div className="page-container p-6">
+      <h2 className="text-2xl font-bold mb-6">共有スケジュール: {schedule.title}</h2>
 
-      <div className="mb-4">
+      {/* 入力フォーム */}
+      <div className="bg-white/90 shadow-lg rounded-2xl p-4 mb-6 max-w-md">
         <input
           type="text"
           placeholder="あなたの名前"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
-          className="p-2 rounded w-64"
+          className="p-2 border rounded w-full mb-2"
         />
+
+        {/* 出欠選択 */}
+        <div>
+          {schedule.dates.map((date) => (
+            <div key={date} className="mb-2 flex justify-between items-center">
+              <span className="mr-2">{date}</span>
+              <select
+                value={answers[date] || ""}
+                onChange={(e) =>
+                  setAnswers((prev) => ({ ...prev, [date]: e.target.value }))
+                }
+                className="p-1 border rounded"
+              >
+                <option value="">選択してください</option>
+                <option value="〇">〇</option>
+                <option value="✕">✕</option>
+              </select>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 出欠選択 */}
-      <div>
-        {schedule.dates.map((date) => (
-          <div key={date} className="mb-2">
-            <span className="mr-2">{date}</span>
-            <select
-              value={answers[date] || ""}
-              onChange={(e) =>
-                setAnswers((prev) => ({ ...prev, [date]: e.target.value }))
-              }
-              className="p-1 rounded"
-            >
-              <option value="">選択してください</option>
-              <option value="〇">〇</option>
-              <option value="✕">✕</option>
-            </select>
-          </div>
-        ))}
-      </div>
-
+      {/* 保存ボタン */}
       <button
         onClick={handleSave}
-        className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
+        className="bg-gradient-to-r from-green-500 to-blue-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:opacity-90"
       >
         出欠を保存
       </button>
 
-      {/* 全員の一覧 */}
-      <h3 className="text-lg font-bold mt-6 mb-2">全員の出欠一覧</h3>
-      <table className="border-collapse border border-gray-400 w-full">
-        <thead>
-          <tr>
-            <th className="border p-2">名前</th>
-            {schedule.dates.map((d) => (
-              <th key={d} className="border p-2">{d}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {responses.map((r, idx) => (
-            <tr key={idx}>
-              <td className="border p-2">{r.username}</td>
+      {/* 出欠一覧 */}
+      <div className="bg-white/90 shadow-lg rounded-2xl p-4 mt-6 overflow-x-auto">
+        <h3 className="text-lg font-bold mb-2">全員の出欠一覧</h3>
+        <table className="border-collapse border border-gray-400 w-full">
+          <thead>
+            <tr>
+              <th className="border p-2 bg-gray-100">名前</th>
               {schedule.dates.map((d) => (
-                <td key={d} className="border p-2">
-                  {r.responses[d] || "-"}
-                </td>
+                <th key={d} className="border p-2 bg-gray-100">{d}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {responses.map((r, idx) => (
+              <tr key={idx} className="hover:bg-gray-50">
+                <td className="border p-2">{r.username}</td>
+                {schedule.dates.map((d) => (
+                  <td key={d} className="border p-2 text-center">
+                    {r.responses[d] || "-"}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
