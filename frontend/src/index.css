@@ -488,3 +488,20 @@ footer {
   .options-section { padding: 1rem; }
   .selected-date { font-size: 0.85rem; }
 }
+/* 現在モード表示 */
+.mode-indicator {
+  margin-top: 0.8rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #FDB9C8;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(253,185,200,0.7);
+}
+.mode-indicator strong {
+  font-size: 1.2rem;
+  color: #fff;
+  background: linear-gradient(90deg, #FDB9C8, #ff69b4);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+}
+
