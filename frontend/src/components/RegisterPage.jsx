@@ -13,9 +13,12 @@ const RegisterPage = () => {
   const [shareLink, setShareLink] = useState("");
   const navigate = useNavigate();
 
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  // 日本時間の今日
+  const jstNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+  const [currentMonth, setCurrentMonth] = useState(jstNow.getMonth());
+  const [currentYear, setCurrentYear] = useState(jstNow.getFullYear());
 
   const hd = new Holidays("JP");
 
@@ -115,27 +118,32 @@ const RegisterPage = () => {
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
-      const holiday = hd.isHoliday(date);
       const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(
         2,
         "0"
       )}-${String(day).padStart(2, "0")}`;
+      const holiday = hd.isHoliday(date);
       const isSelected =
         selectionMode === "multiple"
           ? selectedDates.includes(formattedDate)
           : selectedDates.length === 2 &&
             date >= new Date(selectedDates[0]) &&
             date <= new Date(selectedDates[1]);
+      const isToday =
+        date.getFullYear() === jstNow.getFullYear() &&
+        date.getMonth() === jstNow.getMonth() &&
+        date.getDate() === jstNow.getDate();
 
       days.push(
         <div
           key={day}
           className={`day-cell ${isSelected ? "selected" : ""} ${
             holiday ? "calendar-holiday" : ""
-          }`}
+          } ${isToday ? "calendar-today" : ""}`}
           onClick={() => handleDateClick(day)}
         >
-          {day}
+          <span>{day}</span>
+          {holiday && <small className="holiday-name">{holiday[0].name}</small>}
         </div>
       );
     }
