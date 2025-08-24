@@ -9,23 +9,31 @@ const Footer = () => {
       <div className="footer-links">
         {/* Discordサーバー招待URL */}
         <a
-          href="https://discord.gg/xxxxxx" // ← あなたのDiscordサーバー招待URLに変更
+          href="https://discord.gg/xxxxxx" // ← あなたのサーバー招待URLに変更
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
         >
-          <img src="/discord-icon.png" alt="Discord" className="footer-icon" />
+          <img
+            src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg"
+            alt="Discord"
+            className="footer-icon"
+          />
           Discordサーバー
         </a>
 
         {/* Twitterアカウント */}
         <a
-          href="https://twitter.com/your_account" // ← あなたのTwitterアカウントURLに変更
+          href="https://x.com/Soni_complaint" // ← あなたのTwitterアカウントに変更
           target="_blank"
           rel="noopener noreferrer"
           className="footer-link"
         >
-          <img src="/twitter-icon.png" alt="Twitter" className="footer-icon" />
+          <img
+            src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitter.svg"
+            alt="Twitter"
+            className="footer-icon"
+          />
           Twitter
         </a>
       </div>
