@@ -50,11 +50,15 @@ export default function RegisterPage() {
   const [range, setRange] = useState({ start: null, end: null });
   const [holidays, setHolidays] = useState([]);
 
-  // 日付ごとの時間帯設定 { "yyyy-mm-dd": "allday" }
+  // 日付ごとの時間帯設定
+  // { "yyyy-mm-dd": { type: "allday" | "daytime" | "night" | "custom", start: 9, end: 18 } }
   const [dateTimes, setDateTimes] = useState({});
 
-  const handleTimeChange = (dateKey, value) => {
-    setDateTimes((prev) => ({ ...prev, [dateKey]: value }));
+  const handleTimeChange = (dateKey, field, value) => {
+    setDateTimes((prev) => ({
+      ...prev,
+      [dateKey]: { ...prev[dateKey], [field]: value },
+    }));
   };
 
   const timeOptions = [
@@ -63,6 +67,9 @@ export default function RegisterPage() {
     { value: "night", label: "夜（18:00〜23:59）" },
     { value: "custom", label: "時刻指定" },
   ];
+
+  // 1時〜24時（0時）までの時間リスト
+  const hours = Array.from({ length: 24 }, (_, i) => (i + 1) % 24);
 
   // ==== 日本の祝日を取得 ====
   useEffect(() => {
@@ -83,7 +90,10 @@ export default function RegisterPage() {
           : [...prev, date]
       );
       if (!dateTimes[key]) {
-        setDateTimes((prev) => ({ ...prev, [key]: "allday" }));
+        setDateTimes((prev) => ({
+          ...prev,
+          [key]: { type: "allday", start: 9, end: 18 },
+        }));
       }
     } else if (selectionType === "range") {
       if (!range.start || (range.start && range.end)) {
@@ -149,7 +159,10 @@ export default function RegisterPage() {
       title,
       dates: selectedDates.map((d) => {
         const key = d.toISOString().split("T")[0];
-        return { date: d, timeType: dateTimes[key] || "allday" };
+        return {
+          date: d,
+          ...dateTimes[key],
+        };
       }),
     };
 
@@ -283,6 +296,11 @@ export default function RegisterPage() {
                 .sort((a, b) => a - b)
                 .map((d, i) => {
                   const key = d.toISOString().split("T")[0];
+                  const dt = dateTimes[key] || {
+                    type: "allday",
+                    start: 9,
+                    end: 18,
+                  };
                   return (
                     <div
                       key={i}
@@ -291,9 +309,9 @@ export default function RegisterPage() {
                     >
                       <span>{d.toLocaleDateString("ja-JP")}</span>
                       <select
-                        value={dateTimes[key] || "allday"}
+                        value={dt.type}
                         onChange={(e) =>
-                          handleTimeChange(key, e.target.value)
+                          handleTimeChange(key, "type", e.target.value)
                         }
                       >
                         {timeOptions.map((opt) => (
@@ -302,6 +320,37 @@ export default function RegisterPage() {
                           </option>
                         ))}
                       </select>
+
+                      {dt.type === "custom" && (
+                        <>
+                          <select
+                            value={dt.start}
+                            onChange={(e) =>
+                              handleTimeChange(key, "start", Number(e.target.value))
+                            }
+                          >
+                            {hours.map((h) => (
+                              <option key={h} value={h}>
+                                {h}時
+                              </option>
+                            ))}
+                          </select>
+                          〜
+                          <select
+                            value={dt.end}
+                            onChange={(e) =>
+                              handleTimeChange(key, "end", Number(e.target.value))
+                            }
+                          >
+                            {hours.map((h) => (
+                              <option key={h} value={h}>
+                                {h}時
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
+
                       <button
                         className="remove-date-btn"
                         onClick={() => handleRemoveDate(d)}
@@ -311,18 +360,6 @@ export default function RegisterPage() {
                     </div>
                   );
                 })}
-            {selectionType === "range" && range.start && (
-              <div className="selected-date" style={{ marginBottom: "0.8rem" }}>
-                {range.start.toLocaleDateString("ja-JP")}
-                {range.end && ` 〜 ${range.end.toLocaleDateString("ja-JP")}`}
-                <button
-                  className="remove-date-btn"
-                  onClick={() => setRange({ start: null, end: null })}
-                >
-                  ×
-                </button>
-              </div>
-            )}
           </div>
 
           <button
