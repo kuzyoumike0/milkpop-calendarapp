@@ -456,30 +456,41 @@ footer {
   .nav-links { display: none; }
 }
 
-/* ====== プルダウン（セレクトボックス） ====== */
+/* ====== おしゃれプルダウン（セレクトボックス） ====== */
 select {
   width: 100%;
-  padding: 0.6rem 1rem;
-  border-radius: 0.75rem;
-  border: 2px solid #FDB9C8;
-  background: #fff;
+  padding: 0.8rem 1rem;
+  border-radius: 1rem;
+  border: 2px solid transparent;
+  background: linear-gradient(#fff, #fff) padding-box,
+              linear-gradient(135deg, #FDB9C8, #004CA0) border-box;
   color: #000;
   font-size: 1rem;
   font-family: 'M PLUS Rounded 1c', sans-serif;
-  appearance: none; /* デフォルト矢印を消す */
+  appearance: none;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+  background-position: right 1rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='black'/></svg>");
+}
+
+select:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
 }
 
 select:focus {
   outline: none;
-  border-color: #004CA0;
-  box-shadow: 0 0 6px rgba(0,76,160,0.6);
+  box-shadow: 0 0 8px rgba(0,76,160,0.6);
 }
 
 select option {
-  padding: 0.5rem;
+  padding: 0.6rem;
   background: #fff;
   color: #000;
+  font-size: 1rem;
 }
 
