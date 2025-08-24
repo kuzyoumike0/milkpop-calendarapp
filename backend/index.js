@@ -90,7 +90,6 @@ app.delete("/api/schedules/:id", async (req, res) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Dockerfile で frontend/build を backend/public にコピーする
 const buildPath = path.join(__dirname, "public");
 app.use(express.static(buildPath));
 
@@ -101,8 +100,4 @@ app.get("*", (req, res) => {
 // ===== サーバー起動 =====
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-});
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
 });
