@@ -51,7 +51,7 @@ const RegisterPage = () => {
           setSelectedDates([selectedDates[0], date]);
         }
       } else {
-        setSelectedDates([date]);
+        setSelectedDates([date]); // 新しい範囲開始
       }
     }
   };
