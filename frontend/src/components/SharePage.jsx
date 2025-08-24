@@ -9,6 +9,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [allResponses, setAllResponses] = useState([]);
   const [responses, setResponses] = useState({});
+  const [editingUser, setEditingUser] = useState(""); // 編集対象ユーザ
 
   // スケジュール取得
   useEffect(() => {
@@ -55,6 +56,7 @@ const SharePage = () => {
         }),
       });
       fetchResponses(schedule.id);
+      alert("保存しました");
     } catch (err) {
       console.error(err);
     }
@@ -62,19 +64,21 @@ const SharePage = () => {
 
   // 削除
   const handleDelete = async () => {
-    if (!username) {
-      alert("名前を入力してください");
+    if (!editingUser) {
+      alert("削除するユーザーを選択してください（名前をクリック）");
       return;
     }
-    if (!window.confirm("本当に削除しますか？")) return;
+    if (!window.confirm(`${editingUser} さんの出欠を削除しますか？`)) return;
 
     try {
       await fetch(
-        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(username)}`,
+        `/api/schedules/${schedule.id}/responses/${encodeURIComponent(editingUser)}`,
         { method: "DELETE" }
       );
       setResponses({});
+      setEditingUser("");
       fetchResponses(schedule.id);
+      alert("削除しました");
     } catch (err) {
       console.error(err);
     }
@@ -100,7 +104,10 @@ const SharePage = () => {
       </div>
 
       {/* 名前入力 */}
-      <div className="input-card" style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}>
+      <div
+        className="input-card"
+        style={{ marginBottom: "1.5rem", textAlign: "left", width: "100%" }}
+      >
         <input
           type="text"
           placeholder="あなたの名前を入力"
@@ -112,7 +119,14 @@ const SharePage = () => {
       </div>
 
       {/* 日程一覧 */}
-      <div className="card" style={{ marginBottom: "2rem", textAlign: "left", width: "100%" }}>
+      <div
+        className="card"
+        style={{
+          marginBottom: "2rem",
+          textAlign: "left",
+          width: "100%",
+        }}
+      >
         <h3>日程一覧</h3>
         <table
           style={{
@@ -125,32 +139,59 @@ const SharePage = () => {
             <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
               <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
               {users.map((u) => (
-                <th key={u} style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
-                  {u}
+                <th
+                  key={u}
+                  style={{ textAlign: "center", padding: "0.5rem 1rem" }}
+                >
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      textDecoration:
+                        editingUser === u ? "underline wavy #ff4d6d" : "underline",
+                    }}
+                    onClick={() => setEditingUser(u)}
+                  >
+                    {u}
+                  </span>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {schedule.dates.map((d) => {
-              const [date, time] = d.split("|"); // ← 日付と時間帯を分割
+              // 「日付|時間帯」の形式を分割
+              let [date, time] = d.split("|");
+              if (!time) time = "終日";
+
               return (
-                <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
+                <tr
+                  key={d}
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
+                >
+                  {/* 日付 + 時間帯 */}
                   <td style={{ padding: "0.6rem 1rem" }}>
-                    <strong>{date}</strong> {time && `(${time})`}
+                    <strong>{date}</strong> （{time}）
                   </td>
 
+                  {/* 各ユーザの列 */}
                   {users.map((u) => {
                     const userResp = allResponses.find((r) => r.username === u);
                     const value = userResp?.responses?.[d] || "";
 
-                    if (u === username) {
+                    // 編集対象ユーザ or 自分ならプルダウン
+                    if (u === username || u === editingUser) {
                       return (
-                        <td key={u} style={{ padding: "0.6rem 1rem", textAlign: "center" }}>
+                        <td
+                          key={u}
+                          style={{ padding: "0.6rem 1rem", textAlign: "center" }}
+                        >
                           <select
                             value={responses[d] || value || ""}
                             onChange={(e) =>
-                              setResponses((prev) => ({ ...prev, [d]: e.target.value }))
+                              setResponses((prev) => ({
+                                ...prev,
+                                [d]: e.target.value,
+                              }))
                             }
                             className="custom-dropdown"
                             style={{ width: "80px" }}
@@ -165,7 +206,13 @@ const SharePage = () => {
                     } else {
                       return (
                         <td key={u} style={{ textAlign: "center" }}>
-                          {value === "yes" ? "〇" : value === "no" ? "✕" : value === "maybe" ? "△" : "-"}
+                          {value === "yes"
+                            ? "〇"
+                            : value === "no"
+                            ? "✕"
+                            : value === "maybe"
+                            ? "△"
+                            : "-"}
                         </td>
                       );
                     }
@@ -177,8 +224,8 @@ const SharePage = () => {
         </table>
       </div>
 
-      {/* 保存 / 削除 */}
-      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem" }}>
+      {/* 保存・削除 */}
+      <div style={{ display: "flex", gap: "1rem" }}>
         <button onClick={handleSave} className="share-button fancy">
           保存
         </button>
