@@ -73,8 +73,8 @@ const RegisterPage = () => {
       ...prev,
       [date]: {
         type: value,
-        start: prev[date]?.start || "00:00",
-        end: prev[date]?.end || "01:00",
+        start: prev[date]?.start ?? "00:00",
+        end: prev[date]?.end ?? "01:00",
       },
     }));
   };
@@ -238,7 +238,7 @@ const RegisterPage = () => {
                   <span className="custom-time">
                     <select
                       className="custom-dropdown"
-                      defaultValue="00:00"
+                      value={timeRanges[d]?.start ?? "00:00"}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "start", e.target.value)
                       }
@@ -250,7 +250,7 @@ const RegisterPage = () => {
                     〜
                     <select
                       className="custom-dropdown"
-                      defaultValue="01:00"
+                      value={timeRanges[d]?.end ?? "01:00"}
                       onChange={(e) =>
                         handleCustomTimeChange(d, "end", e.target.value)
                       }
