@@ -160,7 +160,6 @@ const SharePage = () => {
                             key={idx}
                             style={{
                               marginRight: "0.5rem",
-                              cursor: "pointer",
                               fontWeight: "bold",
                             }}
                           >
