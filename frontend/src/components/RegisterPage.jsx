@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import Holidays from "date-holidays";
 
 // ==== ヘルパー ====
 // 月ごとの日数を取得（うるう年対応）
@@ -8,12 +9,14 @@ const getDaysInMonth = (year, month) => {
 };
 
 // ==== カレンダーセル ==== 
-const CalendarCell = ({ date, isSelected, onClick }) => {
+const CalendarCell = ({ date, isSelected, onClick, isHoliday }) => {
   return (
     <div
       onClick={() => onClick(date)}
       className={`w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer transition 
-        ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : "hover:bg-[#004CA0] hover:text-white"}`}
+        ${isSelected ? "bg-[#FDB9C8] text-white font-bold" : ""}
+        ${isHoliday ? "text-red-500 font-bold" : ""}
+        ${!isSelected && !isHoliday ? "hover:bg-[#004CA0] hover:text-white" : ""}`}
     >
       {date.getDate()}
     </div>
@@ -29,6 +32,18 @@ export default function RegisterPage() {
   const [selectionType, setSelectionType] = useState("multiple"); // 複数 or 範囲
   const [selectedDates, setSelectedDates] = useState([]);
   const [range, setRange] = useState({ start: null, end: null });
+  const [holidays, setHolidays] = useState([]);
+
+  // ==== 時間帯 ====
+  const [timeType, setTimeType] = useState("allday");
+  const [timeRange, setTimeRange] = useState({ start: "09:00", end: "18:00" });
+
+  // ==== 日本の祝日を取得 ====
+  useEffect(() => {
+    const hd = new Holidays("JP");
+    const yearHolidays = hd.getHolidays(currentYear);
+    setHolidays(yearHolidays.map((h) => new Date(h.date)));
+  }, [currentYear]);
 
   // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
@@ -64,6 +79,15 @@ export default function RegisterPage() {
     return false;
   };
 
+  const isHoliday = (date) => {
+    return holidays.some(
+      (h) =>
+        h.getFullYear() === date.getFullYear() &&
+        h.getMonth() === date.getMonth() &&
+        h.getDate() === date.getDate()
+    );
+  };
+
   // ==== カレンダー生成 ====
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
@@ -80,8 +104,8 @@ export default function RegisterPage() {
     e.preventDefault();
     const payload =
       selectionType === "multiple"
-        ? { title, dates: selectedDates }
-        : { title, range };
+        ? { title, dates: selectedDates, timeType, timeRange }
+        : { title, range, timeType, timeRange };
 
     console.log("登録データ:", payload);
     alert("登録しました！");
@@ -113,7 +137,7 @@ export default function RegisterPage() {
               className="w-full px-3 py-2 rounded-lg text-black"
             />
 
-            {/* ラジオボタン */}
+            {/* ラジオボタン（選択方法） */}
             <div className="flex space-x-6 items-center">
               <label>
                 <input
@@ -141,11 +165,15 @@ export default function RegisterPage() {
               <div className="flex justify-between items-center mb-2">
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentMonth((prev) =>
-                      prev === 0 ? 11 : prev - 1
-                    ) || (prev === 0 && setCurrentYear(currentYear - 1))
-                  }
+                  onClick={() => {
+                    setCurrentMonth((prev) => {
+                      if (prev === 0) {
+                        setCurrentYear((y) => y - 1);
+                        return 11;
+                      }
+                      return prev - 1;
+                    });
+                  }}
                   className="px-2 py-1 bg-gray-200 rounded"
                 >
                   ←
@@ -155,11 +183,15 @@ export default function RegisterPage() {
                 </h3>
                 <button
                   type="button"
-                  onClick={() =>
-                    setCurrentMonth((prev) =>
-                      prev === 11 ? 0 : prev + 1
-                    ) || (prev === 11 && setCurrentYear(currentYear + 1))
-                  }
+                  onClick={() => {
+                    setCurrentMonth((prev) => {
+                      if (prev === 11) {
+                        setCurrentYear((y) => y + 1);
+                        return 0;
+                      }
+                      return prev + 1;
+                    });
+                  }}
                   className="px-2 py-1 bg-gray-200 rounded"
                 >
                   →
@@ -182,12 +214,79 @@ export default function RegisterPage() {
                       date={date}
                       isSelected={isDateSelected(date)}
                       onClick={handleDateClick}
+                      isHoliday={isHoliday(date)}
                     />
                   ) : (
                     <div key={i} className="w-10 h-10"></div>
                   )
                 )}
               </div>
+            </div>
+
+            {/* ==== 時間帯選択 ==== */}
+            <div className="bg-white text-black rounded-xl p-4 shadow-md space-y-2">
+              <p className="font-semibold">時間帯を選択してください:</p>
+              <div className="flex flex-col space-y-1">
+                <label>
+                  <input
+                    type="radio"
+                    value="allday"
+                    checked={timeType === "allday"}
+                    onChange={(e) => setTimeType(e.target.value)}
+                  />
+                  全日
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="daytime"
+                    checked={timeType === "daytime"}
+                    onChange={(e) => setTimeType(e.target.value)}
+                  />
+                  昼（09:00〜18:00）
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="night"
+                    checked={timeType === "night"}
+                    onChange={(e) => setTimeType(e.target.value)}
+                  />
+                  夜（18:00〜23:59）
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="custom"
+                    checked={timeType === "custom"}
+                    onChange={(e) => setTimeType(e.target.value)}
+                  />
+                  時刻指定
+                </label>
+              </div>
+
+              {/* 時刻指定入力 */}
+              {timeType === "custom" && (
+                <div className="flex items-center space-x-2 mt-2">
+                  <input
+                    type="time"
+                    value={timeRange.start}
+                    onChange={(e) =>
+                      setTimeRange({ ...timeRange, start: e.target.value })
+                    }
+                    className="border rounded px-2 py-1"
+                  />
+                  <span>〜</span>
+                  <input
+                    type="time"
+                    value={timeRange.end}
+                    onChange={(e) =>
+                      setTimeRange({ ...timeRange, end: e.target.value })
+                    }
+                    className="border rounded px-2 py-1"
+                  />
+                </div>
+              )}
             </div>
 
             {/* 登録ボタン */}
