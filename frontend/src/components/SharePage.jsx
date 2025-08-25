@@ -9,64 +9,70 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [allResponses, setAllResponses] = useState([]);
 
-  // DBから日程取得
+  // ===== スケジュール読み込み =====
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
         const res = await fetch(`/api/schedules/${token}`);
         const data = await res.json();
-
-        // dates が文字列なら JSON.parse して補正
-        if (typeof data.dates === "string") {
-          try {
-            data.dates = JSON.parse(data.dates);
-          } catch {
-            data.dates = [];
-          }
+        if (!data.error) {
+          setSchedule(data);
         }
-
-        setSchedule(data);
-
-        // 既存の回答取得
-        const res2 = await fetch(`/api/schedules/${token}/responses`);
-        const resData = await res2.json();
-
-        const myResp = resData.find((r) => r.username === username);
-        if (myResp) setResponses(myResp.responses);
       } catch (err) {
         console.error("共有スケジュール読み込みエラー", err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchSchedule();
-  }, [token, username]);
+  }, [token]);
 
-  const handleChange = (dateKey, value) => {
-    setResponses({ ...responses, [dateKey]: value });
+  // ===== 回答一覧取得 =====
+  const fetchResponses = async () => {
+    try {
+      const res = await fetch(`/api/schedules/${token}/responses`);
+      const data = await res.json();
+      if (!data.error) {
+        setAllResponses(data);
+      }
+    } catch (err) {
+      console.error("回答一覧取得エラー", err);
+    }
   };
 
+  useEffect(() => {
+    fetchResponses();
+  }, [token]);
+
+  // ===== 出欠変更 =====
+  const handleChange = (key, value) => {
+    setResponses({ ...responses, [key]: value });
+  };
+
+  // ===== 保存 =====
   const handleSave = async () => {
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: Math.random().toString(36).slice(2, 8),
+          user_id: Math.random().toString(36).slice(2, 8), // 簡易ID
           username: username || "匿名",
           responses,
         }),
       });
+
+      // 保存後に即反映
+      fetchResponses();
       alert("保存しました！");
     } catch (err) {
-      console.error("保存エラー:", err);
+      console.error("保存エラー", err);
     }
   };
 
-  if (loading) return <p>読み込み中...</p>;
-  if (!schedule) return <p>共有リンクが無効です。</p>;
+  if (!schedule) {
+    return <div className="share-page">読み込み中...</div>;
+  }
 
   return (
     <div className="share-page">
@@ -89,14 +95,31 @@ const SharePage = () => {
       <div className="glass-black schedule-list">
         <h3>日程一覧</h3>
         <table>
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>時間</th>
+              <th>出欠</th>
+              <th>ユーザー</th>
+            </tr>
+          </thead>
           <tbody>
-            {Array.isArray(schedule.dates) && schedule.dates.length > 0 ? (
+            {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
                 const key = `${d.date} (${d.time})`;
+
+                // この日付の全ユーザー回答を抽出
+                const users = allResponses
+                  .map((r) => {
+                    const status = r.responses[key];
+                    return status ? `${r.username}(${status})` : null;
+                  })
+                  .filter(Boolean);
+
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
-                    <td className="time-cell">({d.time})</td>
+                    <td className="time-cell">{d.time}</td>
                     <td>
                       <select
                         value={responses[key] || "-"}
@@ -108,21 +131,19 @@ const SharePage = () => {
                         <option value="✖">✖</option>
                       </select>
                     </td>
+                    <td className="user-list">{users.join(", ")}</td>
                   </tr>
                 );
-              })
-            ) : (
-              <tr>
-                <td colSpan="3">日程が登録されていません</td>
-              </tr>
-            )}
+              })}
           </tbody>
         </table>
       </div>
 
-      {/* 保存ボタン */}
+      {/* ボタン */}
       <div className="button-area">
-        <button onClick={handleSave} className="save-button">保存</button>
+        <button className="save-button" onClick={handleSave}>
+          保存
+        </button>
       </div>
     </div>
   );
