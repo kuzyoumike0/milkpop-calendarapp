@@ -1,7 +1,8 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "../index.css";
+import "../styles/register.css"; // ✅ RegisterPage 専用CSSを読み込む
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -188,7 +189,6 @@ const RegisterPage = () => {
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
                 <option value="夜">夜</option>
-                {/* 時刻指定用 */}
                 {Array.from({ length: 24 }).map((_, h) => (
                   <option key={h} value={`${h}:00`}>
                     {h}:00
