@@ -15,7 +15,7 @@ const SharePage = () => {
     const stored = localStorage.getItem(`share_${token}`);
     if (stored) {
       const data = JSON.parse(stored);
-      data.dates.sort(); // 日付順にソート
+      data.dates.sort(); // 日付順ソート
       setScheduleData(data);
     }
   }, [token]);
