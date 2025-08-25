@@ -90,6 +90,7 @@
 .calendar-day {
   height: 70px;
   display: flex;
+  flex-direction: column; /* ✅ 祝日名を下に出す */
   justify-content: center;
   align-items: center;
   border-radius: 10px;
@@ -114,6 +115,28 @@
   cursor: default;
 }
 
+/* 今日のセル */
+.calendar-day.today {
+  background: #fff0f5;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
+  font-weight: bold;
+}
+
+/* 日付番号 */
+.day-number {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* 祝日名（日付の下） */
+.holiday-name {
+  font-size: 11px;
+  color: red;
+  margin-top: 3px;
+  text-align: center;
+}
+
 /* 右3割リスト */
 .selected-list {
   flex: 3;
@@ -128,86 +151,45 @@
   list-style: none;
   padding: 0;
 }
-.selected-list li {
+.selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #ddd;
 }
+.selected-date {
+  font-weight: bold;
+  color: #004CA0;
+  margin-right: 10px;
+  flex: 1;
+}
 
-/* 時間帯プルダウン */
-.selected-list select {
-  margin-top: 5px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+/* お洒落なプルダウン */
+.styled-dropdown {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid #ccc;
+  background: linear-gradient(135deg, #fff, #f7f7f7);
   font-size: 14px;
-  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-.selected-list select:focus {
+.styled-dropdown:hover {
+  border-color: #FDB9C8;
+}
+.styled-dropdown:focus {
   border-color: #004CA0;
-  box-shadow: 0 0 6px rgba(0, 76, 160, 0.4);
   outline: none;
+  box-shadow: 0 0 8px rgba(0,76,160,0.4);
 }
+
+/* 時間帯 時刻指定の範囲 */
 .time-range {
   margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 5px;
-}
-/* 今日の日付 */
-.calendar-day.today {
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
-  font-weight: bold;
-}
-
-/* 祝日名 */
-.holiday-name {
-  font-size: 11px;
-  color: red;
-  margin-top: 2px;
-  text-align: center;
-}
-
-/* 今日ラベル */
-.today-label {
-  font-size: 11px;
-  color: #004CA0;
-  margin-top: 2px;
-  text-align: center;
-  font-weight: bold;
-}
-
-/* 日付番号 */
-.day-number {
-  font-size: 16px;
-  font-weight: bold;
-}
-/* 今日のセル */
-.calendar-day.today {
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
-  font-weight: bold;
-}
-
-/* 日付番号 */
-.day-number {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-/* 祝日名 */
-.holiday-name {
-  font-size: 11px;
-  color: red;
-  margin-top: 2px;
-  text-align: center;
-}
-
-/* 今日ラベル */
-.today-label {
-  font-size: 11px;
-  color: #004CA0;
-  margin-top: 2px;
-  text-align: center;
-  font-weight: bold;
 }
