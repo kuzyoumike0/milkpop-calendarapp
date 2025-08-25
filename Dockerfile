@@ -1,35 +1,28 @@
-# ====== フロントエンド ======
-FROM node:18 AS frontend-build
+# ===== 基本イメージ =====
+FROM node:18-alpine
 
-WORKDIR /app/frontend
-
-# 依存関係インストール（package.json 先コピーでキャッシュ効かせる）
-COPY frontend/package*.json ./
-RUN npm ci --legacy-peer-deps
-
-# ソースをコピー
-COPY frontend/ ./
-
-# Node のメモリ上限を増加させてビルド
-ENV NODE_OPTIONS="--max-old-space-size=1024"
-RUN npm run build
-
-
-# ====== バックエンド ======
-FROM node:18 AS backend
-
+# ===== ワークディレクトリ作成 =====
 WORKDIR /app
 
-# package.json をコピーして依存関係をインストール
-COPY backend/package*.json ./
-RUN npm ci --legacy-peer-deps
+# ===== package.json をコピーして依存関係をインストール =====
+COPY package.json ./
+# package-lock.json があるなら一緒にCOPYして npm ci を使うのがベスト
+# COPY package*.json ./
+# RUN npm ci
+RUN npm install
 
-# ソースコードコピー
-COPY backend/ ./
+# ===== ソースコード全体をコピー =====
+COPY . .
 
-# フロントのビルド成果物を public に配置（Express で配信する想定）
-COPY --from=frontend-build /app/frontend/build ./public
+# ===== ビルド =====
+RUN npm run build
 
+# ===== 本番サーバーとして serve を使用 =====
+# 静的ファイルを配信するために serve を入れる
+RUN npm install -g serve
+
+# ===== ポート設定 =====
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# ===== 起動コマンド =====
+CMD ["serve", "-s", "build", "-l", "3000"]
