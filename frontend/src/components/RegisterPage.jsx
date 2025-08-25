@@ -14,18 +14,18 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // 日本時間に変換
+  // 📌 JSTに変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト（1時間刻み）
+  // 📌 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 📌 日付クリック
+  // 📌 日付クリック処理
   const handleDateClick = (date) => {
     const jstDate = getJSTDate(date);
 
@@ -151,15 +151,22 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory"   // ← 月曜始まりにする
+            calendarType="gregory"   // 月曜始まり
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
               const jstDate = getJSTDate(date);
+              const today = getJSTDate(new Date());
+
+              const isToday = jstDate.toDateString() === today.toDateString();
               const isSunday = jstDate.getDay() === 0;
               const isSaturday = jstDate.getDay() === 6;
               const holiday = hd.isHoliday(jstDate);
 
+              // 今日を強調
+              if (isToday) return "day-today";
+
+              // 選択済み
               if (
                 selectedDates.some(
                   (d) => d.date.toDateString() === jstDate.toDateString()
@@ -167,8 +174,12 @@ const RegisterPage = () => {
               ) {
                 return "selected-date";
               }
+
+              // 日曜・祝日
               if (holiday || isSunday) return "day-sunday";
+              // 土曜
               if (isSaturday) return "day-saturday";
+
               return "day-default";
             }}
             tileContent={({ date }) => {
