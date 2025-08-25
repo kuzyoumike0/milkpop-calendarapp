@@ -10,6 +10,8 @@ const RegisterPage = () => {
   const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0]; // ← 今日の日付文字列
+
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
@@ -70,23 +72,29 @@ const RegisterPage = () => {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
-        2,
-        "0"
-      )}-${String(day).padStart(2, "0")}`;
+      const dateObj = new Date(currentYear, currentMonth, day);
+      const dateStr = dateObj.toISOString().split("T")[0];
 
       const isSelected = selectedDates.includes(dateStr);
-      const isHoliday = hd.isHoliday(new Date(currentYear, currentMonth, day));
+      const holiday = hd.isHoliday(dateObj); // 祝日オブジェクト
+      const isToday = dateStr === todayStr;
 
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isSelected ? "selected" : ""} ${
-            isHoliday ? "holiday" : ""
-          }`}
+          className={`calendar-day 
+            ${isSelected ? "selected" : ""} 
+            ${holiday ? "holiday" : ""} 
+            ${isToday ? "today" : ""}`}
           onClick={() => handleDateClick(day)}
         >
-          {day}
+          <div className="day-number">{day}</div>
+          {/* 祝日名 or 今日 */}
+          {holiday ? (
+            <div className="holiday-name">{holiday[0].name}</div>
+          ) : isToday ? (
+            <div className="today-label">今日</div>
+          ) : null}
         </div>
       );
     }
