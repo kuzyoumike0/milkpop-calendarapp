@@ -1,28 +1,27 @@
-// frontend/src/components/AuthSuccess.jsx
-import React, { useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+// frontend/src/pages/AuthSuccess.jsx
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const AuthSuccess = () => {
-  const [params] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const userId = params.get("userId");
-    const username = params.get("username");
+    // URL から token を取得
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
 
-    if (userId) {
-      // ローカルに保存して他のページで利用可能にする
-      localStorage.setItem("userId", userId);
-      localStorage.setItem("username", username);
-
-      alert(`ログイン成功！ようこそ ${username} さん`);
-
-      // ホームへリダイレクト
-      navigate("/");
+    if (token) {
+      // localStorage に保存
+      localStorage.setItem("jwt", token);
+      // ホームページなどにリダイレクト
+      navigate("/dashboard");
+    } else {
+      alert("ログインに失敗しました");
     }
-  }, [params, navigate]);
+  }, [location, navigate]);
 
-  return <div>ログイン処理中...</div>;
+  return <div>ログイン中...</div>;
 };
 
 export default AuthSuccess;
