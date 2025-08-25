@@ -23,6 +23,43 @@ a {
   color: inherit;
   text-decoration: none;
 }
+/* ====== トップページ ====== */
+.top-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.top-logo {
+  width: 600px;   /* ← 元に戻す（1040pxから小さめに） */
+  max-width: 90%; /* スマホ対応 */
+  height: auto;
+  margin-bottom: 2rem;
+}
+
+.top-description {
+  font-size: 1.1rem;       /* ← 少し小さめ */
+  line-height: 1.6;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #fff;
+  background: #1a1a1a;
+  border: 2px solid #50C878;
+  padding: 1.5rem;         /* ← パディングも少し減らす */
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+  max-width: 700px;        /* ← 説明文カードの幅を調整 */
+  text-align: center;
+  transition: 0.3s;
+}
+.top-description:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+  transform: scale(1.02);
+}
 
 /* ====== ヘッダー ====== */
 .header {
