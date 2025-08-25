@@ -29,7 +29,7 @@ const SharePage = () => {
             const init = {};
             data.dates.forEach((d) => {
               const key =
-                d.start && d.end
+                d.time === "時間指定" && d.start && d.end
                   ? `${d.date} (${d.start} ~ ${d.end})`
                   : `${d.date} (${d.time})`;
               init[key] = "-";
@@ -172,17 +172,21 @@ const SharePage = () => {
           <tbody>
             {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
+                // 時間指定なら開始〜終了をそのまま文字列化（日をまたぐケースも許す）
+                const timeLabel =
+                  d.time === "時間指定" && d.start && d.end
+                    ? `${d.start} ~ ${d.end}`
+                    : d.time;
+
                 const key =
-                  d.start && d.end
+                  d.time === "時間指定" && d.start && d.end
                     ? `${d.date} (${d.start} ~ ${d.end})`
                     : `${d.date} (${d.time})`;
 
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
-                    <td className="time-cell">
-                      {d.start && d.end ? `${d.start} ~ ${d.end}` : d.time}
-                    </td>
+                    <td className="time-cell">{timeLabel}</td>
                     {users.map((u, idx) => {
                       const userResp = allResponses.find(
                         (r) => r.username === u
