@@ -112,3 +112,33 @@
 .save-button:hover {
   opacity: 0.9;
 }
+.schedule-list table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #111;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.schedule-list th,
+.schedule-list td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.attendance-cell {
+  cursor: pointer;
+}
+
+.user-link {
+  color: #FDB9C8;
+  text-decoration: underline;
+}
+
+.response-dropdown {
+  padding: 5px;
+  border-radius: 6px;
+  background: #fff;
+  color: #000;
+}
