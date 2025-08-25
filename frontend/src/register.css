@@ -209,3 +209,45 @@
   align-items: center;
   gap: 5px;
 }
+/* 共有リンクボタン */
+.share-button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.share-button:hover {
+  opacity: 0.85;
+}
+
+/* 共有リンク表示エリア */
+.share-link-box {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.share-link-box a {
+  word-break: break-all;
+  color: #004CA0;
+  font-weight: bold;
+}
+.share-link-box button {
+  align-self: flex-start;
+  padding: 5px 12px;
+  border: 1px solid #004CA0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.share-link-box button:hover {
+  background: #004CA0;
+  color: #fff;
+}
+
