@@ -37,6 +37,17 @@ CREATE TABLE IF NOT EXISTS personal_schedules (
 );
 
 -- =========================
+-- users（Discordの個人識別情報）
+-- =========================
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  discord_id VARCHAR UNIQUE NOT NULL,
+  username VARCHAR NOT NULL,
+  access_token VARCHAR,
+  refresh_token VARCHAR
+);
+
+-- =========================
 -- 出欠削除用インデックス（高速化）
 -- =========================
 CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
