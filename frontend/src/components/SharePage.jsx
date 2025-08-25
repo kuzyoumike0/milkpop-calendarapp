@@ -1,12 +1,11 @@
 // frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
+import { io } from "socket.io-client";   // ★ 追加
 import "../common.css";
 import "../share.css";
 
 const attendanceOptions = ["-", "○", "✖", "△"];
-const socket = io(); // サーバーに接続
 
 const SharePage = () => {
   const { token } = useParams();
@@ -16,7 +15,31 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [aggregate, setAggregate] = useState({}); // 集計結果
+  const [userId] = useState(() => Math.random().toString(36).slice(2, 10)); // 仮ユーザーID
+
+  // ===== Socket.IO 接続 =====
+  useEffect(() => {
+    const socket = io("/", { path: "/socket.io" }); // Railway想定: backendと同じドメイン
+
+    // このルームに参加
+    socket.emit("join_schedule", token);
+
+    // 他ユーザーの更新を受信
+    socket.on("response_updated", (data) => {
+      if (data.username !== username) {
+        // 他ユーザーの更新を反映
+        setAllResponses((prev) => {
+          const filtered = prev.filter((r) => r.username !== data.username);
+          return [...filtered, { username: data.username, responses: data.responses }];
+        });
+        setUsers((prev) => Array.from(new Set([...prev, data.username])));
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [token, username]);
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -27,14 +50,14 @@ const SharePage = () => {
         if (!data.error) {
           setSchedule(data);
 
-          const init = {};
           if (Array.isArray(data.dates)) {
-            data.dates.forEach((d) => {
+            const init = {};
+            data.dates.forEach((d, index) => {
               const key =
                 d.time === "時間指定" && d.startTime && d.endTime
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
                   : `${d.date} (${d.time})`;
-              init[key] = "-";
+              init[index] = "-"; // インデックス基準
             });
             setResponses(init);
           }
@@ -60,43 +83,8 @@ const SharePage = () => {
     }
   };
 
-  // ===== 集計取得 =====
-  const fetchAggregate = async () => {
-    try {
-      const res = await fetch(`/api/schedules/${token}/aggregate`);
-      const data = await res.json();
-      if (!data.error) setAggregate(data);
-    } catch (err) {
-      console.error("集計取得エラー", err);
-    }
-  };
-
   useEffect(() => {
     fetchResponses();
-    fetchAggregate();
-  }, [token]);
-
-  // ===== Socket.IO =====
-  useEffect(() => {
-    socket.emit("joinSchedule", token);
-
-    socket.on("updateResponses", (data) => {
-      setAllResponses((prev) => {
-        const filtered = prev.filter((r) => r.user_id !== data.user_id);
-        return [...filtered, data];
-      });
-      fetchAggregate();
-    });
-
-    socket.on("deleteResponse", ({ user_id }) => {
-      setAllResponses((prev) => prev.filter((r) => r.user_id !== user_id));
-      fetchAggregate();
-    });
-
-    return () => {
-      socket.off("updateResponses");
-      socket.off("deleteResponse");
-    };
   }, [token]);
 
   // ===== 新規追加 =====
@@ -108,19 +96,20 @@ const SharePage = () => {
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
       const dummy = { username, responses: { ...responses } };
-      setAllResponses((prev) => [...prev, dummy]);
+      setAllResponses((prev) => [...prev.filter((r) => r.username !== username), dummy]);
       setIsEditing(true);
     }
   };
 
   // ===== 出欠クリック変更 =====
-  const handleSelect = (key, value) => {
+  const handleSelect = (index, value) => {
     if (!isEditing) return;
-    setResponses((prev) => ({ ...prev, [key]: value }));
+    setResponses((prev) => ({ ...prev, [index]: value }));
+
     setAllResponses((prev) =>
       prev.map((r) =>
         r.username === username
-          ? { ...r, responses: { ...r.responses, [key]: value } }
+          ? { ...r, responses: { ...r.responses, [index]: value } }
           : r
       )
     );
@@ -133,13 +122,29 @@ const SharePage = () => {
       return;
     }
     try {
-      const payload = { user_id: username, username, responses };
-      await fetch(`/api/schedules/${token}/responses`, {
+      const payload = { user_id: userId, username, responses };
+
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      setIsEditing(false);
+      const data = await res.json();
+
+      if (!data.error) {
+        setAllResponses((prev) => {
+          const filtered = prev.filter((r) => r.username !== username);
+          return [...filtered, { username, responses }];
+        });
+        setIsEditing(false);
+
+        // 🔥 保存したらSocketで他ユーザーへ通知
+        const socket = io("/", { path: "/socket.io" });
+        socket.emit("update_response", { token, username, responses });
+        socket.disconnect();
+
+        alert("保存しました！");
+      }
     } catch (err) {
       console.error("保存エラー", err);
     }
@@ -150,9 +155,9 @@ const SharePage = () => {
   return (
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
+
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 名前入力 */}
       <div className="glass-black name-box">
         <input
           type="text"
@@ -173,7 +178,6 @@ const SharePage = () => {
         )}
       </div>
 
-      {/* 出欠表 */}
       <div className="glass-black schedule-list">
         <table>
           <thead>
@@ -188,24 +192,21 @@ const SharePage = () => {
           <tbody>
             {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
-                const key =
+                const timeLabel =
                   d.time === "時間指定" && d.startTime && d.endTime
-                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                    : `${d.date} (${d.time})`;
+                    ? `${d.startTime} ~ ${d.endTime}`
+                    : d.time;
                 return (
                   <tr key={i}>
                     <td>{d.date}</td>
-                    <td>
-                      {d.time === "時間指定" && d.startTime && d.endTime
-                        ? `${d.startTime} ~ ${d.endTime}`
-                        : d.time}
-                    </td>
+                    <td>{timeLabel}</td>
                     {users.map((u, idx) => {
                       const userResp = allResponses.find((r) => r.username === u);
                       const isSelf = u === username;
                       const value = isSelf
-                        ? responses[key] || "-"
-                        : userResp?.responses?.[key] || "-";
+                        ? responses[i] || "-"
+                        : userResp?.responses?.[i] || "-";
+
                       return (
                         <td key={idx} className="attendance-cell">
                           {isSelf ? (
@@ -216,7 +217,7 @@ const SharePage = () => {
                                   className={`choice-btn ${
                                     value === opt ? "active" : ""
                                   } ${isEditing ? "" : "disabled"}`}
-                                  onClick={() => handleSelect(key, opt)}
+                                  onClick={() => handleSelect(i, opt)}
                                 >
                                   {opt}
                                 </button>
@@ -233,18 +234,6 @@ const SharePage = () => {
               })}
           </tbody>
         </table>
-      </div>
-
-      {/* 集計表示 */}
-      <div className="glass-black aggregate-box">
-        <h3>出欠集計</h3>
-        <ul>
-          {Object.entries(aggregate).map(([key, counts], idx) => (
-            <li key={idx}>
-              {key} → ○:{counts["○"]} ✖:{counts["✖"]} △:{counts["△"]}
-            </li>
-          ))}
-        </ul>
       </div>
 
       {users.includes(username) && (
