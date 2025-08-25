@@ -1,25 +1,34 @@
-FROM node:18-alpine
+# ============================
+# 1. フロントエンドをビルド
+# ============================
+FROM node:18-alpine AS frontend-build
+
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install --production=false
+
+COPY frontend/ ./
+RUN npm run build
+
+
+# ============================
+# 2. バックエンドをセットアップ
+# ============================
+FROM node:18-alpine AS backend
 
 WORKDIR /app
 
-# まず react-scripts を強制インストール
-RUN npm install -g react-scripts@5.0.1
-
-# package.json をコピー
-COPY package.json ./
-
-# 通常依存をインストール（devDependenciesも含む）
+# バックエンドの依存関係をインストール
+COPY backend/package.json backend/package-lock.json* ./
 RUN npm install --production=false
 
-# ソースコードをコピー
-COPY . .
+# バックエンドソースをコピー
+COPY backend/ ./
 
-# ビルド
-RUN npm run build
+# フロントエンドのビルド成果物を backend/public にコピー
+COPY --from=frontend-build /app/frontend/build ./public
 
-# 静的サーバー serve をインストール
-RUN npm install -g serve
-
+# Express サーバーを起動
 EXPOSE 3000
-
-CMD ["serve", "-s", "build", "-l", "3000"]
+CMD ["npm", "start"]
