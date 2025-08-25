@@ -1,7 +1,7 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import "../register.css";  // ✅ RegisterPage専用CSS
+import "../register.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -10,7 +10,7 @@ const RegisterPage = () => {
   const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0]; // ← 今日の日付文字列
+  const todayStr = today.toISOString().split("T")[0];
 
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -76,7 +76,7 @@ const RegisterPage = () => {
       const dateStr = dateObj.toISOString().split("T")[0];
 
       const isSelected = selectedDates.includes(dateStr);
-      const holiday = hd.isHoliday(dateObj); // 祝日オブジェクト
+      const holiday = hd.isHoliday(dateObj);
       const isToday = dateStr === todayStr;
 
       days.push(
@@ -89,19 +89,13 @@ const RegisterPage = () => {
           onClick={() => handleDateClick(day)}
         >
           <div className="day-number">{day}</div>
-          {/* 祝日名 or 今日 */}
-          {holiday ? (
-            <div className="holiday-name">{holiday[0].name}</div>
-          ) : isToday ? (
-            <div className="today-label">今日</div>
-          ) : null}
+          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
         </div>
       );
     }
     return days;
   };
 
-  // 時刻選択用の選択肢
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
     const label = `${String(h).padStart(2, "0")}:00`;
@@ -112,7 +106,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
-      {/* タイトル */}
       <div className="calendar-title-input">
         <input
           type="text"
@@ -122,7 +115,6 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 選択モード */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -152,7 +144,6 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダーとリストを横並び */}
       <div className="calendar-layout">
         <div className="calendar">
           <div className="calendar-header">
@@ -165,14 +156,14 @@ const RegisterPage = () => {
           <div className="calendar-grid">{renderCalendar()}</div>
         </div>
 
-        {/* 選択日程 + 時間帯 */}
         <div className="selected-list">
           <h3>選択した日程</h3>
           <ul>
             {selectedDates.map((d) => (
-              <li key={d}>
-                <div>{d}</div>
+              <li key={d} className="selected-item">
+                <span className="selected-date">{d}</span>
                 <select
+                  className="styled-dropdown"
                   value={timeRanges[d]?.type || "終日"}
                   onChange={(e) => handleTimeChange(d, "type", e.target.value)}
                 >
@@ -185,6 +176,7 @@ const RegisterPage = () => {
                 {timeRanges[d]?.type === "時刻" && (
                   <div className="time-range">
                     <select
+                      className="styled-dropdown"
                       value={timeRanges[d]?.start || "09:00"}
                       onChange={(e) =>
                         handleTimeChange(d, "start", e.target.value)
@@ -198,6 +190,7 @@ const RegisterPage = () => {
                     </select>
                     ～
                     <select
+                      className="styled-dropdown"
                       value={timeRanges[d]?.end || "18:00"}
                       onChange={(e) =>
                         handleTimeChange(d, "end", e.target.value)
