@@ -9,6 +9,9 @@ const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
 
+  const [rangeStart, setRangeStart] = useState(null); // 範囲選択の開始日
+  const [hoverDate, setHoverDate] = useState(null);   // 範囲選択中のマウスホバー日
+
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
 
@@ -23,6 +26,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 日付クリック処理
   const handleDateClick = (day) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -36,10 +40,13 @@ const RegisterPage = () => {
           : [...prev, dateStr]
       );
     } else if (selectionMode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length === 2) {
+      if (!rangeStart) {
+        // 1回目クリック → 開始日設定
+        setRangeStart(dateStr);
         setSelectedDates([dateStr]);
-      } else if (selectedDates.length === 1) {
-        const start = new Date(selectedDates[0]);
+      } else {
+        // 2回目クリック → 範囲確定
+        const start = new Date(rangeStart);
         const end = new Date(dateStr);
         const range = [];
         const step = start < end ? 1 : -1;
@@ -50,11 +57,15 @@ const RegisterPage = () => {
         ) {
           range.push(d.toISOString().split("T")[0]);
         }
+        // ✅ 全範囲を右リストへ反映
         setSelectedDates(range);
+        setRangeStart(null);
+        setHoverDate(null);
       }
     }
   };
 
+  // 時間帯変更処理
   const handleTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
@@ -65,6 +76,7 @@ const RegisterPage = () => {
     }));
   };
 
+  // カレンダー描画
   const renderCalendar = () => {
     const days = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -79,14 +91,28 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(dateObj);
       const isToday = dateStr === todayStr;
 
+      // 範囲選択中の仮ハイライト
+      let inRange = false;
+      if (rangeStart && hoverDate) {
+        const start = new Date(rangeStart);
+        const end = new Date(hoverDate);
+        if (start <= end) {
+          inRange = dateObj >= start && dateObj <= end;
+        } else {
+          inRange = dateObj <= start && dateObj >= end;
+        }
+      }
+
       days.push(
         <div
           key={day}
           className={`calendar-day 
             ${isSelected ? "selected" : ""} 
             ${holiday ? "holiday" : ""} 
-            ${isToday ? "today" : ""}`}
+            ${isToday ? "today" : ""} 
+            ${inRange ? "in-range" : ""}`}
           onClick={() => handleDateClick(day)}
+          onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
         >
           <div className="day-number">{day}</div>
           {holiday && <div className="holiday-name">{holiday[0].name}</div>}
@@ -96,6 +122,7 @@ const RegisterPage = () => {
     return days;
   };
 
+  // 時刻選択用の選択肢
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
     const label = `${String(h).padStart(2, "0")}:00`;
@@ -106,6 +133,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
+      {/* タイトル */}
       <div className="calendar-title-input">
         <input
           type="text"
@@ -115,6 +143,7 @@ const RegisterPage = () => {
         />
       </div>
 
+      {/* 選択モード */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -144,6 +173,7 @@ const RegisterPage = () => {
         </label>
       </div>
 
+      {/* カレンダーとリストを横並び */}
       <div className="calendar-layout">
         <div className="calendar">
           <div className="calendar-header">
@@ -156,6 +186,7 @@ const RegisterPage = () => {
           <div className="calendar-grid">{renderCalendar()}</div>
         </div>
 
+        {/* 選択日程 + 時間帯 */}
         <div className="selected-list">
           <h3>選択した日程</h3>
           <ul>
