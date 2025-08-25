@@ -1,31 +1,41 @@
 // backend/index.js
 import express from "express";
-import bodyParser from "body-parser";
 import cors from "cors";
-import pkg from "pg";
+import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import authRouter from "./auth.js"; // OAuth2設定
+import authRouter from "./auth.js";
+import pool from "./db.js"; // ← ここがポイント：共通Poolを使う
 
-const { Pool } = pkg;
 const app = express();
-const server = createServer(app); // ★ Socket.IO対応
+const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" },
+  // 同一オリジンならこの設定ごと削ってOK
+  cors: {
+    origin: process.env.FRONTEND_URL || "*",
+    methods: ["GET", "POST", "DELETE"],
+    credentials: true,
+  },
 });
 const PORT = process.env.PORT || 5000;
 
-// ===== DB接続設定 =====
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
-});
+// ===== ミドルウェア =====
+app.use(express.json());
+app.use(cookieParser());
 
-app.use(cors());
-app.use(bodyParser.json());
+// 別オリジン運用なら CORS 必須 / 同一オリジンなら以下ブロックは削除OK
+if (process.env.FRONTEND_URL) {
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }));
+}
+
+// プロキシ配下で secure cookie を使うなら推奨
+app.set("trust proxy", 1);
 
 // ===== DB初期化 =====
 const initDB = async () => {
@@ -40,7 +50,6 @@ const initDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS schedule_responses (
         id SERIAL PRIMARY KEY,
@@ -52,7 +61,6 @@ const initDB = async () => {
         UNIQUE(schedule_id, user_id)
       );
     `);
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS personal_schedules (
         id UUID PRIMARY KEY,
@@ -64,7 +72,6 @@ const initDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
     console.log("✅ Database initialized");
   } catch (err) {
     console.error("❌ DB初期化エラー:", err);
@@ -75,24 +82,43 @@ initDB();
 // ===== Socket.IO =====
 io.on("connection", (socket) => {
   console.log("🟢 A user connected");
-
-  socket.on("joinSchedule", (token) => {
-    socket.join(token);
-    console.log(`ユーザーがスケジュール ${token} に参加`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔴 A user disconnected");
-  });
+  socket.on("joinSchedule", (token) => socket.join(token));
+  socket.on("disconnect", () => console.log("🔴 A user disconnected"));
 });
 
-// ===== API =====
-
-// --- OAuthルート ---
+// ===== 認証・ユーザー関連 =====
 app.use("/auth", authRouter);
 
-// --- 共有スケジュール一覧取得 ---
-app.get("/api/schedules", async (req, res) => {
+// 超軽量の認証チェック（Cookie or Bearer）
+function authRequired(req, res, next) {
+  try {
+    const header = req.get("Authorization") || "";
+    const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
+    const token = req.cookies?.token || bearer;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const payload = (await import("jsonwebtoken")).default.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+    req.user = payload; // { userId, discordId, username, iat, exp }
+    next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+
+// ログインユーザー情報
+app.get("/api/me", authRequired, async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT id, discord_id, username, now() AS server_time FROM public.users WHERE id = $1",
+    [req.user.userId]
+  );
+  if (!rows[0]) return res.status(404).json({ error: "User not found" });
+  res.json({ user: rows[0] });
+});
+
+// ===== 既存 API（schedules など）はそのまま =====
+app.get("/api/schedules", async (_req, res) => {
   try {
     const result = await pool.query(
       "SELECT id, title, share_token, created_at FROM schedules ORDER BY created_at DESC"
@@ -306,13 +332,11 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
-// ===== Reactビルドを配信 (Railway用) =====
+// ===== Reactビルド配信（同一オリジンで運用する場合）=====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const frontendPath = path.join(__dirname, "../frontend/build");
 app.use(express.static(frontendPath));
-
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
