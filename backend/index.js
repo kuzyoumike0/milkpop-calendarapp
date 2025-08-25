@@ -6,19 +6,22 @@ import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import authRouter from "./auth.js"; // OAuth2設定
 
 const { Pool } = pkg;
 const app = express();
+const server = createServer(app); // ★ Socket.IO対応
+const io = new Server(server, {
+  cors: { origin: "*" },
+});
 const PORT = process.env.PORT || 5000;
 
 // ===== DB接続設定 =====
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.DATABASE_SSL === "true"
-      ? { rejectUnauthorized: false }
-      : false,
+  ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
 });
 
 app.use(cors());
@@ -68,6 +71,20 @@ const initDB = async () => {
   }
 };
 initDB();
+
+// ===== Socket.IO =====
+io.on("connection", (socket) => {
+  console.log("🟢 A user connected");
+
+  socket.on("joinSchedule", (token) => {
+    socket.join(token);
+    console.log(`ユーザーがスケジュール ${token} に参加`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 A user disconnected");
+  });
+});
 
 // ===== API =====
 
@@ -126,18 +143,17 @@ app.get("/api/schedules/:token", async (req, res) => {
   }
 });
 
-// --- 出欠回答を追加/更新（share_token 基準） ---
+// --- 出欠回答を追加/更新（リアルタイム通知付き） ---
 app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
     const { user_id, username, responses } = req.body;
-    // responses = { "0": "○", "1": "✖", ... } の形で送信される
+    // responses = { "0": "○", "1": "✖", ... }
 
     if (!user_id || !responses) {
       return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
     }
 
-    // schedules を取得
     const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
@@ -152,11 +168,9 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
         d.time === "時間指定" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
           : `${d.date} (${d.time})`;
-
       normalizedResponses[key] = responses[index] || "-";
     });
 
-    // DB保存
     const result = await pool.query(
       `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
        VALUES ($1, $2, $3, $4)
@@ -168,6 +182,13 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
       [scheduleId, user_id, username || "匿名", JSON.stringify(normalizedResponses)]
     );
 
+    // 🔥 リアルタイム通知
+    io.to(token).emit("updateResponses", {
+      user_id,
+      username,
+      responses: normalizedResponses,
+    });
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("回答保存エラー:", err);
@@ -175,7 +196,7 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
-// --- 出欠回答の一覧取得（share_token 基準） ---
+// --- 出欠回答の一覧取得 ---
 app.get("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
@@ -196,7 +217,7 @@ app.get("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
-// --- 出欠回答の集計（日付ごとに全員分表示） ---
+// --- 出欠集計（○✖△人数まとめ） ---
 app.get("/api/schedules/:token/aggregate", async (req, res) => {
   try {
     const { token } = req.params;
@@ -208,7 +229,7 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
     const dates = schedule.rows[0].dates;
 
     const responses = await pool.query(
-      "SELECT user_id, username, responses FROM schedule_responses WHERE schedule_id=$1",
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
       [scheduleId]
     );
 
@@ -218,15 +239,13 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
         d.time === "時間指定" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
           : `${d.date} (${d.time})`;
-      aggregate[key] = [];
+      aggregate[key] = { "○": 0, "✖": 0, "△": 0 };
     });
 
     responses.rows.forEach((row) => {
-      const username = row.username || "匿名";
-      const resp = row.responses;
-      Object.entries(resp).forEach(([key, status]) => {
-        if (aggregate[key]) {
-          aggregate[key].push({ username, status });
+      Object.entries(row.responses).forEach(([key, status]) => {
+        if (aggregate[key] && ["○", "✖", "△"].includes(status)) {
+          aggregate[key][status]++;
         }
       });
     });
@@ -238,52 +257,10 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
   }
 });
 
-// --- 特定ユーザー回答の一括更新 ---
-app.put("/api/schedules/:token/responses/:user_id", async (req, res) => {
-  try {
-    const { token, user_id } = req.params;
-    const { value } = req.body;
-
-    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
-    if (schedule.rows.length === 0) {
-      return res.status(404).json({ error: "共有リンクが無効です" });
-    }
-    const scheduleId = schedule.rows[0].id;
-    const dates = schedule.rows[0].dates;
-
-    const newResponses = {};
-    dates.forEach((d) => {
-      const key =
-        d.time === "時間指定" && d.startTime && d.endTime
-          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.time})`;
-      newResponses[key] = value;
-    });
-
-    const result = await pool.query(
-      `UPDATE schedule_responses
-       SET responses=$1, created_at=CURRENT_TIMESTAMP
-       WHERE schedule_id=$2 AND user_id=$3
-       RETURNING *`,
-      [JSON.stringify(newResponses), scheduleId, user_id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "ユーザーが見つかりません" });
-    }
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("一括更新エラー:", err);
-    res.status(500).json({ error: "一括更新エラー" });
-  }
-});
-
 // --- 特定ユーザー回答の削除 ---
 app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
   try {
     const { token, user_id } = req.params;
-
     const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
@@ -298,6 +275,9 @@ app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "ユーザーが見つかりません" });
     }
+
+    // 🔥 リアルタイム削除通知
+    io.to(token).emit("deleteResponse", { user_id });
 
     res.json({ message: "削除しました", deleted: result.rows[0] });
   } catch (err) {
@@ -339,6 +319,6 @@ app.get("*", (req, res) => {
 });
 
 // ===== サーバー起動 =====
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
