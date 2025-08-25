@@ -560,3 +560,24 @@ footer {
   font-size: 1rem;
 }
 
+/* 選択リストエリアの調整 */
+.options-section {
+  background: linear-gradient(135deg, #1a1a1a, #000);
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 650px;   /* ← 少し広めに */
+  overflow-x: auto;   /* ← はみ出し対策 */
+}
+
+/* 時刻指定ドロップダウン */
+.custom-dropdown {
+  min-width: 90px;  /* ← 短めにする */
+  max-width: 120px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+}
