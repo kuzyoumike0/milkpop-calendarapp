@@ -57,7 +57,7 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: Math.random().toString(36).slice(2, 8), // 簡易ID
+          user_id: Math.random().toString(36).slice(2, 8),
           username: username || "匿名",
           responses,
         }),
@@ -70,22 +70,9 @@ const SharePage = () => {
     }
   };
 
-  // ===== ユーザー編集削除 =====
+  // ===== 一括変更プルダウン表示 =====
   const handleEditUser = (user) => {
-    setEditingUser(user);
-    setUsername(user.username);
-  };
-
-  const handleDeleteUser = async (user) => {
-    if (!window.confirm(`${user.username} さんの回答を削除しますか？`)) return;
-    try {
-      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
-        method: "DELETE",
-      });
-      fetchResponses();
-    } catch (err) {
-      console.error("削除エラー", err);
-    }
+    setEditingUser(editingUser === user.username ? null : user.username);
   };
 
   if (!schedule) {
@@ -126,7 +113,6 @@ const SharePage = () => {
               schedule.dates.map((d, i) => {
                 const key = `${d.date} (${d.time})`;
 
-                // この日付の全ユーザー回答を抽出
                 const users = allResponses.filter(
                   (r) => r.responses[key]
                 );
@@ -144,7 +130,10 @@ const SharePage = () => {
                         <option value="-">-</option>
                         <option value="○">○</option>
                         <option value="✖">✖</option>
+                        <option value="△">△</option>
                       </select>
+                      {/* 削除ボタンは出欠の横 */}
+                      <button className="delete-btn">削除</button>
                     </td>
                     <td className="user-list">
                       {users.map((u, idx) => (
@@ -156,12 +145,20 @@ const SharePage = () => {
                           >
                             {u.username}
                           </a>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteUser(u)}
-                          >
-                            削除
-                          </button>
+                          {editingUser === u.username && (
+                            <select
+                              className="response-dropdown"
+                              onChange={(e) =>
+                                console.log(
+                                  `${u.username} の出欠を ${e.target.value} に一括変更`
+                                )
+                              }
+                            >
+                              <option value="○">○</option>
+                              <option value="✖">✖</option>
+                              <option value="△">△</option>
+                            </select>
+                          )}
                           <div className="user-status">
                             {u.responses[key]}
                           </div>
