@@ -190,10 +190,10 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
     const scheduleId = schedule.rows[0].id;
-    const dates = schedule.rows[0].dates; // 登録された日程リスト
+    const dates = schedule.rows[0].dates;
 
     const responses = await pool.query(
-      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      "SELECT user_id, username, responses FROM schedule_responses WHERE schedule_id=$1",
       [scheduleId]
     );
 
@@ -217,6 +217,71 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
   } catch (err) {
     console.error("集計エラー:", err);
     res.status(500).json({ error: "集計エラー" });
+  }
+});
+
+// --- 特定ユーザー回答の一括更新 ---
+app.put("/api/schedules/:token/responses/:user_id", async (req, res) => {
+  try {
+    const { token, user_id } = req.params;
+    const { value } = req.body;
+
+    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
+
+    const newResponses = {};
+    dates.forEach((d) => {
+      const key = `${d.date} (${d.time})`;
+      newResponses[key] = value;
+    });
+
+    const result = await pool.query(
+      `UPDATE schedule_responses
+       SET responses=$1, created_at=CURRENT_TIMESTAMP
+       WHERE schedule_id=$2 AND user_id=$3
+       RETURNING *`,
+      [JSON.stringify(newResponses), scheduleId, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "ユーザーが見つかりません" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("一括更新エラー:", err);
+    res.status(500).json({ error: "一括更新エラー" });
+  }
+});
+
+// --- 特定ユーザー回答の削除 ---
+app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
+  try {
+    const { token, user_id } = req.params;
+
+    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
+    const result = await pool.query(
+      "DELETE FROM schedule_responses WHERE schedule_id=$1 AND user_id=$2 RETURNING *",
+      [scheduleId, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "ユーザーが見つかりません" });
+    }
+
+    res.json({ message: "削除しました", deleted: result.rows[0] });
+  } catch (err) {
+    console.error("削除エラー:", err);
+    res.status(500).json({ error: "削除エラー" });
   }
 });
 
