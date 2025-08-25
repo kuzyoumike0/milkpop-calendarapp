@@ -140,10 +140,23 @@ router.get("/discord/callback", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // フロントへ
-    const redirect = new URL("/auth/success", FRONTEND_URL);
-    redirect.searchParams.set("token", jwtToken);
-    res.redirect(redirect.toString());
+    // --- ★ ここからクッキー発行＋/meへ ---
+const isProd = process.env.NODE_ENV === "production";
+
+// 別オリジンでAPIを叩くなら SameSite=None & Secure 必須（本番）
+// ローカル開発(http://localhost)では Secure=false / SameSite=Lax でOK
+res.cookie("token", jwtToken, {
+  httpOnly: true,
+  secure: isProd,                 // 本番は true を推奨
+  sameSite: isProd ? "None" : "Lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/",                      // ルート配下で送信
+});
+
+// フロントの /me へ
+const redirect = new URL("/me", FRONTEND_URL);
+return res.redirect(redirect.toString());
+
   } catch (err) {
     console.error("Discord callback error:", err);
     res.status(500).send("Discordログインに失敗しました");
