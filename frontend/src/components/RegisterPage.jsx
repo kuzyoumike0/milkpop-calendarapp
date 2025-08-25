@@ -25,6 +25,7 @@ const RegisterPage = () => {
     `${String(i).padStart(2, "0")}:00`
   );
 
+  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -50,6 +51,25 @@ const RegisterPage = () => {
     }
   };
 
+  // 月送り
+  const prevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear((y) => y - 1);
+    } else {
+      setCurrentMonth((m) => m - 1);
+    }
+  };
+  const nextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear((y) => y + 1);
+    } else {
+      setCurrentMonth((m) => m + 1);
+    }
+  };
+
+  // 共有リンク発行（バックエンド呼び出し）
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -92,6 +112,8 @@ const RegisterPage = () => {
   return (
     <div className="page-container">
       <h2 className="page-title">📅 日程登録ページ</h2>
+
+      {/* タイトル入力 */}
       <input
         type="text"
         placeholder="タイトルを入力"
@@ -100,8 +122,139 @@ const RegisterPage = () => {
         className="title-input"
       />
 
-      {/* カレンダー（省略: 以前のまま） */}
+      {/* 範囲 / 複数 ラジオ */}
+      <div className="radio-group">
+        <input
+          type="radio"
+          id="multiple"
+          value="multiple"
+          checked={selectionMode === "multiple"}
+          onChange={() => setSelectionMode("multiple")}
+        />
+        <label htmlFor="multiple">複数</label>
 
+        <input
+          type="radio"
+          id="range"
+          value="range"
+          checked={selectionMode === "range"}
+          onChange={() => setSelectionMode("range")}
+        />
+        <label htmlFor="range">範囲</label>
+      </div>
+
+      {/* ===== カレンダー部分 ===== */}
+      <div className="calendar">
+        <div className="calendar-header">
+          <button onClick={prevMonth}>←</button>
+          <h3>
+            {currentYear}年 {currentMonth + 1}月
+          </h3>
+          <button onClick={nextMonth}>→</button>
+        </div>
+
+        <div className="week-header">
+          {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+            <div key={d}>{d}</div>
+          ))}
+        </div>
+
+        <div className="calendar-grid">
+          {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+            <div key={`empty-${idx}`} />
+          ))}
+          {Array.from({ length: daysInMonth }, (_, idx) => {
+            const date = new Date(currentYear, currentMonth, idx + 1);
+            const dateStr = date.toISOString().split("T")[0];
+            const isSelected = selectedDates.includes(dateStr);
+            const holiday = hd.isHoliday(date);
+            const isSunday = date.getDay() === 0;
+            const isSaturday = date.getDay() === 6;
+            const isToday =
+              date.toDateString() === new Date().toDateString();
+
+            return (
+              <div
+                key={dateStr}
+                onClick={() => handleDateClick(dateStr)}
+                className={`day-cell ${isSelected ? "selected" : ""} ${
+                  holiday ? "calendar-holiday" : ""
+                } ${isSunday ? "calendar-sunday" : ""} ${
+                  isSaturday ? "calendar-saturday" : ""
+                } ${isToday ? "calendar-today" : ""}`}
+              >
+                {idx + 1}
+                {holiday && (
+                  <div className="holiday-name">{holiday.name}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ===== 選択リスト ===== */}
+      <div className="options-section">
+        <h3>✅ 選択した日程</h3>
+        {selectedDates.map((d) => (
+          <div key={d} className="selected-date">
+            <span>{d}</span>
+            <select
+              value={timeOptions[d] || "終日"}
+              onChange={(e) =>
+                setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
+              }
+              className="custom-dropdown"
+            >
+              <option value="終日">終日</option>
+              <option value="昼">昼</option>
+              <option value="夜">夜</option>
+              <option value="custom">時刻指定</option>
+            </select>
+            {timeOptions[d] === "custom" && (
+              <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                <select
+                  value={customTimes[d]?.start || ""}
+                  onChange={(e) =>
+                    setCustomTimes((prev) => ({
+                      ...prev,
+                      [d]: { ...prev[d], start: e.target.value },
+                    }))
+                  }
+                  className="custom-dropdown"
+                >
+                  <option value="">開始</option>
+                  {hours.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+                ～ 
+                <select
+                  value={customTimes[d]?.end || ""}
+                  onChange={(e) =>
+                    setCustomTimes((prev) => ({
+                      ...prev,
+                      [d]: { ...prev[d], end: e.target.value },
+                    }))
+                  }
+                  className="custom-dropdown"
+                >
+                  <option value="">終了</option>
+                  {hours.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ===== 共有ボタン ===== */}
       <button onClick={handleShare} className="share-button fancy">
         🔗 共有リンクを発行
       </button>
