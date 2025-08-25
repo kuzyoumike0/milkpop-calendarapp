@@ -63,7 +63,7 @@ const RegisterPage = () => {
 
         setSelectedDates(range.sort()); // ✅ 日付順にソート
         setRangeStart(null);
-        setHoverDate(null);
+        setHoverDate(null); // ✅ hover ハイライトを完全リセット
       }
     }
   };
@@ -100,7 +100,7 @@ const RegisterPage = () => {
         const start = new Date(rangeStart);
         const end = new Date(hoverDate);
         if (start <= end) {
-          inRange = dateObj > start && dateObj < end; // 開始・終了は含めない
+          inRange = dateObj > start && dateObj < end;
         } else {
           inRange = dateObj < start && dateObj > end;
         }
