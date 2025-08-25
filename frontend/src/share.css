@@ -125,3 +125,26 @@
   box-shadow: 0 8px 22px rgba(0,0,0,0.5);
   opacity: 0.95;
 }
+/* ===== 新規追加ボタン ===== */
+.add-button {
+  margin-left: 12px;
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #50C878, #004CA0);
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.4);
+  transition: all 0.3s ease;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  letter-spacing: 1px;
+}
+
+.add-button:hover {
+  background: linear-gradient(135deg, #FDB9C8, #50C878);
+  transform: translateY(-2px) scale(1.05);
+  color: #000;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+}
