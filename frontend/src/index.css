@@ -498,4 +498,24 @@ footer {
   text-align: center;
   font-weight: bold;
 }
+/* 横並びレイアウト */
+.main-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4rem;              /* ← カレンダーとリストの間にしっかり余白 */
+  width: 100%;
+  padding: 0 2rem;
+  margin-top: 1.5rem;     /* ← 全体の上側にも余白を追加 */
+}
+
+.calendar-section {
+  flex: 8;
+  margin-right: 2rem;     /* ← カレンダー側の右マージン */
+}
+
+.options-section {
+  flex: 2;
+  margin-left: 2rem;      /* ← リスト側の左マージン */
+}
 
