@@ -15,7 +15,6 @@ const RegisterPage = () => {
   // 📌 カレンダー日付選択（複数 & 範囲対応）
   const handleDateChange = (date) => {
     if (Array.isArray(date)) {
-      // 範囲選択
       const [start, end] = date;
       const range = [];
       let current = new Date(start);
@@ -25,9 +24,10 @@ const RegisterPage = () => {
       }
       setSelectedDates(range);
     } else {
-      // 単日選択
       if (selectedDates.some((d) => d.toDateString() === date.toDateString())) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
+        setSelectedDates(
+          selectedDates.filter((d) => d.toDateString() !== date.toDateString())
+        );
       } else {
         setSelectedDates([...selectedDates, date]);
       }
@@ -53,10 +53,11 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      <h2 className="page-title">日程登録ページ</h2>
+      {/* ===== ページタイトル ===== */}
+      <h2 className="glass-white page-title">日程登録ページ</h2>
 
       {/* ===== タイトル入力 ===== */}
-      <div className="title-input-container">
+      <div className="glass-black title-input-container">
         <input
           type="text"
           placeholder="タイトルを入力してください"
@@ -67,7 +68,7 @@ const RegisterPage = () => {
       </div>
 
       {/* ===== カレンダー ===== */}
-      <div className="calendar-container">
+      <div className="glass-white calendar-container">
         <Calendar
           onChange={handleDateChange}
           selectRange={true}
@@ -81,7 +82,7 @@ const RegisterPage = () => {
       </div>
 
       {/* ===== 選択した日程一覧 ===== */}
-      <div className="selected-dates">
+      <div className="glass-black selected-dates">
         <h3>選択した日程</h3>
         {selectedDates.length === 0 ? (
           <p>日付を選択してください</p>
@@ -100,7 +101,7 @@ const RegisterPage = () => {
       </div>
 
       {/* ===== 時間帯選択 ===== */}
-      <div className="time-selection">
+      <div className="glass-black time-selection">
         <h3>時間帯を選択</h3>
         <label>
           <input
@@ -141,15 +142,25 @@ const RegisterPage = () => {
 
         {timeType === "時間指定" && (
           <div className="time-range">
-            <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+            <select
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            >
               {timeOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
             <span> ~ </span>
-            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+            <select
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            >
               {timeOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -157,13 +168,18 @@ const RegisterPage = () => {
       </div>
 
       {/* ===== 共有リンク発行 ===== */}
-      <div className="share-link-container">
+      <div className="glass-black share-link-container">
         <button className="share-button" onClick={generateShareLink}>
           📤 共有リンクを発行
         </button>
         {shareUrl && (
           <div className="share-link-box">
-            <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="share-link">
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="share-link"
+            >
               {shareUrl}
             </a>
             <button className="copy-button" onClick={copyToClipboard}>
