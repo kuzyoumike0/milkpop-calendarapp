@@ -11,6 +11,7 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
+  const [users, setUsers] = useState([]); // 表示するユーザー
   const [responses, setResponses] = useState({});
 
   // ===== スケジュール読み込み =====
@@ -52,13 +53,21 @@ const SharePage = () => {
 
   useEffect(() => {
     fetchResponses();
-    // 30秒ごとに最新データ取得（擬似リアルタイム更新）
-    const interval = setInterval(fetchResponses, 30000);
-    return () => clearInterval(interval);
   }, [token]);
 
-  // ===== 自分の出欠入力変更 =====
-  const handleChange = (key, value) => {
+  // ===== 新規追加（自分の列を追加） =====
+  const handleAddUser = () => {
+    if (!username) {
+      alert("名前を入力してください！");
+      return;
+    }
+    if (!users.includes(username)) {
+      setUsers((prev) => [...prev, username]);
+    }
+  };
+
+  // ===== 出欠クリック変更 =====
+  const handleSelect = (key, value) => {
     setResponses((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -86,10 +95,6 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ===== ユーザー一覧（自分も含める） =====
-  let users = Array.from(new Set(allResponses.map((r) => r.username)));
-  if (username && !users.includes(username)) users.push(username);
-
   return (
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
@@ -97,7 +102,7 @@ const SharePage = () => {
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 名前入力 */}
+      {/* 名前入力 + 新規追加 */}
       <div className="glass-black name-box">
         <input
           type="text"
@@ -105,6 +110,9 @@ const SharePage = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
+        <button className="add-button" onClick={handleAddUser}>
+          新規追加
+        </button>
       </div>
 
       {/* 日程一覧（常に表示） */}
@@ -114,14 +122,9 @@ const SharePage = () => {
             <tr>
               <th>日付</th>
               <th>時間</th>
-              {/* 自分の列 */}
-              <th>{username || "あなた"}</th>
-              {/* 他のユーザー */}
-              {users
-                .filter((u) => u !== username)
-                .map((u, idx) => (
-                  <th key={idx}>{u}</th>
-                ))}
+              {users.map((u, idx) => (
+                <th key={idx}>{u}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -132,28 +135,34 @@ const SharePage = () => {
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
-                    {/* 自分の列：プルダウン */}
-                    <td>
-                      <select
-                        value={responses[key] || "-"}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        className="response-dropdown"
-                      >
-                        {attendanceOptions.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    {/* 他ユーザー列：読み取り専用 */}
-                    {users
-                      .filter((u) => u !== username)
-                      .map((u, idx) => {
-                        const user = allResponses.find((r) => r.username === u);
-                        const value = user?.responses?.[key] || "-";
-                        return <td key={idx}>{value}</td>;
-                      })}
+                    {users.map((u, idx) => {
+                      const isSelf = u === username;
+                      const value = isSelf
+                        ? responses[key] || "-"
+                        : allResponses.find((r) => r.username === u)?.responses?.[key] || "-";
+
+                      return (
+                        <td key={idx} className="attendance-cell">
+                          {isSelf ? (
+                            <div className="choice-buttons">
+                              {attendanceOptions.map((opt) => (
+                                <button
+                                  key={opt}
+                                  className={`choice-btn ${
+                                    value === opt ? "active" : ""
+                                  }`}
+                                  onClick={() => handleSelect(key, opt)}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}
