@@ -6,14 +6,14 @@ import "../common.css";
 import "../share.css";
 
 const attendanceOptions = ["-", "○", "✖", "△"];
-const socket = io(); // デフォルト接続
+const socket = io();
 
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID()); // ローカル一時ID
+  const [userId] = useState(() => crypto.randomUUID()); // 一時ユーザーID
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -29,11 +29,13 @@ const SharePage = () => {
         // 初期レスポンス
         const init = {};
         data.dates.forEach((d) => {
-          const key =
-            d.time === "時間指定" && d.startTime && d.endTime
-              ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-              : `${d.date} (${d.time})`;
-          init[key] = "-";
+          let label = "";
+          if (d.timeType === "時間指定" && d.startTime && d.endTime) {
+            label = `${d.date} (${d.startTime} ~ ${d.endTime})`;
+          } else {
+            label = `${d.date} (${d.timeType})`;
+          }
+          init[label] = "-";
         });
         setResponses(init);
       }
@@ -66,8 +68,15 @@ const SharePage = () => {
       });
     });
 
+    socket.on("deleteResponse", (data) => {
+      setAllResponses((prev) =>
+        prev.filter((r) => r.user_id !== data.user_id)
+      );
+    });
+
     return () => {
       socket.off("updateResponses");
+      socket.off("deleteResponse");
     };
   }, [token]);
 
@@ -83,11 +92,12 @@ const SharePage = () => {
     }
   };
 
-  // ===== 出欠クリック変更（即表反映） =====
+  // ===== 出欠クリック（編集中のみ） =====
   const handleSelect = (key, value) => {
+    if (!isEditing) return;
+
     setResponses((prev) => {
       const updated = { ...prev, [key]: value };
-
       // 表を即時更新
       setAllResponses((prevAll) => {
         const existing = prevAll.find((r) => r.user_id === userId);
@@ -99,27 +109,32 @@ const SharePage = () => {
           return [...prevAll, { user_id: userId, username, responses: updated }];
         }
       });
-
       return updated;
     });
   };
 
-  // ===== 保存（サーバーへ送信） =====
+  // ===== 保存（サーバー送信 & 即反映） =====
   const handleSave = async () => {
     if (!username) {
       alert("名前を入力してください！（必須）");
       return;
     }
     try {
-      await fetch(`/api/schedules/${token}/responses`, {
+      const payload = { user_id: userId, username, responses };
+
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          username,
-          responses,
-        }),
+        body: JSON.stringify(payload),
       });
+      const saved = await res.json();
+
+      // 即時反映
+      setAllResponses((prev) => {
+        const filtered = prev.filter((r) => r.user_id !== saved.user_id);
+        return [...filtered, saved];
+      });
+
       setIsEditing(false);
     } catch (err) {
       console.error("保存エラー", err);
@@ -132,8 +147,10 @@ const SharePage = () => {
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
 
+      {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
+      {/* 名前入力 + ボタン */}
       <div className="glass-black name-box">
         <input
           type="text"
@@ -144,8 +161,17 @@ const SharePage = () => {
         <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
+        {users.includes(username) && (
+          <button
+            className="edit-button"
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            {isEditing ? "編集終了" : "編集"}
+          </button>
+        )}
       </div>
 
+      {/* 出欠表 */}
       <div className="glass-black schedule-list">
         <table>
           <thead>
@@ -160,17 +186,17 @@ const SharePage = () => {
           <tbody>
             {schedule.dates.map((d, i) => {
               const key =
-                d.time === "時間指定" && d.startTime && d.endTime
+                d.timeType === "時間指定" && d.startTime && d.endTime
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.time})`;
+                  : `${d.date} (${d.timeType})`;
 
               return (
                 <tr key={i}>
                   <td>{d.date}</td>
                   <td>
-                    {d.startTime && d.endTime
+                    {d.timeType === "時間指定" && d.startTime && d.endTime
                       ? `${d.startTime} ~ ${d.endTime}`
-                      : d.time}
+                      : d.timeType}
                   </td>
                   {users.map((u, idx) => {
                     const userResp = allResponses.find((r) => r.username === u);
@@ -188,7 +214,7 @@ const SharePage = () => {
                                 key={opt}
                                 className={`choice-btn ${
                                   value === opt ? "active" : ""
-                                }`}
+                                } ${isEditing ? "" : "disabled"}`}
                                 onClick={() => handleSelect(key, opt)}
                               >
                                 {opt}
@@ -208,9 +234,14 @@ const SharePage = () => {
         </table>
       </div>
 
+      {/* 保存ボタン */}
       {users.includes(username) && (
         <div className="button-area">
-          <button className="save-button" onClick={handleSave}>
+          <button
+            className="save-button"
+            onClick={handleSave}
+            disabled={!isEditing}
+          >
             保存する
           </button>
         </div>
