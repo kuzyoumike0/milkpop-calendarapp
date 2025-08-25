@@ -1,4 +1,3 @@
-// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "../index.css";
@@ -8,9 +7,8 @@ const SharePage = () => {
   const [scheduleData, setScheduleData] = useState(null);
   const [responses, setResponses] = useState({});
   const [userName, setUserName] = useState("");
-  const [allResponses, setAllResponses] = useState([]); // 全員の回答一覧
+  const [allResponses, setAllResponses] = useState([]);
 
-  // スケジュール取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -25,15 +23,12 @@ const SharePage = () => {
       });
   }, [token]);
 
-  // 回答一覧取得
   const fetchResponses = async () => {
     const res = await fetch(`/api/schedules/${token}/responses`);
     const data = await res.json();
     setAllResponses(data);
-
-    // 自分の回答があれば反映
-    const my = data.find((r) => r.username === userName);
-    if (my) setResponses(my.responses);
+    const mine = data.find((r) => r.username === userName);
+    if (mine) setResponses(mine.responses);
   };
 
   const handleSelect = (date, value) => {
@@ -50,13 +45,13 @@ const SharePage = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: userName, username: userName, responses }),
     });
-    await fetchResponses(); // 即一覧を更新
+    await fetchResponses();
     alert("保存しました！");
   };
 
   const handleDelete = () => {
     setResponses({});
-    alert("選択をリセットしました（保存ボタンを押すと反映されます）");
+    alert("選択をリセットしました（保存すると反映されます）");
   };
 
   if (!scheduleData) return <p>読み込み中...</p>;
@@ -65,12 +60,10 @@ const SharePage = () => {
     <div className="page-container">
       <h2 className="page-title">共有スケジュール</h2>
 
-      {/* タイトル */}
       <div className="input-card">
         <p className="title-display">{scheduleData.title}</p>
       </div>
 
-      {/* 名前入力 */}
       <div className="input-card">
         <input
           type="text"
@@ -81,7 +74,6 @@ const SharePage = () => {
         />
       </div>
 
-      {/* 日程一覧（入力フォーム） */}
       <div className="input-card">
         <h3>日程一覧</h3>
         {scheduleData.dates.map((d) => {
@@ -89,13 +81,13 @@ const SharePage = () => {
           return (
             <div key={d} className="schedule-row">
               <span className="schedule-date">{date}</span>
-              <span className="schedule-time">({time})</span>
+              <span className="schedule-time">{time}</span>
               <select
                 value={responses[d] || ""}
                 onChange={(e) => handleSelect(d, e.target.value)}
                 className="icon-dropdown"
               >
-                <option value="">-</option>
+                <option value="">－</option>
                 <option value="〇">〇</option>
                 <option value="△">△</option>
                 <option value="✕">✕</option>
@@ -105,13 +97,11 @@ const SharePage = () => {
         })}
       </div>
 
-      {/* ボタン */}
       <div className="button-group spaced">
         <button onClick={handleSave} className="btn-save">保存</button>
         <button onClick={handleDelete} className="btn-delete">削除</button>
       </div>
 
-      {/* 全員の回答一覧 */}
       <div className="input-card" style={{ marginTop: "2rem" }}>
         <h3>参加状況</h3>
         <table className="responses-table">
