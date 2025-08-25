@@ -11,7 +11,6 @@
   justify-content: center;
   margin-bottom: 15px;
 }
-
 .title-input {
   padding: 10px 15px;
   border-radius: 8px;
@@ -36,26 +35,43 @@
   font-size: 16px;
   font-weight: bold;
 }
-
-.selection-toggle label {
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: background 0.2s, color 0.2s;
+.radio-label {
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  position: relative;
 }
-
-.selection-toggle input[type="radio"] {
-  accent-color: #004CA0; /* ラジオボタン色 */
-  transform: scale(1.2);
+.radio-label input[type="radio"] {
+  display: none; /* デフォルト非表示 */
+}
+.custom-radio {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #004CA0;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s;
+}
+.radio-label input[type="radio"]:checked + .custom-radio {
+  background: #004CA0;
+}
+.radio-label input[type="radio"]:checked + .custom-radio::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
 }
 
 /* ====== カレンダーと右側リスト ====== */
 .calendar-container {
   display: flex;
-  gap: 20px;
+  gap: 25px; /* ← カレンダーとリストの余白 */
   margin-top: 20px;
 }
 
@@ -69,7 +85,7 @@
 
 .register-box {
   flex: 3;
-  background: rgba(255,255,255,0.9);
+  background: #fff; /* ← 半透明や重ねを禁止して単色に */
   border-radius: 12px;
   padding: 15px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -82,12 +98,10 @@
   align-items: center;
   margin-bottom: 10px;
 }
-
 .calendar-header h2 {
   font-size: 20px;
   font-weight: bold;
 }
-
 .month-nav {
   background: linear-gradient(135deg,#FDB9C8,#004CA0);
   border: none;
@@ -140,7 +154,6 @@
 .calendar-day:hover {
   background: #fde2ea;
 }
-
 .calendar-day .day-number {
   margin-top: 6px;
   font-size: 16px;
@@ -190,13 +203,11 @@
   margin-bottom: 10px;
   color: #004CA0;
 }
-
 .register-box ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .register-box li {
   margin-bottom: 8px;
   display: flex;
