@@ -11,9 +11,9 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [users, setUsers] = useState([]); // 表示するユーザー
+  const [users, setUsers] = useState([]); 
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(false); // 編集モード
+  const [isEditing, setIsEditing] = useState(true); // 初期から編集モード
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -56,7 +56,7 @@ const SharePage = () => {
     fetchResponses();
   }, [token]);
 
-  // ===== 新規追加（自分の列を即表示） =====
+  // ===== 新規追加 =====
   const handleAddUser = () => {
     if (!username) {
       alert("名前を入力してください！");
@@ -64,13 +64,13 @@ const SharePage = () => {
     }
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
-      setIsEditing(false); // 追加直後は編集不可
+      setIsEditing(true); // 初期から編集可能
     }
   };
 
   // ===== 出欠クリック変更 =====
   const handleSelect = (key, value) => {
-    if (!isEditing) return; // 編集モードでないと操作不可
+    if (!isEditing) return;
     setResponses((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -90,7 +90,7 @@ const SharePage = () => {
         }),
       });
       await fetchResponses();
-      setIsEditing(false); // 保存後は編集終了
+      setIsEditing(false); // 保存したら編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -106,7 +106,7 @@ const SharePage = () => {
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 名前入力 + 新規追加 */}
+      {/* 名前入力 + 新規追加 + 編集ボタン */}
       <div className="glass-black name-box">
         <input
           type="text"
