@@ -100,20 +100,29 @@ const SharePage = () => {
       alert("名前を入力してください！（必須）");
       return;
     }
-    try {
-      const payload = { user_id: username, username, responses };
 
+    const payload = { user_id: username, username, responses };
+
+    // === 先にローカルを更新（即一覧に反映） ===
+    setAllResponses((prev) => {
+      const filtered = prev.filter((r) => r.username !== username);
+      return [...filtered, payload];
+    });
+    setIsEditing(false); // 保存直後は編集終了
+
+    try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      await fetchResponses();
-      setIsEditing(false); // 保存後は編集終了
+      // 念のためサーバーから再取得して整合性を保つ
+      fetchResponses();
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
+      alert("保存に失敗しました");
     }
   };
 
