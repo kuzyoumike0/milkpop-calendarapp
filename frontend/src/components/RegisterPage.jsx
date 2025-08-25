@@ -1,14 +1,13 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import "../common.css";
+import "../register.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
-  const [shareLink, setShareLink] = useState(""); // 共有リンク保存
+  const [shareLink, setShareLink] = useState("");
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -22,7 +21,6 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 日付クリック
   const handleDateClick = (day) => {
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -60,7 +58,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 曜日ヘッダー
   const renderWeekdays = () => {
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
     return weekdays.map((day, i) => (
@@ -75,7 +72,6 @@ const RegisterPage = () => {
     ));
   };
 
-  // カレンダー描画
   const renderCalendarDays = () => {
     const days = [];
     const holidays = hd.getHolidays(currentYear);
@@ -142,20 +138,18 @@ const RegisterPage = () => {
     }
   };
 
-  // 時間帯プルダウン
   const handleTimeChange = (date, value) => {
     setTimeRanges({ ...timeRanges, [date]: value });
   };
 
-  // 共有リンク発行（バックエンド呼び出し）
   const generateShareLink = async () => {
     try {
-      const response = await fetch("/api/share", {
+      const response = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          schedules: selectedDates.map((d) => ({
+          dates: selectedDates.map((d) => ({
             date: d,
             time: timeRanges[d] || "終日",
           })),
@@ -163,8 +157,9 @@ const RegisterPage = () => {
       });
 
       const data = await response.json();
-      if (data.url) {
-        setShareLink(data.url);
+      if (data.share_token) {
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareLink(url);
       } else {
         alert("リンク生成に失敗しました");
       }
@@ -174,7 +169,6 @@ const RegisterPage = () => {
     }
   };
 
-  // クリップボードコピー
   const copyToClipboard = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
@@ -184,7 +178,6 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* タイトル */}
       <div className="title-input-container">
         <input
           type="text"
@@ -195,7 +188,6 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 複数 / 範囲切替 */}
       <div className="selection-toggle">
         <button
           className={selectionMode === "multiple" ? "active" : ""}
@@ -211,7 +203,6 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダーとリスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar">
@@ -231,7 +222,6 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択した日付リスト */}
         <div className="list-box">
           <h3>📅 選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -254,8 +244,6 @@ const RegisterPage = () => {
               ))}
             </ul>
           )}
-
-          {/* 共有リンク生成 */}
           <div className="share-link-box">
             <button className="share-btn" onClick={generateShareLink}>
               共有リンクを発行
