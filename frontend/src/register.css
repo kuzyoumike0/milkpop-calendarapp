@@ -301,3 +301,21 @@
   box-shadow: 0 0 10px rgba(255, 200, 0, 0.7);
   transform: scale(1.1);
 }
+/* ===== プルダウン（区分） ===== */
+.schedule-select {
+  background: #fff;          /* 背景白 */
+  color: #000;               /* 文字黒 */
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.schedule-select:focus {
+  outline: none;
+  border-color: #FDB9C8;     /* フォーカス時ピンク枠 */
+  box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
+}
