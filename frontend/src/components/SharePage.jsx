@@ -6,53 +6,35 @@ import "../common.css";
 const SharePage = () => {
   const { token } = useParams();
   const [title, setTitle] = useState("");
-  const [schedules, setSchedules] = useState([]);
+  const [grouped, setGrouped] = useState({});
 
-  // 初回ロード
   useEffect(() => {
-    const data = localStorage.getItem(`schedule_${token}`);
-    if (data) {
-      const parsed = JSON.parse(data);
+    const fetchData = async () => {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/share/${token}`);
+      const data = await res.json();
 
-      // 既に保存済み（参加状況あり）ならそれを読み込む
-      if (parsed.schedules && parsed.schedules.length > 0) {
-        setTitle(parsed.title || "");
-        setSchedules(parsed.schedules);
-      }
-    }
+      setTitle(data.title);
+
+      // 🔹 日付+時間帯ごとにグループ化
+      const groupedData = {};
+      data.schedules.forEach((s) => {
+        const key = `${s.date} (${s.time})`;
+        if (!groupedData[key]) groupedData[key] = [];
+        groupedData[key].push(s);
+      });
+      setGrouped(groupedData);
+    };
+    fetchData();
   }, [token]);
 
-  // 入力変更
-  const handleChange = (index, field, value) => {
-    const updated = [...schedules];
-    updated[index][field] = value;
-    setSchedules(updated);
-  };
-
-  // 保存 → localStorageに反映
-  const saveSchedule = (index) => {
-    const updated = [...schedules];
-    setSchedules(updated);
-
-    const stored = JSON.parse(localStorage.getItem(`schedule_${token}`)) || {};
-    stored.schedules = updated;
-    localStorage.setItem(`schedule_${token}`, JSON.stringify(stored));
-
-    alert(
-      `${schedules[index].date} ${schedules[index].time} | ${schedules[index].name || "未入力"} さん → ${schedules[index].status} を保存しました`
-    );
-  };
-
-  // 削除 → localStorageからも更新
-  const deleteSchedule = (index) => {
-    if (window.confirm("このスケジュールを削除しますか？")) {
-      const updated = schedules.filter((_, i) => i !== index);
-      setSchedules(updated);
-
-      const stored = JSON.parse(localStorage.getItem(`schedule_${token}`)) || {};
-      stored.schedules = updated;
-      localStorage.setItem(`schedule_${token}`, JSON.stringify(stored));
-    }
+  const saveAttendance = async (date, time, name, status) => {
+    await fetch(`${process.env.REACT_APP_API_URL}/api/share/${token}/attendance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, time, name, status }),
+    });
+    alert(`${date} (${time}) | ${name} さん → ${status} を保存しました`);
+    window.location.reload(); // 再読み込みで即反映
   };
 
   return (
@@ -60,58 +42,52 @@ const SharePage = () => {
       <h2 className="page-title">共有スケジュール</h2>
       {title && <h3>{title}</h3>}
 
-      <table className="attendance-table">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>時間帯</th>
-            <th>名前</th>
-            <th>参加状況</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {schedules.map((s, i) => (
-            <tr key={i}>
-              <td>{s.date}</td>
-              <td>{s.time}</td>
-              <td>
-                <input
-                  type="text"
-                  value={s.name || ""}
-                  onChange={(e) => handleChange(i, "name", e.target.value)}
-                  placeholder="名前"
-                />
-              </td>
-              <td>
-                <select
-                  className="share-dropdown"
-                  value={s.status || "〇"}
-                  onChange={(e) => handleChange(i, "status", e.target.value)}
-                >
-                  <option value="〇">〇</option>
-                  <option value="△">△</option>
-                  <option value="✖">✖</option>
-                </select>
-              </td>
-              <td>
-                <button
-                  className="action-button save"
-                  onClick={() => saveSchedule(i)}
-                >
-                  保存
-                </button>
-                <button
-                  className="action-button delete"
-                  onClick={() => deleteSchedule(i)}
-                >
-                  削除
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {Object.keys(grouped).map((key) => (
+        <div key={key} className="schedule-block">
+          <h4>{key}</h4>
+          <table className="attendance-table">
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>参加状況</th>
+              </tr>
+            </thead>
+            <tbody>
+              {grouped[key].map((s, i) => (
+                <tr key={i}>
+                  <td>{s.name || "（未入力）"}</td>
+                  <td>{s.status}</td>
+                </tr>
+              ))}
+              {/* 入力欄 */}
+              <tr>
+                <td>
+                  <input type="text" id={`name-${key}`} placeholder="名前" />
+                </td>
+                <td>
+                  <select id={`status-${key}`} defaultValue="〇">
+                    <option value="〇">〇</option>
+                    <option value="△">△</option>
+                    <option value="✖">✖</option>
+                  </select>
+                  <button
+                    onClick={() =>
+                      saveAttendance(
+                        key.split(" ")[0], // date
+                        key.match(/\((.*?)\)/)[1], // time
+                        document.getElementById(`name-${key}`).value,
+                        document.getElementById(`status-${key}`).value
+                      )
+                    }
+                  >
+                    保存
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 };
