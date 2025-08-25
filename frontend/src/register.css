@@ -301,10 +301,10 @@
   box-shadow: 0 0 10px rgba(255, 200, 0, 0.7);
   transform: scale(1.1);
 }
-/* ===== プルダウン（区分） ===== */
-.schedule-select {
-  background: #fff;          /* 背景白 */
-  color: #000;               /* 文字黒 */
+/* ===== 全プルダウン統一デザイン ===== */
+select {
+  background: #fff;  /* 背景白 */
+  color: #000;       /* 文字黒 */
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -312,10 +312,21 @@
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  appearance: none; /* ブラウザ標準の矢印を消す */
 }
 
-.schedule-select:focus {
+/* フォーカス時（選択中） */
+select:focus {
   outline: none;
-  border-color: #FDB9C8;     /* フォーカス時ピンク枠 */
+  border-color: #FDB9C8; /* ピンク枠 */
   box-shadow: 0 0 6px rgba(253, 185, 200, 0.6);
 }
+
+/* option のスタイル */
+option {
+  background: #fff;  /* ドロップダウン展開時も白背景 */
+  color: #000;       /* 黒文字 */
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  padding: 6px 10px;
+}
+
