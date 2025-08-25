@@ -6,7 +6,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start; /* 左寄せ */
 }
 
 .page-title {
@@ -14,6 +14,8 @@
   font-weight: bold;
   margin-bottom: 20px;
   text-shadow: 0 3px 6px rgba(0,0,0,0.25);
+  text-align: left;
+  width: 100%;
 }
 
 .glass-black {
@@ -21,7 +23,7 @@
   border-radius: 16px;
   padding: 20px;
   margin: 15px 0;
-  width: 80%;
+  width: 100%;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.2);
@@ -30,7 +32,8 @@
 
 .title-box {
   font-size: 18px;
-  text-align: center;
+  text-align: left;
+  margin-bottom: 15px;
 }
 
 .name-box input {
@@ -39,31 +42,47 @@
   border-radius: 10px;
   border: none;
   font-size: 15px;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.schedule-list {
+  width: 100%;
+  margin-top: 20px;
 }
 
 .schedule-list table {
   width: 100%;
   border-collapse: collapse;
-  text-align: left;
 }
+
+.schedule-list th {
+  text-align: left;
+  padding: 10px;
+  font-weight: bold;
+  border-bottom: 2px solid rgba(255,255,255,0.3);
+}
+
 .schedule-list td {
   padding: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
+  vertical-align: middle;
 }
+
 .date-cell {
   font-weight: bold;
   color: #fff;
+  min-width: 120px;
 }
+
 .time-cell {
   color: #fdb9c8;
   font-size: 14px;
-  min-width: 80px;
+  min-width: 100px;
 }
 
 .response-dropdown {
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   border: none;
   background: rgba(255,255,255,0.8);
@@ -76,11 +95,16 @@
   color: #fff;
 }
 
+.user-list {
+  font-size: 14px;
+  color: #ddd;
+}
+
 .button-area {
   margin-top: 20px;
   display: flex;
   gap: 15px;
-  justify-content: center;
+  justify-content: flex-start; /* 左寄せ */
 }
 .save-button {
   padding: 12px 25px;
