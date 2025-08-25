@@ -1,18 +1,17 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Holidays from "date-holidays";
+import { v4 as uuidv4 } from "uuid";
 import "../index.css";
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
 
   const [timeOptions, setTimeOptions] = useState({});
   const [customTimes, setCustomTimes] = useState({});
-  const [shareUrl, setShareUrl] = useState(""); // ← 発行したリンクを保存する
+  const [shareUrl, setShareUrl] = useState("");
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -29,6 +28,7 @@ const RegisterPage = () => {
     `${String(i).padStart(2, "0")}:00`
   );
 
+  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -54,6 +54,7 @@ const RegisterPage = () => {
     }
   };
 
+  // 月送り
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -71,7 +72,8 @@ const RegisterPage = () => {
     }
   };
 
-  const handleShare = async () => {
+  // 共有リンク発行（毎回新しい token）
+  const handleShare = () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
       return;
@@ -86,28 +88,18 @@ const RegisterPage = () => {
       return `${d}|${timeOptions[d] || "終日"}`;
     });
 
-    try {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          dates: formattedDates,
-        }),
-      });
-      const data = await res.json();
-      if (data.share_token) {
-        const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareUrl(url); // ← URL を画面に保存するだけ
-      } else {
-        alert("共有リンクの生成に失敗しました");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("サーバーエラー");
-    }
+    const token = uuidv4();
+    const url = `${window.location.origin}/share/${token}`;
+
+    // 保存（localStorage）
+    const data = { token, title, dates: formattedDates };
+    localStorage.setItem(`share_${token}`, JSON.stringify(data));
+
+    // URLをセット
+    setShareUrl(url);
   };
 
+  // コピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("コピーしました！");
@@ -118,7 +110,7 @@ const RegisterPage = () => {
     <div className="page-container">
       <h2 className="page-title">📅 日程登録ページ</h2>
 
-      {/* タイトル入力 */}
+      {/* 入力フォーム */}
       <div className="input-card">
         <input
           type="text"
@@ -128,7 +120,7 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        {/* 選択モード */}
+        {/* 範囲 / 複数 ラジオ */}
         <div className="radio-group">
           <input
             type="radio"
@@ -150,7 +142,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* カレンダー & 選択リスト */}
+      {/* カレンダー */}
       <div className="main-layout">
         <div className="calendar-section">
           <div className="calendar">
@@ -268,10 +260,17 @@ const RegisterPage = () => {
         🔗 共有リンクを発行
       </button>
 
-      {/* 発行後リンク表示（クリックで遷移しない） */}
+      {/* 発行後リンク表示（クリックでSharePageに遷移 + コピー） */}
       {shareUrl && (
         <div className="share-link">
-          <span className="share-url">{shareUrl}</span>
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="share-url"
+          >
+            {shareUrl}
+          </a>
           <button
             onClick={copyToClipboard}
             className="copy-btn"
