@@ -14,18 +14,18 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // 日本時間の日付を扱う
+  // 日本時間に変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト
+  // 時刻リスト（1時間刻み）
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 📌 日付クリック処理
+  // 📌 日付クリック
   const handleDateClick = (date) => {
     const jstDate = getJSTDate(date);
 
@@ -87,7 +87,7 @@ const RegisterPage = () => {
     setSelectedDates(updated);
   };
 
-  // 📌 共有リンク
+  // 📌 共有リンク生成
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
@@ -150,6 +150,8 @@ const RegisterPage = () => {
           </div>
 
           <Calendar
+            locale="ja-JP"
+            calendarType="gregory"   // ← 月曜始まりにする
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
