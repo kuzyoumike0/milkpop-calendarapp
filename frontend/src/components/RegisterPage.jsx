@@ -127,21 +127,40 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* カレンダー */}
-      <div className="calendar">
-        <div className="calendar-header">
-          <button className="month-nav" onClick={handlePrevMonth}>
-            ◀
-          </button>
-          <h2>
-            {currentYear}年 {currentMonth + 1}月
-          </h2>
-          <button className="month-nav" onClick={handleNextMonth}>
-            ▶
-          </button>
+      {/* 横並びレイアウト */}
+      <div className="calendar-container">
+        {/* 左 7割 → カレンダー */}
+        <div className="calendar-box">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button className="month-nav" onClick={handlePrevMonth}>
+                ◀
+              </button>
+              <h2>
+                {currentYear}年 {currentMonth + 1}月
+              </h2>
+              <button className="month-nav" onClick={handleNextMonth}>
+                ▶
+              </button>
+            </div>
+            <div className="calendar-weekdays">{renderWeekdays()}</div>
+            <div className="calendar-days">{renderCalendarDays()}</div>
+          </div>
         </div>
-        <div className="calendar-weekdays">{renderWeekdays()}</div>
-        <div className="calendar-days">{renderCalendarDays()}</div>
+
+        {/* 右 3割 → 選択した日付リスト */}
+        <div className="list-box">
+          <h3>📅 選択した日付</h3>
+          {selectedDates.length === 0 ? (
+            <p>日付をクリックしてください</p>
+          ) : (
+            <ul>
+              {selectedDates.map((d) => (
+                <li key={d}>{d}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
