@@ -232,3 +232,52 @@
 .copy-button:hover {
   background: #666;
 }
+/* 日曜=赤, 土曜=青 */
+.sunday {
+  color: #d33 !important;
+}
+.saturday {
+  color: #004CA0 !important;
+}
+
+/* 複数選択・範囲選択の切替 */
+.mode-select {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.mode-select label {
+  cursor: pointer;
+}
+.mode-select input {
+  display: none;
+}
+.mode-select span {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  background: rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+.mode-select input:checked + span {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* 時間指定のプルダウンを可愛く */
+.time-dropdown {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: 0.2s;
+}
+.time-dropdown:hover {
+  background: #FDB9C8;
+  color: #fff;
+}
