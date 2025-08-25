@@ -34,69 +34,64 @@ const SharePage = () => {
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: userName, responses }),
+      body: JSON.stringify({ user_id: userName, username: userName, responses }),
     });
-    const updated = await fetch(`/api/schedules/${token}`).then((r) =>
-      r.json()
-    );
+    const updated = await fetch(`/api/schedules/${token}`).then((r) => r.json());
     setScheduleData(updated);
+    alert("保存しました！");
+  };
+
+  const handleDelete = () => {
+    setResponses({});
+    alert("選択をリセットしました");
   };
 
   if (!scheduleData) return <p>読み込み中...</p>;
 
   return (
     <div className="page-container">
-      <h2 className="page-title">📢 共有ページ</h2>
-      <h3>タイトル: {scheduleData.title}</h3>
-      <input
-        type="text"
-        placeholder="名前を入力"
-        value={userName}
-        onChange={(e) => setUserName(e.target.value)}
-        className="title-input"
-      />
+      <h2 className="page-title">共有スケジュール</h2>
 
-      {scheduleData.dates.map((d) => (
-        <div key={d} className="schedule-item">
-          <span>{d}</span>
-          <select
-            value={responses[d] || ""}
-            onChange={(e) => handleSelect(d, e.target.value)}
-            className="custom-dropdown"
-          >
-            <option value="">選択</option>
-            <option value="〇">〇</option>
-            <option value="✕">✕</option>
-          </select>
-        </div>
-      ))}
+      {/* タイトル表示 */}
+      <div className="input-card">
+        <p className="title-display">{scheduleData.title}</p>
+      </div>
 
-      <button onClick={handleSave} className="share-button fancy">
-        保存
-      </button>
+      {/* 名前入力 */}
+      <div className="input-card">
+        <input
+          type="text"
+          placeholder="あなたの名前を入力"
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
+          className="title-input"
+        />
+      </div>
 
-      {scheduleData.responses && (
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>名前</th>
-              {scheduleData.dates.map((d) => (
-                <th key={d}>{d}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(scheduleData.responses).map(([name, res]) => (
-              <tr key={name}>
-                <td>{name}</td>
-                {scheduleData.dates.map((d) => (
-                  <td key={d}>{res[d] || "-"}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* 日程一覧 */}
+      <div className="input-card">
+        <h3>日程一覧</h3>
+        {scheduleData.dates.map((d) => (
+          <div key={d} className="schedule-item">
+            <span>{d}</span>
+            <select
+              value={responses[d] || ""}
+              onChange={(e) => handleSelect(d, e.target.value)}
+              className="custom-dropdown"
+            >
+              <option value="">選択</option>
+              <option value="〇">〇</option>
+              <option value="✕">✕</option>
+            </select>
+          </div>
+        ))}
+      </div>
+
+      {/* ボタン */}
+      <div className="button-group">
+        <button onClick={handleSave} className="btn-save">保存</button>
+        <button onClick={handleDelete} className="btn-delete">削除</button>
+      </div>
     </div>
   );
 };
