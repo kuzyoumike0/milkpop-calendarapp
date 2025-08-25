@@ -12,7 +12,6 @@ const RegisterPage = () => {
   const [endTime, setEndTime] = useState("23:59");
   const [shareUrl, setShareUrl] = useState("");
 
-  // 📌 カレンダー日付選択（複数 & 範囲対応）
   const handleDateChange = (date) => {
     if (Array.isArray(date)) {
       const [start, end] = date;
@@ -34,12 +33,10 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 時刻リスト生成（1時間ごと）
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 📌 共有リンク発行
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
