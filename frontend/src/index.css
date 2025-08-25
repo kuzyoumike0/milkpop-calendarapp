@@ -581,3 +581,23 @@ footer {
   padding: 0.5rem 0.8rem;
   font-size: 0.9rem;
 }
+/* 月移動ボタン */
+.calendar-header button {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.calendar-header button:hover {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  color: #000;
+}
