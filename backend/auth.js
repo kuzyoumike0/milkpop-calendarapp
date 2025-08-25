@@ -1,166 +1,346 @@
-// backend/auth.js
+// backend/index.js
 import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import authRouter from "./auth.js";
+import pool from "./db.js"; // ← ここがポイント：共通Poolを使う
 import jwt from "jsonwebtoken";
-import pool from "./db.js"; // pg Pool（sslmode=require, rejectUnauthorized:false 推奨）
 
-const router = express.Router();
-
-// ==== 必須環境変数チェック ====
-const {
-  JWT_SECRET,
-  DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET,
-  DISCORD_REDIRECT_URI,
-  FRONTEND_URL,
-} = process.env;
-
-if (!JWT_SECRET) {
-  console.error("FATAL: JWT_SECRET is not set");
-  process.exit(1);
-}
-for (const [k, v] of Object.entries({
-  DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET,
-  DISCORD_REDIRECT_URI,
-  FRONTEND_URL,
-})) {
-  if (!v) console.warn(`WARN: ${k} is not set`);
-}
-
-// ==== 起動時: 接続先診断 + スキーマブートストラップ ====
-// 失敗してもアプリ自体は起動を続ける（ログだけ出す）
-try {
-  const diag = await pool.query(`
-    SELECT
-      current_user,
-      current_database() AS db,
-      inet_server_addr()::text AS host,
-      inet_server_port()   AS port,
-      current_schema()      AS schema,
-      (SELECT setting FROM pg_settings WHERE name='search_path') AS search_path
-  `);
-  console.log("DB DIAG:", diag.rows[0]);
-} catch (e) {
-  console.warn("DB DIAG failed:", e.message);
-}
-
-// 初期化（idempotent）
-try {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS public.users (
-      id SERIAL PRIMARY KEY,
-      discord_id TEXT UNIQUE NOT NULL,
-      username   TEXT NOT NULL,
-      access_token  TEXT,
-      refresh_token TEXT
-    );
-  `);
-  console.log("users table ensured");
-} catch (e) {
-  console.error("users table bootstrap failed:", e.message);
-  // ここで落としても良いが、一旦続行
-}
-
-// ==== ルーティング ====
-
-// 認可画面へ
-router.get("/discord", (_req, res) => {
-  const scope = encodeURIComponent("identify");
-  const url = `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(
-    DISCORD_CLIENT_ID
-  )}&response_type=code&redirect_uri=${encodeURIComponent(
-    DISCORD_REDIRECT_URI
-  )}&scope=${scope}`;
-  res.redirect(url);
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  // 同一オリジンならこの設定ごと削ってOK
+  cors: {
+    origin: process.env.FRONTEND_URL || "*",
+    methods: ["GET", "POST", "DELETE"],
+    credentials: true,
+  },
 });
+const PORT = process.env.PORT || 5000;
 
-// コールバック
-router.get("/discord/callback", async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send("Codeがありません");
+// ===== ミドルウェア =====
+app.use(express.json());
+app.use(cookieParser());
 
+// 別オリジン運用なら CORS 必須 / 同一オリジンなら以下ブロックは削除OK
+if (process.env.FRONTEND_URL) {
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }));
+}
+
+// プロキシ配下で secure cookie を使うなら推奨
+app.set("trust proxy", 1);
+
+// ===== DB初期化 =====
+const initDB = async () => {
   try {
-    // アクセストークン取得
-    const params = new URLSearchParams();
-    params.append("client_id", DISCORD_CLIENT_ID);
-    params.append("client_secret", DISCORD_CLIENT_SECRET);
-    params.append("grant_type", "authorization_code");
-    params.append("code", code);
-    params.append("redirect_uri", DISCORD_REDIRECT_URI);
-    params.append("scope", "identify");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id UUID PRIMARY KEY,
+        title TEXT NOT NULL,
+        dates JSONB NOT NULL,
+        options JSONB,
+        share_token VARCHAR(64) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedule_responses (
+        id SERIAL PRIMARY KEY,
+        schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        user_id VARCHAR(64) NOT NULL,
+        username TEXT,
+        responses JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(schedule_id, user_id)
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS personal_schedules (
+        id UUID PRIMARY KEY,
+        share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        memo TEXT,
+        dates JSONB NOT NULL,
+        options JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Database initialized");
+  } catch (err) {
+    console.error("❌ DB初期化エラー:", err);
+  }
+};
+initDB();
 
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      body: params.toString(),
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
-    if (!tokenRes.ok) {
-      const text = await tokenRes.text();
-      console.error("Token exchange failed:", tokenRes.status, text);
-      return res.status(502).send("Discordトークン取得に失敗しました");
-    }
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-    const refreshToken = tokenData.refresh_token;
-
-    if (!accessToken) {
-      console.error("No access_token in response:", tokenData);
-      return res.status(502).send("Discordトークンが不正です");
-    }
-
-    // ユーザー情報取得
-    const userRes = await fetch("https://discord.com/api/users/@me", {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!userRes.ok) {
-      const text = await userRes.text();
-      console.error("User fetch failed:", userRes.status, text);
-      return res.status(502).send("Discordユーザー取得に失敗しました");
-    }
-    const userData = await userRes.json();
-
-    // DB upsert（schemaを明示）
-    const upsert = await pool.query(
-      `INSERT INTO public.users (discord_id, username, access_token, refresh_token)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (discord_id)
-       DO UPDATE SET
-         username = EXCLUDED.username,
-         access_token = EXCLUDED.access_token,
-         refresh_token = EXCLUDED.refresh_token
-       RETURNING id`,
-      [userData.id, userData.username, accessToken, refreshToken]
-    );
-    const userId = upsert.rows[0].id;
-
-    // JWT 発行
-    const jwtToken = jwt.sign(
-      { userId, discordId: userData.id, username: userData.username },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // --- ★ ここからクッキー発行＋/meへ ---
-const isProd = process.env.NODE_ENV === "production";
-
-// 別オリジンでAPIを叩くなら SameSite=None & Secure 必須（本番）
-// ローカル開発(http://localhost)では Secure=false / SameSite=Lax でOK
-res.cookie("token", jwtToken, {
-  httpOnly: true,
-  secure: isProd,                 // 本番は true を推奨
-  sameSite: isProd ? "None" : "Lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  path: "/",                      // ルート配下で送信
+// ===== Socket.IO =====
+io.on("connection", (socket) => {
+  console.log("🟢 A user connected");
+  socket.on("joinSchedule", (token) => socket.join(token));
+  socket.on("disconnect", () => console.log("🔴 A user disconnected"));
 });
 
-// フロントの /me へ
-const redirect = new URL("/me", FRONTEND_URL);
-return res.redirect(redirect.toString());
+// ===== 認証・ユーザー関連 =====
+app.use("/auth", authRouter);
 
+// 超軽量の認証チェック（Cookie or Bearer）
+function authRequired(req, res, next) {
+  try {
+    const header = req.get("Authorization") || "";
+    const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
+    const token = req.cookies?.token || bearer;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET); // ← これでOK
+    req.user = payload; // { userId, discordId, username, iat, exp }
+    next();
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+
+// ログインユーザー情報
+app.get("/api/me", authRequired, async (req, res) => {
+  const { rows } = await pool.query(
+    "SELECT id, discord_id, username, now() AS server_time FROM public.users WHERE id = $1",
+    [req.user.userId]
+  );
+  if (!rows[0]) return res.status(404).json({ error: "User not found" });
+  res.json({ user: rows[0] });
+});
+
+// ===== 既存 API（schedules など）はそのまま =====
+app.get("/api/schedules", async (_req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, title, share_token, created_at FROM schedules ORDER BY created_at DESC"
+    );
+    res.json(result.rows);
   } catch (err) {
-    console.error("Discord callback error:", err);
-    res.status(500).send("Discordログインに失敗しました");
+    console.error("DB読み込みエラー:", err);
+    res.status(500).json({ error: "DB読み込みエラー" });
   }
 });
 
-export default router;
+// --- 共有スケジュール作成 ---
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates, options } = req.body;
+    if (!title || !dates) {
+      return res.status(400).json({ error: "タイトルと日程は必須です" });
+    }
+
+    const id = uuidv4();
+    const shareToken = uuidv4();
+
+    const result = await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+    );
+
+    res.json({ share_token: result.rows[0].share_token });
+  } catch (err) {
+    console.error("DB保存エラー:", err);
+    res.status(500).json({ error: "DB保存エラー" });
+  }
+});
+
+// --- 特定スケジュール取得（share_token 経由） ---
+app.get("/api/schedules/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query("SELECT * FROM schedules WHERE share_token=$1", [token]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("DB取得エラー:", err);
+    res.status(500).json({ error: "DB取得エラー" });
+  }
+});
+
+// --- 出欠回答を追加/更新（リアルタイム通知付き） ---
+app.post("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { user_id, username, responses } = req.body;
+
+    if (!user_id || !responses) {
+      return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
+    }
+
+    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
+
+    // responses を統一キーで再構築
+    const normalizedResponses = {};
+    dates.forEach((d, index) => {
+      const key =
+        d.time === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.time})`;
+      normalizedResponses[key] = responses[index] || "-";
+    });
+
+    const result = await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username = EXCLUDED.username,
+                     responses = EXCLUDED.responses,
+                     created_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [scheduleId, user_id, username || "匿名", JSON.stringify(normalizedResponses)]
+    );
+
+    // 🔥 リアルタイム通知
+    io.to(token).emit("updateResponses", {
+      user_id,
+      username,
+      responses: normalizedResponses,
+    });
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存エラー" });
+  }
+});
+
+// --- 出欠回答の一覧取得 ---
+app.get("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
+    const result = await pool.query(
+      "SELECT user_id, username, responses, created_at FROM schedule_responses WHERE schedule_id=$1 ORDER BY created_at DESC",
+      [scheduleId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("回答一覧取得エラー:", err);
+    res.status(500).json({ error: "回答一覧取得エラー" });
+  }
+});
+
+// --- 出欠集計（○✖△人数まとめ） ---
+app.get("/api/schedules/:token/aggregate", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
+
+    const responses = await pool.query(
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      [scheduleId]
+    );
+
+    const aggregate = {};
+    dates.forEach((d) => {
+      const key =
+        d.time === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.time})`;
+      aggregate[key] = { "○": 0, "✖": 0, "△": 0 };
+    });
+
+    responses.rows.forEach((row) => {
+      Object.entries(row.responses).forEach(([key, status]) => {
+        if (aggregate[key] && ["○", "✖", "△"].includes(status)) {
+          aggregate[key][status]++;
+        }
+      });
+    });
+
+    res.json(aggregate);
+  } catch (err) {
+    console.error("集計エラー:", err);
+    res.status(500).json({ error: "集計エラー" });
+  }
+});
+
+// --- 特定ユーザー回答の削除 ---
+app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
+  try {
+    const { token, user_id } = req.params;
+    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
+    const result = await pool.query(
+      "DELETE FROM schedule_responses WHERE schedule_id=$1 AND user_id=$2 RETURNING *",
+      [scheduleId, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "ユーザーが見つかりません" });
+    }
+
+    // 🔥 リアルタイム削除通知
+    io.to(token).emit("deleteResponse", { user_id });
+
+    res.json({ message: "削除しました", deleted: result.rows[0] });
+  } catch (err) {
+    console.error("削除エラー:", err);
+    res.status(500).json({ error: "削除エラー" });
+  }
+});
+
+// --- 個人スケジュール保存 ---
+app.post("/api/personal", async (req, res) => {
+  try {
+    const { share_id, title, memo, dates, options } = req.body;
+    if (!share_id || !title || !dates) {
+      return res.status(400).json({ error: "必須項目が不足しています" });
+    }
+
+    const id = uuidv4();
+    const result = await pool.query(
+      `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [id, share_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("個人スケジュール保存エラー:", err);
+    res.status(500).json({ error: "個人スケジュール保存エラー" });
+  }
+});
+
+// ===== Reactビルド配信（同一オリジンで運用する場合）=====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendPath = path.join(__dirname, "../frontend/build");
+app.use(express.static(frontendPath));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// ===== サーバー起動 =====
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
