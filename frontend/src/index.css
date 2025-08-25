@@ -778,20 +778,22 @@ button:hover {
 
 /* コンパクトなアイコン風プルダウン */
 .icon-dropdown {
-  min-width: 70px;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
+  width: 55px;              /* ← 幅を短く */
+  min-width: unset;         /* デフォルトのmin幅を解除 */
+  padding: 0.3rem 0.2rem;   /* 内側の余白も小さく */
+  border-radius: 6px;
   border: 2px solid #FDB9C8;
   background: #fff;
   color: #000;
-  font-size: 1rem;
+  font-size: 0.9rem;        /* 少し小さめ */
   font-weight: bold;
   text-align: center;
   cursor: pointer;
 }
+
 .icon-dropdown option {
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: bold;
 }
 
