@@ -601,3 +601,19 @@ footer {
   background: linear-gradient(135deg, #50C878, #FDB9C8);
   color: #000;
 }
+/* 時刻指定ブロック（縦並び or 折返しOK） */
+.custom-time {
+  display: flex;
+  flex-wrap: wrap;   /* ← はみ出しを折り返す */
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;       /* ← 親の幅に収める */
+}
+
+.custom-dropdown.short {
+  flex: 1;           /* ← 均等幅に */
+  min-width: 90px;   /* ← はみ出さない幅 */
+  max-width: 120px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
