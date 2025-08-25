@@ -170,3 +170,25 @@
   color: #fff;
   cursor: pointer;
 }
+/* 日付セルをしっかり見えるように */
+.calendar-day {
+  text-align: center;
+  padding: 15px 5px;
+  margin: 3px;
+  border-radius: 12px;
+  background: #ffffff;  /* ← 白背景で見やすく */
+  border: 1px solid #ddd; /* ← 薄いグレー枠を追加 */
+  cursor: pointer;
+  min-height: 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.calendar-day:hover {
+  background: #ffe6ef; /* ← ホバー時にピンクで強調 */
+}
+.calendar-day.selected {
+  background: #004CA0;
+  color: #fff;
+  font-weight: bold;
+}
