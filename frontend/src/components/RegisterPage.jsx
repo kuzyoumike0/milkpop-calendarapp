@@ -15,10 +15,12 @@ const RegisterPage = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
   const hd = new Holidays("JP");
+  const holidays = hd.getHolidays(currentYear).filter(
+    (h) => new Date(h.date).getMonth() === currentMonth
+  );
 
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
-
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
@@ -78,7 +80,6 @@ const RegisterPage = () => {
   // 日付セル
   const renderCalendarDays = () => {
     const days = [];
-    const holidays = hd.getHolidays(currentYear);
 
     // 月初の空白
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -106,14 +107,10 @@ const RegisterPage = () => {
         dayClass += " selected";
       }
 
-      // 今日判定（日本時間 JST）
-      const todayJST = new Date();
-      todayJST.setHours(
-        todayJST.getHours() + 9 - todayJST.getTimezoneOffset() / 60
-      );
-      const todayKey = `${todayJST.getFullYear()}-${String(
-        todayJST.getMonth() + 1
-      ).padStart(2, "0")}-${String(todayJST.getDate()).padStart(2, "0")}`;
+      // 今日判定
+      const todayKey = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       if (dateKey === todayKey) {
         dayClass += " today";
       }
@@ -151,7 +148,7 @@ const RegisterPage = () => {
     setTimeRanges({ ...timeRanges, [date]: value });
   };
 
-  // 共有リンク発行（DBに保存）
+  // 共有リンク発行
   const generateShareLink = async () => {
     try {
       const response = await fetch("/api/schedules", {
@@ -179,7 +176,6 @@ const RegisterPage = () => {
     }
   };
 
-  // コピー
   const copyToClipboard = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
@@ -202,27 +198,27 @@ const RegisterPage = () => {
 
       {/* 選択モードラジオ */}
       <div className="selection-toggle">
-        <label>
+        <label className="radio-label">
           <input
             type="radio"
             value="multiple"
             checked={selectionMode === "multiple"}
             onChange={() => setSelectionMode("multiple")}
           />
-          複数選択
+          <span className="custom-radio"></span> 複数選択
         </label>
-        <label>
+        <label className="radio-label">
           <input
             type="radio"
             value="range"
             checked={selectionMode === "range"}
             onChange={() => setSelectionMode("range")}
           />
-          範囲選択
+          <span className="custom-radio"></span> 範囲選択
         </label>
       </div>
 
-      {/* カレンダー＋右側ボックス */}
+      {/* カレンダー＋リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar">
