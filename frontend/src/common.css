@@ -242,3 +242,25 @@ a {
 .selected-list {
   flex: 3;
 }
+.selected-list select {
+  margin-top: 5px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.selected-list select:focus {
+  border-color: #004CA0;
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 76, 160, 0.4);
+}
+
+.time-range {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
