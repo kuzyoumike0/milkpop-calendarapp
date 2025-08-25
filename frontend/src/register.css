@@ -10,7 +10,6 @@
   align-items: center;
 }
 
-/* ====== タイトル ====== */
 .page-title {
   font-size: 28px;
   font-weight: bold;
@@ -18,7 +17,7 @@
   text-shadow: 0 3px 6px rgba(0,0,0,0.25);
 }
 
-/* ====== 黒半透明カード ====== */
+/* 半透明カード */
 .glass-black {
   background: rgba(0, 0, 0, 0.5);
   border-radius: 16px;
@@ -29,11 +28,10 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
   color: #fff;
 }
-
-/* ====== 白半透明カード ====== */
 .glass-white {
   background: rgba(255, 255, 255, 0.6);
   border-radius: 20px;
+  padding: 20px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -41,7 +39,7 @@
   color: #222;
 }
 
-/* ====== レイアウト ====== */
+/* レイアウト */
 .main-content {
   display: flex;
   justify-content: space-between;
@@ -50,101 +48,23 @@
   margin-top: 20px;
   gap: 30px;
 }
-
 .input-card {
   width: 80%;
   margin-bottom: 20px;
 }
+.calendar-card { flex: 7; }
+.schedule-box { flex: 3; }
 
-.calendar-card {
-  flex: 7;
-  padding: 20px;
-}
-
-.schedule-box {
-  flex: 3;
-  border-radius: 15px;
-  padding: 20px;
-}
-
-/* ====== カレンダー全体 ====== */
-.react-calendar {
-  width: 100%;
-  border: none;
-  font-family: inherit;
-}
-
-/* ====== ナビゲーション（月⇔ボタン） ====== */
-.react-calendar__navigation {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-.react-calendar__navigation button {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border: none;
-  color: #fff;
-  padding: 6px 12px;
-  margin: 0 5px;
-  border-radius: 50%;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  transition: all 0.2s ease;
-}
-.react-calendar__navigation button:hover {
-  transform: scale(1.1);
-}
-
-/* ====== 曜日ヘッダー ====== */
-.react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-.react-calendar__month-view__weekdays abbr {
-  text-decoration: none;
-  font-size: 14px;
-  color: #333;
-}
-
-/* ====== 日付タイル ====== */
-.react-calendar__tile {
-  border-radius: 12px;
-  margin: 3px;
-  padding: 12px 0;
-  font-weight: bold;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.react-calendar__tile:hover {
-  background: #FDB9C8;
-  color: #fff;
-  transform: scale(1.05);
-}
-
-/* 選択した日付 */
-.react-calendar__tile--active,
-.selected-date {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
-  color: #fff !important;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-/* 土曜・日曜・祝日 */
-.saturday {
-  color: #004CA0 !important;
-}
-.holiday {
+/* 曜日 */
+.day-sunday {
   color: #d33 !important;
   font-weight: bold;
 }
+.day-saturday {
+  color: #004CA0 !important;
+  font-weight: bold;
+}
+.day-default { color: #222; }
 .holiday-name {
   display: block;
   font-size: 10px;
@@ -152,7 +72,38 @@
   margin-top: 2px;
 }
 
-/* ====== 選択リスト ====== */
+/* 選択された日付 */
+.selected-date {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
+  color: #fff !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border-radius: 12px;
+}
+
+/* モード切替ボタン */
+.mode-select {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+.mode-select input { display: none; }
+.mode-select span {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  background: rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.mode-select input:checked + span {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* リスト */
 .schedule-box ul {
   list-style: none;
   padding: 0;
@@ -173,28 +124,25 @@
   from { transform: scale(0.7); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+.date-label { font-weight: bold; min-width: 100px; }
 
-.date-label {
-  font-weight: bold;
-  min-width: 100px;
-}
-
-/* ====== ドロップダウン（区分・時間指定） ====== */
-.time-select, .time-range select {
-  padding: 4px 8px;
-  border-radius: 8px;
+/* 区分・時間指定のドロップダウン */
+.time-select, .time-dropdown {
+  padding: 6px 10px;
+  border-radius: 12px;
   border: none;
-  background: rgba(255,255,255,0.8);
-  font-size: 12px;
+  background: rgba(255,255,255,0.9);
+  font-size: 13px;
   cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: 0.2s;
 }
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.time-dropdown:hover, .time-select:hover {
+  background: #FDB9C8;
+  color: #fff;
 }
 
-/* ====== 共有リンクボタン ====== */
+/* 共有リンク */
 .share-button {
   margin-top: 10px;
   padding: 10px 20px;
@@ -206,20 +154,9 @@
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
 }
-.share-button:hover {
-  transform: scale(1.05);
-}
-.share-link-box {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.share-link {
-  color: #fff;
-  font-size: 13px;
-  text-decoration: underline;
-}
+.share-button:hover { transform: scale(1.05); }
+.share-link-box { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.share-link { color: #fff; font-size: 13px; text-decoration: underline; }
 .copy-button {
   padding: 6px 12px;
   border-radius: 12px;
@@ -227,57 +164,5 @@
   background: #444;
   color: #fff;
   cursor: pointer;
-  transition: 0.2s;
 }
-.copy-button:hover {
-  background: #666;
-}
-/* 日曜=赤, 土曜=青 */
-.sunday {
-  color: #d33 !important;
-}
-.saturday {
-  color: #004CA0 !important;
-}
-
-/* 複数選択・範囲選択の切替 */
-.mode-select {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-.mode-select label {
-  cursor: pointer;
-}
-.mode-select input {
-  display: none;
-}
-.mode-select span {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: bold;
-  background: rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
-}
-.mode-select input:checked + span {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-}
-
-/* 時間指定のプルダウンを可愛く */
-.time-dropdown {
-  padding: 6px 10px;
-  border-radius: 12px;
-  border: none;
-  background: rgba(255,255,255,0.9);
-  font-size: 13px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: 0.2s;
-}
-.time-dropdown:hover {
-  background: #FDB9C8;
-  color: #fff;
-}
+.copy-button:hover { background: #666; }
