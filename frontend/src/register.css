@@ -1,0 +1,18 @@
+/* ====== RegisterPage レイアウト ====== */
+.page-container { max-width: 1400px; margin: auto; padding: 2rem; }
+.page-title { font-size: 2rem; font-weight: bold; }
+
+/* 入力カード */
+.input-card { background: rgba(0,0,0,0.85); border-radius: 16px; padding: 1rem; }
+
+/* カレンダー */
+.calendar { background: #fff; border-radius: 16px; padding: 1.2rem; }
+
+/* リスト */
+.options-section {
+  background: linear-gradient(135deg, #1a1a1a, #000);
+  border: 2px solid #FDB9C8;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.schedule-row { display: flex; gap: 1.5rem; padding: 0.6rem 0; }
