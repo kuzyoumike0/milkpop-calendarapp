@@ -113,3 +113,25 @@
 .schedule-box button:hover {
   transform: scale(1.05);
 }
+.main-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.input-card {
+  width: 80%;
+  margin-bottom: 20px;
+}
+
+.calendar-card {
+  flex: 2;
+  padding: 20px;
+}
+
+.schedule-box {
+  flex: 1;
+}
