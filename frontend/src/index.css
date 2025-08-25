@@ -712,3 +712,43 @@ button:hover {
   border-color: #004ca0;
 }
 
+/* 日程行を横並び */
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,192,203,0.3);
+  font-size: 1rem;
+  color: #fff;
+}
+.schedule-row:last-child {
+  border-bottom: none;
+}
+
+/* 日付と時間 */
+.schedule-date {
+  min-width: 120px;
+  font-weight: bold;
+}
+.schedule-time {
+  color: #FDB9C8;
+  font-size: 0.95rem;
+  min-width: 60px;
+}
+
+/* プルダウン（短め） */
+.short-dropdown {
+  min-width: 80px;
+  padding: 0.4rem;
+  border-radius: 8px;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #000;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.short-dropdown:hover {
+  border-color: #004CA0;
+}
