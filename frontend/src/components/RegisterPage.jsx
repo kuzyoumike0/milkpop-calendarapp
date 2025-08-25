@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const [endTime, setEndTime] = useState("23:59");
   const [shareUrl, setShareUrl] = useState("");
 
+  // カレンダー日付選択
   const handleDateChange = (date) => {
     if (Array.isArray(date)) {
       const [start, end] = date;
@@ -50,11 +51,10 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* ===== ページタイトル ===== */}
-      <h2 className="glass-white page-title">日程登録ページ</h2>
+      <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== タイトル入力 ===== */}
-      <div className="glass-black title-input-container">
+      {/* ===== 入力欄カード ===== */}
+      <div className="glass-black input-card">
         <input
           type="text"
           placeholder="タイトルを入力してください"
@@ -64,126 +64,124 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* ===== カレンダー ===== */}
-      <div className="glass-white calendar-container">
-        <Calendar
-          onChange={handleDateChange}
-          selectRange={true}
-          value={selectedDates}
-          tileClassName={({ date }) =>
-            selectedDates.some((d) => d.toDateString() === date.toDateString())
-              ? "selected-date"
-              : ""
-          }
-        />
-      </div>
+      <div className="main-content">
+        {/* ===== カレンダー（白半透明カード） ===== */}
+        <div className="glass-white calendar-card">
+          <Calendar
+            onChange={handleDateChange}
+            selectRange={true}
+            value={selectedDates}
+            tileClassName={({ date }) =>
+              selectedDates.some((d) => d.toDateString() === date.toDateString())
+                ? "selected-date"
+                : ""
+            }
+          />
+        </div>
 
-      {/* ===== 選択した日程一覧 ===== */}
-      <div className="glass-black selected-dates">
-        <h3>選択した日程</h3>
-        {selectedDates.length === 0 ? (
-          <p>日付を選択してください</p>
-        ) : (
-          <ul>
-            {selectedDates.map((d, i) => (
-              <li key={i}>
-                {d.toLocaleDateString()}{" "}
-                {timeType === "時間指定"
-                  ? `(${startTime} ~ ${endTime})`
-                  : `(${timeType})`}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* ===== 時間帯選択 ===== */}
-      <div className="glass-black time-selection">
-        <h3>時間帯を選択</h3>
-        <label>
-          <input
-            type="radio"
-            value="終日"
-            checked={timeType === "終日"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          終日
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="昼"
-            checked={timeType === "昼"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          昼
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="夜"
-            checked={timeType === "夜"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          夜
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="時間指定"
-            checked={timeType === "時間指定"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          時間指定
-        </label>
-
-        {timeType === "時間指定" && (
-          <div className="time-range">
-            <select
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
+        {/* ===== サイドの登録済みスケジュールカード ===== */}
+        <div className="glass-black schedule-box">
+          <h3>選択した日程</h3>
+          {selectedDates.length === 0 ? (
+            <p>日付を選択してください</p>
+          ) : (
+            <ul>
+              {selectedDates.map((d, i) => (
+                <li key={i}>
+                  {d.toLocaleDateString()}{" "}
+                  {timeType === "時間指定"
+                    ? `(${startTime} ~ ${endTime})`
+                    : `(${timeType})`}
+                </li>
               ))}
-            </select>
-            <span> ~ </span>
-            <select
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            >
-              {timeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
+            </ul>
+          )}
 
-      {/* ===== 共有リンク発行 ===== */}
-      <div className="glass-black share-link-container">
-        <button className="share-button" onClick={generateShareLink}>
-          📤 共有リンクを発行
-        </button>
-        {shareUrl && (
-          <div className="share-link-box">
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="share-link"
-            >
-              {shareUrl}
-            </a>
-            <button className="copy-button" onClick={copyToClipboard}>
-              📋 コピー
-            </button>
+          <h3>時間帯を選択</h3>
+          <div className="time-selection">
+            <label>
+              <input
+                type="radio"
+                value="終日"
+                checked={timeType === "終日"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              終日
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="昼"
+                checked={timeType === "昼"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              昼
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="夜"
+                checked={timeType === "夜"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              夜
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="時間指定"
+                checked={timeType === "時間指定"}
+                onChange={(e) => setTimeType(e.target.value)}
+              />
+              時間指定
+            </label>
           </div>
-        )}
+
+          {timeType === "時間指定" && (
+            <div className="time-range">
+              <select
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <span> ~ </span>
+              <select
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              >
+                {timeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button className="share-button" onClick={generateShareLink}>
+            📤 共有リンクを発行
+          </button>
+          {shareUrl && (
+            <div className="share-link-box">
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="share-link"
+              >
+                {shareUrl}
+              </a>
+              <button className="copy-button" onClick={copyToClipboard}>
+                📋 コピー
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
