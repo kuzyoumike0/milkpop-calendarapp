@@ -131,17 +131,32 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
     const { user_id, username, responses } = req.body;
+    // responses = { "0": "○", "1": "✖", ... } の形で送信される
 
     if (!user_id || !responses) {
       return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
     }
 
-    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    // schedules を取得
+    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
     const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
 
+    // responses を統一キーで再構築
+    const normalizedResponses = {};
+    dates.forEach((d, index) => {
+      const key =
+        d.time === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.time})`;
+
+      normalizedResponses[key] = responses[index] || "-";
+    });
+
+    // DB保存
     const result = await pool.query(
       `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
        VALUES ($1, $2, $3, $4)
@@ -150,7 +165,7 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
                      responses = EXCLUDED.responses,
                      created_at = CURRENT_TIMESTAMP
        RETURNING *`,
-      [scheduleId, user_id, username || "匿名", JSON.stringify(responses)]
+      [scheduleId, user_id, username || "匿名", JSON.stringify(normalizedResponses)]
     );
 
     res.json(result.rows[0]);
@@ -199,7 +214,10 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
 
     const aggregate = {};
     dates.forEach((d) => {
-      const key = `${d.date} (${d.time})`;
+      const key =
+        d.time === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.time})`;
       aggregate[key] = [];
     });
 
@@ -235,7 +253,10 @@ app.put("/api/schedules/:token/responses/:user_id", async (req, res) => {
 
     const newResponses = {};
     dates.forEach((d) => {
-      const key = `${d.date} (${d.time})`;
+      const key =
+        d.time === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.time})`;
       newResponses[key] = value;
     });
 
