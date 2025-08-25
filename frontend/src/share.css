@@ -121,3 +121,48 @@
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.4);
 }
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-link {
+  color: #FDB9C8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.user-link:hover {
+  color: #fff;
+}
+
+.user-status {
+  font-size: 13px;
+  color: #ccc;
+  margin-left: 10px;
+}
+
+.delete-btn {
+  margin-top: 3px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 80, 80, 0.8);
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 50, 50, 1);
+}
+
