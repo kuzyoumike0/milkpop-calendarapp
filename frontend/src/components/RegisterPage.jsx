@@ -6,8 +6,6 @@ import "../common.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -98,6 +96,24 @@ const RegisterPage = () => {
     ));
   };
 
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
   return (
     <div className="register-page">
       {/* タイトル入力フォーム */}
@@ -114,27 +130,13 @@ const RegisterPage = () => {
       {/* カレンダー */}
       <div className="calendar">
         <div className="calendar-header">
-          <button
-            className="month-nav"
-            onClick={() =>
-              setCurrentMonth(
-                currentMonth === 0 ? 11 : currentMonth - 1
-              ) || setCurrentYear(currentMonth === 0 ? currentYear - 1 : currentYear)
-            }
-          >
+          <button className="month-nav" onClick={handlePrevMonth}>
             ◀
           </button>
           <h2>
             {currentYear}年 {currentMonth + 1}月
           </h2>
-          <button
-            className="month-nav"
-            onClick={() =>
-              setCurrentMonth(
-                currentMonth === 11 ? 0 : currentMonth + 1
-              ) || setCurrentYear(currentMonth === 11 ? currentYear + 1 : currentYear)
-            }
-          >
+          <button className="month-nav" onClick={handleNextMonth}>
             ▶
           </button>
         </div>
