@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
@@ -59,7 +60,7 @@ const RegisterPage = () => {
     }
   };
 
-  // 曜日見出し
+  // 曜日ヘッダー
   const renderWeekdays = () => {
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
     return weekdays.map((day, i) => (
@@ -74,11 +75,12 @@ const RegisterPage = () => {
     ));
   };
 
-  // カレンダー日付描画
+  // 日付セル
   const renderCalendarDays = () => {
     const days = [];
     const holidays = hd.getHolidays(currentYear);
 
+    // 月初の空白
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
     }
@@ -115,7 +117,7 @@ const RegisterPage = () => {
           className={dayClass}
           onClick={() => handleDateClick(day)}
         >
-          <div>{day}</div>
+          <div className="day-number">{day}</div>
           {holiday && <div className="holiday-name">{holiday.name}</div>}
         </div>
       );
@@ -146,7 +148,7 @@ const RegisterPage = () => {
     setTimeRanges({ ...timeRanges, [date]: value });
   };
 
-  // 共有リンク発行
+  // 共有リンク発行（DBに保存）
   const generateShareLink = async () => {
     try {
       const response = await fetch("/api/schedules", {
@@ -184,7 +186,7 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <div className="title-input-container">
         <input
           type="text"
@@ -195,7 +197,7 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 複数/範囲選択切替 */}
+      {/* 切替 */}
       <div className="selection-toggle">
         <button
           className={selectionMode === "multiple" ? "active" : ""}
@@ -211,7 +213,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダーと右リスト */}
+      {/* カレンダー＋リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar">
