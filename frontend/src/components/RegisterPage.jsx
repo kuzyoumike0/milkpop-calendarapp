@@ -78,50 +78,51 @@ const RegisterPage = () => {
   };
 
   // カレンダー描画
-  const renderCalendar = () => {
-    const days = [];
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
-    }
+ const renderCalendar = () => {
+  const days = [];
+  for (let i = 0; i < firstDayOfMonth; i++) {
+    days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+  }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateObj = new Date(currentYear, currentMonth, day);
-      const dateStr = dateObj.toISOString().split("T")[0];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObj = new Date(currentYear, currentMonth, day);
+    const dateStr = dateObj.toISOString().split("T")[0];
 
-      const isSelected = selectedDates.includes(dateStr);
-      const holiday = hd.isHoliday(dateObj);
-      const isToday = dateStr === todayStr;
+    const isSelected = selectedDates.includes(dateStr);
+    const holiday = hd.isHoliday(dateObj);
+    const isToday = dateStr === todayStr;
 
-      // 範囲選択中の仮ハイライト（未確定時のみ）
-      let inRange = false;
-      if (rangeStart && hoverDate) {
-        const start = new Date(rangeStart);
-        const end = new Date(hoverDate);
-        if (start <= end) {
-          inRange = dateObj > start && dateObj < end; // ✅ 開始・終了を除外
-        } else {
-          inRange = dateObj < start && dateObj > end;
-        }
+    // ✅ 仮ハイライトは「未確定のときだけ」
+    let inRange = false;
+    if (rangeStart && hoverDate) {
+      const start = new Date(rangeStart);
+      const end = new Date(hoverDate);
+      if (start <= end) {
+        inRange = dateObj > start && dateObj < end;
+      } else {
+        inRange = dateObj < start && dateObj > end;
       }
-
-      days.push(
-        <div
-          key={day}
-          className={`calendar-day 
-            ${isSelected ? "selected" : ""} 
-            ${holiday ? "holiday" : ""} 
-            ${isToday ? "today" : ""} 
-            ${inRange ? "in-range" : ""}`}
-          onClick={() => handleDateClick(day)}
-          onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
-        >
-          <div className="day-number">{day}</div>
-          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
-        </div>
-      );
     }
-    return days;
-  };
+
+    days.push(
+      <div
+        key={day}
+        className={`calendar-day 
+          ${isSelected ? "selected" : ""} 
+          ${holiday ? "holiday" : ""} 
+          ${isToday ? "today" : ""} 
+          ${inRange ? "in-range" : ""}`}
+        onClick={() => handleDateClick(day)}
+        onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
+      >
+        <div className="day-number">{day}</div>
+        {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+      </div>
+    );
+  }
+  return days;
+};
+
 
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
