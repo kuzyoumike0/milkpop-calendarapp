@@ -4,37 +4,57 @@
   text-align: center;
 }
 
-/* 一覧全体 */
-.share-list {
-  max-width: 800px;
-  margin: 20px auto;
-  background: rgba(255,255,255,0.9);
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  text-align: left;
+.page-title {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #004CA0;
 }
 
-/* 各日程アイテム */
-.share-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #ddd;
+.share-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #333;
 }
-.share-item:last-child {
+
+/* テーブル */
+.attendance-table {
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.95);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.attendance-table th {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.attendance-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.attendance-table tr:last-child td {
   border-bottom: none;
 }
 
-/* 日付表示 */
-.share-date {
-  font-weight: bold;
-  font-size: 16px;
+/* 入力欄 */
+.name-input {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 120px;
 }
 
-/* プルダウン */
-.share-item select {
+.share-dropdown {
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -42,26 +62,34 @@
   background: #fff;
   transition: all 0.2s;
 }
-.share-item select:focus {
+.share-dropdown:focus {
   border-color: #004CA0;
   box-shadow: 0 0 6px rgba(0, 76, 160, 0.4);
   outline: none;
 }
 
-/* 保存ボタン */
-.save-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border-radius: 30px;
+/* アクションボタン */
+.action-button {
+  margin: 0 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   transition: transform 0.2s;
 }
-.save-button:hover {
+
+.action-button.save {
+  background: #004CA0;
+  color: #fff;
+}
+
+.action-button.delete {
+  background: #FDB9C8;
+  color: #fff;
+}
+
+.action-button:hover {
   transform: scale(1.05);
 }
