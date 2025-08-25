@@ -8,20 +8,18 @@ import "../register.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("multiple"); // 複数 or 範囲
   const [shareUrl, setShareUrl] = useState("");
 
-  // 📌 日本の祝日設定
   const hd = new Holidays("JP");
 
-  // 📌 時刻リスト生成（1時間ごと）
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
   // 📌 日付選択処理
   const handleDateChange = (date) => {
-    if (Array.isArray(date)) {
-      // 範囲選択
+    if (mode === "range" && Array.isArray(date)) {
       const [start, end] = date;
       const range = [];
       let current = new Date(start);
@@ -36,7 +34,7 @@ const RegisterPage = () => {
       }
       setSelectedDates(range);
     } else {
-      // 単日
+      // multiple モード
       const exists = selectedDates.find(
         (d) => d.date.toDateString() === date.toDateString()
       );
@@ -60,21 +58,18 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 区分変更
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
     setSelectedDates(updated);
   };
 
-  // 📌 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
-  // 📌 共有リンク発行
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
@@ -90,7 +85,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== 入力欄カード ===== */}
       <div className="glass-black input-card">
         <input
           type="text"
@@ -104,12 +98,41 @@ const RegisterPage = () => {
       <div className="main-content">
         {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
+          {/* モード切替ラジオボタン */}
+          <div className="mode-select">
+            <label>
+              <input
+                type="radio"
+                name="mode"
+                value="multiple"
+                checked={mode === "multiple"}
+                onChange={() => {
+                  setMode("multiple");
+                  setSelectedDates([]);
+                }}
+              />
+              <span>複数選択</span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="mode"
+                value="range"
+                checked={mode === "range"}
+                onChange={() => {
+                  setMode("range");
+                  setSelectedDates([]);
+                }}
+              />
+              <span>範囲選択</span>
+            </label>
+          </div>
+
           <Calendar
             onChange={handleDateChange}
-            selectRange={true}
+            selectRange={mode === "range"}
             value={selectedDates.map((d) => d.date)}
             tileContent={({ date }) => {
-              // 祝日名を表示
               const holiday = hd.isHoliday(date);
               return holiday ? (
                 <span className="holiday-name">{holiday[0].name}</span>
@@ -127,14 +150,14 @@ const RegisterPage = () => {
               ) {
                 return "selected-date";
               }
-              if (holiday || isSunday) return "holiday";
+              if (holiday || isSunday) return "sunday";
               if (isSaturday) return "saturday";
               return "";
             }}
           />
         </div>
 
-        {/* ===== サイドの登録済みスケジュールカード（右3割） ===== */}
+        {/* ===== リスト（右3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -164,6 +187,7 @@ const RegisterPage = () => {
                         onChange={(e) =>
                           handleTimeChange(i, "startTime", e.target.value)
                         }
+                        className="time-dropdown"
                       >
                         {timeOptions.map((t) => (
                           <option key={t} value={t}>
@@ -177,6 +201,7 @@ const RegisterPage = () => {
                         onChange={(e) =>
                           handleTimeChange(i, "endTime", e.target.value)
                         }
+                        className="time-dropdown"
                       >
                         {timeOptions.map((t) => (
                           <option key={t} value={t}>
