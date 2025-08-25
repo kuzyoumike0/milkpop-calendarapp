@@ -803,3 +803,64 @@ button:hover {
   gap: 2rem;  /* ← 保存と削除の間にしっかり余白 */
   margin-top: 2rem;
 }
+/* ===== SharePage レイアウト調整 ===== */
+.page-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;   /* 左寄せに変更 */
+}
+
+/* タイトルカード */
+.input-card {
+  background: rgba(0,0,0,0.85);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(253,185,200,0.4);
+  margin-bottom: 1.5rem;
+  text-align: left;          /* 左寄せ */
+  width: 80%;                /* 中央にどーんではなく適度な幅 */
+}
+
+/* タイトル文字 */
+.title-display {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+}
+
+/* 名前入力カード */
+.input-card input.title-input {
+  width: 100%;
+  max-width: 400px;          /* 入力幅を短めに */
+  text-align: left;
+}
+
+/* 日程カード */
+.schedule-card, .input-card h3 {
+  text-align: left;
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,192,203,0.3);
+  font-size: 1rem;
+  color: #fff;
+}
+.schedule-row:last-child {
+  border-bottom: none;
+}
+
+/* 保存・削除ボタン */
+.button-group.spaced {
+  display: flex;
+  gap: 2rem;          /* 間隔を広めに */
+  margin-top: 2rem;
+  justify-content: flex-start;  /* 左寄せ配置 */
+}
