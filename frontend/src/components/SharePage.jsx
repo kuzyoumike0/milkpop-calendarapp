@@ -1,7 +1,7 @@
-// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import "../styles/share.css"; // ✅ SharePage専用スタイルを読み込む
+import "../common.css";   // ✅ 修正
+
 
 const SharePage = () => {
   const { token } = useParams();
