@@ -1,48 +1,8 @@
-/* 共有リンク表示エリア */
-.share-link-box {
-  margin-top: 15px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #f9f9f9;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+.register-page {
+  padding: 20px;
+  color: #fff;
 }
 
-/* リンク */
-.share-link {
-  flex: 1;
-  text-align: left;
-  font-size: 14px;
-  color: #004CA0;
-  text-decoration: none;
-  font-weight: bold;
-  word-break: break-all;
-  transition: all 0.3s ease;
-}
-.share-link:hover {
-  text-decoration: underline;
-  color: #FDB9C8;
-}
-
-/* コピー用ボタン */
-.copy-button {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-.copy-button:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
 /* タイトル入力 */
 .title-input-container {
   text-align: center;
@@ -57,85 +17,93 @@
   text-align: center;
   background: #fff;
   color: #333;
-  transition: all 0.3s ease;
 }
-.title-input:focus {
-  border-color: #004CA0;
-  outline: none;
-  box-shadow: 0 0 8px rgba(0, 76, 160, 0.4);
+
+/* 切替ボタン */
+.selection-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.selection-toggle button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #FDB9C8;
+  color: #fff;
+}
+.selection-toggle button.active {
+  background: #004CA0;
+}
+
+/* 横並び */
+.calendar-container {
+  display: flex;
+  gap: 20px;
+}
+.calendar-box {
+  flex: 7;
+}
+.list-box {
+  flex: 3;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 15px;
+  color: #fff;
 }
 
 /* カレンダー */
 .calendar {
-  background: rgba(255, 255, 255, 0.15);
+  background: #fff;
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
-
 .calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-
 .month-nav {
-  background: #FDB9C8;
+  background: linear-gradient(135deg,#FDB9C8,#004CA0);
   border: none;
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  font-size: 20px;
   color: #fff;
   cursor: pointer;
-  transition: background 0.3s;
 }
-.month-nav:hover {
-  background: #004CA0;
-}
-
 .calendar-weekdays,
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   margin-top: 10px;
 }
-
 .calendar-weekday {
   text-align: center;
   font-weight: bold;
-  padding: 5px 0;
 }
-
 .calendar-day {
   text-align: center;
-  padding: 10px;
+  padding: 15px;
   margin: 4px;
-  border-radius: 10px;
+  border-radius: 12px;
+  background: #f6f6f6;
   cursor: pointer;
-  background: rgba(255,255,255,0.1);
-  transition: background 0.3s, transform 0.2s;
 }
-.calendar-day:hover {
-  background: rgba(255,255,255,0.3);
-  transform: scale(1.05);
-}
-
 .calendar-day.selected {
-  background: #FDB9C8;
+  background: #004CA0;
   color: #fff;
-  font-weight: bold;
 }
-
 .calendar-day.holiday {
   color: red;
 }
 .calendar-day.saturday {
   color: blue;
 }
-
 .holiday-name {
-  font-size: 12px;
-  margin-top: 4px;
+  font-size: 11px;
+  margin-top: 3px;
   color: red;
 }
