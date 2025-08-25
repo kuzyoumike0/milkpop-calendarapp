@@ -10,6 +10,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [responses, setResponses] = useState({});
   const [allResponses, setAllResponses] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -62,11 +63,28 @@ const SharePage = () => {
         }),
       });
 
-      // 保存後に即反映
-      fetchResponses();
+      fetchResponses(); // 保存後即反映
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
+    }
+  };
+
+  // ===== ユーザー編集削除 =====
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setUsername(user.username);
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`${user.username} さんの回答を削除しますか？`)) return;
+    try {
+      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
+        method: "DELETE",
+      });
+      fetchResponses();
+    } catch (err) {
+      console.error("削除エラー", err);
     }
   };
 
@@ -109,12 +127,9 @@ const SharePage = () => {
                 const key = `${d.date} (${d.time})`;
 
                 // この日付の全ユーザー回答を抽出
-                const users = allResponses
-                  .map((r) => {
-                    const status = r.responses[key];
-                    return status ? `${r.username}(${status})` : null;
-                  })
-                  .filter(Boolean);
+                const users = allResponses.filter(
+                  (r) => r.responses[key]
+                );
 
                 return (
                   <tr key={i}>
@@ -131,7 +146,28 @@ const SharePage = () => {
                         <option value="✖">✖</option>
                       </select>
                     </td>
-                    <td className="user-list">{users.join(", ")}</td>
+                    <td className="user-list">
+                      {users.map((u, idx) => (
+                        <div key={idx} className="user-entry">
+                          <a
+                            href="#!"
+                            onClick={() => handleEditUser(u)}
+                            className="user-link"
+                          >
+                            {u.username}
+                          </a>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteUser(u)}
+                          >
+                            削除
+                          </button>
+                          <div className="user-status">
+                            {u.responses[key]}
+                          </div>
+                        </div>
+                      ))}
+                    </td>
                   </tr>
                 );
               })}
