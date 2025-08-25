@@ -292,3 +292,12 @@
     width: 100%;
   }
 }
+/* 今日（JST）の強調 */
+.day-today {
+  background: linear-gradient(135deg, #fff7a8, #ffd700) !important;
+  color: #222 !important;
+  font-weight: bold;
+  border: 2px solid #ff9900 !important;
+  box-shadow: 0 0 10px rgba(255, 200, 0, 0.7);
+  transform: scale(1.1);
+}
