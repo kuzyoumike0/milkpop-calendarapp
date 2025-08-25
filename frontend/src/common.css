@@ -186,3 +186,10 @@ th {
 td {
   background: rgba(255, 255, 255, 0.1);
 }
+/* ヘッダー内タイトルを大きく＆ピンクに */
+header h1, .header-title {
+  font-size: 28px;       /* ← 大きく */
+  color: #FDB9C8;        /* ← ピンクに統一 */
+  font-weight: bold;
+  margin: 0;
+}
