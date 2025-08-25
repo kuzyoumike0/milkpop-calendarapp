@@ -343,4 +343,13 @@ header h1, .header-title {
   padding: 6px 12px;
   border-radius: 8px;
 }
+.nav-links a,
+.discord-login {
+  font-size: 18px !important;
+  font-weight: bold;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif !important;
+  color: #fff !important;
+  text-decoration: none;
+  margin-left: 20px;
+}
 
