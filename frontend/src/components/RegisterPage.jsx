@@ -143,9 +143,9 @@ const RegisterPage = () => {
         <label htmlFor="range">範囲</label>
       </div>
 
-      {/* === 7:3 レイアウト === */}
+      {/* === 左7:右3 レイアウト === */}
       <div className="main-layout">
-        {/* 左 7割: カレンダー */}
+        {/* カレンダー */}
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
@@ -197,7 +197,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右 3割: 選択リスト */}
+        {/* 選択リスト */}
         <div className="options-section">
           <h3>✅ 選択した日程</h3>
           {selectedDates.map((d) => (
