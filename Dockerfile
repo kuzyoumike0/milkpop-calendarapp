@@ -1,24 +1,35 @@
-# ====== フロントエンド ビルド ======
-FROM node:18 AS build
+# ====== フロントエンド ======
+FROM node:18 AS frontend-build
+
 WORKDIR /app/frontend
+
+# 依存関係インストール（package.json 先コピーでキャッシュ効かせる）
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci --legacy-peer-deps
+
+# ソースをコピー
 COPY frontend/ ./
+
+# Node のメモリ上限を増加させてビルド
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 RUN npm run build
 
+
 # ====== バックエンド ======
-FROM node:18
+FROM node:18 AS backend
+
 WORKDIR /app
 
-# backend の依存関係
-COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
+# package.json をコピーして依存関係をインストール
+COPY backend/package*.json ./
+RUN npm ci --legacy-peer-deps
 
-# フロントのビルド成果物をコピー
-WORKDIR /app
-COPY --from=build /app/frontend/build ./frontend/build
-COPY backend ./backend
+# ソースコードコピー
+COPY backend/ ./
 
-WORKDIR /app/backend
-CMD ["node", "index.js"]
+# フロントのビルド成果物を public に配置（Express で配信する想定）
+COPY --from=frontend-build /app/frontend/build ./public
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
