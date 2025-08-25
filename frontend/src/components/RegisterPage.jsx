@@ -8,33 +8,42 @@ import "../register.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multiple"); // 複数 or 範囲
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [rangeStart, setRangeStart] = useState(null);
   const [shareUrl, setShareUrl] = useState("");
 
   const hd = new Holidays("JP");
 
+  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 📌 日付選択処理
-  const handleDateChange = (date) => {
-    if (mode === "range" && Array.isArray(date)) {
-      const [start, end] = date;
-      const range = [];
-      let current = new Date(start);
-      while (current <= end) {
-        range.push({
-          date: new Date(current),
-          timeType: "終日",
-          startTime: "00:00",
-          endTime: "23:59",
-        });
-        current.setDate(current.getDate() + 1);
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    if (mode === "range") {
+      // 範囲選択
+      if (!rangeStart) {
+        setRangeStart(date);
+      } else {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+        const newRange = [];
+        let current = new Date(start);
+        while (current <= end) {
+          newRange.push({
+            date: new Date(current),
+            timeType: "終日",
+            startTime: "00:00",
+            endTime: "23:59",
+          });
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(newRange);
+        setRangeStart(null);
       }
-      setSelectedDates(range);
     } else {
-      // multiple モード
+      // 複数選択
       const exists = selectedDates.find(
         (d) => d.date.toDateString() === date.toDateString()
       );
@@ -58,18 +67,21 @@ const RegisterPage = () => {
     }
   };
 
+  // 区分変更
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
     setSelectedDates(updated);
   };
 
+  // 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
+  // 共有リンク発行
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
@@ -85,6 +97,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
+      {/* ===== タイトル入力 ===== */}
       <div className="glass-black input-card">
         <input
           type="text"
@@ -98,7 +111,7 @@ const RegisterPage = () => {
       <div className="main-content">
         {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
-          {/* モード切替ラジオボタン */}
+          {/* 選択モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -109,6 +122,7 @@ const RegisterPage = () => {
                 onChange={() => {
                   setMode("multiple");
                   setSelectedDates([]);
+                  setRangeStart(null);
                 }}
               />
               <span>複数選択</span>
@@ -122,6 +136,7 @@ const RegisterPage = () => {
                 onChange={() => {
                   setMode("range");
                   setSelectedDates([]);
+                  setRangeStart(null);
                 }}
               />
               <span>範囲選択</span>
@@ -129,15 +144,8 @@ const RegisterPage = () => {
           </div>
 
           <Calendar
-            onChange={handleDateChange}
-            selectRange={mode === "range"}
-            value={selectedDates.map((d) => d.date)}
-            tileContent={({ date }) => {
-              const holiday = hd.isHoliday(date);
-              return holiday ? (
-                <span className="holiday-name">{holiday[0].name}</span>
-              ) : null;
-            }}
+            onClickDay={(date) => handleDateClick(date)}
+            value={null} // react-calendar 標準の選択機能は使わない
             tileClassName={({ date }) => {
               const isSunday = date.getDay() === 0;
               const isSaturday = date.getDay() === 6;
@@ -153,6 +161,12 @@ const RegisterPage = () => {
               if (holiday || isSunday) return "sunday";
               if (isSaturday) return "saturday";
               return "";
+            }}
+            tileContent={({ date }) => {
+              const holiday = hd.isHoliday(date);
+              return holiday ? (
+                <span className="holiday-name">{holiday[0].name}</span>
+              ) : null;
             }}
           />
         </div>
