@@ -72,7 +72,7 @@ const SharePage = () => {
       <div className="input-card">
         <h3>日程一覧</h3>
         {scheduleData.dates.map((d) => {
-          const [date, time] = d.split("|"); // ← DBから来るフォーマット "2025-08-24|終日"
+          const [date, time] = d.split("|");
           return (
             <div key={d} className="schedule-row">
               <span className="schedule-date">{date}</span>
@@ -80,10 +80,11 @@ const SharePage = () => {
               <select
                 value={responses[d] || ""}
                 onChange={(e) => handleSelect(d, e.target.value)}
-                className="short-dropdown"
+                className="icon-dropdown"
               >
                 <option value="">-</option>
                 <option value="〇">〇</option>
+                <option value="△">△</option>
                 <option value="✕">✕</option>
               </select>
             </div>
@@ -92,7 +93,7 @@ const SharePage = () => {
       </div>
 
       {/* ボタン */}
-      <div className="button-group">
+      <div className="button-group spaced">
         <button onClick={handleSave} className="btn-save">保存</button>
         <button onClick={handleDelete} className="btn-delete">削除</button>
       </div>
