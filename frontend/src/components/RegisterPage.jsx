@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
+  const [shareLink, setShareLink] = useState(""); // 共有リンク保存
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -29,19 +30,17 @@ const RegisterPage = () => {
     )}-${String(day).padStart(2, "0")}`;
 
     if (selectionMode === "multiple") {
-      // 複数選択
       if (selectedDates.includes(dateKey)) {
         setSelectedDates(selectedDates.filter((d) => d !== dateKey));
       } else {
         setSelectedDates([...selectedDates, dateKey]);
       }
     } else {
-      // 範囲選択
       if (selectedDates.length === 0) {
         setSelectedDates([dateKey]);
       } else if (selectedDates.length === 1) {
-        const start = new Date(selectedDates[0]);
-        const end = new Date(dateKey);
+        let start = new Date(selectedDates[0]);
+        let end = new Date(dateKey);
         if (start > end) [start, end] = [end, start];
         const range = [];
         let d = new Date(start);
@@ -148,6 +147,41 @@ const RegisterPage = () => {
     setTimeRanges({ ...timeRanges, [date]: value });
   };
 
+  // 共有リンク発行（バックエンド呼び出し）
+  const generateShareLink = async () => {
+    try {
+      const response = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          schedules: selectedDates.map((d) => ({
+            date: d,
+            time: timeRanges[d] || "終日",
+          })),
+        }),
+      });
+
+      const data = await response.json();
+      if (data.url) {
+        setShareLink(data.url);
+      } else {
+        alert("リンク生成に失敗しました");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("サーバーエラーが発生しました");
+    }
+  };
+
+  // クリップボードコピー
+  const copyToClipboard = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      alert("リンクをコピーしました！");
+    }
+  };
+
   return (
     <div className="register-page">
       {/* タイトル */}
@@ -220,7 +254,23 @@ const RegisterPage = () => {
               ))}
             </ul>
           )}
-          <button className="share-btn">共有リンクを発行</button>
+
+          {/* 共有リンク生成 */}
+          <div className="share-link-box">
+            <button className="share-btn" onClick={generateShareLink}>
+              共有リンクを発行
+            </button>
+            {shareLink && (
+              <div className="share-link">
+                <a href={shareLink} target="_blank" rel="noopener noreferrer">
+                  {shareLink}
+                </a>
+                <button className="copy-btn" onClick={copyToClipboard}>
+                  コピー
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
