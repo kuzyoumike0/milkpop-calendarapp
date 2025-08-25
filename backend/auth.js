@@ -1,61 +1,75 @@
 // backend/auth.js
 import express from "express";
-//import fetch from "node-fetch"; // npm install node-fetch@2
+//import fetch from "node-fetch";
+import jwt from "jsonwebtoken";
+import { pool } from "./db.js"; // pg Pool
 
 const router = express.Router();
 
-// Railway の環境変数を直接使用
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
-// --- Discord認証ページにリダイレクト ---
+// --- Discord 認証ページにリダイレクト ---
 router.get("/discord", (req, res) => {
-  const scope = encodeURIComponent("identify"); // ユーザー情報取得
+  const scope = encodeURIComponent("identify");
   const discordAuthURL = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}`;
   res.redirect(discordAuthURL);
 });
 
-// --- Discordからのコールバック処理 ---
+// --- Discord コールバック ---
 router.get("/discord/callback", async (req, res) => {
   const code = req.query.code;
-  console.log("Discordから受け取ったcode:", code); // codeを出力
   if (!code) return res.status(400).send("Codeがありません");
 
   try {
-    // --- トークン取得 ---
-  const params = new URLSearchParams();
-  params.append("client_id", CLIENT_ID);
-  params.append("client_secret", CLIENT_SECRET);
-  params.append("grant_type", "authorization_code");
-  params.append("code", code);
-  params.append("redirect_uri", REDIRECT_URI);
-  params.append("scope", "identify"); // 忘れずに
+     // --- トークン取得 ---
+    const params = new URLSearchParams();
+    params.append("client_id", CLIENT_ID);
+    params.append("client_secret", CLIENT_SECRET);
+    params.append("grant_type", "authorization_code");
+    params.append("code", code);
+    params.append("redirect_uri", REDIRECT_URI);
+    params.append("scope", "identify");
 
-  console.log("生成した文字列:",params.toString()); // ← 確認用
-
-  const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-    method: "POST",
-    body: params.toString(), // ← URLSearchParams を文字列に変換する
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
-
-  const tokenData = await tokenRes.json();
-  console.log(tokenData); // access_token があるか確認
-  const accessToken = tokenData.access_token;
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      body: params.toString(),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
 
     // --- ユーザー情報取得 ---
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const userData = await userRes.json();
-    console.log(userData); // id と username があるか確認
+ 
+    // --- Postgres に保存 / 更新 ---
+    const result = await pool.query(
+      `INSERT INTO users (discord_id, username, access_token, refresh_token)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (discord_id)
+       DO UPDATE SET username = EXCLUDED.username,
+                     access_token = EXCLUDED.access_token,
+                     refresh_token = EXCLUDED.refresh_token
+       RETURNING id`,
+      [userData.id, userData.username, accessToken, tokenData.refresh_token]
+    );
+    const userId = result.rows[0].id;
 
-    // --- フロントにリダイレクト ---
-    const redirectURL = `${FRONTEND_URL}/auth/success?userId=${userData.id}&username=${userData.username}`;
-    res.redirect(redirectURL);
+    // JWT を発行
+    const jwtToken = jwt.sign(
+      { userId, discordId: userData.id, username: userData.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
+    // フロントにリダイレクト（JWT は URL パラメータで渡す）
+    res.redirect(`${FRONTEND_URL}/auth/success?token=${jwtToken}`);
   } catch (err) {
     console.error(err);
     res.status(500).send("Discordログインに失敗しました");
