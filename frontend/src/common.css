@@ -302,3 +302,45 @@ header h1, .header-title {
     display: flex;
   }
 }
+/* ヘッダー共通 */
+.header {
+  background: #111;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+}
+
+/* 左ロゴ */
+.logo-link {
+  font-size: 32px !important;   /* ← 確実に大きく */
+  font-weight: bold;
+  color: #FDB9C8 !important;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif !important;
+  text-decoration: none;
+}
+
+/* 右ナビゲーション */
+.nav-links a,
+.nav-links .discord-login {
+  font-size: 18px !important;   /* ← 文字サイズを大きく */
+  font-weight: bold;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif !important;
+  color: #fff !important;
+  text-decoration: none;
+  margin-left: 20px;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover,
+.nav-links .discord-login:hover {
+  color: #FDB9C8 !important;   /* ホバー時ピンク */
+}
+
+/* Discordログインをボタンっぽく */
+.discord-login {
+  background: linear-gradient(135deg,#7289da,#004CA0);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
