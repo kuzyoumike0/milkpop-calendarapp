@@ -35,7 +35,7 @@ a {
 }
 
 .top-logo {
-  width: 600px;   /* ← 元に戻す（1040pxから小さめに） */
+  width: 1040px;   /* ← 元に戻す（1040pxから小さめに） */
   max-width: 90%; /* スマホ対応 */
   height: auto;
   margin-bottom: 2rem;
