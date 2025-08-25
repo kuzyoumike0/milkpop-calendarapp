@@ -4,15 +4,13 @@ import { useParams } from "react-router-dom";
 import "../common.css";
 import "../share.css";
 
-const userOptions = ["Aさん", "Bさん", "Cさん", "Dさん"];
+const attendanceOptions = ["-", "○", "✖", "△"];
 
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
-  const [username, setUsername] = useState("");
-  const [responses, setResponses] = useState({});
   const [allResponses, setAllResponses] = useState([]);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingCell, setEditingCell] = useState(null); // {user_id, key}
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -20,9 +18,7 @@ const SharePage = () => {
       try {
         const res = await fetch(`/api/schedules/${token}`);
         const data = await res.json();
-        if (!data.error) {
-          setSchedule(data);
-        }
+        if (!data.error) setSchedule(data);
       } catch (err) {
         console.error("共有スケジュール読み込みエラー", err);
       }
@@ -35,9 +31,7 @@ const SharePage = () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`);
       const data = await res.json();
-      if (!data.error) {
-        setAllResponses(data);
-      }
+      if (!data.error) setAllResponses(data);
     } catch (err) {
       console.error("回答一覧取得エラー", err);
     }
@@ -47,67 +41,25 @@ const SharePage = () => {
     fetchResponses();
   }, [token]);
 
-  // ===== 出欠変更 =====
-  const handleChange = (key, value) => {
-    setResponses({ ...responses, [key]: value });
-  };
-
-  // ===== 保存 =====
-  const handleSave = async () => {
-    try {
-      await fetch(`/api/schedules/${token}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: Math.random().toString(36).slice(2, 8),
-          username: username || "匿名",
-          responses,
-        }),
-      });
-
-      fetchResponses(); // 保存後即反映
-      alert("保存しました！");
-    } catch (err) {
-      console.error("保存エラー", err);
-    }
-  };
-
-  // ===== ユーザー編集切替 =====
-  const handleEditUser = (user) => {
-    setEditingUser(editingUser === user.user_id ? null : user.user_id);
-  };
-
-  // ===== ユーザー名変更 =====
-  const handleUserChange = async (user, newName) => {
+  // ===== 出欠更新 =====
+  const handleUpdateResponse = async (user, key, value) => {
     try {
       await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: newName }),
+        body: JSON.stringify({ key, value }),
       });
       fetchResponses();
-      setEditingUser(null);
+      setEditingCell(null);
     } catch (err) {
-      console.error("ユーザー名更新エラー", err);
+      console.error("更新エラー", err);
     }
   };
 
-  // ===== 削除 =====
-  const handleDeleteUser = async (user) => {
-    if (!window.confirm(`${user.username} さんの回答を削除しますか？`)) return;
-    try {
-      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
-        method: "DELETE",
-      });
-      fetchResponses();
-    } catch (err) {
-      console.error("削除エラー", err);
-    }
-  };
+  if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  if (!schedule) {
-    return <div className="share-page">読み込み中...</div>;
-  }
+  // 全ユーザー一覧
+  const users = Array.from(new Set(allResponses.map((r) => r.username)));
 
   return (
     <div className="share-page">
@@ -116,26 +68,16 @@ const SharePage = () => {
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 名前入力 */}
-      <div className="glass-black name-box">
-        <input
-          type="text"
-          placeholder="あなたの名前を入力"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </div>
-
-      {/* 日程一覧 */}
+      {/* デイコード/伝助風テーブル */}
       <div className="glass-black schedule-list">
-        <h3>日程一覧</h3>
         <table>
           <thead>
             <tr>
               <th>日付</th>
               <th>時間</th>
-              <th>ユーザー名</th>
-              <th>出欠</th>
+              {users.map((u, idx) => (
+                <th key={idx}>{u}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -143,25 +85,28 @@ const SharePage = () => {
               schedule.dates.map((d, i) => {
                 const key = `${d.date} (${d.time})`;
 
-                const users = allResponses.filter((r) => r.responses[key]);
-
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
-                    <td className="user-list">
-                      {users.map((u, idx) => (
-                        <div key={idx} className="user-entry">
-                          {editingUser === u.user_id ? (
+                    {users.map((username, idx) => {
+                      const user = allResponses.find((r) => r.username === username);
+                      const value = user?.responses?.[key] || "-";
+                      const cellId = `${user?.user_id}-${key}`;
+
+                      return (
+                        <td key={idx} className="attendance-cell">
+                          {editingCell === cellId ? (
                             <select
-                              className="user-dropdown"
-                              value={u.username}
+                              autoFocus
+                              defaultValue={value}
+                              onBlur={() => setEditingCell(null)}
                               onChange={(e) =>
-                                handleUserChange(u, e.target.value)
+                                handleUpdateResponse(user, key, e.target.value)
                               }
-                              onBlur={() => setEditingUser(null)}
+                              className="response-dropdown"
                             >
-                              {userOptions.map((opt) => (
+                              {attendanceOptions.map((opt) => (
                                 <option key={opt} value={opt}>
                                   {opt}
                                 </option>
@@ -170,45 +115,20 @@ const SharePage = () => {
                           ) : (
                             <a
                               href="#!"
-                              onClick={() => handleEditUser(u)}
                               className="user-link"
+                              onClick={() => setEditingCell(cellId)}
                             >
-                              {u.username}
+                              {value}
                             </a>
                           )}
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteUser(u)}
-                          >
-                            削除
-                          </button>
-                        </div>
-                      ))}
-                    </td>
-                    <td>
-                      <select
-                        value={responses[key] || "-"}
-                        onChange={(e) => handleChange(key, e.target.value)}
-                        className="response-dropdown"
-                      >
-                        <option value="-">-</option>
-                        <option value="○">○</option>
-                        <option value="✖">✖</option>
-                        <option value="△">△</option>
-                      </select>
-                    </td>
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}
           </tbody>
         </table>
-      </div>
-
-      {/* ボタン */}
-      <div className="button-area">
-        <button className="save-button" onClick={handleSave}>
-          保存
-        </button>
       </div>
     </div>
   );
