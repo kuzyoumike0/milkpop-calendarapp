@@ -13,7 +13,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false); // 初期は編集不可
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -70,14 +70,14 @@ const SharePage = () => {
       // ユーザーを即追加
       setUsers((prev) => [...prev, username]);
 
-      // ★ allResponses にダミーを追加（画面に即列を出す）
+      // ★ allResponses に仮の回答を追加（画面に即列を出す）
       const dummy = { username, responses: { ...responses } };
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, dummy];
       });
 
-      setIsEditing(true);
+      setIsEditing(false); // 新規追加後は編集不可
     }
   };
 
@@ -117,7 +117,7 @@ const SharePage = () => {
         return [...filtered, payload];
       });
 
-      setIsEditing(false);
+      setIsEditing(false); // 保存後は編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
