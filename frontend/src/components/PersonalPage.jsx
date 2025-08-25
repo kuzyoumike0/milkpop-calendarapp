@@ -1,7 +1,7 @@
-// frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
-import "../styles/personal.css";
+import "../common.css";   // ✅ 修正
+
 
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
