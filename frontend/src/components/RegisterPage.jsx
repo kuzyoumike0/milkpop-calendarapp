@@ -98,7 +98,11 @@ const RegisterPage = () => {
 
       {/* ✅ 選択方法ラジオボタン（タイトルの下・カレンダーの上） */}
       <div className="selection-mode">
-        <label>
+        <label
+          className={`mode-option ${
+            selectionMode === "multiple" ? "active" : ""
+          }`}
+        >
           <input
             type="radio"
             value="multiple"
@@ -107,7 +111,11 @@ const RegisterPage = () => {
           />
           複数選択
         </label>
-        <label>
+        <label
+          className={`mode-option ${
+            selectionMode === "range" ? "active" : ""
+          }`}
+        >
           <input
             type="radio"
             value="range"
