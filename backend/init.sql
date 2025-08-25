@@ -39,12 +39,14 @@ CREATE TABLE IF NOT EXISTS personal_schedules (
 -- =========================
 -- users（Discordの個人識別情報）
 -- =========================
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  discord_id VARCHAR UNIQUE NOT NULL,
-  username VARCHAR NOT NULL,
-  access_token VARCHAR,
-  refresh_token VARCHAR
+CREATE TABLE IF NOT EXISTS public.users (
+  id            BIGSERIAL PRIMARY KEY,
+  discord_id    TEXT NOT NULL UNIQUE,
+  username      TEXT NOT NULL,
+  access_token  TEXT,
+  refresh_token TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- =========================
