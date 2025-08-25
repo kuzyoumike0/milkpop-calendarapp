@@ -93,3 +93,67 @@
 .action-button:hover {
   transform: scale(1.05);
 }
+/* SharePage 専用スタイル */
+
+.share-page {
+  padding: 20px;
+  color: #fff;
+}
+
+.username-box {
+  margin: 10px 0 20px;
+}
+
+.username-box input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+}
+
+.schedule-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.schedule-list li {
+  margin: 8px 0;
+}
+
+.save-btn {
+  margin-top: 10px;
+  background: #FDB9C8;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.save-btn:hover {
+  background: #004CA0;
+  color: #fff;
+}
+
+.responses-list {
+  margin-top: 30px;
+}
+
+.responses-list table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.responses-list th,
+.responses-list td {
+  border: 1px solid #fff;
+  padding: 6px;
+  text-align: center;
+}
+
+.responses-list th {
+  background: rgba(0,76,160,0.4);
+  color: #fff;
+}
+
