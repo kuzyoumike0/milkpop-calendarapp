@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import { v4 as uuidv4 } from "uuid"; // ✅ ランダムID生成
-import { Link } from "react-router-dom";
 import "../register.css";
 
 const RegisterPage = () => {
@@ -24,7 +23,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 日付クリック処理（省略せずそのまま）
+  // 日付クリック処理
   const handleDateClick = (day) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -250,10 +249,17 @@ const RegisterPage = () => {
           {/* ✅ 発行されたリンク表示 */}
           {shareUrl && (
             <div className="share-link-box">
-              <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="share-link"
+              >
                 {shareUrl}
               </a>
-              <button onClick={copyToClipboard}>コピー</button>
+              <button className="copy-button" onClick={copyToClipboard}>
+                📋 コピー
+              </button>
             </div>
           )}
         </div>
