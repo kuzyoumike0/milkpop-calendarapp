@@ -6,7 +6,7 @@ import "../common.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple"); // ← デフォルト: 複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
   const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
@@ -87,6 +87,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
+      {/* タイトル入力 */}
       <input
         type="text"
         placeholder="タイトルを入力"
@@ -95,7 +96,7 @@ const RegisterPage = () => {
         className="title-input"
       />
 
-      {/* ✅ 日程選択方法ラジオボタン */}
+      {/* ✅ 選択方法ラジオボタン（タイトルの下・カレンダーの上） */}
       <div className="selection-mode">
         <label>
           <input
