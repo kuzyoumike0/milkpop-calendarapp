@@ -10,7 +10,8 @@ const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
-  const [editingCell, setEditingCell] = useState(null); // {user_id, key}
+  const [username, setUsername] = useState("");
+  const [editingCell, setEditingCell] = useState(null); // {key}
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -41,13 +42,16 @@ const SharePage = () => {
     fetchResponses();
   }, [token]);
 
-  // ===== 出欠更新 =====
-  const handleUpdateResponse = async (user, key, value) => {
+  // ===== 自分の出欠変更 =====
+  const handleUpdateResponse = async (key, value) => {
     try {
-      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
-        method: "PUT",
+      await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value }),
+        body: JSON.stringify({
+          username: username || "匿名",
+          responses: { [key]: value },
+        }),
       });
       fetchResponses();
       setEditingCell(null);
@@ -58,8 +62,9 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // 全ユーザー一覧
-  const users = Array.from(new Set(allResponses.map((r) => r.username)));
+  // ユーザー一覧（自分も必ず含める）
+  let users = Array.from(new Set(allResponses.map((r) => r.username)));
+  if (username && !users.includes(username)) users.push(username);
 
   return (
     <div className="share-page">
@@ -67,6 +72,16 @@ const SharePage = () => {
 
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
+
+      {/* 自分の名前入力 */}
+      <div className="glass-black name-box">
+        <input
+          type="text"
+          placeholder="あなたの名前を入力"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+      </div>
 
       {/* デイコード/伝助風テーブル */}
       <div className="glass-black schedule-list">
@@ -89,20 +104,22 @@ const SharePage = () => {
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
-                    {users.map((username, idx) => {
-                      const user = allResponses.find((r) => r.username === username);
+                    {users.map((u, idx) => {
+                      const user = allResponses.find((r) => r.username === u);
                       const value = user?.responses?.[key] || "-";
-                      const cellId = `${user?.user_id}-${key}`;
+                      const cellId = `${u}-${key}`;
+
+                      const isSelf = u === username;
 
                       return (
                         <td key={idx} className="attendance-cell">
-                          {editingCell === cellId ? (
+                          {isSelf && editingCell === cellId ? (
                             <select
                               autoFocus
                               defaultValue={value}
                               onBlur={() => setEditingCell(null)}
                               onChange={(e) =>
-                                handleUpdateResponse(user, key, e.target.value)
+                                handleUpdateResponse(key, e.target.value)
                               }
                               className="response-dropdown"
                             >
@@ -112,7 +129,7 @@ const SharePage = () => {
                                 </option>
                               ))}
                             </select>
-                          ) : (
+                          ) : isSelf ? (
                             <a
                               href="#!"
                               className="user-link"
@@ -120,6 +137,8 @@ const SharePage = () => {
                             >
                               {value}
                             </a>
+                          ) : (
+                            value
                           )}
                         </td>
                       );
