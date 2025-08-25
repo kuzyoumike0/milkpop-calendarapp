@@ -70,24 +70,43 @@
   cursor: pointer;
 }
 
-.user-link {
-  color: #FDB9C8;
-  text-decoration: underline;
+/* ===== 出欠選択ボタン ===== */
+.choice-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-.response-dropdown {
-  background: #fff;
-  color: #000;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 15px;
+.choice-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
+  background: #222;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  transition: all 0.25s ease;
 }
+
+.choice-btn:hover {
+  transform: scale(1.15);
+  background: #444;
+}
+
+.choice-btn.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+  transform: scale(1.2);
+}
+
+/* ===== 保存ボタン ===== */
 .save-button {
   margin-top: 20px;
-  padding: 12px 30px;
+  padding: 14px 36px;
   font-size: 18px;
   font-weight: bold;
   color: #fff;
@@ -97,12 +116,12 @@
   cursor: pointer;
   box-shadow: 0 6px 15px rgba(0,0,0,0.3);
   transition: all 0.3s ease;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  letter-spacing: 1px;
 }
 
 .save-button:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.5);
   opacity: 0.95;
 }
-
-
