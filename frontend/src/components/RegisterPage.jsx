@@ -41,9 +41,11 @@ const RegisterPage = () => {
       );
     } else if (selectionMode === "range") {
       if (!rangeStart) {
+        // 1回目クリック → 開始日設定
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
+        // 2回目クリック → 範囲確定
         const start = new Date(rangeStart);
         const end = new Date(dateStr);
         const range = [];
@@ -78,52 +80,52 @@ const RegisterPage = () => {
   };
 
   // カレンダー描画
- const renderCalendar = () => {
-  const days = [];
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateObj = new Date(currentYear, currentMonth, day);
-    const dateStr = dateObj.toISOString().split("T")[0];
-
-    const isSelected = selectedDates.includes(dateStr);
-    const holiday = hd.isHoliday(dateObj);
-    const isToday = dateStr === todayStr;
-
-    // ✅ 仮ハイライトは「未確定のときだけ」
-    let inRange = false;
-    if (rangeStart && hoverDate) {
-      const start = new Date(rangeStart);
-      const end = new Date(hoverDate);
-      if (start <= end) {
-        inRange = dateObj > start && dateObj < end;
-      } else {
-        inRange = dateObj < start && dateObj > end;
-      }
+  const renderCalendar = () => {
+    const days = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
     }
 
-    days.push(
-      <div
-        key={day}
-        className={`calendar-day 
-          ${isSelected ? "selected" : ""} 
-          ${holiday ? "holiday" : ""} 
-          ${isToday ? "today" : ""} 
-          ${inRange ? "in-range" : ""}`}
-        onClick={() => handleDateClick(day)}
-        onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
-      >
-        <div className="day-number">{day}</div>
-        {holiday && <div className="holiday-name">{holiday[0].name}</div>}
-      </div>
-    );
-  }
-  return days;
-};
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(currentYear, currentMonth, day);
+      const dateStr = dateObj.toISOString().split("T")[0];
 
+      const isSelected = selectedDates.includes(dateStr);
+      const holiday = hd.isHoliday(dateObj);
+      const isToday = dateStr === todayStr;
 
+      // ✅ 仮ハイライトは「未確定のときだけ」
+      let inRange = false;
+      if (rangeStart && hoverDate) {
+        const start = new Date(rangeStart);
+        const end = new Date(hoverDate);
+        if (start <= end) {
+          inRange = dateObj > start && dateObj < end; // 開始・終了は含めない
+        } else {
+          inRange = dateObj < start && dateObj > end;
+        }
+      }
+
+      days.push(
+        <div
+          key={day}
+          className={`calendar-day 
+            ${isSelected ? "selected" : ""} 
+            ${holiday ? "holiday" : ""} 
+            ${isToday ? "today" : ""} 
+            ${inRange ? "in-range" : ""}`}
+          onClick={() => handleDateClick(day)}
+          onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
+        >
+          <div className="day-number">{day}</div>
+          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+        </div>
+      );
+    }
+    return days;
+  };
+
+  // 時刻選択用の選択肢
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
     const label = `${String(h).padStart(2, "0")}:00`;
@@ -134,6 +136,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
+      {/* タイトル */}
       <div className="calendar-title-input">
         <input
           type="text"
@@ -143,6 +146,7 @@ const RegisterPage = () => {
         />
       </div>
 
+      {/* 選択モード */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -172,6 +176,7 @@ const RegisterPage = () => {
         </label>
       </div>
 
+      {/* カレンダーとリストを横並び */}
       <div className="calendar-layout">
         <div className="calendar">
           <div className="calendar-header">
@@ -184,6 +189,7 @@ const RegisterPage = () => {
           <div className="calendar-grid">{renderCalendar()}</div>
         </div>
 
+        {/* 選択日程 + 時間帯 */}
         <div className="selected-list">
           <h3>選択した日程</h3>
           <ul>
