@@ -1,0 +1,29 @@
+/* ====== トップページ ====== */
+.top-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+.top-logo {
+  width: 640px;
+  max-width: 90%;
+  height: auto;
+  margin-bottom: 2rem;
+}
+.top-description {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  color: #fff;
+  background: #1a1a1a;
+  border: 2px solid #50C878;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.6);
+  max-width: 700px;
+  text-align: center;
+}
