@@ -1,7 +1,6 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
 
