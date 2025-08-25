@@ -8,7 +8,7 @@ const TopPage = () => {
     <div className="top-page">
       {/* ===== メイン画像 ===== */}
       <div className="hero-image">
-        <img src="/assets/logo.png" alt="MilkPOP Calendar" />
+        <img src="/pubulic/logo.png" alt="MilkPOP Calendar" />
       </div>
 
       {/* ===== ガラス風カード ===== */}
