@@ -78,7 +78,7 @@ app.use("/auth", authRouter);
 app.get("/api/schedules", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM schedules ORDER BY created_at DESC"
+      "SELECT id, title, share_token, created_at FROM schedules ORDER BY created_at DESC"
     );
     res.json(result.rows);
   } catch (err) {
@@ -103,20 +103,21 @@ app.post("/api/schedules", async (req, res) => {
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
     );
-    res.json(result.rows[0]);
+
+    res.json({ share_token: result.rows[0].share_token });
   } catch (err) {
     console.error("DB保存エラー:", err);
     res.status(500).json({ error: "DB保存エラー" });
   }
 });
 
-// --- 特定スケジュール取得 ---
-app.get("/api/schedules/:id", async (req, res) => {
+// --- 特定スケジュール取得（share_token 経由） ---
+app.get("/api/schedules/:token", async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM schedules WHERE id=$1", [id]);
+    const { token } = req.params;
+    const result = await pool.query("SELECT * FROM schedules WHERE share_token=$1", [token]);
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
+      return res.status(404).json({ error: "共有リンクが無効です" });
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -125,15 +126,21 @@ app.get("/api/schedules/:id", async (req, res) => {
   }
 });
 
-// --- 出欠回答を追加/更新 ---
-app.post("/api/schedules/:id/responses", async (req, res) => {
+// --- 出欠回答を追加/更新（share_token 基準） ---
+app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { token } = req.params;
     const { user_id, username, responses } = req.body;
 
     if (!user_id || !responses) {
       return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
     }
+
+    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
 
     const result = await pool.query(
       `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
@@ -143,8 +150,9 @@ app.post("/api/schedules/:id/responses", async (req, res) => {
                      responses = EXCLUDED.responses,
                      created_at = CURRENT_TIMESTAMP
        RETURNING *`,
-      [id, user_id, username || "匿名", JSON.stringify(responses)]
+      [scheduleId, user_id, username || "匿名", JSON.stringify(responses)]
     );
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("回答保存エラー:", err);
@@ -152,13 +160,19 @@ app.post("/api/schedules/:id/responses", async (req, res) => {
   }
 });
 
-// --- 出欠回答の一覧取得（全員分） ---
-app.get("/api/schedules/:id/responses", async (req, res) => {
+// --- 出欠回答の一覧取得（share_token 基準） ---
+app.get("/api/schedules/:token/responses", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { token } = req.params;
+    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
     const result = await pool.query(
       "SELECT user_id, username, responses, created_at FROM schedule_responses WHERE schedule_id=$1 ORDER BY created_at DESC",
-      [id]
+      [scheduleId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -185,24 +199,6 @@ app.post("/api/personal", async (req, res) => {
   } catch (err) {
     console.error("個人スケジュール保存エラー:", err);
     res.status(500).json({ error: "個人スケジュール保存エラー" });
-  }
-});
-
-// --- 共有リンクから取得 ---
-app.get("/share/:token", async (req, res) => {
-  try {
-    const { token } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM schedules WHERE share_token=$1",
-      [token]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "共有リンクが無効です" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("共有リンク取得エラー:", err);
-    res.status(500).json({ error: "共有リンク取得エラー" });
   }
 });
 
