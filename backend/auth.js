@@ -1,50 +1,92 @@
 // backend/auth.js
 import express from "express";
-//import fetch from "node-fetch";
 import jwt from "jsonwebtoken";
-
-
-// 起動時 (server.listen の前で1回だけ)
-import pool from './db.js';
-const r = await pool.query(`
-  SELECT
-    current_user,
-    current_database() AS db,
-    inet_server_addr()::text AS host,
-    inet_server_port()   AS port,
-    current_schema()      AS schema,
-    setting               AS search_path
-  FROM pg_settings WHERE name='search_path'
-`);
-console.log('DB DIAG:', r.rows[0]);  // ここで実際の接続先が分かる
+import pool from "./db.js"; // pg Pool（sslmode=require, rejectUnauthorized:false 推奨）
 
 const router = express.Router();
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
-const FRONTEND_URL = process.env.FRONTEND_URL;
+// ==== 必須環境変数チェック ====
+const {
+  JWT_SECRET,
+  DISCORD_CLIENT_ID,
+  DISCORD_CLIENT_SECRET,
+  DISCORD_REDIRECT_URI,
+  FRONTEND_URL,
+} = process.env;
 
-// --- Discord 認証ページにリダイレクト ---
-router.get("/discord", (req, res) => {
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET is not set");
+  process.exit(1);
+}
+for (const [k, v] of Object.entries({
+  DISCORD_CLIENT_ID,
+  DISCORD_CLIENT_SECRET,
+  DISCORD_REDIRECT_URI,
+  FRONTEND_URL,
+})) {
+  if (!v) console.warn(`WARN: ${k} is not set`);
+}
+
+// ==== 起動時: 接続先診断 + スキーマブートストラップ ====
+// 失敗してもアプリ自体は起動を続ける（ログだけ出す）
+try {
+  const diag = await pool.query(`
+    SELECT
+      current_user,
+      current_database() AS db,
+      inet_server_addr()::text AS host,
+      inet_server_port()   AS port,
+      current_schema()      AS schema,
+      (SELECT setting FROM pg_settings WHERE name='search_path') AS search_path
+  `);
+  console.log("DB DIAG:", diag.rows[0]);
+} catch (e) {
+  console.warn("DB DIAG failed:", e.message);
+}
+
+// 初期化（idempotent）
+try {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS public.users (
+      id SERIAL PRIMARY KEY,
+      discord_id TEXT UNIQUE NOT NULL,
+      username   TEXT NOT NULL,
+      access_token  TEXT,
+      refresh_token TEXT
+    );
+  `);
+  console.log("users table ensured");
+} catch (e) {
+  console.error("users table bootstrap failed:", e.message);
+  // ここで落としても良いが、一旦続行
+}
+
+// ==== ルーティング ====
+
+// 認可画面へ
+router.get("/discord", (_req, res) => {
   const scope = encodeURIComponent("identify");
-  const discordAuthURL = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${scope}`;
-  res.redirect(discordAuthURL);
+  const url = `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(
+    DISCORD_CLIENT_ID
+  )}&response_type=code&redirect_uri=${encodeURIComponent(
+    DISCORD_REDIRECT_URI
+  )}&scope=${scope}`;
+  res.redirect(url);
 });
 
-// --- Discord コールバック ---
+// コールバック
 router.get("/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send("Codeがありません");
 
   try {
-     // --- トークン取得 ---
+    // アクセストークン取得
     const params = new URLSearchParams();
-    params.append("client_id", CLIENT_ID);
-    params.append("client_secret", CLIENT_SECRET);
+    params.append("client_id", DISCORD_CLIENT_ID);
+    params.append("client_secret", DISCORD_CLIENT_SECRET);
     params.append("grant_type", "authorization_code");
     params.append("code", code);
-    params.append("redirect_uri", REDIRECT_URI);
+    params.append("redirect_uri", DISCORD_REDIRECT_URI);
     params.append("scope", "identify");
 
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
@@ -52,40 +94,58 @@ router.get("/discord/callback", async (req, res) => {
       body: params.toString(),
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
-    
+    if (!tokenRes.ok) {
+      const text = await tokenRes.text();
+      console.error("Token exchange failed:", tokenRes.status, text);
+      return res.status(502).send("Discordトークン取得に失敗しました");
+    }
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    const refreshToken = tokenData.refresh_token;
 
-    // --- ユーザー情報取得 ---
+    if (!accessToken) {
+      console.error("No access_token in response:", tokenData);
+      return res.status(502).send("Discordトークンが不正です");
+    }
+
+    // ユーザー情報取得
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
+    if (!userRes.ok) {
+      const text = await userRes.text();
+      console.error("User fetch failed:", userRes.status, text);
+      return res.status(502).send("Discordユーザー取得に失敗しました");
+    }
     const userData = await userRes.json();
- 
-    // --- Postgres に保存 / 更新 ---
-    const result = await pool.query(
-      `INSERT INTO users (discord_id, username, access_token, refresh_token)
+
+    // DB upsert（schemaを明示）
+    const upsert = await pool.query(
+      `INSERT INTO public.users (discord_id, username, access_token, refresh_token)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (discord_id)
-       DO UPDATE SET username = EXCLUDED.username,
-                     access_token = EXCLUDED.access_token,
-                     refresh_token = EXCLUDED.refresh_token
+       DO UPDATE SET
+         username = EXCLUDED.username,
+         access_token = EXCLUDED.access_token,
+         refresh_token = EXCLUDED.refresh_token
        RETURNING id`,
-      [userData.id, userData.username, accessToken, tokenData.refresh_token]
+      [userData.id, userData.username, accessToken, refreshToken]
     );
-    const userId = result.rows[0].id;
+    const userId = upsert.rows[0].id;
 
-    // JWT を発行
+    // JWT 発行
     const jwtToken = jwt.sign(
       { userId, discordId: userData.id, username: userData.username },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // フロントにリダイレクト（JWT は URL パラメータで渡す）
-    res.redirect(`${FRONTEND_URL}/auth/success?token=${jwtToken}`);
+    // フロントへ
+    const redirect = new URL("/auth/success", FRONTEND_URL);
+    redirect.searchParams.set("token", jwtToken);
+    res.redirect(redirect.toString());
   } catch (err) {
-    console.error(err);
+    console.error("Discord callback error:", err);
     res.status(500).send("Discordログインに失敗しました");
   }
 });
