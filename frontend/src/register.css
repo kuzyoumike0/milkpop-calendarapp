@@ -90,7 +90,7 @@
 .calendar-day {
   height: 70px;
   display: flex;
-  flex-direction: column; /* ✅ 祝日名を下に出す */
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   border-radius: 10px;
@@ -123,9 +123,17 @@
   font-weight: bold;
 }
 
+/* ✅ 今日と選択済みが重なった場合は「選択済み優先」 */
+.calendar-day.selected.today {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 /* 範囲選択中の仮ハイライト */
 .calendar-day.in-range {
-  background: #cfe2ff; /* 薄ブルー */
+  background: #cfe2ff;
   color: #004CA0;
 }
 
@@ -152,8 +160,8 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   color: #333;
   text-align: left;
-  max-height: 500px;   /* ✅ 高さ制限 */
-  overflow-y: auto;    /* ✅ スクロール可能 */
+  max-height: 500px;
+  overflow-y: auto;
 }
 .selected-list ul {
   list-style: none;
