@@ -197,7 +197,6 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
       [scheduleId]
     );
 
-    // 日付ごとに集計
     const aggregate = {};
     dates.forEach((d) => {
       const key = `${d.date} (${d.time})`;
