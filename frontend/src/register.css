@@ -6,8 +6,10 @@
   background: linear-gradient(135deg, #FDB9C8, #004CA0);
   min-height: 100vh;
 
-  /* ✅ 影や白背景は不要 */
+  /* ✅ 白背景や影を削除（重なり防止） */
+  background-color: transparent !important;
   box-shadow: none !important;
+  border: none !important;
 }
 
 /* ====== タイトル入力 ====== */
@@ -36,6 +38,7 @@
 }
 
 .selection-toggle label {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -44,20 +47,33 @@
   cursor: pointer;
   padding: 6px 14px;
   border-radius: 20px;
-  transition: background 0.2s, color 0.2s;
-  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s;
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .selection-toggle input[type="radio"] {
-  accent-color: #004CA0;
-  transform: scale(1.2);
+  display: none; /* ✅ 標準ラジオは非表示 */
 }
 
-.selection-toggle input[type="radio"]:checked + span {
+.selection-toggle label::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid #004CA0;
+  border-radius: 50%;
+  display: inline-block;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.selection-toggle input[type="radio"]:checked + label::before {
+  background: #004CA0;
+  box-shadow: 0 0 4px rgba(0, 76, 160, 0.6);
+}
+
+.selection-toggle input[type="radio"]:checked + label {
   background: #004CA0;
   color: #fff;
-  padding: 6px 14px;
-  border-radius: 20px;
 }
 
 /* ====== カレンダーとリスト全体 ====== */
@@ -66,7 +82,7 @@
   gap: 40px; /* ✅ カレンダーとリストの間に余白 */
   margin-top: 20px;
 
-  /* ✅ 二重背景を削除 */
+  /* ✅ 透明化（背景重なり防止） */
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
@@ -80,6 +96,7 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 /* ====== 選択リストカード ====== */
@@ -89,6 +106,7 @@
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 /* ====== カレンダー ====== */
