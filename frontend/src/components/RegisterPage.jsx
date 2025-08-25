@@ -273,10 +273,15 @@ const RegisterPage = () => {
         🔗 共有リンクを発行
       </button>
 
-      {/* 発行後リンク表示 */}
+      {/* 発行後リンク表示（クリックで遷移 + コピー） */}
       {shareUrl && (
         <div className="share-link">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="share-url"
+          >
             {shareUrl}
           </a>
           <button
