@@ -1,12 +1,14 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Holidays from "date-holidays";
 import "../index.css";
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
+
   const [timeOptions, setTimeOptions] = useState({});
   const [customTimes, setCustomTimes] = useState({});
   const [shareUrl, setShareUrl] = useState("");
@@ -17,7 +19,8 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  const getDaysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+  const getDaysInMonth = (year, month) =>
+    new Date(year, month + 1, 0).getDate();
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
@@ -25,13 +28,12 @@ const RegisterPage = () => {
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
         prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]
       );
-    } else {
+    } else if (selectionMode === "range") {
       if (selectedDates.length === 0) {
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
@@ -51,7 +53,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 月送り
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -69,7 +70,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 共有リンク発行
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -89,11 +89,15 @@ const RegisterPage = () => {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, dates: formattedDates }),
+        body: JSON.stringify({
+          title,
+          dates: formattedDates,
+        }),
       });
       const data = await res.json();
       if (data.share_token) {
-        setShareUrl(`${window.location.origin}/share/${data.share_token}`);
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareUrl(url);
       } else {
         alert("共有リンクの生成に失敗しました");
       }
@@ -111,57 +115,53 @@ const RegisterPage = () => {
 
   return (
     <div className="page-container">
-      <h2 className="page-title">📅 日程登録ページ</h2>
+      <h2 className="page-title">日程登録ページ</h2>
 
-      {/* タイトル入力 */}
-      <input
-        type="text"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="title-input"
-      />
-
-      {/* 範囲 / 複数 ラジオ */}
-      <div className="radio-group">
+      <div className="input-card">
         <input
-          type="radio"
-          id="multiple"
-          value="multiple"
-          checked={selectionMode === "multiple"}
-          onChange={() => setSelectionMode("multiple")}
+          type="text"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="title-input"
         />
-        <label htmlFor="multiple">複数</label>
 
-        <input
-          type="radio"
-          id="range"
-          value="range"
-          checked={selectionMode === "range"}
-          onChange={() => setSelectionMode("range")}
-        />
-        <label htmlFor="range">範囲</label>
+        <div className="radio-group">
+          <input
+            type="radio"
+            id="multiple"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
+          <label htmlFor="multiple">複数</label>
+
+          <input
+            type="radio"
+            id="range"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          <label htmlFor="range">範囲</label>
+        </div>
       </div>
 
-      {/* === 左7:右3 レイアウト === */}
       <div className="main-layout">
-        {/* カレンダー */}
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
               <button onClick={prevMonth}>←</button>
-              <h3>
+              <h3 className="month-title">
                 {currentYear}年 {currentMonth + 1}月
               </h3>
               <button onClick={nextMonth}>→</button>
             </div>
-
             <div className="week-header">
               {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
                 <div key={d}>{d}</div>
               ))}
             </div>
-
             <div className="calendar-grid">
               {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
                 <div key={`empty-${idx}`} />
@@ -197,9 +197,8 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 選択リスト */}
         <div className="options-section">
-          <h3>✅ 選択した日程</h3>
+          <h3>選択した日程</h3>
           {selectedDates.map((d) => (
             <div key={d} className="selected-date">
               <span>{d}</span>
@@ -234,7 +233,7 @@ const RegisterPage = () => {
                       </option>
                     ))}
                   </select>
-                  ～ 
+                  ～
                   <select
                     value={customTimes[d]?.end || ""}
                     onChange={(e) =>
@@ -259,9 +258,8 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 共有リンクボタン */}
       <button onClick={handleShare} className="share-button fancy">
-        🔗 共有リンクを発行
+        共有リンクを発行
       </button>
 
       {shareUrl && (
@@ -269,7 +267,18 @@ const RegisterPage = () => {
           <a href={shareUrl} target="_blank" rel="noopener noreferrer">
             {shareUrl}
           </a>
-          <button onClick={copyToClipboard} className="copy-btn">
+          <button
+            onClick={copyToClipboard}
+            style={{
+              marginLeft: "1rem",
+              padding: "0.4rem 0.8rem",
+              borderRadius: "6px",
+              border: "none",
+              background: "#004CA0",
+              color: "#fff",
+              cursor: "pointer",
+            }}
+          >
             コピー
           </button>
         </div>
