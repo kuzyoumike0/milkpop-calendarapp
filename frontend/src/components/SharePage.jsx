@@ -11,7 +11,7 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [editingCell, setEditingCell] = useState(null); // {key}
+  const [responses, setResponses] = useState({});
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -42,27 +42,36 @@ const SharePage = () => {
     fetchResponses();
   }, [token]);
 
-  // ===== 自分の出欠変更 =====
-  const handleUpdateResponse = async (key, value) => {
+  // ===== 自分の出欠入力変更 =====
+  const handleChange = (key, value) => {
+    setResponses((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // ===== 保存 =====
+  const handleSave = async () => {
+    if (!username) {
+      alert("名前を入力してください！");
+      return;
+    }
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username,
-          responses: { [key]: value },
+          responses,
         }),
       });
       fetchResponses();
-      setEditingCell(null);
+      alert("保存しました！");
     } catch (err) {
-      console.error("更新エラー", err);
+      console.error("保存エラー", err);
     }
   };
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ===== 名前が必須 =====
+  // ===== 名前必須 =====
   if (!username) {
     return (
       <div className="share-page">
@@ -81,7 +90,7 @@ const SharePage = () => {
     );
   }
 
-  // ===== ユーザー一覧（自分も必ず含める） =====
+  // ===== ユーザー一覧（自分も含める） =====
   let users = Array.from(new Set(allResponses.map((r) => r.username)));
   if (username && !users.includes(username)) users.push(username);
 
@@ -118,25 +127,25 @@ const SharePage = () => {
             {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
                 const key = `${d.date} (${d.time})`;
-
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
                     {users.map((u, idx) => {
                       const user = allResponses.find((r) => r.username === u);
-                      const value = user?.responses?.[key] || "-";
-                      const cellId = `${u}-${key}`;
-                      const isSelf = u === username;
+                      const value =
+                        u === username
+                          ? responses[key] || "-"
+                          : user?.responses?.[key] || "-";
 
                       return (
                         <td key={idx} className="attendance-cell">
-                          {isSelf && editingCell === cellId ? (
+                          {u === username ? (
                             <select
-                              autoFocus
-                              defaultValue={value}
-                              onBlur={() => setEditingCell(null)}
-                              onChange={(e) => handleUpdateResponse(key, e.target.value)}
+                              value={value}
+                              onChange={(e) =>
+                                handleChange(key, e.target.value)
+                              }
                               className="response-dropdown"
                             >
                               {attendanceOptions.map((opt) => (
@@ -145,14 +154,6 @@ const SharePage = () => {
                                 </option>
                               ))}
                             </select>
-                          ) : isSelf ? (
-                            <a
-                              href="#!"
-                              className="user-link"
-                              onClick={() => setEditingCell(cellId)}
-                            >
-                              {value}
-                            </a>
                           ) : (
                             value
                           )}
@@ -164,6 +165,13 @@ const SharePage = () => {
               })}
           </tbody>
         </table>
+      </div>
+
+      {/* 保存ボタン */}
+      <div className="button-area">
+        <button className="save-button" onClick={handleSave}>
+          保存
+        </button>
       </div>
     </div>
   );
