@@ -13,7 +13,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(true); // 初期は編集可能
+  const [isEditing, setIsEditing] = useState(true);
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -46,7 +46,10 @@ const SharePage = () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`);
       const data = await res.json();
-      if (!data.error) setAllResponses(data);
+      if (!data.error) {
+        setAllResponses(data);
+        setUsers(data.map((r) => r.username));
+      }
     } catch (err) {
       console.error("回答一覧取得エラー", err);
     }
@@ -64,17 +67,17 @@ const SharePage = () => {
     }
 
     if (!users.includes(username)) {
-      // ユーザーリストに即追加
+      // ユーザーを即追加
       setUsers((prev) => [...prev, username]);
 
-      // ★ 即時反映: allResponses に仮の回答を追加（すべて "-"）
+      // ★ allResponses にダミーを追加（画面に即列を出す）
       const dummy = { username, responses: { ...responses } };
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, dummy];
       });
 
-      setIsEditing(true); // すぐ編集可能に
+      setIsEditing(true);
     }
   };
 
@@ -82,6 +85,15 @@ const SharePage = () => {
   const handleSelect = (key, value) => {
     if (!isEditing) return;
     setResponses((prev) => ({ ...prev, [key]: value }));
+
+    // 画面の表示も即更新
+    setAllResponses((prev) =>
+      prev.map((r) =>
+        r.username === username
+          ? { ...r, responses: { ...r.responses, [key]: value } }
+          : r
+      )
+    );
   };
 
   // ===== 保存 =====
@@ -91,10 +103,7 @@ const SharePage = () => {
       return;
     }
     try {
-      const payload = {
-        username: username,
-        responses,
-      };
+      const payload = { username, responses };
 
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -102,13 +111,13 @@ const SharePage = () => {
         body: JSON.stringify(payload),
       });
 
-      // 即時反映: allResponses を更新
+      // 保存後も即反映
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, payload];
       });
 
-      setIsEditing(false); // 保存後は編集終了
+      setIsEditing(false);
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -166,10 +175,13 @@ const SharePage = () => {
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
                     {users.map((u, idx) => {
+                      const userResp = allResponses.find(
+                        (r) => r.username === u
+                      );
                       const isSelf = u === username;
                       const value = isSelf
                         ? responses[key] || "-"
-                        : allResponses.find((r) => r.username === u)?.responses?.[key] || "-";
+                        : userResp?.responses?.[key] || "-";
 
                       return (
                         <td key={idx} className="attendance-cell">
@@ -178,9 +190,9 @@ const SharePage = () => {
                               {attendanceOptions.map((opt) => (
                                 <button
                                   key={opt}
-                                  className={`choice-btn ${value === opt ? "active" : ""} ${
-                                    isEditing ? "" : "disabled"
-                                  }`}
+                                  className={`choice-btn ${
+                                    value === opt ? "active" : ""
+                                  } ${isEditing ? "" : "disabled"}`}
                                   onClick={() => handleSelect(key, opt)}
                                 >
                                   {opt}
@@ -203,7 +215,11 @@ const SharePage = () => {
       {/* 保存ボタン */}
       {users.includes(username) && (
         <div className="button-area">
-          <button className="save-button" onClick={handleSave} disabled={!isEditing}>
+          <button
+            className="save-button"
+            onClick={handleSave}
+            disabled={!isEditing}
+          >
             保存する
           </button>
         </div>
