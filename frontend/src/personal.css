@@ -1,0 +1,20 @@
+/* ===== PersonalPage ===== */
+.memo-input {
+  width: 80%;
+  max-width: 600px;
+  height: 120px;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid #FDB9C8;
+  font-size: 1rem;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  box-shadow: 0 4px 12px rgba(253,185,200,0.4);
+  resize: vertical;
+  background: #fff;
+  color: #000;
+}
+.memo-input:focus {
+  outline: none;
+  border-color: #50C878;
+  box-shadow: 0 0 12px rgba(80,200,120,0.8);
+}
