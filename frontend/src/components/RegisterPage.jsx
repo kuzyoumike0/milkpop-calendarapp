@@ -1,185 +1,177 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
-import Holidays from "date-holidays";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import "../common.css";
 import "../register.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeRanges, setTimeRanges] = useState({});
-  const [shareLink, setShareLink] = useState("");
+  const [timeType, setTimeType] = useState("終日");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("23:59");
+  const [shareUrl, setShareUrl] = useState("");
 
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-
-  const hd = new Holidays("JP");
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-
-  // ✅ 日付クリック処理
-  const handleDateClick = (day) => {
-    const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(
-      2,
-      "0"
-    )}-${String(day).padStart(2, "0")}`;
-
-    if (selectionMode === "multiple") {
-      // 複数選択
-      if (selectedDates.includes(dateKey)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateKey));
-      } else {
-        setSelectedDates([...selectedDates, dateKey]);
-      }
-    } else {
+  // 📌 カレンダー日付選択（複数 & 範囲対応）
+  const handleDateChange = (date) => {
+    if (Array.isArray(date)) {
       // 範囲選択
-      if (selectedDates.length === 0) {
-        setSelectedDates([dateKey]);
-      } else if (selectedDates.length === 1) {
-        let start = new Date(selectedDates[0]);
-        let end = new Date(dateKey);
-        if (start > end) [start, end] = [end, start];
-        const range = [];
-        let d = new Date(start);
-        while (d <= end) {
-          range.push(
-            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
-              2,
-              "0"
-            )}-${String(d.getDate()).padStart(2, "0")}`
-          );
-          d.setDate(d.getDate() + 1);
-        }
-        setSelectedDates(range);
+      const [start, end] = date;
+      const range = [];
+      let current = new Date(start);
+      while (current <= end) {
+        range.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+      setSelectedDates(range);
+    } else {
+      // 単日選択
+      if (selectedDates.some((d) => d.toDateString() === date.toDateString())) {
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== date.toDateString()));
       } else {
-        setSelectedDates([dateKey]);
+        setSelectedDates([...selectedDates, date]);
       }
     }
   };
 
-  // ✅ 曜日ヘッダー
-  const renderWeekdays = () => {
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-    return weekdays.map((day, i) => (
-      <div
-        key={i}
-        className={`calendar-weekday ${
-          i === 0 ? "holiday" : i === 6 ? "saturday" : ""
-        }`}
-      >
-        {day}
-      </div>
-    ));
+  // 📌 時刻リスト生成（1時間ごと）
+  const timeOptions = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
+  // 📌 共有リンク発行
+  const generateShareLink = () => {
+    const token = Math.random().toString(36).substring(2, 10);
+    const url = `${window.location.origin}/share/${token}`;
+    setShareUrl(url);
   };
 
-  // ✅ 日付セル
-  const renderCalendarDays = () => {
-    const days = [];
-    const holidays = hd.getHolidays(currentYear);
-
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(
-        2,
-        "0"
-      )}-${String(day).padStart(2, "0")}`;
-      const dateObj = new Date(currentYear, currentMonth, day);
-      const weekday = dateObj.getDay();
-
-      // 祝日検索
-      const holiday = holidays.find(
-        (h) =>
-          h.date ===
-          `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(
-            day
-          ).padStart(2, "0")}`
-      );
-
-      let dayClass = "calendar-day";
-      if (holiday || weekday === 0) {
-        dayClass += " holiday";
-      } else if (weekday === 6) {
-        dayClass += " saturday";
-      }
-      if (selectedDates.includes(dateKey)) {
-        dayClass += " selected";
-      }
-      if (dateObj.toDateString() === new Date().toDateString()) {
-        dayClass += " today";
-      }
-
-      days.push(
-        <div
-          key={day}
-          className={dayClass}
-          onClick={() => handleDateClick(day)}
-        >
-          <div className="day-number">{day}</div>
-          {holiday && <div className="holiday-name">{holiday.name}</div>}
-        </div>
-      );
-    }
-    return days;
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    alert("リンクをコピーしました！");
   };
 
   return (
     <div className="register-page">
+      <h2 className="page-title">日程登録ページ</h2>
+
+      {/* ===== タイトル入力 ===== */}
       <div className="title-input-container">
         <input
           type="text"
-          placeholder="日程登録"
+          placeholder="タイトルを入力してください"
+          className="title-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="title-input"
         />
       </div>
 
-      <div className="selection-toggle">
-        <label>
-          <input
-            type="radio"
-            value="multiple"
-            checked={selectionMode === "multiple"}
-            onChange={() => setSelectionMode("multiple")}
-          />
-          複数選択
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="range"
-            checked={selectionMode === "range"}
-            onChange={() => setSelectionMode("range")}
-          />
-          範囲選択
-        </label>
+      {/* ===== カレンダー ===== */}
+      <div className="calendar-container">
+        <Calendar
+          onChange={handleDateChange}
+          selectRange={true}
+          value={selectedDates}
+          tileClassName={({ date }) =>
+            selectedDates.some((d) => d.toDateString() === date.toDateString())
+              ? "selected-date"
+              : ""
+          }
+        />
       </div>
 
-      <div className="calendar-container">
-        <div className="calendar-box">
-          <div className="calendar">
-            <div className="calendar-header">
-              <button onClick={() =>
-                setCurrentMonth(currentMonth === 0 ? 11 : currentMonth - 1)
-              }>
-                ◀
-              </button>
-              <h2>
-                {currentYear}年 {currentMonth + 1}月
-              </h2>
-              <button onClick={() =>
-                setCurrentMonth(currentMonth === 11 ? 0 : currentMonth + 1)
-              }>
-                ▶
-              </button>
-            </div>
-            <div className="calendar-weekdays">{renderWeekdays()}</div>
-            <div className="calendar-days">{renderCalendarDays()}</div>
+      {/* ===== 選択した日程一覧 ===== */}
+      <div className="selected-dates">
+        <h3>選択した日程</h3>
+        {selectedDates.length === 0 ? (
+          <p>日付を選択してください</p>
+        ) : (
+          <ul>
+            {selectedDates.map((d, i) => (
+              <li key={i}>
+                {d.toLocaleDateString()}{" "}
+                {timeType === "時間指定"
+                  ? `(${startTime} ~ ${endTime})`
+                  : `(${timeType})`}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* ===== 時間帯選択 ===== */}
+      <div className="time-selection">
+        <h3>時間帯を選択</h3>
+        <label>
+          <input
+            type="radio"
+            value="終日"
+            checked={timeType === "終日"}
+            onChange={(e) => setTimeType(e.target.value)}
+          />
+          終日
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="昼"
+            checked={timeType === "昼"}
+            onChange={(e) => setTimeType(e.target.value)}
+          />
+          昼
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="夜"
+            checked={timeType === "夜"}
+            onChange={(e) => setTimeType(e.target.value)}
+          />
+          夜
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="時間指定"
+            checked={timeType === "時間指定"}
+            onChange={(e) => setTimeType(e.target.value)}
+          />
+          時間指定
+        </label>
+
+        {timeType === "時間指定" && (
+          <div className="time-range">
+            <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <span> ~ </span>
+            <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* ===== 共有リンク発行 ===== */}
+      <div className="share-link-container">
+        <button className="share-button" onClick={generateShareLink}>
+          📤 共有リンクを発行
+        </button>
+        {shareUrl && (
+          <div className="share-link-box">
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="share-link">
+              {shareUrl}
+            </a>
+            <button className="copy-button" onClick={copyToClipboard}>
+              📋 コピー
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
