@@ -17,6 +17,16 @@ const SharePage = () => {
       try {
         const res = await fetch(`/api/schedules/${token}`);
         const data = await res.json();
+
+        // dates が文字列なら JSON.parse して補正
+        if (typeof data.dates === "string") {
+          try {
+            data.dates = JSON.parse(data.dates);
+          } catch {
+            data.dates = [];
+          }
+        }
+
         setSchedule(data);
 
         // 既存の回答取得
@@ -32,7 +42,7 @@ const SharePage = () => {
       }
     };
     fetchSchedule();
-  }, [token]);
+  }, [token, username]);
 
   const handleChange = (dateKey, value) => {
     setResponses({ ...responses, [dateKey]: value });
@@ -44,7 +54,7 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: Math.random().toString(36).slice(2, 8), // 簡易ID
+          user_id: Math.random().toString(36).slice(2, 8),
           username: username || "匿名",
           responses,
         }),
@@ -80,26 +90,32 @@ const SharePage = () => {
         <h3>日程一覧</h3>
         <table>
           <tbody>
-            {schedule.dates.map((d, i) => {
-              const key = `${d.date} (${d.time})`;
-              return (
-                <tr key={i}>
-                  <td className="date-cell">{d.date}</td>
-                  <td className="time-cell">({d.time})</td>
-                  <td>
-                    <select
-                      value={responses[key] || "-"}
-                      onChange={(e) => handleChange(key, e.target.value)}
-                      className="response-dropdown"
-                    >
-                      <option value="-">-</option>
-                      <option value="○">○</option>
-                      <option value="✖">✖</option>
-                    </select>
-                  </td>
-                </tr>
-              );
-            })}
+            {Array.isArray(schedule.dates) && schedule.dates.length > 0 ? (
+              schedule.dates.map((d, i) => {
+                const key = `${d.date} (${d.time})`;
+                return (
+                  <tr key={i}>
+                    <td className="date-cell">{d.date}</td>
+                    <td className="time-cell">({d.time})</td>
+                    <td>
+                      <select
+                        value={responses[key] || "-"}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="response-dropdown"
+                      >
+                        <option value="-">-</option>
+                        <option value="○">○</option>
+                        <option value="✖">✖</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="3">日程が登録されていません</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
