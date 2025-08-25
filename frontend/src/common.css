@@ -264,3 +264,42 @@ a {
   align-items: center;
   gap: 5px;
 }
+/* 横並び配置 */
+.calendar-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* 左側のカレンダー */
+.calendar-box {
+  flex: 7;
+}
+
+/* 右側のリスト */
+.list-box {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.list-box h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #FDB9C8;
+}
+
+.list-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.list-box li {
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: rgba(0,76,160,0.2);
+  border-radius: 8px;
+}
