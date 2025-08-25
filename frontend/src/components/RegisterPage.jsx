@@ -93,13 +93,8 @@ const RegisterPage = () => {
       const dateObj = new Date(currentYear, currentMonth, day);
       const weekday = dateObj.getDay();
 
-      const holiday = holidays.find(
-        (h) =>
-          h.date ===
-          `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(
-            day
-          ).padStart(2, "0")}`
-      );
+      // 祝日判定
+      const holiday = holidays.find((h) => h.date === dateKey);
 
       let dayClass = "calendar-day";
       if (holiday || weekday === 0) {
@@ -111,12 +106,20 @@ const RegisterPage = () => {
         dayClass += " selected";
       }
 
+      // 今日判定（日本時間 JST）
+      const todayJST = new Date();
+      todayJST.setHours(
+        todayJST.getHours() + 9 - todayJST.getTimezoneOffset() / 60
+      );
+      const todayKey = `${todayJST.getFullYear()}-${String(
+        todayJST.getMonth() + 1
+      ).padStart(2, "0")}-${String(todayJST.getDate()).padStart(2, "0")}`;
+      if (dateKey === todayKey) {
+        dayClass += " today";
+      }
+
       days.push(
-        <div
-          key={day}
-          className={dayClass}
-          onClick={() => handleDateClick(day)}
-        >
+        <div key={day} className={dayClass} onClick={() => handleDateClick(day)}>
           <div className="day-number">{day}</div>
           {holiday && <div className="holiday-name">{holiday.name}</div>}
         </div>
@@ -197,20 +200,26 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 切替 */}
+      {/* 選択モードラジオ */}
       <div className="selection-toggle">
-        <button
-          className={selectionMode === "multiple" ? "active" : ""}
-          onClick={() => setSelectionMode("multiple")}
-        >
+        <label>
+          <input
+            type="radio"
+            value="multiple"
+            checked={selectionMode === "multiple"}
+            onChange={() => setSelectionMode("multiple")}
+          />
           複数選択
-        </button>
-        <button
-          className={selectionMode === "range" ? "active" : ""}
-          onClick={() => setSelectionMode("range")}
-        >
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
           範囲選択
-        </button>
+        </label>
       </div>
 
       {/* カレンダー＋右側ボックス */}
@@ -233,7 +242,6 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* ← Register専用 */}
         <div className="register-box">
           <h3>📅 選択した日程</h3>
           {selectedDates.length === 0 ? (
