@@ -1,8 +1,7 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import { v4 as uuidv4 } from "uuid";   // ← uuidでユニークなリンクID生成
-import "../register.css";
+import "../register.css"; // ✅ RegisterPage専用CSS
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -10,14 +9,7 @@ const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
 
-  const [rangeStart, setRangeStart] = useState(null);
-  const [hoverDate, setHoverDate] = useState(null);
-
-  const [shareLink, setShareLink] = useState(null); // ✅ 発行された共有リンクを保持
-
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
@@ -29,7 +21,6 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // ===== 日付クリック処理 =====
   const handleDateClick = (day) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -43,33 +34,24 @@ const RegisterPage = () => {
           : [...prev, dateStr].sort()
       );
     } else if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(dateStr);
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
         setSelectedDates([dateStr]);
-      } else {
-        const start = new Date(rangeStart);
+      } else if (selectedDates.length === 1) {
+        const start = new Date(selectedDates[0]);
         const end = new Date(dateStr);
         const range = [];
         const step = start < end ? 1 : -1;
 
-        for (let d = new Date(start); ; d.setDate(d.getDate() + step)) {
+        let d = new Date(start);
+        while ((step > 0 && d <= end) || (step < 0 && d >= end)) {
           range.push(d.toISOString().split("T")[0]);
-          if (
-            (step > 0 && d.getTime() >= end.getTime()) ||
-            (step < 0 && d.getTime() <= end.getTime())
-          ) {
-            break;
-          }
+          d.setDate(d.getDate() + step);
         }
-
         setSelectedDates(range.sort());
-        setRangeStart(null);
-        setHoverDate(null);
       }
     }
   };
 
-  // ===== 時間帯変更処理 =====
   const handleTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
@@ -80,31 +62,6 @@ const RegisterPage = () => {
     }));
   };
 
-  // ===== 共有リンク発行 =====
-  const generateShareLink = () => {
-    if (!title || selectedDates.length === 0) {
-      alert("タイトルと日程を入力してください。");
-      return;
-    }
-
-    const token = uuidv4(); // ランダムなリンクID
-    const schedules = selectedDates.map((d) => ({
-      date: d,
-      time: timeRanges[d]?.type || "終日",
-    }));
-
-    // localStorageに保存
-    localStorage.setItem(
-      `schedule_${token}`,
-      JSON.stringify({ title, schedules })
-    );
-
-    // 生成したリンクを保持
-    const link = `${window.location.origin}/share/${token}`;
-    setShareLink(link);
-  };
-
-  // ===== カレンダー描画 =====
   const renderCalendar = () => {
     const days = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -112,37 +69,29 @@ const RegisterPage = () => {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const dateObj = new Date(currentYear, currentMonth, day);
-      const dateStr = dateObj.toISOString().split("T")[0];
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
+        2,
+        "0"
+      )}-${String(day).padStart(2, "0")}`;
 
       const isSelected = selectedDates.includes(dateStr);
-      const holiday = hd.isHoliday(dateObj);
-      const isToday = dateStr === todayStr;
-
-      let inRange = false;
-      if (rangeStart && hoverDate) {
-        const start = new Date(rangeStart);
-        const end = new Date(hoverDate);
-        if (start <= end) {
-          inRange = dateObj > start && dateObj < end;
-        } else {
-          inRange = dateObj < start && dateObj > end;
-        }
-      }
+      const isToday =
+        dateStr === today.toISOString().split("T")[0];
+      const holidayInfo = hd.isHoliday(new Date(currentYear, currentMonth, day));
 
       days.push(
         <div
           key={day}
-          className={`calendar-day 
-            ${isSelected ? "selected" : ""} 
-            ${holiday ? "holiday" : ""} 
-            ${isToday ? "today" : ""} 
-            ${inRange ? "in-range" : ""}`}
+          className={`calendar-day ${isSelected ? "selected" : ""} ${
+            isToday ? "today" : ""
+          }`}
           onClick={() => handleDateClick(day)}
-          onMouseEnter={() => rangeStart && setHoverDate(dateStr)}
         >
-          <div className="day-number">{day}</div>
-          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+          <span className="day-number">{day}</span>
+          {holidayInfo && (
+            <span className="holiday-name">{holidayInfo[0].name}</span>
+          )}
+          {isToday && <span className="today-label">今日</span>}
         </div>
       );
     }
@@ -186,9 +135,7 @@ const RegisterPage = () => {
           複数選択
         </label>
         <label
-          className={`mode-option ${
-            selectionMode === "range" ? "active" : ""
-          }`}
+          className={`mode-option ${selectionMode === "range" ? "active" : ""}`}
         >
           <input
             type="radio"
@@ -218,10 +165,9 @@ const RegisterPage = () => {
           <h3>選択した日程</h3>
           <ul>
             {selectedDates.map((d) => (
-              <li key={d} className="selected-item">
-                <span className="selected-date">{d}</span>
+              <li key={d}>
+                <div>{d}</div>
                 <select
-                  className="styled-dropdown"
                   value={timeRanges[d]?.type || "終日"}
                   onChange={(e) => handleTimeChange(d, "type", e.target.value)}
                 >
@@ -234,7 +180,6 @@ const RegisterPage = () => {
                 {timeRanges[d]?.type === "時刻" && (
                   <div className="time-range">
                     <select
-                      className="styled-dropdown"
                       value={timeRanges[d]?.start || "09:00"}
                       onChange={(e) =>
                         handleTimeChange(d, "start", e.target.value)
@@ -248,7 +193,6 @@ const RegisterPage = () => {
                     </select>
                     ～
                     <select
-                      className="styled-dropdown"
                       value={timeRanges[d]?.end || "18:00"}
                       onChange={(e) =>
                         handleTimeChange(d, "end", e.target.value)
@@ -266,25 +210,8 @@ const RegisterPage = () => {
             ))}
           </ul>
 
-          {/* ✅ 共有リンク発行ボタン */}
-          <button className="share-button" onClick={generateShareLink}>
-            共有リンクを発行
-          </button>
-          {shareLink && (
-            <div className="share-link-box">
-              <a href={shareLink} target="_blank" rel="noopener noreferrer">
-                {shareLink}
-              </a>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(shareLink);
-                  alert("リンクをコピーしました！");
-                }}
-              >
-                コピー
-              </button>
-            </div>
-          )}
+          {/* 共有リンク発行ボタン */}
+          <button className="share-button">共有リンクを発行</button>
         </div>
       </div>
     </div>
