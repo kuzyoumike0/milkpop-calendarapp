@@ -864,3 +864,24 @@ button:hover {
   margin-top: 2rem;
   justify-content: flex-start;  /* 左寄せ配置 */
 }
+/* 回答一覧テーブル */
+.responses-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: rgba(0,0,0,0.4);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.responses-table th, .responses-table td {
+  border: 1px solid rgba(255,192,203,0.3);
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+.responses-table th {
+  background: rgba(253,185,200,0.2);
+  color: #fff;
+}
+.responses-table td {
+  color: #fff;
+}
