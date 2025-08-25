@@ -1,40 +1,67 @@
-/* ====== SharePage ====== */
+/* ==== SharePage ==== */
+.share-page {
+  padding: 20px;
+  text-align: center;
+}
 
-/* 出欠確認プルダウン */
-.share-dropdown {
-  width: 90px;
-  padding: 0.4rem 0.6rem;
-  border-radius: 10px;
-  border: 2px solid #FDB9C8;
+/* 一覧全体 */
+.share-list {
+  max-width: 800px;
+  margin: 20px auto;
+  background: rgba(255,255,255,0.9);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  text-align: left;
+}
+
+/* 各日程アイテム */
+.share-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #ddd;
+}
+.share-item:last-child {
+  border-bottom: none;
+}
+
+/* 日付表示 */
+.share-date {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* プルダウン */
+.share-item select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
   background: #fff;
-  color: #000;
-  font-size: 0.9rem;
-  font-weight: bold;
+  transition: all 0.2s;
+}
+.share-item select:focus {
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0, 76, 160, 0.4);
+  outline: none;
 }
 
-/* 保存・削除ボタン */
-.action-button {
-  padding: 0.6rem 1.4rem;
+/* 保存ボタン */
+.save-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border-radius: 30px;
   border: none;
-  border-radius: 25px;
+  font-size: 16px;
   font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.action-button.save { background: linear-gradient(135deg, #50C878, #a6e3b8); color: #fff; }
-.action-button.delete { background: linear-gradient(135deg, #ff4d6d, #ff9999); color: #fff; }
-
-/* 出欠テーブル */
-.attendance-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1.2rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.attendance-table th {
-  background: #004CA0;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
   color: #fff;
-  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+.save-button:hover {
+  transform: scale(1.05);
 }
