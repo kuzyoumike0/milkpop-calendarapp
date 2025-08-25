@@ -57,7 +57,7 @@ const RegisterPage = () => {
             (step > 0 && d.getTime() >= end.getTime()) ||
             (step < 0 && d.getTime() <= end.getTime())
           ) {
-            break; // ✅ 終了日でループを終了 → 翌日まで入らない
+            break; // ✅ 終了日を含んだら終了 → 翌日は含まれない
           }
         }
 
