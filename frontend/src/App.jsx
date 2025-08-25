@@ -7,9 +7,8 @@ import SharePage from "./components/SharePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
-/* 共通スタイルを全体に読み込む */
-import "./styles/common.css";
-import "./styles/header_footer.css";
+/* ✅ CSS のルート修正 */
+import "./common.css";  
 
 function App() {
   return (
