@@ -71,20 +71,24 @@ const SharePage = () => {
       {/* 日程一覧 */}
       <div className="input-card">
         <h3>日程一覧</h3>
-        {scheduleData.dates.map((d) => (
-          <div key={d} className="schedule-item">
-            <span>{d}</span>
-            <select
-              value={responses[d] || ""}
-              onChange={(e) => handleSelect(d, e.target.value)}
-              className="custom-dropdown"
-            >
-              <option value="">選択</option>
-              <option value="〇">〇</option>
-              <option value="✕">✕</option>
-            </select>
-          </div>
-        ))}
+        {scheduleData.dates.map((d) => {
+          const [date, time] = d.split("|"); // ← DBから来るフォーマット "2025-08-24|終日"
+          return (
+            <div key={d} className="schedule-row">
+              <span className="schedule-date">{date}</span>
+              <span className="schedule-time">({time})</span>
+              <select
+                value={responses[d] || ""}
+                onChange={(e) => handleSelect(d, e.target.value)}
+                className="short-dropdown"
+              >
+                <option value="">-</option>
+                <option value="〇">〇</option>
+                <option value="✕">✕</option>
+              </select>
+            </div>
+          );
+        })}
       </div>
 
       {/* ボタン */}
