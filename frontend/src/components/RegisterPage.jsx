@@ -1,6 +1,7 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
+import Holidays from "date-holidays"; // 📌 祝日ライブラリ
 import "../common.css";
 import "../register.css";
 
@@ -12,7 +13,10 @@ const RegisterPage = () => {
   const [endTime, setEndTime] = useState("23:59");
   const [shareUrl, setShareUrl] = useState("");
 
-  // カレンダー日付選択
+  // 📌 日本の祝日設定
+  const hd = new Holidays("JP");
+
+  // 📌 日付選択
   const handleDateChange = (date) => {
     if (Array.isArray(date)) {
       const [start, end] = date;
@@ -53,33 +57,33 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== 入力欄カード ===== */}
-      <div className="glass-black input-card">
-        <input
-          type="text"
-          placeholder="タイトルを入力してください"
-          className="title-input"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-
       <div className="main-content">
-        {/* ===== カレンダー（白半透明カード） ===== */}
+        {/* ===== カレンダー（7割） ===== */}
         <div className="glass-white calendar-card">
           <Calendar
             onChange={handleDateChange}
             selectRange={true}
             value={selectedDates}
-            tileClassName={({ date }) =>
-              selectedDates.some((d) => d.toDateString() === date.toDateString())
-                ? "selected-date"
-                : ""
-            }
+            tileContent={({ date }) => {
+              // 📌 祝日名を表示
+              const holiday = hd.isHoliday(date);
+              return holiday ? (
+                <span className="holiday-name">{holiday[0].name}</span>
+              ) : null;
+            }}
+            tileClassName={({ date }) => {
+              const isSunday = date.getDay() === 0;
+              const isSaturday = date.getDay() === 6;
+              const holiday = hd.isHoliday(date);
+
+              if (holiday || isSunday) return "holiday";
+              if (isSaturday) return "saturday";
+              return "";
+            }}
           />
         </div>
 
-        {/* ===== サイドの登録済みスケジュールカード ===== */}
+        {/* ===== 選択リスト（3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -99,66 +103,20 @@ const RegisterPage = () => {
 
           <h3>時間帯を選択</h3>
           <div className="time-selection">
-            <label>
-              <input
-                type="radio"
-                value="終日"
-                checked={timeType === "終日"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              終日
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="昼"
-                checked={timeType === "昼"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              昼
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="夜"
-                checked={timeType === "夜"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              夜
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="時間指定"
-                checked={timeType === "時間指定"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              時間指定
-            </label>
+            <label><input type="radio" value="終日" checked={timeType==="終日"} onChange={(e)=>setTimeType(e.target.value)}/> 終日</label>
+            <label><input type="radio" value="昼" checked={timeType==="昼"} onChange={(e)=>setTimeType(e.target.value)}/> 昼</label>
+            <label><input type="radio" value="夜" checked={timeType==="夜"} onChange={(e)=>setTimeType(e.target.value)}/> 夜</label>
+            <label><input type="radio" value="時間指定" checked={timeType==="時間指定"} onChange={(e)=>setTimeType(e.target.value)}/> 時間指定</label>
           </div>
 
           {timeType === "時間指定" && (
             <div className="time-range">
-              <select
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              >
-                {timeOptions.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
+              <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+                {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
               <span> ~ </span>
-              <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              >
-                {timeOptions.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
+              <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+                {timeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
           )}
@@ -168,17 +126,10 @@ const RegisterPage = () => {
           </button>
           {shareUrl && (
             <div className="share-link-box">
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="share-link"
-              >
+              <a href={shareUrl} target="_blank" rel="noopener noreferrer" className="share-link">
                 {shareUrl}
               </a>
-              <button className="copy-button" onClick={copyToClipboard}>
-                📋 コピー
-              </button>
+              <button className="copy-button" onClick={copyToClipboard}>📋 コピー</button>
             </div>
           )}
         </div>
