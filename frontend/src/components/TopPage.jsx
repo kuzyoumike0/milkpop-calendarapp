@@ -1,13 +1,13 @@
 // frontend/src/components/TopPage.jsx
 import React from "react";
-import "../index.css";
+import "../styles/top.css"; // ✅ top.css を読み込む
 
 function TopPage() {
   return (
     <div className="top-container">
       {/* トップ画像 */}
       <img
-        src="/logo.png" // 📌 public/logo.png に置いてください
+        src="/logo.png" // 📌 public/logo.png に配置してください
         alt="MilkPOP Calendar"
         className="top-logo"
       />
@@ -19,9 +19,7 @@ function TopPage() {
           ポップで可愛いデザインのカレンダーで、
           あなたのスケジュールを管理しましょう。
         </p>
-        <p>
-          個人用スケジュール登録や共有リンク発行も簡単！
-        </p>
+        <p>個人用スケジュール登録や共有リンク発行も簡単！</p>
       </div>
     </div>
   );
