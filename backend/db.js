@@ -1,11 +1,10 @@
 //pool.query(...) で SQL を実行するために必要らしい
+// db.js (ESM)
+import pg from 'pg';
 
-import pkg from "pg";
-const { Pool } = pkg;
-
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Railway の環境変数
-  ssl: {
-    rejectUnauthorized: false, // Railway では必要な場合がある
-  },
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL, // 例: ...?sslmode=require
+  ssl: { rejectUnauthorized: false },
 });
+
+export default pool;
