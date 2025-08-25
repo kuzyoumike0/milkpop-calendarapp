@@ -11,7 +11,7 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [users, setUsers] = useState([]); 
+  const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(true); // 初期から編集モード
 
@@ -64,7 +64,7 @@ const SharePage = () => {
     }
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
-      setIsEditing(true); // 初期から編集可能
+      setIsEditing(true); // 追加時は編集可能
     }
   };
 
@@ -81,15 +81,23 @@ const SharePage = () => {
       return;
     }
     try {
+      const payload = {
+        username: username,
+        responses,
+      };
+
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: username,
-          responses,
-        }),
+        body: JSON.stringify(payload),
       });
-      await fetchResponses();
+
+      // 即時反映: 自分の回答を allResponses に追加/更新
+      setAllResponses((prev) => {
+        const filtered = prev.filter((r) => r.username !== username);
+        return [...filtered, payload];
+      });
+
       setIsEditing(false); // 保存したら編集終了
       alert("保存しました！");
     } catch (err) {
