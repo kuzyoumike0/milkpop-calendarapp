@@ -1,13 +1,13 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import "../common.css";
+import "../register.css";  // ✅ RegisterPage専用CSS
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeRanges, setTimeRanges] = useState({}); // {date: {type: "終日"|"昼"|"夜"|"時刻", start:"HH:MM", end:"HH:MM"}}
+  const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -93,7 +93,7 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 時刻選択用の選択肢（1時間刻み）
+  // 時刻選択用の選択肢
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
     const label = `${String(h).padStart(2, "0")}:00`;
