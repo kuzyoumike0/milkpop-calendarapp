@@ -148,3 +148,29 @@
   color: #000;
   box-shadow: 0 6px 16px rgba(0,0,0,0.5);
 }
+/* 編集ボタン */
+.edit-button {
+  margin-left: 12px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+}
+.edit-button:hover {
+  background: linear-gradient(135deg, #50C878, #FDB9C8);
+  transform: scale(1.05);
+  color: #000;
+}
+
+/* 編集不可状態のボタン */
+.choice-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
