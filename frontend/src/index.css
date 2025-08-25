@@ -752,3 +752,52 @@ button:hover {
 .short-dropdown:hover {
   border-color: #004CA0;
 }
+/* 日程行 */
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,192,203,0.3);
+  font-size: 1rem;
+  color: #fff;
+}
+.schedule-row:last-child {
+  border-bottom: none;
+}
+
+.schedule-date {
+  min-width: 120px;
+  font-weight: bold;
+}
+.schedule-time {
+  color: #FDB9C8;
+  font-size: 0.95rem;
+  min-width: 60px;
+}
+
+/* コンパクトなアイコン風プルダウン */
+.icon-dropdown {
+  min-width: 70px;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #000;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+.icon-dropdown option {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* ボタン間に余白 */
+.button-group.spaced {
+  display: flex;
+  gap: 2rem;  /* ← 保存と削除の間にしっかり余白 */
+  margin-top: 2rem;
+}
