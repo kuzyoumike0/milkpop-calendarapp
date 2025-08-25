@@ -53,24 +53,26 @@ const SharePage = () => {
     fetchData();
   }, [token]);
 
-  // ===== 新規回答保存 =====
+  // ===== 新規回答 or 上書き保存 =====
   const saveAttendance = async () => {
     if (!newUser) {
       alert("ユーザー名を入力してください");
       return;
     }
+
     await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: newUser,
+        user_id: newUser, // ← user_id を名前と同一にする
         username: newUser,
         responses: { [newDate]: newStatus },
       }),
     });
+
     alert(`${newDate} | ${newUser} さん → ${newStatus} を保存しました`);
 
-    // 🔹 再取得して反映（リロード不要）
+    // 🔹 再取得して反映
     fetchData();
     setNewUser("");
     setNewStatus("〇");
@@ -85,18 +87,18 @@ const SharePage = () => {
     setRows(updated);
     setEditIndex(null);
 
+    // API更新
     await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: editName,
+        user_id: editName, // ← user_id を名前に統一することで上書きされる
         username: editName,
         responses: { [r.date]: editStatus },
       }),
     });
 
     alert(`更新しました → ${editName} さん: ${editStatus}`);
-    // 🔹 再取得して反映
     fetchData();
   };
 
