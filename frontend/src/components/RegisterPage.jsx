@@ -7,7 +7,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [selectionMode, setSelectionMode] = useState("multiple");
-  const [timeRanges, setTimeRanges] = useState({});
+  const [timeRanges, setTimeRanges] = useState({}); // {date: {type: "終日"|"昼"|"夜"|"時刻", start:"HH:MM", end:"HH:MM"}}
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -53,6 +53,16 @@ const RegisterPage = () => {
     }
   };
 
+  const handleTimeChange = (date, field, value) => {
+    setTimeRanges((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        [field]: value,
+      },
+    }));
+  };
+
   const renderCalendar = () => {
     const days = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -83,11 +93,18 @@ const RegisterPage = () => {
     return days;
   };
 
+  // 時刻選択用の選択肢（1時間刻み）
+  const timeOptions = [];
+  for (let h = 0; h < 24; h++) {
+    const label = `${String(h).padStart(2, "0")}:00`;
+    timeOptions.push(label);
+  }
+
   return (
     <div className="register-page">
       <h2>日程登録</h2>
 
-      {/* ✅ タイトルをカレンダー上に置く */}
+      {/* タイトル */}
       <div className="calendar-title-input">
         <input
           type="text"
@@ -97,7 +114,7 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 選択方法ラジオボタン */}
+      {/* 選択モード */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -127,7 +144,7 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* ✅ カレンダーと選択リストを横並び */}
+      {/* カレンダーとリストを横並び */}
       <div className="calendar-layout">
         <div className="calendar">
           <div className="calendar-header">
@@ -140,11 +157,53 @@ const RegisterPage = () => {
           <div className="calendar-grid">{renderCalendar()}</div>
         </div>
 
+        {/* 選択日程 + 時間帯 */}
         <div className="selected-list">
           <h3>選択した日程</h3>
           <ul>
             {selectedDates.map((d) => (
-              <li key={d}>{d}</li>
+              <li key={d}>
+                <div>{d}</div>
+                <select
+                  value={timeRanges[d]?.type || "終日"}
+                  onChange={(e) => handleTimeChange(d, "type", e.target.value)}
+                >
+                  <option value="終日">終日</option>
+                  <option value="昼">昼</option>
+                  <option value="夜">夜</option>
+                  <option value="時刻">時刻指定</option>
+                </select>
+
+                {timeRanges[d]?.type === "時刻" && (
+                  <div className="time-range">
+                    <select
+                      value={timeRanges[d]?.start || "09:00"}
+                      onChange={(e) =>
+                        handleTimeChange(d, "start", e.target.value)
+                      }
+                    >
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    ～
+                    <select
+                      value={timeRanges[d]?.end || "18:00"}
+                      onChange={(e) =>
+                        handleTimeChange(d, "end", e.target.value)
+                      }
+                    >
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </li>
             ))}
           </ul>
         </div>
