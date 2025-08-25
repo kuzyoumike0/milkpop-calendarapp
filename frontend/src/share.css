@@ -165,4 +165,61 @@
 .delete-btn:hover {
   background: rgba(255, 50, 50, 1);
 }
+/* 左右余白を持たせて中央に */
+.glass-black {
+  margin: 15px auto;
+  width: 90%;
+  max-width: 1000px;
+}
+
+.schedule-list table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left; /* 左寄せ */
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-link {
+  color: #FDB9C8;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.user-link:hover {
+  color: #fff;
+}
+
+.user-status {
+  font-size: 13px;
+  color: #ccc;
+  margin-left: 10px;
+}
+
+.delete-btn {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 80, 80, 0.8);
+  color: white;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 50, 50, 1);
+}
 
