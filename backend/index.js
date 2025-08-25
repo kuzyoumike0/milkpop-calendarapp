@@ -9,6 +9,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import authRouter from "./auth.js";
 import pool from "./db.js"; // ← ここがポイント：共通Poolを使う
+import jwt from "jsonwebtoken";
 
 const app = express();
 const server = createServer(app);
@@ -96,13 +97,11 @@ function authRequired(req, res, next) {
     const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
     const token = req.cookies?.token || bearer;
     if (!token) return res.status(401).json({ error: "Unauthorized" });
-    const payload = (await import("jsonwebtoken")).default.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET); // ← これでOK
     req.user = payload; // { userId, discordId, username, iat, exp }
     next();
-  } catch {
+  } catch (e) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
