@@ -1,8 +1,8 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import Holidays from "date-holidays";
-import "../styles/register.css"; // ✅ RegisterPage 専用CSSを読み込む
+import "../common.css";   // ✅ 修正
+
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
