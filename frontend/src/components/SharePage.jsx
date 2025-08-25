@@ -62,7 +62,7 @@ const SharePage = () => {
   // ===== 保存 =====
   const handleSave = async () => {
     if (!username) {
-      alert("名前を入力してください！");
+      alert("名前を入力してください！（必須）");
       return;
     }
     try {
@@ -83,7 +83,7 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ===== ユーザー一覧（自分も含める） =====
+  // ===== ユーザー一覧（自分の名前が入力されたら含める） =====
   let users = Array.from(new Set(allResponses.map((r) => r.username)));
   if (username && !users.includes(username)) users.push(username);
 
@@ -104,74 +104,66 @@ const SharePage = () => {
         />
       </div>
 
-      {/* デイコード/伝助風テーブル */}
-      {username && (
-        <div className="glass-black schedule-list">
-          <table>
-            <thead>
-              <tr>
-                <th>日付</th>
-                <th>時間</th>
-                {users.map((u, idx) => (
+      {/* 日程一覧（常に表示） */}
+      <div className="glass-black schedule-list">
+        <table>
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>時間</th>
+              {/* 自分の列（名前未入力なら「あなた」） */}
+              <th>{username || "あなた"}</th>
+              {/* 他のユーザー */}
+              {users
+                .filter((u) => u !== username)
+                .map((u, idx) => (
                   <th key={idx}>{u}</th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(schedule.dates) &&
-                schedule.dates.map((d, i) => {
-                  const key = `${d.date} (${d.time})`;
-                  return (
-                    <tr key={i}>
-                      <td className="date-cell">{d.date}</td>
-                      <td className="time-cell">{d.time}</td>
-                      {users.map((u, idx) => {
-                        const user = allResponses.find(
-                          (r) => r.username === u
-                        );
-                        const value =
-                          u === username
-                            ? responses[key] || "-"
-                            : user?.responses?.[key] || "-";
-
-                        return (
-                          <td key={idx} className="attendance-cell">
-                            {u === username ? (
-                              <select
-                                value={value}
-                                onChange={(e) =>
-                                  handleChange(key, e.target.value)
-                                }
-                                className="response-dropdown"
-                              >
-                                {attendanceOptions.map((opt) => (
-                                  <option key={opt} value={opt}>
-                                    {opt}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              value
-                            )}
-                          </td>
-                        );
+            </tr>
+          </thead>
+          <tbody>
+            {Array.isArray(schedule.dates) &&
+              schedule.dates.map((d, i) => {
+                const key = `${d.date} (${d.time})`;
+                return (
+                  <tr key={i}>
+                    <td className="date-cell">{d.date}</td>
+                    <td className="time-cell">{d.time}</td>
+                    {/* 自分の列：プルダウン */}
+                    <td>
+                      <select
+                        value={responses[key] || "-"}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="response-dropdown"
+                      >
+                        {attendanceOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    {/* 他ユーザー列：表示のみ */}
+                    {users
+                      .filter((u) => u !== username)
+                      .map((u, idx) => {
+                        const user = allResponses.find((r) => r.username === u);
+                        const value = user?.responses?.[key] || "-";
+                        return <td key={idx}>{value}</td>;
                       })}
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  </tr>
+                );
+              })}
+          </tbody>
+        </table>
+      </div>
 
       {/* 保存ボタン */}
-      {username && (
-        <div className="button-area">
-          <button className="save-button" onClick={handleSave}>
-            保存
-          </button>
-        </div>
-      )}
+      <div className="button-area">
+        <button className="save-button" onClick={handleSave}>
+          保存
+        </button>
+      </div>
     </div>
   );
 };
