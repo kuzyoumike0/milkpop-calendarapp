@@ -123,6 +123,12 @@
   font-weight: bold;
 }
 
+/* 範囲選択中の仮ハイライト */
+.calendar-day.in-range {
+  background: #cfe2ff; /* 薄ブルー */
+  color: #004CA0;
+}
+
 /* 日付番号 */
 .day-number {
   font-size: 16px;
@@ -146,6 +152,8 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   color: #333;
   text-align: left;
+  max-height: 500px;   /* ✅ 高さ制限 */
+  overflow-y: auto;    /* ✅ スクロール可能 */
 }
 .selected-list ul {
   list-style: none;
