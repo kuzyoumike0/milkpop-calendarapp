@@ -10,7 +10,7 @@
   align-items: center;
 }
 
-/* ====== 入力エリア（黒背景カード） ====== */
+/* ====== 入力エリア（ガラスカード調） ====== */
 .title-input-container {
   display: flex;
   justify-content: center;
@@ -18,31 +18,34 @@
   width: 100%;
 }
 
-.title-input {
+.title-input,
+.memo-input {
   width: 80%;
   padding: 12px;
   font-size: 18px;
   border: none;
-  border-radius: 10px;
+  border-radius: 15px;
   text-align: center;
-  background: #111;
+  background: rgba(255, 255, 255, 0.2); /* ✅ 半透明 */
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);           /* ✅ 背景ぼかし */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
 }
 
 .memo-input {
-  width: 80%;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 10px;
   margin-top: 10px;
-  background: #111;
-  color: #fff;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-size: 14px;
 }
 
-/* ====== ラジオボタンおしゃれ化 ====== */
+.title-input:focus,
+.memo-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
+/* ====== ラジオボタンおしゃれ化（ガラス調） ====== */
 .selection-toggle {
   display: flex;
   justify-content: center;
@@ -56,10 +59,11 @@
   font-weight: bold;
   padding: 8px 18px;
   border-radius: 20px;
-  background: #111;
+  background: rgba(255, 255, 255, 0.2); /* ✅ 半透明 */
   color: #fff;
-  transition: all 0.3s;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
 }
 
 .selection-toggle input[type="radio"] {
@@ -70,6 +74,7 @@
   background: linear-gradient(135deg, #FDB9C8, #ff7aa8);
   color: #111;
   font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 /* ====== カレンダーとリスト ====== */
@@ -84,16 +89,16 @@
 .calendar-box {
   flex: 7;
   background: rgba(17, 17, 17, 0.55); /* ✅ 半透明黒 */
-  border-radius: 20px;                /* ✅ 大きめ角丸 */
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4); /* ✅ 強めの影 */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   color: #fff;
-  backdrop-filter: blur(10px);        /* ✅ 背景ぼかし */
+  backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
 
 .calendar-box:hover {
-  transform: translateY(-3px); /* ✅ 浮く演出 */
+  transform: translateY(-3px);
 }
 
 .calendar-header {
@@ -142,7 +147,7 @@
 
 .calendar-day {
   background: rgba(255, 255, 255, 0.15); /* ✅ 半透明白 */
-  border-radius: 8px;
+  border-radius: 12px;
   min-height: 80px;
   display: flex;
   flex-direction: column;
@@ -150,23 +155,28 @@
   align-items: center;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   padding-top: 5px;
   color: #fff;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
 }
 
 .calendar-day:hover {
-  background: rgba(255, 182, 193, 0.4);
+  background: rgba(255, 182, 193, 0.3);
+  transform: scale(1.05);
 }
 
 .calendar-day.selected {
-  background: rgba(0, 76, 160, 0.8) !important;
+  background: rgba(0, 76, 160, 0.7) !important;
   color: #fff !important;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .calendar-day.today {
   border: 2px solid #ff7aa8;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .calendar-day .day-number {
@@ -231,13 +241,16 @@
   background: linear-gradient(135deg, #FDB9C8, #004CA0);
   border: none;
   padding: 10px 18px;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #fff;
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .share-btn:hover {
   opacity: 0.9;
+  transform: translateY(-2px);
 }
