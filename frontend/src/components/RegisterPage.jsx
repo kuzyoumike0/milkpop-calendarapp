@@ -6,6 +6,8 @@ import "../common.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("multiple");
+  const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -19,18 +21,62 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 日付クリック
   const handleDateClick = (day) => {
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
       "0"
     )}-${String(day).padStart(2, "0")}`;
-    if (selectedDates.includes(dateKey)) {
-      setSelectedDates(selectedDates.filter((d) => d !== dateKey));
+
+    if (selectionMode === "multiple") {
+      // 複数選択
+      if (selectedDates.includes(dateKey)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateKey));
+      } else {
+        setSelectedDates([...selectedDates, dateKey]);
+      }
     } else {
-      setSelectedDates([...selectedDates, dateKey]);
+      // 範囲選択
+      if (selectedDates.length === 0) {
+        setSelectedDates([dateKey]);
+      } else if (selectedDates.length === 1) {
+        const start = new Date(selectedDates[0]);
+        const end = new Date(dateKey);
+        if (start > end) [start, end] = [end, start];
+        const range = [];
+        let d = new Date(start);
+        while (d <= end) {
+          range.push(
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+              2,
+              "0"
+            )}-${String(d.getDate()).padStart(2, "0")}`
+          );
+          d.setDate(d.getDate() + 1);
+        }
+        setSelectedDates(range);
+      } else {
+        setSelectedDates([dateKey]);
+      }
     }
   };
 
+  // 曜日ヘッダー
+  const renderWeekdays = () => {
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+    return weekdays.map((day, i) => (
+      <div
+        key={i}
+        className={`calendar-weekday ${
+          i === 0 ? "holiday" : i === 6 ? "saturday" : ""
+        }`}
+      >
+        {day}
+      </div>
+    ));
+  };
+
+  // カレンダー描画
   const renderCalendarDays = () => {
     const days = [];
     const holidays = hd.getHolidays(currentYear);
@@ -47,7 +93,6 @@ const RegisterPage = () => {
       const dateObj = new Date(currentYear, currentMonth, day);
       const weekday = dateObj.getDay();
 
-      // 祝日判定
       const holiday = holidays.find(
         (h) =>
           h.date ===
@@ -56,14 +101,12 @@ const RegisterPage = () => {
           ).padStart(2, "0")}`
       );
 
-      // 曜日・祝日色
       let dayClass = "calendar-day";
       if (holiday || weekday === 0) {
-        dayClass += " holiday"; // 日曜 or 祝日
+        dayClass += " holiday";
       } else if (weekday === 6) {
-        dayClass += " saturday"; // 土曜
+        dayClass += " saturday";
       }
-
       if (selectedDates.includes(dateKey)) {
         dayClass += " selected";
       }
@@ -80,20 +123,6 @@ const RegisterPage = () => {
       );
     }
     return days;
-  };
-
-  const renderWeekdays = () => {
-    const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-    return weekdays.map((day, i) => (
-      <div
-        key={i}
-        className={`calendar-weekday ${
-          i === 0 ? "holiday" : i === 6 ? "saturday" : ""
-        }`}
-      >
-        {day}
-      </div>
-    ));
   };
 
   const handlePrevMonth = () => {
@@ -114,22 +143,42 @@ const RegisterPage = () => {
     }
   };
 
+  // 時間帯プルダウン
+  const handleTimeChange = (date, value) => {
+    setTimeRanges({ ...timeRanges, [date]: value });
+  };
+
   return (
     <div className="register-page">
-      {/* タイトル入力フォーム */}
+      {/* タイトル */}
       <div className="title-input-container">
         <input
           type="text"
-          placeholder="✨ スケジュールのタイトルを入力してください ✨"
+          placeholder="日程登録"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="title-input"
         />
       </div>
 
-      {/* 横並びレイアウト */}
+      {/* 複数 / 範囲切替 */}
+      <div className="selection-toggle">
+        <button
+          className={selectionMode === "multiple" ? "active" : ""}
+          onClick={() => setSelectionMode("multiple")}
+        >
+          複数選択
+        </button>
+        <button
+          className={selectionMode === "range" ? "active" : ""}
+          onClick={() => setSelectionMode("range")}
+        >
+          範囲選択
+        </button>
+      </div>
+
+      {/* カレンダーとリスト */}
       <div className="calendar-container">
-        {/* 左 7割 → カレンダー */}
         <div className="calendar-box">
           <div className="calendar">
             <div className="calendar-header">
@@ -148,18 +197,30 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* 右 3割 → 選択した日付リスト */}
+        {/* 選択した日付リスト */}
         <div className="list-box">
-          <h3>📅 選択した日付</h3>
+          <h3>📅 選択した日程</h3>
           {selectedDates.length === 0 ? (
             <p>日付をクリックしてください</p>
           ) : (
             <ul>
               {selectedDates.map((d) => (
-                <li key={d}>{d}</li>
+                <li key={d}>
+                  {d}{" "}
+                  <select
+                    value={timeRanges[d] || "終日"}
+                    onChange={(e) => handleTimeChange(d, e.target.value)}
+                  >
+                    <option value="終日">終日</option>
+                    <option value="昼">昼</option>
+                    <option value="夜">夜</option>
+                    <option value="時刻指定">時刻指定</option>
+                  </select>
+                </li>
               ))}
             </ul>
           )}
+          <button className="share-btn">共有リンクを発行</button>
         </div>
       </div>
     </div>
