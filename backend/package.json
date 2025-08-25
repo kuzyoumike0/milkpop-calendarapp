@@ -13,7 +13,8 @@
     "cors": "^2.8.5",
     "pg": "^8.11.5",
     "uuid": "^9.0.1",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "jsonwebtoken": "^9.0.2"   // ★ 追加
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
