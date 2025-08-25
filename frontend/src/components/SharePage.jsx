@@ -49,7 +49,7 @@ const SharePage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: username || "匿名",
+          username: username,
           responses: { [key]: value },
         }),
       });
@@ -62,7 +62,26 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ユーザー一覧（自分も必ず含める）
+  // ===== 名前が必須 =====
+  if (!username) {
+    return (
+      <div className="share-page">
+        <h2 className="page-title">共有スケジュール</h2>
+        <div className="glass-black title-box">{schedule.title}</div>
+        <div className="glass-black name-box">
+          <input
+            type="text"
+            placeholder="あなたの名前を入力（必須）"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </div>
+        <p className="notice-text">※名前を入力してください。入力後に表が表示されます。</p>
+      </div>
+    );
+  }
+
+  // ===== ユーザー一覧（自分も必ず含める） =====
   let users = Array.from(new Set(allResponses.map((r) => r.username)));
   if (username && !users.includes(username)) users.push(username);
 
@@ -73,11 +92,11 @@ const SharePage = () => {
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 自分の名前入力 */}
+      {/* 名前入力 */}
       <div className="glass-black name-box">
         <input
           type="text"
-          placeholder="あなたの名前を入力"
+          placeholder="あなたの名前を入力（必須）"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -108,7 +127,6 @@ const SharePage = () => {
                       const user = allResponses.find((r) => r.username === u);
                       const value = user?.responses?.[key] || "-";
                       const cellId = `${u}-${key}`;
-
                       const isSelf = u === username;
 
                       return (
@@ -118,9 +136,7 @@ const SharePage = () => {
                               autoFocus
                               defaultValue={value}
                               onBlur={() => setEditingCell(null)}
-                              onChange={(e) =>
-                                handleUpdateResponse(key, e.target.value)
-                              }
+                              onChange={(e) => handleUpdateResponse(key, e.target.value)}
                               className="response-dropdown"
                             >
                               {attendanceOptions.map((opt) => (
