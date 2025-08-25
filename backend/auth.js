@@ -2,7 +2,21 @@
 import express from "express";
 //import fetch from "node-fetch";
 import jwt from "jsonwebtoken";
-import { pool } from "./db.js"; // pg Pool
+
+
+// 起動時 (server.listen の前で1回だけ)
+import pool from './db.js';
+const r = await pool.query(`
+  SELECT
+    current_user,
+    current_database() AS db,
+    inet_server_addr()::text AS host,
+    inet_server_port()   AS port,
+    current_schema()      AS schema,
+    setting               AS search_path
+  FROM pg_settings WHERE name='search_path'
+`);
+console.log('DB DIAG:', r.rows[0]);  // ここで実際の接続先が分かる
 
 const router = express.Router();
 
