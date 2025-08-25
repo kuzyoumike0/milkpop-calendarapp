@@ -9,8 +9,8 @@ const RegisterPage = () => {
   const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
 
-  const [rangeStart, setRangeStart] = useState(null); // 範囲選択の開始日
-  const [hoverDate, setHoverDate] = useState(null);   // 範囲選択中のマウスホバー日
+  const [rangeStart, setRangeStart] = useState(null);
+  const [hoverDate, setHoverDate] = useState(null);
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -37,15 +37,13 @@ const RegisterPage = () => {
       setSelectedDates((prev) =>
         prev.includes(dateStr)
           ? prev.filter((d) => d !== dateStr)
-          : [...prev, dateStr]
+          : [...prev, dateStr].sort()
       );
     } else if (selectionMode === "range") {
       if (!rangeStart) {
-        // 1回目クリック → 開始日設定
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
-        // 2回目クリック → 範囲確定
         const start = new Date(rangeStart);
         const end = new Date(dateStr);
         const range = [];
@@ -57,12 +55,11 @@ const RegisterPage = () => {
             (step > 0 && d.getTime() >= end.getTime()) ||
             (step < 0 && d.getTime() <= end.getTime())
           ) {
-            break; // ✅ 終了日を含んだら終了 → 翌日は含まれない
+            break;
           }
         }
 
-        // ✅ 全範囲を右リストへ反映
-        setSelectedDates(range);
+        setSelectedDates(range.sort()); // ✅ 日付順にソート
         setRangeStart(null);
         setHoverDate(null);
       }
@@ -95,15 +92,15 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(dateObj);
       const isToday = dateStr === todayStr;
 
-      // 範囲選択中の仮ハイライト
+      // 範囲選択中の仮ハイライト（未確定時のみ）
       let inRange = false;
       if (rangeStart && hoverDate) {
         const start = new Date(rangeStart);
         const end = new Date(hoverDate);
         if (start <= end) {
-          inRange = dateObj >= start && dateObj <= end;
+          inRange = dateObj > start && dateObj < end; // ✅ 開始・終了を除外
         } else {
-          inRange = dateObj <= start && dateObj >= end;
+          inRange = dateObj < start && dateObj > end;
         }
       }
 
@@ -126,7 +123,6 @@ const RegisterPage = () => {
     return days;
   };
 
-  // 時刻選択用の選択肢
   const timeOptions = [];
   for (let h = 0; h < 24; h++) {
     const label = `${String(h).padStart(2, "0")}:00`;
@@ -137,7 +133,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
-      {/* タイトル */}
       <div className="calendar-title-input">
         <input
           type="text"
@@ -147,7 +142,6 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* 選択モード */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -177,7 +171,6 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダーとリストを横並び */}
       <div className="calendar-layout">
         <div className="calendar">
           <div className="calendar-header">
@@ -190,7 +183,6 @@ const RegisterPage = () => {
           <div className="calendar-grid">{renderCalendar()}</div>
         </div>
 
-        {/* 選択日程 + 時間帯 */}
         <div className="selected-list">
           <h3>選択した日程</h3>
           <ul>
