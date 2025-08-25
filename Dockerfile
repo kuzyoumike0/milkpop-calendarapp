@@ -5,9 +5,11 @@ FROM node:18-alpine AS frontend-build
 
 WORKDIR /app/frontend
 
+# 依存関係をインストール
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install --production=false
 
+# ソースをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
@@ -15,20 +17,25 @@ RUN npm run build
 # ============================
 # 2. バックエンドをセットアップ
 # ============================
-FROM node:18-alpine AS backend
+FROM node:18-alpine
 
 WORKDIR /app
 
-# バックエンドの依存関係をインストール
+# バックエンド依存をインストール
 COPY backend/package.json backend/package-lock.json* ./
 RUN npm install --production=false
 
-# バックエンドソースをコピー
+# バックエンドのソースをコピー
 COPY backend/ ./
 
-# フロントエンドのビルド成果物を backend/public にコピー
-COPY --from=frontend-build /app/frontend/build ./public
+# フロントエンドのビルド成果物を public へコピー
+COPY --from=frontend-build /app/frontend/build ./frontend/build
 
-# Express サーバーを起動
-EXPOSE 3000
-CMD ["npm", "start"]
+# 環境変数
+ENV NODE_ENV=production
+
+# ポートを公開
+EXPOSE 5000
+
+# サーバー起動
+CMD ["node", "index.js"]
