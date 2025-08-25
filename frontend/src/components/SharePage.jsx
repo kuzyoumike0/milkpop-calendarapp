@@ -6,88 +6,62 @@ import "../common.css";
 const SharePage = () => {
   const { token } = useParams();
   const [title, setTitle] = useState("");
-  const [grouped, setGrouped] = useState({});
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/share/${token}`);
+      // 🔹 集計APIを呼ぶ
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/schedules/${token}/aggregate`
+      );
       const data = await res.json();
 
-      setTitle(data.title);
+      setTitle(data.title || "");
 
-      // 🔹 日付+時間帯ごとにグループ化
-      const groupedData = {};
-      data.schedules.forEach((s) => {
-        const key = `${s.date} (${s.time})`;
-        if (!groupedData[key]) groupedData[key] = [];
-        groupedData[key].push(s);
+      // 🔹 日付・ユーザー名・参加状況の配列に変換
+      const tableRows = [];
+      Object.entries(data).forEach(([dateKey, responses]) => {
+        responses.forEach((r) => {
+          tableRows.push({
+            date: dateKey,
+            username: r.username || "（未入力）",
+            status: r.status,
+          });
+        });
       });
-      setGrouped(groupedData);
+
+      setRows(tableRows);
     };
     fetchData();
   }, [token]);
-
-  const saveAttendance = async (date, time, name, status) => {
-    await fetch(`${process.env.REACT_APP_API_URL}/api/share/${token}/attendance`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date, time, name, status }),
-    });
-    alert(`${date} (${time}) | ${name} さん → ${status} を保存しました`);
-    window.location.reload(); // 再読み込みで即反映
-  };
 
   return (
     <div className="page-container">
       <h2 className="page-title">共有スケジュール</h2>
       {title && <h3>{title}</h3>}
 
-      {Object.keys(grouped).map((key) => (
-        <div key={key} className="schedule-block">
-          <h4>{key}</h4>
-          <table className="attendance-table">
-            <thead>
-              <tr>
-                <th>名前</th>
-                <th>参加状況</th>
+      {rows.length === 0 ? (
+        <p>まだ回答がありません。</p>
+      ) : (
+        <table className="attendance-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>ユーザー名</th>
+              <th>参加状況</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td>{r.date}</td>
+                <td>{r.username}</td>
+                <td>{r.status}</td>
               </tr>
-            </thead>
-            <tbody>
-              {grouped[key].map((s, i) => (
-                <tr key={i}>
-                  <td>{s.name || "（未入力）"}</td>
-                  <td>{s.status}</td>
-                </tr>
-              ))}
-              {/* 入力欄 */}
-              <tr>
-                <td>
-                  <input type="text" id={`name-${key}`} placeholder="名前" />
-                </td>
-                <td>
-                  <select id={`status-${key}`} defaultValue="〇">
-                    <option value="〇">〇</option>
-                    <option value="△">△</option>
-                    <option value="✖">✖</option>
-                  </select>
-                  <button
-                    onClick={() =>
-                      saveAttendance(
-                        key.split(" ")[0], // date
-                        key.match(/\((.*?)\)/)[1], // time
-                        document.getElementById(`name-${key}`).value,
-                        document.getElementById(`status-${key}`).value
-                      )
-                    }
-                  >
-                    保存
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      ))}
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
