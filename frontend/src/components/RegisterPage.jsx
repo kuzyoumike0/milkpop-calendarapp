@@ -14,18 +14,18 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // 📌 JSTに変換
+  // JSTに変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 📌 時刻リスト
+  // 時刻リスト（1時間刻み）
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 📌 日付クリック処理
+  // 日付クリック処理
   const handleDateClick = (date) => {
     const jstDate = getJSTDate(date);
 
@@ -73,27 +73,57 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 区分変更
+  // 区分変更
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
     setSelectedDates(updated);
   };
 
-  // 📌 時間指定変更
+  // 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
-  // 📌 共有リンク生成
-  const generateShareLink = () => {
-    const token = Math.random().toString(36).substring(2, 10);
-    const url = `${window.location.origin}/share/${token}`;
-    setShareUrl(url);
+  // ===== DBに保存して共有リンク発行 =====
+  const generateShareLink = async () => {
+    try {
+      if (!title || selectedDates.length === 0) {
+        alert("タイトルと日程を入力してください");
+        return;
+      }
+
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: selectedDates.map((d) => ({
+            date: d.date.toISOString().split("T")[0],
+            time: d.timeType,
+            startTime: d.startTime,
+            endTime: d.endTime,
+          })),
+          options: {},
+        }),
+      });
+
+      const data = await res.json();
+      if (data.share_token) {
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareUrl(url);
+      } else {
+        alert("共有リンクの生成に失敗しました");
+      }
+    } catch (err) {
+      console.error("共有リンク生成エラー", err);
+      alert("サーバーエラーが発生しました");
+    }
   };
 
+  // クリップボードにコピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     alert("リンクをコピーしました！");
@@ -151,7 +181,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory"   // 月曜始まり
+            calendarType="gregory" // 月曜始まり
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
@@ -163,10 +193,8 @@ const RegisterPage = () => {
               const isSaturday = jstDate.getDay() === 6;
               const holiday = hd.isHoliday(jstDate);
 
-              // 今日を強調
               if (isToday) return "day-today";
 
-              // 選択済み
               if (
                 selectedDates.some(
                   (d) => d.date.toDateString() === jstDate.toDateString()
@@ -174,10 +202,7 @@ const RegisterPage = () => {
               ) {
                 return "selected-date";
               }
-
-              // 日曜・祝日
               if (holiday || isSunday) return "day-sunday";
-              // 土曜
               if (isSaturday) return "day-saturday";
 
               return "day-default";
