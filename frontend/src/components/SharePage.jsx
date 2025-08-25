@@ -5,284 +5,145 @@ import "../common.css";
 
 const SharePage = () => {
   const { token } = useParams();
-  const [title, setTitle] = useState("");
-  const [rows, setRows] = useState([]);
-  const [dateOptions, setDateOptions] = useState([]);
+  const [schedule, setSchedule] = useState(null);
+  const [responses, setResponses] = useState([]);
+  const [username, setUsername] = useState("");
+  const [myResponses, setMyResponses] = useState({});
 
-  // 新規追加用（単体）
-  const [newDate, setNewDate] = useState("");
-  const [newUser, setNewUser] = useState("");
-  const [newStatus, setNewStatus] = useState("〇");
-
-  // 編集用
-  const [editIndex, setEditIndex] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editStatus, setEditStatus] = useState("〇");
-
-  // まとめて回答用
-  const [bulkUser, setBulkUser] = useState("");
-  const [bulkResponses, setBulkResponses] = useState({});
-
-  // ===== データ取得 =====
-  const fetchData = async () => {
-    const scheduleRes = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/schedules/${token}`
-    );
-    const scheduleData = await scheduleRes.json();
-    setTitle(scheduleData.title);
-
-    const options = scheduleData.dates.map((d) => `${d.date} (${d.time})`);
-    setDateOptions(options);
-    if (options.length > 0) setNewDate(options[0]);
-
-    const aggRes = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/schedules/${token}/aggregate`
-    );
-    const aggData = await aggRes.json();
-
-    const tableRows = [];
-    Object.entries(aggData).forEach(([dateKey, responses]) => {
-      responses.forEach((r) => {
-        tableRows.push({
-          date: dateKey,
-          username: r.username || "（未入力）",
-          status: r.status,
-        });
-      });
-    });
-    setRows(tableRows);
-  };
-
+  // スケジュール取得
   useEffect(() => {
-    fetchData();
+    const fetchSchedule = async () => {
+      try {
+        const res = await fetch(`/api/schedules/${token}`);
+        if (!res.ok) throw new Error("スケジュール取得失敗");
+        const data = await res.json();
+        setSchedule(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const fetchResponses = async () => {
+      try {
+        const res = await fetch(`/api/schedules/${token}/responses`);
+        if (!res.ok) throw new Error("回答取得失敗");
+        const data = await res.json();
+        setResponses(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchSchedule();
+    fetchResponses();
   }, [token]);
 
-  // ===== 単体回答保存 =====
-  const saveAttendance = async () => {
-    if (!newUser) {
-      alert("ユーザー名を入力してください");
-      return;
+  // 出欠選択変更
+  const handleSelectChange = (dateKey, value) => {
+    setMyResponses({ ...myResponses, [dateKey]: value });
+  };
+
+  // 保存
+  const handleSave = async () => {
+    try {
+      const userId = localStorage.getItem("user_id") || crypto.randomUUID();
+      localStorage.setItem("user_id", userId);
+
+      const res = await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          username: username || "匿名",
+          responses: myResponses,
+        }),
+      });
+
+      if (!res.ok) throw new Error("保存失敗");
+      await res.json();
+
+      // 再取得
+      const updated = await fetch(`/api/schedules/${token}/responses`);
+      setResponses(await updated.json());
+      alert("保存しました ✅");
+    } catch (err) {
+      console.error(err);
+      alert("保存エラー");
     }
-    await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: newUser,
-        username: newUser,
-        responses: { [newDate]: newStatus },
-      }),
-    });
-    alert(`${newDate} | ${newUser} さん → ${newStatus} を保存しました`);
-    fetchData();
-    setNewUser("");
-    setNewStatus("〇");
   };
 
-  // ===== 編集保存 =====
-  const saveEditRow = async (index) => {
-    const r = rows[index];
-    const updated = [...rows];
-    updated[index].username = editName || "（未入力）";
-    updated[index].status = editStatus;
-    setRows(updated);
-    setEditIndex(null);
-
-    await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: editName,
-        username: editName,
-        responses: { [r.date]: editStatus },
-      }),
-    });
-    alert(`更新しました → ${editName} さん: ${editStatus}`);
-    fetchData();
-  };
-
-  // ===== まとめて回答保存 =====
-  const saveBulkAttendance = async () => {
-    if (!bulkUser) {
-      alert("ユーザー名を入力してください");
-      return;
-    }
-    await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: bulkUser,
-        username: bulkUser,
-        responses: bulkResponses,
-      }),
-    });
-    alert(`まとめて保存しました → ${bulkUser}`);
-    fetchData();
-    setBulkUser("");
-    setBulkResponses({});
-  };
-
-  // ===== 集計（〇△✖ の人数） =====
-  const getSummary = (date) => {
-    const target = rows.filter((r) => r.date === date);
-    const summary = { "〇": 0, "△": 0, "✖": 0 };
-    target.forEach((r) => {
-      if (summary[r.status] !== undefined) summary[r.status]++;
-    });
-    return summary;
-  };
+  if (!schedule) return <div>読み込み中...</div>;
 
   return (
-    <div className="page-container">
-      <h2 className="page-title">共有スケジュール</h2>
-      {title && <h3>{title}</h3>}
+    <div className="share-page">
+      <h2>📌 共有スケジュール</h2>
+      <h3>{schedule.title}</h3>
 
-      {rows.length === 0 ? (
-        <p>まだ回答がありません。</p>
-      ) : (
-        <table className="attendance-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>ユーザー名</th>
-              <th>参加状況</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dateOptions.map((dateOpt, idx) => {
-              const summary = getSummary(dateOpt);
-              return (
-                <React.Fragment key={idx}>
-                  <tr className="summary-row">
-                    <td colSpan={3}>
-                      <strong>{dateOpt}</strong> | 〇:{summary["〇"]}人 △:{summary["△"]}人 ✖:{summary["✖"]}人
-                    </td>
-                  </tr>
-                  {rows
-                    .filter((r) => r.date === dateOpt)
-                    .map((r, i) => (
-                      <tr key={`${dateOpt}-${i}`}>
-                        <td>{r.date}</td>
-                        <td>
-                          {editIndex === `${dateOpt}-${i}` ? (
-                            <input
-                              type="text"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                            />
-                          ) : (
-                            <span
-                              className="editable-name"
-                              onClick={() => {
-                                setEditIndex(`${dateOpt}-${i}`);
-                                setEditName(r.username);
-                                setEditStatus(r.status);
-                              }}
-                            >
-                              {r.username}
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          {editIndex === `${dateOpt}-${i}` ? (
-                            <>
-                              <select
-                                value={editStatus}
-                                onChange={(e) => setEditStatus(e.target.value)}
-                              >
-                                <option value="〇">〇</option>
-                                <option value="△">△</option>
-                                <option value="✖">✖</option>
-                              </select>
-                              <button onClick={() => saveEditRow(i)}>保存</button>
-                            </>
-                          ) : (
-                            r.status
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                </React.Fragment>
-              );
-            })}
-
-            {/* 新規回答行（単体追加） */}
-            <tr>
-              <td>
-                <select
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                >
-                  {dateOptions.map((d, i) => (
-                    <option key={i} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td>
-                <input
-                  type="text"
-                  placeholder="ユーザー名"
-                  value={newUser}
-                  onChange={(e) => setNewUser(e.target.value)}
-                />
-              </td>
-              <td>
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                >
-                  <option value="〇">〇</option>
-                  <option value="△">△</option>
-                  <option value="✖">✖</option>
-                </select>
-                <button onClick={saveAttendance}>保存</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      )}
-
-      {/* まとめて回答フォーム */}
-      <div className="bulk-form">
-        <h3>まとめて回答</h3>
+      {/* ユーザー名入力 */}
+      <div className="username-box">
+        <label>あなたの名前: </label>
         <input
           type="text"
-          placeholder="ユーザー名"
-          value={bulkUser}
-          onChange={(e) => setBulkUser(e.target.value)}
+          value={username}
+          placeholder="匿名でも可"
+          onChange={(e) => setUsername(e.target.value)}
         />
-        <table className="attendance-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>参加状況</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dateOptions.map((d, i) => (
-              <tr key={i}>
-                <td>{d}</td>
-                <td>
-                  <select
-                    value={bulkResponses[d] || "〇"}
-                    onChange={(e) =>
-                      setBulkResponses({
-                        ...bulkResponses,
-                        [d]: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="〇">〇</option>
-                    <option value="△">△</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </td>
+      </div>
+
+      {/* 日程と出欠プルダウン */}
+      <div className="schedule-list">
+        <h4>日程一覧</h4>
+        <ul>
+          {schedule.dates.map((d, i) => {
+            const key = `${d.date} (${d.time})`;
+            return (
+              <li key={i}>
+                {key}{" "}
+                <select
+                  value={myResponses[key] || ""}
+                  onChange={(e) => handleSelectChange(key, e.target.value)}
+                >
+                  <option value="">選択してください</option>
+                  <option value="◯">◯</option>
+                  <option value="✕">✕</option>
+                </select>
+              </li>
+            );
+          })}
+        </ul>
+        <button className="save-btn" onClick={handleSave}>
+          保存
+        </button>
+      </div>
+
+      {/* 既存回答一覧 */}
+      <div className="responses-list">
+        <h4>📝 回答一覧</h4>
+        {responses.length === 0 ? (
+          <p>まだ回答がありません</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>ユーザー</th>
+                {schedule.dates.map((d, i) => (
+                  <th key={i}>{d.date} ({d.time})</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <button onClick={saveBulkAttendance}>まとめて保存</button>
+            </thead>
+            <tbody>
+              {responses.map((r, idx) => (
+                <tr key={idx}>
+                  <td>{r.username}</td>
+                  {schedule.dates.map((d, i) => {
+                    const key = `${d.date} (${d.time})`;
+                    return <td key={i}>{r.responses[key] || "-"}</td>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
