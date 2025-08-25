@@ -151,11 +151,11 @@ const RegisterPage = () => {
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
-              <button onClick={prevMonth}>←</button>
+              <button onClick={prevMonth}>◀</button>
               <h3 className="month-title">
                 {currentYear}年 {currentMonth + 1}月
               </h3>
-              <button onClick={nextMonth}>→</button>
+              <button onClick={nextMonth}>▶</button>
             </div>
             <div className="week-header">
               {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
@@ -207,7 +207,7 @@ const RegisterPage = () => {
                 onChange={(e) =>
                   setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
                 }
-                className="custom-dropdown"
+                className="custom-dropdown short"
               >
                 <option value="終日">終日</option>
                 <option value="昼">昼</option>
@@ -215,7 +215,7 @@ const RegisterPage = () => {
                 <option value="custom">時刻指定</option>
               </select>
               {timeOptions[d] === "custom" && (
-                <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                <div className="custom-time inline">
                   <select
                     value={customTimes[d]?.start || ""}
                     onChange={(e) =>
@@ -224,7 +224,7 @@ const RegisterPage = () => {
                         [d]: { ...prev[d], start: e.target.value },
                       }))
                     }
-                    className="custom-dropdown"
+                    className="custom-dropdown short"
                   >
                     <option value="">開始</option>
                     {hours.map((h) => (
@@ -233,7 +233,7 @@ const RegisterPage = () => {
                       </option>
                     ))}
                   </select>
-                  ～
+                  <span>〜</span>
                   <select
                     value={customTimes[d]?.end || ""}
                     onChange={(e) =>
@@ -242,7 +242,7 @@ const RegisterPage = () => {
                         [d]: { ...prev[d], end: e.target.value },
                       }))
                     }
-                    className="custom-dropdown"
+                    className="custom-dropdown short"
                   >
                     <option value="">終了</option>
                     {hours.map((h) => (
@@ -288,4 +288,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-
