@@ -52,6 +52,9 @@ const SharePage = () => {
 
   useEffect(() => {
     fetchResponses();
+    // 30秒ごとに最新データ取得（擬似リアルタイム更新）
+    const interval = setInterval(fetchResponses, 30000);
+    return () => clearInterval(interval);
   }, [token]);
 
   // ===== 自分の出欠入力変更 =====
@@ -83,7 +86,7 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ===== ユーザー一覧（自分の名前が入力されたら含める） =====
+  // ===== ユーザー一覧（自分も含める） =====
   let users = Array.from(new Set(allResponses.map((r) => r.username)));
   if (username && !users.includes(username)) users.push(username);
 
@@ -111,7 +114,7 @@ const SharePage = () => {
             <tr>
               <th>日付</th>
               <th>時間</th>
-              {/* 自分の列（名前未入力なら「あなた」） */}
+              {/* 自分の列 */}
               <th>{username || "あなた"}</th>
               {/* 他のユーザー */}
               {users
@@ -143,7 +146,7 @@ const SharePage = () => {
                         ))}
                       </select>
                     </td>
-                    {/* 他ユーザー列：表示のみ */}
+                    {/* 他ユーザー列：読み取り専用 */}
                     {users
                       .filter((u) => u !== username)
                       .map((u, idx) => {
@@ -161,7 +164,7 @@ const SharePage = () => {
       {/* 保存ボタン */}
       <div className="button-area">
         <button className="save-button" onClick={handleSave}>
-          保存
+          保存する
         </button>
       </div>
     </div>
