@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
+import "../common.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -213,7 +214,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー＋リスト */}
+      {/* カレンダー＋右側ボックス */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar">
@@ -233,7 +234,8 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        <div className="list-box">
+        {/* ← リネーム済み */}
+        <div className="common-box">
           <h3>📅 選択した日程</h3>
           {selectedDates.length === 0 ? (
             <p>日付をクリックしてください</p>
