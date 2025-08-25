@@ -191,3 +191,114 @@ header h1, .header-title {
   font-weight: bold;
   margin: 0;
 }
+/* ===============================
+   Header
+   =============================== */
+.header {
+  background: #111;
+  color: #fff;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1000;
+}
+
+/* 左ロゴ */
+.logo-link {
+  font-size: 28px;
+  font-weight: bold;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  color: #FDB9C8;
+  text-decoration: none;
+}
+
+/* PC用ナビ */
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'Zen Maru Gothic','M PLUS Rounded 1c',sans-serif;
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #FDB9C8;
+}
+
+/* Discordログインボタン */
+.discord-login {
+  background: linear-gradient(135deg,#7289da,#004CA0);
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* ハンバーガーメニュー */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 4px;
+}
+.hamburger span {
+  width: 25px;
+  height: 3px;
+  background: #fff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* モバイルメニュー */
+.nav-links-mobile {
+  display: none;
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: #222;
+  border-radius: 8px;
+  padding: 10px 20px;
+  flex-direction: column;
+  gap: 10px;
+}
+.nav-links-mobile.open {
+  display: flex;
+}
+.nav-links-mobile a {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+}
+.nav-links-mobile a:hover {
+  color: #FDB9C8;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  .hamburger {
+    display: flex;
+  }
+}
