@@ -17,6 +17,7 @@ const SharePage = () => {
   // 編集中
   const [editIndex, setEditIndex] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editStatus, setEditStatus] = useState("〇");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,11 +72,12 @@ const SharePage = () => {
     window.location.reload();
   };
 
-  // ===== 名前編集保存 =====
-  const saveEditName = async (index) => {
+  // ===== 編集保存 =====
+  const saveEditRow = async (index) => {
     const r = rows[index];
     const updated = [...rows];
     updated[index].username = editName || "（未入力）";
+    updated[index].status = editStatus;
     setRows(updated);
     setEditIndex(null);
 
@@ -86,10 +88,10 @@ const SharePage = () => {
       body: JSON.stringify({
         user_id: editName, // 簡易: user_id = 名前
         username: editName,
-        responses: { [r.date]: r.status },
+        responses: { [r.date]: editStatus },
       }),
     });
-    alert(`名前を ${editName} に更新しました`);
+    alert(`更新しました → ${editName} さん: ${editStatus}`);
   };
 
   // ===== 集計（〇△✖ の人数を数える） =====
@@ -137,27 +139,41 @@ const SharePage = () => {
                         <td>{r.date}</td>
                         <td>
                           {editIndex === i ? (
-                            <>
-                              <input
-                                type="text"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                              />
-                              <button onClick={() => saveEditName(i)}>保存</button>
-                            </>
+                            <input
+                              type="text"
+                              value={editName}
+                              onChange={(e) => setEditName(e.target.value)}
+                            />
                           ) : (
                             <span
                               className="editable-name"
                               onClick={() => {
                                 setEditIndex(i);
                                 setEditName(r.username);
+                                setEditStatus(r.status);
                               }}
                             >
                               {r.username}
                             </span>
                           )}
                         </td>
-                        <td>{r.status}</td>
+                        <td>
+                          {editIndex === i ? (
+                            <>
+                              <select
+                                value={editStatus}
+                                onChange={(e) => setEditStatus(e.target.value)}
+                              >
+                                <option value="〇">〇</option>
+                                <option value="△">△</option>
+                                <option value="✖">✖</option>
+                              </select>
+                              <button onClick={() => saveEditRow(i)}>保存</button>
+                            </>
+                          ) : (
+                            r.status
+                          )}
+                        </td>
                       </tr>
                     ))}
                 </React.Fragment>
