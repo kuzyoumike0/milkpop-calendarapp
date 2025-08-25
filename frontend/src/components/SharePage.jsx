@@ -14,7 +14,7 @@ const SharePage = () => {
   const [newUser, setNewUser] = useState("");
   const [newStatus, setNewStatus] = useState("〇");
 
-  // 編集中ユーザー
+  // 編集中
   const [editIndex, setEditIndex] = useState(null);
   const [editName, setEditName] = useState("");
 
@@ -27,7 +27,6 @@ const SharePage = () => {
       const scheduleData = await scheduleRes.json();
       setTitle(scheduleData.title);
 
-      // 候補の日付リスト
       const options = scheduleData.dates.map((d) => `${d.date} (${d.time})`);
       setDateOptions(options);
       if (options.length > 0) setNewDate(options[0]);
@@ -53,7 +52,7 @@ const SharePage = () => {
     fetchData();
   }, [token]);
 
-  // 保存（新規回答）
+  // ===== 新規回答保存 =====
   const saveAttendance = async () => {
     if (!newUser) {
       alert("ユーザー名を入力してください");
@@ -63,7 +62,7 @@ const SharePage = () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: newUser, // 簡易的に user_id=ユーザー名
+        user_id: newUser,
         username: newUser,
         responses: { [newDate]: newStatus },
       }),
@@ -72,12 +71,35 @@ const SharePage = () => {
     window.location.reload();
   };
 
-  // ユーザー名編集保存
-  const saveEditName = (index) => {
+  // ===== 名前編集保存 =====
+  const saveEditName = async (index) => {
+    const r = rows[index];
     const updated = [...rows];
     updated[index].username = editName || "（未入力）";
     setRows(updated);
     setEditIndex(null);
+
+    // API反映
+    await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: editName, // 簡易: user_id = 名前
+        username: editName,
+        responses: { [r.date]: r.status },
+      }),
+    });
+    alert(`名前を ${editName} に更新しました`);
+  };
+
+  // ===== 集計（〇△✖ の人数を数える） =====
+  const getSummary = (date) => {
+    const target = rows.filter((r) => r.date === date);
+    const summary = { "〇": 0, "△": 0, "✖": 0 };
+    target.forEach((r) => {
+      if (summary[r.status] !== undefined) summary[r.status]++;
+    });
+    return summary;
   };
 
   return (
@@ -97,34 +119,50 @@ const SharePage = () => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={i}>
-                <td>{r.date}</td>
-                <td>
-                  {editIndex === i ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                      />
-                      <button onClick={() => saveEditName(i)}>保存</button>
-                    </>
-                  ) : (
-                    <span
-                      className="editable-name"
-                      onClick={() => {
-                        setEditIndex(i);
-                        setEditName(r.username);
-                      }}
-                    >
-                      {r.username}
-                    </span>
-                  )}
-                </td>
-                <td>{r.status}</td>
-              </tr>
-            ))}
+            {dateOptions.map((dateOpt, idx) => {
+              const summary = getSummary(dateOpt);
+              return (
+                <React.Fragment key={idx}>
+                  {/* 集計行 */}
+                  <tr className="summary-row">
+                    <td colSpan={3}>
+                      <strong>{dateOpt}</strong> | 〇:{summary["〇"]}人 △:{summary["△"]}人 ✖:{summary["✖"]}人
+                    </td>
+                  </tr>
+                  {/* 回答行 */}
+                  {rows
+                    .filter((r) => r.date === dateOpt)
+                    .map((r, i) => (
+                      <tr key={i}>
+                        <td>{r.date}</td>
+                        <td>
+                          {editIndex === i ? (
+                            <>
+                              <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                              />
+                              <button onClick={() => saveEditName(i)}>保存</button>
+                            </>
+                          ) : (
+                            <span
+                              className="editable-name"
+                              onClick={() => {
+                                setEditIndex(i);
+                                setEditName(r.username);
+                              }}
+                            >
+                              {r.username}
+                            </span>
+                          )}
+                        </td>
+                        <td>{r.status}</td>
+                      </tr>
+                    ))}
+                </React.Fragment>
+              );
+            })}
 
             {/* 新規回答行 */}
             <tr>
