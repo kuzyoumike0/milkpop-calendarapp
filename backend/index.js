@@ -148,7 +148,6 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
     const { user_id, username, responses } = req.body;
-    // responses = { "0": "○", "1": "✖", ... }
 
     if (!user_id || !responses) {
       return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
