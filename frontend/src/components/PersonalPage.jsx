@@ -1,7 +1,7 @@
 // frontend/src/components/PersonalPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
-import "../styles/personal.css"; // ✅ PersonalPage 専用スタイルを読み込む
+import "../styles/personal.css";
 
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
@@ -15,6 +15,30 @@ const PersonalPage = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
 
   const hd = new Holidays("JP");
+
+  // ===== localStorage 読み込み =====
+  useEffect(() => {
+    const saved = localStorage.getItem("personal_schedule");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setTitle(parsed.title || "");
+      setMemo(parsed.memo || "");
+      setSelectedDates(parsed.selectedDates || []);
+      setTimeRanges(parsed.timeRanges || {});
+    }
+  }, []);
+
+  // ===== データ保存 =====
+  const savePersonalSchedule = () => {
+    const data = {
+      title,
+      memo,
+      selectedDates,
+      timeRanges,
+    };
+    localStorage.setItem("personal_schedule", JSON.stringify(data));
+    alert("個人スケジュールを保存しました ✅");
+  };
 
   // ==== カレンダー ====
   const getDaysInMonth = (year, month) =>
@@ -222,6 +246,13 @@ const PersonalPage = () => {
               </select>
             </div>
           ))}
+
+          {/* 保存ボタン */}
+          <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+            <button className="share-button fancy" onClick={savePersonalSchedule}>
+              保存
+            </button>
+          </div>
         </div>
       </div>
     </div>
