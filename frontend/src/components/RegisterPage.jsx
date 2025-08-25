@@ -19,10 +19,9 @@ const RegisterPage = () => {
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック処理
+  // 📌 日付クリック処理
   const handleDateClick = (date) => {
     if (mode === "range") {
-      // 範囲選択
       if (!rangeStart) {
         setRangeStart(date);
       } else {
@@ -43,7 +42,6 @@ const RegisterPage = () => {
         setRangeStart(null);
       }
     } else {
-      // 複数選択
       const exists = selectedDates.find(
         (d) => d.date.toDateString() === date.toDateString()
       );
@@ -67,21 +65,21 @@ const RegisterPage = () => {
     }
   };
 
-  // 区分変更
+  // 📌 区分変更
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
     setSelectedDates(updated);
   };
 
-  // 時間指定変更
+  // 📌 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
-  // 共有リンク発行
+  // 📌 共有リンク
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
@@ -111,7 +109,7 @@ const RegisterPage = () => {
       <div className="main-content">
         {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
-          {/* 選択モード切替 */}
+          {/* モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -145,7 +143,7 @@ const RegisterPage = () => {
 
           <Calendar
             onClickDay={(date) => handleDateClick(date)}
-            value={null} // react-calendar 標準の選択機能は使わない
+            value={null}
             tileClassName={({ date }) => {
               const isSunday = date.getDay() === 0;
               const isSaturday = date.getDay() === 6;
@@ -158,9 +156,9 @@ const RegisterPage = () => {
               ) {
                 return "selected-date";
               }
-              if (holiday || isSunday) return "sunday";
-              if (isSaturday) return "saturday";
-              return "";
+              if (holiday || isSunday) return "day-sunday";
+              if (isSaturday) return "day-saturday";
+              return "day-default";
             }}
             tileContent={({ date }) => {
               const holiday = hd.isHoliday(date);
