@@ -181,6 +181,46 @@ app.get("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
+// --- 出欠回答の集計（日付ごとに全員分表示） ---
+app.get("/api/schedules/:token/aggregate", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates; // 登録された日程リスト
+
+    const responses = await pool.query(
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      [scheduleId]
+    );
+
+    // 日付ごとに集計
+    const aggregate = {};
+    dates.forEach((d) => {
+      const key = `${d.date} (${d.time})`;
+      aggregate[key] = [];
+    });
+
+    responses.rows.forEach((row) => {
+      const username = row.username || "匿名";
+      const resp = row.responses;
+      Object.entries(resp).forEach(([key, status]) => {
+        if (aggregate[key]) {
+          aggregate[key].push({ username, status });
+        }
+      });
+    });
+
+    res.json(aggregate);
+  } catch (err) {
+    console.error("集計エラー:", err);
+    res.status(500).json({ error: "集計エラー" });
+  }
+});
+
 // --- 個人スケジュール保存 ---
 app.post("/api/personal", async (req, res) => {
   try {
