@@ -14,6 +14,12 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
+  // 日本時間の日付を扱う
+  const getJSTDate = (date) => {
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    return new Date(utc + 9 * 60 * 60000);
+  };
+
   // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
@@ -21,12 +27,14 @@ const RegisterPage = () => {
 
   // 📌 日付クリック処理
   const handleDateClick = (date) => {
+    const jstDate = getJSTDate(date);
+
     if (mode === "range") {
       if (!rangeStart) {
-        setRangeStart(date);
+        setRangeStart(jstDate);
       } else {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
+        const start = rangeStart < jstDate ? rangeStart : jstDate;
+        const end = rangeStart < jstDate ? jstDate : rangeStart;
         const newRange = [];
         let current = new Date(start);
         while (current <= end) {
@@ -43,19 +51,19 @@ const RegisterPage = () => {
       }
     } else {
       const exists = selectedDates.find(
-        (d) => d.date.toDateString() === date.toDateString()
+        (d) => d.date.toDateString() === jstDate.toDateString()
       );
       if (exists) {
         setSelectedDates(
           selectedDates.filter(
-            (d) => d.date.toDateString() !== date.toDateString()
+            (d) => d.date.toDateString() !== jstDate.toDateString()
           )
         );
       } else {
         setSelectedDates([
           ...selectedDates,
           {
-            date,
+            date: jstDate,
             timeType: "終日",
             startTime: "00:00",
             endTime: "23:59",
@@ -145,13 +153,14 @@ const RegisterPage = () => {
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
-              const isSunday = date.getDay() === 0;
-              const isSaturday = date.getDay() === 6;
-              const holiday = hd.isHoliday(date);
+              const jstDate = getJSTDate(date);
+              const isSunday = jstDate.getDay() === 0;
+              const isSaturday = jstDate.getDay() === 6;
+              const holiday = hd.isHoliday(jstDate);
 
               if (
                 selectedDates.some(
-                  (d) => d.date.toDateString() === date.toDateString()
+                  (d) => d.date.toDateString() === jstDate.toDateString()
                 )
               ) {
                 return "selected-date";
@@ -161,7 +170,8 @@ const RegisterPage = () => {
               return "day-default";
             }}
             tileContent={({ date }) => {
-              const holiday = hd.isHoliday(date);
+              const jstDate = getJSTDate(date);
+              const holiday = hd.isHoliday(jstDate);
               return holiday ? (
                 <span className="holiday-name">{holiday[0].name}</span>
               ) : null;
@@ -179,7 +189,7 @@ const RegisterPage = () => {
               {selectedDates.map((d, i) => (
                 <li key={i}>
                   <span className="date-label">
-                    {d.date.toLocaleDateString()}
+                    {d.date.toLocaleDateString("ja-JP")}
                   </span>
                   <select
                     value={d.timeType}
@@ -229,7 +239,7 @@ const RegisterPage = () => {
           )}
 
           <button className="share-button" onClick={generateShareLink}>
-            📤 共有リンクを発行
+            🌸 共有リンクを発行
           </button>
           {shareUrl && (
             <div className="share-link-box">
