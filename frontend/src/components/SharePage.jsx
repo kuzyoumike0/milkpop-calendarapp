@@ -24,15 +24,11 @@ const SharePage = () => {
         if (!data.error) {
           setSchedule(data);
 
-          // 初期レスポンスを "-" で準備
+          // 初期レスポンスを "-" で準備（indexベース）
           if (Array.isArray(data.dates)) {
             const init = {};
-            data.dates.forEach((d) => {
-              const key =
-                d.time === "時間指定" && d.start && d.end
-                  ? `${d.date} (${d.start} ~ ${d.end})`
-                  : `${d.date} (${d.time})`;
-              init[key] = "-";
+            data.dates.forEach((_, i) => {
+              init[i] = "-";
             });
             setResponses(init);
           }
@@ -70,30 +66,29 @@ const SharePage = () => {
     }
 
     if (!users.includes(username)) {
-      // ユーザーを即追加
       setUsers((prev) => [...prev, username]);
 
-      // allResponses に仮データを追加
+      // 仮データ追加
       const dummy = { username, responses: { ...responses } };
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, dummy];
       });
 
-      setIsEditing(true); // ★ 新規追加直後は編集モードON
+      setIsEditing(true); // 新規追加直後は編集モードON
     }
   };
 
   // ===== 出欠クリック変更 =====
-  const handleSelect = (key, value) => {
+  const handleSelect = (index, value) => {
     if (!isEditing) return;
-    setResponses((prev) => ({ ...prev, [key]: value }));
+    setResponses((prev) => ({ ...prev, [index]: value }));
 
-    // 表示も即更新
+    // 表示即更新
     setAllResponses((prev) =>
       prev.map((r) =>
         r.username === username
-          ? { ...r, responses: { ...r.responses, [key]: value } }
+          ? { ...r, responses: { ...r.responses, [index]: value } }
           : r
       )
     );
@@ -106,7 +101,7 @@ const SharePage = () => {
       return;
     }
     try {
-      const payload = { username, responses };
+      const payload = { user_id: username, username, responses };
 
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -114,13 +109,8 @@ const SharePage = () => {
         body: JSON.stringify(payload),
       });
 
-      // 即反映
-      setAllResponses((prev) => {
-        const filtered = prev.filter((r) => r.username !== username);
-        return [...filtered, payload];
-      });
-
-      setIsEditing(false); // ★ 保存後は編集終了
+      await fetchResponses();
+      setIsEditing(false); // 保存後は編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -172,16 +162,10 @@ const SharePage = () => {
           <tbody>
             {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
-                // 時間指定なら開始〜終了をそのまま文字列化（日をまたぐケースも許す）
                 const timeLabel =
-                  d.time === "時間指定" && d.start && d.end
-                    ? `${d.start} ~ ${d.end}`
+                  d.time === "時間指定" && d.startTime && d.endTime
+                    ? `${d.startTime} ~ ${d.endTime}`
                     : d.time;
-
-                const key =
-                  d.time === "時間指定" && d.start && d.end
-                    ? `${d.date} (${d.start} ~ ${d.end})`
-                    : `${d.date} (${d.time})`;
 
                 return (
                   <tr key={i}>
@@ -193,8 +177,8 @@ const SharePage = () => {
                       );
                       const isSelf = u === username;
                       const value = isSelf
-                        ? responses[key] || "-"
-                        : userResp?.responses?.[key] || "-";
+                        ? responses[i] || "-"
+                        : userResp?.responses?.[i] || "-";
 
                       return (
                         <td key={idx} className="attendance-cell">
@@ -206,7 +190,7 @@ const SharePage = () => {
                                   className={`choice-btn ${
                                     value === opt ? "active" : ""
                                   } ${isEditing ? "" : "disabled"}`}
-                                  onClick={() => handleSelect(key, opt)}
+                                  onClick={() => handleSelect(i, opt)}
                                 >
                                   {opt}
                                 </button>
