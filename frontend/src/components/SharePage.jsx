@@ -70,9 +70,35 @@ const SharePage = () => {
     }
   };
 
-  // ===== 一括変更プルダウン表示 =====
+  // ===== 一括変更 =====
   const handleEditUser = (user) => {
     setEditingUser(editingUser === user.username ? null : user.username);
+  };
+
+  const handleBulkChange = async (user, value) => {
+    try {
+      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      });
+      fetchResponses();
+    } catch (err) {
+      console.error("一括更新エラー", err);
+    }
+  };
+
+  // ===== 削除 =====
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`${user.username} さんの回答を削除しますか？`)) return;
+    try {
+      await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
+        method: "DELETE",
+      });
+      fetchResponses();
+    } catch (err) {
+      console.error("削除エラー", err);
+    }
   };
 
   if (!schedule) {
@@ -132,8 +158,6 @@ const SharePage = () => {
                         <option value="✖">✖</option>
                         <option value="△">△</option>
                       </select>
-                      {/* 削除ボタンは出欠の横 */}
-                      <button className="delete-btn">削除</button>
                     </td>
                     <td className="user-list">
                       {users.map((u, idx) => (
@@ -149,9 +173,7 @@ const SharePage = () => {
                             <select
                               className="response-dropdown"
                               onChange={(e) =>
-                                console.log(
-                                  `${u.username} の出欠を ${e.target.value} に一括変更`
-                                )
+                                handleBulkChange(u, e.target.value)
                               }
                             >
                               <option value="○">○</option>
@@ -162,6 +184,12 @@ const SharePage = () => {
                           <div className="user-status">
                             {u.responses[key]}
                           </div>
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteUser(u)}
+                          >
+                            削除
+                          </button>
                         </div>
                       ))}
                     </td>
