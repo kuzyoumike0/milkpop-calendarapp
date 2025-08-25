@@ -86,7 +86,7 @@ const SharePage = () => {
           responses,
         }),
       });
-      fetchResponses();
+      await fetchResponses(); // 保存後すぐ一覧反映
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -148,9 +148,7 @@ const SharePage = () => {
                               {attendanceOptions.map((opt) => (
                                 <button
                                   key={opt}
-                                  className={`choice-btn ${
-                                    value === opt ? "active" : ""
-                                  }`}
+                                  className={`choice-btn ${value === opt ? "active" : ""}`}
                                   onClick={() => handleSelect(key, opt)}
                                 >
                                   {opt}
