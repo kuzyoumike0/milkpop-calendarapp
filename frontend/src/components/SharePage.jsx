@@ -9,15 +9,19 @@ const SharePage = () => {
   const [rows, setRows] = useState([]);
   const [dateOptions, setDateOptions] = useState([]);
 
-  // 新規追加用
+  // 新規追加用（単体）
   const [newDate, setNewDate] = useState("");
   const [newUser, setNewUser] = useState("");
   const [newStatus, setNewStatus] = useState("〇");
 
-  // 編集中
+  // 編集用
   const [editIndex, setEditIndex] = useState(null);
   const [editName, setEditName] = useState("");
   const [editStatus, setEditStatus] = useState("〇");
+
+  // まとめて回答用
+  const [bulkUser, setBulkUser] = useState("");
+  const [bulkResponses, setBulkResponses] = useState({});
 
   // ===== データ取得 =====
   const fetchData = async () => {
@@ -53,26 +57,22 @@ const SharePage = () => {
     fetchData();
   }, [token]);
 
-  // ===== 新規回答 or 上書き保存 =====
+  // ===== 単体回答保存 =====
   const saveAttendance = async () => {
     if (!newUser) {
       alert("ユーザー名を入力してください");
       return;
     }
-
     await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: newUser, // ← user_id を名前と同一にする
+        user_id: newUser,
         username: newUser,
         responses: { [newDate]: newStatus },
       }),
     });
-
     alert(`${newDate} | ${newUser} さん → ${newStatus} を保存しました`);
-
-    // 🔹 再取得して反映
     fetchData();
     setNewUser("");
     setNewStatus("〇");
@@ -87,19 +87,38 @@ const SharePage = () => {
     setRows(updated);
     setEditIndex(null);
 
-    // API更新
     await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: editName, // ← user_id を名前に統一することで上書きされる
+        user_id: editName,
         username: editName,
         responses: { [r.date]: editStatus },
       }),
     });
-
     alert(`更新しました → ${editName} さん: ${editStatus}`);
     fetchData();
+  };
+
+  // ===== まとめて回答保存 =====
+  const saveBulkAttendance = async () => {
+    if (!bulkUser) {
+      alert("ユーザー名を入力してください");
+      return;
+    }
+    await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: bulkUser,
+        username: bulkUser,
+        responses: bulkResponses,
+      }),
+    });
+    alert(`まとめて保存しました → ${bulkUser}`);
+    fetchData();
+    setBulkUser("");
+    setBulkResponses({});
   };
 
   // ===== 集計（〇△✖ の人数） =====
@@ -133,13 +152,11 @@ const SharePage = () => {
               const summary = getSummary(dateOpt);
               return (
                 <React.Fragment key={idx}>
-                  {/* 集計行 */}
                   <tr className="summary-row">
                     <td colSpan={3}>
                       <strong>{dateOpt}</strong> | 〇:{summary["〇"]}人 △:{summary["△"]}人 ✖:{summary["✖"]}人
                     </td>
                   </tr>
-                  {/* 回答行 */}
                   {rows
                     .filter((r) => r.date === dateOpt)
                     .map((r, i) => (
@@ -188,7 +205,7 @@ const SharePage = () => {
               );
             })}
 
-            {/* 新規回答行 */}
+            {/* 新規回答行（単体追加） */}
             <tr>
               <td>
                 <select
@@ -225,6 +242,48 @@ const SharePage = () => {
           </tbody>
         </table>
       )}
+
+      {/* まとめて回答フォーム */}
+      <div className="bulk-form">
+        <h3>まとめて回答</h3>
+        <input
+          type="text"
+          placeholder="ユーザー名"
+          value={bulkUser}
+          onChange={(e) => setBulkUser(e.target.value)}
+        />
+        <table className="attendance-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>参加状況</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dateOptions.map((d, i) => (
+              <tr key={i}>
+                <td>{d}</td>
+                <td>
+                  <select
+                    value={bulkResponses[d] || "〇"}
+                    onChange={(e) =>
+                      setBulkResponses({
+                        ...bulkResponses,
+                        [d]: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="〇">〇</option>
+                    <option value="△">△</option>
+                    <option value="✖">✖</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button onClick={saveBulkAttendance}>まとめて保存</button>
+      </div>
     </div>
   );
 };
