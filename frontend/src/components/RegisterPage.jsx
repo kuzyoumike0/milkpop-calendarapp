@@ -21,6 +21,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
+  // 日付クリック
   const handleDateClick = (day) => {
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -58,6 +59,7 @@ const RegisterPage = () => {
     }
   };
 
+  // 曜日見出し
   const renderWeekdays = () => {
     const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
     return weekdays.map((day, i) => (
@@ -72,6 +74,7 @@ const RegisterPage = () => {
     ));
   };
 
+  // カレンダー日付描画
   const renderCalendarDays = () => {
     const days = [];
     const holidays = hd.getHolidays(currentYear);
@@ -120,6 +123,7 @@ const RegisterPage = () => {
     return days;
   };
 
+  // 月移動
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -128,7 +132,6 @@ const RegisterPage = () => {
       setCurrentMonth(currentMonth - 1);
     }
   };
-
   const handleNextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0);
@@ -138,10 +141,12 @@ const RegisterPage = () => {
     }
   };
 
+  // 時間帯変更
   const handleTimeChange = (date, value) => {
     setTimeRanges({ ...timeRanges, [date]: value });
   };
 
+  // 共有リンク発行
   const generateShareLink = async () => {
     try {
       const response = await fetch("/api/schedules", {
@@ -169,6 +174,7 @@ const RegisterPage = () => {
     }
   };
 
+  // コピー
   const copyToClipboard = () => {
     if (shareLink) {
       navigator.clipboard.writeText(shareLink);
@@ -178,6 +184,7 @@ const RegisterPage = () => {
 
   return (
     <div className="register-page">
+      {/* タイトル入力 */}
       <div className="title-input-container">
         <input
           type="text"
@@ -188,6 +195,7 @@ const RegisterPage = () => {
         />
       </div>
 
+      {/* 複数/範囲選択切替 */}
       <div className="selection-toggle">
         <button
           className={selectionMode === "multiple" ? "active" : ""}
@@ -203,6 +211,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
+      {/* カレンダーと右リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar">
@@ -230,7 +239,7 @@ const RegisterPage = () => {
             <ul>
               {selectedDates.map((d) => (
                 <li key={d}>
-                  {d}{" "}
+                  <span>{d}</span>
                   <select
                     value={timeRanges[d] || "終日"}
                     onChange={(e) => handleTimeChange(d, e.target.value)}
