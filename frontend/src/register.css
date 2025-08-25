@@ -2,6 +2,7 @@
 .register-page {
   padding: 20px;
   text-align: center;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
 }
 
 /* タイトル入力 */
@@ -9,11 +10,12 @@
   width: 80%;
   max-width: 500px;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 2px solid #ccc;
   font-size: 16px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   transition: all 0.3s ease;
+  background: #fff;
 }
 .calendar-title-input input:focus {
   border-color: #004CA0;
@@ -29,7 +31,6 @@
   gap: 15px;
 }
 .mode-option {
-  position: relative;
   padding: 10px 20px;
   border-radius: 30px;
   border: 2px solid #004CA0;
@@ -64,7 +65,7 @@
   background: #fff;
   border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .calendar-header {
   display: flex;
@@ -115,26 +116,60 @@
   cursor: default;
 }
 
-/* 今日のセル */
+/* 右3割リスト */
+.selected-list {
+  flex: 3;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #333;
+  text-align: left;
+}
+.selected-list h3 {
+  margin-top: 0;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+.selected-list ul {
+  list-style: none;
+  padding: 0;
+}
+.selected-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* 時間帯プルダウン */
+.selected-list select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+  min-width: 100px;
+}
+.selected-list select:focus {
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0, 76, 160, 0.4);
+  outline: none;
+}
+.time-range {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 今日の日付 */
 .calendar-day.today {
-  background: #fff0f5;
   border: 2px solid #FDB9C8;
   box-shadow: 0 0 8px rgba(253, 185, 200, 0.8);
   font-weight: bold;
-}
-
-/* ✅ 今日と選択済みが重なった場合は「選択済み優先」 */
-.calendar-day.selected.today {
-  background: #004CA0 !important;
-  color: #fff !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* 範囲選択中の仮ハイライト */
-.calendar-day.in-range {
-  background: #cfe2ff;
-  color: #004CA0;
 }
 
 /* 日付番号 */
@@ -143,111 +178,38 @@
   font-weight: bold;
 }
 
-/* 祝日名（日付の下） */
+/* 祝日名 */
 .holiday-name {
   font-size: 11px;
   color: red;
-  margin-top: 3px;
+  margin-top: 2px;
   text-align: center;
 }
 
-/* 右3割リスト */
-.selected-list {
-  flex: 3;
-  background: rgba(255,255,255,0.9);
-  border-radius: 15px;
-  padding: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  color: #333;
-  text-align: left;
-  max-height: 500px;
-  overflow-y: auto;
-}
-.selected-list ul {
-  list-style: none;
-  padding: 0;
-}
-.selected-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid #ddd;
-}
-.selected-date {
-  font-weight: bold;
+/* 今日ラベル */
+.today-label {
+  font-size: 11px;
   color: #004CA0;
-  margin-right: 10px;
-  flex: 1;
+  margin-top: 2px;
+  text-align: center;
+  font-weight: bold;
 }
 
-/* お洒落なプルダウン */
-.styled-dropdown {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 2px solid #ccc;
-  background: linear-gradient(135deg, #fff, #f7f7f7);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-.styled-dropdown:hover {
-  border-color: #FDB9C8;
-}
-.styled-dropdown:focus {
-  border-color: #004CA0;
-  outline: none;
-  box-shadow: 0 0 8px rgba(0,76,160,0.4);
-}
-
-/* 時間帯 時刻指定の範囲 */
-.time-range {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
 /* 共有リンクボタン */
 .share-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
   margin-top: 15px;
-  padding: 10px 20px;
   border: none;
-  border-radius: 25px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #FDB9C8, #004CA0);
   color: #fff;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
 }
 .share-button:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
-
-/* 共有リンク表示エリア */
-.share-link-box {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.share-link-box a {
-  word-break: break-all;
-  color: #004CA0;
-  font-weight: bold;
-}
-.share-link-box button {
-  align-self: flex-start;
-  padding: 5px 12px;
-  border: 1px solid #004CA0;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.share-link-box button:hover {
-  background: #004CA0;
-  color: #fff;
-}
-
