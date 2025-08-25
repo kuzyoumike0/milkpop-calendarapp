@@ -13,6 +13,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]); // 表示するユーザー
   const [responses, setResponses] = useState({});
+  const [isEditing, setIsEditing] = useState(false); // 編集モード
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -55,7 +56,7 @@ const SharePage = () => {
     fetchResponses();
   }, [token]);
 
-  // ===== 新規追加（自分の列を追加） =====
+  // ===== 新規追加（自分の列を即表示） =====
   const handleAddUser = () => {
     if (!username) {
       alert("名前を入力してください！");
@@ -63,11 +64,13 @@ const SharePage = () => {
     }
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
+      setIsEditing(false); // 追加直後は編集不可
     }
   };
 
   // ===== 出欠クリック変更 =====
   const handleSelect = (key, value) => {
+    if (!isEditing) return; // 編集モードでないと操作不可
     setResponses((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -86,7 +89,8 @@ const SharePage = () => {
           responses,
         }),
       });
-      await fetchResponses(); // 保存後すぐ一覧反映
+      await fetchResponses();
+      setIsEditing(false); // 保存後は編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -113,9 +117,17 @@ const SharePage = () => {
         <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
+        {users.includes(username) && (
+          <button
+            className="edit-button"
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            {isEditing ? "編集終了" : "編集"}
+          </button>
+        )}
       </div>
 
-      {/* 日程一覧（常に表示） */}
+      {/* 日程一覧 */}
       <div className="glass-black schedule-list">
         <table>
           <thead>
@@ -148,7 +160,9 @@ const SharePage = () => {
                               {attendanceOptions.map((opt) => (
                                 <button
                                   key={opt}
-                                  className={`choice-btn ${value === opt ? "active" : ""}`}
+                                  className={`choice-btn ${value === opt ? "active" : ""} ${
+                                    isEditing ? "" : "disabled"
+                                  }`}
                                   onClick={() => handleSelect(key, opt)}
                                 >
                                   {opt}
@@ -169,11 +183,13 @@ const SharePage = () => {
       </div>
 
       {/* 保存ボタン */}
-      <div className="button-area">
-        <button className="save-button" onClick={handleSave}>
-          保存する
-        </button>
-      </div>
+      {users.includes(username) && (
+        <div className="button-area">
+          <button className="save-button" onClick={handleSave} disabled={!isEditing}>
+            保存する
+          </button>
+        </div>
+      )}
     </div>
   );
 };
