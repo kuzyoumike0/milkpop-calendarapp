@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
-import "../common.css";
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
@@ -234,8 +233,8 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        {/* ← リネーム済み */}
-        <div className="common-box">
+        {/* ← Register専用 */}
+        <div className="register-box">
           <h3>📅 選択した日程</h3>
           {selectedDates.length === 0 ? (
             <p>日付をクリックしてください</p>
