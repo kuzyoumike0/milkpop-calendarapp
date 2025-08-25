@@ -83,12 +83,17 @@
 /* ====== カレンダー部分 ====== */
 .calendar-box {
   flex: 7;
-  background: rgba(17, 17, 17, 0.6); /* ✅ 半透明黒 */
-  border-radius: 12px;
+  background: rgba(17, 17, 17, 0.55); /* ✅ 半透明黒 */
+  border-radius: 20px;                /* ✅ 大きめ角丸 */
   padding: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4); /* ✅ 強めの影 */
   color: #fff;
-  backdrop-filter: blur(8px); /* ✅ 背景ぼかし */
+  backdrop-filter: blur(10px);        /* ✅ 背景ぼかし */
+  transition: all 0.3s ease;
+}
+
+.calendar-box:hover {
+  transform: translateY(-3px); /* ✅ 浮く演出 */
 }
 
 .calendar-header {
@@ -186,12 +191,17 @@
 /* ====== 右側リストカード ====== */
 .register-box {
   flex: 3;
-  background: rgba(17, 17, 17, 0.6); /* ✅ 半透明黒 */
-  border-radius: 12px;
+  background: rgba(17, 17, 17, 0.55); /* ✅ 半透明黒 */
+  border-radius: 20px;
   padding: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   color: #fff;
-  backdrop-filter: blur(8px); /* ✅ 背景ぼかし */
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.register-box:hover {
+  transform: translateY(-3px);
 }
 
 .register-box h3 {
