@@ -69,7 +69,7 @@ const RegisterPage = () => {
     }
   };
 
-  // 共有リンク発行（バックエンド呼び出し）
+  // 共有リンク発行
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -143,118 +143,123 @@ const RegisterPage = () => {
         <label htmlFor="range">範囲</label>
       </div>
 
-      {/* ===== カレンダー部分 ===== */}
-      <div className="calendar">
-        <div className="calendar-header">
-          <button onClick={prevMonth}>←</button>
-          <h3>
-            {currentYear}年 {currentMonth + 1}月
-          </h3>
-          <button onClick={nextMonth}>→</button>
-        </div>
+      {/* === 7:3 レイアウト === */}
+      <div className="main-layout">
+        {/* 左 7割: カレンダー */}
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={prevMonth}>←</button>
+              <h3>
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={nextMonth}>→</button>
+            </div>
 
-        <div className="week-header">
-          {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
+            <div className="week-header">
+              {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
 
-        <div className="calendar-grid">
-          {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
-            <div key={`empty-${idx}`} />
-          ))}
-          {Array.from({ length: daysInMonth }, (_, idx) => {
-            const date = new Date(currentYear, currentMonth, idx + 1);
-            const dateStr = date.toISOString().split("T")[0];
-            const isSelected = selectedDates.includes(dateStr);
-            const holiday = hd.isHoliday(date);
-            const isSunday = date.getDay() === 0;
-            const isSaturday = date.getDay() === 6;
-            const isToday =
-              date.toDateString() === new Date().toDateString();
+            <div className="calendar-grid">
+              {Array.from({ length: firstDayOfMonth }).map((_, idx) => (
+                <div key={`empty-${idx}`} />
+              ))}
+              {Array.from({ length: daysInMonth }, (_, idx) => {
+                const date = new Date(currentYear, currentMonth, idx + 1);
+                const dateStr = date.toISOString().split("T")[0];
+                const isSelected = selectedDates.includes(dateStr);
+                const holiday = hd.isHoliday(date);
+                const isSunday = date.getDay() === 0;
+                const isSaturday = date.getDay() === 6;
+                const isToday =
+                  date.toDateString() === new Date().toDateString();
 
-            return (
-              <div
-                key={dateStr}
-                onClick={() => handleDateClick(dateStr)}
-                className={`day-cell ${isSelected ? "selected" : ""} ${
-                  holiday ? "calendar-holiday" : ""
-                } ${isSunday ? "calendar-sunday" : ""} ${
-                  isSaturday ? "calendar-saturday" : ""
-                } ${isToday ? "calendar-today" : ""}`}
-              >
-                {idx + 1}
-                {holiday && (
-                  <div className="holiday-name">{holiday.name}</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ===== 選択リスト ===== */}
-      <div className="options-section">
-        <h3>✅ 選択した日程</h3>
-        {selectedDates.map((d) => (
-          <div key={d} className="selected-date">
-            <span>{d}</span>
-            <select
-              value={timeOptions[d] || "終日"}
-              onChange={(e) =>
-                setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
-              }
-              className="custom-dropdown"
-            >
-              <option value="終日">終日</option>
-              <option value="昼">昼</option>
-              <option value="夜">夜</option>
-              <option value="custom">時刻指定</option>
-            </select>
-            {timeOptions[d] === "custom" && (
-              <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                <select
-                  value={customTimes[d]?.start || ""}
-                  onChange={(e) =>
-                    setCustomTimes((prev) => ({
-                      ...prev,
-                      [d]: { ...prev[d], start: e.target.value },
-                    }))
-                  }
-                  className="custom-dropdown"
-                >
-                  <option value="">開始</option>
-                  {hours.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
-                ～ 
-                <select
-                  value={customTimes[d]?.end || ""}
-                  onChange={(e) =>
-                    setCustomTimes((prev) => ({
-                      ...prev,
-                      [d]: { ...prev[d], end: e.target.value },
-                    }))
-                  }
-                  className="custom-dropdown"
-                >
-                  <option value="">終了</option>
-                  {hours.map((h) => (
-                    <option key={h} value={h}>
-                      {h}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                return (
+                  <div
+                    key={dateStr}
+                    onClick={() => handleDateClick(dateStr)}
+                    className={`day-cell ${isSelected ? "selected" : ""} ${
+                      holiday ? "calendar-holiday" : ""
+                    } ${isSunday ? "calendar-sunday" : ""} ${
+                      isSaturday ? "calendar-saturday" : ""
+                    } ${isToday ? "calendar-today" : ""}`}
+                  >
+                    {idx + 1}
+                    {holiday && (
+                      <div className="holiday-name">{holiday.name}</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        ))}
+        </div>
+
+        {/* 右 3割: 選択リスト */}
+        <div className="options-section">
+          <h3>✅ 選択した日程</h3>
+          {selectedDates.map((d) => (
+            <div key={d} className="selected-date">
+              <span>{d}</span>
+              <select
+                value={timeOptions[d] || "終日"}
+                onChange={(e) =>
+                  setTimeOptions((prev) => ({ ...prev, [d]: e.target.value }))
+                }
+                className="custom-dropdown"
+              >
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                <option value="custom">時刻指定</option>
+              </select>
+              {timeOptions[d] === "custom" && (
+                <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                  <select
+                    value={customTimes[d]?.start || ""}
+                    onChange={(e) =>
+                      setCustomTimes((prev) => ({
+                        ...prev,
+                        [d]: { ...prev[d], start: e.target.value },
+                      }))
+                    }
+                    className="custom-dropdown"
+                  >
+                    <option value="">開始</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  ～ 
+                  <select
+                    value={customTimes[d]?.end || ""}
+                    onChange={(e) =>
+                      setCustomTimes((prev) => ({
+                        ...prev,
+                        [d]: { ...prev[d], end: e.target.value },
+                      }))
+                    }
+                    className="custom-dropdown"
+                  >
+                    <option value="">終了</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* ===== 共有ボタン ===== */}
+      {/* 共有リンクボタン */}
       <button onClick={handleShare} className="share-button fancy">
         🔗 共有リンクを発行
       </button>
