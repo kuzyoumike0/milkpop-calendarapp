@@ -24,7 +24,6 @@ const SharePage = () => {
         if (!data.error) {
           setSchedule(data);
 
-          // 初期レスポンスを "-" で準備（indexベース）
           if (Array.isArray(data.dates)) {
             const init = {};
             data.dates.forEach((_, i) => {
@@ -68,23 +67,21 @@ const SharePage = () => {
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
 
-      // 仮データ追加
+      // 仮データを表に追加
       const dummy = { username, responses: { ...responses } };
-      setAllResponses((prev) => {
-        const filtered = prev.filter((r) => r.username !== username);
-        return [...filtered, dummy];
-      });
+      setAllResponses((prev) => [...prev, dummy]);
 
-      setIsEditing(true); // 新規追加直後は編集モードON
+      setIsEditing(true); // 編集モードON
     }
   };
 
   // ===== 出欠クリック変更 =====
   const handleSelect = (index, value) => {
     if (!isEditing) return;
+
     setResponses((prev) => ({ ...prev, [index]: value }));
 
-    // 表示即更新
+    // 表も即更新
     setAllResponses((prev) =>
       prev.map((r) =>
         r.username === username
@@ -103,12 +100,13 @@ const SharePage = () => {
 
     const payload = { user_id: username, username, responses };
 
-    // === 先にローカルを更新（即一覧に反映） ===
+    // ローカル更新（即表に確定）
     setAllResponses((prev) => {
       const filtered = prev.filter((r) => r.username !== username);
       return [...filtered, payload];
     });
-    setIsEditing(false); // 保存直後は編集終了
+
+    setIsEditing(false); // 編集終了にする
 
     try {
       await fetch(`/api/schedules/${token}/responses`, {
@@ -116,10 +114,7 @@ const SharePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      // 念のためサーバーから再取得して整合性を保つ
-      fetchResponses();
-      alert("保存しました！");
+      fetchResponses(); // サーバー最新状態と同期
     } catch (err) {
       console.error("保存エラー", err);
       alert("保存に失敗しました");
@@ -191,14 +186,14 @@ const SharePage = () => {
 
                       return (
                         <td key={idx} className="attendance-cell">
-                          {isSelf ? (
+                          {isSelf && isEditing ? (
                             <div className="choice-buttons">
                               {attendanceOptions.map((opt) => (
                                 <button
                                   key={opt}
                                   className={`choice-btn ${
                                     value === opt ? "active" : ""
-                                  } ${isEditing ? "" : "disabled"}`}
+                                  }`}
                                   onClick={() => handleSelect(i, opt)}
                                 >
                                   {opt}
@@ -219,13 +214,9 @@ const SharePage = () => {
       </div>
 
       {/* 保存ボタン */}
-      {users.includes(username) && (
+      {users.includes(username) && isEditing && (
         <div className="button-area">
-          <button
-            className="save-button"
-            onClick={handleSave}
-            disabled={!isEditing}
-          >
+          <button className="save-button" onClick={handleSave}>
             保存する
           </button>
         </div>
