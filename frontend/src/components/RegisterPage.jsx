@@ -1,6 +1,7 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
+import { v4 as uuidv4 } from "uuid";   // ← uuidでユニークなリンクID生成
 import "../register.css";
 
 const RegisterPage = () => {
@@ -11,6 +12,8 @@ const RegisterPage = () => {
 
   const [rangeStart, setRangeStart] = useState(null);
   const [hoverDate, setHoverDate] = useState(null);
+
+  const [shareLink, setShareLink] = useState(null); // ✅ 発行された共有リンクを保持
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -26,7 +29,7 @@ const RegisterPage = () => {
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
 
-  // 日付クリック処理
+  // ===== 日付クリック処理 =====
   const handleDateClick = (day) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
       2,
@@ -41,11 +44,9 @@ const RegisterPage = () => {
       );
     } else if (selectionMode === "range") {
       if (!rangeStart) {
-        // 1回目クリック → 開始日設定
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
-        // 2回目クリック → 範囲確定
         const start = new Date(rangeStart);
         const end = new Date(dateStr);
         const range = [];
@@ -61,14 +62,14 @@ const RegisterPage = () => {
           }
         }
 
-        setSelectedDates(range.sort()); // ✅ 日付順にソート
+        setSelectedDates(range.sort());
         setRangeStart(null);
-        setHoverDate(null); // ✅ hover ハイライトを完全リセット
+        setHoverDate(null);
       }
     }
   };
 
-  // 時間帯変更処理
+  // ===== 時間帯変更処理 =====
   const handleTimeChange = (date, field, value) => {
     setTimeRanges((prev) => ({
       ...prev,
@@ -79,7 +80,31 @@ const RegisterPage = () => {
     }));
   };
 
-  // カレンダー描画
+  // ===== 共有リンク発行 =====
+  const generateShareLink = () => {
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日程を入力してください。");
+      return;
+    }
+
+    const token = uuidv4(); // ランダムなリンクID
+    const schedules = selectedDates.map((d) => ({
+      date: d,
+      time: timeRanges[d]?.type || "終日",
+    }));
+
+    // localStorageに保存
+    localStorage.setItem(
+      `schedule_${token}`,
+      JSON.stringify({ title, schedules })
+    );
+
+    // 生成したリンクを保持
+    const link = `${window.location.origin}/share/${token}`;
+    setShareLink(link);
+  };
+
+  // ===== カレンダー描画 =====
   const renderCalendar = () => {
     const days = [];
     for (let i = 0; i < firstDayOfMonth; i++) {
@@ -94,7 +119,6 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(dateObj);
       const isToday = dateStr === todayStr;
 
-      // ✅ 仮ハイライトは「未確定のときだけ」
       let inRange = false;
       if (rangeStart && hoverDate) {
         const start = new Date(rangeStart);
@@ -241,6 +265,26 @@ const RegisterPage = () => {
               </li>
             ))}
           </ul>
+
+          {/* ✅ 共有リンク発行ボタン */}
+          <button className="share-button" onClick={generateShareLink}>
+            共有リンクを発行
+          </button>
+          {shareLink && (
+            <div className="share-link-box">
+              <a href={shareLink} target="_blank" rel="noopener noreferrer">
+                {shareLink}
+              </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shareLink);
+                  alert("リンクをコピーしました！");
+                }}
+              >
+                コピー
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
