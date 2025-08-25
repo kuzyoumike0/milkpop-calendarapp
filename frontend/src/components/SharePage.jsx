@@ -1,176 +1,123 @@
+// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "../index.css";
 
 const SharePage = () => {
   const { token } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [username, setUsername] = useState("");
-  const [allResponses, setAllResponses] = useState([]);
+  const [scheduleData, setScheduleData] = useState(null);
   const [responses, setResponses] = useState({});
+  const [userName, setUserName] = useState("");
 
-  // スケジュール取得
+  // データ読み込み
   useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        const res = await fetch(`/share/${token}`);
-        const data = await res.json();
-        if (!data.error) {
-          setSchedule(data);
-          fetchResponses(data.id);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchSchedule();
+    if (!token) return;
+    const stored = localStorage.getItem(`share_${token}`);
+    if (stored) {
+      const data = JSON.parse(stored);
+      data.dates.sort(); // 日付順にソート
+      setScheduleData(data);
+    }
   }, [token]);
 
-  // 回答一覧取得
-  const fetchResponses = async (scheduleId) => {
-    try {
-      const res = await fetch(`/api/schedules/${scheduleId}/responses`);
-      const data = await res.json();
-      setAllResponses(data);
-    } catch (err) {
-      console.error(err);
-    }
+  const handleSelect = (date, value) => {
+    setResponses((prev) => ({
+      ...prev,
+      [date]: value,
+    }));
   };
 
-  // 保存
-  const handleSave = async () => {
-    if (!username) {
+  const handleSave = () => {
+    if (!userName) {
       alert("名前を入力してください");
       return;
     }
-    try {
-      await fetch(`/api/schedules/${schedule.id}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: username,
-          username,
-          responses,
-        }),
-      });
-      fetchResponses(schedule.id);
-    } catch (err) {
-      console.error(err);
-    }
+    const stored = localStorage.getItem(`share_${token}`);
+    if (!stored) return;
+
+    const data = JSON.parse(stored);
+    if (!data.responses) data.responses = {};
+    data.responses[userName] = responses;
+
+    localStorage.setItem(`share_${token}`, JSON.stringify(data));
+    setScheduleData(data);
+    alert("保存しました！");
   };
 
-  if (!schedule) return <div>読み込み中...</div>;
-
-  // ユーザー一覧
-  const users = [...new Set(allResponses.map((r) => r.username))];
+  if (!scheduleData) {
+    return (
+      <div className="page-container">
+        <h2 className="page-title">共有ページ</h2>
+        <p>共有データが見つかりません。</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="page-container"
-      style={{ alignItems: "flex-start", maxWidth: "95%", marginLeft: "2rem" }}
-    >
-      <h2 className="page-title" style={{ textAlign: "left" }}>
-        共有スケジュール
-      </h2>
-
-      {/* タイトル */}
-      <div className="card" style={{ textAlign: "left", width: "100%" }}>
-        <h3>{schedule.title}</h3>
-      </div>
+    <div className="page-container">
+      <h2 className="page-title">📢 共有ページ</h2>
+      <h3 className="page-subtitle">タイトル: {scheduleData.title}</h3>
 
       {/* 名前入力 */}
-      <div className="input-card" style={{ textAlign: "left", width: "100%" }}>
+      <div className="input-card">
         <input
           type="text"
           placeholder="あなたの名前を入力"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={userName}
+          onChange={(e) => setUserName(e.target.value)}
           className="title-input"
-          style={{ maxWidth: "400px" }}
         />
       </div>
 
-      {/* 日程一覧テーブル */}
-      <div className="card" style={{ textAlign: "left", width: "100%" }}>
-        <h3>日程一覧</h3>
-        <table
-          style={{
-            borderCollapse: "collapse",
-            marginTop: "1rem",
-            width: "100%",
-          }}
-        >
-          <thead>
-            <tr style={{ borderBottom: "2px solid #FDB9C8" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem 1rem" }}>日付</th>
-              {users.map((u) => (
-                <th key={u} style={{ textAlign: "center", padding: "0.5rem 1rem" }}>
-                  {u}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.dates.map((d) => {
-              let [date, time] = d.split("|");
-              if (!time) time = "終日";
-
-              return (
-                <tr key={d} style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}>
-                  {/* 日付 + 時間帯 */}
-                  <td style={{ padding: "0.6rem 1rem" }}>
-                    <strong>{date}</strong> （{time}）
-                  </td>
-
-                  {users.map((u) => {
-                    const userResp = allResponses.find((r) => r.username === u);
-                    const value = userResp?.responses?.[d] || "";
-
-                    if (u === username) {
-                      return (
-                        <td key={u} style={{ textAlign: "center" }}>
-                          <select
-                            value={responses[d] || value || ""}
-                            onChange={(e) =>
-                              setResponses((prev) => ({ ...prev, [d]: e.target.value }))
-                            }
-                            className="custom-dropdown"
-                            style={{ width: "80px" }}
-                          >
-                            <option value="">---</option>
-                            <option value="yes">〇</option>
-                            <option value="no">✕</option>
-                            <option value="maybe">△</option>
-                          </select>
-                        </td>
-                      );
-                    } else {
-                      return (
-                        <td key={u} style={{ textAlign: "center" }}>
-                          {value === "yes"
-                            ? "〇"
-                            : value === "no"
-                            ? "✕"
-                            : value === "maybe"
-                            ? "△"
-                            : "-"}
-                        </td>
-                      );
-                    }
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* 日程リスト */}
+      <div className="share-schedule-list">
+        {scheduleData.dates.map((d) => (
+          <div key={d} className="schedule-item">
+            <span className="schedule-date">{d}</span>
+            <select
+              value={responses[d] || ""}
+              onChange={(e) => handleSelect(d, e.target.value)}
+              className="custom-dropdown"
+            >
+              <option value="">選択</option>
+              <option value="〇">〇</option>
+              <option value="✕">✕</option>
+            </select>
+          </div>
+        ))}
       </div>
 
       {/* 保存ボタン */}
-      <div style={{ marginTop: "2rem" }}>
-        <button onClick={handleSave} className="share-button fancy">
-          保存
-        </button>
-      </div>
+      <button onClick={handleSave} className="share-button fancy">
+        保存
+      </button>
+
+      {/* 保存済みの出欠表 */}
+      {scheduleData.responses && (
+        <div className="responses-section">
+          <h3>📝 出欠状況</h3>
+          <table className="responses-table">
+            <thead>
+              <tr>
+                <th>名前</th>
+                {scheduleData.dates.map((d) => (
+                  <th key={d}>{d}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(scheduleData.responses).map(([name, res]) => (
+                <tr key={name}>
+                  <td>{name}</td>
+                  {scheduleData.dates.map((d) => (
+                    <td key={d}>{res[d] || "-"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
