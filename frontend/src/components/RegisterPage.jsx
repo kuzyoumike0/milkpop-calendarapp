@@ -50,13 +50,17 @@ const RegisterPage = () => {
         const end = new Date(dateStr);
         const range = [];
         const step = start < end ? 1 : -1;
-        for (
-          let d = new Date(start);
-          step > 0 ? d <= end : d >= end;
-          d.setDate(d.getDate() + step)
-        ) {
+
+        for (let d = new Date(start); ; d.setDate(d.getDate() + step)) {
           range.push(d.toISOString().split("T")[0]);
+          if (
+            (step > 0 && d.getTime() >= end.getTime()) ||
+            (step < 0 && d.getTime() <= end.getTime())
+          ) {
+            break; // ✅ 終了日でループを終了 → 翌日まで入らない
+          }
         }
+
         // ✅ 全範囲を右リストへ反映
         setSelectedDates(range);
         setRangeStart(null);
