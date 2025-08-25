@@ -13,7 +13,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(false); // 初期は編集不可
+  const [isEditing, setIsEditing] = useState(false);
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -28,7 +28,10 @@ const SharePage = () => {
           if (Array.isArray(data.dates)) {
             const init = {};
             data.dates.forEach((d) => {
-              const key = `${d.date} (${d.time})`;
+              const key =
+                d.start && d.end
+                  ? `${d.date} (${d.start} ~ ${d.end})`
+                  : `${d.date} (${d.time})`;
               init[key] = "-";
             });
             setResponses(init);
@@ -70,14 +73,14 @@ const SharePage = () => {
       // ユーザーを即追加
       setUsers((prev) => [...prev, username]);
 
-      // ★ allResponses に仮の回答を追加（画面に即列を出す）
+      // allResponses に仮データを追加
       const dummy = { username, responses: { ...responses } };
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, dummy];
       });
 
-      setIsEditing(false); // 新規追加後は編集不可
+      setIsEditing(true); // ★ 新規追加直後は編集モードON
     }
   };
 
@@ -86,7 +89,7 @@ const SharePage = () => {
     if (!isEditing) return;
     setResponses((prev) => ({ ...prev, [key]: value }));
 
-    // 画面の表示も即更新
+    // 表示も即更新
     setAllResponses((prev) =>
       prev.map((r) =>
         r.username === username
@@ -111,13 +114,13 @@ const SharePage = () => {
         body: JSON.stringify(payload),
       });
 
-      // 保存後も即反映
+      // 即反映
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, payload];
       });
 
-      setIsEditing(false); // 保存後は編集終了
+      setIsEditing(false); // ★ 保存後は編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
@@ -169,11 +172,17 @@ const SharePage = () => {
           <tbody>
             {Array.isArray(schedule.dates) &&
               schedule.dates.map((d, i) => {
-                const key = `${d.date} (${d.time})`;
+                const key =
+                  d.start && d.end
+                    ? `${d.date} (${d.start} ~ ${d.end})`
+                    : `${d.date} (${d.time})`;
+
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
-                    <td className="time-cell">{d.time}</td>
+                    <td className="time-cell">
+                      {d.start && d.end ? `${d.start} ~ ${d.end}` : d.time}
+                    </td>
                     {users.map((u, idx) => {
                       const userResp = allResponses.find(
                         (r) => r.username === u
