@@ -19,37 +19,37 @@ const SharePage = () => {
   const [editName, setEditName] = useState("");
   const [editStatus, setEditStatus] = useState("〇");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // スケジュール本体
-      const scheduleRes = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/schedules/${token}`
-      );
-      const scheduleData = await scheduleRes.json();
-      setTitle(scheduleData.title);
+  // ===== データ取得 =====
+  const fetchData = async () => {
+    const scheduleRes = await fetch(
+      `${process.env.REACT_APP_API_URL}/api/schedules/${token}`
+    );
+    const scheduleData = await scheduleRes.json();
+    setTitle(scheduleData.title);
 
-      const options = scheduleData.dates.map((d) => `${d.date} (${d.time})`);
-      setDateOptions(options);
-      if (options.length > 0) setNewDate(options[0]);
+    const options = scheduleData.dates.map((d) => `${d.date} (${d.time})`);
+    setDateOptions(options);
+    if (options.length > 0) setNewDate(options[0]);
 
-      // 集計データ
-      const aggRes = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/schedules/${token}/aggregate`
-      );
-      const aggData = await aggRes.json();
+    const aggRes = await fetch(
+      `${process.env.REACT_APP_API_URL}/api/schedules/${token}/aggregate`
+    );
+    const aggData = await aggRes.json();
 
-      const tableRows = [];
-      Object.entries(aggData).forEach(([dateKey, responses]) => {
-        responses.forEach((r) => {
-          tableRows.push({
-            date: dateKey,
-            username: r.username || "（未入力）",
-            status: r.status,
-          });
+    const tableRows = [];
+    Object.entries(aggData).forEach(([dateKey, responses]) => {
+      responses.forEach((r) => {
+        tableRows.push({
+          date: dateKey,
+          username: r.username || "（未入力）",
+          status: r.status,
         });
       });
-      setRows(tableRows);
-    };
+    });
+    setRows(tableRows);
+  };
+
+  useEffect(() => {
     fetchData();
   }, [token]);
 
@@ -69,7 +69,11 @@ const SharePage = () => {
       }),
     });
     alert(`${newDate} | ${newUser} さん → ${newStatus} を保存しました`);
-    window.location.reload();
+
+    // 🔹 再取得して反映（リロード不要）
+    fetchData();
+    setNewUser("");
+    setNewStatus("〇");
   };
 
   // ===== 編集保存 =====
@@ -81,20 +85,22 @@ const SharePage = () => {
     setRows(updated);
     setEditIndex(null);
 
-    // API反映
     await fetch(`${process.env.REACT_APP_API_URL}/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: editName, // 簡易: user_id = 名前
+        user_id: editName,
         username: editName,
         responses: { [r.date]: editStatus },
       }),
     });
+
     alert(`更新しました → ${editName} さん: ${editStatus}`);
+    // 🔹 再取得して反映
+    fetchData();
   };
 
-  // ===== 集計（〇△✖ の人数を数える） =====
+  // ===== 集計（〇△✖ の人数） =====
   const getSummary = (date) => {
     const target = rows.filter((r) => r.date === date);
     const summary = { "〇": 0, "△": 0, "✖": 0 };
@@ -135,10 +141,10 @@ const SharePage = () => {
                   {rows
                     .filter((r) => r.date === dateOpt)
                     .map((r, i) => (
-                      <tr key={i}>
+                      <tr key={`${dateOpt}-${i}`}>
                         <td>{r.date}</td>
                         <td>
-                          {editIndex === i ? (
+                          {editIndex === `${dateOpt}-${i}` ? (
                             <input
                               type="text"
                               value={editName}
@@ -148,7 +154,7 @@ const SharePage = () => {
                             <span
                               className="editable-name"
                               onClick={() => {
-                                setEditIndex(i);
+                                setEditIndex(`${dateOpt}-${i}`);
                                 setEditName(r.username);
                                 setEditStatus(r.status);
                               }}
@@ -158,7 +164,7 @@ const SharePage = () => {
                           )}
                         </td>
                         <td>
-                          {editIndex === i ? (
+                          {editIndex === `${dateOpt}-${i}` ? (
                             <>
                               <select
                                 value={editStatus}
