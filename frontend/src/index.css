@@ -455,3 +455,47 @@ footer {
   .holiday-name { font-size: 0.6rem; }
   .options-section { padding: 1rem; max-width: 100%; }
 }
+/* 日程行 */
+.schedule-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,192,203,0.3);
+  font-size: 1rem;
+  color: #fff;
+}
+.schedule-row:last-child {
+  border-bottom: none;
+}
+
+/* 日付と時間帯をそろえる */
+.schedule-date {
+  min-width: 130px;
+  font-weight: bold;
+}
+.schedule-time {
+  min-width: 70px;
+  font-size: 0.95rem;
+  color: #FDB9C8;
+  text-align: left;
+}
+
+/* プルダウン（短くコンパクト） */
+.icon-dropdown {
+  width: 60px;
+  padding: 0.3rem 0.2rem;
+  border-radius: 6px;
+  border: 2px solid #FDB9C8;
+  background: #fff;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+}
+.icon-dropdown option {
+  text-align: center;
+  font-weight: bold;
+}
+
