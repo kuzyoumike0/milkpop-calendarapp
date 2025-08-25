@@ -12,7 +12,7 @@ const RegisterPage = () => {
 
   const [timeOptions, setTimeOptions] = useState({});
   const [customTimes, setCustomTimes] = useState({});
-  const [shareUrl, setShareUrl] = useState(""); // 共有リンクを保存して表示
+  const [shareUrl, setShareUrl] = useState(""); // ← 発行したリンクを保存する
 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -29,7 +29,6 @@ const RegisterPage = () => {
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック処理
   const handleDateClick = (date) => {
     if (selectionMode === "multiple") {
       setSelectedDates((prev) =>
@@ -55,7 +54,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 月送り
   const prevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
@@ -73,7 +71,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 共有リンク発行
   const handleShare = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日程を入力してください");
@@ -101,7 +98,7 @@ const RegisterPage = () => {
       const data = await res.json();
       if (data.share_token) {
         const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareUrl(url); // URL を保存
+        setShareUrl(url); // ← URL を画面に保存するだけ
       } else {
         alert("共有リンクの生成に失敗しました");
       }
@@ -111,7 +108,6 @@ const RegisterPage = () => {
     }
   };
 
-  // コピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl).then(() => {
       alert("コピーしました！");
@@ -122,7 +118,7 @@ const RegisterPage = () => {
     <div className="page-container">
       <h2 className="page-title">📅 日程登録ページ</h2>
 
-      {/* 入力フォーム */}
+      {/* タイトル入力 */}
       <div className="input-card">
         <input
           type="text"
@@ -132,7 +128,7 @@ const RegisterPage = () => {
           className="title-input"
         />
 
-        {/* 範囲 / 複数 ラジオ */}
+        {/* 選択モード */}
         <div className="radio-group">
           <input
             type="radio"
@@ -156,7 +152,6 @@ const RegisterPage = () => {
 
       {/* カレンダー & 選択リスト */}
       <div className="main-layout">
-        {/* カレンダー */}
         <div className="calendar-section">
           <div className="calendar">
             <div className="calendar-header">
@@ -273,17 +268,10 @@ const RegisterPage = () => {
         🔗 共有リンクを発行
       </button>
 
-      {/* 発行後リンク表示（クリックで遷移 + コピー） */}
+      {/* 発行後リンク表示（クリックで遷移しない） */}
       {shareUrl && (
         <div className="share-link">
-          <a
-            href={shareUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="share-url"
-          >
-            {shareUrl}
-          </a>
+          <span className="share-url">{shareUrl}</span>
           <button
             onClick={copyToClipboard}
             className="copy-btn"
