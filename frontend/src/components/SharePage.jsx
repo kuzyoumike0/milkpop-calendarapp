@@ -13,7 +13,7 @@ const SharePage = () => {
   const [username, setUsername] = useState("");
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
-  const [isEditing, setIsEditing] = useState(true); // 初期から編集モード
+  const [isEditing, setIsEditing] = useState(true); // 初期は編集可能
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -62,9 +62,19 @@ const SharePage = () => {
       alert("名前を入力してください！");
       return;
     }
+
     if (!users.includes(username)) {
+      // ユーザーリストに即追加
       setUsers((prev) => [...prev, username]);
-      setIsEditing(true); // 追加時は編集可能
+
+      // ★ 即時反映: allResponses に仮の回答を追加（すべて "-"）
+      const dummy = { username, responses: { ...responses } };
+      setAllResponses((prev) => {
+        const filtered = prev.filter((r) => r.username !== username);
+        return [...filtered, dummy];
+      });
+
+      setIsEditing(true); // すぐ編集可能に
     }
   };
 
@@ -92,13 +102,13 @@ const SharePage = () => {
         body: JSON.stringify(payload),
       });
 
-      // 即時反映: 自分の回答を allResponses に追加/更新
+      // 即時反映: allResponses を更新
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.username !== username);
         return [...filtered, payload];
       });
 
-      setIsEditing(false); // 保存したら編集終了
+      setIsEditing(false); // 保存後は編集終了
       alert("保存しました！");
     } catch (err) {
       console.error("保存エラー", err);
