@@ -1,7 +1,7 @@
+// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import "../common.css";   // ✅ 修正
-
+import "../share.css";   // ✅ SharePage専用CSSを適用
 
 const SharePage = () => {
   const { token } = useParams();
@@ -43,9 +43,9 @@ const SharePage = () => {
   };
 
   return (
-    <div className="page-container">
+    <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
-      {title && <h3>{title}</h3>}
+      {title && <h3 className="share-title">{title}</h3>}
 
       <table className="attendance-table">
         <thead>
@@ -68,6 +68,7 @@ const SharePage = () => {
                   value={s.name}
                   onChange={(e) => handleChange(i, "name", e.target.value)}
                   placeholder="名前"
+                  className="name-input"
                 />
               </td>
               <td>
