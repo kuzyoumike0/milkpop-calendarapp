@@ -6,7 +6,7 @@ import "../common.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [selectionMode, setSelectionMode] = useState("multiple"); // デフォルトは複数選択
+  const [selectionMode, setSelectionMode] = useState("multiple");
   const [timeRanges, setTimeRanges] = useState({});
 
   const today = new Date();
@@ -87,16 +87,17 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2>日程登録</h2>
 
-      {/* タイトル入力 */}
-      <input
-        type="text"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="title-input"
-      />
+      {/* ✅ タイトルをカレンダー上に置く */}
+      <div className="calendar-title-input">
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
 
-      {/* ✅ 選択方法ラジオボタン（タイトルの下・カレンダーの上） */}
+      {/* 選択方法ラジオボタン */}
       <div className="selection-mode">
         <label
           className={`mode-option ${
@@ -126,26 +127,27 @@ const RegisterPage = () => {
         </label>
       </div>
 
-      {/* カレンダー */}
-      <div className="calendar">
-        <div className="calendar-header">
-          <button onClick={() => setCurrentMonth((m) => m - 1)}>◀</button>
-          <span>
-            {currentYear}年 {currentMonth + 1}月
-          </span>
-          <button onClick={() => setCurrentMonth((m) => m + 1)}>▶</button>
+      {/* ✅ カレンダーと選択リストを横並び */}
+      <div className="calendar-layout">
+        <div className="calendar">
+          <div className="calendar-header">
+            <button onClick={() => setCurrentMonth((m) => m - 1)}>◀</button>
+            <span>
+              {currentYear}年 {currentMonth + 1}月
+            </span>
+            <button onClick={() => setCurrentMonth((m) => m + 1)}>▶</button>
+          </div>
+          <div className="calendar-grid">{renderCalendar()}</div>
         </div>
-        <div className="calendar-grid">{renderCalendar()}</div>
-      </div>
 
-      {/* 選択した日付一覧 */}
-      <div className="selected-list">
-        <h3>選択した日程</h3>
-        <ul>
-          {selectedDates.map((d) => (
-            <li key={d}>{d}</li>
-          ))}
-        </ul>
+        <div className="selected-list">
+          <h3>選択した日程</h3>
+          <ul>
+            {selectedDates.map((d) => (
+              <li key={d}>{d}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
