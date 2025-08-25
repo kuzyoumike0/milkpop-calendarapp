@@ -10,7 +10,15 @@
   align-items: center;
 }
 
-/* ====== 黒系 半透明（入力欄・サイドボックス） ====== */
+/* ====== タイトル ====== */
+.page-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-shadow: 0 3px 6px rgba(0,0,0,0.25);
+}
+
+/* ====== 黒半透明カード ====== */
 .glass-black {
   background: rgba(0, 0, 0, 0.5);
   border-radius: 16px;
@@ -22,120 +30,18 @@
   color: #fff;
 }
 
-/* ====== 白系 半透明（カレンダーなど） ====== */
+/* ====== 白半透明カード ====== */
 .glass-white {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 20px;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
   color: #222;
 }
 
-/* ====== タイトル入力 ====== */
-.title-input {
-  width: 80%;
-  padding: 14px;
-  font-size: 18px;
-  border: none;
-  border-radius: 12px;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* ====== メモ入力 ====== */
-.memo-input {
-  width: 80%;
-  padding: 12px;
-  font-size: 14px;
-  border: none;
-  border-radius: 12px;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* ====== カレンダー ====== */
-.react-calendar {
-  width: 90%;
-  max-width: 800px;
-  border: none;
-  margin: 20px 0;
-}
-.react-calendar__tile {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  margin: 4px;
-  color: #000;
-  font-weight: bold;
-  transition: all 0.2s ease-in-out;
-}
-.react-calendar__tile--active,
-.react-calendar__tile:hover {
-  background: rgba(255, 255, 255, 0.7);
-  transform: scale(1.05);
-}
-
-/* ====== 登録済みスケジュールボックス ====== */
-.schedule-box {
-  position: absolute;
-  right: 50px;
-  top: 350px;
-  width: 250px;
-  border-radius: 15px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-  color: #fff;
-}
-.schedule-box h3 {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-.schedule-box button {
-  margin-top: 10px;
-  padding: 8px 15px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out;
-}
-.schedule-box button:hover {
-  transform: scale(1.05);
-}
-.main-content {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
-  width: 100%;
-  margin-top: 20px;
-}
-
-.input-card {
-  width: 80%;
-  margin-bottom: 20px;
-}
-
-.calendar-card {
-  flex: 2;
-  padding: 20px;
-}
-
-.schedule-box {
-  flex: 1;
-}
-/* レイアウト */
+/* ====== レイアウト ====== */
 .main-content {
   display: flex;
   justify-content: space-between;
@@ -145,6 +51,11 @@
   gap: 30px;
 }
 
+.input-card {
+  width: 80%;
+  margin-bottom: 20px;
+}
+
 .calendar-card {
   flex: 7;
   padding: 20px;
@@ -152,33 +63,81 @@
 
 .schedule-box {
   flex: 3;
+  border-radius: 15px;
+  padding: 20px;
 }
 
-/* カレンダー日付タイル */
+/* ====== カレンダー全体 ====== */
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+}
+
+/* ====== ナビゲーション（月⇔ボタン） ====== */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.react-calendar__navigation button {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  margin: 0 5px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+.react-calendar__navigation button:hover {
+  transform: scale(1.1);
+}
+
+/* ====== 曜日ヘッダー ====== */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+  font-size: 14px;
+  color: #333;
+}
+
+/* ====== 日付タイル ====== */
 .react-calendar__tile {
   border-radius: 12px;
   margin: 3px;
-  padding: 10px 0;
+  padding: 12px 0;
   font-weight: bold;
   font-size: 14px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
-
 .react-calendar__tile:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: #FDB9C8;
+  color: #fff;
   transform: scale(1.05);
 }
 
-/* 選択された日付 */
+/* 選択した日付 */
 .react-calendar__tile--active,
 .selected-date {
   background: linear-gradient(135deg, #FDB9C8, #004CA0) !important;
   color: #fff !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* 土曜 = 青, 日曜 = 赤, 祝日 = 赤 */
+/* 土曜・日曜・祝日 */
 .saturday {
   color: #004CA0 !important;
 }
@@ -186,12 +145,90 @@
   color: #d33 !important;
   font-weight: bold;
 }
-
-/* 祝日名 */
 .holiday-name {
   display: block;
   font-size: 10px;
-  font-weight: normal;
   color: #d33;
   margin-top: 2px;
+}
+
+/* ====== 選択リスト ====== */
+.schedule-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.schedule-box li {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  animation: popIn 0.3s ease;
+}
+@keyframes popIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.date-label {
+  font-weight: bold;
+  min-width: 100px;
+}
+
+/* ====== ドロップダウン（区分・時間指定） ====== */
+.time-select, .time-range select {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.8);
+  font-size: 12px;
+  cursor: pointer;
+}
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ====== 共有リンクボタン ====== */
+.share-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+.share-button:hover {
+  transform: scale(1.05);
+}
+.share-link-box {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.share-link {
+  color: #fff;
+  font-size: 13px;
+  text-decoration: underline;
+}
+.copy-button {
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: none;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.copy-button:hover {
+  background: #666;
 }
