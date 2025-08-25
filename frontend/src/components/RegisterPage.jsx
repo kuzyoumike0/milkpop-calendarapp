@@ -16,7 +16,7 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // ==== カレンダー用 ====
+  // ==== カレンダー ====
   const getDaysInMonth = (year, month) =>
     new Date(year, month + 1, 0).getDate();
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
@@ -46,11 +46,9 @@ const RegisterPage = () => {
       if (selectedDates.length === 0) {
         setSelectedDates([dateStr]);
       } else if (selectedDates.length === 1) {
-        const start = new Date(selectedDates[0]);
-        const end = new Date(dateStr);
-        if (start > end) {
-          [start, end] = [end, start];
-        }
+        let start = new Date(selectedDates[0]);
+        let end = new Date(dateStr);
+        if (start > end) [start, end] = [end, start];
         const range = [];
         let d = new Date(start);
         while (d <= end) {
@@ -69,14 +67,21 @@ const RegisterPage = () => {
     }
   };
 
-  // ==== 月移動 ====
   const prevMonth = () => {
-    setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1));
-    if (currentMonth === 0) setCurrentYear(currentYear - 1);
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
   };
   const nextMonth = () => {
-    setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1));
-    if (currentMonth === 11) setCurrentYear(currentYear + 1);
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
   };
 
   // ==== 共有リンク生成 ====
@@ -101,86 +106,119 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* カレンダー */}
-      <div className="calendar">
-        <div className="calendar-header">
-          <button onClick={prevMonth}>‹</button>
-          <h3 className="month-title">
-            {currentYear}年 {currentMonth + 1}月
-          </h3>
-          <button onClick={nextMonth}>›</button>
-        </div>
+      {/* カレンダー + リストを横並び */}
+      <div className="main-layout">
+        {/* カレンダー */}
+        <div className="calendar-section">
+          <div className="calendar">
+            <div className="calendar-header">
+              <button onClick={prevMonth}>‹</button>
+              <h3 className="month-title">
+                {currentYear}年 {currentMonth + 1}月
+              </h3>
+              <button onClick={nextMonth}>›</button>
+            </div>
 
-        <div className="week-header">
-          <div>日</div>
-          <div>月</div>
-          <div>火</div>
-          <div>水</div>
-          <div>木</div>
-          <div>金</div>
-          <div>土</div>
-        </div>
+            <div className="week-header">
+              <div>日</div>
+              <div>月</div>
+              <div>火</div>
+              <div>水</div>
+              <div>木</div>
+              <div>金</div>
+              <div>土</div>
+            </div>
 
-        <div className="calendar-grid">
-          {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} />
-          ))}
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day = i + 1;
-            const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
-              2,
-              "0"
-            )}-${String(day).padStart(2, "0")}`;
-            const holiday = hd.isHoliday(new Date(dateStr));
-            return (
-              <div
-                key={day}
-                className={`day-cell ${
-                  selectedDates.includes(dateStr) ? "selected" : ""
-                } ${isToday(day) ? "calendar-today" : ""}`}
-                onClick={() => handleDateClick(day)}
-              >
-                <span
-                  className={`${
-                    holiday
-                      ? "calendar-holiday"
-                      : new Date(dateStr).getDay() === 0
-                      ? "calendar-sunday"
-                      : new Date(dateStr).getDay() === 6
-                      ? "calendar-saturday"
-                      : ""
-                  }`}
-                >
-                  {day}
-                </span>
-                {holiday && (
-                  <span className="holiday-name">{holiday.name}</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 共有リンクボタン */}
-      <div style={{ marginTop: "2rem", textAlign: "center" }}>
-        <button className="share-button fancy" onClick={generateShareLink}>
-          共有リンク発行
-        </button>
-        {shareLink && (
-          <div style={{ marginTop: "1rem" }}>
-            <a href={shareLink} target="_blank" rel="noopener noreferrer">
-              {shareLink}
-            </a>
-            <button
-              className="action-button save"
-              onClick={() => navigator.clipboard.writeText(shareLink)}
-              style={{ marginLeft: "1rem" }}
-            >
-              コピー
-            </button>
+            <div className="calendar-grid">
+              {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                <div key={`empty-${i}`} />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const dateStr = `${currentYear}-${String(
+                  currentMonth + 1
+                ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const holiday = hd.isHoliday(new Date(dateStr));
+                return (
+                  <div
+                    key={day}
+                    className={`day-cell ${
+                      selectedDates.includes(dateStr) ? "selected" : ""
+                    } ${isToday(day) ? "calendar-today" : ""}`}
+                    onClick={() => handleDateClick(day)}
+                  >
+                    <span
+                      className={`${
+                        holiday
+                          ? "calendar-holiday"
+                          : new Date(dateStr).getDay() === 0
+                          ? "calendar-sunday"
+                          : new Date(dateStr).getDay() === 6
+                          ? "calendar-saturday"
+                          : ""
+                      }`}
+                    >
+                      {day}
+                    </span>
+                    {holiday && (
+                      <span className="holiday-name">{holiday.name}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* 選択済み日程リスト */}
+        <div className="options-section">
+          <h3>選択した日程</h3>
+          {selectedDates.length === 0 && <p>日付を選択してください</p>}
+          {selectedDates.map((d, i) => (
+            <div key={i} className="schedule-row">
+              <span className="schedule-date">{d}</span>
+              <select
+                className="custom-dropdown short"
+                value={timeRanges[d] || ""}
+                onChange={(e) =>
+                  setTimeRanges({ ...timeRanges, [d]: e.target.value })
+                }
+              >
+                <option value="">時間帯</option>
+                <option value="終日">終日</option>
+                <option value="昼">昼</option>
+                <option value="夜">夜</option>
+                {/* 時刻指定用 */}
+                {Array.from({ length: 24 }).map((_, h) => (
+                  <option key={h} value={`${h}:00`}>
+                    {h}:00
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+
+          {/* 共有リンクボタン */}
+          <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+            <button className="share-button fancy" onClick={generateShareLink}>
+              共有リンク発行
+            </button>
+            {shareLink && (
+              <div style={{ marginTop: "1rem" }}>
+                <a href={shareLink} target="_blank" rel="noopener noreferrer">
+                  {shareLink}
+                </a>
+                <button
+                  className="action-button save"
+                  onClick={() => navigator.clipboard.writeText(shareLink)}
+                  style={{ marginLeft: "1rem" }}
+                >
+                  コピー
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
