@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import "../common.css";
 import "../share.css";
 
+const userOptions = ["Aさん", "Bさん", "Cさん", "Dさん"];
+
 const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
@@ -70,21 +72,23 @@ const SharePage = () => {
     }
   };
 
-  // ===== 一括変更 =====
+  // ===== ユーザー編集切替 =====
   const handleEditUser = (user) => {
-    setEditingUser(editingUser === user.username ? null : user.username);
+    setEditingUser(editingUser === user.user_id ? null : user.user_id);
   };
 
-  const handleBulkChange = async (user, value) => {
+  // ===== ユーザー名変更 =====
+  const handleUserChange = async (user, newName) => {
     try {
       await fetch(`/api/schedules/${token}/responses/${user.user_id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
+        body: JSON.stringify({ username: newName }),
       });
       fetchResponses();
+      setEditingUser(null);
     } catch (err) {
-      console.error("一括更新エラー", err);
+      console.error("ユーザー名更新エラー", err);
     }
   };
 
@@ -130,8 +134,8 @@ const SharePage = () => {
             <tr>
               <th>日付</th>
               <th>時間</th>
+              <th>ユーザー名</th>
               <th>出欠</th>
-              <th>ユーザー</th>
             </tr>
           </thead>
           <tbody>
@@ -139,14 +143,48 @@ const SharePage = () => {
               schedule.dates.map((d, i) => {
                 const key = `${d.date} (${d.time})`;
 
-                const users = allResponses.filter(
-                  (r) => r.responses[key]
-                );
+                const users = allResponses.filter((r) => r.responses[key]);
 
                 return (
                   <tr key={i}>
                     <td className="date-cell">{d.date}</td>
                     <td className="time-cell">{d.time}</td>
+                    <td className="user-list">
+                      {users.map((u, idx) => (
+                        <div key={idx} className="user-entry">
+                          {editingUser === u.user_id ? (
+                            <select
+                              className="user-dropdown"
+                              value={u.username}
+                              onChange={(e) =>
+                                handleUserChange(u, e.target.value)
+                              }
+                              onBlur={() => setEditingUser(null)}
+                            >
+                              {userOptions.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <a
+                              href="#!"
+                              onClick={() => handleEditUser(u)}
+                              className="user-link"
+                            >
+                              {u.username}
+                            </a>
+                          )}
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDeleteUser(u)}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      ))}
+                    </td>
                     <td>
                       <select
                         value={responses[key] || "-"}
@@ -158,40 +196,6 @@ const SharePage = () => {
                         <option value="✖">✖</option>
                         <option value="△">△</option>
                       </select>
-                    </td>
-                    <td className="user-list">
-                      {users.map((u, idx) => (
-                        <div key={idx} className="user-entry">
-                          <a
-                            href="#!"
-                            onClick={() => handleEditUser(u)}
-                            className="user-link"
-                          >
-                            {u.username}
-                          </a>
-                          {editingUser === u.username && (
-                            <select
-                              className="response-dropdown"
-                              onChange={(e) =>
-                                handleBulkChange(u, e.target.value)
-                              }
-                            >
-                              <option value="○">○</option>
-                              <option value="✖">✖</option>
-                              <option value="△">△</option>
-                            </select>
-                          )}
-                          <div className="user-status">
-                            {u.responses[key]}
-                          </div>
-                          <button
-                            className="delete-btn"
-                            onClick={() => handleDeleteUser(u)}
-                          >
-                            削除
-                          </button>
-                        </div>
-                      ))}
                     </td>
                   </tr>
                 );
