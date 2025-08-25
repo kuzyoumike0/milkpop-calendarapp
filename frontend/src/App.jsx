@@ -1,14 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import TopPage from "./TopPage";
-import RegisterPage from "./RegisterPage";
-import PersonalPage from "./PersonalPage";
-import SharePage from "./SharePage";
-import Header from "./Header";
-import Footer from "./Footer";
+import TopPage from "./components/TopPage";
+import RegisterPage from "./components/RegisterPage";
+import PersonalPage from "./components/PersonalPage";
+import SharePage from "./components/SharePage";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
-/* ✅ CSS のルート修正 */
-import "./common.css";  
+import "./common.css";  // ✅ 共通CSSを読み込む
 
 function App() {
   return (
