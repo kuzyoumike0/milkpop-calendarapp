@@ -518,4 +518,45 @@ footer {
   flex: 2;
   margin-left: 2rem;      /* ← リスト側の左マージン */
 }
+/* ====== おしゃれプルダウン（セレクトボックス） ====== */
+.custom-dropdown {
+  width: 140px;
+  padding: 0.6rem 1rem;
+  border-radius: 0.8rem;
+  border: 2px solid #FDB9C8;
+  background-color: #fff !important;
+  color: #000 !important;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  appearance: none;          /* デフォルト矢印を消す */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  position: relative;
+  background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><polygon points='0,0 14,0 7,7' fill='black'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.7rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.custom-dropdown:hover {
+  border-color: #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.3);
+  transform: scale(1.02);
+}
+
+.custom-dropdown:focus {
+  outline: none;
+  border-color: #FDB9C8;
+  box-shadow: 0 0 8px rgba(253,185,200,0.5);
+}
+
+.custom-dropdown option {
+  padding: 0.5rem;
+  background: #fff;
+  color: #000;
+  font-size: 1rem;
+}
 
