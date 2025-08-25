@@ -6,7 +6,7 @@ import "../common.css";
 import "../share.css";
 
 const attendanceOptions = ["-", "○", "✖", "△"];
-const socket = io(); // same origin
+const socket = io(); // サーバーに接続
 
 const SharePage = () => {
   const { token } = useParams();
@@ -16,23 +16,31 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [aggregate, setAggregate] = useState({});
+  const [aggregate, setAggregate] = useState({}); // 集計結果
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
     const fetchSchedule = async () => {
-      const res = await fetch(`/api/schedules/${token}`);
-      const data = await res.json();
-      if (!data.error) {
-        setSchedule(data);
+      try {
+        const res = await fetch(`/api/schedules/${token}`);
+        const data = await res.json();
+        if (!data.error) {
+          setSchedule(data);
 
-        if (Array.isArray(data.dates)) {
           const init = {};
-          data.dates.forEach((_, i) => {
-            init[i] = "-";
-          });
-          setResponses(init);
+          if (Array.isArray(data.dates)) {
+            data.dates.forEach((d) => {
+              const key =
+                d.time === "時間指定" && d.startTime && d.endTime
+                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                  : `${d.date} (${d.time})`;
+              init[key] = "-";
+            });
+            setResponses(init);
+          }
         }
+      } catch (err) {
+        console.error("共有スケジュール読み込みエラー", err);
       }
     };
     fetchSchedule();
@@ -40,44 +48,79 @@ const SharePage = () => {
 
   // ===== 回答一覧取得 =====
   const fetchResponses = async () => {
-    const res = await fetch(`/api/schedules/${token}/responses`);
-    const data = await res.json();
-    if (!data.error) {
-      setAllResponses(data);
-      setUsers(data.map((r) => r.username));
+    try {
+      const res = await fetch(`/api/schedules/${token}/responses`);
+      const data = await res.json();
+      if (!data.error) {
+        setAllResponses(data);
+        setUsers(data.map((r) => r.username));
+      }
+    } catch (err) {
+      console.error("回答一覧取得エラー", err);
     }
-    fetchAggregate();
   };
 
   // ===== 集計取得 =====
   const fetchAggregate = async () => {
-    const res = await fetch(`/api/schedules/${token}/aggregate`);
-    const data = await res.json();
-    if (!data.error) setAggregate(data);
+    try {
+      const res = await fetch(`/api/schedules/${token}/aggregate`);
+      const data = await res.json();
+      if (!data.error) setAggregate(data);
+    } catch (err) {
+      console.error("集計取得エラー", err);
+    }
   };
 
   useEffect(() => {
     fetchResponses();
+    fetchAggregate();
+  }, [token]);
 
+  // ===== Socket.IO =====
+  useEffect(() => {
     socket.emit("joinSchedule", token);
-    socket.on("updateResponses", () => {
-      fetchResponses();
+
+    socket.on("updateResponses", (data) => {
+      setAllResponses((prev) => {
+        const filtered = prev.filter((r) => r.user_id !== data.user_id);
+        return [...filtered, data];
+      });
+      fetchAggregate();
+    });
+
+    socket.on("deleteResponse", ({ user_id }) => {
+      setAllResponses((prev) => prev.filter((r) => r.user_id !== user_id));
+      fetchAggregate();
     });
 
     return () => {
       socket.off("updateResponses");
+      socket.off("deleteResponse");
     };
   }, [token]);
 
-  // ===== 出欠クリック =====
-  const handleSelect = (index, value) => {
-    if (!isEditing) return;
-    setResponses((prev) => ({ ...prev, [index]: value }));
+  // ===== 新規追加 =====
+  const handleAddUser = () => {
+    if (!username) {
+      alert("名前を入力してください！");
+      return;
+    }
+    if (!users.includes(username)) {
+      setUsers((prev) => [...prev, username]);
+      const dummy = { username, responses: { ...responses } };
+      setAllResponses((prev) => [...prev, dummy]);
+      setIsEditing(true);
+    }
+  };
 
+  // ===== 出欠クリック変更 =====
+  const handleSelect = (key, value) => {
+    if (!isEditing) return;
+    setResponses((prev) => ({ ...prev, [key]: value }));
     setAllResponses((prev) =>
       prev.map((r) =>
         r.username === username
-          ? { ...r, responses: { ...r.responses, [index]: value } }
+          ? { ...r, responses: { ...r.responses, [key]: value } }
           : r
       )
     );
@@ -85,18 +128,21 @@ const SharePage = () => {
 
   // ===== 保存 =====
   const handleSave = async () => {
-    const payload = { user_id: username, username, responses };
-    setAllResponses((prev) => {
-      const filtered = prev.filter((r) => r.username !== username);
-      return [...filtered, payload];
-    });
-    setIsEditing(false);
-
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    if (!username) {
+      alert("名前を入力してください！（必須）");
+      return;
+    }
+    try {
+      const payload = { user_id: username, username, responses };
+      await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("保存エラー", err);
+    }
   };
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
@@ -106,19 +152,28 @@ const SharePage = () => {
       <h2 className="page-title">共有スケジュール</h2>
       <div className="glass-black title-box">{schedule.title}</div>
 
+      {/* 名前入力 */}
       <div className="glass-black name-box">
         <input
           type="text"
-          placeholder="あなたの名前（必須）"
+          placeholder="あなたの名前を入力（必須）"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <button className="add-button" onClick={() => setIsEditing(true)}>
+        <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
+        {users.includes(username) && (
+          <button
+            className="edit-button"
+            onClick={() => setIsEditing((prev) => !prev)}
+          >
+            {isEditing ? "編集終了" : "編集"}
+          </button>
+        )}
       </div>
 
-      {/* 日程一覧 */}
+      {/* 出欠表 */}
       <div className="glass-black schedule-list">
         <table>
           <thead>
@@ -128,70 +183,68 @@ const SharePage = () => {
               {users.map((u, idx) => (
                 <th key={idx}>{u}</th>
               ))}
-              <th>集計</th>
             </tr>
           </thead>
           <tbody>
-            {schedule.dates.map((d, i) => {
-              const timeLabel =
-                d.time === "時間指定" && d.startTime && d.endTime
-                  ? `${d.startTime} ~ ${d.endTime}`
-                  : d.time;
-              return (
-                <tr key={i}>
-                  <td>{d.date}</td>
-                  <td>{timeLabel}</td>
-                  {users.map((u, idx) => {
-                    const userResp = allResponses.find((r) => r.username === u);
-                    const isSelf = u === username;
-                    const value = isSelf
-                      ? responses[i] || "-"
-                      : userResp?.responses?.[i] || "-";
-
-                    return (
-                      <td key={idx}>
-                        {isSelf ? (
-                          <div className="choice-buttons">
-                            {attendanceOptions.map((opt) => (
-                              <button
-                                key={opt}
-                                className={`choice-btn ${
-                                  value === opt ? "active" : ""
-                                } ${isEditing ? "" : "disabled"}`}
-                                onClick={() => handleSelect(i, opt)}
-                              >
-                                {opt}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td>
-                    {aggregate[`${d.date} (${d.time})`]?.length
-                      ? `○:${
-                          aggregate[`${d.date} (${d.time})`].filter(
-                            (r) => r.status === "○"
-                          ).length
-                        } ✖:${
-                          aggregate[`${d.date} (${d.time})`].filter(
-                            (r) => r.status === "✖"
-                          ).length
-                        } △:${
-                          aggregate[`${d.date} (${d.time})`].filter(
-                            (r) => r.status === "△"
-                          ).length
-                        }`
-                      : "-"}
-                  </td>
-                </tr>
-              );
-            })}
+            {Array.isArray(schedule.dates) &&
+              schedule.dates.map((d, i) => {
+                const key =
+                  d.time === "時間指定" && d.startTime && d.endTime
+                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                    : `${d.date} (${d.time})`;
+                return (
+                  <tr key={i}>
+                    <td>{d.date}</td>
+                    <td>
+                      {d.time === "時間指定" && d.startTime && d.endTime
+                        ? `${d.startTime} ~ ${d.endTime}`
+                        : d.time}
+                    </td>
+                    {users.map((u, idx) => {
+                      const userResp = allResponses.find((r) => r.username === u);
+                      const isSelf = u === username;
+                      const value = isSelf
+                        ? responses[key] || "-"
+                        : userResp?.responses?.[key] || "-";
+                      return (
+                        <td key={idx} className="attendance-cell">
+                          {isSelf ? (
+                            <div className="choice-buttons">
+                              {attendanceOptions.map((opt) => (
+                                <button
+                                  key={opt}
+                                  className={`choice-btn ${
+                                    value === opt ? "active" : ""
+                                  } ${isEditing ? "" : "disabled"}`}
+                                  onClick={() => handleSelect(key, opt)}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
+      </div>
+
+      {/* 集計表示 */}
+      <div className="glass-black aggregate-box">
+        <h3>出欠集計</h3>
+        <ul>
+          {Object.entries(aggregate).map(([key, counts], idx) => (
+            <li key={idx}>
+              {key} → ○:{counts["○"]} ✖:{counts["✖"]} △:{counts["△"]}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {users.includes(username) && (
