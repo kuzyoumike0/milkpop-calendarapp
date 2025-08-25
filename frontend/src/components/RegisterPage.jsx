@@ -52,3 +52,4 @@ const renderCalendarDays = () => {
   }
   return days;
 };
+export default RegisterPage;
