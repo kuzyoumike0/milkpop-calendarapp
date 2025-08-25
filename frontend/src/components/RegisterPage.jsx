@@ -14,7 +14,7 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // JSTに変換
+  // JST変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
@@ -126,7 +126,7 @@ const RegisterPage = () => {
   // クリップボードにコピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
-    alert("リンクをコピーしました！");
+    alert("リンクをコピーしました！✨");
   };
 
   return (
@@ -134,10 +134,10 @@ const RegisterPage = () => {
       <h2 className="page-title">日程登録ページ</h2>
 
       {/* ===== タイトル入力 ===== */}
-      <div className="glass-black input-card">
+      <div className="glass-black input-card cute-title-box">
         <input
           type="text"
-          placeholder="タイトルを入力してください"
+          placeholder="🎀 タイトルを入力してください 🎀"
           className="title-input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -181,7 +181,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory" // 月曜始まり
+            calendarType="gregory"
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
@@ -194,14 +194,12 @@ const RegisterPage = () => {
               const holiday = hd.isHoliday(jstDate);
 
               if (isToday) return "day-today";
-
               if (
                 selectedDates.some(
                   (d) => d.date.toDateString() === jstDate.toDateString()
                 )
-              ) {
+              )
                 return "selected-date";
-              }
               if (holiday || isSunday) return "day-sunday";
               if (isSaturday) return "day-saturday";
 
@@ -225,10 +223,11 @@ const RegisterPage = () => {
           ) : (
             <ul>
               {selectedDates.map((d, i) => (
-                <li key={i}>
+                <li key={i} className="date-item">
                   <span className="date-label">
-                    {d.date.toLocaleDateString("ja-JP")}
+                    📅 {d.date.toLocaleDateString("ja-JP")}
                   </span>
+
                   <select
                     value={d.timeType}
                     onChange={(e) => handleTimeTypeChange(i, e.target.value)}
@@ -255,7 +254,7 @@ const RegisterPage = () => {
                           </option>
                         ))}
                       </select>
-                      <span> ~ </span>
+                      <span className="range-tilde"> ~ </span>
                       <select
                         value={d.endTime}
                         onChange={(e) =>
