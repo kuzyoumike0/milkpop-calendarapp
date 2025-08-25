@@ -19,7 +19,19 @@ const SharePage = () => {
       try {
         const res = await fetch(`/api/schedules/${token}`);
         const data = await res.json();
-        if (!data.error) setSchedule(data);
+        if (!data.error) {
+          setSchedule(data);
+
+          // 初期レスポンスを "-" で準備
+          if (Array.isArray(data.dates)) {
+            const init = {};
+            data.dates.forEach((d) => {
+              const key = `${d.date} (${d.time})`;
+              init[key] = "-";
+            });
+            setResponses(init);
+          }
+        }
       } catch (err) {
         console.error("共有スケジュール読み込みエラー", err);
       }
@@ -71,25 +83,6 @@ const SharePage = () => {
 
   if (!schedule) return <div className="share-page">読み込み中...</div>;
 
-  // ===== 名前必須 =====
-  if (!username) {
-    return (
-      <div className="share-page">
-        <h2 className="page-title">共有スケジュール</h2>
-        <div className="glass-black title-box">{schedule.title}</div>
-        <div className="glass-black name-box">
-          <input
-            type="text"
-            placeholder="あなたの名前を入力（必須）"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-        <p className="notice-text">※名前を入力してください。入力後に表が表示されます。</p>
-      </div>
-    );
-  }
-
   // ===== ユーザー一覧（自分も含める） =====
   let users = Array.from(new Set(allResponses.map((r) => r.username)));
   if (username && !users.includes(username)) users.push(username);
@@ -112,67 +105,73 @@ const SharePage = () => {
       </div>
 
       {/* デイコード/伝助風テーブル */}
-      <div className="glass-black schedule-list">
-        <table>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>時間</th>
-              {users.map((u, idx) => (
-                <th key={idx}>{u}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(schedule.dates) &&
-              schedule.dates.map((d, i) => {
-                const key = `${d.date} (${d.time})`;
-                return (
-                  <tr key={i}>
-                    <td className="date-cell">{d.date}</td>
-                    <td className="time-cell">{d.time}</td>
-                    {users.map((u, idx) => {
-                      const user = allResponses.find((r) => r.username === u);
-                      const value =
-                        u === username
-                          ? responses[key] || "-"
-                          : user?.responses?.[key] || "-";
+      {username && (
+        <div className="glass-black schedule-list">
+          <table>
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>時間</th>
+                {users.map((u, idx) => (
+                  <th key={idx}>{u}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.isArray(schedule.dates) &&
+                schedule.dates.map((d, i) => {
+                  const key = `${d.date} (${d.time})`;
+                  return (
+                    <tr key={i}>
+                      <td className="date-cell">{d.date}</td>
+                      <td className="time-cell">{d.time}</td>
+                      {users.map((u, idx) => {
+                        const user = allResponses.find(
+                          (r) => r.username === u
+                        );
+                        const value =
+                          u === username
+                            ? responses[key] || "-"
+                            : user?.responses?.[key] || "-";
 
-                      return (
-                        <td key={idx} className="attendance-cell">
-                          {u === username ? (
-                            <select
-                              value={value}
-                              onChange={(e) =>
-                                handleChange(key, e.target.value)
-                              }
-                              className="response-dropdown"
-                            >
-                              {attendanceOptions.map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            value
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
-      </div>
+                        return (
+                          <td key={idx} className="attendance-cell">
+                            {u === username ? (
+                              <select
+                                value={value}
+                                onChange={(e) =>
+                                  handleChange(key, e.target.value)
+                                }
+                                className="response-dropdown"
+                              >
+                                {attendanceOptions.map((opt) => (
+                                  <option key={opt} value={opt}>
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              value
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* 保存ボタン */}
-      <div className="button-area">
-        <button className="save-button" onClick={handleSave}>
-          保存
-        </button>
-      </div>
+      {username && (
+        <div className="button-area">
+          <button className="save-button" onClick={handleSave}>
+            保存
+          </button>
+        </div>
+      )}
     </div>
   );
 };
