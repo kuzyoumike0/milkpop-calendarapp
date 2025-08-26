@@ -1,4 +1,3 @@
-// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -83,7 +82,7 @@ const SharePage = () => {
   // ===== 新規追加 =====
   const handleAddUser = () => {
     if (!username) {
-      alert("名前を入力してください！");
+      alert("名前を入力してください！✨");
       return;
     }
     if (!users.includes(username)) {
@@ -113,7 +112,7 @@ const SharePage = () => {
     });
   };
 
-  // ===== 保存（サーバー送信 & 即反映） =====
+  // ===== 保存 =====
   const handleSave = async () => {
     if (!username) {
       alert("名前を入力してください！（必須）");
@@ -150,7 +149,7 @@ const SharePage = () => {
       {/* タイトル */}
       <div className="glass-black title-box">{schedule.title}</div>
 
-      {/* 名前入力 + ボタン */}
+      {/* 名前入力 */}
       <div className="glass-black name-box">
         <input
           type="text"
@@ -234,7 +233,6 @@ const SharePage = () => {
         </table>
       </div>
 
-      {/* 保存ボタン */}
       {users.includes(username) && (
         <div className="button-area">
           <button
