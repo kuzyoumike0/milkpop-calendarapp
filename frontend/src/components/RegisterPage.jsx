@@ -16,9 +16,11 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
+  // 📌 日付文字列 (UTCずれ防止)
   const getDateStr = (date) => date.toLocaleDateString("sv-SE");
   const todayStr = getDateStr(new Date());
 
+  // 📌 祝日データ
   const year = new Date().getFullYear();
   const holidays = hd.getHolidays(year).reduce((map, h) => {
     const dateStr = getDateStr(new Date(h.date));
@@ -26,9 +28,9 @@ const RegisterPage = () => {
     return map;
   }, {});
 
+  // 📌 日付クリック
   const handleDateClick = (date) => {
     const dateStr = getDateStr(date);
-
     if (selectionMode === "multi") {
       setSelectedDates((prev) =>
         prev.includes(dateStr)
@@ -56,10 +58,24 @@ const RegisterPage = () => {
     }
   };
 
+  // 📌 時間帯選択
   const handleTimeChange = (date, value) => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
+  const handleCustomStartChange = (date, value) => {
+    setCustomTimes((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], start: value },
+    }));
+  };
+  const handleCustomEndChange = (date, value) => {
+    setCustomTimes((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], end: value },
+    }));
+  };
 
+  // 📌 日付フォーマット
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
@@ -68,6 +84,42 @@ const RegisterPage = () => {
       day: "numeric",
       weekday: "short",
     });
+  };
+
+  // 📌 共有リンク生成
+  const handleGenerateLink = async () => {
+    try {
+      const dates = selectedDates.map((date) => {
+        const time = timeSelections[date] || "未選択";
+        return {
+          date,
+          time: time === "custom" && customTimes[date] ? "時間指定" : time,
+          startTime: customTimes[date]?.start || null,
+          endTime: customTimes[date]?.end || null,
+        };
+      });
+
+      const body = {
+        title: title || "無題イベント",
+        dates,
+        options: {},
+      };
+
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error("共有リンクの生成に失敗しました");
+
+      const data = await res.json();
+      const newLink = `${window.location.origin}/share/${data.share_token}`;
+      setShareLink(newLink);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンクの生成に失敗しました");
+    }
   };
 
   return (
@@ -101,19 +153,21 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー＋リストを横並び */}
+      {/* カレンダー & 選択リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
             locale="ja-JP"
-            calendarType="US"   // ✅ 日曜始まり
+            calendarType="US" // ✅ 日曜始まり
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
                 const dateStr = getDateStr(date);
                 const holidayName = holidays[dateStr];
                 return holidayName ? (
-                  <span className="holiday-name">{holidayName}</span>
+                  <div className="holiday-wrapper">
+                    <span className="holiday-name">{holidayName}</span>
+                  </div>
                 ) : null;
               }
             }}
@@ -127,6 +181,7 @@ const RegisterPage = () => {
               if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
               else if (day === 6) classes.push("saturday");
               if (selectedDates.includes(dateStr)) classes.push("selected-day");
+              if (rangeStart === dateStr) classes.push("range-start");
 
               return classes.join(" ");
             }}
@@ -166,11 +221,69 @@ const RegisterPage = () => {
                     >
                       時間指定
                     </button>
+
+                    {/* 時間指定ドロップダウン */}
+                    {timeSelections[date] === "custom" && (
+                      <div className="custom-time">
+                        <select
+                          className="time-dropdown"
+                          value={customTimes[date]?.start || ""}
+                          onChange={(e) =>
+                            handleCustomStartChange(date, e.target.value)
+                          }
+                        >
+                          <option value="">開始時刻</option>
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {i}:00
+                            </option>
+                          ))}
+                        </select>
+                        <span> ~ </span>
+                        <select
+                          className="time-dropdown"
+                          value={customTimes[date]?.end || ""}
+                          onChange={(e) =>
+                            handleCustomEndChange(date, e.target.value)
+                          }
+                        >
+                          <option value="">終了時刻</option>
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={i + 1}>
+                              {i + 1}:00
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
           </ul>
         </div>
+      </div>
+
+      {/* 共有リンク */}
+      <div className="share-link-container">
+        <button className="share-link-btn" onClick={handleGenerateLink}>
+          ✨ 共有リンクを発行
+        </button>
+        {shareLink && (
+          <div className="share-link-box">
+            <a href={shareLink} target="_blank" rel="noopener noreferrer">
+              {shareLink}
+            </a>
+            <button
+              className="copy-btn"
+              onClick={() => {
+                navigator.clipboard.writeText(shareLink);
+                alert("リンクをコピーしました！");
+              }}
+            >
+              📋 コピー
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
