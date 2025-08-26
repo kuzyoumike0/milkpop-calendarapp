@@ -1,289 +1,66 @@
-// frontend/src/components/RegisterPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
+import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
 
+const hd = new Holidays("JP"); // 日本の祝日
+
 const RegisterPage = () => {
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeSelections, setTimeSelections] = useState({});
-  const [customTimes, setCustomTimes] = useState({});
-  const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("range");
-  const [rangeStart, setRangeStart] = useState(null);
-  const [shareLink, setShareLink] = useState("");
+  const [value, setValue] = useState(new Date());
+  const [holidays, setHolidays] = useState({});
 
-  const hd = new Holidays("JP");
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const holidayList = hd.getHolidays(currentYear);
+    const holidayMap = {};
+    holidayList.forEach((h) => {
+      holidayMap[new Date(h.date).toDateString()] = h.name;
+    });
+    setHolidays(holidayMap);
+  }, []);
 
-  // 📌 日付文字列 (UTCずれ防止)
-  const getDateStr = (date) => date.toLocaleDateString("sv-SE");
-  const todayStr = getDateStr(new Date());
-
-  // 📌 祝日データ
-  const year = new Date().getFullYear();
-  const holidays = hd.getHolidays(year).reduce((map, h) => {
-    const dateStr = getDateStr(new Date(h.date));
-    map[dateStr] = h.name;
-    return map;
-  }, {});
-
-  // 📌 日付クリック
-  const handleDateClick = (date) => {
-    const dateStr = getDateStr(date);
-    if (selectionMode === "multi") {
-      setSelectedDates((prev) =>
-        prev.includes(dateStr)
-          ? prev.filter((d) => d !== dateStr)
-          : [...prev, dateStr]
-      );
-    } else if (selectionMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(dateStr);
-        setSelectedDates([dateStr]);
-      } else {
-        let start = new Date(rangeStart);
-        let end = new Date(dateStr);
-        if (start > end) [start, end] = [end, start];
-
-        const range = [];
-        const cur = new Date(start);
-        while (cur <= end) {
-          range.push(getDateStr(cur));
-          cur.setDate(cur.getDate() + 1);
-        }
-        setSelectedDates(range);
-        setRangeStart(null);
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holidayName = holidays[date.toDateString()];
+      if (holidayName) {
+        return (
+          <div className="holiday-name">
+            {holidayName}
+          </div>
+        );
       }
     }
+    return null;
   };
 
-  // 📌 時間帯選択
-  const handleTimeChange = (date, value) => {
-    setTimeSelections((prev) => ({ ...prev, [date]: value }));
-  };
-  const handleCustomStartChange = (date, value) => {
-    setCustomTimes((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], start: value },
-    }));
-  };
-  const handleCustomEndChange = (date, value) => {
-    setCustomTimes((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], end: value },
-    }));
-  };
-
-  // 📌 日付フォーマット
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      weekday: "short",
-    });
-  };
-
-  // 📌 共有リンク生成
-  const handleGenerateLink = async () => {
-    try {
-      const dates = selectedDates.map((date) => {
-        const time = timeSelections[date] || "未選択";
-        return {
-          date,
-          time: time === "custom" && customTimes[date] ? "時間指定" : time,
-          startTime: customTimes[date]?.start || null,
-          endTime: customTimes[date]?.end || null,
-        };
-      });
-
-      const body = {
-        title: title || "無題イベント",
-        dates,
-        options: {},
-      };
-
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error("共有リンクの生成に失敗しました");
-
-      const data = await res.json();
-      const newLink = `${window.location.origin}/share/${data.share_token}`;
-      setShareLink(newLink);
-    } catch (err) {
-      console.error(err);
-      alert("共有リンクの生成に失敗しました");
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const isSunday = date.getDay() === 0;
+      const isHoliday = holidays[date.toDateString()];
+      if (isHoliday || isSunday) {
+        return "holiday";
+      }
+      if (date.getDay() === 6) {
+        return "saturday";
+      }
     }
+    return null;
   };
 
   return (
     <div className="register-page">
-      <h2 className="page-title">📌 日程登録ページ</h2>
-
-      {/* タイトル入力 */}
-      <div className="title-input-container">
-        <input
-          type="text"
-          className="title-input"
-          placeholder="イベントのタイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-
-      {/* モード切替 */}
-      <div className="mode-switch">
-        <button
-          className={`mode-btn ${selectionMode === "range" ? "active" : ""}`}
-          onClick={() => setSelectionMode("range")}
-        >
-          📏 範囲選択
-        </button>
-        <button
-          className={`mode-btn ${selectionMode === "multi" ? "active" : ""}`}
-          onClick={() => setSelectionMode("multi")}
-        >
-          ✅ 複数選択
-        </button>
-      </div>
-
-      {/* カレンダー & 選択リスト */}
+      <h2>日程登録ページ</h2>
       <div className="calendar-container">
-        <div className="calendar-box">
-          <Calendar
-            locale="ja-JP"
-            calendarType="US" // ✅ 日曜始まり
-            onClickDay={handleDateClick}
-            tileContent={({ date, view }) => {
-              if (view === "month") {
-                const dateStr = getDateStr(date);
-                const holidayName = holidays[dateStr];
-                return holidayName ? (
-                  <div className="holiday-wrapper">
-                    <span className="holiday-name">{holidayName}</span>
-                  </div>
-                ) : null;
-              }
-            }}
-            tileClassName={({ date, view }) => {
-              if (view !== "month") return "";
-              const dateStr = getDateStr(date);
-              const day = date.getDay();
-
-              let classes = [];
-              if (dateStr === todayStr) classes.push("today");
-              if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
-              else if (day === 6) classes.push("saturday");
-              if (selectedDates.includes(dateStr)) classes.push("selected-day");
-              if (rangeStart === dateStr) classes.push("range-start");
-
-              return classes.join(" ");
-            }}
-          />
-        </div>
-
-        <div className="selected-dates">
-          <h3>📅 選択した日程</h3>
-          <ul>
-            {selectedDates
-              .sort((a, b) => new Date(a) - new Date(b))
-              .map((date) => (
-                <li key={date} className="date-item">
-                  <span className="date-text">{formatDate(date)}</span>
-                  <div className="radio-group-inline">
-                    <button
-                      className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "all")}
-                    >
-                      終日
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "day" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "day")}
-                    >
-                      昼
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "night" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "night")}
-                    >
-                      夜
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "custom" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "custom")}
-                    >
-                      時間指定
-                    </button>
-
-                    {/* 時間指定ドロップダウン */}
-                    {timeSelections[date] === "custom" && (
-                      <div className="custom-time">
-                        <select
-                          className="time-dropdown"
-                          value={customTimes[date]?.start || ""}
-                          onChange={(e) =>
-                            handleCustomStartChange(date, e.target.value)
-                          }
-                        >
-                          <option value="">開始時刻</option>
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i}>
-                              {i}:00
-                            </option>
-                          ))}
-                        </select>
-                        <span> ~ </span>
-                        <select
-                          className="time-dropdown"
-                          value={customTimes[date]?.end || ""}
-                          onChange={(e) =>
-                            handleCustomEndChange(date, e.target.value)
-                          }
-                        >
-                          <option value="">終了時刻</option>
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i + 1}>
-                              {i + 1}:00
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* 共有リンク */}
-      <div className="share-link-container">
-        <button className="share-link-btn" onClick={handleGenerateLink}>
-          ✨ 共有リンクを発行
-        </button>
-        {shareLink && (
-          <div className="share-link-box">
-            <a href={shareLink} target="_blank" rel="noopener noreferrer">
-              {shareLink}
-            </a>
-            <button
-              className="copy-btn"
-              onClick={() => {
-                navigator.clipboard.writeText(shareLink);
-                alert("リンクをコピーしました！");
-              }}
-            >
-              📋 コピー
-            </button>
-          </div>
-        )}
+        <Calendar
+          onChange={setValue}
+          value={value}
+          locale="ja-JP"
+          calendarType="gregory"
+          tileContent={tileContent}
+          tileClassName={tileClassName}
+        />
       </div>
     </div>
   );
