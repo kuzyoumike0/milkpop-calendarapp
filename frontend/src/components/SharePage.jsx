@@ -181,14 +181,19 @@ const SharePage = () => {
               ? `${d.date} (${d.startTime} ~ ${d.endTime})`
               : `${d.date} (${d.timeType})`;
 
+          // 表示用ラベル
+          let timeLabel = "";
+          if (d.timeType === "all") timeLabel = "終日";
+          else if (d.timeType === "day") timeLabel = "昼";
+          else if (d.timeType === "night") timeLabel = "夜";
+          else if (d.timeType === "時間指定" && d.startTime && d.endTime)
+            timeLabel = `${d.startTime} ~ ${d.endTime}`;
+          else timeLabel = d.timeType || "未設定";
+
           return (
             <div key={i} className="schedule-item">
               <span className="date">{d.date}</span>
-              <span className="time">
-                {d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.startTime} ~ ${d.endTime}`
-                  : d.timeType}
-              </span>
+              <span className="time">{timeLabel}</span>
               {users.map((u, idx) => {
                 const userResp = allResponses.find((r) => r.username === u);
                 const isSelf = u === username;
