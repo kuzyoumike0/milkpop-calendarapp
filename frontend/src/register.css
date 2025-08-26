@@ -259,3 +259,67 @@
   background: rgba(255,255,255,0.4);
   color: #000;
 }
+/* ===== カスタムドロップダウン ===== */
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.custom-dropdown-toggle {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.custom-dropdown-toggle:hover {
+  background: #FDB9C8;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 120px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.95);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  padding: 6px 0;
+  z-index: 100;
+}
+
+.custom-dropdown-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.custom-dropdown-item.even {
+  background: #fef4f7; /* 薄いピンク */
+}
+.custom-dropdown-item.odd {
+  background: #f9f9ff; /* 薄いブルー */
+}
+
+.custom-dropdown-item:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+
+.custom-dropdown-item.selected {
+  background: #004CA0;
+  color: #fff;
+}
