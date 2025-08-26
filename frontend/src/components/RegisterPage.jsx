@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
-  const [shareUrls, setShareUrls] = useState([]); // URLリスト保持
+  const [shareUrls, setShareUrls] = useState([]); // 発行したURLのリスト
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -26,7 +26,7 @@ const RegisterPage = () => {
     setHolidays(holidayMap);
   }, []);
 
-  // ===== カレンダー日付表示 =====
+  // ===== カレンダー装飾 =====
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holidayName = holidays[date.toDateString()];
@@ -237,7 +237,7 @@ const RegisterPage = () => {
           {shareUrls.length > 0 && (
             <div className="share-link-list">
               {shareUrls.map((url, idx) => (
-                <div key={idx} className="share-link">
+                <div key={idx} className="share-link-card">
                   <a
                     href={url}
                     target="_blank"
