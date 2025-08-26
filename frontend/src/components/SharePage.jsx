@@ -174,12 +174,16 @@ const SharePage = () => {
                       autoFocus
                     />
                   ) : (
-                    <span
+                    <a
+                      href="#!"
                       className="editable-username"
-                      onClick={() => handleUsernameEdit(user)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUsernameEdit(user);
+                      }}
                     >
                       {user}
-                    </span>
+                    </a>
                   )}
                 </th>
               ))}
