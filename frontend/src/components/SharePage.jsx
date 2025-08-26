@@ -128,7 +128,7 @@ const SharePage = () => {
       });
       const saved = await res.json();
 
-      // 即時反映
+      // 即時反映（伝助みたいに）
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.user_id !== saved.user_id);
         return [...filtered, saved];
