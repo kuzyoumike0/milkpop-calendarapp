@@ -13,10 +13,11 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID()); // 一時ユーザーID
+  const [userId] = useState(() => crypto.randomUUID());
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(""); // ✅ 保存メッセージ
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -26,7 +27,6 @@ const SharePage = () => {
       if (!data.error) {
         setSchedule(data);
 
-        // 初期レスポンス
         const init = {};
         data.dates.forEach((d) => {
           let label = "";
@@ -92,13 +92,12 @@ const SharePage = () => {
     }
   };
 
-  // ===== 出欠クリック（編集中のみ） =====
+  // ===== 出欠クリック =====
   const handleSelect = (key, value) => {
     if (!isEditing) return;
 
     setResponses((prev) => {
       const updated = { ...prev, [key]: value };
-      // 表を即時更新
       setAllResponses((prevAll) => {
         const existing = prevAll.find((r) => r.user_id === userId);
         if (existing) {
@@ -129,16 +128,16 @@ const SharePage = () => {
       });
       const saved = await res.json();
 
-      // ✅ 即時反映（一覧に自分の回答を更新）
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.user_id !== saved.user_id);
         return [...filtered, saved];
       });
-
-      // ✅ 自分の responses を更新してUIに反映
       setResponses(saved.responses);
-
       setIsEditing(false);
+
+      // ✅ 保存メッセージを表示
+      setSaveMessage("✅ 保存しました！");
+      setTimeout(() => setSaveMessage(""), 3000);
     } catch (err) {
       console.error("保存エラー", err);
     }
@@ -150,8 +149,11 @@ const SharePage = () => {
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
 
-      {/* タイトル */}
-      <div className="glass-black title-box">{schedule.title}</div>
+      {/* タイトル + 保存メッセージ */}
+      <div className="glass-black title-box">
+        {schedule.title}
+        {saveMessage && <span className="save-message">{saveMessage}</span>}
+      </div>
 
       {/* 名前入力 */}
       <div className="glass-black name-box">
