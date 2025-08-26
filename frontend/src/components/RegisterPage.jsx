@@ -16,10 +16,11 @@ const RegisterPage = () => {
   const hd = new Holidays("JP");
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // 📌 今年の祝日を辞書化
+  // 📌 祝日を正規化して辞書化
   const year = new Date().getFullYear();
   const holidays = hd.getHolidays(year).reduce((map, h) => {
-    map[h.date] = h.name; // "2025-08-11": "山の日"
+    const dateStr = new Date(h.date).toISOString().split("T")[0];
+    map[dateStr] = h.name; // "2025-08-11": "山の日"
     return map;
   }, {});
 
@@ -59,7 +60,6 @@ const RegisterPage = () => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
 
-  // 📌 custom 開始/終了時間
   const handleCustomStartChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
@@ -73,7 +73,6 @@ const RegisterPage = () => {
     }));
   };
 
-  // 📌 日付表示フォーマット
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
@@ -99,7 +98,7 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* モード切替ボタン */}
+      {/* モード切替 */}
       <div className="mode-switch">
         <button
           className={`mode-btn ${selectionMode === "range" ? "active" : ""}`}
@@ -115,7 +114,6 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー＋リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
@@ -158,7 +156,6 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
-                  {/* 時間帯ラジオ */}
                   <div className="radio-group">
                     <label>
                       <input
@@ -237,7 +234,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 共有リンク */}
       <div className="share-link-container">
         <button className="share-link-btn">✨ 共有リンクを発行</button>
       </div>
