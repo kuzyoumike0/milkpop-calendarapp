@@ -302,3 +302,79 @@
   transform: scale(1.05);
   background: #ffdae2;
 }
+/* ラジオを隠してボタン風に */
+.mode-select input[type="radio"] {
+  display: none;
+}
+
+.mode-select span {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+  color: #FDB9C8;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  margin: 0 5px;
+  background: transparent;
+}
+
+.mode-select input[type="radio"]:checked + span {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.react-calendar__tile {
+  border-radius: 8px;
+  margin: 2px;
+  padding: 12px 0;
+  transition: all 0.2s;
+}
+
+.react-calendar__tile:hover {
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+
+/* 選択日 */
+.selected-date {
+  background: #FDB9C8 !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* 今日 */
+.day-today {
+  border: 2px solid #fff;
+  background: rgba(255,255,255,0.2);
+  font-weight: bold;
+}
+
+/* 土曜・日曜・祝日 */
+.day-saturday {
+  color: #7ec8ff;
+}
+
+.day-sunday {
+  color: #ff6b6b;
+}
+
+.holiday-name {
+  display: block;
+  font-size: 10px;
+  color: #FDB9C8;
+  margin-top: 2px;
+}
