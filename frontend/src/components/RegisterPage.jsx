@@ -10,7 +10,7 @@ const RegisterPage = () => {
   const [timeSelections, setTimeSelections] = useState({});
   const [customTimes, setCustomTimes] = useState({});
   const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("single"); // single, range, multi
+  const [selectionMode, setSelectionMode] = useState("range"); // デフォルトを範囲
   const [rangeStart, setRangeStart] = useState(null);
 
   const hd = new Holidays("JP");
@@ -20,22 +20,18 @@ const RegisterPage = () => {
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
 
-    if (selectionMode === "single") {
-      setSelectedDates([dateStr]);
-    } else if (selectionMode === "multi") {
+    if (selectionMode === "multi") {
       setSelectedDates((prev) =>
         prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
       );
     } else if (selectionMode === "range") {
       if (!rangeStart) {
-        // 最初のクリック → 開始点だけ選択
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
-        // 2回目クリック → 範囲を全選択
-        const start = new Date(rangeStart);
-        const end = new Date(dateStr);
-        if (start > end) [start, end] = [end, start]; // 順序入れ替え
+        let start = new Date(rangeStart);
+        let end = new Date(dateStr);
+        if (start > end) [start, end] = [end, start];
 
         const range = [];
         const cur = new Date(start);
@@ -43,9 +39,8 @@ const RegisterPage = () => {
           range.push(cur.toISOString().split("T")[0]);
           cur.setDate(cur.getDate() + 1);
         }
-
         setSelectedDates(range);
-        setRangeStart(null); // 範囲終了でリセット
+        setRangeStart(null);
       }
     }
   };
@@ -95,38 +90,20 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* モード切替 */}
+      {/* モード切替ボタン */}
       <div className="mode-switch">
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="single"
-            checked={selectionMode === "single"}
-            onChange={() => setSelectionMode("single")}
-          />
-          単日
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="range"
-            checked={selectionMode === "range"}
-            onChange={() => setSelectionMode("range")}
-          />
-          範囲
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="mode"
-            value="multi"
-            checked={selectionMode === "multi"}
-            onChange={() => setSelectionMode("multi")}
-          />
-          複数
-        </label>
+        <button
+          className={`mode-btn ${selectionMode === "range" ? "active" : ""}`}
+          onClick={() => setSelectionMode("range")}
+        >
+          📏 範囲選択
+        </button>
+        <button
+          className={`mode-btn ${selectionMode === "multi" ? "active" : ""}`}
+          onClick={() => setSelectionMode("multi")}
+        >
+          ✅ 複数選択
+        </button>
       </div>
 
       {/* カレンダー＋リスト */}
