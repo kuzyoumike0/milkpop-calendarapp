@@ -173,3 +173,17 @@
   color: #00c853;
   font-weight: bold;
 }
+.user-response {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.user-col-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
