@@ -123,3 +123,52 @@
   transform: translateY(-3px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.4);
 }
+/* ====== 選択した日程リスト ====== */
+.selected-dates {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 18px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  width: 85%;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+}
+
+.selected-dates h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FDB9C8;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.selected-dates ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.date-item {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.55);
+  font-size: 16px;
+  font-weight: 600;
+  color: #fdfdfd;
+  transition: transform 0.2s ease, background 0.3s ease;
+  border-left: 4px solid #004CA0;
+}
+
+.date-item:hover {
+  transform: translateX(5px);
+  background: rgba(0,0,0,0.75);
+  border-left: 4px solid #FDB9C8;
+}
+
+.date-text {
+  font-weight: bold;
+  color: #fff;
+}
