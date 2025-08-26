@@ -60,19 +60,6 @@ const RegisterPage = () => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
 
-  const handleCustomStartChange = (date, value) => {
-    setCustomTimes((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], start: value },
-    }));
-  };
-  const handleCustomEndChange = (date, value) => {
-    setCustomTimes((prev) => ({
-      ...prev,
-      [date]: { ...prev[date], end: value },
-    }));
-  };
-
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
@@ -83,46 +70,10 @@ const RegisterPage = () => {
     });
   };
 
-  const handleGenerateLink = async () => {
-    try {
-      const dates = selectedDates.map((date) => {
-        const time = timeSelections[date] || "未選択";
-        return {
-          date,
-          time: time === "custom" && customTimes[date] ? "時間指定" : time,
-          startTime: customTimes[date]?.start || null,
-          endTime: customTimes[date]?.end || null,
-        };
-      });
-
-      const body = {
-        title: title || "無題イベント",
-        dates,
-        options: {},
-      };
-
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error("共有リンクの生成に失敗しました");
-
-      const data = await res.json();
-      const newLink = `${window.location.origin}/share/${data.share_token}`;
-      setShareLink(newLink);
-    } catch (err) {
-      console.error(err);
-      alert("共有リンクの生成に失敗しました");
-    }
-  };
-
   return (
     <div className="register-page">
       <h2 className="page-title">📌 日程登録ページ</h2>
 
-      {/* タイトル入力 */}
       <div className="title-input-container">
         <input
           type="text"
@@ -133,7 +84,6 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* モード切替 */}
       <div className="mode-switch">
         <button
           className={`mode-btn ${selectionMode === "range" ? "active" : ""}`}
@@ -149,31 +99,19 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダーとリスト横並び */}
+      {/* カレンダー＋リストを横並び */}
       <div className="calendar-container">
         <div className="calendar-box">
-          <div className="calendar-weekdays">
-            <div className="weekday sunday">日</div>
-            <div className="weekday">月</div>
-            <div className="weekday">火</div>
-            <div className="weekday">水</div>
-            <div className="weekday">木</div>
-            <div className="weekday">金</div>
-            <div className="weekday saturday">土</div>
-          </div>
-
           <Calendar
             locale="ja-JP"
-            calendarType="US"
+            calendarType="US"   // ✅ 日曜始まり
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
                 const dateStr = getDateStr(date);
                 const holidayName = holidays[dateStr];
                 return holidayName ? (
-                  <div className="holiday-wrapper">
-                    <span className="holiday-name">{holidayName}</span>
-                  </div>
+                  <span className="holiday-name">{holidayName}</span>
                 ) : null;
               }
             }}
@@ -187,7 +125,6 @@ const RegisterPage = () => {
               if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
               else if (day === 6) classes.push("saturday");
               if (selectedDates.includes(dateStr)) classes.push("selected-day");
-              if (rangeStart === dateStr) classes.push("range-start");
 
               return classes.join(" ");
             }}
@@ -232,30 +169,6 @@ const RegisterPage = () => {
               ))}
           </ul>
         </div>
-      </div>
-
-      {/* 共有リンク */}
-      <div className="share-link-container">
-        <button className="share-link-btn" onClick={handleGenerateLink}>
-          ✨ 共有リンクを発行
-        </button>
-
-        {shareLink && (
-          <div className="share-link-box">
-            <a href={shareLink} target="_blank" rel="noopener noreferrer">
-              {shareLink}
-            </a>
-            <button
-              className="copy-btn"
-              onClick={() => {
-                navigator.clipboard.writeText(shareLink);
-                alert("リンクをコピーしました！");
-              }}
-            >
-              📋 コピー
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
