@@ -10,7 +10,6 @@ const hd = new Holidays("JP");
 export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [timeType, setTimeType] = useState("終日");
   const [shareUrl, setShareUrl] = useState("");
   const [selectMode, setSelectMode] = useState("single");
   const [rangeStart, setRangeStart] = useState(null);
@@ -20,12 +19,12 @@ export default function RegisterPage() {
     const dateStr = date.toISOString().slice(0, 10);
 
     if (selectMode === "single") {
-      setSelectedDates([{ date: dateStr, timeType }]);
+      setSelectedDates([{ date: dateStr, timeType: "終日" }]);
     } else if (selectMode === "multi") {
-      setSelectedDates((prev) => [
-        ...prev,
-        { date: dateStr, timeType },
-      ]);
+      setSelectedDates((prev) => {
+        if (prev.find((d) => d.date === dateStr)) return prev;
+        return [...prev, { date: dateStr, timeType: "終日" }];
+      });
     } else if (selectMode === "range") {
       if (!rangeStart) {
         setRangeStart(date);
@@ -37,7 +36,7 @@ export default function RegisterPage() {
         while (current <= end) {
           rangeDates.push({
             date: current.toISOString().slice(0, 10),
-            timeType,
+            timeType: "終日",
           });
           current.setDate(current.getDate() + 1);
         }
@@ -45,6 +44,24 @@ export default function RegisterPage() {
         setRangeStart(null);
       }
     }
+  };
+
+  // === 時間帯変更 ===
+  const handleTimeTypeChange = (dateStr, type) => {
+    setSelectedDates((prev) =>
+      prev.map((d) =>
+        d.date === dateStr ? { ...d, timeType: type } : d
+      )
+    );
+  };
+
+  // === 時間指定変更 ===
+  const handleTimeChange = (dateStr, field, value) => {
+    setSelectedDates((prev) =>
+      prev.map((d) =>
+        d.date === dateStr ? { ...d, [field]: value } : d
+      )
+    );
   };
 
   // === 共有リンク発行 ===
@@ -55,14 +72,19 @@ export default function RegisterPage() {
       body: JSON.stringify({
         title,
         dates: selectedDates,
-        options: { timeType },
       }),
     });
     const data = await res.json();
     setShareUrl(`${window.location.origin}/share/${data.share_token}`);
   };
 
-  // === 日付セルの装飾 ===
+  // === 日付フォーマット ===
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  };
+
+  // === 曜日・祝日カラー ===
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -72,23 +94,29 @@ export default function RegisterPage() {
     }
     return null;
   };
-
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const weekday = date.getDay();
       const holiday = hd.isHoliday(date);
-      if (holiday || weekday === 0) return "sunday"; // 日曜・祝日 赤
-      if (weekday === 6) return "saturday"; // 土曜 青
-      return "weekday"; // 平日 黒
+      if (holiday || weekday === 0) return "sunday";
+      if (weekday === 6) return "saturday";
+      return "weekday";
     }
     return null;
   };
+
+  // === 1時間ごとのドロップダウン ===
+  const timeOptions = [];
+  for (let i = 0; i < 24; i++) {
+    const hour = String(i).padStart(2, "0") + ":00";
+    timeOptions.push(hour);
+  }
 
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <input
         type="text"
         className="title-input"
@@ -100,19 +128,7 @@ export default function RegisterPage() {
       <div className="register-container">
         {/* カレンダー */}
         <div className="calendar-box">
-          <Calendar
-            locale="ja-JP"
-            onClickDay={handleDateClick}
-            tileContent={tileContent}
-            tileClassName={tileClassName}
-            calendarType="gregory"
-          />
-        </div>
-
-        {/* 右側パネル */}
-        <div className="register-box">
-          {/* モード切替 */}
-          <div className="mode-buttons">
+          <div className="mode-buttons top">
             <button
               className={selectMode === "single" ? "active" : ""}
               onClick={() => setSelectMode("single")}
@@ -133,18 +149,67 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          {/* 時間帯選択 */}
-          <div className="time-type-buttons">
-            {["終日", "昼", "夜", "時間指定"].map((t) => (
-              <button
-                key={t}
-                className={timeType === t ? "active" : ""}
-                onClick={() => setTimeType(t)}
-              >
-                {t}
-              </button>
+          <Calendar
+            locale="ja-JP"
+            onClickDay={handleDateClick}
+            tileContent={tileContent}
+            tileClassName={tileClassName}
+            calendarType="gregory"
+          />
+        </div>
+
+        {/* 選択中の日程リスト */}
+        <div className="register-box">
+          <h3>選択中の日程</h3>
+          <ul className="event-list">
+            {selectedDates.map((d) => (
+              <li key={d.date}>
+                <span>{formatDate(d.date)}</span>
+                <div className="time-type-buttons">
+                  {["終日", "昼", "夜", "時間指定"].map((t) => (
+                    <button
+                      key={t}
+                      className={d.timeType === t ? "active" : ""}
+                      onClick={() => handleTimeTypeChange(d.date, t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+                {d.timeType === "時間指定" && (
+                  <div className="time-dropdowns">
+                    <select
+                      value={d.startTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(d.date, "startTime", e.target.value)
+                      }
+                    >
+                      <option value="">開始時間</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                    <span>〜</span>
+                    <select
+                      value={d.endTime || ""}
+                      onChange={(e) =>
+                        handleTimeChange(d.date, "endTime", e.target.value)
+                      }
+                    >
+                      <option value="">終了時間</option>
+                      {timeOptions.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </li>
             ))}
-          </div>
+          </ul>
 
           {/* 共有リンク */}
           <button className="share-btn" onClick={handleShare}>
