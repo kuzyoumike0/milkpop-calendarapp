@@ -275,3 +275,26 @@
 .radio-group input[type="radio"]:hover {
   transform: scale(1.1);
 }
+/* 📌 範囲開始強調 */
+.range-start {
+  background: #ffeb3b !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* カレンダー本体調整 */
+.react-calendar {
+  width: 100%;
+  max-width: 800px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.react-calendar__month-view__weekdays,
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+}
