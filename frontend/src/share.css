@@ -1,65 +1,175 @@
-.share-container {
-  max-width: 900px;
+.share-page {
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
   font-family: "Zen Maru Gothic", sans-serif;
   color: #222;
 }
 
-.share-title {
-  text-align: center;
+/* タイトル */
+.page-title {
   font-size: 1.8rem;
-  margin-bottom: 20px;
   font-weight: bold;
   color: #004ca0;
+  margin: 20px 0 30px 20px; /* 左に余白を確保 */
 }
 
-.share-table-wrapper {
-  background: #fff;
-  border-radius: 12px;
+/* 名前入力と追加ボタンのカード */
+.name-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  width: fit-content;
+  margin: 0 auto 20px auto; /* 中央寄せ + 下余白 */
 }
 
-.share-table {
-  width: 100%;
-  border-collapse: collapse;
+/* 入力フィールド */
+.name-input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.2s;
+  width: 220px;
 }
 
-.share-table th,
-.share-table td {
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
+.name-input:focus {
+  border-color: #004ca0;
+  box-shadow: 0 0 6px rgba(0, 76, 160, 0.6);
 }
 
-.share-table th {
-  background: #fdb9c8;
-  color: #000;
+/* 新規追加ボタン */
+.add-button {
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  color: #fff;
+  font-weight: bold;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* スケジュール表のカード */
+.schedule-list {
+  margin: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 表タイトル */
+.table-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 表全体 */
+.schedule-header,
+.schedule-item {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr repeat(auto-fit, minmax(80px, 1fr));
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  align-items: center;
+  color: #fff;
+}
+
+.schedule-header {
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.schedule-item {
+  padding: 12px;
+}
+
+/* 各セル */
+.date,
+.time,
+.user-col,
+.user-response {
+  padding: 0 10px;
+}
+
+/* ユーザ名リンク */
+.user-link {
+  color: #fdb9c8;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.user-link:hover {
+  color: #fff;
+}
+
+/* 出欠ボタン */
+.choice-btn {
+  margin: 2px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #444;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.choice-btn.active {
+  background: #004ca0;
+  color: #fff;
   font-weight: bold;
 }
 
-.share-table select {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+.choice-btn:hover {
+  background: #fdb9c8;
+  color: #000;
+}
+
+/* 保存ボタン */
+.button-area {
+  margin-top: 20px;
+  text-align: center;
 }
 
 .save-button {
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: white;
-  border: none;
+  color: #fff;
+  font-weight: bold;
   padding: 12px 20px;
   border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
+  border: none;
   cursor: pointer;
-  margin-top: 20px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .save-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 保存メッセージ */
+.save-message {
+  text-align: center;
+  margin-top: 15px;
+  color: #00c853;
+  font-weight: bold;
 }
