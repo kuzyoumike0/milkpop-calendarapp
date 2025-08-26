@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -15,11 +16,11 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // 📌 日付文字列をローカル基準で取得（UTCズレ防止）
+  // 📌 日付文字列（ズレ防止）
   const getDateStr = (date) => date.toLocaleDateString("sv-SE");
   const todayStr = getDateStr(new Date());
 
-  // 📌 祝日を辞書化
+  // 📌 祝日マップ
   const year = new Date().getFullYear();
   const holidays = hd.getHolidays(year).reduce((map, h) => {
     const dateStr = getDateStr(new Date(h.date));
@@ -58,7 +59,7 @@ const RegisterPage = () => {
     }
   };
 
-  // 📌 時間帯選択
+  // 📌 時間帯変更
   const handleTimeChange = (date, value) => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
@@ -76,7 +77,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // 📌 日付表示フォーマット（リスト用）
+  // 📌 リスト表示用フォーマット
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
@@ -154,7 +155,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー */}
+      {/* React-Calendar 本体 */}
       <div className="calendar-box">
         <Calendar
           locale="ja-JP"
