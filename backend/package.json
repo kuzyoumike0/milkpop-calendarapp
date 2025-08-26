@@ -1,7 +1,6 @@
 {
   "name": "milkpop-calendar-backend",
   "version": "1.0.0",
-  "description": "Backend for MilkPOP Calendar",
   "main": "index.js",
   "type": "module",
   "scripts": {
