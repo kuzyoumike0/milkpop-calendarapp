@@ -17,7 +17,7 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [editingUser, setEditingUser] = useState(""); // 編集対象
+  const [editingUser, setEditingUser] = useState(""); // 編集対象ユーザ
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -103,7 +103,7 @@ const SharePage = () => {
     }
   };
 
-  // ===== 出欠クリック =====
+  // ===== 出欠選択 =====
   const handleSelect = (key, value) => {
     if (!isEditing) return;
 
@@ -116,7 +116,10 @@ const SharePage = () => {
             r.username === editingUser ? { ...r, responses: updated } : r
           );
         } else {
-          return [...prevAll, { user_id: userId, username: editingUser, responses: updated }];
+          return [
+            ...prevAll,
+            { user_id: userId, username: editingUser, responses: updated },
+          ];
         }
       });
       return updated;
@@ -173,7 +176,7 @@ const SharePage = () => {
         </button>
       </div>
 
-      {/* 出欠表 見出し付き */}
+      {/* 出欠表 */}
       <div className="glass-black schedule-list">
         <h3 className="table-title">🗓 登録された日程</h3>
 
@@ -201,6 +204,7 @@ const SharePage = () => {
               ? `${d.date} (${d.startTime} ~ ${d.endTime})`
               : `${d.date} (${d.timeType})`;
 
+          // 時間帯ラベル変換
           let timeLabel = "";
           if (d.timeType === "all") timeLabel = "終日";
           else if (d.timeType === "day") timeLabel = "昼";
