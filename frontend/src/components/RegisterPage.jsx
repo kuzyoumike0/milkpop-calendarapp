@@ -13,16 +13,11 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // JST変換
+  // JSTに変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
-
-  // 時間リスト
-  const timeOptions = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
 
   // 日付クリック処理
   const handleDateClick = (date) => {
@@ -72,31 +67,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 区分変更
-  const handleTimeTypeChange = (index, newType) => {
-    const updated = [...selectedDates];
-    updated[index].timeType = newType;
-
-    if (newType === "終日") {
-      updated[index].startTime = "00:00";
-      updated[index].endTime = "23:59";
-    } else if (newType === "昼") {
-      updated[index].startTime = "09:00";
-      updated[index].endTime = "17:59";
-    } else if (newType === "夜") {
-      updated[index].startTime = "18:00";
-      updated[index].endTime = "23:59";
-    }
-    setSelectedDates(updated);
-  };
-
-  // 時間指定変更
-  const handleTimeChange = (index, key, value) => {
-    const updated = [...selectedDates];
-    updated[index][key] = value;
-    setSelectedDates(updated);
-  };
-
   // ===== DBに保存して共有リンク発行 =====
   const generateShareLink = async () => {
     try {
@@ -143,7 +113,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== タイトル入力 ===== */}
       <div className="glass-black input-card cute-title-box">
         <input
           type="text"
@@ -155,7 +124,6 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー（左） ===== */}
         <div className="glass-white calendar-card">
           {/* モード切替 */}
           <div className="mode-select">
@@ -222,17 +190,13 @@ const RegisterPage = () => {
             tileContent={({ date }) => {
               const jstDate = getJSTDate(date);
               const holiday = hd.isHoliday(jstDate);
-              return (
-                <div className="date-cell">
-                  <span>{jstDate.getDate()}日</span>
-                  {holiday && <span className="holiday-name">{holiday[0].name}</span>}
-                </div>
-              );
+              return holiday ? (
+                <span className="holiday-name">{holiday[0].name}</span>
+              ) : null;
             }}
           />
         </div>
 
-        {/* ===== リスト（右） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
