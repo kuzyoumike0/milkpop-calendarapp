@@ -2,7 +2,7 @@
 .register-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee); /* ピンク〜青紫 */
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -11,14 +11,14 @@
 
 /* ====== タイトル ====== */
 .page-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   color: #fff;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
-/* ====== レイアウトコンテナ ====== */
+/* ====== レイアウト ====== */
 .register-container {
   display: flex;
   gap: 20px;
@@ -32,7 +32,6 @@
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  color: #000;
   backdrop-filter: blur(15px);
   transition: all 0.3s ease;
 }
@@ -43,17 +42,51 @@
 /* ====== カレンダー ====== */
 .calendar-container {
   flex: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
+/* タイトル入力フォームをカレンダーの上に配置 */
+.title-input {
+  width: 80%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #004CA0;
+  margin-bottom: 20px;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  color: #000;
+  outline: none;
+}
+
+/* カレンダー全体 */
 .react-calendar {
   width: 100% !important;
   border: none !important;
   background: transparent;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #000 !important; /* 👈 文字は黒 */
 }
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  font-weight: bold;
+  text-align: center;
+  font-size: 13px;
+  color: #000;
+}
+
+/* 日付タイル */
 .react-calendar__tile {
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.2s ease;
+  position: relative;
 }
 .react-calendar__tile:hover {
   background: #FDB9C8 !important;
@@ -67,11 +100,27 @@
   border: 2px solid #FDB9C8 !important;
 }
 
-/* 選択された日 */
-.selected-day {
-  background: #004CA0 !important;
-  color: #fff !important;
-  border-radius: 8px;
+/* ===== 曜日色指定 ===== */
+.saturday {
+  color: #004CA0 !important; /* 土曜は青 */
+  font-weight: bold;
+}
+.sunday {
+  color: #FF2D2D !important; /* 日曜は赤 */
+  font-weight: bold;
+}
+.holiday {
+  color: #FF2D2D !important; /* 祝日も赤 */
+  font-weight: bold;
+}
+
+/* 祝日名を日の下に表示 */
+.holiday-name {
+  font-size: 10px;
+  color: #FF2D2D;
+  margin-top: 2px;
+  display: block;
+  text-align: center;
 }
 
 /* ====== サイドパネル ====== */
@@ -80,18 +129,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-/* ====== タイトル入力 ====== */
-.title-input {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  outline: none;
 }
 
 /* ====== モード切替ボタン ====== */
@@ -107,7 +144,7 @@
   border: none;
   font-size: 14px;
   font-weight: bold;
-  background: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.6);
   cursor: pointer;
   transition: 0.2s;
 }
