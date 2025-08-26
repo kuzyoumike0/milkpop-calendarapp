@@ -59,7 +59,7 @@ const RegisterPage = () => {
       setSelectedDates([...new Set([...selectedDates, ...rangeDates])]);
     } else if (mode === "multi") {
       const newDate = new Date(val).toDateString();
-      if (!selectedDates.includes(newDate)) {
+      if (!selectedDates.find((d) => d.date === newDate || d === newDate)) {
         setSelectedDates([...selectedDates, newDate]);
       }
     } else {
@@ -72,11 +72,16 @@ const RegisterPage = () => {
   const handleTimeChange = (date, type, start, end) => {
     setSelectedDates((prev) =>
       prev.map((d) =>
-        d.date === date
-          ? { ...d, type, startHour: start, endHour: end }
+        (d.date || d) === date
+          ? { date, type, startHour: start, endHour: end }
           : d
       )
     );
+  };
+
+  // ===== 日程削除 =====
+  const handleDelete = (date) => {
+    setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
 
   // 日程オブジェクト化
@@ -113,7 +118,13 @@ const RegisterPage = () => {
             <button
               className={mode === "single" ? "active" : ""}
               onClick={() => setMode("single")}
-
+            >
+              単日
+            </button>
+            <button
+              className={mode === "range" ? "active" : ""}
+              onClick={() => setMode("range")}
+            >
               範囲選択
             </button>
             <button
@@ -140,7 +151,15 @@ const RegisterPage = () => {
           <ul className="event-list">
             {enrichedDates.map((e, idx) => (
               <li key={idx}>
-                <strong>{e.date}</strong>
+                <div className="event-header">
+                  <strong>{e.date}</strong>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(e.date)}
+                  >
+                    ❌
+                  </button>
+                </div>
                 <div className="time-type-buttons">
                   {["終日", "午前", "午後", "時間指定"].map((t) => (
                     <button
