@@ -17,7 +17,7 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [editingUser, setEditingUser] = useState(""); // 編集対象ユーザ
+  const [editingUser, setEditingUser] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -182,7 +182,7 @@ const SharePage = () => {
 
         {/* ヘッダー */}
         <div className="schedule-header">
-          <span className="date">日程</span>
+          <span className="date">日付</span>
           <span className="time">時間帯</span>
           {users.map((u, idx) => (
             <span key={idx} className="user-col">
