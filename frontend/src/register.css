@@ -170,3 +170,56 @@
     align-items: flex-start;
   }
 }
+/* ====== カレンダーの曜日色 ====== */
+.react-calendar__month-view__weekdays__weekday {
+  font-weight: bold;
+  text-align: center;
+  font-size: 14px;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  color: #333;
+}
+
+/* 日曜・祝日 → 赤 */
+.sunday-holiday {
+  color: red !important;
+  font-weight: bold;
+}
+
+/* 土曜 → 青 */
+.saturday {
+  color: #004CA0 !important;
+  font-weight: bold;
+}
+
+/* 今日を強調 */
+.today {
+  background: #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  border-radius: 6px;
+}
+
+/* 選択した日 */
+.selected-day {
+  background: #004CA0 !important;
+  color: #fff !important;
+  font-weight: bold;
+  border-radius: 6px;
+}
+
+/* 祝日名 */
+.calendar-tile-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.holiday-name {
+  font-size: 10px;
+  color: red;
+  margin-top: 2px;
+  font-weight: bold;
+}
