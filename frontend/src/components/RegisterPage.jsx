@@ -4,6 +4,7 @@ import Holidays from "date-holidays";
 import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
+import CustomDropdown from "./CustomDropdown"; // ← カスタムドロップダウン
 
 const hd = new Holidays("JP");
 
@@ -11,7 +12,7 @@ const RegisterPage = () => {
   const [value, setValue] = useState(new Date());
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("single"); // "range" or "multi"
+  const [mode, setMode] = useState("single"); // single, range, multi, delete
   const [shareUrl, setShareUrl] = useState("");
 
   // ===== 祝日読み込み =====
@@ -48,6 +49,8 @@ const RegisterPage = () => {
 
   // ===== 日付選択処理 =====
   const handleDateChange = (val) => {
+    const newDate = new Date(val).toDateString();
+
     if (mode === "range" && Array.isArray(val)) {
       const rangeDates = [];
       let start = new Date(val[0]);
@@ -58,48 +61,53 @@ const RegisterPage = () => {
       }
       setSelectedDates([...new Set([...selectedDates, ...rangeDates])]);
     } else if (mode === "multi") {
-      const newDate = new Date(val).toDateString();
-      if (!selectedDates.find((d) => d.date === newDate || d === newDate)) {
+      if (!selectedDates.find((d) => (d.date || d) === newDate)) {
         setSelectedDates([...selectedDates, newDate]);
       }
+    } else if (mode === "delete") {
+      // 単日削除モード
+      setSelectedDates((prev) =>
+        prev.filter((d) => (d.date || d) !== newDate)
+      );
     } else {
       // single
-      setSelectedDates([new Date(val).toDateString()]);
+      setSelectedDates([newDate]);
     }
   };
 
   // ===== 時間帯設定変更 =====
   const handleTimeChange = (date, type, start, end) => {
     setSelectedDates((prev) =>
-      prev.map((d) =>
-        (d.date || d) === date
-          ? { date, type, startHour: start, endHour: end }
-          : d
-      )
+      prev.map((d) => {
+        if ((d.date || d) === date) {
+          let newStart = start !== undefined ? Number(start) : d.startHour || 0;
+          let newEnd = end !== undefined ? Number(end) : d.endHour || 1;
+
+          // 🔹 制御: 開始 < 終了 を保証
+          if (newStart >= newEnd) {
+            if (start !== undefined) {
+              newEnd = newStart + 1 <= 23 ? newStart + 1 : 23;
+            } else if (end !== undefined) {
+              newStart = newEnd - 1 >= 0 ? newEnd - 1 : 0;
+            }
+          }
+
+          return { date, type, startHour: newStart, endHour: newEnd };
+        }
+        return d;
+      })
     );
   };
 
-  // ===== 日程削除 =====
+  // ===== 日程削除ボタン =====
   const handleDelete = (date) => {
     setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
 
   // 日程オブジェクト化
-  const enrichedDates = selectedDates.map((d) => {
-    if (typeof d === "string") {
-      return { date: d, type: "終日" };
-    }
-    return d;
-  });
-
-  // ===== 時間オプション =====
-  const renderHourOptions = () => {
-    return Array.from({ length: 24 }, (_, i) => (
-      <option key={i} value={i}>
-        {i}:00
-      </option>
-    ));
-  };
+  const enrichedDates = selectedDates.map((d) =>
+    typeof d === "string" ? { date: d, type: "終日" } : d
+  );
 
   // ===== 共有リンク発行 =====
   const handleShare = () => {
@@ -133,6 +141,12 @@ const RegisterPage = () => {
             >
               複数選択
             </button>
+            <button
+              className={mode === "delete" ? "active" : ""}
+              onClick={() => setMode("delete")}
+            >
+              単日削除
+            </button>
           </div>
           <Calendar
             onChange={handleDateChange}
@@ -153,12 +167,6 @@ const RegisterPage = () => {
               <li key={idx}>
                 <div className="event-header">
                   <strong>{e.date}</strong>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(e.date)}
-                  >
-                    ❌
-                  </button>
                 </div>
                 <div className="time-type-buttons">
                   {["終日", "午前", "午後", "時間指定"].map((t) => (
@@ -174,35 +182,38 @@ const RegisterPage = () => {
                   ))}
                   {e.type === "時間指定" && (
                     <div className="time-dropdowns">
-                      <select
+                      <CustomDropdown
                         value={e.startHour || 0}
-                        onChange={(ev) =>
+                        onChange={(val) =>
                           handleTimeChange(
                             e.date,
                             "時間指定",
-                            ev.target.value,
+                            val,
                             e.endHour || 1
                           )
                         }
-                      >
-                        {renderHourOptions()}
-                      </select>
+                      />
                       ～
-                      <select
+                      <CustomDropdown
                         value={e.endHour || 1}
-                        onChange={(ev) =>
+                        onChange={(val) =>
                           handleTimeChange(
                             e.date,
                             "時間指定",
                             e.startHour || 0,
-                            ev.target.value
+                            val
                           )
                         }
-                      >
-                        {renderHourOptions()}
-                      </select>
+                      />
                     </div>
                   )}
+                  {/* 単日削除ボタン */}
+                  <button
+                    className="delete-day-btn"
+                    onClick={() => handleDelete(e.date)}
+                  >
+                    単日削除
+                  </button>
                 </div>
               </li>
             ))}
