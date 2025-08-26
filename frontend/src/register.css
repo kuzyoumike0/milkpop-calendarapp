@@ -17,7 +17,6 @@
   text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
 
-/* タイトル入力 */
 .title-input {
   width: 40%;
   padding: 10px;
@@ -31,7 +30,7 @@
   text-align: center;
 }
 
-/* コンテナ */
+/* メインコンテナ */
 .register-container {
   display: flex;
   gap: 20px;
@@ -72,7 +71,7 @@
   color: #fff;
 }
 
-/* 曜日スタイル */
+/* 曜日・祝日 */
 .weekday {
   color: #222 !important;
 }
@@ -105,14 +104,14 @@
   border-radius: 50%;
 }
 
-/* 範囲中 */
+/* 範囲 */
 .in-range {
   background: rgba(0, 76, 160, 0.2) !important;
   border-radius: 6px;
   color: #000 !important;
 }
 
-/* サイドパネル */
+/* 右サイド */
 .register-box {
   flex: 3;
   background: rgba(255, 255, 255, 0.2);
@@ -123,7 +122,6 @@
   backdrop-filter: blur(15px);
 }
 
-/* 日程リスト */
 .event-list {
   list-style: none;
   padding: 0;
@@ -156,7 +154,7 @@
   color: #fff;
 }
 
-/* 時間指定ドロップダウン */
+/* 時間指定 */
 .time-dropdowns {
   display: flex;
   align-items: center;
@@ -174,29 +172,32 @@
   cursor: pointer;
 }
 
-/* 共有リンク */
+/* ===== 共有リンク ===== */
+.share-section {
+  margin-top: 20px;
+  text-align: center;
+}
 .share-btn {
-  background: #004CA0;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
-  padding: 10px;
+  padding: 12px 20px;
   border: none;
   border-radius: 14px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
   transition: 0.2s;
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
 }
 .share-btn:hover {
-  background: #FDB9C8;
-  color: #000;
+  opacity: 0.85;
 }
-
 .share-link {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .share-link a {
   color: #004CA0;
@@ -210,7 +211,7 @@
   padding: 6px 12px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
   color: #fff;
   font-size: 12px;
   font-weight: bold;
