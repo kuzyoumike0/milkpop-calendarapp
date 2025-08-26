@@ -1,16 +1,18 @@
 .register-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding: 20px;
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
 }
 
-/* カレンダー全体 */
+.register-container {
+  display: flex;
+  gap: 20px;
+}
+
 .calendar-container {
-  width: 70%;
+  flex: 7;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   padding: 20px;
 }
 
@@ -21,19 +23,19 @@
   text-align: center;
 }
 
-/* 日曜と祝日 → 赤字 */
+/* 日曜と祝日 */
 .holiday {
   color: red !important;
   font-weight: bold;
 }
 
-/* 土曜 → 青字 */
+/* 土曜 */
 .saturday {
   color: #004CA0 !important;
   font-weight: bold;
 }
 
-/* 今日のハイライト */
+/* 今日 */
 .react-calendar__tile--now {
   background: #FDB9C8 !important;
   border-radius: 8px;
@@ -41,16 +43,122 @@
   color: black !important;
 }
 
-/* 選択中の日付 */
+/* 選択中 */
 .react-calendar__tile--active {
   background: #004CA0 !important;
   color: white !important;
   border-radius: 8px;
 }
 
-/* 祝日名を下に表示 */
+/* 範囲選択 */
+.react-calendar__tile--range {
+  background: rgba(0, 76, 160, 0.2) !important;
+  border-radius: 8px;
+}
+
+/* 祝日名 */
 .holiday-name {
   font-size: 10px;
   color: red;
   margin-top: 2px;
+  font-weight: normal;
+}
+
+/* ===== 右側パネル ===== */
+.side-panel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title-input {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+/* ラジオボタン */
+.time-select label {
+  margin-right: 10px;
+  font-size: 14px;
+}
+
+/* 時間指定ドロップダウン */
+.time-dropdowns select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin: 0 5px;
+  background: #FDB9C8;
+  font-weight: bold;
+}
+
+/* 登録ボタン */
+.register-btn {
+  background: #004CA0;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.register-btn:hover {
+  background: #003080;
+}
+
+/* 登録済みリスト */
+.event-list {
+  list-style: none;
+  padding: 0;
+}
+.event-list li {
+  background: rgba(253, 185, 200, 0.2);
+  border-left: 4px solid #FDB9C8;
+  padding: 6px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+}
+
+/* 共有リンク発行ボタン */
+.share-btn {
+  background: #FDB9C8;
+  color: black;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.share-btn:hover {
+  background: #fda2b5;
+}
+
+/* コピー部分 */
+.share-link {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.share-link input {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.copy-btn {
+  background: #004CA0;
+  color: white;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  background: #003080;
 }
