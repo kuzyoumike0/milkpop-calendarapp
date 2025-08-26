@@ -45,9 +45,7 @@ const RegisterPage = () => {
           });
           current.setDate(current.getDate() + 1);
         }
-        setSelectedDates(
-          [...selectedDates, ...newRange].sort((a, b) => a.date - b.date)
-        );
+        setSelectedDates(newRange);
         setRangeStart(null);
       }
     } else {
@@ -56,20 +54,20 @@ const RegisterPage = () => {
       );
       if (exists) {
         setSelectedDates(
-          selectedDates
-            .filter((d) => d.date.toDateString() !== jstDate.toDateString())
-            .sort((a, b) => a.date - b.date)
+          selectedDates.filter(
+            (d) => d.date.toDateString() !== jstDate.toDateString()
+          )
         );
       } else {
-        setSelectedDates(
-          [...selectedDates,
+        setSelectedDates([
+          ...selectedDates,
           {
             date: jstDate,
             timeType: "終日",
             startTime: "00:00",
             endTime: "23:59",
-          }].sort((a, b) => a.date - b.date)
-        );
+          },
+        ]);
       }
     }
   };
@@ -89,14 +87,14 @@ const RegisterPage = () => {
       updated[index].startTime = "18:00";
       updated[index].endTime = "23:59";
     }
-    setSelectedDates(updated.sort((a, b) => a.date - b.date));
+    setSelectedDates(updated);
   };
 
   // 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
-    setSelectedDates(updated.sort((a, b) => a.date - b.date));
+    setSelectedDates(updated);
   };
 
   // ===== DBに保存して共有リンク発行 =====
@@ -157,8 +155,9 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー ===== */}
+        {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
+          {/* モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -192,7 +191,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="iso8601"
+            calendarType="gregory"
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
@@ -229,7 +228,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== リスト ===== */}
+        {/* ===== リスト（右3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -237,12 +236,58 @@ const RegisterPage = () => {
           ) : (
             <ul>
               {selectedDates
-                .sort((a, b) => a.date - b.date)
+                .sort((a, b) => a.date - b.date) // ✅ 日付順ソート
                 .map((d, i) => (
                   <li key={i} className="date-item">
                     <span className="date-label">
                       📅 {d.date.toLocaleDateString("ja-JP")}
                     </span>
+
+                    <div className="time-type-buttons">
+                      {["終日", "昼", "夜", "時間指定"].map((type) => (
+                        <button
+                          key={type}
+                          className={`time-type-button ${
+                            d.timeType === type ? "active" : ""
+                          }`}
+                          onClick={() => handleTimeTypeChange(i, type)}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+
+                    {d.timeType === "時間指定" && (
+                      <span className="time-range">
+                        <select
+                          value={d.startTime}
+                          onChange={(e) =>
+                            handleTimeChange(i, "startTime", e.target.value)
+                          }
+                          className="time-dropdown stylish-dropdown"
+                        >
+                          {timeOptions.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="range-tilde"> ~ </span>
+                        <select
+                          value={d.endTime}
+                          onChange={(e) =>
+                            handleTimeChange(i, "endTime", e.target.value)
+                          }
+                          className="time-dropdown stylish-dropdown"
+                        >
+                          {timeOptions.map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </span>
+                    )}
                   </li>
                 ))}
             </ul>
