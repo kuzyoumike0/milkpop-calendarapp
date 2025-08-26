@@ -206,3 +206,8 @@
   font-weight: bold;
   font-size: 0.9rem;
 }
+.editable-username {
+  cursor: pointer;
+  color: #4dabf7;
+  text-decoration: underline;
+}
