@@ -638,4 +638,17 @@
     transform: translateY(0);
   }
 }
+/* コピー完了メッセージ */
+.copied-msg {
+  margin-left: 8px;
+  color: #90ee90; /* 明るい緑 */
+  font-weight: bold;
+  font-size: 0.9em;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
