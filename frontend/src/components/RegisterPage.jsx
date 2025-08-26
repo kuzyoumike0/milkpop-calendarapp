@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -20,7 +19,7 @@ const RegisterPage = () => {
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト（1時間刻み）
+  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
