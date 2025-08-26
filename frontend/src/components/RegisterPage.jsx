@@ -175,6 +175,26 @@ const RegisterPage = () => {
               const isSaturday = jstDate.getDay() === 6;
               const holiday = hd.isHoliday(jstDate);
 
+              // 範囲選択
+              if (selectedDates.length > 1) {
+                const range = selectedDates.map((d) => d.date.toDateString());
+                if (
+                  jstDate.toDateString() ===
+                  selectedDates[0].date.toDateString()
+                ) {
+                  return "range-start";
+                }
+                if (
+                  jstDate.toDateString() ===
+                  selectedDates[selectedDates.length - 1].date.toDateString()
+                ) {
+                  return "range-end";
+                }
+                if (range.includes(jstDate.toDateString())) {
+                  return "range-between";
+                }
+              }
+
               if (isToday) return "day-today";
               if (
                 selectedDates.some(
