@@ -1,340 +1,86 @@
-/* ====== ページ全体 ====== */
-.register-page {
-  padding: 20px;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
+/* ===== ページタイトル ===== */
 .page-title {
-  font-size: 24px;
-  font-weight: bold;
+  margin-left: 20px;   /* 左に余白 */
   margin-bottom: 20px;
-}
-
-/* ====== Title 入力 ====== */
-.title-input-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  width: 100%;
-}
-
-.title-input {
-  width: 80%;
-  padding: 12px;
-  font-size: 18px;
-  border: none;
-  border-radius: 10px;
-  text-align: center;
-  background: #111;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-/* ====== Mode 切替ボタン ====== */
-.mode-switch {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin: 10px 0 20px;
-}
-
-.mode-btn {
-  padding: 8px 18px;
-  font-size: 14px;
+  font-size: 1.4rem;
   font-weight: bold;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #ccc, #777);
   color: #fff;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
 
-.mode-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-}
-
-.mode-btn.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
-
-/* ====== Calendar + List 横並び ====== */
-.calendar-container {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1100px;
-  gap: 15px;
-  margin: 20px auto;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
-
-.calendar-box {
-  flex: 7;
-}
-
-.selected-dates {
-  flex: 3;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 18px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-  backdrop-filter: blur(6px);
-  min-width: 260px;
-}
-
-.selected-dates h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #FDB9C8;
-  margin-bottom: 12px;
-  text-align: center;
-  letter-spacing: 1px;
-}
-
-/* ====== Calendar 調整 ====== */
-.react-calendar {
-  width: 100%;
-  background: rgba(255,255,255,0.1);
-  border-radius: 15px;
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-.react-calendar__month-view__weekdays,
-.react-calendar__month-view__days {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr);
-  text-align: center;
-}
-
-/* 日付セルの縦幅を広げて祝日名を入れる */
-.react-calendar__tile {
-  min-height: 85px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 4px;
-  box-sizing: border-box;
-  position: relative;
-}
-
-/* 祝日名ラッパー */
-.holiday-wrapper {
-  margin-top: 3px;
-  text-align: center;
-  width: 100%;
-}
-
-/* 祝日名スタイル */
-.holiday-name {
-  font-size: 11px;
-  font-weight: bold;
-  color: red;
-  line-height: 1.2;
-}
-
-/* ====== 日程リスト ====== */
-.date-item {
-  display: flex;
-  flex-direction: column; /* ✅ 縦に並べてドロップダウンを収める */
-  margin: 10px 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.55);
-  font-size: 16px;
-  font-weight: 600;
-  color: #fdfdfd;
-  transition: transform 0.2s ease, background 0.3s ease;
-  border-left: 4px solid #004CA0;
-}
-
-.date-item:hover {
-  transform: translateX(5px);
-  background: rgba(0,0,0,0.75);
-  border-left: 4px solid #FDB9C8;
-}
-
-.date-text {
-  margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-/* ====== 横並びボタン（折り返し対応） ====== */
-.radio-group-inline {
-  display: flex;
-  flex-wrap: wrap;   /* ✅ 折り返し可能 */
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-/* お洒落なボタン */
-.time-btn {
-  padding: 6px 12px;
-  border: none;
+/* ===== タイトルカード ===== */
+.title-box {
+  display: inline-block;
+  padding: 8px 16px;
   border-radius: 12px;
-  background: #222;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 1.1rem;
+  font-weight: bold;
   color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  margin: 0 0 16px 20px; /* 左寄せ + 左余白 */
+  max-width: 300px;
 }
 
-.time-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-}
-
-.time-btn.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-}
-
-/* ====== 時間指定ドロップダウン ====== */
-.custom-time {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;   /* ✅ ボタンとの間隔 */
-  flex-wrap: wrap;
-  width: 100%;       /* ✅ 枠に収まる */
-}
-
-.time-dropdown {
-  padding: 4px 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fff;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  flex: 1;
-  min-width: 70px;
-}
-
-/* ====== 共有リンクボタン ====== */
-.share-link-container {
-  margin-top: 20px;
-}
-
-.share-link-btn {
-  padding: 12px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  transition: transform 0.2s;
-}
-
-.share-link-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #004CA0, #FDB9C8);
-}
-
-/* ====== Calendar 曜日色 ====== */
-.sunday-holiday {
-  color: red !important;
-  font-weight: bold;
-}
-
-.saturday {
-  color: #004CA0 !important;
-  font-weight: bold;
-}
-
-.today {
-  background: #FDB9C8 !important;
-  color: #fff !important;
-  font-weight: bold !important;
-  border-radius: 6px;
-}
-
-.selected-day {
-  background: #004CA0 !important;
-  color: #fff !important;
-  font-weight: bold;
-  border-radius: 6px;
-}
-
-.range-start {
-  background: #ffeb3b !important;
-  color: #000 !important;
-  font-weight: bold;
-}
-.share-link-box {
-  margin-top: 12px;
+/* ===== 名前入力エリア ===== */
+.name-box {
+  display: inline-block; /* 背景を内容に合わせる */
   padding: 10px;
-  background: rgba(0,0,0,0.6);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  margin: 0 0 10px 20px; /* 左余白 */
 }
 
-.share-link-box a {
-  color: #FDB9C8;
-  font-weight: bold;
-  text-decoration: none;
-  word-break: break-all;
-}
-
-.copy-btn {
-  padding: 6px 12px;
-  font-size: 13px;
+.name-box .name-input {
+  width: 220px; /* コンパクト */
+  padding: 8px 12px;
+  border-radius: 20px;
   border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  outline: none;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== ボタン ===== */
+.button-area {
+  margin: 10px 0 20px 20px; /* 左余白 */
+}
+
+.add-button,
+.save-button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
   color: #fff;
-  cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
 
-.copy-btn:hover {
-  transform: scale(1.05);
-}
-.editable-username {
-  cursor: pointer;
-  color: #4dabf7;
-  text-decoration: underline;
+.add-button:hover,
+.save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
-.saved-list {
-  margin-top: 20px;
+/* ===== 出欠表全体 ===== */
+.schedule-list {
+  margin: 20px 40px 20px 20px;  /* 左右に余白（右余白を確保） */
   padding: 16px;
   border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  text-align: left;
 }
 
-.saved-user {
-  margin-bottom: 16px;
-}
-
-.saved-user h4 {
-  margin-bottom: 8px;
+.table-title {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #FDB9C8;
 }
-/* 見出し行 */
+
+/* ===== 表ヘッダー ===== */
 .schedule-header {
   display: flex;
   font-weight: bold;
@@ -346,11 +92,36 @@
 
 .schedule-header .date { width: 120px; }
 .schedule-header .time { width: 100px; }
-.schedule-header .user-col { flex: 1; }
+.schedule-header .user-col { flex: 1; text-align: center; }
 
-/* ユーザ名リンク */
+/* ===== 日程行 ===== */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.schedule-item .date {
+  width: 120px;
+  text-align: left;
+}
+
+.schedule-item .time {
+  width: 100px;
+  text-align: left;
+  margin-right: 12px;
+}
+
+.schedule-item .user-response {
+  flex: 1;
+  text-align: center;
+}
+
+/* ===== ユーザ名リンク ===== */
 .user-link {
-  margin-right: 6px;
   color: #FDB9C8;
   font-weight: bold;
   text-decoration: underline;
@@ -365,4 +136,45 @@
 .response-value {
   margin-left: 6px;
   color: #ddd;
+}
+
+/* ===== 出欠選択ボタン ===== */
+.choice-btn {
+  width: 38px;
+  height: 38px;
+  margin: 0 4px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.choice-btn:hover {
+  background: #FDB9C8;
+  border-color: #FDB9C8;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.choice-btn.active {
+  background: #004CA0;
+  border-color: #004CA0;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== 保存メッセージ ===== */
+.save-message {
+  margin-left: 16px;
+  color: #00e676;
+  font-weight: bold;
+  font-size: 0.9rem;
 }
