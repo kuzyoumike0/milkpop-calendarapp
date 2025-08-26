@@ -1,4 +1,3 @@
-// backend/index.js
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -130,8 +129,8 @@ app.get("/api/schedules", async (_req, res) => {
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates, options } = req.body;
-    if (!title || !dates) {
-      return res.status(400).json({ error: "タイトルと日程は必須です" });
+    if (!dates) {
+      return res.status(400).json({ error: "日程は必須です" });
     }
 
     const id = uuidv4();
@@ -140,7 +139,7 @@ app.post("/api/schedules", async (req, res) => {
     const result = await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [id, title, JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+      [id, title || "無題スケジュール", JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
     );
 
     res.json({ share_token: result.rows[0].share_token });
@@ -185,7 +184,6 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
     const scheduleId = schedule.rows[0].id;
     const dates = schedule.rows[0].dates;
 
-    // 🔑 responses を「日付 (時間帯)」キーで揃える
     const normalizedResponses = {};
     dates.forEach((d) => {
       const key =
@@ -207,7 +205,6 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
       [scheduleId, user_id, username || "匿名", JSON.stringify(normalizedResponses)]
     );
 
-    // 🔥 リアルタイム通知
     io.to(token).emit("updateResponses", {
       user_id,
       username,
