@@ -4,7 +4,7 @@ import Holidays from "date-holidays";
 import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
-import CustomDropdown from "./CustomDropdown"; // カスタムドロップダウン
+import CustomDropdown from "./CustomDropdown";
 
 const hd = new Holidays("JP");
 
@@ -120,11 +120,32 @@ const RegisterPage = () => {
     .map((d) => (typeof d === "string" ? { date: d, type: "終日" } : d))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // ===== 共有リンク発行 =====
-  const handleShare = () => {
-    const token = Math.random().toString(36).substr(2, 8);
-    const url = `${window.location.origin}/share/${token}`;
-    setShareUrl(url);
+  // ===== 共有リンク発行（保存もする） =====
+  const handleShare = async () => {
+    const dates = enrichedDates.map((d) => ({
+      date: d.date,
+      type: d.type,
+      startHour: d.startHour || 0,
+      endHour: d.endHour || 24,
+    }));
+
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dates }),
+      });
+
+      if (res.ok) {
+        const { token } = await res.json();
+        const url = `${window.location.origin}/share/${token}`;
+        setShareUrl(url);
+      } else {
+        alert("スケジュール保存に失敗しました");
+      }
+    } catch (err) {
+      console.error("Error saving schedule:", err);
+    }
   };
 
   return (
@@ -195,7 +216,7 @@ const RegisterPage = () => {
                     <div className="time-dropdowns">
                       <CustomDropdown
                         value={e.startHour || 0}
-                        max={23}   // 開始は0〜23
+                        max={23}
                         onChange={(val) =>
                           handleTimeChange(
                             e.date,
@@ -208,7 +229,7 @@ const RegisterPage = () => {
                       ～
                       <CustomDropdown
                         value={e.endHour || 1}
-                        max={24}   // 終了は0〜24
+                        max={24}
                         onChange={(val) =>
                           handleTimeChange(
                             e.date,
@@ -220,7 +241,6 @@ const RegisterPage = () => {
                       />
                     </div>
                   )}
-                  {/* 単日削除ボタン */}
                   <button
                     className="delete-day-btn"
                     onClick={() => handleDelete(e.date)}
@@ -237,7 +257,6 @@ const RegisterPage = () => {
           </button>
           {shareUrl && (
             <div className="share-link">
-              {/* リンク化 */}
               <a
                 href={shareUrl}
                 target="_blank"
@@ -246,7 +265,6 @@ const RegisterPage = () => {
               >
                 {shareUrl}
               </a>
-              {/* コピー用ボタン */}
               <button
                 className="copy-btn"
                 onClick={() => {
