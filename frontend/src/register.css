@@ -151,14 +151,6 @@
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
-.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
-  background: #ffb3b3;
-  color: #fff;
-}
-.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
-  background: #8fcfff;
-  color: #fff;
-}
 
 /* 日付セル */
 .react-calendar__tile {
@@ -246,4 +238,66 @@
   font-size: 16px;
   font-weight: bold;
   color: #FDB9C8;
+}
+
+/* ====== 共有リンク ====== */
+.share-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.share-button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #ffdde6, #FDB9C8);
+  color: #000;
+}
+
+.share-link-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.share-link {
+  flex: 1;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.4);
+  transition: background 0.3s;
+}
+.share-link:hover {
+  background: rgba(0,0,0,0.6);
+  color: #FDB9C8;
+}
+
+.copy-button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 20px;
+  background: #FDB9C8;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.copy-button:hover {
+  background: #ffdee8;
+  transform: scale(1.1);
 }
