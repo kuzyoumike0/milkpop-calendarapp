@@ -12,15 +12,18 @@
 
 /* ====== カレンダー部分（ガラスカード） ====== */
 .calendar-box {
-  flex: 7;
-  background: rgba(255, 255, 255, 0.2); /* ✅ 半透明ホワイト */
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   color: #fff;
-  backdrop-filter: blur(15px); /* ✅ ガラス感 */
+  backdrop-filter: blur(15px);
   transition: all 0.3s ease;
+
+  width: fit-content;  /* 👈 テキスト幅に合わせる */
+  max-width: 90%;      /* 👈 はみ出さないよう制限 */
 }
+
 
 .calendar-box:hover {
   transform: translateY(-3px);
