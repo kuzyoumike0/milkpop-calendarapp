@@ -8,13 +8,12 @@ import { v4 as uuidv4 } from "uuid";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import authRouter from "./auth.js";
-import pool from "./db.js"; // ← ここがポイント：共通Poolを使う
+import pool from "./db.js"; // ← 共通Pool
 import jwt from "jsonwebtoken";
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-  // 同一オリジンならこの設定ごと削ってOK
   cors: {
     origin: process.env.FRONTEND_URL || "*",
     methods: ["GET", "POST", "DELETE"],
@@ -27,15 +26,15 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cookieParser());
 
-// 別オリジン運用なら CORS 必須 / 同一オリジンなら以下ブロックは削除OK
 if (process.env.FRONTEND_URL) {
-  app.use(cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  }));
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_URL,
+      credentials: true,
+    })
+  );
 }
 
-// プロキシ配下で secure cookie を使うなら推奨
 app.set("trust proxy", 1);
 
 // ===== DB初期化 =====
@@ -90,7 +89,6 @@ io.on("connection", (socket) => {
 // ===== 認証・ユーザー関連 =====
 app.use("/auth", authRouter);
 
-// 超軽量の認証チェック（Cookie or Bearer）
 function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
@@ -98,15 +96,14 @@ function authRequired(req, res, next) {
     const token = req.cookies?.token || bearer;
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET); // ← これでOK
-    req.user = payload; // { userId, discordId, username, iat, exp }
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload;
     next();
   } catch (e) {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
 
-// ログインユーザー情報
 app.get("/api/me", authRequired, async (req, res) => {
   const { rows } = await pool.query(
     "SELECT id, discord_id, username, now() AS server_time FROM public.users WHERE id = $1",
@@ -116,7 +113,7 @@ app.get("/api/me", authRequired, async (req, res) => {
   res.json({ user: rows[0] });
 });
 
-// ===== 既存 API（schedules など）はそのまま =====
+// ===== schedules API =====
 app.get("/api/schedules", async (_req, res) => {
   try {
     const result = await pool.query(
@@ -153,7 +150,7 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// --- 特定スケジュール取得（share_token 経由） ---
+// --- 特定スケジュール取得 ---
 app.get("/api/schedules/:token", async (req, res) => {
   try {
     const { token } = req.params;
@@ -168,7 +165,7 @@ app.get("/api/schedules/:token", async (req, res) => {
   }
 });
 
-// --- 出欠回答を追加/更新（リアルタイム通知付き） ---
+// --- 出欠回答 保存/更新 ---
 app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
@@ -178,21 +175,25 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
       return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
     }
 
-    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    const schedule = await pool.query(
+      "SELECT id, dates FROM schedules WHERE share_token=$1",
+      [token]
+    );
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
     const scheduleId = schedule.rows[0].id;
     const dates = schedule.rows[0].dates;
 
-    // responses を統一キーで再構築
+    // 🔑 responses を「日付 (時間帯)」キーで揃える
     const normalizedResponses = {};
-    dates.forEach((d, index) => {
+    dates.forEach((d) => {
       const key =
-        d.time === "時間指定" && d.startTime && d.endTime
+        d.timeType === "時間指定" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.time})`;
-      normalizedResponses[key] = responses[index] || "-";
+          : `${d.date} (${d.timeType})`;
+
+      normalizedResponses[key] = responses[key] || "-";
     });
 
     const result = await pool.query(
@@ -213,14 +214,18 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
       responses: normalizedResponses,
     });
 
-    res.json(result.rows[0]);
+    res.json({
+      user_id,
+      username,
+      responses: normalizedResponses,
+    });
   } catch (err) {
     console.error("回答保存エラー:", err);
     res.status(500).json({ error: "回答保存エラー" });
   }
 });
 
-// --- 出欠回答の一覧取得 ---
+// --- 出欠回答 一覧取得 ---
 app.get("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
@@ -241,7 +246,7 @@ app.get("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
-// --- 出欠集計（○✖△人数まとめ） ---
+// --- 出欠集計 ---
 app.get("/api/schedules/:token/aggregate", async (req, res) => {
   try {
     const { token } = req.params;
@@ -260,9 +265,9 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
     const aggregate = {};
     dates.forEach((d) => {
       const key =
-        d.time === "時間指定" && d.startTime && d.endTime
+        d.timeType === "時間指定" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.time})`;
+          : `${d.date} (${d.timeType})`;
       aggregate[key] = { "○": 0, "✖": 0, "△": 0 };
     });
 
@@ -300,7 +305,6 @@ app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
       return res.status(404).json({ error: "ユーザーが見つかりません" });
     }
 
-    // 🔥 リアルタイム削除通知
     io.to(token).emit("deleteResponse", { user_id });
 
     res.json({ message: "削除しました", deleted: result.rows[0] });
@@ -331,7 +335,7 @@ app.post("/api/personal", async (req, res) => {
   }
 });
 
-// ===== Reactビルド配信（同一オリジンで運用する場合）=====
+// ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendPath = path.join(__dirname, "../frontend/build");
