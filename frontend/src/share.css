@@ -1,3 +1,12 @@
+/* ===== ページタイトル ===== */
+.page-title {
+  margin-left: 20px;   /* 左に余白 */
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #fff;
+}
+
 /* ===== タイトルカード ===== */
 .title-box {
   display: inline-block;
@@ -7,17 +16,21 @@
   font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
-  margin: 0 0 16px 20px;  /* 左寄せ + 左余白 */
-  max-width: 300px;       /* 長すぎない */
+  margin: 0 0 16px 20px; /* 左寄せ + 左余白 */
+  max-width: 300px;
 }
 
-/* ===== 名前入力エリア ===== */
+/* ===== 名前入力エリア（黒背景を短くする） ===== */
 .name-box {
-  margin: 0 0 10px 20px;  /* 左寄せ + 左余白 */
+  display: inline-block; /* 背景を内容に合わせる */
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  margin: 0 0 10px 20px; /* 左余白 */
 }
 
 .name-box .name-input {
-  width: 250px;          /* 短めに */
+  width: 220px; /* コンパクト */
   padding: 8px 12px;
   border-radius: 20px;
   border: none;
@@ -29,7 +42,7 @@
 
 /* ===== ボタンエリア ===== */
 .button-area {
-  margin: 10px 0 20px 20px; /* 左寄せ + 左余白 */
+  margin: 10px 0 20px 20px; /* 左余白 */
 }
 
 .add-button,
@@ -53,11 +66,11 @@
 
 /* ===== 出欠表 ===== */
 .schedule-list {
-  margin: 20px;
+  margin: 20px 40px 20px 20px;  /* 左右に余白（右余白を確保） */
   padding: 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.4);
-  text-align: left;  /* 全体を左寄せ */
+  text-align: left;
 }
 
 .table-title {
