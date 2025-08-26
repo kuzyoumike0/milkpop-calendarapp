@@ -1,3 +1,51 @@
+/* ===== 登録ページ全体 ===== */
+.register-page {
+  padding: 20px;
+  text-align: center;
+}
+
+/* ===== ページタイトル ===== */
+.page-title {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #004CA0;
+}
+
+/* ===== タイトル入力 ===== */
+.title-input-container {
+  margin-bottom: 20px;
+}
+
+.title-input {
+  width: 300px;
+  padding: 8px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+/* ===== モード切替ボタン ===== */
+.mode-switch {
+  margin-bottom: 20px;
+}
+
+.mode-btn {
+  margin: 0 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  background: #eee;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background: #FDB9C8;
+  color: #fff;
+}
+
 /* ===== カレンダーとリスト全体 ===== */
 .calendar-container {
   display: flex;
@@ -5,11 +53,11 @@
   align-items: flex-start;
   gap: 30px;
   margin: 20px auto;
-  max-width: 1200px;   /* 全体幅を制御 */
-  padding: 0 40px;     /* 左右に余白 */
+  max-width: 1200px;   /* 全体幅 */
+  padding: 0 40px;     /* 左右余白 */
 }
 
-/* ===== カレンダーカード (左 7割) ===== */
+/* ===== カレンダーカード (左7割) ===== */
 .calendar-box {
   flex: 7;
   background: rgba(255, 255, 255, 0.08);
@@ -20,7 +68,7 @@
               -8px -8px 16px rgba(255,255,255,0.2);
 }
 
-/* ===== リストカード (右 3割) ===== */
+/* ===== 選択リストカード (右3割) ===== */
 .selected-dates {
   flex: 3;
   background: rgba(255, 255, 255, 0.08);
@@ -30,6 +78,93 @@
   box-shadow: 8px 8px 16px rgba(0,0,0,0.3),
               -8px -8px 16px rgba(255,255,255,0.2);
   text-align: left;
+}
+
+.selected-dates h3 {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.date-item {
+  margin-bottom: 12px;
+}
+
+.date-text {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+/* ===== 時間帯ボタン ===== */
+.radio-group-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.time-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-btn.active {
+  background: #004CA0;
+  color: #fff;
+  border-color: #004CA0;
+}
+
+.custom-time {
+  margin-left: 10px;
+}
+
+.time-dropdown {
+  margin: 0 4px;
+  padding: 2px;
+}
+
+/* ===== 共有リンク ===== */
+.share-link-container {
+  margin-top: 20px;
+}
+
+.share-link-btn {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  background: #FDB9C8;
+  color: #fff;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.share-link-btn:hover {
+  background: #004CA0;
+}
+
+.share-link-box {
+  margin-top: 10px;
+}
+
+.copy-btn {
+  margin-left: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+  background: #eee;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: #FDB9C8;
+  color: #fff;
 }
 
 /* ===== カレンダー調整 ===== */
