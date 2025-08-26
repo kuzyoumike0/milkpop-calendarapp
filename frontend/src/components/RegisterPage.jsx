@@ -1,8 +1,7 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
-import "react-calendar/dist/Calendar.css";
+import "../common.css";
 import "../register.css";
 
 const RegisterPage = () => {
@@ -20,7 +19,7 @@ const RegisterPage = () => {
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト（1時間刻み）
+  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
@@ -98,7 +97,7 @@ const RegisterPage = () => {
     setSelectedDates(updated);
   };
 
-  // 共有リンク生成
+  // ===== DBに保存して共有リンク発行 =====
   const generateShareLink = async () => {
     try {
       if (!title || selectedDates.length === 0) {
@@ -113,10 +112,11 @@ const RegisterPage = () => {
           title,
           dates: selectedDates.map((d) => ({
             date: d.date.toISOString().split("T")[0],
-            timeType: d.timeType,
+            time: d.timeType,
             startTime: d.startTime,
             endTime: d.endTime,
           })),
+          options: {},
         }),
       });
 
@@ -139,11 +139,14 @@ const RegisterPage = () => {
     alert("リンクをコピーしました！✨");
   };
 
+  // 選択した日程を日付順にソート
+  const sortedDates = [...selectedDates].sort((a, b) => a.date - b.date);
+
   return (
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* タイトル入力 */}
+      {/* ===== タイトル入力 ===== */}
       <div className="glass-black input-card cute-title-box">
         <input
           type="text"
@@ -155,7 +158,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* カレンダー */}
+        {/* ===== カレンダー ===== */}
         <div className="glass-white calendar-card">
           {/* モード切替 */}
           <div className="mode-select">
@@ -191,12 +194,12 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="iso8601"
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
             }
             onClickDay={(date) => handleDateClick(date)}
+            value={null}
             tileClassName={({ date }) => {
               const jstDate = getJSTDate(date);
               const today = getJSTDate(new Date());
@@ -215,6 +218,7 @@ const RegisterPage = () => {
                 return "selected-date";
               if (holiday || isSunday) return "day-sunday";
               if (isSaturday) return "day-saturday";
+
               return "day-default";
             }}
             tileContent={({ date }) => {
@@ -227,14 +231,14 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 選択リスト */}
+        {/* ===== リスト ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
-          {selectedDates.length === 0 ? (
+          {sortedDates.length === 0 ? (
             <p>日付を選択してください</p>
           ) : (
             <ul>
-              {selectedDates.map((d, i) => (
+              {sortedDates.map((d, i) => (
                 <li key={i} className="date-item">
                   <span className="date-label">
                     📅 {d.date.toLocaleDateString("ja-JP")}
@@ -290,8 +294,7 @@ const RegisterPage = () => {
             </ul>
           )}
 
-          {/* 共有リンクボタン */}
-          <button className="share-button" onClick={generateShareLink}>
+          <button className="share-button fancy-share" onClick={generateShareLink}>
             🌸 共有リンクを発行
           </button>
           {shareUrl && (
