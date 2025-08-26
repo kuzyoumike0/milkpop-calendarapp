@@ -1,7 +1,5 @@
-/* frontend/src/personal.css */
-
 /* ====== ページ全体 ====== */
-.personal-page {
+.register-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
@@ -21,22 +19,22 @@
 
 /* ====== ガラス風カード ====== */
 .glass-white, .glass-black {
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   padding: 20px;
 }
 
 .glass-white {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .glass-black {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
 }
 
-/* ====== タイトル・メモ入力 ====== */
+/* ====== タイトル入力 ====== */
 .input-card {
   margin-bottom: 20px;
   width: 80%;
@@ -67,29 +65,6 @@
   box-shadow: 0 0 12px #FDB9C8;
 }
 
-.memo-box {
-  width: 80%;
-}
-
-.memo-input {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px 14px;
-  font-size: 14px;
-  border: none;
-  border-radius: 12px;
-  background: #111;
-  color: #fff;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
-  resize: vertical;
-}
-
-.memo-input:focus {
-  outline: none;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 12px #FDB9C8;
-}
-
 /* ====== メインエリア ====== */
 .main-content {
   display: flex;
@@ -103,75 +78,147 @@
   flex: 7;
 }
 
+/* ====== モード切替（ラジオをお洒落ボタン風に） ====== */
 .mode-select {
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
-  gap: 20px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.mode-select label {
-  font-size: 14px;
+.mode-select input[type="radio"] {
+  display: none;
+}
+
+.mode-select span {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid #FDB9C8;
+  background: rgba(255, 255, 255, 0.1);
+  color: #FDB9C8;
+  font-weight: bold;
   cursor: pointer;
+  transition: all 0.3s;
 }
 
+.mode-select input[type="radio"]:checked + span {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+/* --- react-calendar カスタマイズ --- */
 .react-calendar {
   width: 100% !important;
   border: none !important;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.2);
-  color: #fff;
-  padding: 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-.react-calendar__tile {
-  border-radius: 8px;
-  transition: all 0.2s;
+/* ナビゲーション */
+.react-calendar__navigation {
+  margin-bottom: 12px;
 }
-
-.react-calendar__tile:hover {
-  background: rgba(255,255,255,0.2);
-  cursor: pointer;
-}
-
-.selected-date {
-  background: #FDB9C8 !important;
-  color: #000 !important;
-  font-weight: bold;
-}
-
-.day-today {
-  border: 2px solid #fff;
-  background: rgba(255,255,255,0.2);
-  font-weight: bold;
-}
-
-.day-saturday {
-  color: #7ec8ff;
-}
-
-.day-sunday {
-  color: #ff6b6b;
-}
-
-.holiday-name {
-  display: block;
-  font-size: 10px;
-  color: #FDB9C8;
-  margin-top: 2px;
-}
-
 .react-calendar__navigation button {
   background: transparent;
   border: none;
   color: #fff;
   font-size: 20px;
-  transition: transform 0.2s;
+  transition: transform 0.2s, color 0.2s;
 }
-
 .react-calendar__navigation button:hover {
   color: #FDB9C8;
   transform: scale(1.2);
+}
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 6px;
+}
+.react-calendar__month-view__weekdays__weekday {
+  flex: 1;
+  text-align: center;
+}
+.react-calendar__month-view__weekdays__weekday abbr {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
+  font-weight: bold;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
+  background: #ffb3b3;
+  color: #fff;
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
+  background: #8fcfff;
+  color: #fff;
+}
+
+/* 日付セル */
+.react-calendar__tile {
+  border-radius: 14px;
+  margin: 4px;
+  padding: 14px 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+.react-calendar__tile:hover {
+  background: #FDB9C8;
+  color: #000;
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+/* 選択日 */
+.selected-date {
+  background: linear-gradient(145deg, #ffdde6, #FDB9C8) !important;
+  color: #000 !important;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  margin: auto;
+  display: inline-block;
+  transform: scale(1.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* 今日 */
+.day-today {
+  border: 2px solid #fff !important;
+  background: rgba(255,255,255,0.35) !important;
+  border-radius: 50%;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+/* 土曜・日曜・祝日 */
+.day-saturday {
+  color: #7ec8ff !important;
+}
+.day-sunday {
+  color: #ff7b7b !important;
+}
+.holiday-name {
+  font-size: 10px;
+  color: #FDB9C8;
+  margin-top: 2px;
 }
 
 /* ====== 選択した日程リスト ====== */
@@ -179,20 +226,17 @@
   flex: 3;
   margin-top: 20px;
 }
-
 .schedule-box h3 {
   margin-bottom: 10px;
   font-size: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   padding-bottom: 5px;
 }
-
 .schedule-box ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .date-item {
   margin-bottom: 14px;
   display: flex;
@@ -200,80 +244,12 @@
   gap: 8px;
   padding: 10px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.08);
 }
-
 .date-label {
   font-size: 16px;
   font-weight: bold;
   color: #FDB9C8;
 }
 
-/* ====== 時間区分ボタン ====== */
-.time-type-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.time-type-button {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #FDB9C8;
-  background: transparent;
-  color: #FDB9C8;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 13px;
-}
-
-.time-type-button:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-
-.time-type-button.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  box-shadow: 0 0 6px rgba(0,0,0,0.5);
-}
-
-/* ====== おしゃれなドロップダウン ====== */
-.stylish-dropdown {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding: 6px 28px 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #FDB9C8;
-  background: #111 url("data:image/svg+xml;utf8,<svg fill='%23FDB9C8' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center;
-  background-size: 14px;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.stylish-dropdown:hover {
-  background-color: #222;
-}
-
-.stylish-dropdown:focus {
-  outline: none;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 8px #FDB9C8;
-}
-
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.range-tilde {
-  font-size: 16px;
-  color: #fff;
-}
+/* =====
