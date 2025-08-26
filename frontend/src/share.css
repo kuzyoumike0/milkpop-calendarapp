@@ -86,12 +86,12 @@
 .schedule-header,
 .schedule-item {
   display: grid;
-  grid-template-columns: 2fr 1.2fr repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: 2fr 1fr 3fr; /* 日付, 時間帯, 回答 */
   padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  align-items: center;
+  align-items: flex-start;
   color: #fff;
-  min-width: 600px; /* 横スクロール時の最小幅 */
+  min-width: 600px; /* レイアウト崩れ防止 */
 }
 
 .schedule-header {
@@ -115,7 +115,41 @@
   word-break: keep-all;
 }
 
-/* ユーザ名リンク（ヘッダー部分） */
+/* 回答欄を縦並び＆スクロール対応 */
+.user-response {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 150px;      /* 高さ制限 */
+  overflow-y: auto;       /* 縦スクロール */
+  padding-right: 6px;     /* スクロールバー分余白 */
+}
+
+/* 各ユーザ行 */
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+/* スクロールバーを細く＆お洒落に */
+.user-response::-webkit-scrollbar {
+  width: 6px;
+}
+
+.user-response::-webkit-scrollbar-thumb {
+  background: #fdb9c8;
+  border-radius: 3px;
+}
+
+.user-response::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ユーザ名リンク */
 .user-link {
   color: #fdb9c8;
   text-decoration: underline;
