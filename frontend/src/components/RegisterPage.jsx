@@ -22,7 +22,12 @@ export default function RegisterPage() {
     if (selectMode === "single") {
       setSelectedDates([{ date: dateStr, timeType }]);
     } else if (selectMode === "multi") {
-      setSelectedDates((prev) => [...prev, { date: dateStr, timeType }]);
+      setSelectedDates((prev) => {
+        if (prev.find((d) => d.date === dateStr)) {
+          return prev.filter((d) => d.date !== dateStr);
+        }
+        return [...prev, { date: dateStr, timeType }];
+      });
     } else if (selectMode === "range") {
       if (!rangeStart) {
         setRangeStart(date);
@@ -90,6 +95,11 @@ export default function RegisterPage() {
     }
   };
 
+  // ===== 日付ソートして表示 =====
+  const sortedDates = [...selectedDates].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
@@ -139,7 +149,7 @@ export default function RegisterPage() {
         <div className="register-box">
           <h3>選択中の日程</h3>
           <ul className="event-list">
-            {selectedDates.map((d, idx) => (
+            {sortedDates.map((d, idx) => (
               <li key={idx}>
                 {d.date}
                 <div className="time-type-buttons">
