@@ -1,10 +1,9 @@
-.share-page {
+.register-page {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
   font-family: "Zen Maru Gothic", sans-serif;
   color: #222;
-  overflow-x: auto; /* 横スクロール対応 */
 }
 
 /* タイトル */
@@ -12,147 +11,110 @@
   font-size: 1.8rem;
   font-weight: bold;
   color: #004ca0;
-  margin: 20px 0 30px 20px; /* 左に余白を確保 */
+  margin: 20px 0 30px 20px; /* 左に余白 */
 }
 
-/* 名前入力と追加ボタンのカード */
-.name-box {
+/* 入力フォーム全体 */
+.form-container {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 15px;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.6);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  width: fit-content;
-  margin: 0 auto 20px auto; /* 中央寄せ + 下余白 */
+  margin-bottom: 20px;
+}
+
+/* ラベル */
+.form-label {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
 }
 
 /* 入力フィールド */
-.name-input {
+.form-input,
+.form-select,
+.form-textarea {
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 1rem;
   outline: none;
+  width: 100%;
   transition: 0.2s;
-  width: 220px;
 }
 
-.name-input:focus {
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
   border-color: #004ca0;
   box-shadow: 0 0 6px rgba(0, 76, 160, 0.6);
 }
 
-/* 新規追加ボタン */
-.add-button {
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
-  font-weight: bold;
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* スケジュール表のカード */
-.schedule-list {
-  margin: 20px;
-  padding: 20px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  overflow-x: auto; /* ユーザが多い時に横スクロール */
-}
-
-/* 表タイトル */
-.table-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* テーブル部分 */
-.schedule-header,
-.schedule-item {
-  display: grid;
-  grid-template-columns: 2fr 1fr repeat(auto-fit, minmax(100px, 1fr));
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  min-width: 600px;
-}
-
-.schedule-header {
-  font-weight: bold;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 12px 0;
-  text-align: center;
-}
-
-.schedule-item {
-  padding: 10px 0;
-  text-align: center;
-}
-
-/* 各セル */
-.date,
-.time {
-  padding: 8px;
-  font-weight: bold;
-  text-align: center;
+/* カレンダー部分 */
+.calendar-container {
+  margin: 20px 0;
+  padding: 15px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  margin: 2px;
+  border-radius: 12px;
 }
 
-.user-col {
-  padding: 8px;
+/* カレンダーUI */
+.calendar {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar th,
+.calendar td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
-  font-weight: bold;
-  color: #fdb9c8;
+  padding: 10px;
+  color: #222;
 }
 
-.user-response {
-  padding: 4px;
-  text-align: center;
-}
-
-/* プルダウン */
-.user-response select {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-  cursor: pointer;
-  background: #222;
+.calendar th {
+  background: #004ca0;
   color: #fff;
+  font-weight: bold;
 }
 
-.user-response select:disabled {
-  background: #555;
-  color: #aaa;
-  cursor: not-allowed;
+.calendar td {
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-/* 保存ボタン */
-.button-area {
-  margin-top: 20px;
-  text-align: center;
+.calendar td:hover {
+  background: rgba(253, 185, 200, 0.3);
 }
 
-.save-button {
+/* 土曜・日曜・祝日 */
+.calendar .sat {
+  color: #0066ff;
+  font-weight: bold;
+}
+.calendar .sun,
+.calendar .holiday {
+  color: #ff0000;
+  font-weight: bold;
+}
+
+/* 選択範囲 */
+.calendar .selected {
+  background: #fdb9c8;
+  color: #000;
+  font-weight: bold;
+  border-radius: 6px;
+}
+
+/* ボタン */
+.submit-button {
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
   color: #fff;
   font-weight: bold;
@@ -161,17 +123,38 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: 10px;
 }
 
-.save-button:hover {
+.submit-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
-/* 保存メッセージ */
-.save-message {
-  text-align: center;
-  margin-top: 15px;
-  color: #00c853;
-  font-weight: bold;
+/* 共有リンク */
+.share-link-box {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  word-break: break-all;
+}
+
+/* 登録済み日程リスト */
+.registered-list {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+}
+
+.registered-item {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.registered-item:last-child {
+  border-bottom: none;
 }
