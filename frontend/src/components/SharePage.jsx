@@ -1,3 +1,4 @@
+// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -128,11 +129,14 @@ const SharePage = () => {
       });
       const saved = await res.json();
 
-      // 即時反映（伝助みたいに）
+      // ✅ 即時反映（一覧に自分の回答を更新）
       setAllResponses((prev) => {
         const filtered = prev.filter((r) => r.user_id !== saved.user_id);
         return [...filtered, saved];
       });
+
+      // ✅ 自分の responses を更新してUIに反映
+      setResponses(saved.responses);
 
       setIsEditing(false);
     } catch (err) {
