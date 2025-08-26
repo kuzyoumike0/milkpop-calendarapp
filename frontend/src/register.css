@@ -177,29 +177,41 @@
   color: #fff;
 }
 
-/* ===== 曜日ヘッダー（日曜始まり固定） ===== */
-.react-calendar__month-view__weekdays {
+/* --- グリッドを統一して曜日と日を揃える --- */
+.react-calendar__month-view {
   display: grid !important;
   grid-template-columns: repeat(7, 1fr) !important;
   text-align: center;
 }
 
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays {
+  display: contents !important;
+}
+
 .react-calendar__month-view__weekdays__weekday {
   font-weight: bold;
   font-size: 0.9rem;
-  color: #fff;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  height: 40px;
+  line-height: 40px;
 }
 
-/* ===== カレンダーの日付セル ===== */
+/* 日セル */
 .react-calendar__tile {
-  padding: 14px 0;
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  height: 80px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
+  transition: all 0.2s ease;
+  border-radius: 8px;
 }
 
+/* ホバー */
 .react-calendar__tile:hover {
-  background: rgba(253, 185, 200, 0.8);
+  background: rgba(253,185,200,0.8);
   color: #fff;
   transform: scale(1.05);
 }
@@ -216,17 +228,16 @@
   color: #fff !important;
 }
 
-/* 土曜 */
+/* 土曜（青） */
 .react-calendar__month-view__weekdays__weekday:nth-child(7),
-.react-calendar__tile.saturday {
+.react-calendar__tile:nth-child(7n) {
   color: #004CA0 !important;
 }
 
-/* 日曜（祝日も含む） */
+/* 日曜（赤） */
 .react-calendar__month-view__weekdays__weekday:nth-child(1),
-.react-calendar__tile.sunday-holiday {
+.react-calendar__tile:nth-child(7n+1) {
   color: #FF0000 !important;
-  font-weight: bold;
 }
 
 /* 祝日名 */
@@ -235,4 +246,5 @@
   color: #FF0000;
   font-weight: bold;
   display: block;
+  margin-top: 4px;
 }
