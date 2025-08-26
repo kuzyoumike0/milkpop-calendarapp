@@ -17,6 +17,7 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [editingUser, setEditingUser] = useState(""); // 🔑 編集中ユーザ
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -88,7 +89,19 @@ const SharePage = () => {
     }
     if (!users.includes(username)) {
       setUsers((prev) => [...prev, username]);
-      setIsEditing(true);
+    }
+  };
+
+  // ===== 編集開始 =====
+  const handleEditUser = (u) => {
+    setEditingUser(u);
+    setIsEditing(true);
+    setUsername(u);
+
+    // 既存の回答をセット
+    const userResp = allResponses.find((r) => r.username === u);
+    if (userResp) {
+      setResponses(userResp.responses);
     }
   };
 
@@ -99,13 +112,13 @@ const SharePage = () => {
     setResponses((prev) => {
       const updated = { ...prev, [key]: value };
       setAllResponses((prevAll) => {
-        const existing = prevAll.find((r) => r.user_id === userId);
+        const existing = prevAll.find((r) => r.username === editingUser);
         if (existing) {
           return prevAll.map((r) =>
-            r.user_id === userId ? { ...r, responses: updated } : r
+            r.username === editingUser ? { ...r, responses: updated } : r
           );
         } else {
-          return [...prevAll, { user_id: userId, username, responses: updated }];
+          return [...prevAll, { user_id: userId, username: editingUser, responses: updated }];
         }
       });
       return updated;
@@ -114,12 +127,12 @@ const SharePage = () => {
 
   // ===== 保存 =====
   const handleSave = async () => {
-    if (!username) {
-      alert("名前を入力してください！（必須）");
+    if (!editingUser) {
+      alert("編集するユーザを選択してください");
       return;
     }
     try {
-      const payload = { user_id: userId, username, responses };
+      const payload = { user_id: userId, username: editingUser, responses };
 
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -129,13 +142,13 @@ const SharePage = () => {
       const saved = await res.json();
 
       setAllResponses((prev) => {
-        const filtered = prev.filter((r) => r.user_id !== saved.user_id);
+        const filtered = prev.filter((r) => r.username !== saved.username);
         return [...filtered, saved];
       });
       setResponses(saved.responses);
       setIsEditing(false);
 
-      setSaveMessage("✅ 保存しました！");
+      setSaveMessage(`✅ ${editingUser} の回答を保存しました！`);
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (err) {
       console.error("保存エラー", err);
@@ -148,25 +161,15 @@ const SharePage = () => {
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
 
-      {/* タイトルカード */}
-      <div className="glass-black title-box">
-        {schedule.title}
-        {saveMessage && <span className="save-message">{saveMessage}</span>}
-      </div>
-
-      {/* 名前入力 */}
+      {/* 新規追加 */}
       <div className="glass-black name-box">
         <input
           type="text"
           className="name-input"
-          placeholder="あなたの名前を入力（必須）"
+          placeholder="新しいユーザ名を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-      </div>
-
-      {/* 新規追加ボタン */}
-      <div className="button-area">
         <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
@@ -175,6 +178,14 @@ const SharePage = () => {
       {/* 出欠表 見出し付き */}
       <div className="glass-black schedule-list">
         <h3 className="table-title">🗓 登録された日程</h3>
+
+        {/* 見出し行 */}
+        <div className="schedule-header">
+          <span className="date">日程</span>
+          <span className="time">時間帯</span>
+          <span className="user-col">ユーザ名</span>
+        </div>
+
         {schedule.dates.map((d, i) => {
           const key =
             d.timeType === "時間指定" && d.startTime && d.endTime
@@ -194,45 +205,53 @@ const SharePage = () => {
             <div key={i} className="schedule-item">
               <span className="date">{d.date}</span>
               <span className="time">{timeLabel}</span>
-              {users.map((u, idx) => {
-                const userResp = allResponses.find((r) => r.username === u);
-                const isSelf = u === username;
-                const value = isSelf
-                  ? responses[key] || "-"
-                  : userResp?.responses?.[key] || "-";
+              <span className="user-col">
+                {users.map((u, idx) => {
+                  const userResp = allResponses.find((r) => r.username === u);
+                  const value = userResp?.responses?.[key] || "-";
 
-                return (
-                  <span key={idx} className="user-response">
-                    {isSelf && isEditing ? (
-                      attendanceOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          className={`choice-btn ${
-                            value === opt ? "active" : ""
-                          }`}
-                          onClick={() => handleSelect(key, opt)}
-                        >
-                          {opt}
-                        </button>
-                      ))
-                    ) : (
-                      value
-                    )}
-                  </span>
-                );
-              })}
+                  return (
+                    <span key={idx} className="user-response">
+                      <a
+                        href="#!"
+                        className="user-link"
+                        onClick={() => handleEditUser(u)}
+                      >
+                        {u}
+                      </a>
+                      {editingUser === u && isEditing ? (
+                        attendanceOptions.map((opt) => (
+                          <button
+                            key={opt}
+                            className={`choice-btn ${
+                              value === opt ? "active" : ""
+                            }`}
+                            onClick={() => handleSelect(key, opt)}
+                          >
+                            {opt}
+                          </button>
+                        ))
+                      ) : (
+                        <span className="response-value">{value}</span>
+                      )}
+                    </span>
+                  );
+                })}
+              </span>
             </div>
           );
         })}
       </div>
 
-      {users.includes(username) && isEditing && (
+      {editingUser && isEditing && (
         <div className="button-area">
           <button className="save-button" onClick={handleSave}>
             保存する
           </button>
         </div>
       )}
+
+      {saveMessage && <div className="save-message">{saveMessage}</div>}
     </div>
   );
 };
