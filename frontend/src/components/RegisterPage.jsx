@@ -69,7 +69,6 @@ const RegisterPage = () => {
       [date]: { ...prev[date], start: value },
     }));
   };
-
   const handleCustomEndChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
@@ -155,22 +154,11 @@ const RegisterPage = () => {
         </button>
       </div>
 
+      {/* カレンダー */}
       <div className="calendar-box">
-        {/* 自作曜日ヘッダー（日曜始まり固定） */}
-        <div className="calendar-weekdays">
-          <div className="weekday sunday">日</div>
-          <div className="weekday">月</div>
-          <div className="weekday">火</div>
-          <div className="weekday">水</div>
-          <div className="weekday">木</div>
-          <div className="weekday">金</div>
-          <div className="weekday saturday">土</div>
-        </div>
-
-        {/* React-Calendar */}
         <Calendar
           locale="ja-JP"
-          calendarType="US" // ✅ 日曜始まり
+          calendarType="US"   // ✅ 日曜始まり
           onClickDay={handleDateClick}
           tileContent={({ date, view }) => {
             if (view === "month") {
@@ -209,6 +197,7 @@ const RegisterPage = () => {
             .map((date) => (
               <li key={date} className="date-item">
                 <span className="date-text">{formatDate(date)}</span>
+
                 <div className="radio-group-inline">
                   <button
                     className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
@@ -234,6 +223,7 @@ const RegisterPage = () => {
                   >
                     時間指定
                   </button>
+
                   {timeSelections[date] === "custom" && (
                     <div className="custom-time">
                       <select
@@ -274,6 +264,7 @@ const RegisterPage = () => {
         <button className="share-link-btn" onClick={handleGenerateLink}>
           ✨ 共有リンクを発行
         </button>
+
         {shareLink && (
           <div className="share-link-box">
             <a href={shareLink} target="_blank" rel="noopener noreferrer">
