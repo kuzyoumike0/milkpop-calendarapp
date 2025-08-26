@@ -32,7 +32,7 @@
 }
 
 .glass-black {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   color: #fff;
 }
 
@@ -176,12 +176,12 @@
 }
 
 .date-item {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
   background: rgba(255,255,255,0.05);
 }
 
@@ -191,26 +191,68 @@
   color: #FDB9C8;
 }
 
-.time-select, .time-dropdown {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: none;
-  background: #222;
-  color: #fff;
-  font-size: 14px;
-  margin-top: 4px;
+/* ====== 時間区分ボタン ====== */
+.time-type-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.time-select:focus, .time-dropdown:focus {
+.time-type-button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+  background: transparent;
+  color: #FDB9C8;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.time-type-button:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+
+.time-type-button.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* ====== おしゃれなドロップダウン ====== */
+.stylish-dropdown {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 6px 28px 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+  background: #111 url("data:image/svg+xml;utf8,<svg fill='%23FDB9C8' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center;
+  background-size: 14px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.stylish-dropdown:hover {
+  background-color: #222;
+}
+
+.stylish-dropdown:focus {
   outline: none;
-  box-shadow: 0 0 6px #FDB9C8;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 8px #FDB9C8;
 }
 
 .time-range {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .range-tilde {
