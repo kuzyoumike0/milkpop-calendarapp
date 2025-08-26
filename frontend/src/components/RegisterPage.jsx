@@ -162,78 +162,64 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
-                  <div className="radio-group">
-                    <label>
-                      <input
-                        type="radio"
-                        name={`time-${date}`}
-                        value="all"
-                        checked={timeSelections[date] === "all"}
-                        onChange={(e) => handleTimeChange(date, e.target.value)}
-                      />
+                  {/* 横並びボタン */}
+                  <div className="radio-group-inline">
+                    <button
+                      className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
+                      onClick={() => handleTimeChange(date, "all")}
+                    >
                       終日
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`time-${date}`}
-                        value="day"
-                        checked={timeSelections[date] === "day"}
-                        onChange={(e) => handleTimeChange(date, e.target.value)}
-                      />
+                    </button>
+                    <button
+                      className={`time-btn ${timeSelections[date] === "day" ? "active" : ""}`}
+                      onClick={() => handleTimeChange(date, "day")}
+                    >
                       昼
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`time-${date}`}
-                        value="night"
-                        checked={timeSelections[date] === "night"}
-                        onChange={(e) => handleTimeChange(date, e.target.value)}
-                      />
+                    </button>
+                    <button
+                      className={`time-btn ${timeSelections[date] === "night" ? "active" : ""}`}
+                      onClick={() => handleTimeChange(date, "night")}
+                    >
                       夜
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name={`time-${date}`}
-                        value="custom"
-                        checked={timeSelections[date] === "custom"}
-                        onChange={(e) => handleTimeChange(date, e.target.value)}
-                      />
+                    </button>
+                    <button
+                      className={`time-btn ${timeSelections[date] === "custom" ? "active" : ""}`}
+                      onClick={() => handleTimeChange(date, "custom")}
+                    >
                       時間指定
-                    </label>
-                  </div>
+                    </button>
 
-                  {timeSelections[date] === "custom" && (
-                    <div className="custom-time">
-                      <select
-                        className="time-dropdown"
-                        onChange={(e) =>
-                          handleCustomStartChange(date, e.target.value)
-                        }
-                      >
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <option key={i} value={i}>
-                            {i}:00
-                          </option>
-                        ))}
-                      </select>
-                      <span> ~ </span>
-                      <select
-                        className="time-dropdown"
-                        onChange={(e) =>
-                          handleCustomEndChange(date, e.target.value)
-                        }
-                      >
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <option key={i} value={i + 1}>
-                            {i + 1}:00
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                    {/* 時間指定ドロップダウン */}
+                    {timeSelections[date] === "custom" && (
+                      <div className="custom-time">
+                        <select
+                          className="time-dropdown"
+                          onChange={(e) =>
+                            handleCustomStartChange(date, e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {i}:00
+                            </option>
+                          ))}
+                        </select>
+                        <span> ~ </span>
+                        <select
+                          className="time-dropdown"
+                          onChange={(e) =>
+                            handleCustomEndChange(date, e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={i + 1}>
+                              {i + 1}:00
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </li>
               ))}
           </ul>
