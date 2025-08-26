@@ -235,3 +235,30 @@
   margin-top: 4px;
   display: block;
 }
+/* ===== 曜日ヘッダー（日曜始まり固定） ===== */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.weekday {
+  padding: 6px 0;
+}
+
+.weekday.sunday {
+  color: red;   /* ✅ 日曜は赤 */
+}
+
+.weekday.saturday {
+  color: #004CA0; /* ✅ 土曜は青 */
+}
+
+/* React-Calendar 内部の曜日ラベルは非表示にする */
+.react-calendar__month-view__weekdays {
+  display: none !important;
+}
