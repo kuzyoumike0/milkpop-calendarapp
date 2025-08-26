@@ -4,7 +4,7 @@ import Holidays from "date-holidays";
 import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
-import CustomDropdown from "./CustomDropdown"; // ← カスタムドロップダウン
+import CustomDropdown from "./CustomDropdown"; // カスタムドロップダウン
 
 const hd = new Holidays("JP");
 
@@ -83,10 +83,10 @@ const RegisterPage = () => {
           let newStart = start !== undefined ? Number(start) : d.startHour || 0;
           let newEnd = end !== undefined ? Number(end) : d.endHour || 1;
 
-          // 🔹 制御: 開始 < 終了 を保証
+          // 🔹 制御: 開始 < 終了 ≤ 24 を保証
           if (newStart >= newEnd) {
             if (start !== undefined) {
-              newEnd = newStart + 1 <= 23 ? newStart + 1 : 23;
+              newEnd = newStart + 1 <= 24 ? newStart + 1 : 24;
             } else if (end !== undefined) {
               newStart = newEnd - 1 >= 0 ? newEnd - 1 : 0;
             }
@@ -184,6 +184,7 @@ const RegisterPage = () => {
                     <div className="time-dropdowns">
                       <CustomDropdown
                         value={e.startHour || 0}
+                        max={23}   // 開始は0〜23
                         onChange={(val) =>
                           handleTimeChange(
                             e.date,
@@ -196,6 +197,7 @@ const RegisterPage = () => {
                       ～
                       <CustomDropdown
                         value={e.endHour || 1}
+                        max={24}   // 終了は0〜24
                         onChange={(val) =>
                           handleTimeChange(
                             e.date,
