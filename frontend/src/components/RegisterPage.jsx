@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -7,24 +8,21 @@ import "../register.css";
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [mode, setMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
   const [shareUrl, setShareUrl] = useState("");
 
   const hd = new Holidays("JP");
 
-  // JST変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック処理
   const handleDateClick = (date) => {
     const jstDate = getJSTDate(date);
 
@@ -72,7 +70,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 区分ボタン切替
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
@@ -90,14 +87,12 @@ const RegisterPage = () => {
     setSelectedDates(updated);
   };
 
-  // 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
-  // ===== DBに保存して共有リンク発行 =====
   const generateShareLink = async () => {
     try {
       if (!title || selectedDates.length === 0) {
@@ -133,7 +128,6 @@ const RegisterPage = () => {
     }
   };
 
-  // クリップボードにコピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     alert("リンクをコピーしました！✨");
@@ -143,7 +137,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== タイトル入力 ===== */}
       <div className="glass-black input-card cute-title-box">
         <input
           type="text"
@@ -155,9 +148,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
-          {/* モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -192,6 +183,7 @@ const RegisterPage = () => {
           <Calendar
             locale="ja-JP"
             calendarType="gregory"
+            firstDayOfWeek={1}
             onClickDay={(date) => handleDateClick(date)}
             value={null}
             tileClassName={({ date }) => {
@@ -225,7 +217,6 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== リスト（右3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -238,7 +229,6 @@ const RegisterPage = () => {
                     📅 {d.date.toLocaleDateString("ja-JP")}
                   </span>
 
-                  {/* 区分ボタン */}
                   <div className="time-type-buttons">
                     {["終日", "昼", "夜", "時間指定"].map((type) => (
                       <button
@@ -253,7 +243,6 @@ const RegisterPage = () => {
                     ))}
                   </div>
 
-                  {/* 時間指定の場合だけドロップダウン */}
                   {d.timeType === "時間指定" && (
                     <span className="time-range">
                       <select
