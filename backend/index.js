@@ -335,7 +335,7 @@ app.post("/api/personal", async (req, res) => {
 // ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPath = path.join(__dirname, "../frontend/build");
+const frontendPath = path.join(__dirname, "public"); // ← public 配下を見るように変更
 app.use(express.static(frontendPath));
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
