@@ -78,6 +78,36 @@
   flex: 7;
 }
 
+/* ====== モード切替（ラジオをお洒落ボタン風に） ====== */
+.mode-select {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mode-select input[type="radio"] {
+  display: none;
+}
+
+.mode-select span {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid #FDB9C8;
+  background: rgba(255, 255, 255, 0.1);
+  color: #FDB9C8;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.mode-select input[type="radio"]:checked + span {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
 /* --- react-calendar カスタマイズ --- */
 .react-calendar {
   width: 100% !important;
@@ -107,11 +137,12 @@
 
 /* 曜日ヘッダー */
 .react-calendar__month-view__weekdays {
-  text-align: center;
-  font-weight: bold;
+  display: flex;
+  justify-content: space-around;
   margin-bottom: 6px;
 }
 .react-calendar__month-view__weekdays__weekday {
+  flex: 1;
   text-align: center;
 }
 .react-calendar__month-view__weekdays__weekday abbr {
@@ -221,106 +252,4 @@
   color: #FDB9C8;
 }
 
-/* ====== 時間区分ボタン ====== */
-.time-type-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.time-type-button {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #FDB9C8;
-  background: transparent;
-  color: #FDB9C8;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.time-type-button:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-.time-type-button.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  box-shadow: 0 0 6px rgba(0,0,0,0.5);
-}
-
-/* ====== ドロップダウン ====== */
-.stylish-dropdown {
-  appearance: none;
-  padding: 6px 28px 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #FDB9C8;
-  background: #111 url("data:image/svg+xml;utf8,<svg fill='%23FDB9C8' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center;
-  background-size: 14px;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.stylish-dropdown:hover {
-  background-color: #222;
-}
-.stylish-dropdown:focus {
-  outline: none;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 8px #FDB9C8;
-}
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-.range-tilde {
-  font-size: 16px;
-  color: #fff;
-}
-
-/* ====== 共有リンク ====== */
-.share-button {
-  margin-top: 16px;
-  padding: 10px 16px;
-  font-size: 16px;
-  border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.share-button:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #ffcad4, #0055cc);
-}
-.share-link-box {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.share-link {
-  color: #FDB9C8;
-  font-weight: bold;
-  text-decoration: none;
-  word-break: break-all;
-}
-.copy-button {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: none;
-  background: #FDB9C8;
-  color: #000;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.copy-button:hover {
-  transform: scale(1.05);
-  background: #ffdae2;
-}
+/* =====
