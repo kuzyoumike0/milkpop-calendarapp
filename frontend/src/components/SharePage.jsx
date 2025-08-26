@@ -16,154 +16,168 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== 日付フォーマット（YYYY年M月D日(曜)） =====
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }) + `(${weekday})`;
-  };
-
   // ===== スケジュール読み込み =====
   useEffect(() => {
     const fetchSchedule = async () => {
       const res = await fetch(`/api/schedules/${token}`);
       if (res.ok) {
         const data = await res.json();
-        // 日付でソートして保持
-        data.dates.sort((a, b) => new Date(a.date) - new Date(b.date));
         setSchedule(data);
       }
     };
-    fetchSchedule();
 
-    socket.emit("join", token);
+    const fetchResponses = async () => {
+      const res = await fetch(`/api/schedules/${token}/responses`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllResponses(data);
+      }
+    };
+
+    fetchSchedule();
+    fetchResponses();
+
+    socket.emit("joinSchedule", token);
 
     socket.on("updateResponses", (data) => {
-      setAllResponses(data);
+      setAllResponses((prev) => {
+        const exists = prev.find((r) => r.user_id === data.user_id);
+        if (exists) {
+          return prev.map((r) => (r.user_id === data.user_id ? data : r));
+        }
+        return [data, ...prev];
+      });
+    });
+
+    socket.on("deleteResponse", (data) => {
+      setAllResponses((prev) => prev.filter((r) => r.user_id !== data.user_id));
     });
 
     return () => {
       socket.off("updateResponses");
+      socket.off("deleteResponse");
     };
   }, [token]);
 
   // ===== 回答変更 =====
-  const handleResponseChange = (date, value) => {
+  const handleResponseChange = (dateKey, value) => {
     setResponses((prev) => ({
       ...prev,
-      [date]: value,
+      [dateKey]: value,
     }));
   };
 
   // ===== 保存処理 =====
-  const handleSave = () => {
-    const payload = {
-      token,
-      userId,
-      username: username || "匿名",
+  const handleSave = async () => {
+    if (!username.trim()) {
+      setSaveMessage("⚠️ 名前を入力してください");
+      return;
+    }
+
+    const newResponse = {
+      user_id: userId,
+      username,
       responses,
     };
-    socket.emit("saveResponse", payload);
-    setSaveMessage("✅ 保存しました！");
-    setTimeout(() => setSaveMessage(""), 2000);
+
+    // 即時反映（楽観的更新）
+    setAllResponses((prev) => {
+      const exists = prev.find((r) => r.user_id === userId);
+      if (exists) {
+        return prev.map((r) => (r.user_id === userId ? newResponse : r));
+      }
+      return [newResponse, ...prev];
+    });
+
+    try {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newResponse),
+      });
+
+      if (res.ok) {
+        setSaveMessage("✅ 保存しました");
+      } else {
+        setSaveMessage("❌ 保存に失敗しました");
+      }
+    } catch (err) {
+      console.error("保存エラー:", err);
+      setSaveMessage("❌ 保存エラー");
+    }
   };
+
+  if (!schedule) return <div>読み込み中...</div>;
+
+  const dates = schedule.dates;
 
   return (
     <div className="share-page">
-      <h2>日程共有ページ</h2>
+      <h2>共有スケジュール</h2>
 
-      <div className="share-container">
-        {/* ===== 日程リスト ===== */}
-        <div className="glass-card">
-          <h3>登録された日程</h3>
-          {schedule ? (
-            <ul className="schedule-list">
-              {schedule.dates.map((d, idx) => (
-                <li key={idx}>
-                  {formatDate(d.date)}　({d.type})
-                  {d.type === "時間指定" &&
-                    ` ${d.startHour}:00～${d.endHour}:00`}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>読み込み中...</p>
-          )}
-        </div>
-
-        {/* ===== 回答フォーム ===== */}
-        <div className="glass-card">
-          <h3>あなたの出欠入力</h3>
+      <div className="glass-card">
+        <label>
+          名前：
           <input
             type="text"
-            className="title-input"
-            placeholder="お名前を入力"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            placeholder="あなたの名前"
           />
-          <div className="response-form">
-            {schedule &&
-              schedule.dates.map((d, idx) => (
-                <div className="response-row" key={idx}>
-                  <span>{formatDate(d.date)}</span>
-                  <select
-                    className="response-select"
-                    value={responses[d.date] || "-"}
-                    onChange={(e) =>
-                      handleResponseChange(d.date, e.target.value)
-                    }
-                  >
-                    {attendanceOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-          </div>
-          <button onClick={handleSave} className="save-btn">
-            保存する
-          </button>
-          {saveMessage && <p>{saveMessage}</p>}
-        </div>
+        </label>
+
+        <table className="response-table">
+          <thead>
+            <tr>
+              <th>日程</th>
+              <th>回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dates.map((d, idx) => {
+              const key =
+                d.type === "時間指定" && d.startHour !== undefined
+                  ? `${d.date} (${d.startHour}~${d.endHour})`
+                  : `${d.date} (${d.type})`;
+              return (
+                <tr key={idx}>
+                  <td>{key}</td>
+                  <td>
+                    <select
+                      value={responses[key] || "-"}
+                      onChange={(e) => handleResponseChange(key, e.target.value)}
+                    >
+                      {attendanceOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <button onClick={handleSave} className="save-btn">
+          保存
+        </button>
+        {saveMessage && <p className="save-msg">{saveMessage}</p>}
       </div>
 
-      {/* ===== 全員の回答 ===== */}
-      <div className="glass-card" style={{ marginTop: "20px", width: "100%" }}>
-        <h3>全員の回答一覧</h3>
-        {allResponses.length > 0 ? (
-          <div style={{ overflowX: "auto" }}>
-            <table className="all-response-table">
-              <thead>
-                <tr>
-                  <th>名前</th>
-                  {schedule &&
-                    schedule.dates.map((d, idx) => (
-                      <th key={idx}>{formatDate(d.date)}</th>
-                    ))}
-                </tr>
-              </thead>
-              <tbody>
-                {allResponses.map((r, idx) => (
-                  <tr key={idx}>
-                    <td>{r.username}</td>
-                    {schedule &&
-                      schedule.dates.map((d, i) => (
-                        <td key={i}>{r.responses[d.date] || "-"}</td>
-                      ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>まだ回答がありません。</p>
-        )}
+      <div className="glass-card">
+        <h3>みんなの回答</h3>
+        <ul>
+          {allResponses.map((r, idx) => (
+            <li key={idx}>
+              <strong>{r.username}</strong>：{" "}
+              {Object.entries(r.responses)
+                .map(([k, v]) => `${k}=${v}`)
+                .join(", ")}
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
