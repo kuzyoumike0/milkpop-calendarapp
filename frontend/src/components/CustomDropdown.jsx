@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../register.css";
 
-const CustomDropdown = ({ value, onChange }) => {
+const CustomDropdown = ({ value, onChange, max = 24 }) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+  const hours = Array.from({ length: max + 1 }, (_, i) => `${i}:00`);
 
   const handleSelect = (hour) => {
     onChange(hour.replace(":00", "")); // 親に数値を渡す
