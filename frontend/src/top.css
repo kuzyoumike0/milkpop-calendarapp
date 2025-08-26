@@ -22,10 +22,10 @@
   background: rgba(255, 255, 255, 0.2); /* 半透明 */
   border-radius: 20px;
   padding: 30px;
-  width: fit-content;     /* 👈 コンテンツ幅に合わせる */
-  max-width: 90%;         /* 👈 はみ出し防止 */
+  width: fit-content;     /* PC時はテキスト幅にフィット */
+  max-width: 90%;         /* はみ出し防止 */
   text-align: center;
-  margin: 0 auto;         /* 👈 中央寄せ */
+  margin: 0 auto;         /* 中央寄せ */
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -45,4 +45,17 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== レスポンシブ対応 ===== */
+@media (max-width: 768px) {
+  .glass-card {
+    width: 100%;     /* スマホでは横幅いっぱい */
+    max-width: 100%; /* 左右に余白を持たせたいならここを90%に */
+    padding: 20px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+  }
 }
