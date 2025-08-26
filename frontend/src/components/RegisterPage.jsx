@@ -1,36 +1,53 @@
 // frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import Holidays from "date-holidays";
 import "../register.css";
 
-const hd = new Holidays("JP"); // 日本の祝日対応
+const hd = new Holidays("JP");
 
 export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
   const [timeType, setTimeType] = useState("終日");
-  const [shareLink, setShareLink] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
+  const [selectMode, setSelectMode] = useState("single");
+  const [rangeStart, setRangeStart] = useState(null);
 
-  // 📌 日付クリック処理
+  // === 日付クリック処理 ===
   const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
-    if (selectedDates.find((d) => d.date === dateStr)) {
-      setSelectedDates(selectedDates.filter((d) => d.date !== dateStr));
-    } else {
-      setSelectedDates([...selectedDates, { date: dateStr, timeType }]);
+    const dateStr = date.toISOString().slice(0, 10);
+
+    if (selectMode === "single") {
+      setSelectedDates([{ date: dateStr, timeType }]);
+    } else if (selectMode === "multi") {
+      setSelectedDates((prev) => [
+        ...prev,
+        { date: dateStr, timeType },
+      ]);
+    } else if (selectMode === "range") {
+      if (!rangeStart) {
+        setRangeStart(date);
+      } else {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+        let rangeDates = [];
+        let current = new Date(start);
+        while (current <= end) {
+          rangeDates.push({
+            date: current.toISOString().slice(0, 10),
+            timeType,
+          });
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(rangeDates);
+        setRangeStart(null);
+      }
     }
   };
 
-  // 📌 モード切替
-  const handleModeChange = (mode) => {
-    setTimeType(mode);
-    setSelectedDates((prev) =>
-      prev.map((d) => ({ ...d, timeType: mode }))
-    );
-  };
-
-  // 📌 共有リンク発行
+  // === 共有リンク発行 ===
   const handleShare = async () => {
     const res = await fetch("/api/schedules", {
       method: "POST",
@@ -38,92 +55,111 @@ export default function RegisterPage() {
       body: JSON.stringify({
         title,
         dates: selectedDates,
+        options: { timeType },
       }),
     });
     const data = await res.json();
-    if (data.share_token) {
-      setShareLink(`${window.location.origin}/share/${data.share_token}`);
-    }
+    setShareUrl(`${window.location.origin}/share/${data.share_token}`);
   };
 
-  // 📌 日付の色分け & 祝日名表示
+  // === 日付セルの装飾 ===
   const tileContent = ({ date, view }) => {
-    if (view !== "month") return null;
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      if (holiday) {
+        return <div className="holiday-name">{holiday[0].name}</div>;
+      }
+    }
+    return null;
+  };
 
-    const weekDay = date.getDay();
-    const holiday = hd.isHoliday(date);
-
-    let className = "weekday"; // デフォルト（平日：黒）
-    if (weekDay === 0) className = "sunday"; // 日曜
-    if (weekDay === 6) className = "saturday"; // 土曜
-    if (holiday) className = "holiday"; // 祝日
-
-    return (
-      <div className={className}>
-        {holiday && <span className="holiday-name">{holiday[0].name}</span>}
-      </div>
-    );
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const weekday = date.getDay();
+      const holiday = hd.isHoliday(date);
+      if (holiday || weekday === 0) return "sunday"; // 日曜・祝日 赤
+      if (weekday === 6) return "saturday"; // 土曜 青
+      return "weekday"; // 平日 黒
+    }
+    return null;
   };
 
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
+
+      {/* タイトル入力 */}
+      <input
+        type="text"
+        className="title-input"
+        placeholder="タイトルを入力"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
       <div className="register-container">
         {/* カレンダー */}
-        <div className="calendar-container glass-card">
-          <input
-            type="text"
-            placeholder="タイトルを入力"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="title-input"
-          />
+        <div className="calendar-box">
           <Calendar
-            onClickDay={handleDateClick}
-            value={selectedDates.map((d) => new Date(d.date))}
             locale="ja-JP"
+            onClickDay={handleDateClick}
             tileContent={tileContent}
+            tileClassName={tileClassName}
             calendarType="gregory"
           />
         </div>
 
-        {/* サイドパネル */}
-        <div className="side-panel glass-card">
+        {/* 右側パネル */}
+        <div className="register-box">
+          {/* モード切替 */}
           <div className="mode-buttons">
-            {["終日", "昼", "夜", "時間指定"].map((mode) => (
+            <button
+              className={selectMode === "single" ? "active" : ""}
+              onClick={() => setSelectMode("single")}
+            >
+              単日
+            </button>
+            <button
+              className={selectMode === "multi" ? "active" : ""}
+              onClick={() => setSelectMode("multi")}
+            >
+              複数選択
+            </button>
+            <button
+              className={selectMode === "range" ? "active" : ""}
+              onClick={() => setSelectMode("range")}
+            >
+              範囲選択
+            </button>
+          </div>
+
+          {/* 時間帯選択 */}
+          <div className="time-type-buttons">
+            {["終日", "昼", "夜", "時間指定"].map((t) => (
               <button
-                key={mode}
-                className={timeType === mode ? "active" : ""}
-                onClick={() => handleModeChange(mode)}
+                key={t}
+                className={timeType === t ? "active" : ""}
+                onClick={() => setTimeType(t)}
               >
-                {mode}
+                {t}
               </button>
             ))}
           </div>
 
+          {/* 共有リンク */}
           <button className="share-btn" onClick={handleShare}>
             共有リンク発行
           </button>
-
-          {shareLink && (
+          {shareUrl && (
             <div className="share-link">
               <a
-                href={shareLink}
+                href={shareUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="share-link-url"
               >
-                {shareLink}
+                {shareUrl}
               </a>
-              <button
-                className="copy-btn"
-                onClick={() => {
-                  navigator.clipboard.writeText(shareLink);
-                  alert("コピーしました！");
-                }}
-              >
-                コピー
-              </button>
             </div>
           )}
         </div>
