@@ -12,8 +12,8 @@ const RegisterPage = () => {
   const [value, setValue] = useState(new Date());
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("single"); // single, range, multi, delete
-  const [shareUrls, setShareUrls] = useState([]); // 複数URL保持
+  const [mode, setMode] = useState("single");
+  const [shareUrls, setShareUrls] = useState([]); // URLリスト保持
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -26,22 +26,18 @@ const RegisterPage = () => {
     setHolidays(holidayMap);
   }, []);
 
-  // ===== カレンダー日付見た目 =====
+  // ===== カレンダー日付表示 =====
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holidayName = holidays[date.toDateString()];
-      if (holidayName) {
-        return <div className="holiday-name">{holidayName}</div>;
-      }
+      if (holidayName) return <div className="holiday-name">{holidayName}</div>;
     }
     return null;
   };
 
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const isSunday = date.getDay() === 0;
-      const isHoliday = holidays[date.toDateString()];
-      if (isHoliday || isSunday) return "holiday";
+      if (date.getDay() === 0 || holidays[date.toDateString()]) return "holiday";
       if (date.getDay() === 6) return "saturday";
     }
     return null;
@@ -65,17 +61,13 @@ const RegisterPage = () => {
         setSelectedDates([...selectedDates, newDate]);
       }
     } else if (mode === "delete") {
-      // 単日削除モード
-      setSelectedDates((prev) =>
-        prev.filter((d) => (d.date || d) !== newDate)
-      );
+      setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== newDate));
     } else {
-      // single
       setSelectedDates([newDate]);
     }
   };
 
-  // ===== 日付フォーマット（和暦 + 曜日） =====
+  // ===== 日付フォーマット（和暦+曜日） =====
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
@@ -86,7 +78,7 @@ const RegisterPage = () => {
     }) + `(${weekday})`;
   };
 
-  // ===== 時間帯設定変更 =====
+  // ===== 時間帯変更 =====
   const handleTimeChange = (date, type, start, end) => {
     setSelectedDates((prev) =>
       prev.map((d) => {
@@ -94,13 +86,9 @@ const RegisterPage = () => {
           let newStart = start !== undefined ? Number(start) : d.startHour || 0;
           let newEnd = end !== undefined ? Number(end) : d.endHour || 1;
 
-          // 🔹 制御: 開始 < 終了 ≤ 24 を保証
           if (newStart >= newEnd) {
-            if (start !== undefined) {
-              newEnd = newStart + 1 <= 24 ? newStart + 1 : 24;
-            } else if (end !== undefined) {
-              newStart = newEnd - 1 >= 0 ? newEnd - 1 : 0;
-            }
+            if (start !== undefined) newEnd = Math.min(newStart + 1, 24);
+            else if (end !== undefined) newStart = Math.max(newEnd - 1, 0);
           }
 
           return { date, type, startHour: newStart, endHour: newEnd };
@@ -110,17 +98,17 @@ const RegisterPage = () => {
     );
   };
 
-  // ===== 日程削除ボタン =====
+  // ===== 日程削除 =====
   const handleDelete = (date) => {
     setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
 
-  // ===== 日程オブジェクト化 & ソート =====
+  // ===== オブジェクト化 & ソート =====
   const enrichedDates = selectedDates
     .map((d) => (typeof d === "string" ? { date: d, type: "終日" } : d))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // ===== 共有リンク発行（保存もする） =====
+  // ===== 共有リンク発行 =====
   const handleShare = async () => {
     const dates = enrichedDates.map((d) => ({
       date: d.date,
@@ -139,7 +127,8 @@ const RegisterPage = () => {
       if (res.ok) {
         const { token } = await res.json();
         const url = `${window.location.origin}/share/${token}`;
-        setShareUrls((prev) => [...prev, url]); // 新しいURLを追加
+        // 新しいURLを先頭に追加
+        setShareUrls((prev) => [url, ...prev]);
       } else {
         alert("スケジュール保存に失敗しました");
       }
@@ -155,30 +144,18 @@ const RegisterPage = () => {
         {/* カレンダー */}
         <div className="calendar-container glass-card">
           <div className="mode-buttons">
-            <button
-              className={mode === "single" ? "active" : ""}
-              onClick={() => setMode("single")}
-            >
-              単日
-            </button>
-            <button
-              className={mode === "range" ? "active" : ""}
-              onClick={() => setMode("range")}
-            >
-              範囲選択
-            </button>
-            <button
-              className={mode === "multi" ? "active" : ""}
-              onClick={() => setMode("multi")}
-            >
-              複数選択
-            </button>
-            <button
-              className={mode === "delete" ? "active" : ""}
-              onClick={() => setMode("delete")}
-            >
-              単日削除
-            </button>
+            {["single", "range", "multi", "delete"].map((m) => (
+              <button
+                key={m}
+                className={mode === m ? "active" : ""}
+                onClick={() => setMode(m)}
+              >
+                {m === "single" && "単日"}
+                {m === "range" && "範囲選択"}
+                {m === "multi" && "複数選択"}
+                {m === "delete" && "単日削除"}
+              </button>
+            ))}
           </div>
           <Calendar
             onChange={handleDateChange}
