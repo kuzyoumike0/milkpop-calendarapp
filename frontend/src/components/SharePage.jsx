@@ -184,17 +184,7 @@ const SharePage = () => {
         <div className="schedule-header">
           <span className="date">日付</span>
           <span className="time">時間帯</span>
-          {users.map((u, idx) => (
-            <span key={idx} className="user-col">
-              <a
-                href="#!"
-                className="user-link"
-                onClick={() => handleEditUser(u)}
-              >
-                {u}
-              </a>
-            </span>
-          ))}
+          <span className="user-col">回答</span>
         </div>
 
         {/* 日程ごとの行 */}
@@ -217,30 +207,41 @@ const SharePage = () => {
             <div key={i} className="schedule-item">
               <span className="date">{d.date}</span>
               <span className="time">{timeLabel}</span>
-              {users.map((u, idx) => {
-                const userResp = allResponses.find((r) => r.username === u);
-                const value = userResp?.responses?.[key] || "-";
+              <span className="user-response">
+                {users.length === 0 && <span>-</span>}
+                {users.map((u, idx) => {
+                  const userResp = allResponses.find((r) => r.username === u);
+                  const value = userResp?.responses?.[key] || "-";
 
-                return (
-                  <span key={idx} className="user-response">
-                    {editingUser === u && isEditing ? (
-                      attendanceOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          className={`choice-btn ${
-                            value === opt ? "active" : ""
-                          }`}
-                          onClick={() => handleSelect(key, opt)}
-                        >
-                          {opt}
-                        </button>
-                      ))
-                    ) : (
-                      value
-                    )}
-                  </span>
-                );
-              })}
+                  return (
+                    <div key={idx} className="user-row">
+                      <a
+                        href="#!"
+                        className="user-link"
+                        onClick={() => handleEditUser(u)}
+                      >
+                        {u}
+                      </a>
+                      ：
+                      {editingUser === u && isEditing ? (
+                        attendanceOptions.map((opt) => (
+                          <button
+                            key={opt}
+                            className={`choice-btn ${
+                              value === opt ? "active" : ""
+                            }`}
+                            onClick={() => handleSelect(key, opt)}
+                          >
+                            {opt}
+                          </button>
+                        ))
+                      ) : (
+                        value
+                      )}
+                    </div>
+                  );
+                })}
+              </span>
             </div>
           );
         })}
