@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -5,255 +6,139 @@ import "../common.css";
 import "../register.css";
 
 const RegisterPage = () => {
-  const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("multiple");
-  const [rangeStart, setRangeStart] = useState(null);
-  const [shareUrl, setShareUrl] = useState("");
+  const [timeSelections, setTimeSelections] = useState({});
+  const [customTimes, setCustomTimes] = useState({});
+  const [title, setTitle] = useState("");
 
   const hd = new Holidays("JP");
 
-  // JSTに変換
-  const getJSTDate = (date) => {
-    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-    return new Date(utc + 9 * 60 * 60000);
-  };
-
-  // 日付クリック処理
+  // 日付選択
   const handleDateClick = (date) => {
-    const jstDate = getJSTDate(date);
-
-    if (mode === "range") {
-      if (!rangeStart) {
-        setRangeStart(jstDate);
-      } else {
-        const start = rangeStart < jstDate ? rangeStart : jstDate;
-        const end = rangeStart < jstDate ? jstDate : rangeStart;
-        const newRange = [];
-        let current = new Date(start);
-        while (current <= end) {
-          newRange.push({
-            date: new Date(current),
-            timeType: "終日",
-            startTime: "00:00",
-            endTime: "23:59",
-          });
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(newRange);
-        setRangeStart(null);
-      }
-    } else {
-      const exists = selectedDates.find(
-        (d) => d.date.toDateString() === jstDate.toDateString()
-      );
-      if (exists) {
-        setSelectedDates(
-          selectedDates.filter(
-            (d) => d.date.toDateString() !== jstDate.toDateString()
-          )
-        );
-      } else {
-        setSelectedDates([
-          ...selectedDates,
-          {
-            date: jstDate,
-            timeType: "終日",
-            startTime: "00:00",
-            endTime: "23:59",
-          },
-        ]);
-      }
-    }
+    const dateStr = date.toISOString().split("T")[0];
+    setSelectedDates((prev) =>
+      prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+    );
   };
 
-  // ===== DBに保存して共有リンク発行 =====
-  const generateShareLink = async () => {
-    try {
-      if (!title || selectedDates.length === 0) {
-        alert("タイトルと日程を入力してください");
-        return;
-      }
-
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          dates: selectedDates.map((d) => ({
-            date: d.date.toISOString().split("T")[0],
-            time: d.timeType,
-            startTime: d.startTime,
-            endTime: d.endTime,
-          })),
-          options: {},
-        }),
-      });
-
-      const data = await res.json();
-      if (data.share_token) {
-        const url = `${window.location.origin}/share/${data.share_token}`;
-        setShareUrl(url);
-      } else {
-        alert("共有リンクの生成に失敗しました");
-      }
-    } catch (err) {
-      console.error("共有リンク生成エラー", err);
-      alert("サーバーエラーが発生しました");
-    }
+  // 時間帯選択
+  const handleTimeChange = (date, value) => {
+    setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
 
-  // クリップボードにコピー
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl);
-    alert("リンクをコピーしました！✨");
+  // custom 開始時間
+  const handleCustomStartChange = (date, value) => {
+    setCustomTimes((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], start: value }
+    }));
+  };
+
+  // custom 終了時間
+  const handleCustomEndChange = (date, value) => {
+    setCustomTimes((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], end: value }
+    }));
+  };
+
+  // 表示用フォーマット
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      weekday: "short"
+    });
   };
 
   return (
     <div className="register-page">
-      <h2 className="page-title">日程登録ページ</h2>
+      <h2 className="page-title">📌 日程登録ページ</h2>
 
-      <div className="glass-black input-card cute-title-box">
+      {/* タイトル入力 */}
+      <div className="title-input-container">
         <input
           type="text"
-          placeholder="🎀 タイトルを入力してください 🎀"
           className="title-input"
+          placeholder="イベントのタイトルを入力"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
       </div>
 
-      <div className="main-content">
-        <div className="glass-white calendar-card">
-          {/* モード切替 */}
-          <div className="mode-select">
-            <label>
-              <input
-                type="radio"
-                name="mode"
-                value="multiple"
-                checked={mode === "multiple"}
-                onChange={() => {
-                  setMode("multiple");
-                  setSelectedDates([]);
-                  setRangeStart(null);
-                }}
-              />
-              <span>複数選択</span>
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="mode"
-                value="range"
-                checked={mode === "range"}
-                onChange={() => {
-                  setMode("range");
-                  setSelectedDates([]);
-                  setRangeStart(null);
-                }}
-              />
-              <span>範囲選択</span>
-            </label>
-          </div>
+      {/* カレンダー */}
+      <Calendar
+        onClickDay={handleDateClick}
+        tileClassName={({ date }) => {
+          const dateStr = date.toISOString().split("T")[0];
+          if (selectedDates.includes(dateStr)) {
+            return "selected-day";
+          }
+          if (hd.isHoliday(date)) {
+            return "holiday";
+          }
+          return null;
+        }}
+      />
 
-          <Calendar
-            locale="ja-JP"
-            calendarType="gregory"
-            firstDayOfWeek={0}
-            formatShortWeekday={(locale, date) =>
-              ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
-            }
-            onClickDay={(date) => handleDateClick(date)}
-            value={null}
-            tileClassName={({ date }) => {
-              const jstDate = getJSTDate(date);
-              const today = getJSTDate(new Date());
+      {/* 選択した日程リスト */}
+      <div className="selected-dates">
+        <h3>📅 選択した日程</h3>
+        <ul>
+          {selectedDates
+            .sort((a, b) => new Date(a) - new Date(b))
+            .map((date) => (
+              <li key={date} className="date-item">
+                <span className="date-text">{formatDate(date)}</span>
 
-              const isToday = jstDate.toDateString() === today.toDateString();
-              const isSunday = jstDate.getDay() === 0;
-              const isSaturday = jstDate.getDay() === 6;
-              const holiday = hd.isHoliday(jstDate);
+                {/* ▼ 時間帯選択 */}
+                <select
+                  className="time-select"
+                  value={timeSelections[date] || "all"}
+                  onChange={(e) => handleTimeChange(date, e.target.value)}
+                >
+                  <option value="all">終日 (0:00〜24:00)</option>
+                  <option value="day">昼 (9:00〜17:00)</option>
+                  <option value="night">夜 (18:00〜24:00)</option>
+                  <option value="custom">時間指定</option>
+                </select>
 
-              // 範囲選択
-              if (selectedDates.length > 1) {
-                const range = selectedDates.map((d) => d.date.toDateString());
-                if (
-                  jstDate.toDateString() ===
-                  selectedDates[0].date.toDateString()
-                ) {
-                  return "range-start";
-                }
-                if (
-                  jstDate.toDateString() ===
-                  selectedDates[selectedDates.length - 1].date.toDateString()
-                ) {
-                  return "range-end";
-                }
-                if (range.includes(jstDate.toDateString())) {
-                  return "range-between";
-                }
-              }
+                {/* ▼ custom のときだけ表示 */}
+                {timeSelections[date] === "custom" && (
+                  <div className="custom-time">
+                    <select
+                      className="time-dropdown"
+                      onChange={(e) => handleCustomStartChange(date, e.target.value)}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {i}:00
+                        </option>
+                      ))}
+                    </select>
+                    <span> ~ </span>
+                    <select
+                      className="time-dropdown"
+                      onChange={(e) => handleCustomEndChange(date, e.target.value)}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i + 1}>
+                          {i + 1}:00
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </li>
+            ))}
+        </ul>
+      </div>
 
-              if (isToday) return "day-today";
-              if (
-                selectedDates.some(
-                  (d) => d.date.toDateString() === jstDate.toDateString()
-                )
-              )
-                return "selected-date";
-              if (holiday || isSunday) return "day-sunday";
-              if (isSaturday) return "day-saturday";
-
-              return "day-default";
-            }}
-            tileContent={({ date }) => {
-              const jstDate = getJSTDate(date);
-              const holiday = hd.isHoliday(jstDate);
-              return holiday ? (
-                <span className="holiday-name">{holiday[0].name}</span>
-              ) : null;
-            }}
-          />
-        </div>
-
-        <div className="glass-black schedule-box">
-          <h3>選択した日程</h3>
-          {selectedDates.length === 0 ? (
-            <p>日付を選択してください</p>
-          ) : (
-            <ul>
-              {selectedDates
-                .sort((a, b) => a.date - b.date)
-                .map((d, i) => (
-                  <li key={i} className="date-item">
-                    <span className="date-label">
-                      📅 {d.date.toLocaleDateString("ja-JP")}
-                    </span>
-                  </li>
-                ))}
-            </ul>
-          )}
-
-          <button className="share-button" onClick={generateShareLink}>
-            🌸 共有リンクを発行
-          </button>
-          {shareUrl && (
-            <div className="share-link-box">
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="share-link"
-              >
-                {shareUrl}
-              </a>
-              <button className="copy-button" onClick={copyToClipboard}>
-                📋 コピー
-              </button>
-            </div>
-          )}
-        </div>
+      {/* 共有リンク発行ボタン（ダミー） */}
+      <div className="share-link-container">
+        <button className="share-link-btn">✨ 共有リンクを発行</button>
       </div>
     </div>
   );
