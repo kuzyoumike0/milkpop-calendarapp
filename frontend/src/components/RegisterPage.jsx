@@ -192,7 +192,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="ISO 8601"
+            calendarType="gregory"   // ✅ ISO 8601 → gregory に修正
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
