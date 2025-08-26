@@ -167,75 +167,52 @@ const SharePage = () => {
         </button>
       </div>
 
-      {/* 出欠表 */}
+      {/* 出欠表 横並び */}
       <div className="glass-black schedule-list">
-        <table>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>時間</th>
-              {users.map((u, idx) => (
-                <th
-                  key={idx}
-                  onClick={() => {
-                    if (u === username) setIsEditing(true);
-                  }}
-                  className={u === username ? "editable-username" : ""}
-                >
-                  {u}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.dates.map((d, i) => {
-              const key =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
+        {schedule.dates.map((d, i) => {
+          const key =
+            d.timeType === "時間指定" && d.startTime && d.endTime
+              ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+              : `${d.date} (${d.timeType})`;
 
-              return (
-                <tr key={i}>
-                  <td>{d.date}</td>
-                  <td>
-                    {d.timeType === "時間指定" && d.startTime && d.endTime
-                      ? `${d.startTime} ~ ${d.endTime}`
-                      : d.timeType}
-                  </td>
-                  {users.map((u, idx) => {
-                    const userResp = allResponses.find((r) => r.username === u);
-                    const isSelf = u === username;
-                    const value = isSelf
-                      ? responses[key] || "-"
-                      : userResp?.responses?.[key] || "-";
+          return (
+            <div key={i} className="schedule-item">
+              <span className="date">{d.date}</span>
+              <span className="time">
+                {d.timeType === "時間指定" && d.startTime && d.endTime
+                  ? `${d.startTime} ~ ${d.endTime}`
+                  : d.timeType}
+              </span>
+              {users.map((u, idx) => {
+                const userResp = allResponses.find((r) => r.username === u);
+                const isSelf = u === username;
+                const value = isSelf
+                  ? responses[key] || "-"
+                  : userResp?.responses?.[key] || "-";
 
-                    return (
-                      <td key={idx} className="attendance-cell">
-                        {isSelf && isEditing ? (
-                          <div className="choice-buttons">
-                            {attendanceOptions.map((opt) => (
-                              <button
-                                key={opt}
-                                className={`choice-btn ${
-                                  value === opt ? "active" : ""
-                                }`}
-                                onClick={() => handleSelect(key, opt)}
-                              >
-                                {opt}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <span key={idx} className="user-response">
+                    {isSelf && isEditing ? (
+                      attendanceOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          className={`choice-btn ${
+                            value === opt ? "active" : ""
+                          }`}
+                          onClick={() => handleSelect(key, opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))
+                    ) : (
+                      value
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
 
       {users.includes(username) && isEditing && (
