@@ -1,175 +1,177 @@
-/* ====== ページ全体 ====== */
-.share-container {
-  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+/* ===== ページ全体 ===== */
+.register-page {
   padding: 20px;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
-}
-
-/* ====== タイトル ====== */
-.share-title {
-  text-align: center;
-  font-size: 26px;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-/* ====== 入力フォーム ====== */
-.response-form {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 16px;
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto 25px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.username-input {
-  width: 100%;
-  padding: 10px 14px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 15px;
-}
-
-/* 日程ラベル */
-.date-response {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
 }
 
-.date-label {
+.page-title {
+  font-size: 22px;
   font-weight: bold;
-  font-size: 14px;
-  color: #000 !important; /* 黒文字で見やすく */
-}
-
-/* プルダウン */
-.attendance-select {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.attendance-select:hover {
-  border-color: #004CA0;
-  background: #f1f6ff;
-}
-
-/* 保存ボタン */
-.save-btn {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  margin-top: 15px;
-  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  margin-bottom: 10px;
   color: #fff;
-  font-weight: bold;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.25s;
-}
-.save-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
 
-.save-message {
-  margin-top: 8px;
-  font-weight: bold;
-  color: #004CA0;
-  text-align: center;
-}
-
-/* ====== みんなの回答 ====== */
-.all-responses {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 16px;
-  padding: 20px;
-  max-width: 1000px;
-  margin: 0 auto;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.all-responses h2 {
-  font-size: 20px;
-  font-weight: bold;
-  color: #004CA0;
-  margin-bottom: 15px;
-}
-
-/* テーブル */
-.responses-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.responses-table th,
-.responses-table td {
-  border: 1px solid #ddd;
+/* タイトル入力 */
+.title-input {
+  width: 40%;
   padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #111;
+  color: #fff;
   text-align: center;
 }
 
-.responses-table th {
+/* コンテナ */
+.register-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* カレンダー */
+.calendar-box {
+  flex: 7;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  color: #fff;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+}
+.calendar-box:hover {
+  transform: translateY(-3px);
+}
+
+/* モード切替 */
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mode-buttons button {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.4);
+  font-weight: bold;
+  cursor: pointer;
+}
+.mode-buttons button.active {
   background: #004CA0;
   color: #fff;
-  font-weight: bold;
-  font-size: 14px;
 }
 
-.responses-table td {
-  font-size: 14px;
-  color: #000; /* 黒文字で見やすく */
+/* カレンダー曜日スタイル */
+.weekday {
+  color: #222 !important;
 }
-
-/* 偶数行の背景色 */
-.responses-table tr:nth-child(even) {
-  background: #f9f9f9;
-}
-
-/* 回答マーク ○✖△ の色 */
-.responses-table td:contains("○") {
-  color: #008000;
+.saturday {
+  color: #004CA0 !important;
   font-weight: bold;
 }
-.responses-table td:contains("✖") {
+.sunday {
+  color: #ff2d2d !important;
+  font-weight: bold;
+}
+.holiday-name {
+  font-size: 10px;
   color: #ff2d2d;
-  font-weight: bold;
 }
-.responses-table td:contains("△") {
-  color: #ffa500;
+
+/* 今日 */
+.today-highlight {
+  background: #FDB9C8 !important;
+  border: 2px solid #004CA0 !important;
+  border-radius: 50%;
+  color: #000 !important;
   font-weight: bold;
 }
 
-/* 編集可能ユーザー名 */
-.editable-username {
-  cursor: pointer;
-  color: #004CA0;
-  font-weight: bold;
-  transition: 0.2s;
-}
-.editable-username:hover {
-  text-decoration: underline;
-  color: #FDB9C8;
+/* 選択済み */
+.selected-date {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border-radius: 50%;
 }
 
-/* ユーザー名編集フォーム */
-.username-edit-input {
-  padding: 4px 8px;
+/* 範囲中 */
+.in-range {
+  background: rgba(0, 76, 160, 0.2) !important;
   border-radius: 6px;
-  border: 1px solid #004CA0;
-  font-size: 14px;
+  color: #000 !important;
+}
+
+/* サイドパネル */
+.register-box {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  color: #000;
+  backdrop-filter: blur(15px);
+}
+
+/* 日程リスト */
+.event-list {
+  list-style: none;
+  padding: 0;
+}
+.event-list li {
+  background: rgba(255,255,255,0.25);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
+
+/* 時間帯ボタン */
+.time-type-buttons {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.time-type-buttons button {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.time-type-buttons button.active {
+  background: #004CA0;
+  color: #fff;
+}
+
+/* 時間指定ドロップダウン */
+.time-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.time-dropdowns select {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.9);
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
 }
