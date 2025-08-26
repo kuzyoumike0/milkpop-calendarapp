@@ -10,47 +10,73 @@ const RegisterPage = () => {
   const [timeSelections, setTimeSelections] = useState({});
   const [customTimes, setCustomTimes] = useState({});
   const [title, setTitle] = useState("");
+  const [selectionMode, setSelectionMode] = useState("single"); // single, range, multi
+  const [rangeStart, setRangeStart] = useState(null);
 
   const hd = new Holidays("JP");
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // 日付クリック
+  // 📌 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-    setSelectedDates((prev) =>
-      prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
-    );
+
+    if (selectionMode === "single") {
+      setSelectedDates([dateStr]);
+    } else if (selectionMode === "multi") {
+      setSelectedDates((prev) =>
+        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+      );
+    } else if (selectionMode === "range") {
+      if (!rangeStart) {
+        // 最初のクリック → 開始点だけ選択
+        setRangeStart(dateStr);
+        setSelectedDates([dateStr]);
+      } else {
+        // 2回目クリック → 範囲を全選択
+        const start = new Date(rangeStart);
+        const end = new Date(dateStr);
+        if (start > end) [start, end] = [end, start]; // 順序入れ替え
+
+        const range = [];
+        const cur = new Date(start);
+        while (cur <= end) {
+          range.push(cur.toISOString().split("T")[0]);
+          cur.setDate(cur.getDate() + 1);
+        }
+
+        setSelectedDates(range);
+        setRangeStart(null); // 範囲終了でリセット
+      }
+    }
   };
 
-  // ラジオボタン選択
+  // 📌 時間帯選択
   const handleTimeChange = (date, value) => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
 
-  // custom 開始時間
+  // 📌 custom 開始/終了時間
   const handleCustomStartChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
-      [date]: { ...prev[date], start: value }
+      [date]: { ...prev[date], start: value },
     }));
   };
-
-  // custom 終了時間
   const handleCustomEndChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
-      [date]: { ...prev[date], end: value }
+      [date]: { ...prev[date], end: value },
     }));
   };
 
-  // 表示フォーマット
+  // 📌 日付表示フォーマット
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
       year: "numeric",
       month: "numeric",
       day: "numeric",
-      weekday: "short"
+      weekday: "short",
     });
   };
 
@@ -67,6 +93,40 @@ const RegisterPage = () => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
+      </div>
+
+      {/* モード切替 */}
+      <div className="mode-switch">
+        <label>
+          <input
+            type="radio"
+            name="mode"
+            value="single"
+            checked={selectionMode === "single"}
+            onChange={() => setSelectionMode("single")}
+          />
+          単日
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="mode"
+            value="range"
+            checked={selectionMode === "range"}
+            onChange={() => setSelectionMode("range")}
+          />
+          範囲
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="mode"
+            value="multi"
+            checked={selectionMode === "multi"}
+            onChange={() => setSelectionMode("multi")}
+          />
+          複数
+        </label>
       </div>
 
       {/* カレンダー＋リスト */}
@@ -99,6 +159,7 @@ const RegisterPage = () => {
               if (holiday || day === 0) classes.push("sunday-holiday");
               else if (day === 6) classes.push("saturday");
               if (selectedDates.includes(dateStr)) classes.push("selected-day");
+              if (rangeStart === dateStr) classes.push("range-start");
 
               return classes.join(" ");
             }}
@@ -114,7 +175,7 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
-                  {/* ラジオボタン */}
+                  {/* 時間帯ラジオ */}
                   <div className="radio-group">
                     <label>
                       <input
@@ -193,7 +254,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 共有リンクボタン */}
+      {/* 共有リンク */}
       <div className="share-link-container">
         <button className="share-link-btn">✨ 共有リンクを発行</button>
       </div>
