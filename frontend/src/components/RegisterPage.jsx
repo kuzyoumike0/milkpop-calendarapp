@@ -192,8 +192,8 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="iso8601"   // ✅ 正しい指定
-            firstDayOfWeek={1}       // ✅ 月曜始まり
+            calendarType="iso8601"
+            firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
             }
