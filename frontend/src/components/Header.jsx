@@ -37,15 +37,15 @@ export default function Header() {
 
       {/* モバイルメニュー */}
       <div className={`nav-links-mobile ${menuOpen ? "open" : ""}`}>
-        <Link to="/personal" onClick={() => setMenuOpen(false)}>
+        <Link to="/personal" className="nav-link-mobile" onClick={() => setMenuOpen(false)}>
           個人スケジュール
         </Link>
-        <Link to="/register" onClick={() => setMenuOpen(false)}>
+        <Link to="/register" className="nav-link-mobile" onClick={() => setMenuOpen(false)}>
           日程登録
         </Link>
         <a
           href="/auth/discord"
-          className="discord-login"
+          className="nav-btn-mobile"
           onClick={() => setMenuOpen(false)}
         >
           Discordログイン
