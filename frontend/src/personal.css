@@ -1,5 +1,5 @@
 /* ====== ページ全体 ====== */
-.register-page {
+.personal-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
@@ -42,10 +42,6 @@
   justify-content: center;
 }
 
-.cute-title-box {
-  border: 2px solid #FDB9C8;
-}
-
 .title-input {
   width: 100%;
   padding: 12px 16px;
@@ -65,6 +61,24 @@
   box-shadow: 0 0 12px #FDB9C8;
 }
 
+/* ====== メモ入力 ====== */
+.memo-input {
+  width: 80%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+}
+.memo-input:focus {
+  outline: none;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 10px #FDB9C8;
+}
+
 /* ====== メインエリア ====== */
 .main-content {
   display: flex;
@@ -78,7 +92,7 @@
   flex: 7;
 }
 
-/* ====== モード切替（ラジオをお洒落ボタン風に） ====== */
+/* ====== モード切替ボタン（ラジオお洒落版） ====== */
 .mode-select {
   display: flex;
   justify-content: center;
@@ -252,4 +266,79 @@
   color: #FDB9C8;
 }
 
-/* =====
+/* ====== 時間区分ボタン ====== */
+.time-type-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.time-type-button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+  background: transparent;
+  color: #FDB9C8;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.time-type-button:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+.time-type-button.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* ====== ドロップダウン ====== */
+.stylish-dropdown {
+  appearance: none;
+  padding: 6px 28px 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #FDB9C8;
+  background: #111 url("data:image/svg+xml;utf8,<svg fill='%23FDB9C8' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 8px center;
+  background-size: 14px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.stylish-dropdown:hover {
+  background-color: #222;
+}
+.stylish-dropdown:focus {
+  outline: none;
+  border: 2px solid #FDB9C8;
+  box-shadow: 0 0 8px #FDB9C8;
+}
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.range-tilde {
+  font-size: 16px;
+  color: #fff;
+}
+
+/* ====== 保存ボタン ====== */
+.save-button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.save-button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #ffcad4, #0055cc);
+}
