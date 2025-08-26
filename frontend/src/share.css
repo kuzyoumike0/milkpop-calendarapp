@@ -1,188 +1,178 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import "../common.css";
-import "../share.css";
+.share-container {
+  padding: 30px;
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  min-height: 100vh;
+  color: #222;
+}
 
-const attendanceOptions = ["-", "○", "✖", "△"];
-const socket = io();
+.share-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  color: white;
+  font-weight: bold;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+}
 
-const SharePage = () => {
-  const { token } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [allResponses, setAllResponses] = useState([]);
-  const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID());
-  const [responses, setResponses] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
+/* ===== 入力フォーム ===== */
+.response-form {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
 
-  // 編集用ステート
-  const [editingUser, setEditingUser] = useState(null);
-  const [newUsername, setNewUsername] = useState("");
+.username-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #004ca0;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  outline: none;
+  transition: 0.2s;
+}
+.username-input:focus {
+  border-color: #fdb9c8;
+  box-shadow: 0 0 6px rgba(253,185,200,0.5);
+}
 
-  // ===== スケジュール読み込み =====
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      const res = await fetch(`/api/schedule/${token}`);
-      const data = await res.json();
-      setSchedule(data.schedule);
-      setAllResponses(data.responses || []);
-    };
-    fetchSchedule();
+.date-response {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
 
-    socket.emit("join-room", token);
-    socket.on("update-responses", (data) => {
-      setAllResponses(data);
-    });
+.date-label {
+  font-weight: bold;
+  flex: 1;
+  font-size: 0.95rem;
+}
 
-    return () => {
-      socket.off("update-responses");
-    };
-  }, [token]);
+/* プルダウン */
+.attendance-select {
+  flex: 0.5;
+  padding: 8px 30px 8px 12px;
+  border-radius: 20px;
+  border: 2px solid #fdb9c8;
+  background: rgba(255,255,255,0.9);
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.25s;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+.attendance-select:hover {
+  border-color: #004ca0;
+  background: #fdf0f5;
+}
 
-  const handleChange = (date, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [date]: value,
-    }));
-  };
+/* 保存ボタン */
+.save-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+}
 
-  const handleSave = async () => {
-    if (!username) {
-      setSaveMessage("名前を入力してください");
-      return;
-    }
-    const res = {
-      userId,
-      username,
-      responses,
-    };
-    await fetch(`/api/schedule/${token}/response`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
-    });
-    setSaveMessage("保存しました！");
-  };
+.save-message {
+  margin-top: 10px;
+  color: #004ca0;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
 
-  const handleUsernameEdit = (user) => {
-    setEditingUser(user);
-    setNewUsername(user);
-  };
+/* ===== みんなの回答 ===== */
+.all-responses {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
 
-  const handleUsernameSave = async (oldName) => {
-    if (!newUsername.trim()) return;
-    await fetch(`/api/schedule/${token}/edit-username`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        oldName,
-        newName: newUsername.trim(),
-      }),
-    });
-    setEditingUser(null);
-    setNewUsername("");
-  };
+.all-responses h2 {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: #004ca0;
+}
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-  };
+/* テーブル */
+.responses-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+.responses-table th,
+.responses-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  font-size: 0.95rem;
+}
+.responses-table th {
+  background: #004ca0;
+  color: white;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+}
+.responses-table tr:nth-child(even) {
+  background: #fdf0f5;
+}
 
-  if (!schedule) return <div>読み込み中...</div>;
+/* ユーザー名 編集 */
+.editable-username {
+  cursor: pointer;
+  color: #004ca0;
+  text-decoration: underline dotted;
+  transition: 0.2s;
+  font-weight: bold;
+}
+.editable-username:hover {
+  color: #fdb9c8;
+}
 
-  // 全ユーザーリスト
-  const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
+.username-edit-input {
+  padding: 6px;
+  border-radius: 8px;
+  border: 2px solid #004ca0;
+  font-size: 0.9rem;
+  width: 100px;
+  transition: 0.2s;
+}
+.username-edit-input:focus {
+  border-color: #fdb9c8;
+  box-shadow: 0 0 5px rgba(253,185,200,0.6);
+}
 
-  return (
-    <div className="share-container">
-      <h1 className="share-title">MilkPOP Calendar</h1>
-
-      {/* 入力フォーム */}
-      <div className="response-form">
-        <input
-          type="text"
-          className="username-input"
-          placeholder="あなたの名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        {schedule.dates.map((date) => (
-          <div key={date} className="date-response">
-            <span className="date-label">{formatDate(date)}</span>
-            <select
-              className="attendance-select"
-              value={responses[date] || "-"}
-              onChange={(e) => handleChange(date, e.target.value)}
-            >
-              {attendanceOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
-        <button className="save-btn" onClick={handleSave}>
-          保存する
-        </button>
-        {saveMessage && <p className="save-message">{saveMessage}</p>}
-      </div>
-
-      {/* みんなの回答 */}
-      <div className="all-responses">
-        <h2>みんなの回答</h2>
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>日程</th>
-              {uniqueUsers.map((user) => (
-                <th key={user}>
-                  {editingUser === user ? (
-                    <input
-                      type="text"
-                      className="username-edit-input"
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      onBlur={() => handleUsernameSave(user)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleUsernameSave(user);
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      className="editable-username"
-                      onClick={() => handleUsernameEdit(user)}
-                    >
-                      {user}
-                    </span>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.dates.map((date) => (
-              <tr key={date}>
-                <td>{formatDate(date)}</td>
-                {uniqueUsers.map((user) => {
-                  const userResponse = allResponses.find(
-                    (r) => r.username === user
-                  );
-                  return (
-                    <td key={user}>
-                      {userResponse?.responses?.[date] || "-"}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-export default SharePage;
+/* ===== レスポンシブ対応 ===== */
+@media (max-width: 800px) {
+  .responses-table th,
+  .responses-table td {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+  .username-edit-input {
+    width: 80px;
+  }
+}
