@@ -48,11 +48,13 @@
   color: #ff2d2d !important;
   font-weight: bold;
 }
+
 /* 土曜 */
 .saturday {
   color: #004CA0 !important;
   font-weight: bold;
 }
+
 /* 今日 */
 .react-calendar__tile--now {
   background: rgba(253, 185, 200, 0.5) !important;
@@ -60,17 +62,20 @@
   font-weight: bold;
   color: black !important;
 }
+
 /* 選択中 */
 .react-calendar__tile--active {
   background: rgba(0, 76, 160, 0.8) !important;
   color: white !important;
   border-radius: 8px;
 }
+
 /* 範囲選択 */
 .react-calendar__tile--range {
   background: rgba(0, 76, 160, 0.3) !important;
   border-radius: 8px;
 }
+
 /* 祝日名 */
 .holiday-name {
   font-size: 10px;
@@ -89,8 +94,15 @@
   padding: 6px 8px;
   border-radius: 10px;
   border: none;
-  back
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  font-weight: bold;
 }
+.mode-buttons button.active {
+  background: #FDB9C8;
+  color: #000;
+}
+
 /* 日程リスト */
 .event-list li {
   background: rgba(255,255,255,0.25);
@@ -100,7 +112,7 @@
   border-radius: 12px;
 }
 
-/* 日程ヘッダー（タイトル＋削除） */
+/* 日程ヘッダー */
 .event-header {
   display: flex;
   justify-content: space-between;
@@ -108,13 +120,16 @@
 }
 
 /* 削除ボタン */
-.delete-btn {
-  background: transparent;
+.delete-day-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
   border: none;
+  background: rgba(255, 77, 77, 0.8);
+  color: white;
+  font-size: 12px;
   cursor: pointer;
-  font-size: 16px;
-  transition: transform 0.2s;
+  transition: 0.2s;
 }
-.delete-btn:hover {
-  transform: scale(1.2);
+.delete-day-btn:hover {
+  background: rgba(255, 0, 0, 0.9);
 }
