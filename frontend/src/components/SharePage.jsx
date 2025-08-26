@@ -12,11 +12,22 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
+  const [editingUser, setEditingUser] = useState(null);
   const [userId] = useState(() => crypto.randomUUID());
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== スケジュール読み込み =====
+  // ===== 日付フォーマット =====
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
+  };
+
+  // ===== スケジュール & 回答取得 =====
   useEffect(() => {
     const fetchSchedule = async () => {
       const res = await fetch(`/api/schedules/${token}`);
@@ -80,7 +91,7 @@ const SharePage = () => {
       responses,
     };
 
-    // 即時反映（楽観的更新）
+    // 即時反映
     setAllResponses((prev) => {
       const exists = prev.find((r) => r.user_id === userId);
       if (exists) {
@@ -107,6 +118,32 @@ const SharePage = () => {
     }
   };
 
+  // ===== ユーザー名編集の確定処理 =====
+  const handleUsernameEdit = async (user_id, newName, userResponses) => {
+    setEditingUser(null);
+
+    const updated = {
+      user_id,
+      username: newName,
+      responses: userResponses,
+    };
+
+    // 楽観的更新
+    setAllResponses((prev) =>
+      prev.map((u) => (u.user_id === user_id ? updated : u))
+    );
+
+    try {
+      await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+    } catch (err) {
+      console.error("ユーザー名更新エラー:", err);
+    }
+  };
+
   if (!schedule) return <div>読み込み中...</div>;
 
   const dates = schedule.dates;
@@ -115,10 +152,12 @@ const SharePage = () => {
     <div className="share-page">
       <h2>共有スケジュール</h2>
 
-      <div className="glass-card">
-        <label>
+      {/* 入力フォーム */}
+      <div className="glass-card form-card">
+        <label className="input-label">
           名前：
           <input
+            className="name-input"
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -137,13 +176,14 @@ const SharePage = () => {
             {dates.map((d, idx) => {
               const key =
                 d.type === "時間指定" && d.startHour !== undefined
-                  ? `${d.date} (${d.startHour}~${d.endHour})`
-                  : `${d.date} (${d.type})`;
+                  ? `${formatDate(d.date)} (${d.startHour}~${d.endHour})`
+                  : `${formatDate(d.date)} (${d.type})`;
               return (
                 <tr key={idx}>
                   <td>{key}</td>
                   <td>
                     <select
+                      className="cute-select"
                       value={responses[key] || "-"}
                       onChange={(e) => handleResponseChange(key, e.target.value)}
                     >
@@ -166,18 +206,48 @@ const SharePage = () => {
         {saveMessage && <p className="save-msg">{saveMessage}</p>}
       </div>
 
-      <div className="glass-card">
+      {/* みんなの回答 */}
+      <div className="glass-card responses-card">
         <h3>みんなの回答</h3>
-        <ul>
-          {allResponses.map((r, idx) => (
-            <li key={idx}>
-              <strong>{r.username}</strong>：{" "}
-              {Object.entries(r.responses)
-                .map(([k, v]) => `${k}=${v}`)
-                .join(", ")}
-            </li>
-          ))}
-        </ul>
+        <table className="response-table">
+          <thead>
+            <tr>
+              <th>ユーザー</th>
+              <th>日程</th>
+              <th>回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allResponses.map((r, idx) =>
+              Object.entries(r.responses).map(([dateKey, value], i) => (
+                <tr key={`${idx}-${i}`}>
+                  <td>
+                    {editingUser === r.user_id ? (
+                      <input
+                        type="text"
+                        defaultValue={r.username}
+                        onBlur={(e) =>
+                          handleUsernameEdit(r.user_id, e.target.value, r.responses)
+                        }
+                        autoFocus
+                      />
+                    ) : (
+                      <a
+                        href="#!"
+                        className="editable-username"
+                        onClick={() => setEditingUser(r.user_id)}
+                      >
+                        {r.username}
+                      </a>
+                    )}
+                  </td>
+                  <td>{dateKey}</td>
+                  <td>{value}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
