@@ -11,7 +11,6 @@ import Footer from "./components/Footer";
 // ====== CSS 全部読み込み ======
 import "./common.css";
 import "./header_footer.css";
-import "./index.css";
 import "./personal.css";
 import "./register.css";
 import "./share.css";
