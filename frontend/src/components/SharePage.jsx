@@ -16,9 +16,28 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 編集用ステート
+  // 編集用
   const [editingUser, setEditingUser] = useState(null);
   const [newUsername, setNewUsername] = useState("");
+
+  // ===== 日付を表示形式に変換 =====
+  const formatDate = (d) => {
+    if (!d) return "";
+    const date = new Date(d.date);
+    const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    if (d.timeType === "時間指定" && d.startTime && d.endTime) {
+      return `${base} (${d.startTime} ~ ${d.endTime})`;
+    }
+    return `${base} (${d.timeType})`;
+  };
+
+  // ===== Key を統一して管理 =====
+  const makeKey = (d) => {
+    if (d.timeType === "時間指定" && d.startTime && d.endTime) {
+      return `${d.date} (${d.startTime} ~ ${d.endTime})`;
+    }
+    return `${d.date} (${d.timeType})`;
+  };
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -29,7 +48,6 @@ const SharePage = () => {
         const data = await res.json();
         setSchedule(data);
 
-        // 回答一覧も取得
         const res2 = await fetch(`/api/schedules/${token}/responses`);
         if (!res2.ok) throw new Error("回答一覧取得失敗");
         setAllResponses(await res2.json());
@@ -39,23 +57,29 @@ const SharePage = () => {
     };
     fetchSchedule();
 
-    socket.emit("join-room", token);
-    socket.on("update-responses", (data) => {
-      setAllResponses(data);
+    socket.emit("joinSchedule", token);
+    socket.on("updateResponses", (data) => {
+      setAllResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== data.user_id);
+        return [...others, data];
+      });
     });
 
     return () => {
-      socket.off("update-responses");
+      socket.off("updateResponses");
     };
   }, [token]);
 
-  const handleChange = (date, value) => {
+  // ===== プルダウン変更 =====
+  const handleChange = (d, value) => {
+    const key = makeKey(d);
     setResponses((prev) => ({
       ...prev,
-      [date]: value,
+      [key]: value,
     }));
   };
 
+  // ===== 保存 =====
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
@@ -99,11 +123,6 @@ const SharePage = () => {
     setNewUsername("");
   };
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-  };
-
   if (!schedule) return <div>読み込み中...</div>;
 
   // 全ユーザーリスト
@@ -122,22 +141,25 @@ const SharePage = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        {schedule.dates.map((date) => (
-          <div key={date} className="date-response">
-            <span className="date-label">{formatDate(date)}</span>
-            <select
-              className="attendance-select"
-              value={responses[date] || "-"}
-              onChange={(e) => handleChange(date, e.target.value)}
-            >
-              {attendanceOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+        {schedule.dates.map((d, idx) => {
+          const key = makeKey(d);
+          return (
+            <div key={idx} className="date-response">
+              <span className="date-label">{formatDate(d)}</span>
+              <select
+                className="attendance-select"
+                value={responses[key] || "-"}
+                onChange={(e) => handleChange(d, e.target.value)}
+              >
+                {attendanceOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })}
         <button className="save-btn" onClick={handleSave}>
           保存する
         </button>
@@ -178,21 +200,24 @@ const SharePage = () => {
             </tr>
           </thead>
           <tbody>
-            {schedule.dates.map((date) => (
-              <tr key={date}>
-                <td>{formatDate(date)}</td>
-                {uniqueUsers.map((user) => {
-                  const userResponse = allResponses.find(
-                    (r) => r.username === user
-                  );
-                  return (
-                    <td key={user}>
-                      {userResponse?.responses?.[date] || "-"}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {schedule.dates.map((d, idx) => {
+              const key = makeKey(d);
+              return (
+                <tr key={idx}>
+                  <td>{formatDate(d)}</td>
+                  {uniqueUsers.map((user) => {
+                    const userResponse = allResponses.find(
+                      (r) => r.username === user
+                    );
+                    return (
+                      <td key={user}>
+                        {userResponse?.responses?.[key] || "-"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
