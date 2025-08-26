@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
 
   const hd = new Holidays("JP");
+  const todayStr = new Date().toISOString().split("T")[0];
 
   // 日付クリック
   const handleDateClick = (date) => {
@@ -73,11 +74,48 @@ const RegisterPage = () => {
         <div className="calendar-box">
           <Calendar
             onClickDay={handleDateClick}
-            tileClassName={({ date }) => {
+            tileContent={({ date, view }) => {
+              if (view === "month") {
+                const holiday = hd.isHoliday(date);
+                return (
+                  <div className="calendar-tile-content">
+                    {/* 祝日名を日付の下に表示 */}
+                    {holiday ? (
+                      <span className="holiday-name">{holiday.name}</span>
+                    ) : null}
+                  </div>
+                );
+              }
+            }}
+            tileClassName={({ date, view }) => {
+              if (view !== "month") return "";
+
               const dateStr = date.toISOString().split("T")[0];
-              if (selectedDates.includes(dateStr)) return "selected-day";
-              if (hd.isHoliday(date)) return "holiday";
-              return null;
+              const day = date.getDay();
+              const holiday = hd.isHoliday(date);
+
+              let classes = [];
+
+              // 今日の日付
+              if (dateStr === todayStr) {
+                classes.push("today");
+              }
+
+              // 祝日 or 日曜
+              if (holiday || day === 0) {
+                classes.push("sunday-holiday");
+              }
+              // 土曜
+              else if (day === 6) {
+                classes.push("saturday");
+              }
+
+              // 選択した日
+              if (selectedDates.includes(dateStr)) {
+                classes.push("selected-day");
+              }
+
+              return classes.join(" ");
             }}
           />
         </div>
