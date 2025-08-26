@@ -1,4 +1,4 @@
-/* ====== ページ全体 ====== */
+/* ====== Page 全体 ====== */
 .register-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
@@ -16,7 +16,7 @@
   margin-bottom: 20px;
 }
 
-/* ====== タイトル入力 ====== */
+/* ====== Title 入力 ====== */
 .title-input-container {
   display: flex;
   justify-content: center;
@@ -36,7 +36,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* ====== モード切替お洒落ボタン ====== */
+/* ====== Mode 切替ボタン ====== */
 .mode-switch {
   display: flex;
   gap: 12px;
@@ -68,15 +68,15 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
-/* ====== カレンダー＋リスト横並び ====== */
+/* ====== Calendar + List 横並び ====== */
 .calendar-container {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  max-width: 1100px;  /* ← 少し縮めた */
-  gap: 15px;          /* ← 余白縮小 */
+  max-width: 1100px;
+  gap: 15px;
   margin: 20px auto;
-  padding: 0 20px;    /* ← 左右余白を縮めた */
+  padding: 0 20px;
   box-sizing: border-box;
 }
 
@@ -103,7 +103,7 @@
   letter-spacing: 1px;
 }
 
-/* ====== カレンダー調整 ====== */
+/* ====== Calendar 調整 ====== */
 .react-calendar {
   width: 100%;
   background: rgba(255,255,255,0.1);
@@ -119,7 +119,6 @@
   text-align: center;
 }
 
-/* 日付セルの縦幅を広げる */
 .react-calendar__tile {
   min-height: 70px;
   display: flex;
@@ -173,4 +172,101 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 1
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #FDB9C8;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.radio-group input[type="radio"]:checked {
+  background-color: #FDB9C8;
+  border: 2px solid #004CA0;
+}
+
+.radio-group input[type="radio"]:hover {
+  transform: scale(1.1);
+}
+
+/* ====== Custom 時間指定 ====== */
+.custom-time {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  gap: 6px;
+}
+
+.time-dropdown {
+  padding: 5px 8px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* ====== 共有リンクボタン ====== */
+.share-link-container {
+  margin-top: 20px;
+}
+
+.share-link-btn {
+  padding: 12px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  transition: transform 0.2s;
+}
+
+.share-link-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+}
+
+/* ====== Calendar 曜日色 ====== */
+.sunday-holiday {
+  color: red !important;
+  font-weight: bold;
+}
+
+.saturday {
+  color: #004CA0 !important;
+  font-weight: bold;
+}
+
+.today {
+  background: #FDB9C8 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  border-radius: 6px;
+}
+
+.selected-day {
+  background: #004CA0 !important;
+  color: #fff !important;
+  font-weight: bold;
+  border-radius: 6px;
+}
+
+.range-start {
+  background: #ffeb3b !important;
+  color: #000 !important;
+  font-weight: bold;
+}
