@@ -4,6 +4,7 @@
   padding: 20px;
   font-family: "Zen Maru Gothic", sans-serif;
   color: #222;
+  overflow-x: hidden; /* ページ全体は横スクロールしない */
 }
 
 /* タイトル */
@@ -67,6 +68,7 @@
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.6);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  overflow-x: auto; /* 横スクロール対応 */
 }
 
 /* 表タイトル */
@@ -84,11 +86,12 @@
 .schedule-header,
 .schedule-item {
   display: grid;
-  grid-template-columns: 2fr 1.2fr repeat(auto-fit, minmax(80px, 1fr));
+  grid-template-columns: 2fr 1.2fr repeat(auto-fit, minmax(100px, 1fr));
   padding: 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   align-items: center;
   color: #fff;
+  min-width: 600px; /* 横スクロール時の最小幅 */
 }
 
 .schedule-header {
@@ -109,6 +112,7 @@
 .user-response {
   padding: 0 10px;
   text-align: center;
+  word-break: keep-all;
 }
 
 /* ユーザ名リンク（ヘッダー部分） */
@@ -132,6 +136,7 @@
   background: #444;
   color: #fff;
   transition: 0.2s;
+  min-width: 40px;
 }
 
 .choice-btn.active {
