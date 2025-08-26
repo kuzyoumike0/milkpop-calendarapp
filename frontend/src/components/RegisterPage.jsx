@@ -155,40 +155,51 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー＋リスト */}
-      <div className="calendar-container">
-        <div className="calendar-box">
-          <Calendar
-            locale="ja-JP"
-            calendarType="US"   // ✅ 日曜始まりにする（重要）
-            onClickDay={handleDateClick}
-            tileContent={({ date, view }) => {
-              if (view === "month") {
-                const dateStr = getDateStr(date);
-                const holidayName = holidays[dateStr];
-                return holidayName ? (
-                  <div className="holiday-wrapper">
-                    <span className="holiday-name">{holidayName}</span>
-                  </div>
-                ) : null;
-              }
-            }}
-            tileClassName={({ date, view }) => {
-              if (view !== "month") return "";
-              const dateStr = getDateStr(date);
-              const day = date.getDay();
+      <div className="calendar-box">
+  {/* 曜日ヘッダー（日曜始まりで固定） */}
+  <div className="calendar-weekdays">
+    <div className="weekday sunday">日</div>
+    <div className="weekday">月</div>
+    <div className="weekday">火</div>
+    <div className="weekday">水</div>
+    <div className="weekday">木</div>
+    <div className="weekday">金</div>
+    <div className="weekday saturday">土</div>
+  </div>
 
-              let classes = [];
-              if (dateStr === todayStr) classes.push("today");
-              if (holidays[dateStr] || day === 0) classes.push("sunday-holiday"); // 赤
-              else if (day === 6) classes.push("saturday"); // 青
-              if (selectedDates.includes(dateStr)) classes.push("selected-day");
-              if (rangeStart === dateStr) classes.push("range-start");
+  {/* React-Calendar 本体 */}
+  <Calendar
+    locale="ja-JP"
+    calendarType="US"   // ✅ 日曜始まりを強制
+    onClickDay={handleDateClick}
+    tileContent={({ date, view }) => {
+      if (view === "month") {
+        const dateStr = getDateStr(date);
+        const holidayName = holidays[dateStr];
+        return holidayName ? (
+          <div className="holiday-wrapper">
+            <span className="holiday-name">{holidayName}</span>
+          </div>
+        ) : null;
+      }
+    }}
+    tileClassName={({ date, view }) => {
+      if (view !== "month") return "";
+      const dateStr = getDateStr(date);
+      const day = date.getDay();
 
-              return classes.join(" ");
-            }}
-          />
-        </div>
+      let classes = [];
+      if (dateStr === todayStr) classes.push("today");
+      if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
+      else if (day === 6) classes.push("saturday");
+      if (selectedDates.includes(dateStr)) classes.push("selected-day");
+      if (rangeStart === dateStr) classes.push("range-start");
+
+      return classes.join(" ");
+    }}
+  />
+</div>
+
 
         {/* 選択リスト */}
         <div className="selected-dates">
