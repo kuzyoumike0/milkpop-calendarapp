@@ -1,210 +1,177 @@
-// frontend/src/components/RegisterPage.jsx
-import React, { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import Holidays from "date-holidays";
-import "../register.css";
+/* ===== ページ全体 ===== */
+.register-page {
+  padding: 20px;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-const hd = new Holidays("JP");
+.page-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+}
 
-export default function RegisterPage() {
-  const [title, setTitle] = useState("");
-  const [selectMode, setSelectMode] = useState("single");
-  const [rangeStart, setRangeStart] = useState(null);
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeType, setTimeType] = useState("終日");
+/* タイトル入力 */
+.title-input {
+  width: 40%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin-bottom: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #111;
+  color: #fff;
+  text-align: center;
+}
 
-  // ===== 日付クリック処理 =====
-  const handleDateClick = (date) => {
-    const dateStr = date.toISOString().slice(0, 10);
+/* コンテナ */
+.register-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
 
-    if (selectMode === "single") {
-      setSelectedDates([{ date: dateStr, timeType }]);
-    } else if (selectMode === "multi") {
-      setSelectedDates((prev) => [...prev, { date: dateStr, timeType }]);
-    } else if (selectMode === "range") {
-      if (!rangeStart) {
-        setRangeStart(date);
-      } else {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-        let rangeDates = [];
-        let current = new Date(start);
-        while (current <= end) {
-          rangeDates.push({
-            date: current.toISOString().slice(0, 10),
-            timeType,
-          });
-          current.setDate(current.getDate() + 1);
-        }
-        setSelectedDates(rangeDates);
-        setRangeStart(null);
-      }
-    }
-  };
+/* カレンダー */
+.calendar-box {
+  flex: 7;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  color: #fff;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+}
+.calendar-box:hover {
+  transform: translateY(-3px);
+}
 
-  // ===== 曜日・祝日・範囲強調 =====
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const weekday = date.getDay();
-      const holiday = hd.isHoliday(date);
-      const dateStr = date.toISOString().slice(0, 10);
-      const todayStr = new Date().toISOString().slice(0, 10);
+/* モード切替 */
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mode-buttons button {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.4);
+  font-weight: bold;
+  cursor: pointer;
+}
+.mode-buttons button.active {
+  background: #004CA0;
+  color: #fff;
+}
 
-      // 今日強調
-      if (dateStr === todayStr) return "today-highlight";
+/* カレンダー曜日スタイル */
+.weekday {
+  color: #222 !important;
+}
+.saturday {
+  color: #004CA0 !important;
+  font-weight: bold;
+}
+.sunday {
+  color: #ff2d2d !important;
+  font-weight: bold;
+}
+.holiday-name {
+  font-size: 10px;
+  color: #ff2d2d;
+}
 
-      // 範囲選択中
-      if (rangeStart && !selectedDates.find((d) => d.date === dateStr)) {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-        if (date >= start && date <= end) {
-          return "in-range";
-        }
-      }
+/* 今日 */
+.today-highlight {
+  background: #FDB9C8 !important;
+  border: 2px solid #004CA0 !important;
+  border-radius: 50%;
+  color: #000 !important;
+  font-weight: bold;
+}
 
-      // 選択済み
-      if (selectedDates.find((d) => d.date === dateStr)) {
-        return "selected-date";
-      }
+/* 選択済み */
+.selected-date {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
 
-      // 曜日と祝日
-      if (holiday || weekday === 0) return "sunday";
-      if (weekday === 6) return "saturday";
-      return "weekday";
-    }
-    return null;
-  };
+/* 範囲中 */
+.in-range {
+  background: rgba(0, 76, 160, 0.2) !important;
+  border-radius: 6px;
+  color: #000 !important;
+}
 
-  return (
-    <div className="register-page">
-      <h1 className="page-title">日程登録</h1>
+/* サイドパネル */
+.register-box {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  color: #000;
+  backdrop-filter: blur(15px);
+}
 
-      {/* タイトル入力 */}
-      <input
-        type="text"
-        className="title-input"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+/* 日程リスト */
+.event-list {
+  list-style: none;
+  padding: 0;
+}
+.event-list li {
+  background: rgba(255,255,255,0.25);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
 
-      <div className="register-container">
-        {/* カレンダー部分 */}
-        <div className="calendar-box">
-          {/* モード切替ボタン */}
-          <div className="mode-buttons">
-            <button
-              className={selectMode === "single" ? "active" : ""}
-              onClick={() => setSelectMode("single")}
-            >
-              単日
-            </button>
-            <button
-              className={selectMode === "multi" ? "active" : ""}
-              onClick={() => setSelectMode("multi")}
-            >
-              複数選択
-            </button>
-            <button
-              className={selectMode === "range" ? "active" : ""}
-              onClick={() => setSelectMode("range")}
-            >
-              範囲選択
-            </button>
-          </div>
+/* 時間帯ボタン */
+.time-type-buttons {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.time-type-buttons button {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.time-type-buttons button.active {
+  background: #004CA0;
+  color: #fff;
+}
 
-          <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={tileClassName}
-            calendarType="US"
-            locale="ja-JP"
-          />
-        </div>
-
-        {/* 選択中日程 */}
-        <div className="register-box">
-          <h3>選択中の日程</h3>
-          <ul className="event-list">
-            {selectedDates.map((d, idx) => (
-              <li key={idx}>
-                {d.date}
-                <div className="time-type-buttons">
-                  <button
-                    className={d.timeType === "終日" ? "active" : ""}
-                    onClick={() =>
-                      setSelectedDates((prev) =>
-                        prev.map((item, i) =>
-                          i === idx ? { ...item, timeType: "終日" } : item
-                        )
-                      )
-                    }
-                  >
-                    終日
-                  </button>
-                  <button
-                    className={d.timeType === "昼" ? "active" : ""}
-                    onClick={() =>
-                      setSelectedDates((prev) =>
-                        prev.map((item, i) =>
-                          i === idx ? { ...item, timeType: "昼" } : item
-                        )
-                      )
-                    }
-                  >
-                    昼
-                  </button>
-                  <button
-                    className={d.timeType === "夜" ? "active" : ""}
-                    onClick={() =>
-                      setSelectedDates((prev) =>
-                        prev.map((item, i) =>
-                          i === idx ? { ...item, timeType: "夜" } : item
-                        )
-                      )
-                    }
-                  >
-                    夜
-                  </button>
-                  <button
-                    className={d.timeType === "時間指定" ? "active" : ""}
-                    onClick={() =>
-                      setSelectedDates((prev) =>
-                        prev.map((item, i) =>
-                          i === idx ? { ...item, timeType: "時間指定" } : item
-                        )
-                      )
-                    }
-                  >
-                    時間指定
-                  </button>
-                </div>
-
-                {/* 時間指定用ドロップダウン */}
-                {d.timeType === "時間指定" && (
-                  <div className="time-dropdowns">
-                    <select>
-                      {Array.from({ length: 24 }).map((_, h) => (
-                        <option key={h} value={h}>
-                          {h}:00
-                        </option>
-                      ))}
-                    </select>
-                    ～
-                    <select>
-                      {Array.from({ length: 24 }).map((_, h) => (
-                        <option key={h} value={h}>
-                          {h}:00
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
+/* 時間指定ドロップダウン */
+.time-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.time-dropdowns select {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.9);
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
 }
