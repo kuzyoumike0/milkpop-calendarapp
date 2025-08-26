@@ -13,13 +13,13 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // JSTに変換
+  // JST変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト（1時間刻み）
+  // 時間リスト
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
@@ -139,9 +139,6 @@ const RegisterPage = () => {
     alert("リンクをコピーしました！✨");
   };
 
-  // 選択日を日付順にソート
-  const sortedDates = [...selectedDates].sort((a, b) => a.date - b.date);
-
   return (
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
@@ -158,7 +155,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー（左7割） ===== */}
+        {/* ===== カレンダー（左） ===== */}
         <div className="glass-white calendar-card">
           {/* モード切替 */}
           <div className="mode-select">
@@ -194,8 +191,8 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="US"  // ✅ ズレ防止
-            firstDayOfWeek={1}
+            calendarType="gregory"
+            firstDayOfWeek={0}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
             }
@@ -225,73 +222,32 @@ const RegisterPage = () => {
             tileContent={({ date }) => {
               const jstDate = getJSTDate(date);
               const holiday = hd.isHoliday(jstDate);
-              return holiday ? (
-                <span className="holiday-name">{holiday[0].name}</span>
-              ) : null;
+              return (
+                <div className="date-cell">
+                  <span>{jstDate.getDate()}日</span>
+                  {holiday && <span className="holiday-name">{holiday[0].name}</span>}
+                </div>
+              );
             }}
           />
         </div>
 
-        {/* ===== リスト（右3割） ===== */}
+        {/* ===== リスト（右） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
-          {sortedDates.length === 0 ? (
+          {selectedDates.length === 0 ? (
             <p>日付を選択してください</p>
           ) : (
             <ul>
-              {sortedDates.map((d, i) => (
-                <li key={i} className="date-item">
-                  <span className="date-label">
-                    📅 {d.date.toLocaleDateString("ja-JP")}
-                  </span>
-
-                  <div className="time-type-buttons">
-                    {["終日", "昼", "夜", "時間指定"].map((type) => (
-                      <button
-                        key={type}
-                        className={`time-type-button ${
-                          d.timeType === type ? "active" : ""
-                        }`}
-                        onClick={() => handleTimeTypeChange(i, type)}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-
-                  {d.timeType === "時間指定" && (
-                    <span className="time-range">
-                      <select
-                        value={d.startTime}
-                        onChange={(e) =>
-                          handleTimeChange(i, "startTime", e.target.value)
-                        }
-                        className="time-dropdown stylish-dropdown"
-                      >
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="range-tilde"> ~ </span>
-                      <select
-                        value={d.endTime}
-                        onChange={(e) =>
-                          handleTimeChange(i, "endTime", e.target.value)
-                        }
-                        className="time-dropdown stylish-dropdown"
-                      >
-                        {timeOptions.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </select>
+              {selectedDates
+                .sort((a, b) => a.date - b.date)
+                .map((d, i) => (
+                  <li key={i} className="date-item">
+                    <span className="date-label">
+                      📅 {d.date.toLocaleDateString("ja-JP")}
                     </span>
-                  )}
-                </li>
-              ))}
+                  </li>
+                ))}
             </ul>
           )}
 
