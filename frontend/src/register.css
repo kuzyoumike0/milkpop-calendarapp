@@ -1,11 +1,10 @@
-/* ページ全体 */
+/* ===== 登録ページ全体 ===== */
 .register-page {
   padding: 20px;
   text-align: center;
-  font-family: "Zen Maru Gothic", sans-serif;
 }
 
-/* タイトル */
+/* ===== ページタイトル ===== */
 .page-title {
   font-size: 1.8rem;
   margin-bottom: 20px;
@@ -13,10 +12,11 @@
   color: #004CA0;
 }
 
-/* タイトル入力 */
+/* ===== タイトル入力 ===== */
 .title-input-container {
   margin-bottom: 20px;
 }
+
 .title-input {
   width: 300px;
   padding: 8px;
@@ -26,10 +26,11 @@
   text-align: center;
 }
 
-/* モード切替 */
+/* ===== モード切替ボタン ===== */
 .mode-switch {
   margin-bottom: 20px;
 }
+
 .mode-btn {
   margin: 0 5px;
   padding: 6px 12px;
@@ -39,15 +40,16 @@
   background: #eee;
   transition: all 0.2s ease;
 }
+
 .mode-btn.active {
   background: #FDB9C8;
   color: #fff;
 }
 
-/* カレンダー＋リスト横並び */
+/* ===== カレンダーとリスト横並び ===== */
 .calendar-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: flex-start;
   gap: 30px;
   margin: 20px auto;
@@ -55,7 +57,7 @@
   padding: 0 40px;
 }
 
-/* カレンダー */
+/* ===== カレンダー部分 (左7割) ===== */
 .calendar-box {
   flex: 7;
   min-width: 65%;
@@ -67,7 +69,7 @@
               -8px -8px 16px rgba(255,255,255,0.2);
 }
 
-/* リスト */
+/* ===== 選択リスト (右3割) ===== */
 .selected-dates {
   flex: 3;
   min-width: 30%;
@@ -80,14 +82,18 @@
   text-align: left;
   height: fit-content;
 }
+
 .selected-dates h3 {
   margin-bottom: 10px;
   font-size: 1.1rem;
   color: #fff;
 }
 
-/* 日付表示 */
-.date-item { margin-bottom: 12px; }
+/* ===== 日付リスト ===== */
+.date-item {
+  margin-bottom: 12px;
+}
+
 .date-text {
   font-weight: bold;
   display: block;
@@ -95,12 +101,13 @@
   color: #fff;
 }
 
-/* 時間ボタン */
+/* ===== ボタン群 ===== */
 .radio-group-inline {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
+
 .time-btn {
   padding: 4px 10px;
   border-radius: 6px;
@@ -109,41 +116,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .time-btn.active {
   background: #004CA0;
   color: #fff;
   border-color: #004CA0;
 }
 
-/* 共有リンク */
-.share-link-container { margin-top: 20px; }
-.share-link-btn {
-  padding: 8px 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  border: none;
-  background: #FDB9C8;
-  color: #fff;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-.share-link-btn:hover { background: #004CA0; }
-.share-link-box { margin-top: 10px; }
-.copy-btn {
-  margin-left: 10px;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 6px;
-  border: none;
-  background: #eee;
-  transition: all 0.2s ease;
-}
-.copy-btn:hover {
-  background: #FDB9C8;
-  color: #fff;
-}
-
-/* カレンダー調整 */
+/* ===== カレンダー全体調整 ===== */
 .react-calendar {
   width: 100%;
   border: none;
@@ -152,39 +132,41 @@
   font-size: 0.9rem;
   color: #fff;
 }
-.react-calendar__tile {
-  padding: 14px 0;
-  border-radius: 12px;
-  transition: all 0.2s ease;
+
+.react-calendar__month-view__weekdays {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
   font-weight: bold;
-}
-.react-calendar__tile:hover {
-  background: rgba(253, 185, 200, 0.8);
-  color: #fff;
-  transform: scale(1.05);
+  margin-bottom: 8px;
 }
 
-/* 今日 */
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+/* ===== 日曜・土曜・祝日 ===== */
+.react-calendar__tile.sunday-holiday { color: red; font-weight: bold; }
+.react-calendar__tile.saturday { color: #004CA0; }
+
+/* ===== 今日 ===== */
 .react-calendar__tile.today {
   border: 2px solid #FDB9C8;
   background: rgba(255,255,255,0.1);
 }
-/* 選択 */
+
+/* ===== 選択中 ===== */
 .react-calendar__tile.selected-day {
   background: #004CA0 !important;
   color: #fff !important;
+  border-radius: 10px;
 }
-/* 土曜 */
-.react-calendar__tile.saturday { color: #004CA0; }
-/* 日曜＆祝日 */
-.react-calendar__tile.sunday-holiday {
-  color: red;
-  font-weight: bold;
-}
-/* 祝日名 */
+
+/* ===== 祝日名 ===== */
 .holiday-name {
   font-size: 0.6rem;
-  color: red;
+  color: #FDB9C8;
   font-weight: bold;
   display: block;
 }
