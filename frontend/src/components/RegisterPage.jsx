@@ -95,7 +95,12 @@ const RegisterPage = () => {
         const time = timeSelections[date] || "未選択";
         return {
           date,
-          time: time === "custom" && customTimes[date] ? "時間指定" : time,
+          timeType:
+            time === "custom" && customTimes[date] ? "時間指定" :
+            time === "all" ? "終日" :
+            time === "day" ? "昼" :
+            time === "night" ? "夜" :
+            "未選択",
           startTime: customTimes[date]?.start || null,
           endTime: customTimes[date]?.end || null,
         };
@@ -236,7 +241,7 @@ const RegisterPage = () => {
                           }
                         >
                           {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i}>
+                            <option key={i} value={`${i}:00`}>
                               {i}:00
                             </option>
                           ))}
@@ -249,7 +254,7 @@ const RegisterPage = () => {
                           }
                         >
                           {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i + 1}>
+                            <option key={i} value={`${i + 1}:00`}>
                               {i + 1}:00
                             </option>
                           ))}
