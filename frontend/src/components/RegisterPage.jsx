@@ -15,8 +15,6 @@ export default function RegisterPage() {
   // 📌 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-
-    // 既に選択済みなら削除
     if (selectedDates.find((d) => d.date === dateStr)) {
       setSelectedDates(selectedDates.filter((d) => d.date !== dateStr));
     } else {
@@ -27,13 +25,12 @@ export default function RegisterPage() {
   // 📌 モード切替
   const handleModeChange = (mode) => {
     setTimeType(mode);
-    // 選択済みにも反映
     setSelectedDates((prev) =>
       prev.map((d) => ({ ...d, timeType: mode }))
     );
   };
 
-  // 📌 共有リンク発行（バックエンドに送信）
+  // 📌 共有リンク発行
   const handleShare = async () => {
     const res = await fetch("/api/schedules", {
       method: "POST",
@@ -49,14 +46,14 @@ export default function RegisterPage() {
     }
   };
 
-  // 📌 日付表示（祝日・土日対応）
+  // 📌 日付の色分け & 祝日名表示
   const tileContent = ({ date, view }) => {
     if (view !== "month") return null;
 
     const weekDay = date.getDay();
     const holiday = hd.isHoliday(date);
 
-    let className = "";
+    let className = "weekday"; // デフォルト（平日：黒）
     if (weekDay === 0) className = "sunday"; // 日曜
     if (weekDay === 6) className = "saturday"; // 土曜
     if (holiday) className = "holiday"; // 祝日
@@ -72,9 +69,8 @@ export default function RegisterPage() {
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
       <div className="register-container">
-        {/* カレンダー側 */}
+        {/* カレンダー */}
         <div className="calendar-container glass-card">
-          {/* タイトル入力をカレンダーの上に */}
           <input
             type="text"
             placeholder="タイトルを入力"
@@ -93,7 +89,6 @@ export default function RegisterPage() {
 
         {/* サイドパネル */}
         <div className="side-panel glass-card">
-          {/* モード切替ボタン */}
           <div className="mode-buttons">
             {["終日", "昼", "夜", "時間指定"].map((mode) => (
               <button
@@ -106,7 +101,6 @@ export default function RegisterPage() {
             ))}
           </div>
 
-          {/* 共有リンク発行 */}
           <button className="share-btn" onClick={handleShare}>
             共有リンク発行
           </button>
