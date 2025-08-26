@@ -1,213 +1,50 @@
-/* frontend/src/share.css */
-
-.share-page {
-  padding: 20px;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.page-title {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #fff;
-  text-align: center;
-}
-
-.glass-black {
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 15px;
-  padding: 15px;
-  margin: 15px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  width: 80%;
-}
-
-.title-box {
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.name-box input {
-  width: 50%;        /* 横幅を短く */
-  max-width: 400px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-size: 16px;
-  text-align: center;
-  display: block;
-  margin: 0 auto;
-}
-
-.notice-text {
-  font-size: 14px;
-  color: #ffdddd;
-  margin-top: -5px;
-}
-
+/* ===== 出欠表スタイル ===== */
 .schedule-list table {
   width: 100%;
   border-collapse: collapse;
-  background: #111;
-  border-radius: 10px;
-  overflow: hidden;
 }
 
 .schedule-list th,
 .schedule-list td {
-  padding: 10px;
+  border: 1px solid #333;
+  padding: 8px;
   text-align: center;
-  border: 1px solid rgba(255,255,255,0.2);
-}
-
-.attendance-cell {
-  cursor: pointer;
-}
-
-/* ===== 出欠選択ボタン ===== */
-.choice-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.choice-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  background: #222;
   color: #fff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-  transition: all 0.25s ease;
 }
 
-.choice-btn:hover {
-  transform: scale(1.15);
-  background: #444;
+/* 日付列（1列目） */
+.schedule-list table th:first-child,
+.schedule-list table td:first-child {
+  width: 120px;      /* 固定幅 */
+  text-align: left;  /* 左寄せ */
+  padding-left: 12px;
 }
 
-.choice-btn.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  box-shadow: 0 0 12px rgba(253,185,200,0.9);
-  transform: scale(1.2);
+/* 時間列（2列目） */
+.schedule-list table th:nth-child(2),
+.schedule-list table td:nth-child(2) {
+  width: 100px;      /* 固定幅 */
+  text-align: left;  /* 左寄せ */
+  padding-left: 12px;
 }
 
-/* ===== 保存ボタン ===== */
-.save-button {
-  margin-top: 20px;
-  padding: 14px 36px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  letter-spacing: 1px;
+/* 他の列は自動で均等 */
+.schedule-list table th,
+.schedule-list table td {
+  min-width: 80px;
 }
 
-.save-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 22px rgba(0,0,0,0.5);
-  opacity: 0.95;
-}
-/* ===== 新規追加ボタン ===== */
-.add-button {
-  margin-left: 12px;
-  padding: 10px 22px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #50C878, #004CA0);
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.4);
-  transition: all 0.3s ease;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-  letter-spacing: 1px;
-}
-
-.add-button:hover {
-  background: linear-gradient(135deg, #FDB9C8, #50C878);
-  transform: translateY(-2px) scale(1.05);
-  color: #000;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-}
-/* 編集ボタン */
-.edit-button {
-  margin-left: 12px;
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-}
-.edit-button:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  transform: scale(1.05);
-  color: #000;
-}
-
-/* 編集不可状態のボタン */
-.choice-btn.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-/* 編集ボタン */
-.edit-button {
-  margin-left: 12px;
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: bold;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  transition: all 0.3s ease;
-  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
-}
-.edit-button:hover {
-  background: linear-gradient(135deg, #50C878, #FDB9C8);
-  transform: scale(1.05);
-  color: #000;
-}
-
-/* 編集不可状態のボタン */
-.choice-btn.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-.save-message {
-  margin-left: 16px;
-  color: #00e676; /* 緑でチェック風 */
-  font-weight: bold;
-  font-size: 0.9rem;
-}
+/* 編集可能なユーザー名 */
 .editable-username {
   cursor: pointer;
   color: #4dabf7;
   text-decoration: underline;
+}
+
+/* 保存メッセージ */
+.save-message {
+  margin-left: 16px;
+  color: #00e676;
+  font-weight: bold;
+  font-size: 0.9rem;
 }
