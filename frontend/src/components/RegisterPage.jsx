@@ -14,19 +14,22 @@ const RegisterPage = () => {
   const [rangeStart, setRangeStart] = useState(null);
 
   const hd = new Holidays("JP");
-  const todayStr = new Date().toISOString().split("T")[0];
 
-  // 📌 祝日を正規化して辞書化
+  // 📌 日付文字列をローカル基準で取得（UTCズレ防止）
+  const getDateStr = (date) => date.toLocaleDateString("sv-SE"); // YYYY-MM-DD
+  const todayStr = getDateStr(new Date());
+
+  // 📌 祝日を辞書化
   const year = new Date().getFullYear();
   const holidays = hd.getHolidays(year).reduce((map, h) => {
-    const dateStr = new Date(h.date).toISOString().split("T")[0];
-    map[dateStr] = h.name; // "2025-08-11": "山の日"
+    const dateStr = getDateStr(new Date(h.date));
+    map[dateStr] = h.name;
     return map;
   }, {});
 
   // 📌 日付クリック処理
   const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = getDateStr(date);
 
     if (selectionMode === "multi") {
       setSelectedDates((prev) =>
@@ -46,7 +49,7 @@ const RegisterPage = () => {
         const range = [];
         const cur = new Date(start);
         while (cur <= end) {
-          range.push(cur.toISOString().split("T")[0]);
+          range.push(getDateStr(cur));
           cur.setDate(cur.getDate() + 1);
         }
         setSelectedDates(range);
@@ -73,6 +76,7 @@ const RegisterPage = () => {
     }));
   };
 
+  // 📌 日付表示フォーマット（リスト用）
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
     return d.toLocaleDateString("ja-JP", {
@@ -114,6 +118,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
+      {/* カレンダー＋リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
@@ -121,7 +126,7 @@ const RegisterPage = () => {
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
-                const dateStr = date.toISOString().split("T")[0];
+                const dateStr = getDateStr(date);
                 const holidayName = holidays[dateStr];
                 return holidayName ? (
                   <div className="holiday-wrapper">
@@ -132,7 +137,7 @@ const RegisterPage = () => {
             }}
             tileClassName={({ date, view }) => {
               if (view !== "month") return "";
-              const dateStr = date.toISOString().split("T")[0];
+              const dateStr = getDateStr(date);
               const day = date.getDay();
 
               let classes = [];
@@ -147,6 +152,7 @@ const RegisterPage = () => {
           />
         </div>
 
+        {/* 選択リスト */}
         <div className="selected-dates">
           <h3>📅 選択した日程</h3>
           <ul>
@@ -234,6 +240,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
+      {/* 共有リンク */}
       <div className="share-link-container">
         <button className="share-link-btn">✨ 共有リンクを発行</button>
       </div>
