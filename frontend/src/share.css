@@ -1,177 +1,114 @@
 .share-page {
-  max-width: 1000px;
-  margin: 0 auto;
   padding: 20px;
-  font-family: "Zen Maru Gothic", sans-serif;
-  color: #222;
-  overflow-x: auto; /* 横スクロール対応 */
-}
-
-/* タイトル */
-.page-title {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #004ca0;
-  margin: 20px 0 30px 20px; /* 左に余白を確保 */
-}
-
-/* 名前入力と追加ボタンのカード */
-.name-box {
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 15px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  width: fit-content;
-  margin: 0 auto 20px auto; /* 中央寄せ + 下余白 */
 }
 
-/* 入力フィールド */
-.name-input {
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  outline: none;
-  transition: 0.2s;
-  width: 220px;
+.share-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
 }
 
-.name-input:focus {
-  border-color: #004ca0;
-  box-shadow: 0 0 6px rgba(0, 76, 160, 0.6);
+/* グラスカード */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 20px;
+  flex: 1;
 }
 
-/* 新規追加ボタン */
-.add-button {
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
-  font-weight: bold;
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.add-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* スケジュール表のカード */
+/* 日程リスト */
 .schedule-list {
-  margin: 20px;
-  padding: 20px;
+  list-style: none;
+  padding: 0;
+}
+.schedule-list li {
+  background: rgba(255,255,255,0.25);
+  border-left: 4px solid #FDB9C8;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  overflow-x: auto; /* ユーザが多い時に横スクロール */
+  font-weight: bold;
 }
 
-/* 表タイトル */
-.table-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 12px;
+/* 回答UI */
+.response-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.response-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-/* テーブル部分 */
-.schedule-header,
-.schedule-item {
-  display: grid;
-  grid-template-columns: 2fr 1fr repeat(auto-fit, minmax(100px, 1fr));
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  min-width: 600px;
-}
-
-.schedule-header {
-  font-weight: bold;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 12px 0;
-  text-align: center;
-}
-
-.schedule-item {
-  padding: 10px 0;
-  text-align: center;
-}
-
-/* 各セル */
-.date,
-.time {
-  padding: 8px;
-  font-weight: bold;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  margin: 2px;
-}
-
-.user-col {
-  padding: 8px;
-  text-align: center;
-  font-weight: bold;
-  color: #fdb9c8;
-}
-
-.user-response {
-  padding: 4px;
-  text-align: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 /* プルダウン */
-.user-response select {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
+.response-select {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.7);
+  font-size: 13px;
+  font-weight: bold;
   cursor: pointer;
-  background: #222;
-  color: #fff;
+  transition: 0.2s;
 }
-
-.user-response select:disabled {
-  background: #555;
-  color: #aaa;
-  cursor: not-allowed;
+.response-select:hover {
+  background: #FDB9C8;
+  color: #000;
 }
 
 /* 保存ボタン */
-.button-area {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.save-button {
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+.save-btn {
+  margin-top: 10px;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
-  font-weight: bold;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 10px;
   border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.save-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* 保存メッセージ */
-.save-message {
-  text-align: center;
-  margin-top: 15px;
-  color: #00c853;
+  border-radius: 14px;
+  font-size: 14px;
   font-weight: bold;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 1024px) {
+  .share-container {
+    flex-direction: column;
+  }
+  .glass-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .share-page {
+    padding: 10px;
+  }
+  .response-select {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  .save-btn {
+    font-size: 13px;
+    padding: 8px;
+  }
 }
