@@ -22,7 +22,7 @@ const RegisterPage = () => {
     );
   };
 
-  // 時間帯選択
+  // ラジオボタン選択
   const handleTimeChange = (date, value) => {
     setTimeSelections((prev) => ({ ...prev, [date]: value }));
   };
@@ -69,17 +69,17 @@ const RegisterPage = () => {
         />
       </div>
 
-      {/* カレンダー + リスト */}
+      {/* カレンダー＋リスト */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
+            locale="ja-JP"
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
                 const holiday = hd.isHoliday(date);
                 return (
                   <div className="calendar-tile-content">
-                    {/* 祝日名を日付の下に表示 */}
                     {holiday ? (
                       <span className="holiday-name">{holiday.name}</span>
                     ) : null}
@@ -95,25 +95,10 @@ const RegisterPage = () => {
               const holiday = hd.isHoliday(date);
 
               let classes = [];
-
-              // 今日の日付
-              if (dateStr === todayStr) {
-                classes.push("today");
-              }
-
-              // 祝日 or 日曜
-              if (holiday || day === 0) {
-                classes.push("sunday-holiday");
-              }
-              // 土曜
-              else if (day === 6) {
-                classes.push("saturday");
-              }
-
-              // 選択した日
-              if (selectedDates.includes(dateStr)) {
-                classes.push("selected-day");
-              }
+              if (dateStr === todayStr) classes.push("today");
+              if (holiday || day === 0) classes.push("sunday-holiday");
+              else if (day === 6) classes.push("saturday");
+              if (selectedDates.includes(dateStr)) classes.push("selected-day");
 
               return classes.join(" ");
             }}
@@ -129,17 +114,49 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
-                  {/* 時間帯選択 */}
-                  <select
-                    className="time-select"
-                    value={timeSelections[date] || "all"}
-                    onChange={(e) => handleTimeChange(date, e.target.value)}
-                  >
-                    <option value="all">終日 (0:00〜24:00)</option>
-                    <option value="day">昼 (9:00〜17:00)</option>
-                    <option value="night">夜 (18:00〜24:00)</option>
-                    <option value="custom">時間指定</option>
-                  </select>
+                  {/* ラジオボタン */}
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        name={`time-${date}`}
+                        value="all"
+                        checked={timeSelections[date] === "all"}
+                        onChange={(e) => handleTimeChange(date, e.target.value)}
+                      />
+                      終日
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`time-${date}`}
+                        value="day"
+                        checked={timeSelections[date] === "day"}
+                        onChange={(e) => handleTimeChange(date, e.target.value)}
+                      />
+                      昼
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`time-${date}`}
+                        value="night"
+                        checked={timeSelections[date] === "night"}
+                        onChange={(e) => handleTimeChange(date, e.target.value)}
+                      />
+                      夜
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name={`time-${date}`}
+                        value="custom"
+                        checked={timeSelections[date] === "custom"}
+                        onChange={(e) => handleTimeChange(date, e.target.value)}
+                      />
+                      時間指定
+                    </label>
+                  </div>
 
                   {timeSelections[date] === "custom" && (
                     <div className="custom-time">
