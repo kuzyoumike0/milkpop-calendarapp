@@ -335,8 +335,15 @@ app.post("/api/personal", async (req, res) => {
 // ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPath = path.join(__dirname, "public"); // ← public 配下を見るように変更
+const frontendPath = path.join(__dirname, "public");
 app.use(express.static(frontendPath));
+
+// 👇 /api/ が存在しない場合は JSON を返す
+app.use("/api", (req, res) => {
+  res.status(404).json({ error: "API not found" });
+});
+
+// Reactルーティングは最後にキャッチオール
 app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
