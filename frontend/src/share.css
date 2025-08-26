@@ -1,50 +1,44 @@
-/* ===== 出欠表スタイル ===== */
+/* 出欠表の外枠 */
+.schedule-list {
+  margin: 20px auto;
+  max-width: 90%;     /* 左右に余白を持たせる */
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+/* テーブル本体 */
 .schedule-list table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .schedule-list th,
 .schedule-list td {
   border: 1px solid #333;
-  padding: 8px;
+  padding: 6px 10px;
   text-align: center;
   color: #fff;
 }
 
-/* 日付列（1列目） */
+/* 日付列をもっと小さく */
 .schedule-list table th:first-child,
 .schedule-list table td:first-child {
-  width: 120px;      /* 固定幅 */
-  text-align: left;  /* 左寄せ */
-  padding-left: 12px;
+  width: 90px;       /* 日付をさらにコンパクトに */
+  text-align: left;
+  padding-left: 8px;
 }
 
-/* 時間列（2列目） */
+/* 時間列をもっと小さく */
 .schedule-list table th:nth-child(2),
 .schedule-list table td:nth-child(2) {
-  width: 100px;      /* 固定幅 */
-  text-align: left;  /* 左寄せ */
-  padding-left: 12px;
+  width: 80px;       /* 時間もさらにコンパクト */
+  text-align: left;
+  padding-left: 8px;
 }
 
-/* 他の列は自動で均等 */
+/* 参加者の列は自動で広がる */
 .schedule-list table th,
 .schedule-list table td {
-  min-width: 80px;
-}
-
-/* 編集可能なユーザー名 */
-.editable-username {
-  cursor: pointer;
-  color: #4dabf7;
-  text-decoration: underline;
-}
-
-/* 保存メッセージ */
-.save-message {
-  margin-left: 16px;
-  color: #00e676;
-  font-weight: bold;
-  font-size: 0.9rem;
+  min-width: 70px;
 }
