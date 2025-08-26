@@ -170,3 +170,37 @@
   font-weight: bold;
   display: block;
 }
+/* ===== 時間帯ボタン群 ===== */
+.radio-group-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.time-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #fdfbfb, #ebedee);
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.15),
+              -2px -2px 6px rgba(255,255,255,0.5);
+}
+
+.time-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #FDB9C8, #ffdde1);
+  color: #fff;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.2),
+              -3px -3px 8px rgba(255,255,255,0.4);
+}
+
+.time-btn.active {
+  background: linear-gradient(135deg, #004CA0, #4f86e8);
+  color: #fff;
+  box-shadow: inset 2px 2px 6px rgba(0,0,0,0.3),
+              inset -2px -2px 6px rgba(255,255,255,0.3);
+}
