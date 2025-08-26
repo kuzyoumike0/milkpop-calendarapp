@@ -16,7 +16,7 @@
   margin-bottom: 20px;
 }
 
-/* ====== 入力エリア ====== */
+/* ====== タイトル入力 ====== */
 .title-input-container {
   display: flex;
   justify-content: center;
@@ -36,36 +36,26 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 
-/* ====== カレンダー ====== */
-.react-calendar {
-  background: rgba(255,255,255,0.15);
-  border-radius: 15px;
-  padding: 10px;
-  margin-bottom: 20px;
-  color: #000;
-}
-
-.selected-day {
-  background: #FDB9C8 !important;
-  color: #fff !important;
-  font-weight: bold;
-  border-radius: 6px;
-}
-
-.holiday {
-  color: red !important;
-  font-weight: bold;
-}
-
-/* ====== 選択した日程リスト ====== */
-.selected-dates {
+/* ====== カレンダー＋リスト横並び ====== */
+.calendar-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
   margin-top: 20px;
+}
+
+.calendar-box {
+  flex: 7; /* 7割 */
+}
+
+.selected-dates {
+  flex: 3; /* 3割 */
   background: rgba(255, 255, 255, 0.12);
   padding: 18px;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.4);
   backdrop-filter: blur(6px);
-  width: 85%;
 }
 
 .selected-dates h3 {
@@ -77,8 +67,10 @@
   letter-spacing: 1px;
 }
 
+/* ====== 日程リスト ====== */
 .date-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   margin: 8px 0;
   padding: 10px 14px;
@@ -97,7 +89,7 @@
   border-left: 4px solid #FDB9C8;
 }
 
-/* ====== 時間帯セレクト ====== */
+/* ====== 時間帯選択 ====== */
 .time-select {
   margin-left: auto;
   padding: 6px 10px;
@@ -115,7 +107,7 @@
   transform: scale(1.05);
 }
 
-/* ====== custom 時間指定 ====== */
+/* custom 時間指定 */
 .custom-time {
   display: flex;
   align-items: center;
@@ -154,4 +146,27 @@
 .share-link-btn:hover {
   transform: scale(1.05);
   background: linear-gradient(135deg, #004CA0, #FDB9C8);
+}
+
+/* ====== 📱 レスポンシブ対応 ====== */
+@media (max-width: 900px) {
+  .calendar-container {
+    flex-direction: column;
+  }
+
+  .calendar-box,
+  .selected-dates {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .time-select {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .date-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
