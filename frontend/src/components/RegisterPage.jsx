@@ -12,7 +12,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
-  const [shareLink, setShareLink] = useState("");
+  const [shareLink, setShareLink] = useState(""); // ✅ 共有リンク
 
   const hd = new Holidays("JP");
 
@@ -70,7 +70,6 @@ const RegisterPage = () => {
       [date]: { ...prev[date], start: value },
     }));
   };
-
   const handleCustomEndChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
@@ -161,7 +160,7 @@ const RegisterPage = () => {
         <div className="calendar-box">
           <Calendar
             locale="ja-JP"
-            calendarType="US"   // ✅ 日曜始まりに固定
+            calendarType="US"   // ✅ 日曜始まりにする（重要）
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
@@ -181,8 +180,8 @@ const RegisterPage = () => {
 
               let classes = [];
               if (dateStr === todayStr) classes.push("today");
-              if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
-              else if (day === 6) classes.push("saturday");
+              if (holidays[dateStr] || day === 0) classes.push("sunday-holiday"); // 赤
+              else if (day === 6) classes.push("saturday"); // 青
               if (selectedDates.includes(dateStr)) classes.push("selected-day");
               if (rangeStart === dateStr) classes.push("range-start");
 
