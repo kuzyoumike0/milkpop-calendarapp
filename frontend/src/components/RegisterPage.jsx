@@ -139,6 +139,9 @@ const RegisterPage = () => {
     alert("リンクをコピーしました！✨");
   };
 
+  // 選択日を日付順にソート
+  const sortedDates = [...selectedDates].sort((a, b) => a.date - b.date);
+
   return (
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
@@ -191,7 +194,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory"
+            calendarType="US"  // ✅ ズレ防止
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
@@ -216,6 +219,7 @@ const RegisterPage = () => {
                 return "selected-date";
               if (holiday || isSunday) return "day-sunday";
               if (isSaturday) return "day-saturday";
+
               return "day-default";
             }}
             tileContent={({ date }) => {
@@ -231,65 +235,63 @@ const RegisterPage = () => {
         {/* ===== リスト（右3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
-          {selectedDates.length === 0 ? (
+          {sortedDates.length === 0 ? (
             <p>日付を選択してください</p>
           ) : (
             <ul>
-              {selectedDates
-                .sort((a, b) => a.date - b.date) // ✅ 日付順ソート
-                .map((d, i) => (
-                  <li key={i} className="date-item">
-                    <span className="date-label">
-                      📅 {d.date.toLocaleDateString("ja-JP")}
+              {sortedDates.map((d, i) => (
+                <li key={i} className="date-item">
+                  <span className="date-label">
+                    📅 {d.date.toLocaleDateString("ja-JP")}
+                  </span>
+
+                  <div className="time-type-buttons">
+                    {["終日", "昼", "夜", "時間指定"].map((type) => (
+                      <button
+                        key={type}
+                        className={`time-type-button ${
+                          d.timeType === type ? "active" : ""
+                        }`}
+                        onClick={() => handleTimeTypeChange(i, type)}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
+                  {d.timeType === "時間指定" && (
+                    <span className="time-range">
+                      <select
+                        value={d.startTime}
+                        onChange={(e) =>
+                          handleTimeChange(i, "startTime", e.target.value)
+                        }
+                        className="time-dropdown stylish-dropdown"
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="range-tilde"> ~ </span>
+                      <select
+                        value={d.endTime}
+                        onChange={(e) =>
+                          handleTimeChange(i, "endTime", e.target.value)
+                        }
+                        className="time-dropdown stylish-dropdown"
+                      >
+                        {timeOptions.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
                     </span>
-
-                    <div className="time-type-buttons">
-                      {["終日", "昼", "夜", "時間指定"].map((type) => (
-                        <button
-                          key={type}
-                          className={`time-type-button ${
-                            d.timeType === type ? "active" : ""
-                          }`}
-                          onClick={() => handleTimeTypeChange(i, type)}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-
-                    {d.timeType === "時間指定" && (
-                      <span className="time-range">
-                        <select
-                          value={d.startTime}
-                          onChange={(e) =>
-                            handleTimeChange(i, "startTime", e.target.value)
-                          }
-                          className="time-dropdown stylish-dropdown"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="range-tilde"> ~ </span>
-                        <select
-                          value={d.endTime}
-                          onChange={(e) =>
-                            handleTimeChange(i, "endTime", e.target.value)
-                          }
-                          className="time-dropdown stylish-dropdown"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                      </span>
-                    )}
-                  </li>
-                ))}
+                  )}
+                </li>
+              ))}
             </ul>
           )}
 
