@@ -22,7 +22,9 @@ const RegisterPage = () => {
 
     if (selectionMode === "multi") {
       setSelectedDates((prev) =>
-        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
+        prev.includes(dateStr)
+          ? prev.filter((d) => d !== dateStr)
+          : [...prev, dateStr]
       );
     } else if (selectionMode === "range") {
       if (!rangeStart) {
@@ -117,7 +119,9 @@ const RegisterPage = () => {
                 const holiday = hd.isHoliday(date);
                 return (
                   <div className="calendar-tile-content">
-                    {holiday ? <span>{holiday.name}</span> : null}
+                    {holiday ? (
+                      <span className="holiday-name">{holiday.name}</span>
+                    ) : null}
                   </div>
                 );
               }
