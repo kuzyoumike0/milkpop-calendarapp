@@ -42,6 +42,10 @@
   justify-content: center;
 }
 
+.cute-title-box {
+  border: 2px solid #FDB9C8;
+}
+
 .title-input {
   width: 100%;
   padding: 12px 16px;
@@ -73,19 +77,19 @@
   flex: 7;
 }
 
-/* ====== モード切替（ラジオボタンをトグル風に） ====== */
+/* ====== モード切替（ラジオをおしゃれボタン風に） ====== */
 .mode-select {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 .mode-select input[type="radio"] {
   display: none;
 }
 .mode-select span {
   display: inline-block;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 20px;
   border: 2px solid #FDB9C8;
   background: rgba(255, 255, 255, 0.1);
@@ -105,9 +109,9 @@
   width: 100% !important;
   border: none !important;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 16px;
-  font-size: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 20px;
+  font-size: 16px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
@@ -132,27 +136,30 @@
 
 /* 曜日ヘッダー */
 .react-calendar__month-view__weekdays {
-  display: flex;
-  justify-content: space-around;
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
   margin-bottom: 6px;
 }
 .react-calendar__month-view__weekdays__weekday {
-  flex: 1;
   text-align: center;
 }
 .react-calendar__month-view__weekdays__weekday abbr {
-  text-decoration: none !important;
-  display: block;
-  width: 100%;
-  text-align: center;
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
   font-weight: bold;
-  font-size: 14px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
 }
 .react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
-  color: #ff7b7b;
+  background: #ffb3b3;
+  color: #fff;
 }
 .react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
-  color: #7ec8ff;
+  background: #8fcfff;
+  color: #fff;
 }
 
 /* 日付セル */
@@ -169,7 +176,7 @@
 .react-calendar__tile:hover {
   background: #FDB9C8;
   color: #000;
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
@@ -243,19 +250,56 @@
   color: #FDB9C8;
 }
 
-/* ====== リンクボタン ====== */
-.share-button {
-  margin-top: 16px;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 30px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-size: 16px;
+/* 時間帯ボタン */
+.time-type-buttons {
+  display: flex;
+  gap: 8px;
+}
+.time-type-button {
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid #FDB9C8;
+  background: rgba(255,255,255,0.1);
+  color: #FDB9C8;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s;
+}
+.time-type-button.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+}
+
+/* 時間指定ドロップダウン */
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stylish-dropdown {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #FDB9C8;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-weight: bold;
+}
+.range-tilde {
+  color: #FDB9C8;
+  font-weight: bold;
+}
+
+/* 共有ボタン */
+.share-button {
+  margin-top: 12px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 .share-button:hover {
   transform: scale(1.05);
@@ -263,6 +307,7 @@
   color: #000;
 }
 
+/* 共有リンク表示 */
 .share-link-box {
   margin-top: 12px;
   padding: 12px;
@@ -273,7 +318,6 @@
   align-items: center;
   gap: 10px;
 }
-
 .share-link {
   flex: 1;
   text-decoration: none;
@@ -289,7 +333,6 @@
   background: rgba(0,0,0,0.6);
   color: #FDB9C8;
 }
-
 .copy-button {
   padding: 8px 14px;
   border: none;
