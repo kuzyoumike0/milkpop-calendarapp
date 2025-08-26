@@ -281,3 +281,35 @@
   color: #000 !important;
   font-weight: bold;
 }
+.share-link-box {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.share-link-box a {
+  color: #FDB9C8;
+  font-weight: bold;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.copy-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.copy-btn:hover {
+  transform: scale(1.05);
+}
