@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -62,6 +61,11 @@ export default function RegisterPage() {
         d.date === dateStr ? { ...d, [field]: value } : d
       )
     );
+  };
+
+  // === 日付削除 ===
+  const handleDeleteDate = (dateStr) => {
+    setSelectedDates((prev) => prev.filter((d) => d.date !== dateStr));
   };
 
   // === 共有リンク発行 ===
@@ -164,7 +168,16 @@ export default function RegisterPage() {
           <ul className="event-list">
             {selectedDates.map((d) => (
               <li key={d.date}>
-                <span>{formatDate(d.date)}</span>
+                <div className="event-header">
+                  <span>{formatDate(d.date)}</span>
+                  <button
+                    className="delete-day-btn"
+                    onClick={() => handleDeleteDate(d.date)}
+                  >
+                    ×
+                  </button>
+                </div>
+
                 <div className="time-type-buttons">
                   {["終日", "昼", "夜", "時間指定"].map((t) => (
                     <button
