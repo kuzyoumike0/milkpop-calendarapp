@@ -12,11 +12,11 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
-  const [shareLink, setShareLink] = useState(""); // ✅ 共有リンク
+  const [shareLink, setShareLink] = useState("");
 
   const hd = new Holidays("JP");
 
-  // 📌 日付文字列をローカル基準で取得（UTCズレ防止）
+  // 📌 日付文字列をローカル基準で取得
   const getDateStr = (date) => date.toLocaleDateString("sv-SE");
   const todayStr = getDateStr(new Date());
 
@@ -160,6 +160,7 @@ const RegisterPage = () => {
         <div className="calendar-box">
           <Calendar
             locale="ja-JP"
+            calendarType="US"   // ✅ 日本形式に戻す（日曜始まり）
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
@@ -199,7 +200,6 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
-                  {/* 横並びボタン */}
                   <div className="radio-group-inline">
                     <button
                       className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
