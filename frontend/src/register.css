@@ -46,20 +46,10 @@
   color: #fff;
 }
 
-/* ===== カレンダーとリスト全体 ===== */
-.calendar-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
-  margin: 20px auto;
-  max-width: 1200px;   /* 全体幅 */
-  padding: 0 40px;     /* 左右余白 */
-}
-
-/* ===== カレンダーカード (左7割) ===== */
+/* ===== カレンダーカード ===== */
 .calendar-box {
-  flex: 7;
+  margin: 0 auto;
+  max-width: 800px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   padding: 20px;
@@ -68,9 +58,94 @@
               -8px -8px 16px rgba(255,255,255,0.2);
 }
 
-/* ===== 選択リストカード (右3割) ===== */
+/* ===== 曜日ヘッダー（日曜始まり固定） ===== */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 6px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.weekday {
+  padding: 6px 0;
+}
+
+.weekday.sunday {
+  color: red;   /* ✅ 日曜は赤 */
+}
+
+.weekday.saturday {
+  color: #004CA0; /* ✅ 土曜は青 */
+}
+
+/* React-Calendar デフォルトの曜日を非表示 */
+.react-calendar__month-view__weekdays {
+  display: none !important;
+}
+
+/* ===== カレンダー調整 ===== */
+.react-calendar {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.react-calendar__tile {
+  padding: 14px 0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.react-calendar__tile:hover {
+  background: rgba(253, 185, 200, 0.8);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* 今日 */
+.react-calendar__tile.today {
+  border: 2px solid #FDB9C8;
+  background: rgba(255,255,255,0.1);
+}
+
+/* 選択中 */
+.react-calendar__tile.selected-day {
+  background: #004CA0 !important;
+  color: #fff !important;
+}
+
+/* 土曜 */
+.react-calendar__tile.saturday {
+  color: #004CA0;
+}
+
+/* 日曜と祝日 */
+.react-calendar__tile.sunday-holiday {
+  color: red;
+  font-weight: bold;
+}
+
+/* 祝日名 */
+.holiday-name {
+  font-size: 0.6rem;
+  color: red;
+  font-weight: bold;
+  display: block;
+}
+
+/* ===== 選択リストカード ===== */
 .selected-dates {
-  flex: 3;
+  margin-top: 20px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   padding: 20px;
@@ -78,12 +153,12 @@
   box-shadow: 8px 8px 16px rgba(0,0,0,0.3),
               -8px -8px 16px rgba(255,255,255,0.2);
   text-align: left;
+  color: #fff;
 }
 
 .selected-dates h3 {
   margin-bottom: 10px;
   font-size: 1.1rem;
-  color: #fff;
 }
 
 .date-item {
@@ -165,100 +240,4 @@
 .copy-btn:hover {
   background: #FDB9C8;
   color: #fff;
-}
-
-/* ===== カレンダー調整 ===== */
-.react-calendar {
-  width: 100%;
-  border: none;
-  background: transparent;
-  font-family: "Zen Maru Gothic", sans-serif;
-  font-size: 0.9rem;
-  color: #fff;
-  text-align: center;
-}
-
-/* 曜日ヘッダー */
-.react-calendar__month-view__weekdays__weekday {
-  font-weight: bold;
-  font-size: 0.9rem;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-
-/* 日セル */
-.react-calendar__tile {
-  height: 80px !important;   /* 高さを固定 */
-  display: flex;
-  flex-direction: column;   /* 日付と祝日名を縦に */
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-/* ホバー */
-.react-calendar__tile:hover {
-  background: rgba(253,185,200,0.8);
-  color: #fff;
-  transform: scale(1.05);
-}
-
-/* 今日 */
-.react-calendar__tile.today {
-  border: 2px solid #FDB9C8;
-  background: rgba(255,255,255,0.1);
-}
-
-/* 選択中 */
-.react-calendar__tile.selected-day {
-  background: #004CA0 !important;
-  color: #fff !important;
-}
-
-/* 土曜（青） */
-.react-calendar__month-view__days__day:nth-child(7n) {
-  color: #004CA0 !important;
-}
-
-/* 日曜（赤） */
-.react-calendar__month-view__days__day:nth-child(7n+1) {
-  color: #FF0000 !important;
-}
-
-/* 祝日名 */
-.holiday-name {
-  font-size: 0.6rem;
-  color: #FF0000;
-  font-weight: bold;
-  margin-top: 4px;
-  display: block;
-}
-/* ===== 曜日ヘッダー（日曜始まり固定） ===== */
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
-  font-weight: bold;
-  text-align: center;
-  font-size: 1rem;
-  color: #fff;
-}
-
-.weekday {
-  padding: 6px 0;
-}
-
-.weekday.sunday {
-  color: red;   /* ✅ 日曜は赤 */
-}
-
-.weekday.saturday {
-  color: #004CA0; /* ✅ 土曜は青 */
-}
-
-/* React-Calendar 内部の曜日ラベルは非表示にする */
-.react-calendar__month-view__weekdays {
-  display: none !important;
 }
