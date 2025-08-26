@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
-  const [shareUrls, setShareUrls] = useState([]); // 発行したURLのリスト
+  const [shareUrls, setShareUrls] = useState([]); // 発行されたURLを保持
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -43,7 +43,7 @@ const RegisterPage = () => {
     return null;
   };
 
-  // ===== 日付選択処理 =====
+  // ===== 日付選択 =====
   const handleDateChange = (val) => {
     const newDate = new Date(val).toDateString();
 
@@ -67,7 +67,7 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 日付フォーマット（和暦+曜日） =====
+  // ===== 日付フォーマット =====
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
@@ -98,7 +98,7 @@ const RegisterPage = () => {
     );
   };
 
-  // ===== 日程削除 =====
+  // ===== 単日削除 =====
   const handleDelete = (date) => {
     setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
@@ -127,7 +127,7 @@ const RegisterPage = () => {
       if (res.ok) {
         const { token } = await res.json();
         const url = `${window.location.origin}/share/${token}`;
-        // 新しいURLを先頭に追加
+        // 新しいURLを先頭に追加して即表示
         setShareUrls((prev) => [url, ...prev]);
       } else {
         alert("スケジュール保存に失敗しました");
@@ -233,7 +233,7 @@ const RegisterPage = () => {
             共有リンクを発行
           </button>
 
-          {/* 発行済みリンク一覧 */}
+          {/* 発行されたリンクを即表示 */}
           {shareUrls.length > 0 && (
             <div className="share-link-list">
               {shareUrls.map((url, idx) => (
