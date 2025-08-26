@@ -4,7 +4,7 @@
   padding: 20px;
   font-family: "Zen Maru Gothic", sans-serif;
   color: #222;
-  overflow-x: hidden; /* ページ全体は横スクロールしない */
+  overflow-x: auto; /* 横スクロール対応 */
 }
 
 /* タイトル */
@@ -68,7 +68,7 @@
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.6);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  overflow-x: auto; /* 横スクロール対応 */
+  overflow-x: auto; /* ユーザが多い時に横スクロール */
 }
 
 /* 表タイトル */
@@ -82,106 +82,68 @@
   gap: 8px;
 }
 
-/* 表全体（ヘッダーとアイテム共通） */
+/* テーブル部分 */
 .schedule-header,
 .schedule-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 3fr; /* 日付, 時間帯, 回答 */
-  padding: 10px 0;
+  grid-template-columns: 2fr 1fr repeat(auto-fit, minmax(100px, 1fr));
+  align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  align-items: flex-start;
   color: #fff;
-  min-width: 600px; /* レイアウト崩れ防止 */
+  min-width: 600px;
 }
 
 .schedule-header {
   font-weight: bold;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  padding: 12px;
+  padding: 12px 0;
+  text-align: center;
 }
 
 .schedule-item {
-  padding: 12px;
+  padding: 10px 0;
+  text-align: center;
 }
 
 /* 各セル */
 .date,
-.time,
-.user-col,
-.user-response {
-  padding: 0 10px;
+.time {
+  padding: 8px;
+  font-weight: bold;
   text-align: center;
-  word-break: keep-all;
-}
-
-/* 回答欄を縦並び＆スクロール対応 */
-.user-response {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 150px;      /* 高さ制限 */
-  overflow-y: auto;       /* 縦スクロール */
-  padding-right: 6px;     /* スクロールバー分余白 */
-}
-
-/* 各ユーザ行 */
-.user-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 6px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 6px;
-}
-
-/* スクロールバーを細く＆お洒落に */
-.user-response::-webkit-scrollbar {
-  width: 6px;
-}
-
-.user-response::-webkit-scrollbar-thumb {
-  background: #fdb9c8;
-  border-radius: 3px;
-}
-
-.user-response::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* ユーザ名リンク */
-.user-link {
-  color: #fdb9c8;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.user-link:hover {
-  color: #fff;
-}
-
-/* 出欠ボタン */
-.choice-btn {
   margin: 2px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background: #444;
-  color: #fff;
-  transition: 0.2s;
-  min-width: 40px;
 }
 
-.choice-btn.active {
-  background: #004ca0;
-  color: #fff;
+.user-col {
+  padding: 8px;
+  text-align: center;
   font-weight: bold;
+  color: #fdb9c8;
 }
 
-.choice-btn:hover {
-  background: #fdb9c8;
-  color: #000;
+.user-response {
+  padding: 4px;
+  text-align: center;
+}
+
+/* プルダウン */
+.user-response select {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #222;
+  color: #fff;
+}
+
+.user-response select:disabled {
+  background: #555;
+  color: #aaa;
+  cursor: not-allowed;
 }
 
 /* 保存ボタン */
