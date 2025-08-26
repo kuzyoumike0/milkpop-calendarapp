@@ -1,23 +1,23 @@
 /* ===== タイトルカード ===== */
 .title-box {
-  display: block;
-  width: 300px;          /* 入力欄と同じ幅 */
-  padding: 10px 16px;
+  display: inline-block;
+  padding: 8px 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.4);
   font-size: 1.1rem;
   font-weight: bold;
   color: #fff;
-  margin: 0 auto 16px 0;  /* 左寄せ */
+  margin: 0 0 16px 20px;  /* 左寄せ + 左余白 */
+  max-width: 300px;       /* 長すぎない */
 }
 
 /* ===== 名前入力エリア ===== */
 .name-box {
-  margin-bottom: 10px;
+  margin: 0 0 10px 20px;  /* 左寄せ + 左余白 */
 }
 
 .name-box .name-input {
-  width: 300px;          /* 短めに固定 */
+  width: 250px;          /* 短めに */
   padding: 8px 12px;
   border-radius: 20px;
   border: none;
@@ -29,7 +29,7 @@
 
 /* ===== ボタンエリア ===== */
 .button-area {
-  margin: 10px 0 20px 0;
+  margin: 10px 0 20px 20px; /* 左寄せ + 左余白 */
 }
 
 .add-button,
@@ -51,19 +51,26 @@
   box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
-/* ===== 出欠表 横並び ===== */
+/* ===== 出欠表 ===== */
 .schedule-list {
-  margin: 20px auto;
-  max-width: 700px;
-  padding: 12px 20px;
+  margin: 20px;
+  padding: 16px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.4);
+  text-align: left;  /* 全体を左寄せ */
+}
+
+.table-title {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #FDB9C8;
 }
 
 .schedule-item {
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   font-size: 0.95rem;
