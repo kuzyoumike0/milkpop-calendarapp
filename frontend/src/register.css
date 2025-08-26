@@ -1,5 +1,5 @@
 /* ====== ページ全体 ====== */
-.share-page {
+.register-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
@@ -10,6 +10,7 @@
   align-items: center;
 }
 
+/* ====== タイトル ====== */
 .page-title {
   font-size: 28px;
   font-weight: bold;
@@ -18,156 +19,183 @@
 }
 
 /* ====== ガラス風カード ====== */
-.glass-black {
+.glass-white, .glass-black {
   backdrop-filter: blur(12px);
   border-radius: 16px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   padding: 20px;
+}
+
+.glass-white {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.glass-black {
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  width: 95%;
-  margin-bottom: 20px;
 }
 
-/* ====== タイトル表示 ====== */
-.title-box {
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-  border: 2px solid #FDB9C8;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.5);
-  color: #FDB9C8;
+/* ====== カレンダー全体 ====== */
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 16px;
+  font-size: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-/* ====== 名前入力エリア ====== */
-.name-box {
+/* ====== ナビゲーション ====== */
+.react-calendar__navigation {
+  margin-bottom: 12px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-}
-.name-box input {
-  padding: 10px;
-  border-radius: 12px;
-  border: none;
-  width: 220px;
-  background: rgba(255,255,255,0.15);
-  color: #fff;
-  font-size: 14px;
-}
-.name-box input:focus {
-  outline: 2px solid #FDB9C8;
-}
-.add-button, .edit-button {
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s;
-}
-.add-button {
-  background: #FDB9C8;
-  color: #000;
-}
-.add-button:hover {
-  background: #ffdee8;
-}
-.edit-button {
-  background: #004CA0;
-  color: #fff;
-}
-.edit-button:hover {
-  background: #335fa8;
 }
 
-/* ====== 出欠表（スクロール対応） ====== */
-.schedule-list {
-  margin-top: 20px;
-  max-height: 600px;   /* RegisterPage のカレンダーに揃える */
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #FDB9C8 transparent;
-}
-.schedule-list::-webkit-scrollbar {
-  width: 8px;
-}
-.schedule-list::-webkit-scrollbar-track {
+.react-calendar__navigation button {
   background: transparent;
-}
-.schedule-list::-webkit-scrollbar-thumb {
-  background: #FDB9C8;
-  border-radius: 4px;
-}
-.schedule-list::-webkit-scrollbar-thumb:hover {
-  background: #ff9eb6;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  transition: transform 0.2s, color 0.2s;
 }
 
-/* ====== テーブル ====== */
-.schedule-list table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: center;
-}
-.schedule-list th, .schedule-list td {
-  border: 1px solid rgba(255,255,255,0.2);
-  padding: 8px;
-  font-size: 14px;
-}
-.schedule-list th {
-  background: rgba(255,255,255,0.15);
+.react-calendar__navigation button:hover {
   color: #FDB9C8;
-  font-weight: bold;
-}
-.attendance-cell {
-  min-width: 80px;
+  transform: scale(1.2);
 }
 
-/* ====== 出欠選択ボタン ====== */
-.choice-buttons {
+/* ====== 曜日ヘッダー ====== */
+.react-calendar__month-view__weekdays {
   display: flex;
-  justify-content: center;
-  gap: 6px;
+  justify-content: space-around;
+  margin-bottom: 8px;
 }
-.choice-btn {
-  padding: 4px 8px;
-  border-radius: 10px;
-  border: 1px solid #FDB9C8;
-  background: rgba(255,255,255,0.1);
-  color: #FDB9C8;
-  cursor: pointer;
-  transition: all 0.3s;
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 50%;
   font-weight: bold;
-}
-.choice-btn.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
-.choice-btn.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+
+.react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
+  background: #ff9b9b;
+  color: #fff;
+}
+.react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
+  background: #77c6ff;
+  color: #fff;
 }
 
-/* ====== 保存ボタン ====== */
-.button-area {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
+/* ====== 日付セル ====== */
+.react-calendar__tile {
+  border-radius: 12px;
+  margin: 3px;
+  padding: 12px 0;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  transition: all 0.25s ease;
 }
-.save-button {
-  padding: 10px 20px;
+
+.react-calendar__tile:hover {
+  background: #FDB9C8;
+  color: #000;
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+/* 今日 */
+.day-today {
+  border: 2px solid #fff !important;
+  background: rgba(255,255,255,0.4) !important;
+  border-radius: 50%;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(255,255,255,0.6);
+}
+
+/* 選択した日 */
+.selected-date {
+  background: linear-gradient(145deg, #ffdde6, #FDB9C8) !important;
+  color: #000 !important;
+  font-weight: bold;
+  border-radius: 12px;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* 土日・祝日 */
+.day-saturday {
+  color: #7ec8ff !important;
+}
+.day-sunday {
+  color: #ff7b7b !important;
+}
+.holiday-name {
+  font-size: 10px;
+  color: #FDB9C8;
+  margin-top: 2px;
+}
+
+/* ====== 共有リンクボタン ====== */
+.share-button {
+  background: linear-gradient(135deg, #FDB9C8, #ff75a0);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 20px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.share-button:hover {
+  background: linear-gradient(135deg, #ff75a0, #FDB9C8);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+}
+
+/* 共有リンク表示部分 */
+.share-link-box {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.share-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  background: rgba(255,255,255,0.2);
+  padding: 6px 12px;
+  border-radius: 12px;
+}
+
+.copy-button {
+  background: #fff;
+  color: #FDB9C8;
+  font-weight: bold;
   border: none;
   border-radius: 20px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-weight: bold;
+  padding: 6px 14px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: 0.3s;
 }
-.save-button:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #ffdde6, #FDB9C8);
-  color: #000;
+
+.copy-button:hover {
+  background: #FDB9C8;
+  color: #fff;
 }
