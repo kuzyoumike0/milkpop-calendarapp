@@ -14,18 +14,15 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // JSTに変換
   const getJSTDate = (date) => {
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     return new Date(utc + 9 * 60 * 60000);
   };
 
-  // 時刻リスト（1時間刻み）
   const timeOptions = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
 
-  // 日付クリック処理
   const handleDateClick = (date) => {
     const jstDate = getJSTDate(date);
 
@@ -73,7 +70,6 @@ const RegisterPage = () => {
     }
   };
 
-  // 区分変更
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
@@ -91,14 +87,12 @@ const RegisterPage = () => {
     setSelectedDates(updated);
   };
 
-  // 時間指定変更
   const handleTimeChange = (index, key, value) => {
     const updated = [...selectedDates];
     updated[index][key] = value;
     setSelectedDates(updated);
   };
 
-  // ===== DBに保存して共有リンク発行 =====
   const generateShareLink = async () => {
     try {
       if (!title || selectedDates.length === 0) {
@@ -134,7 +128,6 @@ const RegisterPage = () => {
     }
   };
 
-  // クリップボードにコピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     alert("リンクをコピーしました！✨");
@@ -144,7 +137,6 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">日程登録ページ</h2>
 
-      {/* ===== タイトル入力 ===== */}
       <div className="glass-black input-card cute-title-box">
         <input
           type="text"
@@ -156,9 +148,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー（左7割） ===== */}
         <div className="glass-white calendar-card">
-          {/* モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -192,7 +182,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory"   // ✅ ISO 8601 → gregory に修正
+            calendarType="ISO 8601"   // ← 修正 (月曜始まり & ズレ防止)
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
@@ -230,7 +220,6 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== リスト（右3割） ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
