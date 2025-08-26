@@ -298,3 +298,34 @@
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
 }
+/* ====== モード切替お洒落ボタン ====== */
+.mode-switch {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 10px 0 20px;
+}
+
+.mode-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ccc, #777);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+}
+
+.mode-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
