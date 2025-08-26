@@ -17,7 +17,7 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [saveMessage, setSaveMessage] = useState(""); // ✅ 保存メッセージ
+  const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -135,7 +135,6 @@ const SharePage = () => {
       setResponses(saved.responses);
       setIsEditing(false);
 
-      // ✅ 保存メッセージを表示
       setSaveMessage("✅ 保存しました！");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (err) {
@@ -166,14 +165,6 @@ const SharePage = () => {
         <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
-        {users.includes(username) && (
-          <button
-            className="edit-button"
-            onClick={() => setIsEditing((prev) => !prev)}
-          >
-            {isEditing ? "編集終了" : "編集"}
-          </button>
-        )}
       </div>
 
       {/* 出欠表 */}
@@ -184,7 +175,15 @@ const SharePage = () => {
               <th>日付</th>
               <th>時間</th>
               {users.map((u, idx) => (
-                <th key={idx}>{u}</th>
+                <th
+                  key={idx}
+                  onClick={() => {
+                    if (u === username) setIsEditing(true);
+                  }}
+                  className={u === username ? "editable-username" : ""}
+                >
+                  {u}
+                </th>
               ))}
             </tr>
           </thead>
@@ -212,14 +211,14 @@ const SharePage = () => {
 
                     return (
                       <td key={idx} className="attendance-cell">
-                        {isSelf ? (
+                        {isSelf && isEditing ? (
                           <div className="choice-buttons">
                             {attendanceOptions.map((opt) => (
                               <button
                                 key={opt}
                                 className={`choice-btn ${
                                   value === opt ? "active" : ""
-                                } ${isEditing ? "" : "disabled"}`}
+                                }`}
                                 onClick={() => handleSelect(key, opt)}
                               >
                                 {opt}
@@ -239,17 +238,30 @@ const SharePage = () => {
         </table>
       </div>
 
-      {users.includes(username) && (
+      {users.includes(username) && isEditing && (
         <div className="button-area">
-          <button
-            className="save-button"
-            onClick={handleSave}
-            disabled={!isEditing}
-          >
+          <button className="save-button" onClick={handleSave}>
             保存する
           </button>
         </div>
       )}
+
+      {/* 保存済みリスト（伝助風） */}
+      <div className="glass-black saved-list">
+        <h3>参加者の回答一覧</h3>
+        {allResponses.map((r) => (
+          <div key={r.user_id} className="saved-user">
+            <h4>{r.username}</h4>
+            <ul>
+              {Object.entries(r.responses).map(([key, val], idx) => (
+                <li key={idx}>
+                  {key}: {val}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
