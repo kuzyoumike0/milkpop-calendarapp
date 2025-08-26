@@ -15,6 +15,8 @@ const RegisterPage = () => {
   const [mode, setMode] = useState("single");
   const [shareUrls, setShareUrls] = useState([]);
   const [copiedUrl, setCopiedUrl] = useState("");
+  const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -27,36 +29,47 @@ const RegisterPage = () => {
     setHolidays(holidayMap);
   }, []);
 
-  // ===== カレンダー装飾 =====
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holidayName = holidays[date.toDateString()];
-      if (holidayName) return <div className="holiday-name">{holidayName}</div>;
-    }
-    return null;
+  // ===== 日付フォーマット =====
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }) + `(${weekday})`;
   };
 
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      if (date.getDay() === 0 || holidays[date.toDateString()]) return "holiday";
-      if (date.getDay() === 6) return "saturday";
-    }
-    return null;
-  };
-
-  // ===== 日付選択 =====
+  // ===== 日付選択処理 =====
   const handleDateChange = (val) => {
     const newDate = new Date(val).toDateString();
 
-    if (mode === "range" && Array.isArray(val)) {
-      const rangeDates = [];
-      let start = new Date(val[0]);
-      const end = new Date(val[1]);
-      while (start <= end) {
-        rangeDates.push(new Date(start).toDateString());
-        start.setDate(start.getDate() + 1);
+    if (mode === "range") {
+      if (!rangeStart) {
+        // 1回目クリック → 開始日
+        setRangeStart(newDate);
+        setRangeEnd(null);
+        setSelectedDates([newDate]);
+      } else if (!rangeEnd) {
+        // 2回目クリック → 終了日
+        setRangeEnd(newDate);
+        const start = new Date(rangeStart);
+        const end = new Date(newDate);
+        const rangeDates = [];
+        let cursor = start < end ? start : end;
+        const last = start < end ? end : start;
+
+        while (cursor <= last) {
+          rangeDates.push(new Date(cursor).toDateString());
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        setSelectedDates(rangeDates);
+      } else {
+        // 3回目クリック → 新しい範囲
+        setRangeStart(newDate);
+        setRangeEnd(null);
+        setSelectedDates([newDate]);
       }
-      setSelectedDates([...new Set([...selectedDates, ...rangeDates])]);
     } else if (mode === "multi") {
       if (!selectedDates.find((d) => (d.date || d) === newDate)) {
         setSelectedDates([...selectedDates, newDate]);
@@ -68,15 +81,28 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 日付フォーマット =====
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }) + `(${weekday})`;
+  // ===== カレンダーのスタイル付与 =====
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const ds = date.toDateString();
+
+      if (mode === "range") {
+        if (ds === rangeStart) return "range-start";
+        if (ds === rangeEnd) return "range-end";
+        if (
+          rangeStart &&
+          rangeEnd &&
+          new Date(ds) > new Date(rangeStart) &&
+          new Date(ds) < new Date(rangeEnd)
+        ) {
+          return "range-middle";
+        }
+      }
+
+      if (date.getDay() === 0 || holidays[ds]) return "holiday";
+      if (date.getDay() === 6) return "saturday";
+    }
+    return null;
   };
 
   // ===== 時間帯変更 =====
@@ -128,7 +154,7 @@ const RegisterPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "共有スケジュール", // ✅ タイトルを追加
+          title: "共有スケジュール",
           dates,
           options: {},
         }),
@@ -177,8 +203,13 @@ const RegisterPage = () => {
             value={value}
             locale="ja-JP"
             calendarType="gregory"
-            selectRange={mode === "range"}
-            tileContent={tileContent}
+            tileContent={({ date, view }) =>
+              view === "month" && holidays[date.toDateString()] ? (
+                <div className="holiday-name">
+                  {holidays[date.toDateString()]}
+                </div>
+              ) : null
+            }
             tileClassName={tileClassName}
           />
         </div>
@@ -248,7 +279,6 @@ const RegisterPage = () => {
             共有リンクを発行
           </button>
 
-          {/* 発行されたリンク一覧 */}
           {shareUrls.length > 0 && (
             <div className="share-link-list">
               {shareUrls.map((url, idx) => (
