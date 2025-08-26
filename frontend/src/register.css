@@ -190,7 +190,50 @@
   box-shadow: 0 5px 12px rgba(255, 0, 0, 0.35);
 }
 
-/* 共有リンクボタン */
+/* ===== 時間指定プルダウン ===== */
+.time-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.time-dropdowns select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  padding: 8px 30px 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+
+  background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.time-dropdowns select:hover {
+  background: #FDB9C8;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.time-dropdowns select:focus {
+  outline: none;
+  border: 1px solid #004CA0;
+  box-shadow: 0 0 6px rgba(0,76,160,0.4);
+}
+
+/* ===== 共有リンク ===== */
 .share-btn {
   background: #FDB9C8;
   color: #000;
@@ -208,7 +251,6 @@
   transform: translateY(-2px);
 }
 
-/* 共有リンク表示 */
 .share-link input {
   width: 100%;
   padding: 8px;
