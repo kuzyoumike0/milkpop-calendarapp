@@ -13,8 +13,8 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
-  const [shareUrls, setShareUrls] = useState([]); // 発行されたURLリスト
-  const [copiedUrl, setCopiedUrl] = useState(""); // コピー済みURLを保持
+  const [shareUrls, setShareUrls] = useState([]);
+  const [copiedUrl, setCopiedUrl] = useState("");
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -104,13 +104,18 @@ const RegisterPage = () => {
     setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
 
-  // ===== オブジェクト化 & ソート =====
+  // ===== ソート済み日程 =====
   const enrichedDates = selectedDates
     .map((d) => (typeof d === "string" ? { date: d, type: "終日" } : d))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // ===== 共有リンク発行 =====
   const handleShare = async () => {
+    if (enrichedDates.length === 0) {
+      alert("日程を選択してください");
+      return;
+    }
+
     const dates = enrichedDates.map((d) => ({
       date: d.date,
       type: d.type,
@@ -122,15 +127,19 @@ const RegisterPage = () => {
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dates }),
+        body: JSON.stringify({
+          title: "共有スケジュール", // ✅ タイトルを追加
+          dates,
+          options: {},
+        }),
       });
 
       if (res.ok) {
-        const { token } = await res.json();
-        const url = `${window.location.origin}/share/${token}`;
+        const { share_token } = await res.json();
+        const url = `${window.location.origin}/share/${share_token}`;
         setShareUrls((prev) => [url, ...prev]);
       } else {
-        alert("スケジュール保存に失敗しました");
+        console.error("保存失敗", res.status);
       }
     } catch (err) {
       console.error("Error saving schedule:", err);
@@ -255,7 +264,6 @@ const RegisterPage = () => {
                   <button className="copy-btn" onClick={() => handleCopy(url)}>
                     コピー
                   </button>
-                  {/* ✅ コピーしたURLのみにメッセージ表示 */}
                   {copiedUrl === url && (
                     <span className="copied-msg">✅ コピーしました！</span>
                   )}
