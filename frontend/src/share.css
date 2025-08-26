@@ -4,6 +4,8 @@
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
+  max-width: 1200px; /* 中央寄せ */
+  margin: 0 auto;
 }
 
 /* タイトル */
@@ -131,9 +133,10 @@
   cursor: pointer;
   color: #004CA0;
   font-weight: bold;
+  text-decoration: underline;
 }
 .editable-username:hover {
-  text-decoration: underline;
+  color: #FDB9C8;
 }
 
 .username-edit-input {
