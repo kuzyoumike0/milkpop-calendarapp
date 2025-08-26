@@ -16,13 +16,26 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
+  // 編集用ステート
+  const [editingUser, setEditingUser] = useState(null);
+  const [newUsername, setNewUsername] = useState("");
+
   // ===== スケジュール読み込み =====
   useEffect(() => {
     const fetchSchedule = async () => {
-      const res = await fetch(`/api/schedule/${token}`);
-      const data = await res.json();
-      setSchedule(data.schedule);
-      setAllResponses(data.responses || []);
+      try {
+        const res = await fetch(`/api/schedules/${token}`);
+        if (!res.ok) throw new Error("スケジュール取得失敗");
+        const data = await res.json();
+        setSchedule(data);
+
+        // 回答一覧も取得
+        const res2 = await fetch(`/api/schedules/${token}/responses`);
+        if (!res2.ok) throw new Error("回答一覧取得失敗");
+        setAllResponses(await res2.json());
+      } catch (err) {
+        console.error("読み込みエラー:", err);
+      }
     };
     fetchSchedule();
 
@@ -49,16 +62,41 @@ const SharePage = () => {
       return;
     }
     const res = {
-      userId,
+      user_id: userId,
       username,
       responses,
     };
-    await fetch(`/api/schedule/${token}/response`, {
+    try {
+      const response = await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(res),
+      });
+      if (!response.ok) throw new Error("保存失敗");
+      setSaveMessage("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      setSaveMessage("保存に失敗しました");
+    }
+  };
+
+  const handleUsernameEdit = (user) => {
+    setEditingUser(user);
+    setNewUsername(user);
+  };
+
+  const handleUsernameSave = async (oldName) => {
+    if (!newUsername.trim()) return;
+    await fetch(`/api/schedules/${token}/edit-username`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
+      body: JSON.stringify({
+        oldName,
+        newName: newUsername.trim(),
+      }),
     });
-    setSaveMessage("保存しました！");
+    setEditingUser(null);
+    setNewUsername("");
   };
 
   const formatDate = (dateStr) => {
@@ -114,7 +152,28 @@ const SharePage = () => {
             <tr>
               <th>日程</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>{user}</th>
+                <th key={user}>
+                  {editingUser === user ? (
+                    <input
+                      type="text"
+                      className="username-edit-input"
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                      onBlur={() => handleUsernameSave(user)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleUsernameSave(user);
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="editable-username"
+                      onClick={() => handleUsernameEdit(user)}
+                    >
+                      {user}
+                    </span>
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
