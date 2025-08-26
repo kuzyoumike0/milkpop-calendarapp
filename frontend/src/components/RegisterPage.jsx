@@ -16,7 +16,7 @@ const RegisterPage = () => {
 
   const hd = new Holidays("JP");
 
-  // 📌 日付文字列をローカル基準で取得
+  // 📌 日付文字列をローカル基準で取得（UTCズレ防止）
   const getDateStr = (date) => date.toLocaleDateString("sv-SE");
   const todayStr = getDateStr(new Date());
 
@@ -70,6 +70,7 @@ const RegisterPage = () => {
       [date]: { ...prev[date], start: value },
     }));
   };
+
   const handleCustomEndChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
@@ -88,7 +89,7 @@ const RegisterPage = () => {
     });
   };
 
-  // 📌 共有リンク生成（API接続版）
+  // 📌 共有リンク生成
   const handleGenerateLink = async () => {
     try {
       const dates = selectedDates.map((date) => {
@@ -160,7 +161,7 @@ const RegisterPage = () => {
         <div className="calendar-box">
           <Calendar
             locale="ja-JP"
-            calendarType="US"   // ✅ 日本形式に戻す（日曜始まり）
+            calendarType="US"   // ✅ 日曜始まりに固定
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
@@ -200,6 +201,7 @@ const RegisterPage = () => {
                 <li key={date} className="date-item">
                   <span className="date-text">{formatDate(date)}</span>
 
+                  {/* 横並びボタン */}
                   <div className="radio-group-inline">
                     <button
                       className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
