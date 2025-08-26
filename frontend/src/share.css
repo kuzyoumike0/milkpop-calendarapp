@@ -117,7 +117,7 @@
 
 .responses-table th {
   background: #004CA0;
-  color: #fff;
+  color: #fff; /* ← ユーザ名は白にする */
   font-weight: bold;
 }
 
@@ -131,12 +131,12 @@
 /* ===== ユーザー名編集 ===== */
 .editable-username {
   cursor: pointer;
-  color: #004CA0;
+  color: #66d9ff; /* 表の青(#004CA0)とは違う水色 */
   font-weight: bold;
   text-decoration: underline;
 }
 .editable-username:hover {
-  color: #FDB9C8;
+  color: #FDB9C8; /* ホバーでピンクに */
 }
 
 .username-edit-input {
