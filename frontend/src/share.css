@@ -1,120 +1,175 @@
-/* ===== ページ全体 ===== */
+/* ====== ページ全体 ====== */
 .share-container {
-  padding: 20px;
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  padding: 20px;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
 }
 
-/* ===== タイトル ===== */
+/* ====== タイトル ====== */
 .share-title {
   text-align: center;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
-  margin-bottom: 20px;
   color: #fff;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== 入力フォーム ===== */
+/* ====== 入力フォーム ====== */
 .response-form {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
   padding: 20px;
-  border-radius: 14px;
-  margin-bottom: 30px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  max-width: 800px;
+  margin: 0 auto 25px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .username-input {
   width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+  padding: 10px 14px;
   margin-bottom: 15px;
-  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
 }
 
+/* 日程ラベル */
 .date-response {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .date-label {
   font-weight: bold;
   font-size: 14px;
-  color: #000 !important; /* ✅ 黒文字に変更 */
+  color: #000 !important; /* 黒文字で見やすく */
 }
 
+/* プルダウン */
 .attendance-select {
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.attendance-select:hover {
+  border-color: #004CA0;
+  background: #f1f6ff;
 }
 
 /* 保存ボタン */
 .save-btn {
+  display: block;
   width: 100%;
   padding: 12px;
-  border: none;
-  border-radius: 12px;
+  margin-top: 15px;
   background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
   font-weight: bold;
-  margin-top: 15px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.25s;
 }
 .save-btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .save-message {
-  margin-top: 10px;
-  font-size: 14px;
+  margin-top: 8px;
   font-weight: bold;
   color: #004CA0;
+  text-align: center;
 }
 
-/* ===== みんなの回答 ===== */
+/* ====== みんなの回答 ====== */
 .all-responses {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
   padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  max-width: 1000px;
+  margin: 0 auto;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .all-responses h2 {
   font-size: 20px;
   font-weight: bold;
-  margin-bottom: 12px;
   color: #004CA0;
+  margin-bottom: 15px;
 }
 
+/* テーブル */
 .responses-table {
   width: 100%;
   border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.responses-table th,
+.responses-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
 }
 
 .responses-table th {
   background: #004CA0;
   color: #fff;
-  padding: 10px;
+  font-weight: bold;
   font-size: 14px;
-  text-align: center;
 }
 
 .responses-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
   font-size: 14px;
-  text-align: center;
+  color: #000; /* 黒文字で見やすく */
 }
 
-/* 日付の列を黒文字に */
-.responses-table td:first-child {
-  color: #000 !important;
+/* 偶数行の背景色 */
+.responses-table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+/* 回答マーク ○✖△ の色 */
+.responses-table td:contains("○") {
+  color: #008000;
   font-weight: bold;
-  text-align: left;
+}
+.responses-table td:contains("✖") {
+  color: #ff2d2d;
+  font-weight: bold;
+}
+.responses-table td:contains("△") {
+  color: #ffa500;
+  font-weight: bold;
+}
+
+/* 編集可能ユーザー名 */
+.editable-username {
+  cursor: pointer;
+  color: #004CA0;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.editable-username:hover {
+  text-decoration: underline;
+  color: #FDB9C8;
+}
+
+/* ユーザー名編集フォーム */
+.username-edit-input {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #004CA0;
+  font-size: 14px;
 }
