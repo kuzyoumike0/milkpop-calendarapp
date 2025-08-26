@@ -16,6 +16,13 @@ const RegisterPage = () => {
   const hd = new Holidays("JP");
   const todayStr = new Date().toISOString().split("T")[0];
 
+  // 📌 今年の祝日を辞書化
+  const year = new Date().getFullYear();
+  const holidays = hd.getHolidays(year).reduce((map, h) => {
+    map[h.date] = h.name; // "2025-08-11": "山の日"
+    return map;
+  }, {});
+
   // 📌 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
@@ -116,10 +123,11 @@ const RegisterPage = () => {
             onClickDay={handleDateClick}
             tileContent={({ date, view }) => {
               if (view === "month") {
-                const holiday = hd.isHoliday(date);
-                return holiday ? (
+                const dateStr = date.toISOString().split("T")[0];
+                const holidayName = holidays[dateStr];
+                return holidayName ? (
                   <div className="holiday-wrapper">
-                    <span className="holiday-name">{holiday.name}</span>
+                    <span className="holiday-name">{holidayName}</span>
                   </div>
                 ) : null;
               }
@@ -129,11 +137,10 @@ const RegisterPage = () => {
 
               const dateStr = date.toISOString().split("T")[0];
               const day = date.getDay();
-              const holiday = hd.isHoliday(date);
 
               let classes = [];
               if (dateStr === todayStr) classes.push("today");
-              if (holiday || day === 0) classes.push("sunday-holiday");
+              if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
               else if (day === 6) classes.push("saturday");
               if (selectedDates.includes(dateStr)) classes.push("selected-day");
               if (rangeStart === dateStr) classes.push("range-start");
