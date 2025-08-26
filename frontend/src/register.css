@@ -1,5 +1,41 @@
-/* react-calendar のデザイン */
+/* ===== カレンダーとリスト全体 ===== */
+.calendar-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  margin: 20px auto;
+  max-width: 1100px; /* 横幅制御 */
+}
+
+/* ===== カレンダーカード ===== */
+.calendar-box {
+  flex: none;
+  width: 600px;          /* カレンダー部分をコンパクトに */
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 8px 8px 16px rgba(0,0,0,0.3),
+              -8px -8px 16px rgba(255,255,255,0.2);
+}
+
+/* ===== 選択リストカード ===== */
+.selected-dates {
+  flex: none;
+  width: 280px;          /* 右側のカードを細めに */
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 8px 8px 16px rgba(0,0,0,0.3),
+              -8px -8px 16px rgba(255,255,255,0.2);
+  text-align: left;
+}
+
+/* ===== カレンダー調整 ===== */
 .react-calendar {
+  width: 100%;
   border: none;
   background: transparent;
   font-family: "Zen Maru Gothic", sans-serif;
@@ -11,7 +47,7 @@
   padding: 14px 0;
   border-radius: 12px;
   transition: all 0.2s ease;
-  font-weight: bold; /* 日付を太字に */
+  font-weight: bold;
 }
 
 .react-calendar__tile:hover {
@@ -23,7 +59,6 @@
 /* 今日 */
 .react-calendar__tile.today {
   border: 2px solid #FDB9C8;
-  font-weight: bold;
   background: rgba(255,255,255,0.1);
 }
 
@@ -31,19 +66,11 @@
 .react-calendar__tile.selected-day {
   background: #004CA0 !important;
   color: #fff !important;
-  font-weight: bold;
-}
-
-/* 範囲開始 */
-.react-calendar__tile.range-start {
-  background: #FDB9C8 !important;
-  color: #fff !important;
 }
 
 /* 土曜 */
 .react-calendar__tile.saturday {
   color: #004CA0;
-  font-weight: bold;
 }
 
 /* 日曜と祝日 */
@@ -52,11 +79,7 @@
   font-weight: bold;
 }
 
-/* 祝日名（日の下に小さく表示） */
-.holiday-wrapper {
-  margin-top: 2px;
-}
-
+/* 祝日名 */
 .holiday-name {
   font-size: 0.6rem;
   color: #FDB9C8;
