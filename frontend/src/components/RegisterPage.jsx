@@ -10,7 +10,7 @@ const RegisterPage = () => {
   const [timeSelections, setTimeSelections] = useState({});
   const [customTimes, setCustomTimes] = useState({});
   const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("range");
+  const [selectionMode, setSelectionMode] = useState("range"); // デフォルト範囲
   const [rangeStart, setRangeStart] = useState(null);
 
   const hd = new Holidays("JP");
