@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -191,7 +192,7 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="gregory"
+            calendarType="ISO 8601"
             firstDayOfWeek={1}
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
