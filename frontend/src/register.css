@@ -334,3 +334,35 @@
   font-weight: bold;
   color: #FDB9C8;
 }
+/* 見出し行 */
+.schedule-header {
+  display: flex;
+  font-weight: bold;
+  color: #FDB9C8;
+  padding: 6px 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 8px;
+}
+
+.schedule-header .date { width: 120px; }
+.schedule-header .time { width: 100px; }
+.schedule-header .user-col { flex: 1; }
+
+/* ユーザ名リンク */
+.user-link {
+  margin-right: 6px;
+  color: #FDB9C8;
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.user-link:hover {
+  color: #fff;
+}
+
+.response-value {
+  margin-left: 6px;
+  color: #ddd;
+}
