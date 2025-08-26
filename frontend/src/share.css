@@ -111,3 +111,35 @@
   font-weight: bold;
   font-size: 0.9rem;
 }
+/* ===== 出欠選択ボタン ===== */
+.choice-btn {
+  width: 38px;
+  height: 38px;
+  margin: 0 4px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.choice-btn:hover {
+  background: #FDB9C8;
+  border-color: #FDB9C8;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.choice-btn.active {
+  background: #004CA0;
+  border-color: #004CA0;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
