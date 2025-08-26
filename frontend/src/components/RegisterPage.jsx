@@ -5,11 +5,6 @@ import Holidays from "date-holidays";
 import "../common.css";
 import "../register.css";
 
-// ランダムトークン生成関数
-const generateToken = () => {
-  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-};
-
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [timeSelections, setTimeSelections] = useState({});
@@ -93,11 +88,40 @@ const RegisterPage = () => {
     });
   };
 
-  // 📌 共有リンク生成
-  const handleGenerateLink = () => {
-    const token = generateToken();
-    const newLink = `${window.location.origin}/share/${token}`;
-    setShareLink(newLink);
+  // 📌 共有リンク生成（API接続版）
+  const handleGenerateLink = async () => {
+    try {
+      const dates = selectedDates.map((date) => {
+        const time = timeSelections[date] || "未選択";
+        return {
+          date,
+          time: time === "custom" && customTimes[date] ? "時間指定" : time,
+          startTime: customTimes[date]?.start || null,
+          endTime: customTimes[date]?.end || null,
+        };
+      });
+
+      const body = {
+        title: title || "無題イベント",
+        dates,
+        options: {},
+      };
+
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) throw new Error("共有リンクの生成に失敗しました");
+
+      const data = await res.json();
+      const newLink = `${window.location.origin}/share/${data.share_token}`;
+      setShareLink(newLink);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンクの生成に失敗しました");
+    }
   };
 
   return (
