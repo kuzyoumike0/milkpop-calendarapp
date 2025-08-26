@@ -74,6 +74,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h2 className="page-title">📌 日程登録ページ</h2>
 
+      {/* タイトル入力 */}
       <div className="title-input-container">
         <input
           type="text"
@@ -84,6 +85,7 @@ const RegisterPage = () => {
         />
       </div>
 
+      {/* モード切替 */}
       <div className="mode-switch">
         <button
           className={`mode-btn ${selectionMode === "range" ? "active" : ""}`}
