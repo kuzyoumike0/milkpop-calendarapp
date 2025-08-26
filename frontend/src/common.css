@@ -52,3 +52,28 @@
   color: #fff;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
 }
+/* ===== 共通リンクスタイル ===== */
+a {
+  color: #004CA0;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+a:hover {
+  color: #FDB9C8;
+  text-decoration: underline;
+}
+
+/* ヘッダー専用リンク */
+.header a {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.header a:hover {
+  background: rgba(255, 255, 255, 0.4);
+  color: #000;
+}
