@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -8,22 +9,19 @@ const hd = new Holidays("JP");
 
 export default function RegisterPage() {
   const [title, setTitle] = useState("");
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
   const [selectMode, setSelectMode] = useState("single");
   const [rangeStart, setRangeStart] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeType, setTimeType] = useState("終日");
 
-  // === 日付クリック処理 ===
+  // ===== 日付クリック処理 =====
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().slice(0, 10);
 
     if (selectMode === "single") {
-      setSelectedDates([{ date: dateStr, timeType: "終日" }]);
+      setSelectedDates([{ date: dateStr, timeType }]);
     } else if (selectMode === "multi") {
-      setSelectedDates((prev) => {
-        if (prev.find((d) => d.date === dateStr)) return prev;
-        return [...prev, { date: dateStr, timeType: "終日" }];
-      });
+      setSelectedDates((prev) => [...prev, { date: dateStr, timeType }]);
     } else if (selectMode === "range") {
       if (!rangeStart) {
         setRangeStart(date);
@@ -35,7 +33,7 @@ export default function RegisterPage() {
         while (current <= end) {
           rangeDates.push({
             date: current.toISOString().slice(0, 10),
-            timeType: "終日",
+            timeType,
           });
           current.setDate(current.getDate() + 1);
         }
@@ -45,63 +43,32 @@ export default function RegisterPage() {
     }
   };
 
-  // === 時間帯変更 ===
-  const handleTimeTypeChange = (dateStr, type) => {
-    setSelectedDates((prev) =>
-      prev.map((d) =>
-        d.date === dateStr ? { ...d, timeType: type } : d
-      )
-    );
-  };
-
-  // === 時間指定変更 ===
-  const handleTimeChange = (dateStr, field, value) => {
-    setSelectedDates((prev) =>
-      prev.map((d) =>
-        d.date === dateStr ? { ...d, [field]: value } : d
-      )
-    );
-  };
-
-  // === 日付削除 ===
-  const handleDeleteDate = (dateStr) => {
-    setSelectedDates((prev) => prev.filter((d) => d.date !== dateStr));
-  };
-
-  // === 共有リンク発行 ===
-  const handleShare = async () => {
-    const res = await fetch("/api/schedules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title,
-        dates: selectedDates,
-      }),
-    });
-    const data = await res.json();
-    setShareUrl(`${window.location.origin}/share/${data.share_token}`);
-  };
-
-  // === 日付フォーマット ===
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-  };
-
-  // === 曜日・祝日カラー ===
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (holiday) {
-        return <div className="holiday-name">{holiday[0].name}</div>;
-      }
-    }
-    return null;
-  };
+  // ===== 曜日・祝日・範囲強調 =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const weekday = date.getDay();
       const holiday = hd.isHoliday(date);
+      const dateStr = date.toISOString().slice(0, 10);
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      // 今日強調
+      if (dateStr === todayStr) return "today-highlight";
+
+      // 範囲選択中
+      if (rangeStart && !selectedDates.find((d) => d.date === dateStr)) {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+        if (date >= start && date <= end) {
+          return "in-range";
+        }
+      }
+
+      // 選択済み
+      if (selectedDates.find((d) => d.date === dateStr)) {
+        return "selected-date";
+      }
+
+      // 曜日と祝日
       if (holiday || weekday === 0) return "sunday";
       if (weekday === 6) return "saturday";
       return "weekday";
@@ -109,18 +76,11 @@ export default function RegisterPage() {
     return null;
   };
 
-  // === 1時間ごとのドロップダウン ===
-  const timeOptions = [];
-  for (let i = 0; i < 24; i++) {
-    const hour = String(i).padStart(2, "0") + ":00";
-    timeOptions.push(hour);
-  }
-
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
-      {/* タイトル */}
+      {/* タイトル入力 */}
       <input
         type="text"
         className="title-input"
@@ -130,9 +90,10 @@ export default function RegisterPage() {
       />
 
       <div className="register-container">
-        {/* カレンダー */}
+        {/* カレンダー部分 */}
         <div className="calendar-box">
-          <div className="mode-buttons top">
+          {/* モード切替ボタン */}
+          <div className="mode-buttons">
             <button
               className={selectMode === "single" ? "active" : ""}
               onClick={() => setSelectMode("single")}
@@ -154,67 +115,86 @@ export default function RegisterPage() {
           </div>
 
           <Calendar
-            locale="ja-JP"
             onClickDay={handleDateClick}
-            tileContent={tileContent}
             tileClassName={tileClassName}
-            calendarType="gregory"
+            calendarType="US"
+            locale="ja-JP"
           />
         </div>
 
-        {/* 選択中の日程リスト */}
+        {/* 選択中日程 */}
         <div className="register-box">
           <h3>選択中の日程</h3>
           <ul className="event-list">
-            {selectedDates.map((d) => (
-              <li key={d.date}>
-                <div className="event-header">
-                  <span>{formatDate(d.date)}</span>
+            {selectedDates.map((d, idx) => (
+              <li key={idx}>
+                {d.date}
+                <div className="time-type-buttons">
                   <button
-                    className="delete-day-btn"
-                    onClick={() => handleDeleteDate(d.date)}
+                    className={d.timeType === "終日" ? "active" : ""}
+                    onClick={() =>
+                      setSelectedDates((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, timeType: "終日" } : item
+                        )
+                      )
+                    }
                   >
-                    ×
+                    終日
+                  </button>
+                  <button
+                    className={d.timeType === "昼" ? "active" : ""}
+                    onClick={() =>
+                      setSelectedDates((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, timeType: "昼" } : item
+                        )
+                      )
+                    }
+                  >
+                    昼
+                  </button>
+                  <button
+                    className={d.timeType === "夜" ? "active" : ""}
+                    onClick={() =>
+                      setSelectedDates((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, timeType: "夜" } : item
+                        )
+                      )
+                    }
+                  >
+                    夜
+                  </button>
+                  <button
+                    className={d.timeType === "時間指定" ? "active" : ""}
+                    onClick={() =>
+                      setSelectedDates((prev) =>
+                        prev.map((item, i) =>
+                          i === idx ? { ...item, timeType: "時間指定" } : item
+                        )
+                      )
+                    }
+                  >
+                    時間指定
                   </button>
                 </div>
 
-                <div className="time-type-buttons">
-                  {["終日", "昼", "夜", "時間指定"].map((t) => (
-                    <button
-                      key={t}
-                      className={d.timeType === t ? "active" : ""}
-                      onClick={() => handleTimeTypeChange(d.date, t)}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
+                {/* 時間指定用ドロップダウン */}
                 {d.timeType === "時間指定" && (
                   <div className="time-dropdowns">
-                    <select
-                      value={d.startTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(d.date, "startTime", e.target.value)
-                      }
-                    >
-                      <option value="">開始時間</option>
-                      {timeOptions.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
+                    <select>
+                      {Array.from({ length: 24 }).map((_, h) => (
+                        <option key={h} value={h}>
+                          {h}:00
                         </option>
                       ))}
                     </select>
-                    <span>〜</span>
-                    <select
-                      value={d.endTime || ""}
-                      onChange={(e) =>
-                        handleTimeChange(d.date, "endTime", e.target.value)
-                      }
-                    >
-                      <option value="">終了時間</option>
-                      {timeOptions.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
+                    ～
+                    <select>
+                      {Array.from({ length: 24 }).map((_, h) => (
+                        <option key={h} value={h}>
+                          {h}:00
                         </option>
                       ))}
                     </select>
@@ -223,23 +203,6 @@ export default function RegisterPage() {
               </li>
             ))}
           </ul>
-
-          {/* 共有リンク */}
-          <button className="share-btn" onClick={handleShare}>
-            共有リンク発行
-          </button>
-          {shareUrl && (
-            <div className="share-link">
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="share-link-url"
-              >
-                {shareUrl}
-              </a>
-            </div>
-          )}
         </div>
       </div>
     </div>
