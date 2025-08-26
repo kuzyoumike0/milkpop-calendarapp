@@ -200,3 +200,9 @@
   opacity: 0.4;
   pointer-events: none;
 }
+.save-message {
+  margin-left: 16px;
+  color: #00e676; /* 緑でチェック風 */
+  font-weight: bold;
+  font-size: 0.9rem;
+}
