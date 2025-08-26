@@ -158,10 +158,15 @@ const SharePage = () => {
       <div className="glass-black name-box">
         <input
           type="text"
+          className="name-input"
           placeholder="あなたの名前を入力（必須）"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
+      </div>
+
+      {/* 新規追加ボタン */}
+      <div className="button-area">
         <button className="add-button" onClick={handleAddUser}>
           新規追加
         </button>
