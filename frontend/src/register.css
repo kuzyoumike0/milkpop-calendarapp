@@ -217,3 +217,11 @@
   font-weight: bold;
   cursor: pointer;
 }
+/* 選択中の日を強調 */
+.selected-day {
+  background: #FDB9C8 !important;
+  border-radius: 50%;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+}
