@@ -75,6 +75,17 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 日付フォーマット（和暦 + 曜日） =====
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const weekday = date.toLocaleDateString("ja-JP", { weekday: "short" });
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }) + `(${weekday})`;
+  };
+
   // ===== 時間帯設定変更 =====
   const handleTimeChange = (date, type, start, end) => {
     setSelectedDates((prev) =>
@@ -104,10 +115,10 @@ const RegisterPage = () => {
     setSelectedDates((prev) => prev.filter((d) => (d.date || d) !== date));
   };
 
-  // 日程オブジェクト化
-  const enrichedDates = selectedDates.map((d) =>
-    typeof d === "string" ? { date: d, type: "終日" } : d
-  );
+  // ===== 日程オブジェクト化 & ソート =====
+  const enrichedDates = selectedDates
+    .map((d) => (typeof d === "string" ? { date: d, type: "終日" } : d))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // ===== 共有リンク発行 =====
   const handleShare = () => {
@@ -166,7 +177,7 @@ const RegisterPage = () => {
             {enrichedDates.map((e, idx) => (
               <li key={idx}>
                 <div className="event-header">
-                  <strong>{e.date}</strong>
+                  <strong>{formatDate(e.date)}</strong>
                 </div>
                 <div className="time-type-buttons">
                   {["終日", "午前", "午後", "時間指定"].map((t) => (
