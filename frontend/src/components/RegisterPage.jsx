@@ -5,22 +5,19 @@ import "react-calendar/dist/Calendar.css";
 import "../common.css";
 import "../register.css";
 
-const hd = new Holidays("JP"); // 日本の祝日
+const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [value, setValue] = useState(new Date());
   const [holidays, setHolidays] = useState({});
-  const [title, setTitle] = useState("");
-  const [timeType, setTimeType] = useState("終日");
-  const [startHour, setStartHour] = useState("0");
-  const [endHour, setEndHour] = useState("1");
-  const [events, setEvents] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("single"); // "range" or "multi"
   const [shareUrl, setShareUrl] = useState("");
 
   // ===== 祝日読み込み =====
   useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const holidayList = hd.getHolidays(currentYear);
+    const year = new Date().getFullYear();
+    const holidayList = hd.getHolidays(year);
     const holidayMap = {};
     holidayList.forEach((h) => {
       holidayMap[new Date(h.date).toDateString()] = h.name;
@@ -28,7 +25,7 @@ const RegisterPage = () => {
     setHolidays(holidayMap);
   }, []);
 
-  // ===== カレンダー日付の見た目 =====
+  // ===== カレンダー日付見た目 =====
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holidayName = holidays[date.toDateString()];
@@ -49,26 +46,54 @@ const RegisterPage = () => {
     return null;
   };
 
-  // ===== 登録処理 =====
-  const handleRegister = () => {
-    if (!title) return;
-
-    let timeLabel = timeType;
-    if (timeType === "時間指定") {
-      timeLabel = `${startHour}:00 - ${endHour}:00`;
+  // ===== 日付選択処理 =====
+  const handleDateChange = (val) => {
+    if (mode === "range" && Array.isArray(val)) {
+      const rangeDates = [];
+      let start = new Date(val[0]);
+      const end = new Date(val[1]);
+      while (start <= end) {
+        rangeDates.push(new Date(start).toDateString());
+        start.setDate(start.getDate() + 1);
+      }
+      setSelectedDates([...new Set([...selectedDates, ...rangeDates])]);
+    } else if (mode === "multi") {
+      const newDate = new Date(val).toDateString();
+      if (!selectedDates.includes(newDate)) {
+        setSelectedDates([...selectedDates, newDate]);
+      }
+    } else {
+      // single
+      setSelectedDates([new Date(val).toDateString()]);
     }
+  };
 
-    const newEvent = {
-      title,
-      date: Array.isArray(value) ? value.map((d) => d.toDateString()) : [value.toDateString()],
-      time: timeLabel,
-    };
-
-    const updated = [...events, newEvent].sort((a, b) =>
-      new Date(a.date[0]) - new Date(b.date[0])
+  // ===== 時間帯設定変更 =====
+  const handleTimeChange = (date, type, start, end) => {
+    setSelectedDates((prev) =>
+      prev.map((d) =>
+        d.date === date
+          ? { ...d, type, startHour: start, endHour: end }
+          : d
+      )
     );
-    setEvents(updated);
-    setTitle("");
+  };
+
+  // 日程オブジェクト化
+  const enrichedDates = selectedDates.map((d) => {
+    if (typeof d === "string") {
+      return { date: d, type: "終日" };
+    }
+    return d;
+  });
+
+  // ===== 時間オプション =====
+  const renderHourOptions = () => {
+    return Array.from({ length: 24 }, (_, i) => (
+      <option key={i} value={i}>
+        {i}:00
+      </option>
+    ));
   };
 
   // ===== 共有リンク発行 =====
@@ -78,113 +103,88 @@ const RegisterPage = () => {
     setShareUrl(url);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(shareUrl);
-    alert("コピーしました！");
-  };
-
-  // ===== 時間選択ドロップダウン生成 =====
-  const renderHourOptions = () => {
-    return Array.from({ length: 24 }, (_, i) => (
-      <option key={i} value={i}>
-        {i}:00
-      </option>
-    ));
-  };
-
   return (
     <div className="register-page">
       <h2>日程登録ページ</h2>
       <div className="register-container">
-        {/* ===== カレンダー（左7割） ===== */}
-        <div className="calendar-container">
+        {/* カレンダー */}
+        <div className="calendar-container glass-card">
+          <div className="mode-buttons">
+            <button
+              className={mode === "single" ? "active" : ""}
+              onClick={() => setMode("single")}
+
+              範囲選択
+            </button>
+            <button
+              className={mode === "multi" ? "active" : ""}
+              onClick={() => setMode("multi")}
+            >
+              複数選択
+            </button>
+          </div>
           <Calendar
-            onChange={setValue}
+            onChange={handleDateChange}
             value={value}
             locale="ja-JP"
             calendarType="gregory"
-            selectRange={true}
+            selectRange={mode === "range"}
             tileContent={tileContent}
             tileClassName={tileClassName}
           />
         </div>
 
-        {/* ===== 登録フォーム＋リスト（右3割） ===== */}
-        <div className="side-panel">
-          <input
-            type="text"
-            placeholder="タイトルを入力"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="title-input"
-          />
-
-          <div className="time-select">
-            <label>
-              <input
-                type="radio"
-                name="time"
-                value="終日"
-                checked={timeType === "終日"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              終日
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="time"
-                value="昼"
-                checked={timeType === "昼"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              昼
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="time"
-                value="夜"
-                checked={timeType === "夜"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              夜
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="time"
-                value="時間指定"
-                checked={timeType === "時間指定"}
-                onChange={(e) => setTimeType(e.target.value)}
-              />
-              時間指定
-            </label>
-          </div>
-
-          {timeType === "時間指定" && (
-            <div className="time-dropdowns">
-              <select value={startHour} onChange={(e) => setStartHour(e.target.value)}>
-                {renderHourOptions()}
-              </select>
-              ～
-              <select value={endHour} onChange={(e) => setEndHour(e.target.value)}>
-                {renderHourOptions()}
-              </select>
-            </div>
-          )}
-
-          <button onClick={handleRegister} className="register-btn">
-            登録する
-          </button>
-
-          <h3>登録済み日程</h3>
+        {/* 選択済み日程 */}
+        <div className="side-panel glass-card">
+          <h3>選択中の日程</h3>
           <ul className="event-list">
-            {events.map((e, idx) => (
+            {enrichedDates.map((e, idx) => (
               <li key={idx}>
-                <strong>{e.title}</strong>
-                <br />
-                {e.date.join(" ~ ")} ({e.time})
+                <strong>{e.date}</strong>
+                <div className="time-type-buttons">
+                  {["終日", "午前", "午後", "時間指定"].map((t) => (
+                    <button
+                      key={t}
+                      className={e.type === t ? "active" : ""}
+                      onClick={() =>
+                        handleTimeChange(e.date, t, e.startHour, e.endHour)
+                      }
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  {e.type === "時間指定" && (
+                    <div className="time-dropdowns">
+                      <select
+                        value={e.startHour || 0}
+                        onChange={(ev) =>
+                          handleTimeChange(
+                            e.date,
+                            "時間指定",
+                            ev.target.value,
+                            e.endHour || 1
+                          )
+                        }
+                      >
+                        {renderHourOptions()}
+                      </select>
+                      ～
+                      <select
+                        value={e.endHour || 1}
+                        onChange={(ev) =>
+                          handleTimeChange(
+                            e.date,
+                            "時間指定",
+                            e.startHour || 0,
+                            ev.target.value
+                          )
+                        }
+                      >
+                        {renderHourOptions()}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -195,7 +195,6 @@ const RegisterPage = () => {
           {shareUrl && (
             <div className="share-link">
               <input type="text" value={shareUrl} readOnly />
-              <button onClick={handleCopy} className="copy-btn">コピー</button>
             </div>
           )}
         </div>
