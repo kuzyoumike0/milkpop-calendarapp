@@ -186,3 +186,28 @@ a:hover {
     display: flex; /* ハンバーガー表示 */
   }
 }
+/* ===== フッター ===== */
+footer {
+  background: rgba(0, 0, 0, 0.7);
+  color: #FDB9C8;
+  text-align: center;
+  padding: 1.2rem;
+  font-size: 1rem;
+  font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
+  border-top: 2px solid #004CA0;
+  margin-top: auto;
+}
+
+/* フッターリンク */
+footer a {
+  margin: 0 8px;
+  color: #FDB9C8;
+  text-decoration: none;
+  font-weight: bold;
+  transition: 0.2s;
+}
+footer a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
