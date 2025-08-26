@@ -1,125 +1,65 @@
-/* ===== カレンダー全体 ===== */
+/* react-calendar のデザイン */
 .react-calendar {
-  width: 100% !important;
   border: none;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  background: transparent;
+  font-family: "Zen Maru Gothic", sans-serif;
+  font-size: 0.9rem;
+  color: #fff;
 }
 
-/* 曜日と日付をきれいに揃える */
-.react-calendar__month-view__weekdays,
-.react-calendar__month-view__days {
-  display: grid !important;
-  grid-template-columns: repeat(7, 1fr) !important;
-  text-align: center;
-}
-
-/* 曜日 */
-.react-calendar__month-view__weekdays__weekday abbr {
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: bold;
-  color: #333;
-}
-
-/* 日付セル */
 .react-calendar__tile {
-  min-height: 85px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333 !important;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.25);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.25s ease;
-  position: relative;
-  z-index: 1;
+  padding: 14px 0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-weight: bold; /* 日付を太字に */
 }
 
-/* ホバー */
 .react-calendar__tile:hover {
-  background: #FDB9C8;
-  color: #000 !important;
+  background: rgba(253, 185, 200, 0.8);
+  color: #fff;
   transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(253, 185, 200, 0.6);
 }
 
 /* 今日 */
-.day-today {
-  border: 2px solid #000;
-  border-radius: 50%;
-  background: #fff6 !important;
+.react-calendar__tile.today {
+  border: 2px solid #FDB9C8;
   font-weight: bold;
-  box-shadow: 0 0 10px #FDB9C8;
+  background: rgba(255,255,255,0.1);
 }
 
-/* ===== 範囲選択 ===== */
-.range-start {
-  background: #ff99cc !important;
-  color: white !important;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(255, 105, 180, 0.8);
-  z-index: 2;
-}
-.range-end {
+/* 選択中 */
+.react-calendar__tile.selected-day {
   background: #004CA0 !important;
-  color: white !important;
-  border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 76, 160, 0.8);
-  z-index: 2;
-}
-.range-between {
-  background: linear-gradient(90deg, #ff99cc, #004CA0) !important;
-  color: white !important;
-  border-radius: 0;
-  z-index: 1;
-}
-
-/* 単独選択 */
-.selected-date {
-  background: linear-gradient(145deg, #ffdde6, #ff99cc) !important;
-  color: #000 !important;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-/* 土曜・日曜 */
-.day-saturday {
-  color: #1976d2 !important;
-}
-.day-sunday {
-  color: #d32f2f !important;
-}
-
-/* 祝日 */
-.holiday-name {
-  font-size: 11px;
-  margin-top: 2px;
-  color: #ff4081;
-  font-weight: normal;
-}
-
-/* ===== ボタン強化 ===== */
-.share-button {
-  margin-top: 16px;
-  padding: 12px 22px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: white;
-  font-size: 16px;
+  color: #fff !important;
   font-weight: bold;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
 }
-.share-button:hover {
-  background: linear-gradient(135deg, #ff80ab, #1565c0);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+
+/* 範囲開始 */
+.react-calendar__tile.range-start {
+  background: #FDB9C8 !important;
+  color: #fff !important;
+}
+
+/* 土曜 */
+.react-calendar__tile.saturday {
+  color: #004CA0;
+  font-weight: bold;
+}
+
+/* 日曜と祝日 */
+.react-calendar__tile.sunday-holiday {
+  color: #FDB9C8;
+  font-weight: bold;
+}
+
+/* 祝日名（日の下に小さく表示） */
+.holiday-wrapper {
+  margin-top: 2px;
+}
+
+.holiday-name {
+  font-size: 0.6rem;
+  color: #FDB9C8;
+  font-weight: bold;
+  display: block;
 }
