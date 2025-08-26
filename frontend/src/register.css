@@ -35,92 +35,18 @@
   color: #fff;
 }
 
-/* ====== タイトル入力 ====== */
-.input-card {
-  margin-bottom: 20px;
-  width: 80%;
-  display: flex;
-  justify-content: center;
-}
-
-.cute-title-box {
-  border: 2px solid #FDB9C8;
-}
-
-.title-input {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 18px;
-  border: none;
-  border-radius: 12px;
-  text-align:center;
-  background: #111;
-  color: #fff;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
-  transition: all 0.3s;
-}
-
-.title-input:focus {
-  outline: none;
-  border: 2px solid #FDB9C8;
-  box-shadow: 0 0 12px #FDB9C8;
-}
-
-/* ====== メインエリア ====== */
-.main-content {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  width: 95%;
-}
-
 /* ====== カレンダーエリア ====== */
-.calendar-card {
-  flex: 7;
-}
-
-/* ====== モード切替（ラジオをボタン風） ====== */
-.mode-select {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.mode-select input[type="radio"] {
-  display: none;
-}
-
-.mode-select span {
-  display: inline-block;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 2px solid #FDB9C8;
-  background: rgba(255, 255, 255, 0.1);
-  color: #FDB9C8;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.mode-select input[type="radio"]:checked + span {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
-}
-
-/* ====== react-calendar カスタマイズ ====== */
 .react-calendar {
   width: 100% !important;
   border: none !important;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   padding: 20px;
-  font-size: 14px;
+  font-size: 15px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-/* ナビゲーション */
+/* ====== ナビゲーション ====== */
 .react-calendar__navigation {
   margin-bottom: 12px;
   display: flex;
@@ -142,60 +68,49 @@
   transform: scale(1.2);
 }
 
-/* 曜日ヘッダー */
+/* ====== 曜日ヘッダー ====== */
 .react-calendar__month-view__weekdays {
   display: flex;
   justify-content: space-around;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .react-calendar__month-view__weekdays__weekday {
   flex: 1;
   text-align: center;
-}
-
-.react-calendar__month-view__weekdays__weekday abbr {
-  display: inline-block;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  border-radius: 50%;
   font-weight: bold;
-  background: rgba(255,255,255,0.15);
+  font-size: 15px;
   color: #fff;
 }
 
+/* 土曜・日曜ヘッダー */
 .react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
-  background: #ffb3b3;
-  color: #fff;
+  color: #ff4d6d; /* 日曜 赤 */
 }
-
 .react-calendar__month-view__weekdays__weekday:nth-child(7) abbr {
-  background: #8fcfff;
-  color: #fff;
+  color: #007bff; /* 土曜 青 */
 }
 
-/* ===== 日付セル（ガラス風を廃止し、カード調に） ===== */
+/* ====== 日付セル ====== */
 .react-calendar__tile {
   margin: 6px;
-  padding: 18px 0;
+  padding: 20px 0;
   border-radius: 14px;
   border: none;
-  color: #333;
   font-weight: 600;
   font-size: 16px;
-  min-height: 70px;
-
-  background: linear-gradient(145deg, #ffffff, #f3f3f3);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-
+  min-height: 90px; /* ← 高さ拡張で余裕を持たせる */
+  background: #ffffff;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transition: all 0.25s ease;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.25s ease;
+  flex-direction: column;
 }
 
-/* ホバー時 */
+/* ホバー */
 .react-calendar__tile:hover {
   background: linear-gradient(145deg, #ffdee9, #b5fffc);
   color: #000;
@@ -223,7 +138,7 @@
   box-shadow: 0 0 10px rgba(253, 185, 200, 0.6);
 }
 
-/* 土曜・日曜・祝日 */
+/* 土日・祝日 */
 .day-saturday {
   color: #007bff !important;
   font-weight: bold;
@@ -238,130 +153,4 @@
   color: #ff6699;
   display: block;
   margin-top: 4px;
-}
-
-/* ====== 選択したスケジュールリスト ====== */
-.schedule-box {
-  flex: 3;
-  margin-top: 20px;
-}
-
-.schedule-box h3 {
-  margin-bottom: 10px;
-  font-size: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  padding-bottom: 5px;
-}
-
-.schedule-box ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.date-item {
-  margin-bottom: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.08);
-}
-
-.date-label {
-  font-size: 16px;
-  font-weight: bold;
-  color: #FDB9C8;
-}
-
-/* ====== 時間帯ボタン ====== */
-.time-type-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
-}
-
-.time-type-button {
-  padding: 6px 12px;
-  border-radius: 12px;
-  border: 2px solid #FDB9C8;
-  background: rgba(255,255,255,0.1);
-  color: #FDB9C8;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.time-type-button.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
-}
-
-/* ====== 時間指定ドロップダウン ====== */
-.stylish-dropdown {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #FDB9C8;
-  background: #fff;
-  color: #333;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.stylish-dropdown:hover {
-  border-color: #004CA0;
-  box-shadow: 0 0 8px rgba(0,0,0,0.2);
-}
-
-/* ====== 共有リンクボタン ====== */
-.share-button {
-  margin-top: 15px;
-  padding: 10px 18px;
-  border: none;
-  border-radius: 25px;
-  font-size: 15px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #ffb6c1, #FDB9C8);
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-.share-button:hover {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
-}
-
-/* ====== 共有リンク表示 ====== */
-.share-link-box {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.share-link {
-  color: #FDB9C8;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.copy-button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 10px;
-  background: #FDB9C8;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.copy-button:hover {
-  background: #004CA0;
 }
