@@ -13,7 +13,8 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single");
-  const [shareUrls, setShareUrls] = useState([]); // 発行されたURLを保持
+  const [shareUrls, setShareUrls] = useState([]); // 発行されたURLリスト
+  const [copiedUrl, setCopiedUrl] = useState(""); // コピー済みURLを保持
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -127,7 +128,6 @@ const RegisterPage = () => {
       if (res.ok) {
         const { token } = await res.json();
         const url = `${window.location.origin}/share/${token}`;
-        // 新しいURLを先頭に追加して即表示
         setShareUrls((prev) => [url, ...prev]);
       } else {
         alert("スケジュール保存に失敗しました");
@@ -135,6 +135,12 @@ const RegisterPage = () => {
     } catch (err) {
       console.error("Error saving schedule:", err);
     }
+  };
+
+  // ===== コピー処理 =====
+  const handleCopy = (url) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
   };
 
   return (
@@ -233,7 +239,7 @@ const RegisterPage = () => {
             共有リンクを発行
           </button>
 
-          {/* 発行されたリンクを即表示 */}
+          {/* 発行されたリンク一覧 */}
           {shareUrls.length > 0 && (
             <div className="share-link-list">
               {shareUrls.map((url, idx) => (
@@ -246,15 +252,13 @@ const RegisterPage = () => {
                   >
                     {url}
                   </a>
-                  <button
-                    className="copy-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(url);
-                      alert("共有リンクをコピーしました！");
-                    }}
-                  >
+                  <button className="copy-btn" onClick={() => handleCopy(url)}>
                     コピー
                   </button>
+                  {/* ✅ コピーしたURLのみにメッセージ表示 */}
+                  {copiedUrl === url && (
+                    <span className="copied-msg">✅ コピーしました！</span>
+                  )}
                 </div>
               ))}
             </div>
