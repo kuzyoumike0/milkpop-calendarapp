@@ -1,8 +1,7 @@
-/* ====== ページ全体 ====== */
+/* ===== ページ全体 ===== */
 .register-page {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
   display: flex;
@@ -11,15 +10,16 @@
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
-  margin-bottom: 12px;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
 
-/* ====== タイトル入力 ====== */
+/* タイトル入力 */
 .title-input {
-  width: 60%;
+  width: 40%;
   padding: 10px;
   border-radius: 10px;
   border: none;
@@ -31,7 +31,7 @@
   text-align: center;
 }
 
-/* ====== レイアウト ====== */
+/* コンテナ */
 .register-container {
   display: flex;
   gap: 20px;
@@ -39,28 +39,49 @@
   max-width: 1200px;
 }
 
-/* ====== カレンダー ====== */
+/* カレンダー */
 .calendar-box {
   flex: 7;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  color: #fff;
   backdrop-filter: blur(15px);
 }
+.calendar-box:hover {
+  transform: translateY(-3px);
+}
 
-/* 曜日・祝日カラー */
-.weekday {
-  color: #222 !important; /* 可愛い黒 */
+/* モード切替 */
+.mode-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mode-buttons button {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.4);
   font-weight: bold;
+  cursor: pointer;
+}
+.mode-buttons button.active {
+  background: #004CA0;
+  color: #fff;
+}
+
+/* 曜日スタイル */
+.weekday {
+  color: #222 !important;
 }
 .saturday {
-  color: #004CA0 !important; /* 青 */
+  color: #004CA0 !important;
   font-weight: bold;
 }
 .sunday {
-  color: #ff2d2d !important; /* 赤 */
+  color: #ff2d2d !important;
   font-weight: bold;
 }
 .holiday-name {
@@ -68,71 +89,53 @@
   color: #ff2d2d;
 }
 
-/* ====== モード切替ボタン ====== */
-.mode-buttons.top {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.mode-buttons.top button {
-  flex: 1;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: none;
-  background: rgba(255,255,255,0.6);
+/* 今日 */
+.today-highlight {
+  background: #FDB9C8 !important;
+  border: 2px solid #004CA0 !important;
+  border-radius: 50%;
+  color: #000 !important;
   font-weight: bold;
-  cursor: pointer;
-}
-.mode-buttons.top button.active {
-  background: #004CA0;
-  color: #fff;
 }
 
-/* ====== 選択中の日程リスト ====== */
+/* 選択済み */
+.selected-date {
+  background: #004CA0 !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
+
+/* 範囲中 */
+.in-range {
+  background: rgba(0, 76, 160, 0.2) !important;
+  border-radius: 6px;
+  color: #000 !important;
+}
+
+/* サイドパネル */
 .register-box {
   flex: 3;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   color: #000;
+  backdrop-filter: blur(15px);
 }
+
+/* 日程リスト */
 .event-list {
   list-style: none;
   padding: 0;
 }
 .event-list li {
   background: rgba(255,255,255,0.25);
-  border-radius: 12px;
   padding: 10px;
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #000;
-}
-.event-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-bottom: 8px;
+  border-radius: 12px;
 }
 
-/* 削除ボタン */
-.delete-day-btn {
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(135deg, #ff6b6b, #ff8ea0);
-  color: #fff;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.delete-day-btn:hover {
-  background: linear-gradient(135deg, #ff3b3b, #ff6680);
-  transform: scale(1.05);
-}
-
-/* ====== 時間帯ボタン ====== */
+/* 時間帯ボタン */
 .time-type-buttons {
   margin-top: 6px;
   display: flex;
@@ -153,7 +156,7 @@
   color: #fff;
 }
 
-/* ====== 時間指定ドロップダウン ====== */
+/* 時間指定ドロップダウン */
 .time-dropdowns {
   display: flex;
   align-items: center;
@@ -161,22 +164,19 @@
   margin-top: 6px;
 }
 .time-dropdowns select {
-  padding: 6px 12px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  background: #fff;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.9);
+  font-size: 13px;
   font-weight: bold;
+  color: #333;
   cursor: pointer;
-  transition: 0.2s;
-}
-.time-dropdowns select:hover {
-  background: #FDB9C8;
-  color: #000;
 }
 
-/* ====== 共有リンク ====== */
+/* 共有リンク */
 .share-btn {
-  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  background: #004CA0;
   color: #fff;
   padding: 10px;
   border: none;
@@ -184,18 +184,35 @@
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 10px;
+  transition: 0.2s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
 }
 .share-btn:hover {
-  transform: translateY(-2px);
+  background: #FDB9C8;
+  color: #000;
 }
 
 .share-link {
   margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.share-link-url {
-  font-size: 13px;
-  font-weight: bold;
+.share-link a {
   color: #004CA0;
-  word-break: break-all;
+  font-weight: bold;
+  text-decoration: none;
+}
+.share-link a:hover {
+  text-decoration: underline;
+}
+.copy-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
 }
