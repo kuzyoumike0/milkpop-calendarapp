@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -12,7 +11,7 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
-  const [shareLink, setShareLink] = useState(""); // ✅ 共有リンク
+  const [shareLink, setShareLink] = useState("");
 
   const hd = new Holidays("JP");
 
@@ -70,6 +69,7 @@ const RegisterPage = () => {
       [date]: { ...prev[date], start: value },
     }));
   };
+
   const handleCustomEndChange = (date, value) => {
     setCustomTimes((prev) => ({
       ...prev,
@@ -156,123 +156,117 @@ const RegisterPage = () => {
       </div>
 
       <div className="calendar-box">
-  {/* 曜日ヘッダー（日曜始まりで固定） */}
-  <div className="calendar-weekdays">
-    <div className="weekday sunday">日</div>
-    <div className="weekday">月</div>
-    <div className="weekday">火</div>
-    <div className="weekday">水</div>
-    <div className="weekday">木</div>
-    <div className="weekday">金</div>
-    <div className="weekday saturday">土</div>
-  </div>
-
-  {/* React-Calendar 本体 */}
-  <Calendar
-    locale="ja-JP"
-    calendarType="US"   // ✅ 日曜始まりを強制
-    onClickDay={handleDateClick}
-    tileContent={({ date, view }) => {
-      if (view === "month") {
-        const dateStr = getDateStr(date);
-        const holidayName = holidays[dateStr];
-        return holidayName ? (
-          <div className="holiday-wrapper">
-            <span className="holiday-name">{holidayName}</span>
-          </div>
-        ) : null;
-      }
-    }}
-    tileClassName={({ date, view }) => {
-      if (view !== "month") return "";
-      const dateStr = getDateStr(date);
-      const day = date.getDay();
-
-      let classes = [];
-      if (dateStr === todayStr) classes.push("today");
-      if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
-      else if (day === 6) classes.push("saturday");
-      if (selectedDates.includes(dateStr)) classes.push("selected-day");
-      if (rangeStart === dateStr) classes.push("range-start");
-
-      return classes.join(" ");
-    }}
-  />
-</div>
-
-
-        {/* 選択リスト */}
-        <div className="selected-dates">
-          <h3>📅 選択した日程</h3>
-          <ul>
-            {selectedDates
-              .sort((a, b) => new Date(a) - new Date(b))
-              .map((date) => (
-                <li key={date} className="date-item">
-                  <span className="date-text">{formatDate(date)}</span>
-
-                  {/* 横並びボタン */}
-                  <div className="radio-group-inline">
-                    <button
-                      className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "all")}
-                    >
-                      終日
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "day" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "day")}
-                    >
-                      昼
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "night" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "night")}
-                    >
-                      夜
-                    </button>
-                    <button
-                      className={`time-btn ${timeSelections[date] === "custom" ? "active" : ""}`}
-                      onClick={() => handleTimeChange(date, "custom")}
-                    >
-                      時間指定
-                    </button>
-
-                    {/* 時間指定ドロップダウン */}
-                    {timeSelections[date] === "custom" && (
-                      <div className="custom-time">
-                        <select
-                          className="time-dropdown"
-                          onChange={(e) =>
-                            handleCustomStartChange(date, e.target.value)
-                          }
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i}>
-                              {i}:00
-                            </option>
-                          ))}
-                        </select>
-                        <span> ~ </span>
-                        <select
-                          className="time-dropdown"
-                          onChange={(e) =>
-                            handleCustomEndChange(date, e.target.value)
-                          }
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i + 1}>
-                              {i + 1}:00
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-          </ul>
+        {/* 自作曜日ヘッダー（日曜始まり固定） */}
+        <div className="calendar-weekdays">
+          <div className="weekday sunday">日</div>
+          <div className="weekday">月</div>
+          <div className="weekday">火</div>
+          <div className="weekday">水</div>
+          <div className="weekday">木</div>
+          <div className="weekday">金</div>
+          <div className="weekday saturday">土</div>
         </div>
+
+        {/* React-Calendar */}
+        <Calendar
+          locale="ja-JP"
+          calendarType="US" // ✅ 日曜始まり
+          onClickDay={handleDateClick}
+          tileContent={({ date, view }) => {
+            if (view === "month") {
+              const dateStr = getDateStr(date);
+              const holidayName = holidays[dateStr];
+              return holidayName ? (
+                <div className="holiday-wrapper">
+                  <span className="holiday-name">{holidayName}</span>
+                </div>
+              ) : null;
+            }
+          }}
+          tileClassName={({ date, view }) => {
+            if (view !== "month") return "";
+            const dateStr = getDateStr(date);
+            const day = date.getDay();
+
+            let classes = [];
+            if (dateStr === todayStr) classes.push("today");
+            if (holidays[dateStr] || day === 0) classes.push("sunday-holiday");
+            else if (day === 6) classes.push("saturday");
+            if (selectedDates.includes(dateStr)) classes.push("selected-day");
+            if (rangeStart === dateStr) classes.push("range-start");
+
+            return classes.join(" ");
+          }}
+        />
+      </div>
+
+      {/* 選択リスト */}
+      <div className="selected-dates">
+        <h3>📅 選択した日程</h3>
+        <ul>
+          {selectedDates
+            .sort((a, b) => new Date(a) - new Date(b))
+            .map((date) => (
+              <li key={date} className="date-item">
+                <span className="date-text">{formatDate(date)}</span>
+                <div className="radio-group-inline">
+                  <button
+                    className={`time-btn ${timeSelections[date] === "all" ? "active" : ""}`}
+                    onClick={() => handleTimeChange(date, "all")}
+                  >
+                    終日
+                  </button>
+                  <button
+                    className={`time-btn ${timeSelections[date] === "day" ? "active" : ""}`}
+                    onClick={() => handleTimeChange(date, "day")}
+                  >
+                    昼
+                  </button>
+                  <button
+                    className={`time-btn ${timeSelections[date] === "night" ? "active" : ""}`}
+                    onClick={() => handleTimeChange(date, "night")}
+                  >
+                    夜
+                  </button>
+                  <button
+                    className={`time-btn ${timeSelections[date] === "custom" ? "active" : ""}`}
+                    onClick={() => handleTimeChange(date, "custom")}
+                  >
+                    時間指定
+                  </button>
+                  {timeSelections[date] === "custom" && (
+                    <div className="custom-time">
+                      <select
+                        className="time-dropdown"
+                        onChange={(e) =>
+                          handleCustomStartChange(date, e.target.value)
+                        }
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {i}:00
+                          </option>
+                        ))}
+                      </select>
+                      <span> ~ </span>
+                      <select
+                        className="time-dropdown"
+                        onChange={(e) =>
+                          handleCustomEndChange(date, e.target.value)
+                        }
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i + 1}>
+                            {i + 1}:00
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+        </ul>
       </div>
 
       {/* 共有リンク */}
@@ -280,7 +274,6 @@ const RegisterPage = () => {
         <button className="share-link-btn" onClick={handleGenerateLink}>
           ✨ 共有リンクを発行
         </button>
-
         {shareLink && (
           <div className="share-link-box">
             <a href={shareLink} target="_blank" rel="noopener noreferrer">
