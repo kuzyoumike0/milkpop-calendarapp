@@ -8,13 +8,14 @@ import SharePage from "./components/SharePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
-// ====== CSS 一括管理 ======
-import "./common.css";          // 共通スタイル
-import "./header_footer.css";   // ヘッダー・フッター
-import "./register.css";        // RegisterPage専用
-import "./share.css";           // SharePage専用
-import "./personal.css";        // PersonalPage専用
-// TopPage専用があるならここに追加 → import "./top.css";
+// ====== CSS 全部読み込み ======
+import "./common.css";
+import "./header_footer.css";
+import "./index.css";
+import "./personal.css";
+import "./register.css";
+import "./share.css";
+import "./top.css";
 
 function App() {
   return (
