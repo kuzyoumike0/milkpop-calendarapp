@@ -226,7 +226,25 @@ const RegisterPage = () => {
           </button>
           {shareUrl && (
             <div className="share-link">
-              <input type="text" value={shareUrl} readOnly />
+              {/* リンク化 */}
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="share-link-url"
+              >
+                {shareUrl}
+              </a>
+              {/* コピー用ボタン */}
+              <button
+                className="copy-btn"
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl);
+                  alert("共有リンクをコピーしました！");
+                }}
+              >
+                コピー
+              </button>
             </div>
           )}
         </div>
