@@ -187,7 +187,8 @@ a:hover {
   }
 }
 /* ===== フッター ===== */
-footer {
+footer,
+.footer {
   background: rgba(0, 0, 0, 0.7);
   color: #FDB9C8;
   text-align: center;
@@ -199,15 +200,17 @@ footer {
 }
 
 /* フッターリンク */
-footer a {
+footer a,
+.footer a {
   margin: 0 8px;
-  color: #FDB9C8;
+  color: #FDB9C8 !important;
   text-decoration: none;
   font-weight: bold;
   transition: 0.2s;
 }
-footer a:hover {
-  color: #fff;
+
+footer a:hover,
+.footer a:hover {
+  color: #fff !important;
   text-decoration: underline;
 }
-
