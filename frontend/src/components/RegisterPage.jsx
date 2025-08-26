@@ -10,7 +10,7 @@ const RegisterPage = () => {
   const [timeSelections, setTimeSelections] = useState({});
   const [customTimes, setCustomTimes] = useState({});
   const [title, setTitle] = useState("");
-  const [selectionMode, setSelectionMode] = useState("range"); // デフォルト範囲
+  const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
 
   const hd = new Holidays("JP");
@@ -134,7 +134,6 @@ const RegisterPage = () => {
             }}
             tileClassName={({ date, view }) => {
               if (view !== "month") return "";
-
               const dateStr = date.toISOString().split("T")[0];
               const day = date.getDay();
 
