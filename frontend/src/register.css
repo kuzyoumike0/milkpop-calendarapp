@@ -368,3 +368,210 @@
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
 }
+
+.register-page {
+  padding: 20px;
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.register-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* === ガラス風カード === */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 20px;
+}
+
+/* カレンダー */
+.calendar-container {
+  flex: 7;
+}
+.calendar-container .react-calendar {
+  width: 100% !important;
+  border: none !important;
+}
+
+/* サイドパネル */
+.side-panel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* === 共通ボタン === */
+.mode-buttons button,
+.time-type-buttons button,
+.delete-day-btn,
+.share-btn,
+.copy-btn {
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+/* モード切替ボタン */
+.mode-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mode-buttons button {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,0.3);
+  font-weight: bold;
+}
+.mode-buttons button.active {
+  background: #FDB9C8;
+  color: #000;
+}
+
+/* 日程リスト */
+.event-list {
+  list-style: none;
+  padding: 0;
+}
+.event-list li {
+  background: rgba(255,255,255,0.25);
+  border-left: 4px solid #FDB9C8;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
+
+/* ===== 時間帯ボタン ===== */
+.time-type-buttons {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.time-type-buttons button {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  font-size: 13px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.time-type-buttons button.active {
+  background: #004CA0;
+  color: #fff;
+}
+
+/* 単日削除ボタン */
+.delete-day-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #ff6b6b, #ff8ea0);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 3px 8px rgba(255, 0, 0, 0.25);
+}
+
+/* ===== カスタムドロップダウン ===== */
+.time-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* 共有リンク */
+.share-btn {
+  background: #FDB9C8;
+  color: #000;
+  padding: 10px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+.share-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.2);
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+.share-link-url {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  color: #004CA0;
+  text-decoration: none;
+  word-break: break-all;
+}
+.copy-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ===== レスポンシブ対応 ===== */
+@media (max-width: 1024px) {
+  .register-container {
+    flex-direction: column;
+  }
+  .calendar-container,
+  .side-panel {
+    flex: unset;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .register-page {
+    padding: 10px;
+  }
+  .mode-buttons button {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+  .time-type-buttons button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  .delete-day-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  .share-btn {
+    font-size: 13px;
+    padding: 8px;
+  }
+  .copy-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+}
+
