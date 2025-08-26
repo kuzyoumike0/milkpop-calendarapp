@@ -149,9 +149,8 @@
 /* ====== 日程リスト ====== */
 .date-item {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin: 8px 0;
+  flex-direction: column; /* ✅ 縦に並べてドロップダウンを収める */
+  margin: 10px 0;
   padding: 10px 14px;
   border-radius: 10px;
   background: rgba(0,0,0,0.55);
@@ -168,61 +167,65 @@
   border-left: 4px solid #FDB9C8;
 }
 
-/* ====== 時間帯ラジオ ====== */
-.radio-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.radio-group label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.date-text {
+  margin-bottom: 6px;
   font-size: 14px;
   font-weight: bold;
+}
+
+/* ====== 横並びボタン（折り返し対応） ====== */
+.radio-group-inline {
+  display: flex;
+  flex-wrap: wrap;   /* ✅ 折り返し可能 */
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* お洒落なボタン */
+.time-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  background: #222;
   color: #fff;
+  font-size: 13px;
+  font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-.radio-group input[type="radio"] {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #FDB9C8;
-  border-radius: 50%;
-  outline: none;
-  cursor: pointer;
-  position: relative;
-  transition: 0.2s;
+.time-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
 }
 
-.radio-group input[type="radio"]:checked {
-  background-color: #FDB9C8;
-  border: 2px solid #004CA0;
+.time-btn.active {
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
 }
 
-.radio-group input[type="radio"]:hover {
-  transform: scale(1.1);
-}
-
-/* ====== Custom 時間指定 ====== */
+/* ====== 時間指定ドロップダウン ====== */
 .custom-time {
   display: flex;
   align-items: center;
-  margin-left: 10px;
   gap: 6px;
+  margin-top: 6px;   /* ✅ ボタンとの間隔 */
+  flex-wrap: wrap;
+  width: 100%;       /* ✅ 枠に収まる */
 }
 
 .time-dropdown {
-  padding: 5px 8px;
-  border-radius: 10px;
+  padding: 4px 6px;
+  border-radius: 8px;
   border: 1px solid #ccc;
   background: #fff;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  flex: 1;
+  min-width: 70px;
 }
 
 /* ====== 共有リンクボタン ====== */
@@ -250,12 +253,12 @@
 
 /* ====== Calendar 曜日色 ====== */
 .sunday-holiday {
-  color: red !important;       /* 日曜・祝日 → 赤文字 */
+  color: red !important;
   font-weight: bold;
 }
 
 .saturday {
-  color: #004CA0 !important;   /* 土曜 → 青文字 */
+  color: #004CA0 !important;
   font-weight: bold;
 }
 
@@ -278,51 +281,3 @@
   color: #000 !important;
   font-weight: bold;
 }
-/* 横並びボタン用 */
-.radio-group-inline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-/* お洒落なボタン */
-.time-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 12px;
-  background: #222;
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-
-.time-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-}
-
-.time-btn.active {
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-}
-
-/* 時間指定ドロップダウン */
-.custom-time {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.time-dropdown {
-  padding: 4px 6px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fff;
-  font-size: 12px;
-  cursor: pointer;
-}
-
