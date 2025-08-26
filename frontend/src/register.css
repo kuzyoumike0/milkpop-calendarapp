@@ -154,3 +154,24 @@
   display: block;
   margin-top: 4px;
 }
+/* 🌸 共有リンクボタンをお洒落に */
+.fancy-share {
+  margin-top: 15px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #FDB9C8, #ff9ec4, #a18cd1);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.fancy-share:hover {
+  background: linear-gradient(135deg, #ffdee9, #b5fffc);
+  color: #333;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
