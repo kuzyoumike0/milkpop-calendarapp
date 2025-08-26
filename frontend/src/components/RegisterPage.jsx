@@ -157,9 +157,8 @@ const RegisterPage = () => {
       </div>
 
       <div className="main-content">
-        {/* ===== カレンダー（左7割） ===== */}
+        {/* ===== カレンダー ===== */}
         <div className="glass-white calendar-card">
-          {/* モード切替 */}
           <div className="mode-select">
             <label>
               <input
@@ -193,8 +192,8 @@ const RegisterPage = () => {
 
           <Calendar
             locale="ja-JP"
-            calendarType="ISO 8601"
-            firstDayOfWeek={1}
+            calendarType="iso8601"   // ✅ 正しい指定
+            firstDayOfWeek={1}       // ✅ 月曜始まり
             formatShortWeekday={(locale, date) =>
               ["日", "月", "火", "水", "木", "金", "土"][date.getDay()]
             }
@@ -218,7 +217,6 @@ const RegisterPage = () => {
                 return "selected-date";
               if (holiday || isSunday) return "day-sunday";
               if (isSaturday) return "day-saturday";
-
               return "day-default";
             }}
             tileContent={({ date }) => {
@@ -231,7 +229,7 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* ===== リスト（右3割） ===== */}
+        {/* ===== リスト ===== */}
         <div className="glass-black schedule-box">
           <h3>選択した日程</h3>
           {selectedDates.length === 0 ? (
@@ -245,52 +243,6 @@ const RegisterPage = () => {
                     <span className="date-label">
                       📅 {d.date.toLocaleDateString("ja-JP")}
                     </span>
-
-                    <div className="time-type-buttons">
-                      {["終日", "昼", "夜", "時間指定"].map((type) => (
-                        <button
-                          key={type}
-                          className={`time-type-button ${
-                            d.timeType === type ? "active" : ""
-                          }`}
-                          onClick={() => handleTimeTypeChange(i, type)}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-
-                    {d.timeType === "時間指定" && (
-                      <span className="time-range">
-                        <select
-                          value={d.startTime}
-                          onChange={(e) =>
-                            handleTimeChange(i, "startTime", e.target.value)
-                          }
-                          className="time-dropdown stylish-dropdown"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="range-tilde"> ~ </span>
-                        <select
-                          value={d.endTime}
-                          onChange={(e) =>
-                            handleTimeChange(i, "endTime", e.target.value)
-                          }
-                          className="time-dropdown stylish-dropdown"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                      </span>
-                    )}
                   </li>
                 ))}
             </ul>
