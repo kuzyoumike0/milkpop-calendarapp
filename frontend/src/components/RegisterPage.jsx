@@ -5,6 +5,11 @@ import Holidays from "date-holidays";
 import "../common.css";
 import "../register.css";
 
+// ランダムトークン生成関数
+const generateToken = () => {
+  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+};
+
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [timeSelections, setTimeSelections] = useState({});
@@ -12,11 +17,12 @@ const RegisterPage = () => {
   const [title, setTitle] = useState("");
   const [selectionMode, setSelectionMode] = useState("range");
   const [rangeStart, setRangeStart] = useState(null);
+  const [shareLink, setShareLink] = useState(""); // ✅ 共有リンク
 
   const hd = new Holidays("JP");
 
   // 📌 日付文字列をローカル基準で取得（UTCズレ防止）
-  const getDateStr = (date) => date.toLocaleDateString("sv-SE"); // YYYY-MM-DD
+  const getDateStr = (date) => date.toLocaleDateString("sv-SE");
   const todayStr = getDateStr(new Date());
 
   // 📌 祝日を辞書化
@@ -85,6 +91,13 @@ const RegisterPage = () => {
       day: "numeric",
       weekday: "short",
     });
+  };
+
+  // 📌 共有リンク生成
+  const handleGenerateLink = () => {
+    const token = generateToken();
+    const newLink = `${window.location.origin}/share/${token}`;
+    setShareLink(newLink);
   };
 
   return (
@@ -228,7 +241,26 @@ const RegisterPage = () => {
 
       {/* 共有リンク */}
       <div className="share-link-container">
-        <button className="share-link-btn">✨ 共有リンクを発行</button>
+        <button className="share-link-btn" onClick={handleGenerateLink}>
+          ✨ 共有リンクを発行
+        </button>
+
+        {shareLink && (
+          <div className="share-link-box">
+            <a href={shareLink} target="_blank" rel="noopener noreferrer">
+              {shareLink}
+            </a>
+            <button
+              className="copy-btn"
+              onClick={() => {
+                navigator.clipboard.writeText(shareLink);
+                alert("リンクをコピーしました！");
+              }}
+            >
+              📋 コピー
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
