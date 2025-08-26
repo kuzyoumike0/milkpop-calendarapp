@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-x: hidden; /* ← 背景はみ出し防止 */
+  overflow-x: hidden; /* はみ出し防止 */
 }
 
 .page-title {
@@ -41,7 +41,7 @@
   max-width: 1200px;
 }
 
-/* ===== カレンダー部分 ===== */
+/* ===== カレンダー ===== */
 .calendar-card {
   flex: 7;
   min-width: 60%;
@@ -96,6 +96,7 @@
   color: #fff;
 }
 
+/* 日曜日・土曜日色付け */
 .react-calendar__month-view__weekdays__weekday:nth-child(1) abbr {
   background: #ff9b9b;
   color: #fff;
@@ -105,7 +106,7 @@
   color: #fff;
 }
 
-/* 日付 */
+/* 日付セル */
 .react-calendar__tile {
   border-radius: 12px;
   margin: 3px;
@@ -125,6 +126,7 @@
   box-shadow: 0 6px 12px rgba(0,0,0,0.3);
 }
 
+/* 今日 */
 .day-today {
   border: 2px solid #fff !important;
   background: rgba(255,255,255,0.4) !important;
@@ -134,6 +136,7 @@
   box-shadow: 0 0 10px rgba(255,255,255,0.6);
 }
 
+/* 選択日 */
 .selected-date {
   background: linear-gradient(145deg, #ffdde6, #FDB9C8) !important;
   color: #000 !important;
@@ -157,7 +160,7 @@
   margin-top: 2px;
 }
 
-/* ===== 右側スケジュールボックス ===== */
+/* ===== スケジュールリスト ===== */
 .schedule-box {
   flex: 3;
   margin-top: 20px;
