@@ -80,7 +80,7 @@
   gap: 8px;
 }
 
-/* 表全体 */
+/* 表全体（ヘッダーとアイテム共通） */
 .schedule-header,
 .schedule-item {
   display: grid;
@@ -108,9 +108,10 @@
 .user-col,
 .user-response {
   padding: 0 10px;
+  text-align: center;
 }
 
-/* ユーザ名リンク */
+/* ユーザ名リンク（ヘッダー部分） */
 .user-link {
   color: #fdb9c8;
   text-decoration: underline;
@@ -172,18 +173,4 @@
   margin-top: 15px;
   color: #00c853;
   font-weight: bold;
-}
-.user-response {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.user-col-inline {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 4px 8px;
-  border-radius: 6px;
 }
