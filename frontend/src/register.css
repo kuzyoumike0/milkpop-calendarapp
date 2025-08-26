@@ -313,3 +313,24 @@
 .copy-btn:hover {
   transform: scale(1.05);
 }
+.editable-username {
+  cursor: pointer;
+  color: #4dabf7;
+  text-decoration: underline;
+}
+
+.saved-list {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.saved-user {
+  margin-bottom: 16px;
+}
+
+.saved-user h4 {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #FDB9C8;
+}
