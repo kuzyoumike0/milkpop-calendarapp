@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const [holidays, setHolidays] = useState({});
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single"); // single, range, multi, delete
-  const [shareUrl, setShareUrl] = useState("");
+  const [shareUrls, setShareUrls] = useState([]); // 複数URL保持
 
   // ===== 祝日読み込み =====
   useEffect(() => {
@@ -139,7 +139,7 @@ const RegisterPage = () => {
       if (res.ok) {
         const { token } = await res.json();
         const url = `${window.location.origin}/share/${token}`;
-        setShareUrl(url);
+        setShareUrls((prev) => [...prev, url]); // 新しいURLを追加
       } else {
         alert("スケジュール保存に失敗しました");
       }
@@ -255,25 +255,31 @@ const RegisterPage = () => {
           <button onClick={handleShare} className="share-btn">
             共有リンクを発行
           </button>
-          {shareUrl && (
-            <div className="share-link">
-              <a
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="share-link-url"
-              >
-                {shareUrl}
-              </a>
-              <button
-                className="copy-btn"
-                onClick={() => {
-                  navigator.clipboard.writeText(shareUrl);
-                  alert("共有リンクをコピーしました！");
-                }}
-              >
-                コピー
-              </button>
+
+          {/* 発行済みリンク一覧 */}
+          {shareUrls.length > 0 && (
+            <div className="share-link-list">
+              {shareUrls.map((url, idx) => (
+                <div key={idx} className="share-link">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="share-link-url"
+                  >
+                    {url}
+                  </a>
+                  <button
+                    className="copy-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(url);
+                      alert("共有リンクをコピーしました！");
+                    }}
+                  >
+                    コピー
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
