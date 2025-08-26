@@ -1,21 +1,56 @@
-/* 日付セルの基本 */
-.react-calendar__tile {
-  position: relative;
-  display: flex;
-  flex-direction: column; /* 縦並び */
-  justify-content: center;
-  align-items: center;
-  font-weight: bold; /* フォント太字 */
-  font-size: 15px;
-  padding: 12px 0;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+/* ====== カレンダー全体 ====== */
+.react-calendar {
+  width: 100% !important;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-/* ホバー時 */
-.react-calendar__tile:hover {
+/* 曜日ヘッダーと日付を揃える（7列固定） */
+.react-calendar__month-view__weekdays,
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  text-align: center;
+}
+
+/* 曜日ヘッダー */
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333; /* 黒に近い */
+}
+
+/* 日付セル */
+.react-calendar__tile {
+  min-height: 80px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333 !important;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+/* ホバー */
+.react-calendar__tile:hover {
+  background: #FDB9C8;
+  color: #000 !important;
   transform: scale(1.05);
+}
+
+/* 今日 */
+.day-today {
+  border: 2px solid #000;
+  border-radius: 50%;
+  font-weight: bold;
 }
 
 /* 選択日 */
@@ -23,32 +58,21 @@
   background: linear-gradient(145deg, #ffdde6, #ff99cc) !important;
   color: #000 !important;
   border-radius: 50%;
-  font-weight: bold;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* 今日 */
-.day-today {
-  border: 2px solid #fff !important;
-  background: rgba(255, 255, 255, 0.35) !important;
-  border-radius: 50%;
-  color: #000 !important;
-  font-weight: bold;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 /* 土曜・日曜 */
 .day-saturday {
-  color: #1e88e5 !important; /* 濃い青で視認性UP */
+  color: #1976d2 !important; /* 濃い青で視認性UP */
 }
 .day-sunday {
-  color: #e53935 !important; /* 鮮やかな赤 */
+  color: #d32f2f !important; /* 濃い赤で視認性UP */
 }
 
 /* 祝日名 */
 .holiday-name {
-  font-size: 12px;
-  color: #ff4081; /* 鮮やかなピンク */
-  font-weight: 600;
+  font-size: 11px;
   margin-top: 2px;
+  color: #ff4081; /* 鮮やかなピンク */
+  font-weight: normal;
 }
