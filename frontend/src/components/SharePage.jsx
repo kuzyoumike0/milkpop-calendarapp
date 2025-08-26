@@ -148,7 +148,7 @@ const SharePage = () => {
     <div className="share-page">
       <h2 className="page-title">共有スケジュール</h2>
 
-      {/* タイトル + 保存メッセージ */}
+      {/* タイトルカード */}
       <div className="glass-black title-box">
         {schedule.title}
         {saveMessage && <span className="save-message">{saveMessage}</span>}
@@ -172,8 +172,9 @@ const SharePage = () => {
         </button>
       </div>
 
-      {/* 出欠表 横並び */}
+      {/* 出欠表 見出し付き */}
       <div className="glass-black schedule-list">
+        <h3 className="table-title">🗓 登録された日程</h3>
         {schedule.dates.map((d, i) => {
           const key =
             d.timeType === "時間指定" && d.startTime && d.endTime
