@@ -1,19 +1,41 @@
 .register-page {
   padding: 20px;
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .register-container {
   display: flex;
   gap: 20px;
+  width: 100%;
+  max-width: 1200px;
 }
 
+/* === ガラス風カード共通 === */
+.glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 20px;
+}
+
+/* カレンダー部分 */
 .calendar-container {
   flex: 7;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  padding: 20px;
+}
+.calendar-container .react-calendar {
+  width: 100% !important;
+  border: none !important;
+}
+.calendar-container {
+  composes: glass-card;
 }
 
 /* 曜日ヘッダー */
@@ -21,11 +43,12 @@
   font-weight: bold;
   font-size: 14px;
   text-align: center;
+  color: rgba(0,0,0,0.8);
 }
 
 /* 日曜と祝日 */
 .holiday {
-  color: red !important;
+  color: #ff2d2d !important;
   font-weight: bold;
 }
 
@@ -37,7 +60,7 @@
 
 /* 今日 */
 .react-calendar__tile--now {
-  background: #FDB9C8 !important;
+  background: rgba(253, 185, 200, 0.5) !important;
   border-radius: 8px;
   font-weight: bold;
   color: black !important;
@@ -45,21 +68,21 @@
 
 /* 選択中 */
 .react-calendar__tile--active {
-  background: #004CA0 !important;
+  background: rgba(0, 76, 160, 0.8) !important;
   color: white !important;
   border-radius: 8px;
 }
 
 /* 範囲選択 */
 .react-calendar__tile--range {
-  background: rgba(0, 76, 160, 0.2) !important;
+  background: rgba(0, 76, 160, 0.3) !important;
   border-radius: 8px;
 }
 
 /* 祝日名 */
 .holiday-name {
   font-size: 10px;
-  color: red;
+  color: #ff2d2d;
   margin-top: 2px;
   font-weight: normal;
 }
@@ -69,45 +92,64 @@
   flex: 3;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+}
+.side-panel {
+  composes: glass-card;
 }
 
+/* 入力欄 */
 .title-input {
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.2);
+  color: #000;
   font-size: 14px;
+  outline: none;
+}
+.title-input::placeholder {
+  color: rgba(0,0,0,0.6);
 }
 
 /* ラジオボタン */
 .time-select label {
   margin-right: 10px;
   font-size: 14px;
+  color: rgba(0,0,0,0.9);
 }
 
 /* 時間指定ドロップダウン */
 .time-dropdowns select {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.5);
   margin: 0 5px;
-  background: #FDB9C8;
+  background: rgba(255,255,255,0.3);
   font-weight: bold;
+  color: #000;
+  backdrop-filter: blur(6px);
+}
+
+/* ボタン共通 */
+.register-btn, .share-btn, .copy-btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 /* 登録ボタン */
 .register-btn {
-  background: #004CA0;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.2s;
+  background: rgba(0,76,160,0.7);
+  color: #fff;
 }
 .register-btn:hover {
-  background: #003080;
+  background: rgba(0,76,160,0.9);
 }
 
 /* 登録済みリスト */
@@ -116,27 +158,21 @@
   padding: 0;
 }
 .event-list li {
-  background: rgba(253, 185, 200, 0.2);
+  background: rgba(255,255,255,0.2);
   border-left: 4px solid #FDB9C8;
   padding: 6px;
   margin-bottom: 6px;
-  border-radius: 8px;
+  border-radius: 10px;
+  color: #000;
 }
 
 /* 共有リンク発行ボタン */
 .share-btn {
-  background: #FDB9C8;
-  color: black;
-  padding: 10px;
-  border: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
+  background: rgba(253,185,200,0.7);
+  color: #000;
 }
 .share-btn:hover {
-  background: #fda2b5;
+  background: rgba(253,185,200,0.9);
 }
 
 /* コピー部分 */
@@ -149,16 +185,14 @@
   flex: 1;
   padding: 6px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.3);
+  color: #000;
 }
 .copy-btn {
-  background: #004CA0;
+  background: rgba(0,76,160,0.7);
   color: white;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
 }
 .copy-btn:hover {
-  background: #003080;
+  background: rgba(0,76,160,0.9);
 }
