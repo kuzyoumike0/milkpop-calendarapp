@@ -17,7 +17,7 @@ const SharePage = () => {
   const [users, setUsers] = useState([]);
   const [responses, setResponses] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [editingUser, setEditingUser] = useState(""); // 🔑 編集中ユーザ
+  const [editingUser, setEditingUser] = useState(""); // 編集対象
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -96,9 +96,7 @@ const SharePage = () => {
   const handleEditUser = (u) => {
     setEditingUser(u);
     setIsEditing(true);
-    setUsername(u);
 
-    // 既存の回答をセット
     const userResp = allResponses.find((r) => r.username === u);
     if (userResp) {
       setResponses(userResp.responses);
@@ -179,20 +177,30 @@ const SharePage = () => {
       <div className="glass-black schedule-list">
         <h3 className="table-title">🗓 登録された日程</h3>
 
-        {/* 見出し行 */}
+        {/* ヘッダー */}
         <div className="schedule-header">
           <span className="date">日程</span>
           <span className="time">時間帯</span>
-          <span className="user-col">ユーザ名</span>
+          {users.map((u, idx) => (
+            <span key={idx} className="user-col">
+              <a
+                href="#!"
+                className="user-link"
+                onClick={() => handleEditUser(u)}
+              >
+                {u}
+              </a>
+            </span>
+          ))}
         </div>
 
+        {/* 日程ごとの行 */}
         {schedule.dates.map((d, i) => {
           const key =
             d.timeType === "時間指定" && d.startTime && d.endTime
               ? `${d.date} (${d.startTime} ~ ${d.endTime})`
               : `${d.date} (${d.timeType})`;
 
-          // 表示用ラベル
           let timeLabel = "";
           if (d.timeType === "all") timeLabel = "終日";
           else if (d.timeType === "day") timeLabel = "昼";
@@ -205,39 +213,30 @@ const SharePage = () => {
             <div key={i} className="schedule-item">
               <span className="date">{d.date}</span>
               <span className="time">{timeLabel}</span>
-              <span className="user-col">
-                {users.map((u, idx) => {
-                  const userResp = allResponses.find((r) => r.username === u);
-                  const value = userResp?.responses?.[key] || "-";
+              {users.map((u, idx) => {
+                const userResp = allResponses.find((r) => r.username === u);
+                const value = userResp?.responses?.[key] || "-";
 
-                  return (
-                    <span key={idx} className="user-response">
-                      <a
-                        href="#!"
-                        className="user-link"
-                        onClick={() => handleEditUser(u)}
-                      >
-                        {u}
-                      </a>
-                      {editingUser === u && isEditing ? (
-                        attendanceOptions.map((opt) => (
-                          <button
-                            key={opt}
-                            className={`choice-btn ${
-                              value === opt ? "active" : ""
-                            }`}
-                            onClick={() => handleSelect(key, opt)}
-                          >
-                            {opt}
-                          </button>
-                        ))
-                      ) : (
-                        <span className="response-value">{value}</span>
-                      )}
-                    </span>
-                  );
-                })}
-              </span>
+                return (
+                  <span key={idx} className="user-response">
+                    {editingUser === u && isEditing ? (
+                      attendanceOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          className={`choice-btn ${
+                            value === opt ? "active" : ""
+                          }`}
+                          onClick={() => handleSelect(key, opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))
+                    ) : (
+                      value
+                    )}
+                  </span>
+                );
+              })}
             </div>
           );
         })}
