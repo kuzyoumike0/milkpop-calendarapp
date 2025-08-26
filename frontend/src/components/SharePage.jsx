@@ -245,23 +245,6 @@ const SharePage = () => {
           </button>
         </div>
       )}
-
-      {/* 保存済みリスト（伝助風） */}
-      <div className="glass-black saved-list">
-        <h3>参加者の回答一覧</h3>
-        {allResponses.map((r) => (
-          <div key={r.user_id} className="saved-user">
-            <h4>{r.username}</h4>
-            <ul>
-              {Object.entries(r.responses).map(([key, val], idx) => (
-                <li key={idx}>
-                  {key}: {val}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
