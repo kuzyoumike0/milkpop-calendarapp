@@ -73,10 +73,21 @@ const RegisterPage = () => {
     }
   };
 
-  // 区分変更
+  // 区分ボタン切替
   const handleTimeTypeChange = (index, newType) => {
     const updated = [...selectedDates];
     updated[index].timeType = newType;
+
+    if (newType === "終日") {
+      updated[index].startTime = "00:00";
+      updated[index].endTime = "23:59";
+    } else if (newType === "昼") {
+      updated[index].startTime = "09:00";
+      updated[index].endTime = "17:59";
+    } else if (newType === "夜") {
+      updated[index].startTime = "18:00";
+      updated[index].endTime = "23:59";
+    }
     setSelectedDates(updated);
   };
 
@@ -228,17 +239,22 @@ const RegisterPage = () => {
                     📅 {d.date.toLocaleDateString("ja-JP")}
                   </span>
 
-                  <select
-                    value={d.timeType}
-                    onChange={(e) => handleTimeTypeChange(i, e.target.value)}
-                    className="time-select"
-                  >
-                    <option value="終日">終日</option>
-                    <option value="昼">昼</option>
-                    <option value="夜">夜</option>
-                    <option value="時間指定">時間指定</option>
-                  </select>
+                  {/* 区分ボタン */}
+                  <div className="time-type-buttons">
+                    {["終日", "昼", "夜", "時間指定"].map((type) => (
+                      <button
+                        key={type}
+                        className={`time-type-button ${
+                          d.timeType === type ? "active" : ""
+                        }`}
+                        onClick={() => handleTimeTypeChange(i, type)}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
 
+                  {/* 時間指定の場合だけドロップダウン */}
                   {d.timeType === "時間指定" && (
                     <span className="time-range">
                       <select
@@ -246,7 +262,7 @@ const RegisterPage = () => {
                         onChange={(e) =>
                           handleTimeChange(i, "startTime", e.target.value)
                         }
-                        className="time-dropdown"
+                        className="time-dropdown stylish-dropdown"
                       >
                         {timeOptions.map((t) => (
                           <option key={t} value={t}>
@@ -260,7 +276,7 @@ const RegisterPage = () => {
                         onChange={(e) =>
                           handleTimeChange(i, "endTime", e.target.value)
                         }
-                        className="time-dropdown"
+                        className="time-dropdown stylish-dropdown"
                       >
                         {timeOptions.map((t) => (
                           <option key={t} value={t}>
