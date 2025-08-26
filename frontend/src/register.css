@@ -229,3 +229,49 @@
   margin-top: 2px;
   font-weight: bold;
 }
+/* 曜日を均等幅にする */
+.react-calendar__month-view__weekdays__weekday {
+  width: 40px; /* 均等幅 */
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* ====== ラジオボタン ====== */
+.radio-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #FDB9C8;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.radio-group input[type="radio"]:checked {
+  background-color: #FDB9C8;
+  border: 2px solid #004CA0;
+}
+
+.radio-group input[type="radio"]:hover {
+  transform: scale(1.1);
+}
