@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -15,15 +16,23 @@ const RegisterPage = () => {
   const [shareLink, setShareLink] = useState("");
   const navigate = useNavigate();
 
-  // JST基準の今日
+  // JST の今日
   const jstNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
   const todayStr = jstNow.toISOString().split("T")[0];
 
+  // 日付を JST で YYYY-MM-DD 形式に変換
+  const formatDateJST = (date) => {
+    const jstDate = new Date(
+      date.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+    );
+    return jstDate.toISOString().split("T")[0];
+  };
+
   // 日付クリック
   const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = formatDateJST(date);
     if (mode === "single") {
       setSelectedDates([dateStr]);
     } else if (mode === "multiple") {
@@ -37,12 +46,12 @@ const RegisterPage = () => {
         setSelectedDates([dateStr]);
       } else if (selectedDates.length === 1) {
         const start = new Date(selectedDates[0]);
-        const end = date;
+        const end = new Date(dateStr);
         const range = [];
         let cur = new Date(Math.min(start, end));
         const stop = new Date(Math.max(start, end));
         while (cur <= stop) {
-          range.push(cur.toISOString().split("T")[0]);
+          range.push(formatDateJST(cur));
           cur.setDate(cur.getDate() + 1);
         }
         setSelectedDates(range);
@@ -50,7 +59,7 @@ const RegisterPage = () => {
     }
   };
 
-  // ボタンの時間区分を選択
+  // 時間区分選択
   const handleTimeSelect = (date, time) => {
     setSelectedTimes((prev) => ({
       ...prev,
@@ -58,7 +67,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // 時間指定（プルダウン変更）
+  // 時間指定の変更
   const handleTimeChange = (date, field, value) => {
     setSelectedTimes((prev) => ({
       ...prev,
@@ -66,7 +75,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // タイルのクラス名
+  // タイルのクラス
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const classes = [];
@@ -74,7 +83,7 @@ const RegisterPage = () => {
       if (day === 0) classes.push("sunday");
       if (day === 6) classes.push("saturday");
 
-      const dateStr = date.toISOString().split("T")[0];
+      const dateStr = formatDateJST(date);
       if (dateStr === todayStr) classes.push("today");
       if (selectedDates.includes(dateStr)) classes.push("selected-date");
       return classes;
@@ -82,7 +91,7 @@ const RegisterPage = () => {
     return null;
   };
 
-  // タイルの中に祝日名
+  // タイルの祝日名
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -99,17 +108,13 @@ const RegisterPage = () => {
     const url = `${window.location.origin}/share/${token}`;
     setShareLink(url);
 
-    // データを保存（SharePageで読み込む）
+    // 保存
     localStorage.setItem(
       `share-${token}`,
       JSON.stringify({ title, selectedDates, selectedTimes })
     );
-
-    // そのまま共有ページに遷移
-    navigate(`/share/${token}`);
   };
 
-  // 時間リスト
   const hours = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
@@ -219,7 +224,10 @@ const RegisterPage = () => {
           <a href={shareLink} target="_blank" rel="noopener noreferrer">
             {shareLink}
           </a>
-          <button className="copy-btn" onClick={() => navigator.clipboard.writeText(shareLink)}>
+          <button
+            className="copy-btn"
+            onClick={() => navigator.clipboard.writeText(shareLink)}
+          >
             📋 コピー
           </button>
         </div>
