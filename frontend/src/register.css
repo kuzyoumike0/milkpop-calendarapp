@@ -1,4 +1,73 @@
-/* カレンダー日付をシンプルに1回だけ表示 */
+.register-page {
+  padding: 20px;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  min-height: 100vh;
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  color: #222;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.title-input {
+  display: block;
+  width: 70%;
+  margin: 0 auto 20px auto;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  text-align: center;
+  font-size: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+}
+
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.mode-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  margin: 0 5px;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+.mode-tabs button.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+}
+
+.calendar-container {
+  display: flex;
+  gap: 20px;
+}
+.calendar-box {
+  flex: 7;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.selected-list {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 15px;
+  border-radius: 20px;
+  overflow-y: auto;
+}
+
+/* ==== カレンダー ==== */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -16,11 +85,10 @@
   color: #004ca0 !important;
 }
 
-/* 祝日名を下に追加 */
+/* 祝日名を下に */
 .holiday-name {
   color: #e60033 !important;
   font-size: 0.7rem;
-  line-height: 1;
   margin-top: 2px;
 }
 
@@ -40,4 +108,84 @@
   font-weight: bold !important;
   border: 3px solid #fdb9c8 !important;
   border-radius: 8px !important;
+}
+
+/* ==== 選択中の日程 ==== */
+.selected-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.date-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* ボタン */
+.time-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.time-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  background: #eee;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+.time-btn:hover {
+  background: #fdb9c8;
+  color: white;
+}
+.time-btn.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+}
+
+/* 共有リンク */
+.save-btn {
+  display: block;
+  margin: 20px auto;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.share-link-box {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+.share-link-box a {
+  color: #004ca0;
+  text-decoration: underline;
+}
+.copy-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  background: #004ca0;
+  color: white;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  opacity: 0.8;
 }
