@@ -1,101 +1,274 @@
 /* =====================
+   RegisterPage 全体
+===================== */
+.register-page {
+  padding: 40px; /* 余白を確保 */
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  min-height: 100vh;
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  color: #222;
+  box-sizing: border-box;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.title-input {
+  display: block;
+  width: 60%;
+  max-width: 600px;
+  margin: 0 auto 20px auto;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  text-align: center;
+  font-size: 1.2rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+}
+
+/* =====================
+   モード切替ボタン
+===================== */
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.mode-tabs button {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  margin: 0 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: 0.2s;
+}
+.mode-tabs button.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+}
+.mode-tabs button:hover {
+  transform: scale(1.05);
+}
+
+/* =====================
+   カレンダーとリスト (7:3)
+===================== */
+.calendar-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;   /* カレンダーとリストの間隔 */
+  margin: 0 auto;
+  max-width: 1400px; /* 全体幅制限 */
+}
+
+.calendar-box {
+  flex: 7;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 30px;
+  border-radius: 20px;
+  font-size: 1.4rem;
+}
+
+.selected-list {
+  flex: 3;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 24px;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  overflow-y: auto;
+}
+
+/* =====================
    カレンダー table
 ===================== */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  color: white;
+  font-size: 1.2rem;
+}
+.calendar-header button {
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.calendar-header button:hover {
+  background: #004ca0;
+}
+
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  table-layout: fixed; /* 列幅を均等にする */
+  table-layout: fixed;
 }
-
 .calendar-table tr {
-  height: 100px; /* 1週の高さを確保 */
+  height: 100px;
 }
-
 .calendar-table th {
   padding: 14px;
   background: rgba(0,0,0,0.3);
   color: white;
   font-size: 1.2rem;
 }
-
-/* td は table-cell のまま */
 .calendar-table td {
-  position: relative;
   font-size: 1.3rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s, color 0.3s, box-shadow 0.3s;
   vertical-align: middle;
 }
-
-/* 中央揃え用の内部div */
-.calendar-table td .day-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-}
-
-/* ホバー */
 .calendar-table td:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* 今日（ネオン強調） */
+/* 今日（日付をネオン風に強調） */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold;
   animation: neonPulse 2s infinite alternate;
-  text-shadow:
-    0 0 4px #fff,
-    0 0 8px #fdb9c8,
-    0 0 12px #fdb9c8;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fdb9c8, 0 0 12px #fdb9c8;
 }
-
-/* ネオンアニメーション */
 @keyframes neonPulse {
-  0% {
-    box-shadow:
-      0 0 6px #fdb9c8,
-      0 0 12px #fdb9c8,
-      0 0 20px #fdb9c8;
-  }
-  100% {
-    box-shadow:
-      0 0 12px #fdb9c8,
-      0 0 24px #fdb9c8,
-      0 0 36px #fdb9c8;
-  }
+  0% { box-shadow: 0 0 6px #fdb9c8, 0 0 12px #fdb9c8; }
+  100% { box-shadow: 0 0 24px #fdb9c8, 0 0 36px #fdb9c8; }
 }
 
-/* 選択日（四角のまま色だけ変更） */
+/* 選択日 */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
   font-weight: bold;
-  box-shadow: none;
 }
 
 /* 他月 */
-.other-month {
-  opacity: 0.3;
-}
+.other-month { opacity: 0.3; }
 
 /* 日曜赤、土曜青 */
-.sunday {
-  color: #e60033;
-}
-.saturday {
-  color: #004ca0;
-}
+.sunday { color: #e60033; }
+.saturday { color: #004ca0; }
 
-/* 祝日名 */
+/* 祝日 */
 .holiday-name {
   font-size: 0.8rem;
   color: red;
   margin-top: 4px;
   display: block;
+}
+
+/* =====================
+   選択リストカード
+===================== */
+.selected-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.date-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+.time-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.time-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #eee;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+.time-btn:hover {
+  background: #fdb9c8;
+  color: white;
+}
+.time-btn.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+}
+
+/* =====================
+   時間指定プルダウン
+===================== */
+.time-selects {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cute-select {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid #004ca0;
+  background: black;
+  color: white;
+  font-size: 0.95rem;
+}
+.cute-select option {
+  background: black;
+  color: white;
+}
+
+/* =====================
+   共有リンク
+===================== */
+.share-btn {
+  display: block;
+  margin: 24px auto;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+.share-link-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.share-link-box a {
+  color: #004ca0;
+  text-decoration: underline;
+  font-weight: bold;
+}
+.copy-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 12px;
+  background: #004ca0;
+  color: white;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  opacity: 0.85;
 }
