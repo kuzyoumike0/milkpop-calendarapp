@@ -71,12 +71,19 @@
   overflow-y: auto;
 }
 
-/* デフォルト四角 */
+/* === カレンダー調整 === */
+
+/* デフォルトタイル → 四角固定＋中央揃え */
 .react-calendar__tile {
   border-radius: 8px !important;
-  padding: 10px 0 !important;
-  text-align: center;
+  height: 60px !important; /* 高さを統一 */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1rem;
   transition: 0.2s;
+  text-align: center;
+  padding: 0 !important; /* padding削除で文字ズレ防止 */
 }
 
 /* 範囲選択時の楕円を完全無効化 */
@@ -90,7 +97,7 @@
   box-shadow: none !important;
 }
 
-/* 選択日 → 四角ピンク＋黒文字 */
+/* 選択日 → ピンク背景＋黒文字 */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
@@ -98,10 +105,12 @@
   border-radius: 8px !important;
   border: 2px solid #004ca0 !important;
   box-shadow: 0 0 6px rgba(0,0,0,0.2);
-  text-align: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* 今日 → 四角青背景＋ピンク枠＋白文字 */
+/* 今日 → 青背景＋ピンク枠＋白文字 */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
@@ -109,7 +118,9 @@
   border-radius: 8px !important;
   border: 3px solid #fdb9c8 !important;
   box-shadow: 0 0 10px rgba(253,185,200,0.7);
-  text-align: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* hover */
@@ -119,7 +130,7 @@
   color: #000 !important;
 }
 
-/* 選択中の日程カード */
+/* === 選択中の日程カード === */
 .selected-card {
   background: white;
   border-radius: 16px;
