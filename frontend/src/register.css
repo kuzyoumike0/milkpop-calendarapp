@@ -17,7 +17,7 @@
 
 .title-input {
   display: block;
-  width: 25%; /* ← 短く */
+  width: 70%; /* カレンダー幅に合わせる */
   margin: 0 auto 20px auto;
   padding: 10px;
   border-radius: 12px;
@@ -27,8 +27,6 @@
   background: rgba(0,0,0,0.7);
   color: white;
 }
-
-
 
 .mode-tabs {
   display: flex;
@@ -73,30 +71,16 @@
   overflow-y: auto;
 }
 
-/* === カレンダー調整 === */
-
-/* デフォルトタイル → 四角固定＋中央揃え */
+/* カレンダーのデフォルト四角 */
 .react-calendar__tile {
-  border-radius: 8px !important;
-  height: 60px !important; /* 高さを統一 */
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 1rem;
+  border-radius: 8px;
+  height: 60px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: 0.2s;
   text-align: center;
-  padding: 0 !important; /* padding削除で文字ズレ防止 */
-}
-
-/* 範囲選択時の楕円を完全無効化 */
-.react-calendar__tile--range,
-.react-calendar__tile--rangeStart,
-.react-calendar__tile--rangeEnd,
-.react-calendar__tile--rangeBothEnds,
-.react-calendar__tile--hover {
-  border-radius: 8px !important;
-  background: inherit !important;
-  box-shadow: none !important;
+  padding: 0 !important;
 }
 
 /* 選択日 → ピンク背景＋黒文字 */
@@ -106,10 +90,7 @@
   font-weight: bold !important;
   border-radius: 8px !important;
   border: 2px solid #004ca0 !important;
-  box-shadow: 0 0 6px rgba(0,0,0,0.2);
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
 /* 今日 → 青背景＋ピンク枠＋白文字 */
@@ -119,10 +100,7 @@
   font-weight: bold !important;
   border-radius: 8px !important;
   border: 3px solid #fdb9c8 !important;
-  box-shadow: 0 0 10px rgba(253,185,200,0.7);
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  box-shadow: 0 0 12px rgba(253,185,200,0.9);
 }
 
 /* hover */
@@ -132,7 +110,14 @@
   color: #000 !important;
 }
 
-/* === 選択中の日程カード === */
+/* 祝日名を下に表示 */
+.holiday-name {
+  color: #e60033 !important;
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+/* 選択中の日程カード */
 .selected-card {
   background: white;
   border-radius: 16px;
@@ -142,14 +127,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: 0.2s;
-}
-.selected-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
 
-/* 日付バッジ */
 .date-badge {
   display: inline-block;
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
@@ -158,10 +137,8 @@
   font-size: 1rem;
   padding: 6px 12px;
   border-radius: 20px;
-  text-align: center;
 }
 
-/* 時間帯ボタン */
 .time-buttons {
   display: flex;
   gap: 6px;
@@ -178,18 +155,12 @@
   transition: 0.2s;
 }
 
-.time-btn:hover {
-  background: #fdb9c8;
-  color: white;
-}
-
 .time-btn.active {
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
   font-weight: bold;
 }
 
-/* 可愛いセレクト */
 .cute-select {
   padding: 6px 10px;
   border-radius: 12px;
@@ -200,13 +171,6 @@
   transition: 0.2s;
 }
 
-.cute-select:hover {
-  background: #fdb9c8;
-  color: white;
-  border-color: #fdb9c8;
-}
-
-/* 保存ボタン */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -219,49 +183,14 @@
   cursor: pointer;
 }
 
-.save-btn:hover {
-  opacity: 0.9;
-}
-
 .share-link-box {
   display: flex;
   justify-content: center;
   margin-top: 10px;
+  gap: 10px;
 }
 
-.share-link-box input {
-  flex: 1;
-  max-width: 400px;
-  padding: 8px;
-  border-radius: 12px;
-  border: none;
-}
-
-.copy-btn {
-  margin-left: 10px;
-  padding: 8px 16px;
-  border-radius: 12px;
-  border: none;
-  background: #004ca0;
-  color: white;
-  cursor: pointer;
-}
-
-.copy-btn:hover {
-  opacity: 0.8;
-}
-
-/* 日曜・土曜・祝日 */
-.sunday {
-  color: #e60033 !important;
-}
-.saturday {
-  color: #004ca0 !important;
-}
-.holiday, .holiday-name {
-  color: #e60033 !important;
-  font-weight: bold;
-  font-size: 0.7rem;
-  display: block;
-  margin-top: 2px;
+.share-link-box a {
+  color: #004ca0;
+  text-decoration: underline;
 }
