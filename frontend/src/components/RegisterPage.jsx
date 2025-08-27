@@ -41,7 +41,13 @@ const RegisterPage = () => {
     }
   };
 
-  // カレンダーセルのクラス名
+  // JST基準の今日
+  const jstNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+  const todayStr = jstNow.toISOString().split("T")[0];
+
+  // クラス名付与
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const classes = [];
@@ -49,10 +55,7 @@ const RegisterPage = () => {
       if (day === 0) classes.push("sunday");
       if (day === 6) classes.push("saturday");
 
-      const today = new Date();
-      const todayStr = today.toISOString().split("T")[0];
       const dateStr = date.toISOString().split("T")[0];
-
       if (dateStr === todayStr) classes.push("today");
       if (selectedDates.includes(dateStr)) classes.push("selected-date");
       return classes;
@@ -60,7 +63,7 @@ const RegisterPage = () => {
     return null;
   };
 
-  // 祝日名だけを追加
+  // 祝日名表示
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -78,7 +81,7 @@ const RegisterPage = () => {
     setShareLink(url);
   };
 
-  // リンクコピー
+  // コピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareLink);
     alert("コピーしました！");
@@ -95,7 +98,6 @@ const RegisterPage = () => {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      {/* モード切り替え */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -117,7 +119,6 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダー */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
@@ -128,7 +129,6 @@ const RegisterPage = () => {
           />
         </div>
 
-        {/* 選択中の日程 */}
         <div className="selected-list">
           <h3>選択中の日程</h3>
           {selectedDates.map((d) => (
@@ -136,8 +136,8 @@ const RegisterPage = () => {
               <span className="date-badge">{d}</span>
               <div className="time-buttons">
                 <button className="time-btn">終日</button>
-                <button className="time-btn">午前</button>
-                <button className="time-btn">午後</button>
+                <button className="time-btn">昼</button>
+                <button className="time-btn">夜</button>
                 <button className="time-btn">時間指定</button>
               </div>
             </div>
@@ -145,7 +145,6 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      {/* 共有リンク */}
       <button className="save-btn" onClick={generateShareLink}>
         共有リンクを発行
       </button>
