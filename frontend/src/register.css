@@ -115,6 +115,7 @@
   color: #e60033 !important;
   font-size: 0.7rem;
   margin-top: 2px;
+  display: block;
 }
 
 /* 選択中の日程カード */
@@ -173,10 +174,10 @@
   padding: 8px 14px;
   border-radius: 14px;
   border: 2px solid #004ca0;
-  background: #000;              /* ← 黒背景 */
+  background: #000;              /* 通常時：黒背景 */
   font-size: 0.95rem;
   font-weight: bold;
-  color: #fff;                   /* ← 白文字 */
+  color: #fff;                   /* 通常時：白文字 */
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
   transition: all 0.25s ease;
@@ -188,20 +189,17 @@
   padding-right: 30px;
 }
 
-/* ホバー時 */
-.cute-select:hover {
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
-  border-color: #fdb9c8;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+/* option のデザイン（プルダウンを開いた時のリスト） */
+.cute-select option {
+  background: #000;    /* 黒背景 */
+  color: #fff;         /* 白文字 */
+  padding: 8px;
 }
 
-/* フォーカス時 */
-.cute-select:focus {
-  outline: none;
-  border-color: #fdb9c8;
-  box-shadow: 0 0 8px #fdb9c8;
+/* 選択中の項目 */
+.cute-select option:checked {
+  background: #004ca0;
+  color: #fff;
 }
 
 /* 保存ボタン */
@@ -227,4 +225,19 @@
 .share-link-box a {
   color: #004ca0;
   text-decoration: underline;
+}
+
+/* 日曜・土曜・祝日 */
+.sunday {
+  color: #e60033 !important;
+}
+.saturday {
+  color: #004ca0 !important;
+}
+.holiday, .holiday-name {
+  color: #e60033 !important;
+  font-weight: bold;
+  font-size: 0.7rem;
+  display: block;
+  margin-top: 2px;
 }
