@@ -17,7 +17,7 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // === JST 今日を正しく取得 ===
+  // === JST 今日を正しく取得（日付のみ） ===
   const jstToday = new Date().toLocaleDateString("ja-JP", {
     timeZone: "Asia/Tokyo",
   });
@@ -201,7 +201,7 @@ const RegisterPage = () => {
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today";
+              if (dateStr === today) return "today"; // JST基準
               if (getHolidayName(date)) return "holiday";
               if (date.getDay() === 0) return "sunday";
               if (date.getDay() === 6) return "saturday";
