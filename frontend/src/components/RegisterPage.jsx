@@ -79,7 +79,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // ===== 保存（共有リンク生成） =====
+  // ===== 保存（共有リンク生成＋即遷移） =====
   const handleSave = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日付を入力してください");
@@ -107,11 +107,12 @@ const RegisterPage = () => {
     if (res.ok) {
       const token = (await res.json()).token;
       const url = `${window.location.origin}/share/${token}`;
-      setShareUrl(url); // ←毎回新しいURL
+      setShareUrl(url); // コピー用に保持
       setSchedules([...schedules, newSchedule]);
       setTitle("");
       setSelectedDates([]);
       setTimeSettings({});
+      window.open(url, "_blank"); // ←即遷移
     }
   };
 
@@ -256,9 +257,7 @@ const RegisterPage = () => {
       </button>
       {shareUrl && (
         <div className="share-link-box">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
+          <input type="text" value={shareUrl} readOnly />
           <button
             className="copy-btn"
             onClick={() => navigator.clipboard.writeText(shareUrl)}
