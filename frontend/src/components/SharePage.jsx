@@ -1,3 +1,4 @@
+// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -16,11 +17,10 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== 編集モード =====
+  // ===== 編集用 =====
   const [editingCell, setEditingCell] = useState(null);
-  const [editValue, setEditValue] = useState("");
+  const [editedResponses, setEditedResponses] = useState({});
 
-  // ===== スケジュール読み込み =====
   useEffect(() => {
     if (!token) return;
 
@@ -29,10 +29,7 @@ const SharePage = () => {
         const res = await fetch(`/api/schedules/${token}`);
         if (!res.ok) throw new Error("スケジュール取得失敗");
         const data = await res.json();
-        setSchedule({
-          ...data,
-          dates: data.dates || [],
-        });
+        setSchedule({ ...data, dates: data.dates || [] });
 
         const res2 = await fetch(`/api/schedules/${token}/responses`);
         if (!res2.ok) throw new Error("レスポンス取得失敗");
@@ -61,25 +58,16 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 自分の回答変更 =====
   const handleChange = (dateKey, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [dateKey]: value,
-    }));
+    setResponses((prev) => ({ ...prev, [dateKey]: value }));
   };
 
-  // ===== 自分の回答保存 =====
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
       return;
     }
-    const res = {
-      user_id: userId,
-      username,
-      responses,
-    };
+    const res = { user_id: userId, username, responses };
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,34 +76,6 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== セル編集保存（みんなの回答） =====
-  const handleCellSave = async () => {
-    if (!editingCell) return;
-    const { user, dateKey } = editingCell;
-
-    const userResponse = allResponses.find((r) => r.username === user);
-    if (!userResponse) return;
-
-    const updatedResponses = {
-      ...userResponse.responses,
-      [dateKey]: editValue,
-    };
-
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: userResponse.user_id,
-        username: userResponse.username,
-        responses: updatedResponses,
-      }),
-    });
-
-    setEditingCell(null);
-    setEditValue("");
-  };
-
-  // ===== 日付フォーマット =====
   const formatDate = (d) => {
     const date = new Date(d.date);
     const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
@@ -127,12 +87,29 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
+  // 集計
+  const aggregate = {};
+  schedule.dates.forEach((d) => {
+    const dateKey =
+      d.timeType === "時間指定" && d.startTime && d.endTime
+        ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+        : `${d.date} (${d.timeType})`;
+    aggregate[dateKey] = { "○": 0, "✖": 0, "△": 0 };
+  });
+  allResponses.forEach((row) => {
+    Object.entries(row.responses).forEach(([key, status]) => {
+      if (aggregate[key] && ["○", "✖", "△"].includes(status)) {
+        aggregate[key][status]++;
+      }
+    });
+  });
+
   return (
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* 自分の回答 */}
-      <div className="my-response-box">
+      {/* === 自分の回答 === */}
+      <div className="my-responses">
         <h2>自分の回答</h2>
         <input
           type="text"
@@ -142,7 +119,7 @@ const SharePage = () => {
           onChange={(e) => setUsername(e.target.value)}
         />
         <div className="my-responses-list">
-          {schedule?.dates?.map((d) => {
+          {schedule.dates.map((d) => {
             const dateKey =
               d.timeType === "時間指定" && d.startTime && d.endTime
                 ? `${d.date} (${d.startTime} ~ ${d.endTime})`
@@ -171,47 +148,64 @@ const SharePage = () => {
         {saveMessage && <p className="save-message">{saveMessage}</p>}
       </div>
 
-      {/* みんなの回答 */}
+      {/* === みんなの回答 === */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
-        <div className="responses-grid">
-          {schedule?.dates?.map((d) => {
+        <div className="response-cards">
+          {schedule.dates.map((d) => {
             const dateKey =
               d.timeType === "時間指定" && d.startTime && d.endTime
                 ? `${d.date} (${d.startTime} ~ ${d.endTime})`
                 : `${d.date} (${d.timeType})`;
-
-            const counts = { "○": 0, "✖": 0, "△": 0, "-": 0 };
-            allResponses.forEach((r) => {
-              const val = r.responses?.[dateKey] || "-";
-              if (counts[val] !== undefined) counts[val]++;
-            });
-
             return (
               <div key={dateKey} className="response-card">
-                <div className="response-header">
-                  <span className="date-label">{formatDate(d)}</span>
-                  <span className="count-label">
-                    ○{counts["○"]} ✖{counts["✖"]} △{counts["△"]}
-                  </span>
+                <div className="response-date">{formatDate(d)}</div>
+                <div className="response-aggregate">
+                  <span className="circle">○{aggregate[dateKey]["○"]}</span>
+                  <span className="cross">✖{aggregate[dateKey]["✖"]}</span>
+                  <span className="triangle">△{aggregate[dateKey]["△"]}</span>
                 </div>
                 <div className="response-users">
-                  {allResponses.map((r) => (
+                  {allResponses.map((user) => (
                     <div
-                      key={r.user_id + dateKey}
+                      key={user.user_id}
                       className="user-response"
-                      onClick={() => {
-                        setEditingCell({ user: r.username, dateKey });
-                        setEditValue(r.responses?.[dateKey] || "-");
-                      }}
+                      onClick={() => setEditingCell({ user: user.user_id, date: dateKey })}
                     >
-                      <span className="username">{r.username}</span>
-                      {editingCell?.user === r.username &&
-                      editingCell?.dateKey === dateKey ? (
+                      <span className="user-name">{user.username}</span>
+                      {editingCell &&
+                      editingCell.user === user.user_id &&
+                      editingCell.date === dateKey ? (
                         <select
-                          className="attendance-select"
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
+                          value={
+                            editedResponses[user.user_id]?.[dateKey] ||
+                            user.responses[dateKey] ||
+                            "-"
+                          }
+                          onChange={(e) =>
+                            setEditedResponses((prev) => ({
+                              ...prev,
+                              [user.user_id]: {
+                                ...(prev[user.user_id] || {}),
+                                [dateKey]: e.target.value,
+                              },
+                            }))
+                          }
+                          onBlur={async () => {
+                            await fetch(`/api/schedules/${token}/responses`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                user_id: user.user_id,
+                                username: user.username,
+                                responses: {
+                                  ...user.responses,
+                                  ...editedResponses[user.user_id],
+                                },
+                              }),
+                            });
+                            setEditingCell(null);
+                          }}
                         >
                           {attendanceOptions.map((opt) => (
                             <option key={opt} value={opt}>
@@ -220,8 +214,8 @@ const SharePage = () => {
                           ))}
                         </select>
                       ) : (
-                        <span className="response-value">
-                          {r.responses?.[dateKey] || "-"}
+                        <span className="user-answer">
+                          {user.responses[dateKey] || "-"}
                         </span>
                       )}
                     </div>
@@ -231,11 +225,6 @@ const SharePage = () => {
             );
           })}
         </div>
-        {editingCell && (
-          <button className="save-btn" onClick={handleCellSave}>
-            編集内容を保存
-          </button>
-        )}
       </div>
     </div>
   );
