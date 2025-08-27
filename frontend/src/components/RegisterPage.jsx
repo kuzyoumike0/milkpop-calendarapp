@@ -1,61 +1,75 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Holidays from "date-holidays";
 import "../register.css";
 
-const hd = new Holidays("JP"); // 日本の祝日
+const hd = new Holidays("JP");
+
+// JST 今日
 const todayJST = new Date(
   new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
 );
 
 const RegisterPage = () => {
+  const [title, setTitle] = useState("");
   const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [title, setTitle] = useState("");
-  const [shareLink, setShareLink] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
 
-  // 日付クリック
-  const handleDateClick = (date) => {
+  const handleDateChange = (date) => {
     if (mode === "single") {
-      setSelectedDates([{ date, timeType: "終日" }]);
-    } else if (mode === "multiple") {
-      setSelectedDates((prev) => {
-        const exists = prev.find((d) => d.date.toDateString() === date.toDateString());
-        return exists
-          ? prev.filter((d) => d.date.toDateString() !== date.toDateString())
-          : [...prev, { date, timeType: "終日" }];
-      });
+      setSelectedDates([date]);
+    } else if (mode === "multi") {
+      const exists = selectedDates.some(
+        (d) => d.toDateString() === date.toDateString()
+      );
+      if (exists) {
+        setSelectedDates(selectedDates.filter(
+          (d) => d.toDateString() !== date.toDateString()
+        ));
+      } else {
+        setSelectedDates([...selectedDates, date]);
+      }
     } else if (mode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length >= 2) {
-        setSelectedDates([{ date, timeType: "終日" }]);
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
+        setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        const start = selectedDates[0].date;
-        const range = eachDayOfInterval({ start, end: date }).map((d) => ({
-          date: d,
-          timeType: "終日",
-        }));
-        setSelectedDates(range);
+        const [start] = selectedDates;
+        if (date < start) {
+          setSelectedDates([date, start]);
+        } else {
+          setSelectedDates([start, date]);
+        }
       }
     }
   };
 
-  // 範囲ユーティリティ
-  const eachDayOfInterval = ({ start, end }) => {
-    const arr = [];
-    let d = new Date(start);
-    while (d <= end) {
-      arr.push(new Date(d));
-      d.setDate(d.getDate() + 1);
+  const isSelected = (date) => {
+    if (mode === "single" || mode === "multi") {
+      return selectedDates.some((d) => d.toDateString() === date.toDateString());
     }
-    return arr;
+    if (mode === "range" && selectedDates.length === 2) {
+      const [start, end] = selectedDates;
+      return date >= start && date <= end;
+    }
+    return false;
   };
 
-  // 選択判定
-  const isSelected = (date) =>
-    selectedDates.some((d) => d.date.toDateString() === date.toDateString());
+  // 共有リンク生成
+  const generateShareLink = () => {
+    const token = Math.random().toString(36).substring(2, 10);
+    const url = `${window.location.origin}/share/${token}`;
+    setShareUrl(url);
+  };
 
-  // tileContent
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    alert("リンクをコピーしました！");
+  };
+
+  // 📌 カレンダータイルの描画
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -75,53 +89,20 @@ const RegisterPage = () => {
             ${isToday ? "today" : ""}
             ${isSelected(date) ? "selected-date" : ""}
           `}
-          style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
+          <span>{date.getDate()}</span>
           {holiday && <span className="holiday-name">{holiday[0].name}</span>}
         </div>
       );
     }
     return null;
   };
-
-  // 時間帯変更
-  const handleTimeTypeChange = (idx, type) => {
-    setSelectedDates((prev) =>
-      prev.map((d, i) => (i === idx ? { ...d, timeType: type } : d))
-    );
-  };
-
-  // 時間選択変更
-  const handleTimeChange = (idx, field, value) => {
-    setSelectedDates((prev) =>
-      prev.map((d, i) =>
-        i === idx ? { ...d, [field]: value, timeType: "時間指定" } : d
-      )
-    );
-  };
-
-  // 共有リンク生成
-  const handleGenerateLink = () => {
-    if (!title.trim() || selectedDates.length === 0) {
-      alert("タイトルと日程を入力してください");
-      return;
-    }
-    const token = Math.random().toString(36).substr(2, 8);
-    const url = `${window.location.origin}/share/${token}`;
-    setShareLink(url);
-  };
-
-  const handleCopy = () => {
-    if (shareLink) {
-      navigator.clipboard.writeText(shareLink);
-      alert("リンクをコピーしました！");
-    }
-  };
-
-  // 時刻のリスト（00:00〜23:00）
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
 
   return (
     <div className="register-page">
@@ -137,103 +118,65 @@ const RegisterPage = () => {
       {/* モード切替 */}
       <div className="mode-tabs">
         <button
-          onClick={() => setMode("single")}
           className={mode === "single" ? "active" : ""}
+          onClick={() => setMode("single")}
         >
           単日
         </button>
         <button
-          onClick={() => setMode("multiple")}
-          className={mode === "multiple" ? "active" : ""}
+          className={mode === "multi" ? "active" : ""}
+          onClick={() => setMode("multi")}
         >
           複数選択
         </button>
         <button
-          onClick={() => setMode("range")}
           className={mode === "range" ? "active" : ""}
+          onClick={() => setMode("range")}
         >
           範囲選択
         </button>
       </div>
 
-      {/* カレンダー */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
-            locale="ja-JP"
-            calendarType="gregory"
-            onClickDay={handleDateClick}
+            onClickDay={handleDateChange}
+            value={selectedDates}
             tileContent={tileContent}
+            calendarType="US"
+            locale="ja-JP"
           />
         </div>
-
-        {/* 選択中リスト */}
         <div className="selected-list">
           <h3>選択中の日程</h3>
-          {selectedDates.map((item, idx) => (
-            <div key={idx} className="selected-card">
-              <span className="date-badge">
-                {item.date.toISOString().split("T")[0]}
-              </span>
-              <div className="time-buttons">
-                {["終日", "午前", "午後", "時間指定"].map((t) => (
-                  <button
-                    key={t}
-                    className={`time-btn ${item.timeType === t ? "active" : ""}`}
-                    onClick={() => handleTimeTypeChange(idx, t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {item.timeType === "時間指定" && (
-                <div className="time-select-box">
-                  <select
-                    className="cute-select"
-                    value={item.startTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(idx, "startTime", e.target.value)
-                    }
-                  >
-                    <option value="">開始時間</option>
-                    {hours.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                  <span> ~ </span>
-                  <select
-                    className="cute-select"
-                    value={item.endTime || ""}
-                    onChange={(e) =>
-                      handleTimeChange(idx, "endTime", e.target.value)
-                    }
-                  >
-                    <option value="">終了時間</option>
-                    {hours.map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {selectedDates.length === 0 && <p>まだ選択されていません</p>}
+          {selectedDates.length > 0 && (
+            <ul>
+              {mode === "range" && selectedDates.length === 2 ? (
+                <li>
+                  {selectedDates[0].toLocaleDateString()} ~{" "}
+                  {selectedDates[1].toLocaleDateString()}
+                </li>
+              ) : (
+                selectedDates.map((d, i) => (
+                  <li key={i}>{d.toLocaleDateString()}</li>
+                ))
               )}
-            </div>
-          ))}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* 共有リンク */}
-      <button className="save-btn" onClick={handleGenerateLink}>
+      <button className="save-btn" onClick={generateShareLink}>
         共有リンクを発行
       </button>
-      {shareLink && (
+      {shareUrl && (
         <div className="share-link-box">
-          <a href={shareLink} target="_blank" rel="noopener noreferrer">
-            {shareLink}
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
           </a>
-          <button className="copy-btn" onClick={handleCopy}>
+          <button className="copy-btn" onClick={copyToClipboard}>
             コピー
           </button>
         </div>
