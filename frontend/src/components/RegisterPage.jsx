@@ -119,11 +119,32 @@ const RegisterPage = () => {
     }));
   };
 
-  // 共有リンク生成
-  const generateShareLink = () => {
-    const uniqueId = Math.random().toString(36).substring(2, 10);
-    const url = `${window.location.origin}/share/${uniqueId}`;
-    setShareUrl(url);
+  // ✅ 共有リンク生成（バックエンドに保存して share_token を取得）
+  const generateShareLink = async () => {
+    try {
+      const payload = {
+        title,
+        dates: selectedDates.map((d) => ({
+          date: formatDateKey(d),
+          timeType: "終日", // TODO: 実際は activeTimes や start/end を反映
+        })),
+      };
+
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("共有リンク生成失敗");
+      const data = await res.json();
+
+      const url = `${window.location.origin}/share/${data.share_token}`;
+      setShareUrl(url);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンク生成に失敗しました");
+    }
   };
 
   const copyToClipboard = () => {
@@ -218,19 +239,11 @@ const RegisterPage = () => {
           </table>
         </div>
 
-        {/* 選択中リスト（年→月→日でソート） */}
+        {/* 選択中リスト */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
           {[...selectedDates]
-            .sort((a, b) => {
-              if (a.getFullYear() !== b.getFullYear()) {
-                return a.getFullYear() - b.getFullYear();
-              }
-              if (a.getMonth() !== b.getMonth()) {
-                return a.getMonth() - b.getMonth();
-              }
-              return a.getDate() - b.getDate();
-            })
+            .sort((a, b) => a - b)
             .map((d, idx) => {
               const key = formatDateKey(d);
               const setting = timeSettings[key] || {};
