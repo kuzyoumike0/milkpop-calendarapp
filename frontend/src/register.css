@@ -17,7 +17,7 @@
 
 .title-input {
   display: block;
-  width: 40%; /* 短くしてバランス */
+  width: 40%;
   margin: 0 auto 20px auto;
   padding: 10px;
   border-radius: 12px;
@@ -71,25 +71,42 @@
   overflow-y: auto;
 }
 
-/* カレンダー選択日 */
-.selected-date {
-  background: #fdb9c8 !important;
-  color: white !important;
-  font-weight: bold;
-  border-radius: 50% !important; /* 丸 */
-  border: 2px solid #004ca0 !important;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
-  text-align: center;
+/* タイルを正円化 */
+.react-calendar__tile {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: 0.2s;
 }
 
-/* 今日（JST基準で強調） */
+/* 選択日 */
+.selected-date {
+  background: #fdb9c8 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  border: 2px solid #004ca0 !important;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+/* 今日 */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold !important;
   border-radius: 50% !important;
   border: 3px solid #fdb9c8 !important;
-  box-shadow: 0 0 10px rgba(253,185,200,0.8);
+  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+}
+
+/* hover */
+.react-calendar__tile:hover {
+  transform: scale(1.1);
+  background: rgba(253,185,200,0.6) !important;
+  color: #000 !important;
 }
 
 /* 選択中の日程カード */
@@ -209,24 +226,6 @@
 
 .copy-btn:hover {
   opacity: 0.8;
-}
-
-/* react-calendar 調整 */
-.react-calendar {
-  width: 100% !important;
-  border: none;
-  background: transparent;
-  font-size: 1rem;
-}
-
-.react-calendar__month-view__weekdays {
-  font-weight: bold;
-  text-align: center;
-}
-
-.react-calendar__tile {
-  border-radius: 8px;
-  padding: 10px 0;
 }
 
 /* 日曜・土曜・祝日 */
