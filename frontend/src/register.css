@@ -126,6 +126,9 @@
   font-size: 1.2rem;
 }
 .calendar-table td {
+  min-width: 80px;   /* セル幅固定 */
+  min-height: 80px;  /* セル高さ固定 */
+  height: 100px;
   font-size: 1.3rem;
   font-weight: bold;
   cursor: pointer;
@@ -159,6 +162,9 @@
   box-shadow: 0 0 6px rgba(0,0,0,0.2);
   text-align: center;
   vertical-align: middle;
+
+  /* セル全体に背景を適用 */
+  display: table-cell;
 }
 
 /* 他月 */
