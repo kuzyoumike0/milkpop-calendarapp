@@ -119,17 +119,18 @@
   font-size: 1.2rem;
 }
 
-/* ===== セル固定 ===== */
+/* ===== セル固定（崩れ防止） ===== */
 .calendar-table td {
   width: 14%;           
   height: 100px;        
-  line-height: 100px;
   box-sizing: border-box;
-  text-align: center;
-  vertical-align: middle;
+  display: flex;              /* flexで中央揃え */
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   font-size: 1.3rem;
   font-weight: bold;
+  border-radius: 0;           /* 四角形固定 */
   transition: background 0.3s, color 0.3s, box-shadow 0.3s;
 }
 .calendar-table td:hover {
@@ -150,25 +151,23 @@
     0 0 12px #fdb9c8;
 }
 
-/* ネオン発光アニメーション */
+/* ネオンアニメーション */
 @keyframes neonPulse {
   0% {
     box-shadow:
       0 0 6px #fdb9c8,
       0 0 12px #fdb9c8,
-      0 0 20px #fdb9c8,
-      0 0 30px #fdb9c8;
+      0 0 20px #fdb9c8;
   }
   100% {
     box-shadow:
       0 0 12px #fdb9c8,
       0 0 24px #fdb9c8,
-      0 0 36px #fdb9c8,
-      0 0 48px #fdb9c8;
+      0 0 36px #fdb9c8;
   }
 }
 
-/* 選択日 → 背景色のみ */
+/* 選択日 → 四角形のまま色だけ */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
