@@ -1,202 +1,123 @@
-/* ===== 全体 ===== */
 .share-container {
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   padding: 20px;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
-  min-height: 100vh;
+  font-family: "Zen Maru Gothic", sans-serif;
 }
 
 .share-title {
+  font-size: 1.5rem;
   text-align: center;
-  font-size: 26px;
-  font-weight: bold;
-  color: #fff;
   margin-bottom: 20px;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
 }
 
-/* ===== フォーム部分 ===== */
-.response-form {
-  background: rgba(255,255,255,0.2);
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+/* ==== 自分の回答 ==== */
+.my-response-box {
+  background: #fce4ec;
+  border-radius: 12px;
+  padding: 12px 16px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.my-response-box h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+  color: #333;
 }
 
 .username-input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  margin-bottom: 15px;
-  font-size: 16px;
-  background: #fff;
-  color: #333;
-}
-
-.date-response {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.date-label {
-  font-size: 15px;
-  color: #333;
-  font-weight: bold;
-}
-
-.attendance-select {
-  padding: 6px 12px;
+  width: 50%;
+  padding: 6px 10px;
+  font-size: 0.9rem;
   border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.2);
-  background: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.attendance-select:hover {
-  background: #fbc2eb;
-  border-color: #a6c1ee;
-}
-
-/* 保存ボタン */
-.save-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #004CA0, #FDB9C8);
-  color: #fff;
-  padding: 12px;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-  transition: 0.2s;
-}
-
-.save-btn:hover {
-  opacity: 0.85;
-}
-
-.save-message {
-  text-align: center;
-  color: #004CA0;
-  margin-top: 8px;
-  font-weight: bold;
-}
-
-/* ===== みんなの回答 ===== */
-.all-responses {
-  background: rgba(255,255,255,0.2);
-  padding: 20px;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.all-responses h2 {
-  font-size: 18px;
-  font-weight: bold;
-  color: #004CA0;
+  border: 1px solid #ccc;
   margin-bottom: 12px;
+}
+
+.my-responses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.my-response-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.my-response-item .date-label {
+  font-weight: 500;
+  color: #444;
+}
+
+.my-response-item .attendance-select {
+  width: 90px;
+  padding: 4px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+}
+
+/* ==== みんなの回答 ==== */
+.all-responses {
+  margin-top: 20px;
 }
 
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: center;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .responses-table th {
-  background: #004CA0;
+  background: #0d47a1;
   color: #fff;
   padding: 10px;
-  font-weight: bold;
 }
 
 .responses-table td {
-  padding: 10px;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 8px;
+  text-align: center;
 }
 
 .responses-table tr:nth-child(even) {
-  background: rgba(255,255,255,0.4);
+  background: #fce4ec;
 }
+
 .responses-table tr:nth-child(odd) {
-  background: rgba(255,200,220,0.4);
+  background: #f8bbd0;
 }
 
-/* ===== ユーザ名リンク ===== */
 .editable-username {
-  color: #fff;
   cursor: pointer;
+  color: #0d47a1;
   font-weight: bold;
-  text-decoration: underline;
-  transition: 0.2s;
-}
-.editable-username:hover {
-  color: #FDB9C8;
 }
 
-/* ===== ユーザ名編集モード ===== */
-.username-edit-box {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-}
-
-.username-edit-input {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #aaa;
-  font-size: 14px;
-}
-
-.username-save-btn {
-  padding: 6px 12px;
+.save-btn {
+  background: linear-gradient(to right, #3f51b5, #f48fb1);
+  color: white;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
+  padding: 8px 16px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: 0.2s;
+  margin-top: 8px;
 }
 
-.username-save-btn:hover {
-  opacity: 0.85;
-}
-.count-badge {
-  display: inline-block;
-  margin: 0 4px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 0.9em;
+.save-btn:hover {
+  opacity: 0.9;
 }
 
-.count-badge.ok {
-  background: #d4f5d4;
-  color: #2b7a2b;
-}
-
-.count-badge.no {
-  background: #ffd6d6;
-  color: #c62828;
-}
-
-.count-badge.maybe {
-  background: #fff4c2;
-  color: #ff9800;
-}
-
-.count-badge.none {
-  background: #e0e0e0;
-  color: #555;
+.save-message {
+  margin-top: 6px;
+  color: green;
+  font-size: 0.85rem;
 }
