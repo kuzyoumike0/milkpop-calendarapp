@@ -108,7 +108,7 @@ const RegisterPage = () => {
       const token = (await res.json()).token;
       const url = `/share/${token}`;
       setShareUrl(url);
-      navigate(url); // ← 発行後すぐに遷移
+      navigate(url); // 発行後すぐにシェアページ遷移
     }
   };
 
