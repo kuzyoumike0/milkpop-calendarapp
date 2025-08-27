@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
 import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 import "../common.css";
 import "../register.css";
 
@@ -14,7 +15,7 @@ const RegisterPage = () => {
   const [rangeStart, setRangeStart] = useState(null);
   const [timeSettings, setTimeSettings] = useState({});
   const [shareUrl, setShareUrl] = useState("");
-  const [schedules, setSchedules] = useState([]);
+  const navigate = useNavigate();
 
   // === JST 今日 ===
   const jstNow = new Date().toLocaleDateString("ja-JP", {
@@ -105,12 +106,9 @@ const RegisterPage = () => {
     });
     if (res.ok) {
       const token = (await res.json()).token;
-      const url = `${window.location.origin}/share/${token}`;
+      const url = `/share/${token}`;
       setShareUrl(url);
-      setSchedules([...schedules, newSchedule]);
-      setTitle("");
-      setSelectedDates([]);
-      setTimeSettings({});
+      navigate(url); // ← 発行後すぐに遷移
     }
   };
 
@@ -168,13 +166,15 @@ const RegisterPage = () => {
       <h1 className="page-title">日程登録</h1>
 
       {/* タイトル */}
-      <input
-        type="text"
-        className="title-input"
-        placeholder="タイトルを入力"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+      <div className="title-box">
+        <input
+          type="text"
+          className="title-input"
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
 
       {/* 選択モードタブ */}
       <div className="mode-tabs">
@@ -207,7 +207,9 @@ const RegisterPage = () => {
             onClickDay={handleDateClick}
             tileContent={({ date }) => {
               const holiday = getHolidayName(date);
-              return holiday ? <div className="holiday-name">{holiday}</div> : null;
+              return holiday ? (
+                <div className="holiday-name">{holiday}</div>
+              ) : null;
             }}
             tileClassName={({ date }) => {
               const dateStr = date
@@ -216,7 +218,7 @@ const RegisterPage = () => {
                 .replace(/-(\d)(?!\d)/g, "-0$1");
 
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today"; // JST基準
+              if (dateStr === today) return "today";
               if (getHolidayName(date)) return "holiday";
               if (date.getDay() === 0) return "sunday";
               if (date.getDay() === 6) return "saturday";
@@ -255,12 +257,12 @@ const RegisterPage = () => {
       </button>
       {shareUrl && (
         <div className="share-link-box">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
+          <a href={shareUrl}>{window.location.origin + shareUrl}</a>
           <button
             className="copy-btn"
-            onClick={() => navigator.clipboard.writeText(shareUrl)}
+            onClick={() =>
+              navigator.clipboard.writeText(window.location.origin + shareUrl)
+            }
           >
             コピー
           </button>
