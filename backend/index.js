@@ -63,7 +63,7 @@ const initDB = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS personal_schedules (
         id UUID PRIMARY KEY,
-        share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        user_id VARCHAR(64) NOT NULL,
         title TEXT NOT NULL,
         memo TEXT,
         dates JSONB NOT NULL,
@@ -104,12 +104,7 @@ function authRequired(req, res, next) {
 }
 
 app.get("/api/me", authRequired, async (req, res) => {
-  const { rows } = await pool.query(
-    "SELECT id, discord_id, username, now() AS server_time FROM public.users WHERE id = $1",
-    [req.user.userId]
-  );
-  if (!rows[0]) return res.status(404).json({ error: "User not found" });
-  res.json({ user: rows[0] });
+  res.json({ user: req.user });
 });
 
 // ===== schedules API =====
@@ -311,19 +306,34 @@ app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
   }
 });
 
-// --- 個人スケジュール保存 ---
-app.post("/api/personal", async (req, res) => {
-  try {
-    const { share_id, title, memo, dates, options } = req.body;
-    if (!share_id || !title || !dates) {
-      return res.status(400).json({ error: "必須項目が不足しています" });
-    }
+// ===== 個人スケジュール API =====
 
+// 取得
+app.get("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM personal_schedules WHERE user_id=$1 ORDER BY created_at DESC",
+      [req.user.discord_id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("個人スケジュール取得エラー:", err);
+    res.status(500).json({ error: "個人スケジュール取得エラー" });
+  }
+});
+
+// 保存
+app.post("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const { title, memo, dates, options } = req.body;
+    if (!title || !dates) {
+      return res.status(400).json({ error: "タイトルと日程は必須です" });
+    }
     const id = uuidv4();
     const result = await pool.query(
-      `INSERT INTO personal_schedules (id, share_id, title, memo, dates, options)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [id, share_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [id, req.user.discord_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
     );
     res.json(result.rows[0]);
   } catch (err) {
