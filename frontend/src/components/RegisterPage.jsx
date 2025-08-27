@@ -1,182 +1,89 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
-import { v4 as uuidv4 } from "uuid";
-import { useNavigate } from "react-router-dom";
-import "../common.css";
+import "react-calendar/dist/Calendar.css";
 import "../register.css";
 
-const hd = new Holidays("JP");
+const hd = new Holidays("JP"); // 日本の祝日
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [rangeStart, setRangeStart] = useState(null);
-  const [timeSettings, setTimeSettings] = useState({});
+  const [mode, setMode] = useState("single"); // single, multiple, range
   const [shareUrl, setShareUrl] = useState("");
-  const navigate = useNavigate();
 
-  // === JST 今日 ===
-  const jstNow = new Date().toLocaleDateString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-  });
-  const [yy, mm, dd] = jstNow.split("/");
-  const today = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(
-    2,
-    "0"
-  )}`;
-
-  // ===== 日付クリック =====
-  const handleDateClick = (date) => {
-    const dateStr = date
-      .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
-      .replace(/\//g, "-")
-      .replace(/-(\d)(?!\d)/g, "-0$1");
-
+  // ===== 日付選択 =====
+  const handleDateChange = (date) => {
     if (mode === "single") {
-      setSelectedDates([dateStr]);
+      setSelectedDates([date]);
     } else if (mode === "multiple") {
-      if (selectedDates.includes(dateStr)) {
-        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
-      } else {
-        setSelectedDates([...selectedDates, dateStr].sort());
-      }
+      setSelectedDates((prev) =>
+        prev.some((d) => d.toDateString() === date.toDateString())
+          ? prev.filter((d) => d.toDateString() !== date.toDateString())
+          : [...prev, date]
+      );
     } else if (mode === "range") {
-      if (!rangeStart) {
-        setRangeStart(dateStr);
-        setSelectedDates([dateStr]);
-      } else {
-        let start = new Date(rangeStart);
-        let end = new Date(dateStr);
-        if (start > end) [start, end] = [end, start];
+      if (selectedDates.length === 0) {
+        setSelectedDates([date]);
+      } else if (selectedDates.length === 1) {
+        const start = selectedDates[0];
+        const end = date;
         const range = [];
-        let d = new Date(start);
-        while (d <= end) {
-          const dStr = d
-            .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
-            .replace(/\//g, "-")
-            .replace(/-(\d)(?!\d)/g, "-0$1");
-          range.push(dStr);
-          d.setDate(d.getDate() + 1);
+        let current = new Date(start);
+        while (current <= end) {
+          range.push(new Date(current));
+          current.setDate(current.getDate() + 1);
         }
         setSelectedDates(range);
-        setRangeStart(null);
+      } else {
+        setSelectedDates([date]);
       }
     }
   };
 
-  // ===== 時間帯変更 =====
-  const handleTimeChange = (date, type) => {
-    setTimeSettings((prev) => ({
-      ...prev,
-      [date]: {
-        ...prev[date],
-        type,
-        start: prev[date]?.start || "",
-        end: prev[date]?.end || "",
-      },
-    }));
+  // ===== 共有リンク発行 =====
+  const handleShareLink = () => {
+    const token = crypto.randomUUID(); // ランダムID生成
+    const url = `${window.location.origin}/share/${token}`;
+    setShareUrl(url);
+
+    // TODO: バックエンドに schedule 保存API を叩く処理を追加する
+    // fetch("/api/schedules", { method: "POST", body: JSON.stringify({title, selectedDates, token}) })
   };
 
-  // ===== 保存（共有リンク生成） =====
-  const handleSave = async () => {
-    if (!title || selectedDates.length === 0) {
-      alert("タイトルと日付を入力してください");
-      return;
+  // ===== 日付タイルの表示調整 =====
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      return (
+        <div>
+          {/* 祝日名を日付下に表示 */}
+          {holiday && <span className="holiday-name">{holiday[0].name}</span>}
+        </div>
+      );
     }
-
-    const newSchedule = {
-      id: uuidv4(),
-      title,
-      dates: selectedDates.map((d) => ({
-        date: d,
-        timeType: timeSettings[d]?.type || "終日",
-        startTime:
-          timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.start : null,
-        endTime:
-          timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.end : null,
-      })),
-    };
-
-    const res = await fetch("/api/schedules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newSchedule),
-    });
-    if (res.ok) {
-      const token = (await res.json()).token;
-      const url = `/share/${token}`;
-      setShareUrl(url);
-      navigate(url); // 発行後すぐにシェアページ遷移
-    }
+    return null;
   };
 
-  const getHolidayName = (date) => {
-    const h = hd.isHoliday(date);
-    return h ? h[0].name : null;
-  };
-
-  const renderTimeDropdown = (d) => {
-    if (timeSettings[d]?.type !== "時間指定") return null;
-    const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-    return (
-      <div className="time-dropdowns">
-        <select
-          className="cute-select"
-          value={timeSettings[d]?.start || ""}
-          onChange={(e) =>
-            setTimeSettings((prev) => ({
-              ...prev,
-              [d]: { ...prev[d], start: e.target.value },
-            }))
-          }
-        >
-          <option value="">開始時間</option>
-          {hours.map((h) => (
-            <option key={h} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-        <span> ~ </span>
-        <select
-          className="cute-select"
-          value={timeSettings[d]?.end || ""}
-          onChange={(e) =>
-            setTimeSettings((prev) => ({
-              ...prev,
-              [d]: { ...prev[d], end: e.target.value },
-            }))
-          }
-        >
-          <option value="">終了時間</option>
-          {hours.map((h) => (
-            <option key={h} value={h}>
-              {h}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
+  const formatDate = (date) => {
+    return date.toISOString().split("T")[0];
   };
 
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
-      {/* タイトル */}
-      <div className="title-box">
-        <input
-          type="text"
-          className="title-input"
-          placeholder="タイトルを入力"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
+      {/* タイトル入力 */}
+      <input
+        type="text"
+        className="title-input"
+        placeholder="タイトルを入力"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
 
-      {/* 選択モードタブ */}
+      {/* 選択モード */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -198,71 +105,68 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      {/* カレンダーとリスト */}
       <div className="calendar-container">
+        {/* カレンダー */}
         <div className="calendar-box">
           <Calendar
-            locale="ja-JP"
-            calendarType="US"
-            onClickDay={handleDateClick}
-            tileContent={({ date }) => {
-              const holiday = getHolidayName(date);
-              return holiday ? (
-                <div className="holiday-name">{holiday}</div>
-              ) : null;
-            }}
+            onClickDay={handleDateChange}
+            value={selectedDates}
+            tileContent={tileContent}
             tileClassName={({ date }) => {
-              const dateStr = date
-                .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
-                .replace(/\//g, "-")
-                .replace(/-(\d)(?!\d)/g, "-0$1");
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const d = new Date(date);
+              d.setHours(0, 0, 0, 0);
 
-              if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today";
-              if (getHolidayName(date)) return "holiday";
-              if (date.getDay() === 0) return "sunday";
-              if (date.getDay() === 6) return "saturday";
-              return null;
+              if (selectedDates.some((sel) => sel.toDateString() === d.toDateString())) {
+                return "selected-date";
+              }
+              if (d.getTime() === today.getTime()) {
+                return "today";
+              }
+
+              // 日曜赤, 土曜青
+              if (d.getDay() === 0) return "sunday";
+              if (d.getDay() === 6) return "saturday";
+              return "";
             }}
           />
         </div>
 
+        {/* 選択中の日程リスト */}
         <div className="selected-list">
           <h3>選択中の日程</h3>
-          {selectedDates.map((d) => (
-            <div key={d} className="selected-card">
-              <div className="date-badge">{d}</div>
+          {selectedDates.map((date, idx) => (
+            <div key={idx} className="selected-card">
+              <span className="date-badge">{formatDate(date)}</span>
               <div className="time-buttons">
-                {["終日", "昼", "夜", "時間指定"].map((t) => (
-                  <button
-                    key={t}
-                    className={`time-btn ${
-                      timeSettings[d]?.type === t ? "active" : ""
-                    }`}
-                    onClick={() => handleTimeChange(d, t)}
-                  >
-                    {t}
-                  </button>
-                ))}
+                <button className="time-btn active">終日</button>
+                <button className="time-btn">昼</button>
+                <button className="time-btn">夜</button>
+                <button className="time-btn">時間指定</button>
               </div>
-              {renderTimeDropdown(d)}
             </div>
           ))}
         </div>
       </div>
 
-      {/* 共有リンク */}
-      <button className="save-btn" onClick={handleSave}>
+      {/* 共有リンクボタン */}
+      <button className="save-btn" onClick={handleShareLink}>
         共有リンクを発行
       </button>
+
+      {/* 共有リンク表示部分 */}
       {shareUrl && (
         <div className="share-link-box">
-          <a href={shareUrl}>{window.location.origin + shareUrl}</a>
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
           <button
             className="copy-btn"
-            onClick={() =>
-              navigator.clipboard.writeText(window.location.origin + shareUrl)
-            }
+            onClick={() => {
+              navigator.clipboard.writeText(shareUrl);
+              alert("リンクをコピーしました！");
+            }}
           >
             コピー
           </button>
