@@ -69,8 +69,21 @@ const RegisterPage = () => {
     alert("リンクをコピーしました！");
   };
 
-  // 📌 カレンダータイルの描画
+  // 📌 カレンダータイルの描画（祝日名のみ追加）
   const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      return (
+        <>
+          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+        </>
+      );
+    }
+    return null;
+  };
+
+  // 📌 タイルにクラスを付与（日曜赤 / 土曜青 / 祝日赤 / 今日 / 選択日）
+  const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
       const isSunday = date.getDay() === 0;
@@ -80,28 +93,15 @@ const RegisterPage = () => {
         date.getMonth() === todayJST.getMonth() &&
         date.getDate() === todayJST.getDate();
 
-      return (
-        <div
-          className={`
-            ${isSunday ? "sunday" : ""}
-            ${isSaturday ? "saturday" : ""}
-            ${holiday ? "holiday" : ""}
-            ${isToday ? "today" : ""}
-            ${isSelected(date) ? "selected-date" : ""}
-          `}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span>{date.getDate()}</span>
-          {holiday && <span className="holiday-name">{holiday[0].name}</span>}
-        </div>
-      );
+      return [
+        isSunday ? "sunday" : "",
+        isSaturday ? "saturday" : "",
+        holiday ? "holiday" : "",
+        isToday ? "today" : "",
+        isSelected(date) ? "selected-date" : "",
+      ].join(" ");
     }
-    return null;
+    return "";
   };
 
   return (
@@ -143,6 +143,7 @@ const RegisterPage = () => {
             onClickDay={handleDateChange}
             value={selectedDates}
             tileContent={tileContent}
+            tileClassName={tileClassName}
             calendarType="US"
             locale="ja-JP"
           />
