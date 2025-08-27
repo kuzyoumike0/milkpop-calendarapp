@@ -14,6 +14,7 @@ const SharePage = () => {
   const [allResponses, setAllResponses] = useState([]);
   const [editingUserId, setEditingUserId] = useState(null);
   const [editingResponses, setEditingResponses] = useState({});
+  const [editingUsername, setEditingUsername] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -67,7 +68,23 @@ const SharePage = () => {
   // ===== 編集開始 =====
   const handleEditUser = (user) => {
     setEditingUserId(user.user_id);
+    setEditingUsername(user.username);
     setEditingResponses(user.responses || {});
+  };
+
+  // ===== 新規回答開始 =====
+  const handleNewResponse = () => {
+    setEditingUserId("new");
+    setEditingUsername("");
+    const init = {};
+    schedule.dates.forEach((d) => {
+      const key =
+        d.timeType === "時間指定" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${d.timeType})`;
+      init[key] = "-";
+    });
+    setEditingResponses(init);
   };
 
   // ===== 編集中のセル更新 =====
@@ -80,27 +97,18 @@ const SharePage = () => {
 
   // ===== 保存 =====
   const handleSaveEdit = async () => {
-    if (!editingUserId) return;
-    const targetUser = allResponses.find((u) => u.user_id === editingUserId);
-    if (!targetUser) return;
+    if (!editingUserId || !editingUsername.trim()) return;
 
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUserId,
-          username: targetUser.username,
+          user_id: editingUserId === "new" ? crypto.randomUUID() : editingUserId,
+          username: editingUsername.trim(),
           responses: editingResponses,
         }),
       });
-
-      // 即時反映
-      setAllResponses((prev) =>
-        prev.map((u) =>
-          u.user_id === editingUserId ? { ...u, responses: editingResponses } : u
-        )
-      );
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
@@ -111,6 +119,7 @@ const SharePage = () => {
 
     setEditingUserId(null);
     setEditingResponses({});
+    setEditingUsername("");
   };
 
   if (!schedule) return <div>読み込み中...</div>;
@@ -125,69 +134,87 @@ const SharePage = () => {
         <table className="responses-table">
           <thead>
             <tr>
-              <th>日程</th>
-              {allResponses.map((user) => (
-                <th
-                  key={user.user_id}
-                  className="editable-username"
-                  onClick={() => handleEditUser(user)}
-                >
-                  {user.username}
-                </th>
+              <th>ユーザ名</th>
+              {schedule?.dates?.map((d) => (
+                <th key={d.date}>{formatDate(d)}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {schedule?.dates?.map((d) => {
-              const dateKey =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
-              return (
-                <tr key={dateKey}>
-                  <td>{formatDate(d)}</td>
-                  {allResponses.map((user) => {
-                    const isEditing = editingUserId === user.user_id;
-                    const currentValue = isEditing
-                      ? editingResponses[dateKey] || "-"
-                      : user.responses?.[dateKey] || "-";
+            {allResponses.map((user) => (
+              <tr key={user.user_id}>
+                <td
+                  className="editable-username"
+                  onClick={() => handleEditUser(user)}
+                >
+                  {user.username}
+                </td>
+                {schedule.dates.map((d) => {
+                  const dateKey =
+                    d.timeType === "時間指定" && d.startTime && d.endTime
+                      ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                      : `${d.date} (${d.timeType})`;
+                  return (
+                    <td key={dateKey}>
+                      {user.responses?.[dateKey] || "-"}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
 
-                    return (
-                      <td key={user.user_id}>
-                        {isEditing ? (
-                          <select
-                            className="attendance-select"
-                            value={currentValue}
-                            onChange={(e) =>
-                              handleEditChange(dateKey, e.target.value)
-                            }
-                          >
-                            {attendanceOptions.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          currentValue
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+            {/* 編集中 or 新規回答行 */}
+            {editingUserId && (
+              <tr>
+                <td>
+                  <input
+                    type="text"
+                    value={editingUsername}
+                    placeholder="ユーザ名"
+                    onChange={(e) => setEditingUsername(e.target.value)}
+                  />
+                </td>
+                {schedule.dates.map((d) => {
+                  const dateKey =
+                    d.timeType === "時間指定" && d.startTime && d.endTime
+                      ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                      : `${d.date} (${d.timeType})`;
+                  return (
+                    <td key={dateKey}>
+                      <select
+                        className="attendance-select"
+                        value={editingResponses[dateKey] || "-"}
+                        onChange={(e) =>
+                          handleEditChange(dateKey, e.target.value)
+                        }
+                      >
+                        {attendanceOptions.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  );
+                })}
+              </tr>
+            )}
           </tbody>
         </table>
 
-        {/* 保存ボタン */}
-        {editingUserId && (
-          <div className="edit-actions">
+        {/* 操作ボタン */}
+        <div className="edit-actions">
+          {!editingUserId && (
+            <button className="save-btn" onClick={handleNewResponse}>
+              新規回答を追加
+            </button>
+          )}
+          {editingUserId && (
             <button className="save-btn" onClick={handleSaveEdit}>
               保存
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {saveMessage && <p className="save-message">{saveMessage}</p>}
       </div>
