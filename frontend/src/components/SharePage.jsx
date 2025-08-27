@@ -71,11 +71,19 @@ const SharePage = () => {
       username,
       responses,
     };
-    await fetch(`/api/schedules/${token}/responses`, {
+    const response = await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(res),
     });
+    const data = await response.json();
+
+    // ✅ 保存直後に allResponses を更新（即座に反映）
+    setAllResponses((prev) => {
+      const others = prev.filter((r) => r.user_id !== data.user_id);
+      return [...others, data];
+    });
+
     setSaveMessage("保存しました！");
   };
 
@@ -95,7 +103,7 @@ const SharePage = () => {
 
   // ===== 編集保存 =====
   const handleEditSave = async (user) => {
-    await fetch(`/api/schedules/${token}/responses`, {
+    const response = await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -104,11 +112,18 @@ const SharePage = () => {
         responses: editingResponses,
       }),
     });
+    const data = await response.json();
+
+    // ✅ 保存直後に allResponses を更新
+    setAllResponses((prev) => {
+      const others = prev.filter((r) => r.user_id !== data.user_id);
+      return [...others, data];
+    });
+
     setEditingUser(null);
     setEditingResponses({});
   };
 
-  // ===== 日付フォーマット =====
   const formatDate = (d) => {
     const date = new Date(d.date);
     const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
