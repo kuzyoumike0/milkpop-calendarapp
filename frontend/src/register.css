@@ -168,6 +168,7 @@
 }
 
 /* ==== プルダウン（時間指定用） ==== */
+/* ==== プルダウン（時間指定用） ==== */
 .time-select-box {
   display: flex;
   align-items: center;
@@ -179,35 +180,37 @@
   padding: 8px 14px;
   border-radius: 14px;
   border: 2px solid #004ca0;
-  background: rgba(255, 255, 255, 0.8);
+  background: #fff;               /* ← 白背景 */
   font-size: 0.95rem;
   font-weight: bold;
-  color: #004ca0;
+  color: #000;                    /* ← 黒文字 */
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   transition: all 0.25s ease;
   appearance: none;
-  background-image: linear-gradient(135deg, #fdfdfd, #f7f7f7),
-    url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%23004ca0' d='M5.25 7.5L10 12.25L14.75 7.5H5.25Z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%23004ca0' d='M5.25 7.5L10 12.25L14.75 7.5H5.25Z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 14px;
   padding-right: 30px; /* ▼アイコン分 */
 }
 
+/* ホバー時 */
 .cute-select:hover {
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
+  color: #fff;                    /* ホバー時は白文字 */
   border-color: #fdb9c8;
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
 
+/* フォーカス時 */
 .cute-select:focus {
   outline: none;
   border-color: #fdb9c8;
   box-shadow: 0 0 8px #fdb9c8;
 }
+
 
 /* ==== 保存ボタン ==== */
 .save-btn {
