@@ -71,32 +71,49 @@
   overflow-y: auto;
 }
 
-/* 選択中の日程をボタン風に */
-.selected-button {
-  background: white;
-  border-radius: 16px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: 0.2s;
-}
-.selected-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+/* 選択日強調（カレンダー） */
+.selected-date {
+  background: #fdb9c8 !important;
+  border: 2px solid #004ca0 !important;
+  color: white !important;
+  font-weight: bold;
+  border-radius: 50% !important;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
-.date-label {
+/* 選択中の日程カード */
+.selected-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: 0.2s;
+}
+.selected-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+/* 日付バッジ */
+.date-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
   font-weight: bold;
-  color: #333;
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-align: center;
 }
 
 /* 時間帯ボタン */
 .time-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -106,7 +123,7 @@
   border-radius: 20px;
   background: #eee;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: 0.2s;
 }
 
@@ -214,12 +231,6 @@
   font-size: 0.7rem;
   display: block;
   margin-top: 2px;
-}
-
-/* 選択日 */
-.selected-date {
-  background: rgba(253,185,200,0.8) !important;
-  border-radius: 50%;
 }
 
 /* 今日 */
