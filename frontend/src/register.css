@@ -1,334 +1,184 @@
-/* =====================
-   RegisterPage 全体
-===================== */
 .register-page {
-  padding: 40px;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  min-height: 100vh;
-  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
-  color: #222;
-  box-sizing: border-box;
+  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+  background: linear-gradient(135deg, #f5d9e6, #dbe6f6, #cfd9df);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
 .page-title {
   text-align: center;
-  font-size: 2.4rem;
-  font-weight: bold;
+  font-size: 28px;
   margin-bottom: 20px;
-  color: white;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-}
-
-.title-input {
-  display: block;
-  width: 60%;
-  max-width: 600px;
-  margin: 0 auto 20px auto;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  text-align: center;
-  font-size: 1.2rem;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-}
-
-/* =====================
-   モード切替ボタン
-===================== */
-.mode-tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-.mode-tabs button {
-  padding: 14px 28px;
-  border: none;
-  border-radius: 12px;
-  margin: 0 8px;
+  color: #333;
   font-weight: bold;
-  font-size: 1.1rem;
-  background: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: 0.2s;
-}
-.mode-tabs button.active {
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-}
-.mode-tabs button:hover {
-  transform: scale(1.05);
 }
 
-/* =====================
-   カレンダーとリスト (PC 7:3)
-===================== */
+/* カレンダー */
 .calendar-container {
   display: flex;
-  justify-content: space-between;
-  gap: 40px;
-  margin: 0 auto;
-  max-width: 1400px;
+  gap: 20px;
 }
 
 .calendar-box {
   flex: 7;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 30px;
-  border-radius: 20px;
-  font-size: 1.4rem;
 }
 
-.selected-list {
-  flex: 3;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 24px;
-  border-radius: 20px;
-  font-size: 1.1rem;
-  overflow-y: auto;
-}
-
-/* =====================
-   カレンダー table
-===================== */
 .calendar-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 14px;
-  color: white;
-  font-size: 1.2rem;
-}
-.calendar-header button {
-  background: rgba(0,0,0,0.5);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 14px;
-  cursor: pointer;
-}
-.calendar-header button:hover {
-  background: #004ca0;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: bold;
 }
 
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  table-layout: fixed;
 }
-.calendar-table tr {
-  height: 100px;
-}
+
 .calendar-table th {
-  padding: 14px;
-  background: rgba(0,0,0,0.3);
-  color: white;
-  font-size: 1.2rem;
+  padding: 10px;
+  color: #555;
+  font-weight: bold;
 }
+
 .calendar-table td {
-  min-width: 80px;
-  min-height: 80px;
-  height: 100px;
-  font-size: 1.3rem;
-  font-weight: bold;
+  width: 50px;
+  height: 50px;
   cursor: pointer;
-  vertical-align: middle;
-  transition: background 0.3s, color 0.3s;
+  border-radius: 8px;
+  transition: all 0.2s;
+  position: relative;
 }
+
 .calendar-table td:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 200, 200, 0.4);
 }
 
-/* 今日（日付をネオン風に強調） */
-.today {
-  background: #004ca0 !important;
-  color: #fff !important;
+/* ✅ 今日をお洒落に */
+.calendar-table td.today {
+  background: linear-gradient(135deg, #ffecd2, #fcb69f);
+  color: #222;
   font-weight: bold;
-  animation: neonPulse 2s infinite alternate;
-  text-shadow: 0 0 4px #fff, 0 0 8px #fdb9c8, 0 0 12px #fdb9c8;
-}
-@keyframes neonPulse {
-  0% { box-shadow: 0 0 6px #fdb9c8, 0 0 12px #fdb9c8; }
-  100% { box-shadow: 0 0 24px #fdb9c8, 0 0 36px #fdb9c8; }
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 120, 150, 0.6),
+              0 0 20px rgba(255, 120, 150, 0.4);
+  transition: transform 0.2s, box-shadow 0.3s;
 }
 
-/* 選択セル → セル全体を強調 */
+.calendar-table td.today:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 100, 150, 0.9),
+              0 0 30px rgba(255, 150, 180, 0.7);
+}
+
+/* ✅ 選択セル */
 .calendar-table td.selected-date {
-  background-color: #fdb9c8 !important;
-  color: #000 !important;
+  background: #ffc2d1;
   font-weight: bold;
-  border: none !important;
-  border-radius: 6px !important;
-  box-shadow: 0 0 6px rgba(0,0,0,0.2);
-  text-align: center;
-  vertical-align: middle;
-  display: table-cell;
+  color: #000;
+  box-shadow: 0 0 5px rgba(255,0,100,0.6);
 }
 
-/* 他月 */
-.other-month { opacity: 0.3; }
+/* 他の月 */
+.calendar-table td.other-month {
+  color: #aaa;
+}
 
-/* 日曜赤、土曜青 */
-.sunday { color: #e60033; }
-.saturday { color: #004ca0; }
-
-/* 祝日 */
-.holiday-name {
-  font-size: 0.8rem;
+.calendar-table td.sunday {
   color: red;
-  margin-top: 4px;
-  display: block;
+}
+.calendar-table td.saturday {
+  color: blue;
 }
 
-/* =====================
-   選択リストカード
-===================== */
+/* 祝日名 */
+.holiday-name {
+  font-size: 10px;
+  color: red;
+  margin-top: 2px;
+}
+
+/* 選択中リスト */
+.selected-list {
+  flex: 3;
+  background: rgba(255,255,255,0.2);
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
 .selected-card {
-  background: white;
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 18px;
-  font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
+
 .date-badge {
-  display: inline-block;
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-  padding: 8px 14px;
-  border-radius: 20px;
   font-weight: bold;
-  font-size: 1.1rem;
+  color: #444;
+  margin-right: 8px;
 }
+
 .time-buttons {
+  margin-top: 5px;
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 6px;
 }
+
 .time-btn {
-  padding: 8px 14px;
-  border-radius: 20px;
-  background: #eee;
+  padding: 4px 8px;
   border: none;
+  border-radius: 6px;
+  background: #eee;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: 0.2s;
-}
-.time-btn:hover {
-  background: #fdb9c8;
-  color: white;
+  font-size: 12px;
 }
 .time-btn.active {
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
+  background: #ff99cc;
+  color: #fff;
+  font-weight: bold;
 }
 
-/* =====================
-   時間指定プルダウン
-===================== */
-.time-selects {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
 .cute-select {
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 2px solid #004ca0;
-  background: black;
-  color: white;
-  font-size: 0.95rem;
-}
-.cute-select option {
-  background: black;
-  color: white;
+  margin: 5px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
-/* =====================
-   共有リンク
-===================== */
 .share-btn {
-  display: block;
-  margin: 24px auto;
-  padding: 14px 28px;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-}
-.share-link-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
   margin-top: 12px;
-}
-.share-link-box a {
-  color: #004ca0;
-  text-decoration: underline;
-  font-weight: bold;
-}
-.copy-btn {
-  padding: 8px 14px;
+  padding: 10px;
+  width: 100%;
   border: none;
-  border-radius: 12px;
-  background: #004ca0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #355c7d, #6c5b7b, #c06c84);
   color: white;
+  font-weight: bold;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
-.copy-btn:hover {
+.share-btn:hover {
   opacity: 0.85;
 }
 
-/* =====================
-   レスポンシブ対応
-===================== */
-
-/* タブレット (768px〜1024px) */
-@media screen and (max-width: 1024px) {
-  .calendar-container {
-    flex-direction: row;
-    gap: 20px;
-  }
-  .calendar-box {
-    flex: 6;
-  }
-  .selected-list {
-    flex: 4;
-  }
+.share-link-box {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-/* スマホ (767px以下) */
-@media screen and (max-width: 767px) {
-  .calendar-container {
-    flex-direction: column;
-  }
-  .calendar-box,
-  .selected-list {
-    flex: 1 1 100%;
-    width: 100%;
-  }
-  .calendar-table tr {
-    height: 60px;
-  }
-  .calendar-table td {
-    min-width: auto;
-    min-height: auto;
-    height: 60px;
-    font-size: 1rem;
-  }
-  /* スマホでも今日セル強調 */
-  .calendar-table td.today {
-    font-size: 1rem;
-    padding: 2px;
-  }
-  /* スマホでも選択セル強調 */
-  .calendar-table td.selected-date {
-    font-size: 1rem;
-    background-color: #fdb9c8 !important;
-    box-shadow: 0 0 4px rgba(0,0,0,0.2);
-  }
+.copy-btn {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
 }
