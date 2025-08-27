@@ -10,16 +10,14 @@ const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single"); // single / multiple / range
+  const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeStart, setRangeStart] = useState(null);
-  const [timeType, setTimeType] = useState("終日");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [timeSettings, setTimeSettings] = useState({}); // 各日ごと
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // === 日本時間の今日を取得 ===
+  // JST今日
   const jstNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
@@ -28,7 +26,6 @@ const RegisterPage = () => {
   // ===== 日付クリック =====
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
-
     if (mode === "single") {
       setSelectedDates([dateStr]);
     } else if (mode === "multiple") {
@@ -57,6 +54,19 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 時間帯変更 =====
+  const handleTimeChange = (date, type) => {
+    setTimeSettings((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        type,
+        start: prev[date]?.start || "",
+        end: prev[date]?.end || "",
+      },
+    }));
+  };
+
   // ===== 保存 =====
   const handleSave = async () => {
     if (!title || selectedDates.length === 0) {
@@ -69,9 +79,9 @@ const RegisterPage = () => {
       title,
       dates: selectedDates.map((d) => ({
         date: d,
-        timeType,
-        startTime: timeType === "時間指定" ? startTime : null,
-        endTime: timeType === "時間指定" ? endTime : null,
+        timeType: timeSettings[d]?.type || "終日",
+        startTime: timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.start : null,
+        endTime: timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.end : null,
       })),
     };
 
@@ -86,6 +96,7 @@ const RegisterPage = () => {
       setSchedules([...schedules, newSchedule]);
       setTitle("");
       setSelectedDates([]);
+      setTimeSettings({});
     }
   };
 
@@ -96,19 +107,37 @@ const RegisterPage = () => {
   };
 
   // ===== 時間指定ドロップダウン =====
-  const renderTimeDropdown = () => {
-    if (timeType !== "時間指定") return null;
+  const renderTimeDropdown = (d) => {
+    if (timeSettings[d]?.type !== "時間指定") return null;
     const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
     return (
       <div className="time-dropdowns">
-        <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+        <select
+          className="cute-select"
+          value={timeSettings[d]?.start || ""}
+          onChange={(e) =>
+            setTimeSettings((prev) => ({
+              ...prev,
+              [d]: { ...prev[d], start: e.target.value },
+            }))
+          }
+        >
           <option value="">開始時間</option>
           {hours.map((h) => (
             <option key={h} value={h}>{h}</option>
           ))}
         </select>
         <span> ~ </span>
-        <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+        <select
+          className="cute-select"
+          value={timeSettings[d]?.end || ""}
+          onChange={(e) =>
+            setTimeSettings((prev) => ({
+              ...prev,
+              [d]: { ...prev[d], end: e.target.value },
+            }))
+          }
+        >
           <option value="">終了時間</option>
           {hours.map((h) => (
             <option key={h} value={h}>{h}</option>
@@ -152,7 +181,7 @@ const RegisterPage = () => {
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today"; // JST 今日
+              if (dateStr === today) return "today";
               if (getHolidayName(date)) return "holiday";
               if (date.getDay() === 0) return "sunday";
               if (date.getDay() === 6) return "saturday";
@@ -164,15 +193,20 @@ const RegisterPage = () => {
         <div className="selected-list">
           <h3>選択中の日程</h3>
           {selectedDates.map((d) => (
-            <div key={d} className="selected-item">
-              <span>{d}</span>
-              <div className="time-options">
-                <label><input type="radio" name={`time-${d}`} value="終日" checked={timeType === "終日"} onChange={(e) => setTimeType(e.target.value)} /> 終日</label>
-                <label><input type="radio" name={`time-${d}`} value="昼" checked={timeType === "昼"} onChange={(e) => setTimeType(e.target.value)} /> 昼</label>
-                <label><input type="radio" name={`time-${d}`} value="夜" checked={timeType === "夜"} onChange={(e) => setTimeType(e.target.value)} /> 夜</label>
-                <label><input type="radio" name={`time-${d}`} value="時間指定" checked={timeType === "時間指定"} onChange={(e) => setTimeType(e.target.value)} /> 時間指定</label>
+            <div key={d} className="selected-button">
+              <span className="date-label">{d}</span>
+              <div className="time-buttons">
+                {["終日", "昼", "夜", "時間指定"].map((t) => (
+                  <button
+                    key={t}
+                    className={`time-btn ${timeSettings[d]?.type === t ? "active" : ""}`}
+                    onClick={() => handleTimeChange(d, t)}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
-              {renderTimeDropdown()}
+              {renderTimeDropdown(d)}
             </div>
           ))}
         </div>
