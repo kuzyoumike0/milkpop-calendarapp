@@ -13,11 +13,12 @@ const SharePage = () => {
   const [allResponses, setAllResponses] = useState([]);
   const [username, setUsername] = useState("");
   const [userId] = useState(() => crypto.randomUUID());
-  const [myResponses, setMyResponses] = useState({});
+  const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== 編集モード用 =====
-  const [editingCell, setEditingCell] = useState(null); // {user,dateKey}
+  // ===== 編集モード =====
+  const [editingCell, setEditingCell] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -60,8 +61,16 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 保存（自分の回答） =====
-  const handleSaveMyResponses = async () => {
+  // ===== 自分の回答変更 =====
+  const handleChange = (dateKey, value) => {
+    setResponses((prev) => ({
+      ...prev,
+      [dateKey]: value,
+    }));
+  };
+
+  // ===== 自分の回答保存 =====
+  const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
       return;
@@ -69,7 +78,7 @@ const SharePage = () => {
     const res = {
       user_id: userId,
       username,
-      responses: myResponses,
+      responses,
     };
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
@@ -79,23 +88,31 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== 編集保存（他ユーザセル） =====
-  const handleSaveCell = async (user, dateKey, value) => {
-    const target = allResponses.find((r) => r.username === user);
-    if (!target) return;
+  // ===== セル編集保存（みんなの回答） =====
+  const handleCellSave = async () => {
+    if (!editingCell) return;
+    const { user, dateKey } = editingCell;
 
-    const updated = {
-      ...target,
-      responses: { ...target.responses, [dateKey]: value },
+    const userResponse = allResponses.find((r) => r.username === user);
+    if (!userResponse) return;
+
+    const updatedResponses = {
+      ...userResponse.responses,
+      [dateKey]: editValue,
     };
 
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
+      body: JSON.stringify({
+        user_id: userResponse.user_id,
+        username: userResponse.username,
+        responses: updatedResponses,
+      }),
     });
 
     setEditingCell(null);
+    setEditValue("");
   };
 
   // ===== 日付フォーマット =====
@@ -109,26 +126,6 @@ const SharePage = () => {
   };
 
   if (!schedule) return <div>読み込み中...</div>;
-
-  // ユニークユーザー
-  const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
-
-  // 集計
-  const aggregate = {};
-  schedule.dates.forEach((d) => {
-    const dateKey =
-      d.timeType === "時間指定" && d.startTime && d.endTime
-        ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-        : `${d.date} (${d.timeType})`;
-    aggregate[dateKey] = { "○": 0, "✖": 0, "△": 0 };
-  });
-  allResponses.forEach((row) => {
-    Object.entries(row.responses).forEach(([key, status]) => {
-      if (aggregate[key] && ["○", "✖", "△"].includes(status)) {
-        aggregate[key][status]++;
-      }
-    });
-  });
 
   return (
     <div className="share-container">
@@ -144,9 +141,8 @@ const SharePage = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-
         <div className="my-responses-list">
-          {schedule.dates.map((d) => {
+          {schedule?.dates?.map((d) => {
             const dateKey =
               d.timeType === "時間指定" && d.startTime && d.endTime
                 ? `${d.date} (${d.startTime} ~ ${d.endTime})`
@@ -156,13 +152,8 @@ const SharePage = () => {
                 <span className="date-label">{formatDate(d)}</span>
                 <select
                   className="attendance-select"
-                  value={myResponses[dateKey] || "-"}
-                  onChange={(e) =>
-                    setMyResponses((prev) => ({
-                      ...prev,
-                      [dateKey]: e.target.value,
-                    }))
-                  }
+                  value={responses[dateKey] || "-"}
+                  onChange={(e) => handleChange(dateKey, e.target.value)}
                 >
                   {attendanceOptions.map((opt) => (
                     <option key={opt} value={opt}>
@@ -174,8 +165,7 @@ const SharePage = () => {
             );
           })}
         </div>
-
-        <button className="save-btn" onClick={handleSaveMyResponses}>
+        <button className="save-btn" onClick={handleSave}>
           保存する
         </button>
         {saveMessage && <p className="save-message">{saveMessage}</p>}
@@ -184,78 +174,68 @@ const SharePage = () => {
       {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>回答数</th>
-              <th>ユーザ名</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.dates.map((d) => {
-              const dateKey =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
-              return (
-                <tr key={dateKey}>
-                  <td>{formatDate(d)}</td>
-                  <td>
-                    ○{aggregate[dateKey]?.["○"] || 0}　
-                    ✖{aggregate[dateKey]?.["✖"] || 0}　
-                    △{aggregate[dateKey]?.["△"] || 0}
-                  </td>
-                  <td>
-                    {uniqueUsers.map((user) => {
-                      const userResponse = allResponses.find(
-                        (r) => r.username === user
-                      );
-                      const currentVal =
-                        userResponse?.responses?.[dateKey] || "-";
-                      const isEditing =
-                        editingCell &&
-                        editingCell.user === user &&
-                        editingCell.dateKey === dateKey;
+        <div className="responses-grid">
+          {schedule?.dates?.map((d) => {
+            const dateKey =
+              d.timeType === "時間指定" && d.startTime && d.endTime
+                ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                : `${d.date} (${d.timeType})`;
 
-                      return (
-                        <div
-                          key={`${user}-${dateKey}`}
-                          className="user-response"
+            const counts = { "○": 0, "✖": 0, "△": 0, "-": 0 };
+            allResponses.forEach((r) => {
+              const val = r.responses?.[dateKey] || "-";
+              if (counts[val] !== undefined) counts[val]++;
+            });
+
+            return (
+              <div key={dateKey} className="response-card">
+                <div className="response-header">
+                  <span className="date-label">{formatDate(d)}</span>
+                  <span className="count-label">
+                    ○{counts["○"]} ✖{counts["✖"]} △{counts["△"]}
+                  </span>
+                </div>
+                <div className="response-users">
+                  {allResponses.map((r) => (
+                    <div
+                      key={r.user_id + dateKey}
+                      className="user-response"
+                      onClick={() => {
+                        setEditingCell({ user: r.username, dateKey });
+                        setEditValue(r.responses?.[dateKey] || "-");
+                      }}
+                    >
+                      <span className="username">{r.username}</span>
+                      {editingCell?.user === r.username &&
+                      editingCell?.dateKey === dateKey ? (
+                        <select
+                          className="attendance-select"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
                         >
-                          {isEditing ? (
-                            <select
-                              className="attendance-select"
-                              value={currentVal}
-                              onChange={(e) =>
-                                handleSaveCell(user, dateKey, e.target.value)
-                              }
-                            >
-                              {attendanceOptions.map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span
-                              className="editable-username"
-                              onClick={() =>
-                                setEditingCell({ user, dateKey })
-                              }
-                            >
-                              {user}: {currentVal}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                          {attendanceOptions.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="response-value">
+                          {r.responses?.[dateKey] || "-"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {editingCell && (
+          <button className="save-btn" onClick={handleCellSave}>
+            編集内容を保存
+          </button>
+        )}
       </div>
     </div>
   );
