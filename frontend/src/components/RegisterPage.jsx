@@ -10,7 +10,7 @@ const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single"); // single / multiple / range
+  const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeStart, setRangeStart] = useState(null);
   const [timeType, setTimeType] = useState("終日");
@@ -18,6 +18,11 @@ const RegisterPage = () => {
   const [endTime, setEndTime] = useState("");
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
+
+  // JST現在日付を取得
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
+    .toISOString()
+    .split("T")[0];
 
   // ===== 日付クリック =====
   const handleDateClick = (date) => {
@@ -36,8 +41,8 @@ const RegisterPage = () => {
         setRangeStart(dateStr);
         setSelectedDates([dateStr]);
       } else {
-        const start = new Date(rangeStart);
-        const end = new Date(dateStr);
+        let start = new Date(rangeStart);
+        let end = new Date(dateStr);
         if (start > end) [start, end] = [end, start];
         const range = [];
         let d = new Date(start);
@@ -127,24 +132,9 @@ const RegisterPage = () => {
 
       {/* 選択モードタブ */}
       <div className="mode-tabs">
-        <button
-          className={mode === "single" ? "active" : ""}
-          onClick={() => setMode("single")}
-        >
-          単日
-        </button>
-        <button
-          className={mode === "multiple" ? "active" : ""}
-          onClick={() => setMode("multiple")}
-        >
-          複数選択
-        </button>
-        <button
-          className={mode === "range" ? "active" : ""}
-          onClick={() => setMode("range")}
-        >
-          範囲選択
-        </button>
+        <button className={mode === "single" ? "active" : ""} onClick={() => setMode("single")}>単日</button>
+        <button className={mode === "multiple" ? "active" : ""} onClick={() => setMode("multiple")}>複数選択</button>
+        <button className={mode === "range" ? "active" : ""} onClick={() => setMode("range")}>範囲選択</button>
       </div>
 
       {/* カレンダーとリスト */}
@@ -161,8 +151,10 @@ const RegisterPage = () => {
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (date.getDay() === 0) return "sunday";
-              if (date.getDay() === 6) return "saturday";
+              if (dateStr === today) return "today"; // 当日
+              if (getHolidayName(date)) return "holiday"; // 祝日
+              if (date.getDay() === 0) return "sunday"; // 日曜
+              if (date.getDay() === 6) return "saturday"; // 土曜
               return null;
             }}
           />
@@ -174,42 +166,10 @@ const RegisterPage = () => {
             <div key={d} className="selected-item">
               <span>{d}</span>
               <div className="time-options">
-                <label>
-                  <input
-                    type="radio"
-                    name={`time-${d}`}
-                    value="終日"
-                    checked={timeType === "終日"}
-                    onChange={(e) => setTimeType(e.target.value)}
-                  /> 終日
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={`time-${d}`}
-                    value="昼"
-                    checked={timeType === "昼"}
-                    onChange={(e) => setTimeType(e.target.value)}
-                  /> 昼
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={`time-${d}`}
-                    value="夜"
-                    checked={timeType === "夜"}
-                    onChange={(e) => setTimeType(e.target.value)}
-                  /> 夜
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name={`time-${d}`}
-                    value="時間指定"
-                    checked={timeType === "時間指定"}
-                    onChange={(e) => setTimeType(e.target.value)}
-                  /> 時間指定
-                </label>
+                <label><input type="radio" name={`time-${d}`} value="終日" checked={timeType === "終日"} onChange={(e) => setTimeType(e.target.value)} /> 終日</label>
+                <label><input type="radio" name={`time-${d}`} value="昼" checked={timeType === "昼"} onChange={(e) => setTimeType(e.target.value)} /> 昼</label>
+                <label><input type="radio" name={`time-${d}`} value="夜" checked={timeType === "夜"} onChange={(e) => setTimeType(e.target.value)} /> 夜</label>
+                <label><input type="radio" name={`time-${d}`} value="時間指定" checked={timeType === "時間指定"} onChange={(e) => setTimeType(e.target.value)} /> 時間指定</label>
               </div>
               {renderTimeDropdown()}
             </div>
@@ -218,18 +178,11 @@ const RegisterPage = () => {
       </div>
 
       {/* 共有リンク */}
-      <button className="save-btn" onClick={handleSave}>
-        共有リンクを発行
-      </button>
+      <button className="save-btn" onClick={handleSave}>共有リンクを発行</button>
       {shareUrl && (
         <div className="share-link-box">
           <input type="text" value={shareUrl} readOnly />
-          <button
-            className="copy-btn"
-            onClick={() => navigator.clipboard.writeText(shareUrl)}
-          >
-            コピー
-          </button>
+          <button className="copy-btn" onClick={() => navigator.clipboard.writeText(shareUrl)}>コピー</button>
         </div>
       )}
     </div>
