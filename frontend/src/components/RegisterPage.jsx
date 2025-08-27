@@ -17,7 +17,7 @@ const generateCalendar = (year, month) => {
   const lastDay = new Date(year, month + 1, 0);
   const weeks = [];
   let current = new Date(firstDay);
-  current.setDate(current.getDate() - current.getDay()); // 週の先頭まで戻す
+  current.setDate(current.getDate() - current.getDay());
 
   while (current <= lastDay || current.getDay() !== 0) {
     const week = [];
@@ -35,12 +35,14 @@ const RegisterPage = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [weeks, setWeeks] = useState([]);
-  const [mode, setMode] = useState("range"); // single, multiple, range
+  const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
 
-  // 日付ごとの時間帯設定
+  // 日付ごとの時間帯設定 & 時間指定
   const [timeSettings, setTimeSettings] = useState({});
+  // 共有リンク
+  const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
@@ -57,32 +59,23 @@ const RegisterPage = () => {
     ).padStart(2, "0")}`;
 
   const handleSelect = (date) => {
-    // 単日
     if (mode === "single") {
       if (selectedDates.length === 1 && isSameDate(selectedDates[0], date)) {
-        setSelectedDates([]); // 解除
+        setSelectedDates([]);
       } else {
         setSelectedDates([date]);
       }
-    }
-
-    // 複数
-    else if (mode === "multiple") {
+    } else if (mode === "multiple") {
       const exists = selectedDates.find((d) => isSameDate(d, date));
       if (exists) {
-        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date))); // 解除
+        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
       } else {
         setSelectedDates([...selectedDates, date]);
       }
-    }
-
-    // 範囲
-    else if (mode === "range") {
+    } else if (mode === "range") {
       if (selectedDates.length === 0 || selectedDates.length > 1) {
-        // 一回目クリック
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
-        // 二回目クリックで範囲
         const start = selectedDates[0];
         const range = [];
         const min = start < date ? start : date;
@@ -105,13 +98,39 @@ const RegisterPage = () => {
     return h ? h[0].name : null;
   };
 
-  // 時間指定の変更処理
+  // 時間区分の切り替え
+  const toggleTime = (date, type) => {
+    const key = formatDateKey(date);
+    setTimeSettings((prev) => {
+      const current = prev[key] || {};
+      const newActive = { ...current.activeTimes };
+      if (!newActive) {
+        newActive = {};
+      }
+      newActive[type] = !newActive[type];
+      return { ...prev, [key]: { ...current, activeTimes: newActive } };
+    });
+  };
+
+  // 時間指定の変更
   const handleTimeChange = (date, type, value) => {
     const key = formatDateKey(date);
     setTimeSettings((prev) => ({
       ...prev,
       [key]: { ...prev[key], [type]: value },
     }));
+  };
+
+  // 共有リンク生成
+  const generateShareLink = () => {
+    const uniqueId = Math.random().toString(36).substring(2, 10);
+    const url = `${window.location.origin}/share/${uniqueId}`;
+    setShareUrl(url);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    alert("URLをコピーしました！");
   };
 
   return (
@@ -204,6 +223,7 @@ const RegisterPage = () => {
           {selectedDates.map((d, idx) => {
             const key = formatDateKey(d);
             const setting = timeSettings[key] || {};
+            const active = setting.activeTimes || {};
             return (
               <div key={idx} className="selected-card">
                 <span className="date-badge">
@@ -212,9 +232,15 @@ const RegisterPage = () => {
                   {String(d.getDate()).padStart(2, "0")}
                 </span>
                 <div className="time-buttons">
-                  <button className="time-btn">終日</button>
-                  <button className="time-btn">昼</button>
-                  <button className="time-btn">夜</button>
+                  {["終日", "昼", "夜"].map((label) => (
+                    <button
+                      key={label}
+                      className={`time-btn ${active[label] ? "active" : ""}`}
+                      onClick={() => toggleTime(d, label)}
+                    >
+                      {label}
+                    </button>
+                  ))}
                   <button
                     className="time-btn"
                     onClick={() =>
@@ -236,9 +262,7 @@ const RegisterPage = () => {
                     <select
                       className="cute-select"
                       value={setting.start || ""}
-                      onChange={(e) =>
-                        handleTimeChange(d, "start", e.target.value)
-                      }
+                      onChange={(e) => handleTimeChange(d, "start", e.target.value)}
                     >
                       <option value="">開始時刻</option>
                       {Array.from({ length: 24 }).map((_, h) => (
@@ -251,9 +275,7 @@ const RegisterPage = () => {
                     <select
                       className="cute-select"
                       value={setting.end || ""}
-                      onChange={(e) =>
-                        handleTimeChange(d, "end", e.target.value)
-                      }
+                      onChange={(e) => handleTimeChange(d, "end", e.target.value)}
                     >
                       <option value="">終了時刻</option>
                       {Array.from({ length: 24 }).map((_, h) => (
@@ -267,6 +289,21 @@ const RegisterPage = () => {
               </div>
             );
           })}
+
+          {/* 共有リンク発行 */}
+          <button className="share-btn" onClick={generateShareLink}>
+            共有リンク発行
+          </button>
+          {shareUrl && (
+            <div className="share-link-box">
+              <a href={shareUrl} target="_blank" rel="noreferrer">
+                {shareUrl}
+              </a>
+              <button className="copy-btn" onClick={copyToClipboard}>
+                コピー
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
