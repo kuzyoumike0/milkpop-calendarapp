@@ -20,9 +20,12 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 編集対象 {user, dateKey}
-  const [editingCell, setEditingCell] = useState(null);
-  const [editValue, setEditValue] = useState("");
+  // 編集中のユーザ
+  const [editingUser, setEditingUser] = useState(null);
+  const [editValues, setEditValues] = useState({});
+
+  // フィルター
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     if (!token) return;
@@ -61,13 +64,7 @@ const SharePage = () => {
     };
   }, [token]);
 
-  const handleChange = (dateKey, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [dateKey]: value,
-    }));
-  };
-
+  // 自分の回答保存
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
@@ -87,18 +84,22 @@ const SharePage = () => {
   };
 
   // 編集開始
-  const startEdit = (user, dateKey, currentValue) => {
-    setEditingCell({ user, dateKey });
-    setEditValue(currentValue);
+  const startEdit = (user) => {
+    setEditingUser(user);
+    const target = allResponses.find((r) => r.username === user);
+    setEditValues({ ...(target?.responses || {}) });
   };
 
-  const saveEdit = async () => {
-    if (!editingCell) return;
-    const { user, dateKey } = editingCell;
-    const target = allResponses.find((r) => r.username === user);
-    if (!target) return;
+  // 値変更
+  const changeEditValue = (dateKey, value) => {
+    setEditValues((prev) => ({ ...prev, [dateKey]: value }));
+  };
 
-    const newResponses = { ...target.responses, [dateKey]: editValue };
+  // 編集保存
+  const saveEdit = async () => {
+    if (!editingUser) return;
+    const target = allResponses.find((r) => r.username === editingUser);
+    if (!target) return;
 
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
@@ -106,12 +107,12 @@ const SharePage = () => {
       body: JSON.stringify({
         user_id: target.user_id,
         username: target.username,
-        responses: newResponses,
+        responses: editValues,
       }),
     });
 
-    setEditingCell(null);
-    setEditValue("");
+    setEditingUser(null);
+    setEditValues({});
   };
 
   const formatDate = (d) => {
@@ -153,7 +154,12 @@ const SharePage = () => {
                 <select
                   className="fancy-select"
                   value={responses[dateKey] || "-"}
-                  onChange={(e) => handleChange(dateKey, e.target.value)}
+                  onChange={(e) =>
+                    setResponses((prev) => ({
+                      ...prev,
+                      [dateKey]: e.target.value,
+                    }))
+                  }
                 >
                   {attendanceOptions.map((opt) => (
                     <option key={opt.value} value={opt.value} className={opt.class}>
@@ -174,79 +180,119 @@ const SharePage = () => {
       {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
+
+        {/* フィルター */}
+        <div className="filter-box">
+          フィルタ:{" "}
+          <select
+            className="fancy-select"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">すべて表示</option>
+            <option value="ok">○がある日だけ</option>
+            <option value="ng">✖がある日だけ</option>
+            <option value="maybe">△がある日だけ</option>
+          </select>
+        </div>
+
         <table className="responses-table">
           <thead>
             <tr>
               <th>日付</th>
               <th>回答数</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>{user}</th>
+                <th key={user}>
+                  {editingUser === user ? (
+                    <>
+                      <span>{user}</span>
+                      <button className="mini-save-btn" onClick={saveEdit}>
+                        保存
+                      </button>
+                    </>
+                  ) : (
+                    <span
+                      className="editable-username"
+                      onClick={() => startEdit(user)}
+                    >
+                      {user}
+                    </span>
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {schedule?.dates?.map((d) => {
-              const dateKey =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
+            {schedule?.dates
+              ?.filter((d) => {
+                const dateKey =
+                  d.timeType === "時間指定" && d.startTime && d.endTime
+                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                    : `${d.date} (${d.timeType})`;
 
-              const counts = { "○": 0, "✖": 0, "△": 0 };
-              allResponses.forEach((r) => {
-                const val = r.responses?.[dateKey];
-                if (counts[val] !== undefined) counts[val]++;
-              });
+                const counts = { "○": 0, "✖": 0, "△": 0 };
+                allResponses.forEach((r) => {
+                  const val = r.responses?.[dateKey];
+                  if (counts[val] !== undefined) counts[val]++;
+                });
 
-              return (
-                <tr key={dateKey}>
-                  <td>{formatDate(d)}</td>
-                  <td>
-                    <span className="count-ok">○{counts["○"]}</span>{" "}
-                    <span className="count-ng">✖{counts["✖"]}</span>{" "}
-                    <span className="count-maybe">△{counts["△"]}</span>
-                  </td>
-                  {uniqueUsers.map((user) => {
-                    const userResponse = allResponses.find((r) => r.username === user);
-                    const val = userResponse?.responses?.[dateKey] || "-";
+                if (filter === "ok" && counts["○"] === 0) return false;
+                if (filter === "ng" && counts["✖"] === 0) return false;
+                if (filter === "maybe" && counts["△"] === 0) return false;
 
-                    if (
-                      editingCell &&
-                      editingCell.user === user &&
-                      editingCell.dateKey === dateKey
-                    ) {
-                      return (
-                        <td key={user}>
-                          <select
-                            className="fancy-select"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                          >
-                            {attendanceOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value} className={opt.class}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                          <button className="mini-save-btn" onClick={saveEdit}>
-                            保存
-                          </button>
-                        </td>
+                return true;
+              })
+              .map((d) => {
+                const dateKey =
+                  d.timeType === "時間指定" && d.startTime && d.endTime
+                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                    : `${d.date} (${d.timeType})`;
+
+                const counts = { "○": 0, "✖": 0, "△": 0 };
+                allResponses.forEach((r) => {
+                  const val = r.responses?.[dateKey];
+                  if (counts[val] !== undefined) counts[val]++;
+                });
+
+                return (
+                  <tr key={dateKey}>
+                    <td>{formatDate(d)}</td>
+                    <td>
+                      <span className="count-ok">○{counts["○"]}</span>{" "}
+                      <span className="count-ng">✖{counts["✖"]}</span>{" "}
+                      <span className="count-maybe">△{counts["△"]}</span>
+                    </td>
+                    {uniqueUsers.map((user) => {
+                      const userResponse = allResponses.find(
+                        (r) => r.username === user
                       );
-                    }
+                      const val = userResponse?.responses?.[dateKey] || "-";
 
-                    return (
-                      <td
-                        key={user}
-                        className="editable-username"
-                        onClick={() => startEdit(user, dateKey, val)}
-                      >
-                        {val}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+                      if (editingUser === user) {
+                        return (
+                          <td key={user}>
+                            <select
+                              className="fancy-select"
+                              value={editValues[dateKey] || "-"}
+                              onChange={(e) =>
+                                changeEditValue(dateKey, e.target.value)
+                              }
+                            >
+                              {attendanceOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        );
+                      }
+
+                      return <td key={user}>{val}</td>;
+                    })}
+                  </tr>
+                );
+              })}
           </tbody>
         </table>
       </div>
