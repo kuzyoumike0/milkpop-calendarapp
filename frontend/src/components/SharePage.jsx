@@ -17,9 +17,8 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 編集用
+  // 編集対象ユーザ
   const [editingUser, setEditingUser] = useState(null);
-  const [newUsername, setNewUsername] = useState("");
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -27,7 +26,7 @@ const SharePage = () => {
       const res = await fetch(`/api/schedules/${token}`);
       const data = await res.json();
       setSchedule(data);
-      // 既存回答も取得
+
       const res2 = await fetch(`/api/schedules/${token}/responses`);
       const data2 = await res2.json();
       setAllResponses(data2);
@@ -51,7 +50,7 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 入力変更 =====
+  // ===== 回答変更 =====
   const handleChange = (dateKey, value) => {
     setResponses((prev) => ({
       ...prev,
@@ -78,35 +77,44 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== ユーザー名編集 =====
-  const handleUsernameEdit = (user) => {
-    setEditingUser(user);
-    setNewUsername(user);
-  };
+  // ===== 他ユーザの回答編集 =====
+  const handleResponseEdit = async (user, dateKey, newValue) => {
+    const target = allResponses.find((r) => r.username === user);
+    if (!target) return;
 
-  const handleUsernameSave = async (oldName) => {
-    if (!newUsername.trim()) return;
-    await fetch(`/api/schedules/${token}/edit-username`, {
+    const updatedResponses = {
+      ...target.responses,
+      [dateKey]: newValue,
+    };
+
+    await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        oldName,
-        newName: newUsername.trim(),
+        user_id: target.user_id,
+        username: target.username,
+        responses: updatedResponses,
       }),
     });
-    setEditingUser(null);
-    setNewUsername("");
+
+    // 即座に state を更新
+    setAllResponses((prev) =>
+      prev.map((r) =>
+        r.username === user ? { ...r, responses: updatedResponses } : r
+      )
+    );
   };
 
   // ===== 日付フォーマット =====
   const formatDate = (dateStr, timeType) => {
     const d = new Date(dateStr);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${timeType || "未定"}）`;
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${
+      timeType || "未定"
+    }）`;
   };
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // ユニークユーザー
   const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
 
   return (
@@ -161,30 +169,14 @@ const SharePage = () => {
               <th>日程</th>
               {uniqueUsers.map((user) => (
                 <th key={user}>
-                  {editingUser === user ? (
-                    <input
-                      type="text"
-                      className="username-edit-input"
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      onBlur={() => handleUsernameSave(user)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleUsernameSave(user);
-                      }}
-                      autoFocus
-                    />
-                  ) : (
-                    <a
-                      href="#!"
-                      className="editable-username"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleUsernameEdit(user);
-                      }}
-                    >
-                      {user}
-                    </a>
-                  )}
+                  <span
+                    className="editable-username"
+                    onClick={() =>
+                      setEditingUser(editingUser === user ? null : user)
+                    }
+                  >
+                    {user}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -202,9 +194,26 @@ const SharePage = () => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
                     );
+                    const currentVal =
+                      userResponse?.responses?.[dateKey] || "-";
                     return (
                       <td key={user}>
-                        {userResponse?.responses?.[dateKey] || "-"}
+                        {editingUser === user ? (
+                          <select
+                            value={currentVal}
+                            onChange={(e) =>
+                              handleResponseEdit(user, dateKey, e.target.value)
+                            }
+                          >
+                            {attendanceOptions.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          currentVal
+                        )}
                       </td>
                     );
                   })}
