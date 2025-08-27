@@ -218,78 +218,80 @@ const RegisterPage = () => {
           </table>
         </div>
 
-        {/* 選択中リスト */}
+        {/* 選択中リスト（ソート済み） */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
-          {selectedDates.map((d, idx) => {
-            const key = formatDateKey(d);
-            const setting = timeSettings[key] || {};
-            const active = setting.activeTimes || {};
-            return (
-              <div key={idx} className="selected-card">
-                <span className="date-badge">
-                  {d.getFullYear()}-
-                  {String(d.getMonth() + 1).padStart(2, "0")}-
-                  {String(d.getDate()).padStart(2, "0")}
-                </span>
-                <div className="time-buttons">
-                  {["終日", "昼", "夜"].map((label) => (
+          {[...selectedDates]
+            .sort((a, b) => a - b)   // 昇順ソート
+            .map((d, idx) => {
+              const key = formatDateKey(d);
+              const setting = timeSettings[key] || {};
+              const active = setting.activeTimes || {};
+              return (
+                <div key={idx} className="selected-card">
+                  <span className="date-badge">
+                    {d.getFullYear()}-
+                    {String(d.getMonth() + 1).padStart(2, "0")}-
+                    {String(d.getDate()).padStart(2, "0")}
+                  </span>
+                  <div className="time-buttons">
+                    {["終日", "昼", "夜"].map((label) => (
+                      <button
+                        key={label}
+                        className={`time-btn ${active[label] ? "active" : ""}`}
+                        onClick={() => toggleTime(d, label)}
+                      >
+                        {label}
+                      </button>
+                    ))}
                     <button
-                      key={label}
-                      className={`time-btn ${active[label] ? "active" : ""}`}
-                      onClick={() => toggleTime(d, label)}
+                      className="time-btn"
+                      onClick={() =>
+                        setTimeSettings((prev) => ({
+                          ...prev,
+                          [key]: {
+                            ...prev[key],
+                            showTimeSelect: !prev[key]?.showTimeSelect,
+                          },
+                        }))
+                      }
                     >
-                      {label}
+                      時間指定
                     </button>
-                  ))}
-                  <button
-                    className="time-btn"
-                    onClick={() =>
-                      setTimeSettings((prev) => ({
-                        ...prev,
-                        [key]: {
-                          ...prev[key],
-                          showTimeSelect: !prev[key]?.showTimeSelect,
-                        },
-                      }))
-                    }
-                  >
-                    時間指定
-                  </button>
-                </div>
-
-                {setting.showTimeSelect && (
-                  <div className="time-selects">
-                    <select
-                      className="cute-select"
-                      value={setting.start || ""}
-                      onChange={(e) => handleTimeChange(d, "start", e.target.value)}
-                    >
-                      <option value="">開始時刻</option>
-                      {Array.from({ length: 24 }).map((_, h) => (
-                        <option key={h} value={`${h}:00`}>
-                          {h}:00
-                        </option>
-                      ))}
-                    </select>
-                    <span>〜</span>
-                    <select
-                      className="cute-select"
-                      value={setting.end || ""}
-                      onChange={(e) => handleTimeChange(d, "end", e.target.value)}
-                    >
-                      <option value="">終了時刻</option>
-                      {Array.from({ length: 24 }).map((_, h) => (
-                        <option key={h} value={`${h}:00`}>
-                          {h}:00
-                        </option>
-                      ))}
-                    </select>
                   </div>
-                )}
-              </div>
-            );
-          })}
+
+                  {setting.showTimeSelect && (
+                    <div className="time-selects">
+                      <select
+                        className="cute-select"
+                        value={setting.start || ""}
+                        onChange={(e) => handleTimeChange(d, "start", e.target.value)}
+                      >
+                        <option value="">開始時刻</option>
+                        {Array.from({ length: 24 }).map((_, h) => (
+                          <option key={h} value={`${h}:00`}>
+                            {h}:00
+                          </option>
+                        ))}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        className="cute-select"
+                        value={setting.end || ""}
+                        onChange={(e) => handleTimeChange(d, "end", e.target.value)}
+                      >
+                        <option value="">終了時刻</option>
+                        {Array.from({ length: 24 }).map((_, h) => (
+                          <option key={h} value={`${h}:00`}>
+                            {h}:00
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
           {/* 共有リンク発行 */}
           <button className="share-btn" onClick={generateShareLink}>
