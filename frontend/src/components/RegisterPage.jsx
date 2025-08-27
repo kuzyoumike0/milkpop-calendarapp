@@ -17,16 +17,24 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // === JST 今日を正しく取得（日付のみ） ===
-  const jstToday = new Date().toLocaleDateString("ja-JP", {
+  // === JST 今日を正しく取得 ===
+  const jstNow = new Date().toLocaleDateString("ja-JP", {
     timeZone: "Asia/Tokyo",
   });
-  const [y, m, d] = jstToday.split("/");
-  const today = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  // "2025/8/27" → "2025-08-27"
+  const [yy, mm, dd] = jstNow.split("/");
+  const today = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(
+    2,
+    "0"
+  )}`;
 
   // ===== 日付クリック =====
   const handleDateClick = (date) => {
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = date
+      .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
+      .replace(/\//g, "-")
+      .replace(/-(\d)(?!\d)/g, "-0$1");
+
     if (mode === "single") {
       setSelectedDates([dateStr]);
     } else if (mode === "multiple") {
@@ -46,7 +54,11 @@ const RegisterPage = () => {
         const range = [];
         let d = new Date(start);
         while (d <= end) {
-          range.push(d.toISOString().split("T")[0]);
+          const dStr = d
+            .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
+            .replace(/\//g, "-")
+            .replace(/-(\d)(?!\d)/g, "-0$1");
+          range.push(dStr);
           d.setDate(d.getDate() + 1);
         }
         setSelectedDates(range);
@@ -81,8 +93,10 @@ const RegisterPage = () => {
       dates: selectedDates.map((d) => ({
         date: d,
         timeType: timeSettings[d]?.type || "終日",
-        startTime: timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.start : null,
-        endTime: timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.end : null,
+        startTime:
+          timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.start : null,
+        endTime:
+          timeSettings[d]?.type === "時間指定" ? timeSettings[d]?.end : null,
       })),
     };
 
@@ -199,7 +213,11 @@ const RegisterPage = () => {
               return holiday ? <p className="holiday-name">{holiday}</p> : null;
             }}
             tileClassName={({ date }) => {
-              const dateStr = date.toISOString().split("T")[0];
+              const dateStr = date
+                .toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
+                .replace(/\//g, "-")
+                .replace(/-(\d)(?!\d)/g, "-0$1");
+
               if (selectedDates.includes(dateStr)) return "selected-date";
               if (dateStr === today) return "today"; // JST基準
               if (getHolidayName(date)) return "holiday";
