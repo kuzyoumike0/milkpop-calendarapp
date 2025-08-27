@@ -189,3 +189,28 @@
 .copy-btn:hover {
   opacity: 0.8;
 }
+/* 時間指定プルダウン */
+.time-selects {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.cute-select {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid #004ca0;
+  background: black;   /* 黒背景 */
+  color: white;        /* 白文字 */
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.cute-select option {
+  background: black;
+  color: white;
+}
+.cute-select:hover {
+  border-color: #fdb9c8;
+}
