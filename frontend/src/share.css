@@ -172,3 +172,31 @@
 .username-save-btn:hover {
   opacity: 0.85;
 }
+.count-badge {
+  display: inline-block;
+  margin: 0 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.count-badge.ok {
+  background: #d4f5d4;
+  color: #2b7a2b;
+}
+
+.count-badge.no {
+  background: #ffd6d6;
+  color: #c62828;
+}
+
+.count-badge.maybe {
+  background: #fff4c2;
+  color: #ff9800;
+}
+
+.count-badge.none {
+  background: #e0e0e0;
+  color: #555;
+}
