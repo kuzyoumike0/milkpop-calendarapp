@@ -39,6 +39,9 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
 
+  // 日付ごとの時間帯設定
+  const [timeSettings, setTimeSettings] = useState({});
+
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
   }, [currentYear, currentMonth]);
@@ -47,6 +50,11 @@ const RegisterPage = () => {
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
+
+  const formatDateKey = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate()
+    ).padStart(2, "0")}`;
 
   const handleSelect = (date) => {
     // 単日
@@ -95,6 +103,15 @@ const RegisterPage = () => {
   const holiday = (date) => {
     const h = hd.isHoliday(date);
     return h ? h[0].name : null;
+  };
+
+  // 時間指定の変更処理
+  const handleTimeChange = (date, type, value) => {
+    const key = formatDateKey(date);
+    setTimeSettings((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [type]: value },
+    }));
   };
 
   return (
@@ -184,21 +201,72 @@ const RegisterPage = () => {
 
         <div className="selected-list">
           <h2>選択中の日程</h2>
-          {selectedDates.map((d, idx) => (
-            <div key={idx} className="selected-card">
-              <span className="date-badge">
-                {d.getFullYear()}-
-                {String(d.getMonth() + 1).padStart(2, "0")}-
-                {String(d.getDate()).padStart(2, "0")}
-              </span>
-              <div className="time-buttons">
-                <button className="time-btn">終日</button>
-                <button className="time-btn">昼</button>
-                <button className="time-btn">夜</button>
-                <button className="time-btn">時間指定</button>
+          {selectedDates.map((d, idx) => {
+            const key = formatDateKey(d);
+            const setting = timeSettings[key] || {};
+            return (
+              <div key={idx} className="selected-card">
+                <span className="date-badge">
+                  {d.getFullYear()}-
+                  {String(d.getMonth() + 1).padStart(2, "0")}-
+                  {String(d.getDate()).padStart(2, "0")}
+                </span>
+                <div className="time-buttons">
+                  <button className="time-btn">終日</button>
+                  <button className="time-btn">昼</button>
+                  <button className="time-btn">夜</button>
+                  <button
+                    className="time-btn"
+                    onClick={() =>
+                      setTimeSettings((prev) => ({
+                        ...prev,
+                        [key]: {
+                          ...prev[key],
+                          showTimeSelect: !prev[key]?.showTimeSelect,
+                        },
+                      }))
+                    }
+                  >
+                    時間指定
+                  </button>
+                </div>
+
+                {setting.showTimeSelect && (
+                  <div className="time-selects">
+                    <select
+                      className="cute-select"
+                      value={setting.start || ""}
+                      onChange={(e) =>
+                        handleTimeChange(d, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始時刻</option>
+                      {Array.from({ length: 24 }).map((_, h) => (
+                        <option key={h} value={`${h}:00`}>
+                          {h}:00
+                        </option>
+                      ))}
+                    </select>
+                    <span>〜</span>
+                    <select
+                      className="cute-select"
+                      value={setting.end || ""}
+                      onChange={(e) =>
+                        handleTimeChange(d, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了時刻</option>
+                      {Array.from({ length: 24 }).map((_, h) => (
+                        <option key={h} value={`${h}:00`}>
+                          {h}:00
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
