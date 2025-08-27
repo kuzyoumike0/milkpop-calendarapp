@@ -1,4 +1,6 @@
-/* RegisterPage 全体 */
+/* =====================
+   RegisterPage 全体
+===================== */
 .register-page {
   padding: 20px;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
@@ -29,7 +31,9 @@
   color: white;
 }
 
-/* モード切替 */
+/* =====================
+   モード切替ボタン
+===================== */
 .mode-tabs {
   display: flex;
   justify-content: center;
@@ -44,13 +48,19 @@
   font-size: 1rem;
   background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
+  transition: 0.2s;
 }
 .mode-tabs button.active {
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
 }
+.mode-tabs button:hover {
+  transform: scale(1.05);
+}
 
-/* カレンダーとリスト */
+/* =====================
+   カレンダーとリスト
+===================== */
 .calendar-container {
   display: flex;
   gap: 24px;
@@ -73,43 +83,102 @@
   overflow-y: auto;
 }
 
-/* カレンダー */
+/* =====================
+   カレンダー table
+===================== */
 .calendar-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
   color: white;
 }
+.calendar-header button {
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.calendar-header button:hover {
+  background: #004ca0;
+}
+
 .calendar-table {
   width: 100%;
   border-collapse: collapse;
   text-align: center;
 }
+
+/* ====== 崩れ防止: 各セルを同じサイズに固定 ====== */
 .calendar-table th {
   padding: 10px;
   background: rgba(0,0,0,0.3);
   color: white;
 }
 .calendar-table td {
-  padding: 20px;
-  cursor: pointer;
+  width: 14%;              /* 7列均等 */
+  height: 80px;            /* 固定高さ */
+  box-sizing: border-box;   /* borderを含めてサイズ固定 */
+  text-align: center;
+  vertical-align: middle;
   border-radius: 10px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
 }
-.today {
-  background: #004ca0 !important;
-  color: white !important;
-}
-.selected-date {
-  background: #fdb9c8 !important;
-  border: 2px solid #004ca0;
+.calendar-table td:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
-/* 選択リスト */
+/* 今日 */
+.today {
+  background: #004ca0 !important;
+  color: #fff !important;
+  font-weight: bold;
+  box-shadow: 0 0 6px #fdb9c8;
+}
+
+/* 選択日 */
+.selected-date {
+  background: #fdb9c8 !important;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 8px #004ca0;
+  border: none; /* サイズ崩れ防止 */
+}
+
+/* 他月は薄く */
+.other-month {
+  opacity: 0.3;
+}
+
+/* 日曜赤、土曜青 */
+.sunday {
+  color: #e60033;
+}
+.saturday {
+  color: #004ca0;
+}
+
+/* 祝日名 */
+.holiday-name {
+  font-size: 0.6rem;
+  color: red;
+  margin-top: 2px;
+}
+
+/* =====================
+   選択リストカード
+===================== */
 .selected-card {
   background: white;
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 .date-badge {
   display: inline-block;
@@ -123,6 +192,7 @@
   display: flex;
   gap: 6px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 .time-btn {
   padding: 6px 12px;
@@ -136,7 +206,9 @@
   color: white;
 }
 
-/* 時間指定プルダウン */
+/* =====================
+   時間指定プルダウン
+===================== */
 .time-selects {
   display: flex;
   gap: 8px;
@@ -150,7 +222,9 @@
   color: white;
 }
 
-/* 共有リンク */
+/* =====================
+   共有リンク
+===================== */
 .share-btn {
   display: block;
   margin: 20px auto;
@@ -160,12 +234,19 @@
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
   cursor: pointer;
+  font-weight: bold;
 }
 .share-link-box {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 10px;
+  margin-top: 10px;
+}
+.share-link-box a {
+  color: #004ca0;
+  text-decoration: underline;
+  font-weight: bold;
 }
 .copy-btn {
   padding: 6px 12px;
@@ -174,4 +255,7 @@
   background: #004ca0;
   color: white;
   cursor: pointer;
+}
+.copy-btn:hover {
+  opacity: 0.85;
 }
