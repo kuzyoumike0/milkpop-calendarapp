@@ -218,11 +218,19 @@ const RegisterPage = () => {
           </table>
         </div>
 
-        {/* 選択中リスト（ソート済み） */}
+        {/* 選択中リスト（年→月→日でソート） */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
           {[...selectedDates]
-            .sort((a, b) => a - b)   // 昇順ソート
+            .sort((a, b) => {
+              if (a.getFullYear() !== b.getFullYear()) {
+                return a.getFullYear() - b.getFullYear();
+              }
+              if (a.getMonth() !== b.getMonth()) {
+                return a.getMonth() - b.getMonth();
+              }
+              return a.getDate() - b.getDate();
+            })
             .map((d, idx) => {
               const key = formatDateKey(d);
               const setting = timeSettings[key] || {};
