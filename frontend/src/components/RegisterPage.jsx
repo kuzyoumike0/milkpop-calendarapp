@@ -164,17 +164,20 @@ const SharePage = () => {
               {uniqueUsers.map((user) => (
                 <th key={user}>
                   {editingUser === user ? (
-                    <input
-                      type="text"
-                      className="username-edit-input"
-                      value={newUsername}
-                      onChange={(e) => setNewUsername(e.target.value)}
-                      onBlur={() => handleUsernameSave(user)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleUsernameSave(user);
-                      }}
-                      autoFocus
-                    />
+                    <div className="username-edit-box">
+                      <input
+                        type="text"
+                        className="username-edit-input"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                      />
+                      <button
+                        className="username-save-btn"
+                        onClick={() => handleUsernameSave(user)}
+                      >
+                        保存
+                      </button>
+                    </div>
                   ) : (
                     <span
                       className="editable-username"
