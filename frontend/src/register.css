@@ -61,7 +61,7 @@
 }
 
 /* =====================
-   カレンダーとリスト (7:3)
+   カレンダーとリスト (PC 7:3)
 ===================== */
 .calendar-container {
   display: flex;
@@ -126,8 +126,8 @@
   font-size: 1.2rem;
 }
 .calendar-table td {
-  min-width: 80px;   /* セル幅固定 */
-  min-height: 80px;  /* セル高さ固定 */
+  min-width: 80px;
+  min-height: 80px;
   height: 100px;
   font-size: 1.3rem;
   font-weight: bold;
@@ -152,7 +152,7 @@
   100% { box-shadow: 0 0 24px #fdb9c8, 0 0 36px #fdb9c8; }
 }
 
-/* 選択セル → セル全体を強調（縮まない） */
+/* 選択セル → セル全体を強調 */
 .calendar-table td.selected-date {
   background-color: #fdb9c8 !important;
   color: #000 !important;
@@ -162,8 +162,6 @@
   box-shadow: 0 0 6px rgba(0,0,0,0.2);
   text-align: center;
   vertical-align: middle;
-
-  /* セル全体に背景を適用 */
   display: table-cell;
 }
 
@@ -283,4 +281,43 @@
 }
 .copy-btn:hover {
   opacity: 0.85;
+}
+
+/* =====================
+   レスポンシブ対応
+===================== */
+
+/* タブレット (768px〜1024px) */
+@media screen and (max-width: 1024px) {
+  .calendar-container {
+    flex-direction: row;
+    gap: 20px;
+  }
+  .calendar-box {
+    flex: 6;
+  }
+  .selected-list {
+    flex: 4;
+  }
+}
+
+/* スマホ (767px以下) */
+@media screen and (max-width: 767px) {
+  .calendar-container {
+    flex-direction: column;
+  }
+  .calendar-box,
+  .selected-list {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .calendar-table tr {
+    height: 60px; /* 高さを詰める */
+  }
+  .calendar-table td {
+    min-width: auto;
+    min-height: auto;
+    height: 60px;
+    font-size: 1rem;
+  }
 }
