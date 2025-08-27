@@ -1,222 +1,187 @@
-// frontend/src/components/SharePage.jsx
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
+import Calendar from "react-calendar";
+import Holidays from "date-holidays";
+import { v4 as uuidv4 } from "uuid";
 import "../common.css";
-import "../share.css";
+import "../register.css";
 
-const attendanceOptions = ["-", "○", "✖", "△"];
-const socket = io();
+const hd = new Holidays("JP"); // 日本の祝日
 
-const SharePage = () => {
-  const { token } = useParams();
-  const [schedule, setSchedule] = useState(null);
-  const [allResponses, setAllResponses] = useState([]);
-  const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID());
-  const [responses, setResponses] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
+const RegisterPage = () => {
+  const [title, setTitle] = useState("");
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeType, setTimeType] = useState("終日");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
+  const [schedules, setSchedules] = useState([]);
 
-  // ===== ユーザ名編集用 =====
-  const [editingUser, setEditingUser] = useState(null);
-  const [newUsername, setNewUsername] = useState("");
-
-  // ===== スケジュール読み込み =====
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      const res = await fetch(`/api/schedules/${token}`);
-      const data = await res.json();
-      setSchedule(data);
-
-      const res2 = await fetch(`/api/schedules/${token}/responses`);
-      const data2 = await res2.json();
-      setAllResponses(data2);
-    };
-    fetchSchedule();
-
-    socket.emit("joinSchedule", token);
-    socket.on("updateResponses", (newRes) => {
-      setAllResponses((prev) => {
-        const others = prev.filter((r) => r.user_id !== newRes.user_id);
-        return [...others, newRes];
-      });
-    });
-    socket.on("deleteResponse", ({ user_id }) => {
-      setAllResponses((prev) => prev.filter((r) => r.user_id !== user_id));
-    });
-
-    return () => {
-      socket.off("updateResponses");
-      socket.off("deleteResponse");
-    };
-  }, [token]);
-
-  // ===== 入力変更 =====
-  const handleChange = (dateKey, value) => {
-    setResponses((prev) => ({
-      ...prev,
-      [dateKey]: value,
-    }));
+  // ===== カレンダーで日付クリック =====
+  const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
+    if (selectedDates.includes(dateStr)) {
+      setSelectedDates(selectedDates.filter((d) => d !== dateStr));
+    } else {
+      setSelectedDates([...selectedDates, dateStr].sort());
+    }
   };
 
   // ===== 保存 =====
   const handleSave = async () => {
-    if (!username) {
-      setSaveMessage("名前を入力してください");
-      return;
-    }
-    const res = {
-      user_id: userId,
-      username,
-      responses,
+    if (!title || selectedDates.length === 0) return alert("タイトルと日付を入力してください");
+
+    const newSchedule = {
+      id: uuidv4(),
+      title,
+      dates: selectedDates.map((d) => ({
+        date: d,
+        timeType,
+        startTime: timeType === "時間指定" ? startTime : null,
+        endTime: timeType === "時間指定" ? endTime : null,
+      })),
     };
-    await fetch(`/api/schedules/${token}/responses`, {
+
+    const res = await fetch("/api/schedules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
+      body: JSON.stringify(newSchedule),
     });
-    setSaveMessage("保存しました！");
-  };
-
-  // ===== ユーザ名編集 =====
-  const handleUsernameEdit = (user) => {
-    setEditingUser(user);
-    setNewUsername(user);
-  };
-
-  const handleUsernameSave = async (oldName) => {
-    if (!newUsername.trim()) return;
-    await fetch(`/api/schedules/${token}/edit-username`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        oldName,
-        newName: newUsername.trim(),
-      }),
-    });
-    setEditingUser(null);
-    setNewUsername("");
-  };
-
-  // ===== 日付フォーマット =====
-  const formatDate = (d) => {
-    const date = new Date(d.date);
-    const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-    if (d.timeType === "時間指定" && d.startTime && d.endTime) {
-      return `${base} (${d.startTime} ~ ${d.endTime})`;
+    if (res.ok) {
+      const token = (await res.json()).token;
+      setShareUrl(`${window.location.origin}/share/${token}`);
+      setSchedules([...schedules, newSchedule]);
+      setTitle("");
+      setSelectedDates([]);
     }
-    return `${base}（${d.timeType || "未定"}）`;
   };
 
-  if (!schedule) return <div>読み込み中...</div>;
+  // ===== 祝日名を返す =====
+  const getHolidayName = (date) => {
+    const h = hd.isHoliday(date);
+    return h ? h[0].name : null;
+  };
 
-  // ユニークユーザー
-  const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
+  // ===== 時間選択のドロップダウンを作る =====
+  const renderTimeDropdown = () => {
+    if (timeType !== "時間指定") return null;
+    const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    return (
+      <div className="time-dropdowns">
+        <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+          <option value="">開始時間</option>
+          {hours.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <span> ~ </span>
+        <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+          <option value="">終了時間</option>
+          {hours.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+      </div>
+    );
+  };
 
   return (
-    <div className="share-container">
-      <h1 className="share-title">MilkPOP Calendar</h1>
+    <div className="register-container">
+      <h1 className="register-title">MilkPOP Calendar</h1>
 
       {/* 入力フォーム */}
-      <div className="response-form">
+      <div className="form-container">
         <input
           type="text"
-          className="username-input"
-          placeholder="あなたの名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          placeholder="タイトルを入力"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="title-input"
         />
-        {schedule.dates.map((d) => {
-          const dateKey =
-            d.timeType === "時間指定" && d.startTime && d.endTime
-              ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-              : `${d.date} (${d.timeType})`;
-          return (
-            <div key={dateKey} className="date-response">
-              <span className="date-label">{formatDate(d)}</span>
-              <select
-                className="attendance-select"
-                value={responses[dateKey] || "-"}
-                onChange={(e) => handleChange(dateKey, e.target.value)}
-              >
-                {attendanceOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          );
-        })}
-        <button className="save-btn" onClick={handleSave}>
-          保存する
-        </button>
-        {saveMessage && <p className="save-message">{saveMessage}</p>}
+
+        <div className="calendar-and-list">
+          <div className="calendar-box">
+            <Calendar
+              locale="ja-JP"
+              onClickDay={handleDateClick}
+              tileContent={({ date }) => {
+                const holiday = getHolidayName(date);
+                return holiday ? <p className="holiday-name">{holiday}</p> : null;
+              }}
+              tileClassName={({ date }) => {
+                const dateStr = date.toISOString().split("T")[0];
+                if (selectedDates.includes(dateStr)) return "selected-date";
+                if (date.getDay() === 0) return "sunday";
+                if (date.getDay() === 6) return "saturday";
+                return null;
+              }}
+            />
+          </div>
+
+          <div className="selected-list">
+            <h3>選択された日程</h3>
+            <ul>
+              {selectedDates.map((d) => (
+                <li key={d}>
+                  {d} （{timeType}
+                  {timeType === "時間指定" && startTime && endTime
+                    ? ` ${startTime} ~ ${endTime}`
+                    : ""}
+                  ）
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* 時間帯選択 */}
+        <div className="time-options">
+          <label><input type="radio" value="終日" checked={timeType === "終日"} onChange={(e) => setTimeType(e.target.value)} /> 終日</label>
+          <label><input type="radio" value="昼" checked={timeType === "昼"} onChange={(e) => setTimeType(e.target.value)} /> 昼</label>
+          <label><input type="radio" value="夜" checked={timeType === "夜"} onChange={(e) => setTimeType(e.target.value)} /> 夜</label>
+          <label><input type="radio" value="時間指定" checked={timeType === "時間指定"} onChange={(e) => setTimeType(e.target.value)} /> 時間指定</label>
+        </div>
+
+        {renderTimeDropdown()}
+
+        <button className="save-btn" onClick={handleSave}>共有リンクを発行</button>
+        {shareUrl && (
+          <div className="share-link-box">
+            <input type="text" value={shareUrl} readOnly className="share-link" />
+            <button
+              className="copy-btn"
+              onClick={() => navigator.clipboard.writeText(shareUrl)}
+            >
+              コピー
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* みんなの回答 */}
-      <div className="all-responses">
-        <h2>みんなの回答</h2>
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>日程</th>
-              {uniqueUsers.map((user) => (
-                <th key={user}>
-                  {editingUser === user ? (
-                    <div className="username-edit-box">
-                      <input
-                        type="text"
-                        className="username-edit-input"
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                      />
-                      <button
-                        className="username-save-btn"
-                        onClick={() => handleUsernameSave(user)}
-                      >
-                        保存
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="editable-username"
-                      onClick={() => handleUsernameEdit(user)}
-                    >
-                      {user}
-                    </span>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedule.dates.map((d) => {
-              const dateKey =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
-              return (
-                <tr key={dateKey}>
-                  <td>{formatDate(d)}</td>
-                  {uniqueUsers.map((user) => {
-                    const userResponse = allResponses.find(
-                      (r) => r.username === user
-                    );
-                    return (
-                      <td key={user}>
-                        {userResponse?.responses?.[dateKey] || "-"}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* 登録済みカレンダー一覧 */}
+      <div className="schedules-list">
+        <h2>登録済みスケジュール</h2>
+        <ul>
+          {schedules.map((s) => (
+            <li key={s.id}>
+              <strong>{s.title}</strong>
+              <ul>
+                {s.dates.map((d, i) => (
+                  <li key={i}>
+                    {d.date} （{d.timeType}
+                    {d.timeType === "時間指定" && d.startTime && d.endTime
+                      ? ` ${d.startTime} ~ ${d.endTime}`
+                      : ""}
+                    ）
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 };
 
-export default SharePage;
+export default RegisterPage;
