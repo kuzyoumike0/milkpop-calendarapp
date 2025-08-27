@@ -29,23 +29,14 @@ const RegisterPage = () => {
       } else if (selectedDates.length === 1) {
         const start = new Date(selectedDates[0]);
         const end = date;
-        if (start <= end) {
-          const range = [];
-          let cur = new Date(start);
-          while (cur <= end) {
-            range.push(cur.toISOString().split("T")[0]);
-            cur.setDate(cur.getDate() + 1);
-          }
-          setSelectedDates(range);
-        } else {
-          const range = [];
-          let cur = new Date(end);
-          while (cur <= start) {
-            range.push(cur.toISOString().split("T")[0]);
-            cur.setDate(cur.getDate() + 1);
-          }
-          setSelectedDates(range);
+        const range = [];
+        let cur = new Date(Math.min(start, end));
+        const stop = new Date(Math.max(start, end));
+        while (cur <= stop) {
+          range.push(cur.toISOString().split("T")[0]);
+          cur.setDate(cur.getDate() + 1);
         }
+        setSelectedDates(range);
       }
     }
   };
@@ -53,28 +44,29 @@ const RegisterPage = () => {
   // カレンダーセルのクラス名
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
+      const classes = [];
       const day = date.getDay();
-      if (day === 0) return "sunday";
-      if (day === 6) return "saturday";
-      const dateStr = date.toISOString().split("T")[0];
-      if (selectedDates.includes(dateStr)) return "selected-date";
+      if (day === 0) classes.push("sunday");
+      if (day === 6) classes.push("saturday");
+
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0];
-      if (dateStr === todayStr) return "today";
+      const dateStr = date.toISOString().split("T")[0];
+
+      if (dateStr === todayStr) classes.push("today");
+      if (selectedDates.includes(dateStr)) classes.push("selected-date");
+      return classes;
     }
     return null;
   };
 
-  // 祝日名を日付の下に表示
+  // 祝日名だけを追加
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
-      return (
-        <div className="day-cell">
-          <div className="day-number">{date.getDate()}</div>
-          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
-        </div>
-      );
+      return holiday ? (
+        <div className="holiday-name">{holiday[0].name}</div>
+      ) : null;
     }
     return null;
   };
