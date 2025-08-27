@@ -13,6 +13,10 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [timeSettings, setTimeSettings] = useState({});
 
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    String(i).padStart(2, "0") + ":00"
+  );
+
   const handleDateChange = (date) => {
     if (mode === "single") {
       setSelectedDates([date]);
@@ -70,6 +74,13 @@ const RegisterPage = () => {
     setTimeSettings((prev) => ({
       ...prev,
       [dateKey]: { type, start: null, end: null },
+    }));
+  };
+
+  const handleStartEndChange = (dateKey, field, value) => {
+    setTimeSettings((prev) => ({
+      ...prev,
+      [dateKey]: { ...prev[dateKey], [field]: value },
     }));
   };
 
@@ -154,6 +165,41 @@ const RegisterPage = () => {
                     </button>
                   ))}
                 </div>
+
+                {/* 時間指定のときだけプルダウン表示 */}
+                {timeSettings[key]?.type === "時間指定" && (
+                  <div className="time-select-box">
+                    <select
+                      className="cute-select"
+                      value={timeSettings[key]?.start || ""}
+                      onChange={(e) =>
+                        handleStartEndChange(key, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                    <span> ~ </span>
+                    <select
+                      className="cute-select"
+                      value={timeSettings[key]?.end || ""}
+                      onChange={(e) =>
+                        handleStartEndChange(key, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了時刻</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             );
           })}
