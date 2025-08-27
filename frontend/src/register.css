@@ -15,7 +15,6 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
-/* タイトル入力フォーム → カレンダー幅に合わせる */
 .title-input {
   display: block;
   width: 70%; /* カレンダー幅に合わせる */
@@ -72,7 +71,7 @@
   overflow-y: auto;
 }
 
-/* ===== カレンダーのデフォルト四角 ===== */
+/* ==== カレンダー ==== */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -104,23 +103,21 @@
   box-shadow: 0 0 12px rgba(253,185,200,0.9);
 }
 
-/* hover時 */
+/* hover */
 .react-calendar__tile:hover {
   transform: scale(1.05);
   background: rgba(253,185,200,0.6) !important;
   color: #000 !important;
 }
 
-/* ===== 祝日名を下に表示 ===== */
+/* 祝日名を下に表示 */
 .holiday-name {
   color: #e60033 !important;
   font-size: 0.7rem;
   margin-top: 2px;
-  display: block;
-  text-align: center;
 }
 
-/* ===== 選択中の日程カード ===== */
+/* ==== 選択中の日程カード ==== */
 .selected-card {
   background: white;
   border-radius: 16px;
@@ -132,7 +129,6 @@
   gap: 10px;
 }
 
-/* 日付バッジ */
 .date-badge {
   display: inline-block;
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
@@ -143,7 +139,7 @@
   border-radius: 20px;
 }
 
-/* 時間帯ボタン */
+/* ==== 時間帯ボタン ==== */
 .time-buttons {
   display: flex;
   gap: 6px;
@@ -160,24 +156,60 @@
   transition: 0.2s;
 }
 
+.time-btn:hover {
+  background: #fdb9c8;
+  color: white;
+}
+
 .time-btn.active {
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
   font-weight: bold;
 }
 
-/* 時間指定用セレクト */
-.cute-select {
-  padding: 6px 10px;
-  border-radius: 12px;
-  border: 2px solid #004ca0;
-  background: white;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: 0.2s;
+/* ==== プルダウン（時間指定用） ==== */
+.time-select-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-/* 保存ボタン */
+.cute-select {
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 2px solid #004ca0;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #004ca0;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: all 0.25s ease;
+  appearance: none;
+  background-image: linear-gradient(135deg, #fdfdfd, #f7f7f7),
+    url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%23004ca0' d='M5.25 7.5L10 12.25L14.75 7.5H5.25Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 30px; /* ▼アイコン分 */
+}
+
+.cute-select:hover {
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  color: #fff;
+  border-color: #fdb9c8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+.cute-select:focus {
+  outline: none;
+  border-color: #fdb9c8;
+  box-shadow: 0 0 8px #fdb9c8;
+}
+
+/* ==== 保存ボタン ==== */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -190,7 +222,11 @@
   cursor: pointer;
 }
 
-/* 共有リンク表示エリア */
+.save-btn:hover {
+  opacity: 0.9;
+}
+
+/* ==== 共有リンクエリア ==== */
 .share-link-box {
   display: flex;
   justify-content: center;
