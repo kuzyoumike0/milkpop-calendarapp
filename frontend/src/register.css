@@ -33,6 +33,7 @@
   justify-content: center;
   margin-bottom: 20px;
 }
+
 .mode-tabs button {
   flex: 1;
   padding: 10px;
@@ -43,6 +44,7 @@
   background: rgba(255,255,255,0.6);
   cursor: pointer;
 }
+
 .mode-tabs button.active {
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
@@ -52,6 +54,7 @@
   display: flex;
   gap: 20px;
 }
+
 .calendar-box {
   flex: 7;
   background: rgba(255,255,255,0.2);
@@ -59,6 +62,7 @@
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
+
 .selected-list {
   flex: 3;
   background: rgba(255,255,255,0.2);
@@ -67,7 +71,23 @@
   overflow-y: auto;
 }
 
-/* デフォルト四角タイル */
+/* 日曜は赤、土曜は青 */
+.sunday .day-number {
+  color: #e60033 !important;
+}
+.saturday .day-number {
+  color: #004ca0 !important;
+}
+
+/* 祝日名を日付の下に赤で */
+.holiday-name {
+  color: #e60033 !important;
+  font-size: 0.7rem;
+  margin-top: 2px;
+  font-weight: bold;
+}
+
+/* デフォルト日付 */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -84,9 +104,8 @@
   background: #fdb9c8 !important;
   color: #000 !important;
   font-weight: bold !important;
-  border-radius: 8px !important;
   border: 2px solid #004ca0 !important;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  border-radius: 8px !important;
 }
 
 /* 今日 */
@@ -94,34 +113,47 @@
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold !important;
-  border-radius: 8px !important;
   border: 3px solid #fdb9c8 !important;
-  box-shadow: 0 0 12px rgba(253,185,200,0.9);
+  border-radius: 8px !important;
 }
 
-/* hover */
-.react-calendar__tile:hover {
-  transform: scale(1.05);
-  background: rgba(253,185,200,0.6) !important;
-  color: #000 !important;
+/* 選択カード */
+.selected-card {
+  background: white;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* 日曜・土曜・祝日 */
-.sunday span:first-child {
-  color: #e60033 !important;
-}
-.saturday span:first-child {
-  color: #004ca0 !important;
-}
-.holiday span:first-child {
-  color: #e60033 !important;
+.date-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 6px 12px;
+  border-radius: 20px;
 }
 
-/* 祝日名（日付の下に小さく赤文字） */
-.holiday-name {
-  color: #e60033 !important;
-  font-size: 0.7rem;
-  margin-top: 2px;
+.time-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.time-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  background: #eee;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.time-btn.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
   font-weight: bold;
 }
 
@@ -136,9 +168,6 @@
   font-size: 1rem;
   cursor: pointer;
 }
-.save-btn:hover {
-  opacity: 0.9;
-}
 
 .share-link-box {
   display: flex;
@@ -146,10 +175,7 @@
   margin-top: 10px;
   gap: 10px;
 }
-.share-link-box a {
-  color: #004ca0;
-  text-decoration: underline;
-}
+
 .copy-btn {
   padding: 8px 16px;
   border-radius: 12px;
@@ -157,7 +183,4 @@
   background: #004ca0;
   color: white;
   cursor: pointer;
-}
-.copy-btn:hover {
-  opacity: 0.8;
 }
