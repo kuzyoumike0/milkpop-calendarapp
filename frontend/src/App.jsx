@@ -19,13 +19,18 @@ import "./top.css";
 function App() {
   return (
     <Router>
+      {/* 共通ヘッダー */}
       <Header />
+
+      {/* ページごとのルーティング */}
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/personal" element={<PersonalPage />} />
         <Route path="/share/:token" element={<SharePage />} />
       </Routes>
+
+      {/* 共通フッター */}
       <Footer />
     </Router>
   );
