@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const [selectMode, setSelectMode] = useState("single");
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]);
-  const [timeType, setTimeType] = useState("終日");
   const [shareLink, setShareLink] = useState("");
 
   // ===== 日付クリック処理 =====
@@ -20,13 +19,14 @@ export default function RegisterPage() {
     const dateStr = date.toISOString().slice(0, 10);
 
     if (selectMode === "single") {
-      setSelectedDates([{ date: dateStr, timeType }]);
+      setSelectedDates([{ date: dateStr, timeType: "終日" }]);
     } else if (selectMode === "multi") {
       setSelectedDates((prev) => {
+        // 既に選択済みなら解除
         if (prev.find((d) => d.date === dateStr)) {
           return prev.filter((d) => d.date !== dateStr);
         }
-        return [...prev, { date: dateStr, timeType }];
+        return [...prev, { date: dateStr, timeType: "終日" }];
       });
     } else if (selectMode === "range") {
       if (!rangeStart) {
@@ -39,7 +39,7 @@ export default function RegisterPage() {
         while (current <= end) {
           rangeDates.push({
             date: current.toISOString().slice(0, 10),
-            timeType,
+            timeType: "終日",
           });
           current.setDate(current.getDate() + 1);
         }
@@ -49,7 +49,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ===== 曜日・祝日・範囲強調 =====
+  // ===== カレンダーのセルスタイル =====
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const weekday = date.getDay();
@@ -57,17 +57,15 @@ export default function RegisterPage() {
       const dateStr = date.toISOString().slice(0, 10);
       const todayStr = new Date().toISOString().slice(0, 10);
 
-      if (dateStr === todayStr) return "today-highlight"; // 今日強調
-      if (rangeStart && !selectedDates.find((d) => d.date === dateStr)) {
-        const start = rangeStart < date ? rangeStart : date;
-        const end = rangeStart < date ? date : rangeStart;
-        if (date >= start && date <= end) {
-          return "in-range";
-        }
-      }
+      // 今日
+      if (dateStr === todayStr) return "today-highlight";
+
+      // 選択中
       if (selectedDates.find((d) => d.date === dateStr)) {
         return "selected-date";
       }
+
+      // 曜日・祝日
       if (holiday || weekday === 0) return "sunday";
       if (weekday === 6) return "saturday";
       return "weekday";
@@ -95,7 +93,7 @@ export default function RegisterPage() {
     }
   };
 
-  // ===== 日付ソートして表示 =====
+  // ===== 日付ソート =====
   const sortedDates = [...selectedDates].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
@@ -114,7 +112,7 @@ export default function RegisterPage() {
       />
 
       <div className="register-container">
-        {/* カレンダー部分 */}
+        {/* カレンダー */}
         <div className="calendar-box">
           <div className="mode-buttons">
             <button
@@ -145,7 +143,7 @@ export default function RegisterPage() {
           />
         </div>
 
-        {/* 選択中日程 */}
+        {/* 選択中の日程 */}
         <div className="register-box">
           <h3>選択中の日程</h3>
           <ul className="event-list">
@@ -195,12 +193,11 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* 共有リンク発行 */}
+      {/* 共有リンク */}
       <div className="share-section">
         <button className="share-btn" onClick={handleShare}>
           共有リンク発行
         </button>
-
         {shareLink && (
           <div className="share-link">
             <a href={shareLink} target="_blank" rel="noopener noreferrer">
