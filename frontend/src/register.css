@@ -161,6 +161,16 @@
     box-shadow: 0 0 20px #ff9a9e, 0 0 30px #fad0c4;
   }
 }
+/* ✅ 今日かつ選択された日付 */
+.calendar-table td.today.selected-date {
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4) !important;
+  color: #fff !important;
+  font-weight: bold;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(255, 100, 150, 0.7), 0 0 20px rgba(250, 208, 196, 0.8);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+  transform: scale(1.08);
+}
 
 
 /* 選択セル → セル全体を強調 */
@@ -255,6 +265,7 @@
   background: black;
   color: white;
 }
+
 
 /* =====================
    共有リンク
