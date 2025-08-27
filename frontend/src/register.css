@@ -73,10 +73,20 @@
 
 /* カレンダーのデフォルト四角 */
 .react-calendar__tile {
-  border-radius: 8px;
-  padding: 10px 0;
+  border-radius: 8px !important;
+  padding: 10px 0 !important;
   transition: 0.2s;
   text-align: center;
+}
+
+/* 範囲選択時の楕円を無効化（強制四角） */
+.react-calendar__tile--range,
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd,
+.react-calendar__tile--rangeBothEnds {
+  border-radius: 8px !important;
+  background: inherit !important;
+  box-shadow: none !important;
 }
 
 /* 選択日 → ピンク背景＋黒文字 */
