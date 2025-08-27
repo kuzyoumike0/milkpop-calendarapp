@@ -67,7 +67,7 @@
 }
 
 .calendar-box {
-  flex: 9; /* カレンダーを広めに */
+  flex: 9; /* カレンダー広め */
   background: rgba(255, 255, 255, 0.2);
   padding: 30px;
   border-radius: 20px;
@@ -109,7 +109,7 @@
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  table-layout: fixed; /* 均等配置 */
+  table-layout: fixed;
 }
 
 .calendar-table th {
@@ -119,15 +119,14 @@
   font-size: 1.2rem;
 }
 
-/* ===== セルサイズ拡大で崩れ防止 ===== */
+/* ===== セル: 形は一定で崩れない ===== */
 .calendar-table td {
-  width: 14%;           /* 7列均等 */
-  height: 100px;        /* 高さ拡大 */
+  width: 14%;           
+  height: 100px;        
   box-sizing: border-box;
   text-align: center;
   vertical-align: middle;
-  border-radius: 12px;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition: background 0.2s, color 0.2s;
   cursor: pointer;
   font-size: 1.3rem;
   font-weight: bold;
@@ -141,19 +140,16 @@
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold;
-  box-shadow: 0 0 8px #fdb9c8;
 }
 
-/* 選択日 */
+/* 選択日: 色だけ変更 */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
   font-weight: bold;
-  box-shadow: 0 0 10px #004ca0;
-  border: none;
 }
 
-/* 他月は薄く */
+/* 他月 */
 .other-month {
   opacity: 0.3;
 }
@@ -166,7 +162,7 @@
   color: #004ca0;
 }
 
-/* 祝日 */
+/* 祝日名 */
 .holiday-name {
   font-size: 0.8rem;
   color: red;
