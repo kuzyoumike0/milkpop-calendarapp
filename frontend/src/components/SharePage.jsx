@@ -12,15 +12,8 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
 
-  // ==== 自分の回答 ====
-  const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID());
-  const [responses, setResponses] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
-
-  // ==== 編集対象ユーザ ====
-  const [editingUser, setEditingUser] = useState(null);
-  const [editingResponses, setEditingResponses] = useState({});
+  // 編集中セルの変更を一時保存するバッファ
+  const [editingCells, setEditingCells] = useState({}); // { user_id: { dateKey: value } }
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -52,78 +45,62 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 自分の回答入力変更 =====
-  const handleChange = (dateKey, value) => {
-    setResponses((prev) => ({
+  // ===== 編集開始 =====
+  const handleEditCell = (user, dateKey, currentValue) => {
+    setEditingCells((prev) => ({
       ...prev,
-      [dateKey]: value,
+      [user.user_id]: {
+        ...(prev[user.user_id] || {}),
+        [dateKey]: currentValue,
+      },
     }));
   };
 
-  // ===== 自分の回答保存 =====
-  const handleSave = async () => {
-    if (!username) {
-      setSaveMessage("名前を入力してください");
-      return;
+  // ===== 編集値変更 =====
+  const handleChangeCell = (user, dateKey, value) => {
+    setEditingCells((prev) => ({
+      ...prev,
+      [user.user_id]: {
+        ...(prev[user.user_id] || {}),
+        [dateKey]: value,
+      },
+    }));
+  };
+
+  // ===== 保存処理（まとめて保存） =====
+  const handleSaveAll = async () => {
+    for (const user_id of Object.keys(editingCells)) {
+      const user = allResponses.find((r) => r.user_id === user_id);
+      if (!user) continue;
+
+      const newResponses = {
+        ...user.responses,
+        ...editingCells[user_id],
+      };
+
+      const response = await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.user_id,
+          username: user.username,
+          responses: newResponses,
+        }),
+      });
+      const data = await response.json();
+
+      // 即反映
+      setAllResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== data.user_id);
+        return [...others, data];
+      });
     }
-    const res = {
-      user_id: userId,
-      username,
-      responses,
-    };
-    const response = await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
-    });
-    const data = await response.json();
 
-    // ✅ 保存直後に allResponses を更新（即座に反映）
-    setAllResponses((prev) => {
-      const others = prev.filter((r) => r.user_id !== data.user_id);
-      return [...others, data];
-    });
-
-    setSaveMessage("保存しました！");
+    setEditingCells({});
+    alert("保存しました！");
   };
 
-  // ===== 他人の回答編集開始 =====
-  const handleEditUser = (user) => {
-    setEditingUser(user.username);
-    setEditingResponses({ ...user.responses });
-  };
-
-  // ===== 編集中の回答変更 =====
-  const handleEditResponseChange = (dateKey, value) => {
-    setEditingResponses((prev) => ({
-      ...prev,
-      [dateKey]: value,
-    }));
-  };
-
-  // ===== 編集保存 =====
-  const handleEditSave = async (user) => {
-    const response = await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.user_id,
-        username: user.username,
-        responses: editingResponses,
-      }),
-    });
-    const data = await response.json();
-
-    // ✅ 保存直後に allResponses を更新
-    setAllResponses((prev) => {
-      const others = prev.filter((r) => r.user_id !== data.user_id);
-      return [...others, data];
-    });
-
-    setEditingUser(null);
-    setEditingResponses({});
-  };
-
+  // ===== 日付フォーマット =====
   const formatDate = (d) => {
     const date = new Date(d.date);
     const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
@@ -141,45 +118,6 @@ const SharePage = () => {
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* ===== 自分の回答フォーム ===== */}
-      <div className="response-form">
-        <h2>あなたの回答</h2>
-        <input
-          type="text"
-          className="username-input"
-          placeholder="あなたの名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        {schedule?.dates?.map((d) => {
-          const dateKey =
-            d.timeType === "時間指定" && d.startTime && d.endTime
-              ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-              : `${d.date} (${d.timeType})`;
-          return (
-            <div key={dateKey} className="date-response">
-              <span className="date-label">{formatDate(d)}</span>
-              <select
-                className="attendance-select"
-                value={responses[dateKey] || "-"}
-                onChange={(e) => handleChange(dateKey, e.target.value)}
-              >
-                {attendanceOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
-            </div>
-          );
-        })}
-        <button className="save-btn" onClick={handleSave}>
-          保存する
-        </button>
-        {saveMessage && <p className="save-message">{saveMessage}</p>}
-      </div>
-
-      {/* ===== みんなの回答 ===== */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
         <table className="responses-table">
@@ -205,15 +143,31 @@ const SharePage = () => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
                     );
+                    const user_id = userResponse?.user_id;
+                    const currentValue =
+                      editingCells[user_id]?.[dateKey] ??
+                      userResponse?.responses?.[dateKey] ??
+                      "-";
 
-                    if (editingUser === user) {
-                      return (
-                        <td key={user}>
+                    const isEditing =
+                      editingCells[user_id] &&
+                      editingCells[user_id][dateKey] !== undefined;
+
+                    return (
+                      <td
+                        key={user}
+                        className="editable-cell"
+                        onClick={() =>
+                          !isEditing &&
+                          handleEditCell(userResponse, dateKey, currentValue)
+                        }
+                      >
+                        {isEditing ? (
                           <select
                             className="attendance-select"
-                            value={editingResponses[dateKey] || "-"}
+                            value={currentValue}
                             onChange={(e) =>
-                              handleEditResponseChange(dateKey, e.target.value)
+                              handleChangeCell(userResponse, dateKey, e.target.value)
                             }
                           >
                             {attendanceOptions.map((opt) => (
@@ -222,23 +176,9 @@ const SharePage = () => {
                               </option>
                             ))}
                           </select>
-                        </td>
-                      );
-                    }
-
-                    return (
-                      <td
-                        key={user}
-                        className="editable-cell"
-                        onClick={() =>
-                          handleEditUser({
-                            username: user,
-                            user_id: userResponse?.user_id,
-                            responses: userResponse?.responses || {},
-                          })
-                        }
-                      >
-                        {userResponse?.responses?.[dateKey] || "-"}
+                        ) : (
+                          currentValue
+                        )}
                       </td>
                     );
                   })}
@@ -248,27 +188,11 @@ const SharePage = () => {
           </tbody>
         </table>
 
-        {editingUser && (
+        {/* 下に保存ボタン */}
+        {Object.keys(editingCells).length > 0 && (
           <div className="edit-actions">
-            <button
-              className="save-btn"
-              onClick={() => {
-                const targetUser = allResponses.find(
-                  (r) => r.username === editingUser
-                );
-                handleEditSave(targetUser);
-              }}
-            >
-              編集保存
-            </button>
-            <button
-              className="cancel-btn"
-              onClick={() => {
-                setEditingUser(null);
-                setEditingResponses({});
-              }}
-            >
-              キャンセル
+            <button className="save-btn" onClick={handleSaveAll}>
+              保存
             </button>
           </div>
         )}
