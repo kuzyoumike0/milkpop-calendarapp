@@ -12,10 +12,15 @@ const SharePage = () => {
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
 
-  // 編集中セルの変更を一時保存するバッファ
-  const [editingCells, setEditingCells] = useState({}); // { user_id: { dateKey: value } }
+  // 自分の回答
+  const [username, setUsername] = useState("");
+  const [userId] = useState(() => crypto.randomUUID());
+  const [responses, setResponses] = useState({});
+  const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== スケジュール読み込み =====
+  // 編集中セル
+  const [editingCells, setEditingCells] = useState({});
+
   useEffect(() => {
     if (!token) return;
 
@@ -29,6 +34,13 @@ const SharePage = () => {
       if (!res2.ok) return;
       const data2 = await res2.json();
       setAllResponses(data2);
+
+      // もし自分の回答があればロード
+      const myRes = data2.find((r) => r.user_id === userId);
+      if (myRes) {
+        setUsername(myRes.username);
+        setResponses(myRes.responses);
+      }
     };
     fetchData();
 
@@ -43,9 +55,43 @@ const SharePage = () => {
     return () => {
       socket.off("updateResponses");
     };
-  }, [token]);
+  }, [token, userId]);
 
-  // ===== 編集開始 =====
+  // 自分の入力変更
+  const handleChange = (dateKey, value) => {
+    setResponses((prev) => ({
+      ...prev,
+      [dateKey]: value,
+    }));
+  };
+
+  // 自分の保存
+  const handleSave = async () => {
+    if (!username) {
+      setSaveMessage("名前を入力してください");
+      return;
+    }
+    const res = {
+      user_id: userId,
+      username,
+      responses,
+    };
+    const response = await fetch(`/api/schedules/${token}/responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(res),
+    });
+    const data = await response.json();
+
+    setAllResponses((prev) => {
+      const others = prev.filter((r) => r.user_id !== data.user_id);
+      return [...others, data];
+    });
+
+    setSaveMessage("保存しました！");
+  };
+
+  // みんなの回答セル編集
   const handleEditCell = (user, dateKey, currentValue) => {
     setEditingCells((prev) => ({
       ...prev,
@@ -56,7 +102,6 @@ const SharePage = () => {
     }));
   };
 
-  // ===== 編集値変更 =====
   const handleChangeCell = (user, dateKey, value) => {
     setEditingCells((prev) => ({
       ...prev,
@@ -67,7 +112,6 @@ const SharePage = () => {
     }));
   };
 
-  // ===== 保存処理（まとめて保存） =====
   const handleSaveAll = async () => {
     for (const user_id of Object.keys(editingCells)) {
       const user = allResponses.find((r) => r.user_id === user_id);
@@ -89,7 +133,6 @@ const SharePage = () => {
       });
       const data = await response.json();
 
-      // 即反映
       setAllResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== data.user_id);
         return [...others, data];
@@ -100,7 +143,7 @@ const SharePage = () => {
     alert("保存しました！");
   };
 
-  // ===== 日付フォーマット =====
+  // 日付表示
   const formatDate = (d) => {
     const date = new Date(d.date);
     const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
@@ -118,6 +161,45 @@ const SharePage = () => {
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
+      {/* ✅ 自分の回答フォーム */}
+      <div className="response-form">
+        <h2>自分の回答</h2>
+        <input
+          type="text"
+          className="username-input"
+          placeholder="あなたの名前"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        {schedule?.dates?.map((d) => {
+          const dateKey =
+            d.timeType === "時間指定" && d.startTime && d.endTime
+              ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+              : `${d.date} (${d.timeType})`;
+          return (
+            <div key={dateKey} className="date-response">
+              <span className="date-label">{formatDate(d)}</span>
+              <select
+                className="attendance-select"
+                value={responses[dateKey] || "-"}
+                onChange={(e) => handleChange(dateKey, e.target.value)}
+              >
+                {attendanceOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        })}
+        <button className="save-btn" onClick={handleSave}>
+          保存する
+        </button>
+        {saveMessage && <p className="save-message">{saveMessage}</p>}
+      </div>
+
+      {/* ✅ みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
         <table className="responses-table">
@@ -188,7 +270,6 @@ const SharePage = () => {
           </tbody>
         </table>
 
-        {/* 下に保存ボタン */}
         {Object.keys(editingCells).length > 0 && (
           <div className="edit-actions">
             <button className="save-btn" onClick={handleSaveAll}>
