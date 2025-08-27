@@ -12,9 +12,9 @@ const SharePage = () => {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
   const [allResponses, setAllResponses] = useState([]);
-  const [editingUserId, setEditingUserId] = useState(null);
-  const [editingResponses, setEditingResponses] = useState({});
-  const [editingUsername, setEditingUsername] = useState("");
+  const [editingCell, setEditingCell] = useState(null); 
+  // { user_id, username, dateKey, currentValue }
+  const [editingValue, setEditingValue] = useState("-");
   const [saveMessage, setSaveMessage] = useState("");
 
   // ===== スケジュール読み込み =====
@@ -65,50 +65,35 @@ const SharePage = () => {
     return `${base}（${d.timeType || "未定"}）`;
   };
 
-  // ===== 編集開始 =====
-  const handleEditUser = (user) => {
-    setEditingUserId(user.user_id);
-    setEditingUsername(user.username);
-    setEditingResponses(user.responses || {});
-  };
-
-  // ===== 新規回答開始 =====
-  const handleNewResponse = () => {
-    setEditingUserId("new");
-    setEditingUsername("");
-    const init = {};
-    schedule.dates.forEach((d) => {
-      const key =
-        d.timeType === "時間指定" && d.startTime && d.endTime
-          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.timeType})`;
-      init[key] = "-";
-    });
-    setEditingResponses(init);
-  };
-
-  // ===== 編集中のセル更新 =====
-  const handleEditChange = (dateKey, value) => {
-    setEditingResponses((prev) => ({
-      ...prev,
-      [dateKey]: value,
-    }));
-  };
-
   // ===== 保存 =====
   const handleSaveEdit = async () => {
-    if (!editingUserId || !editingUsername.trim()) return;
+    if (!editingCell) return;
+
+    const user = allResponses.find((u) => u.user_id === editingCell.user_id);
+    if (!user) return;
+
+    const newResponses = {
+      ...user.responses,
+      [editingCell.dateKey]: editingValue,
+    };
 
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUserId === "new" ? crypto.randomUUID() : editingUserId,
-          username: editingUsername.trim(),
-          responses: editingResponses,
+          user_id: user.user_id,
+          username: user.username,
+          responses: newResponses,
         }),
       });
+
+      // 即時反映
+      setAllResponses((prev) =>
+        prev.map((u) =>
+          u.user_id === user.user_id ? { ...u, responses: newResponses } : u
+        )
+      );
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
@@ -117,9 +102,8 @@ const SharePage = () => {
       setSaveMessage("保存に失敗しました");
     }
 
-    setEditingUserId(null);
-    setEditingResponses({});
-    setEditingUsername("");
+    setEditingCell(null);
+    setEditingValue("-");
   };
 
   if (!schedule) return <div>読み込み中...</div>;
@@ -134,87 +118,83 @@ const SharePage = () => {
         <table className="responses-table">
           <thead>
             <tr>
+              <th>日付</th>
+              <th>回答数</th>
               <th>ユーザ名</th>
-              {schedule?.dates?.map((d) => (
-                <th key={d.date}>{formatDate(d)}</th>
-              ))}
             </tr>
           </thead>
           <tbody>
-            {allResponses.map((user) => (
-              <tr key={user.user_id}>
-                <td
-                  className="editable-username"
-                  onClick={() => handleEditUser(user)}
-                >
-                  {user.username}
-                </td>
-                {schedule.dates.map((d) => {
-                  const dateKey =
-                    d.timeType === "時間指定" && d.startTime && d.endTime
-                      ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                      : `${d.date} (${d.timeType})`;
-                  return (
-                    <td key={dateKey}>
-                      {user.responses?.[dateKey] || "-"}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {schedule?.dates?.map((d) => {
+              const dateKey =
+                d.timeType === "時間指定" && d.startTime && d.endTime
+                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                  : `${d.date} (${d.timeType})`;
 
-            {/* 編集中 or 新規回答行 */}
-            {editingUserId && (
-              <tr>
-                <td>
-                  <input
-                    type="text"
-                    value={editingUsername}
-                    placeholder="ユーザ名"
-                    onChange={(e) => setEditingUsername(e.target.value)}
-                  />
-                </td>
-                {schedule.dates.map((d) => {
-                  const dateKey =
-                    d.timeType === "時間指定" && d.startTime && d.endTime
-                      ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                      : `${d.date} (${d.timeType})`;
-                  return (
-                    <td key={dateKey}>
-                      <select
-                        className="attendance-select"
-                        value={editingResponses[dateKey] || "-"}
-                        onChange={(e) =>
-                          handleEditChange(dateKey, e.target.value)
+              // 全ユーザの回答
+              const responsesForDate = allResponses.map((user) => ({
+                user_id: user.user_id,
+                username: user.username,
+                response: user.responses?.[dateKey] || "-",
+              }));
+
+              // 集計
+              const counts = { "○": 0, "✖": 0, "△": 0, "-": 0 };
+              responsesForDate.forEach((r) => counts[r.response]++);
+
+              return (
+                <tr key={dateKey}>
+                  <td>{formatDate(d)}</td>
+                  <td>
+                    ○{counts["○"]} ✖{counts["✖"]} △{counts["△"]} -{counts["-"]}
+                  </td>
+                  <td>
+                    {responsesForDate.map((r) => (
+                      <span
+                        key={r.user_id}
+                        className={`response-tag response-${r.response}`}
+                        onClick={() =>
+                          setEditingCell({
+                            user_id: r.user_id,
+                            username: r.username,
+                            dateKey,
+                            currentValue: r.response,
+                          })
                         }
                       >
-                        {attendanceOptions.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  );
-                })}
-              </tr>
-            )}
+                        {editingCell &&
+                        editingCell.user_id === r.user_id &&
+                        editingCell.dateKey === dateKey ? (
+                          <select
+                            className="attendance-select"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                          >
+                            {attendanceOptions.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          `${r.username} (${r.response})`
+                        )}
+                      </span>
+                    ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
-        {/* 操作ボタン */}
-        <div className="edit-actions">
-          {!editingUserId && (
-            <button className="save-btn" onClick={handleNewResponse}>
-              新規回答を追加
-            </button>
-          )}
-          {editingUserId && (
+        {/* 保存ボタン */}
+        {editingCell && (
+          <div className="edit-actions">
             <button className="save-btn" onClick={handleSaveEdit}>
               保存
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {saveMessage && <p className="save-message">{saveMessage}</p>}
       </div>
