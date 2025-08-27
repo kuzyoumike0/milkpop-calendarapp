@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
@@ -22,8 +22,11 @@ function App() {
 
   // ログイン状態を確認
   useEffect(() => {
-    fetch("/api/auth/user")
-      .then((res) => res.json())
+    fetch("/api/me")
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("not logged in");
+      })
       .then((data) => {
         setUser(data.user);
         setLoading(false);
@@ -40,17 +43,40 @@ function App() {
 
   return (
     <Router>
-      {/* 共通ヘッダー（ログイン状態を渡す） */}
+      {/* 共通ヘッダー */}
       <Header user={user} />
 
       {/* ページごとのルーティング */}
       <Routes>
         <Route path="/" element={<TopPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        {/* 個人ページはログイン必須 */}
         <Route
           path="/personal"
-          element={user ? <PersonalPage user={user} /> : <Navigate to="/" />}
+          element={
+            user ? (
+              <PersonalPage user={user} />
+            ) : (
+              <div style={{ textAlign: "center", padding: "50px" }}>
+                <h2>🔒 個人スケジュールページ</h2>
+                <p>このページを利用するには Discord ログインが必要です。</p>
+                <a
+                  href="/auth/discord/login"
+                  style={{
+                    display: "inline-block",
+                    marginTop: "20px",
+                    padding: "12px 24px",
+                    borderRadius: "8px",
+                    background: "#004CA0",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    textDecoration: "none",
+                  }}
+                >
+                  Discordでログイン
+                </a>
+              </div>
+            )
+          }
         />
         <Route path="/share/:token" element={<SharePage />} />
       </Routes>
