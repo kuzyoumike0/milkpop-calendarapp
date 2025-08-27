@@ -9,7 +9,7 @@
   margin-bottom: 20px;
 }
 
-/* ==== 自分の回答 ==== */
+/* ===== 自分の回答 ===== */
 .my-response-box {
   background: #fce4ec;
   border-radius: 12px;
@@ -25,7 +25,7 @@
 }
 
 .username-input {
-  width: 50%;
+  width: 100%;
   padding: 6px 10px;
   font-size: 0.9rem;
   border-radius: 8px;
@@ -34,9 +34,9 @@
 }
 
 .my-responses-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
@@ -47,77 +47,90 @@
   background: #fff;
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .my-response-item .date-label {
   font-weight: 500;
   color: #444;
+  font-size: 0.8rem;
 }
 
 .my-response-item .attendance-select {
-  width: 90px;
-  padding: 4px;
-  font-size: 0.85rem;
+  width: 70px;
+  padding: 3px;
+  font-size: 0.8rem;
   border-radius: 6px;
   border: 1px solid #bbb;
 }
 
-/* ==== みんなの回答 ==== */
-.all-responses {
-  margin-top: 20px;
+/* ===== みんなの回答 ===== */
+.responses-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.responses-table {
-  width: 100%;
-  border-collapse: collapse;
-  border-radius: 8px;
-  overflow: hidden;
+.response-card {
+  background: #f3e5f5;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-.responses-table th {
-  background: #0d47a1;
-  color: #fff;
-  padding: 10px;
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
-.responses-table td {
-  padding: 8px;
-  text-align: center;
+.response-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.responses-table tr:nth-child(even) {
-  background: #fce4ec;
-}
-
-.responses-table tr:nth-child(odd) {
-  background: #f8bbd0;
-}
-
-.editable-username {
+.user-response {
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
-  color: #0d47a1;
-  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.user-response .username {
+  font-weight: 500;
+  color: #333;
+}
+
+.user-response .response-value {
+  color: #666;
 }
 
 .save-btn {
-  background: linear-gradient(to right, #3f51b5, #f48fb1);
-  color: white;
+  margin-top: 10px;
+  background: linear-gradient(to right, #4a90e2, #9013fe);
+  color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-size: 1rem;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 8px;
 }
 
 .save-btn:hover {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
-.save-message {
-  margin-top: 6px;
-  color: green;
-  font-size: 0.85rem;
+/* ===== スマホ対応 ===== */
+@media (max-width: 768px) {
+  .my-responses-list {
+    grid-template-columns: 1fr;
+  }
 }
