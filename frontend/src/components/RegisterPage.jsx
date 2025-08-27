@@ -19,7 +19,7 @@ const RegisterPage = () => {
 
   // === JST 今日を正しく取得 ===
   const jstNow = new Date(
-    new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
   const today = jstNow.toISOString().split("T")[0];
 
