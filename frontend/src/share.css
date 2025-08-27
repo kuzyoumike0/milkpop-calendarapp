@@ -127,7 +127,7 @@
 
 /* ユーザ名リンク */
 .editable-username {
-  color: #3a7bd5;
+  color: orange;
   font-weight: bold;
   cursor: pointer;
   text-decoration: underline;
@@ -137,17 +137,27 @@
 }
 .editable-username:hover {
   color: #ff4b91;
-  background: rgba(255, 75, 145, 0.1);
+  background: rgba(255, 75, 145, 0.15);
 }
 
-/* 保存ボタン（編集時） */
+/* 保存ボタン（編集時）をテーブル下部に固定 */
+.table-container {
+  position: relative;
+}
+.edit-save-bar {
+  position: sticky;
+  bottom: 0;
+  text-align: center;
+  padding: 10px;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+}
 .username-save-btn {
   background: #7b4397;
   color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
   cursor: pointer;
 }
 .username-save-btn:hover {
