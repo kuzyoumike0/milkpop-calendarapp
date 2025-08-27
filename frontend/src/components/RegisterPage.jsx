@@ -124,10 +124,24 @@ const RegisterPage = () => {
     try {
       const payload = {
         title,
-        dates: selectedDates.map((d) => ({
-          date: formatDateKey(d),
-          timeType: "終日", // TODO: 実際は activeTimes や start/end を反映
-        })),
+        dates: selectedDates.map((d) => {
+          const key = formatDateKey(d);
+          const setting = timeSettings[key] || {};
+          const active = setting.activeTimes || {};
+
+          // === 時間帯の決定ロジック ===
+          let timeType = "終日";
+          if (active["午前"]) timeType = "午前";
+          if (active["午後"]) timeType = "午後";
+          if (setting.start && setting.end) timeType = "時間指定";
+
+          return {
+            date: formatDateKey(d),
+            timeType,
+            startTime: setting.start || null,
+            endTime: setting.end || null,
+          };
+        }),
       };
 
       const res = await fetch("/api/schedules", {
@@ -252,11 +266,11 @@ const RegisterPage = () => {
                 <div key={idx} className="selected-card">
                   <span className="date-badge">
                     {d.getFullYear()}-
-                    {String(d.getMonth() + 1).padStart(2, "0")}-
+                    {String(d.getMonth() + 1).padStart(2, "0")}- 
                     {String(d.getDate()).padStart(2, "0")}
                   </span>
                   <div className="time-buttons">
-                    {["終日", "昼", "夜"].map((label) => (
+                    {["終日", "午前", "午後"].map((label) => (
                       <button
                         key={label}
                         className={`time-btn ${active[label] ? "active" : ""}`}
