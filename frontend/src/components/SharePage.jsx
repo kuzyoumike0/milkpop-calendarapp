@@ -3,7 +3,12 @@ import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import "../share.css";
 
-const attendanceOptions = ["-", "○", "✖", "△"];
+const attendanceOptions = [
+  { value: "-", label: "－", class: "opt-none" },
+  { value: "○", label: "○ 出席", class: "opt-ok" },
+  { value: "✖", label: "✖ 欠席", class: "opt-ng" },
+  { value: "△", label: "△ 未定", class: "opt-maybe" },
+];
 const socket = io();
 
 const SharePage = () => {
@@ -15,8 +20,8 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 編集用
-  const [editingCell, setEditingCell] = useState(null); // {user, dateKey}
+  // 編集対象 {user, dateKey}
+  const [editingCell, setEditingCell] = useState(null);
   const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
@@ -81,7 +86,7 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ユーザセル編集
+  // 編集開始
   const startEdit = (user, dateKey, currentValue) => {
     setEditingCell({ user, dateKey });
     setEditValue(currentValue);
@@ -90,14 +95,10 @@ const SharePage = () => {
   const saveEdit = async () => {
     if (!editingCell) return;
     const { user, dateKey } = editingCell;
-
     const target = allResponses.find((r) => r.username === user);
     if (!target) return;
 
-    const newResponses = {
-      ...target.responses,
-      [dateKey]: editValue,
-    };
+    const newResponses = { ...target.responses, [dateKey]: editValue };
 
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
@@ -155,8 +156,8 @@ const SharePage = () => {
                   onChange={(e) => handleChange(dateKey, e.target.value)}
                 >
                   {attendanceOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
+                    <option key={opt.value} value={opt.value} className={opt.class}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>
@@ -205,9 +206,7 @@ const SharePage = () => {
                     <span className="count-maybe">△{counts["△"]}</span>
                   </td>
                   {uniqueUsers.map((user) => {
-                    const userResponse = allResponses.find(
-                      (r) => r.username === user
-                    );
+                    const userResponse = allResponses.find((r) => r.username === user);
                     const val = userResponse?.responses?.[dateKey] || "-";
 
                     if (
@@ -223,8 +222,8 @@ const SharePage = () => {
                             onChange={(e) => setEditValue(e.target.value)}
                           >
                             {attendanceOptions.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
+                              <option key={opt.value} value={opt.value} className={opt.class}>
+                                {opt.label}
                               </option>
                             ))}
                           </select>
