@@ -12,6 +12,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [mode, setMode] = useState("single"); // single, multiple, range
   const [shareUrl, setShareUrl] = useState("");
+  const [timeSettings, setTimeSettings] = useState({}); // ← 各日付の時間設定
 
   // ===== 日付選択 =====
   const handleDateChange = (date) => {
@@ -42,14 +43,39 @@ const RegisterPage = () => {
     }
   };
 
+  // ===== 時間帯ボタン押下 =====
+  const handleTimeChange = (date, type) => {
+    const key = date.toISOString().split("T")[0];
+    setTimeSettings((prev) => ({
+      ...prev,
+      [key]: {
+        type,
+        start: prev[key]?.start || "",
+        end: prev[key]?.end || "",
+      },
+    }));
+  };
+
+  // ===== 開始/終了時間変更 =====
+  const handleTimeSelect = (date, field, value) => {
+    const key = date.toISOString().split("T")[0];
+    setTimeSettings((prev) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [field]: value,
+      },
+    }));
+  };
+
   // ===== 共有リンク発行 =====
   const handleShareLink = () => {
     const token = crypto.randomUUID(); // ランダムID生成
     const url = `${window.location.origin}/share/${token}`;
     setShareUrl(url);
 
-    // TODO: バックエンドに schedule 保存API を叩く処理を追加する
-    // fetch("/api/schedules", { method: "POST", body: JSON.stringify({title, selectedDates, token}) })
+    // TODO: バックエンドに保存処理を追加する
+    // fetch("/api/schedules", { method: "POST", body: JSON.stringify({title, selectedDates, token, timeSettings}) })
   };
 
   // ===== 日付タイルの表示調整 =====
@@ -58,7 +84,6 @@ const RegisterPage = () => {
       const holiday = hd.isHoliday(date);
       return (
         <div>
-          {/* 祝日名を日付下に表示 */}
           {holiday && <span className="holiday-name">{holiday[0].name}</span>}
         </div>
       );
@@ -69,6 +94,8 @@ const RegisterPage = () => {
   const formatDate = (date) => {
     return date.toISOString().split("T")[0];
   };
+
+  const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
   return (
     <div className="register-page">
@@ -125,7 +152,6 @@ const RegisterPage = () => {
                 return "today";
               }
 
-              // 日曜赤, 土曜青
               if (d.getDay() === 0) return "sunday";
               if (d.getDay() === 6) return "saturday";
               return "";
@@ -136,17 +162,61 @@ const RegisterPage = () => {
         {/* 選択中の日程リスト */}
         <div className="selected-list">
           <h3>選択中の日程</h3>
-          {selectedDates.map((date, idx) => (
-            <div key={idx} className="selected-card">
-              <span className="date-badge">{formatDate(date)}</span>
-              <div className="time-buttons">
-                <button className="time-btn active">終日</button>
-                <button className="time-btn">昼</button>
-                <button className="time-btn">夜</button>
-                <button className="time-btn">時間指定</button>
+          {selectedDates.map((date, idx) => {
+            const key = formatDate(date);
+            const setting = timeSettings[key] || {};
+            return (
+              <div key={idx} className="selected-card">
+                <span className="date-badge">{key}</span>
+                <div className="time-buttons">
+                  {["終日", "昼", "夜", "時間指定"].map((t) => (
+                    <button
+                      key={t}
+                      className={`time-btn ${setting.type === t ? "active" : ""}`}
+                      onClick={() => handleTimeChange(date, t)}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 時間指定の場合のみドロップダウン表示 */}
+                {setting.type === "時間指定" && (
+                  <div className="time-dropdowns">
+                    <select
+                      className="cute-select"
+                      value={setting.start}
+                      onChange={(e) =>
+                        handleTimeSelect(date, "start", e.target.value)
+                      }
+                    >
+                      <option value="">開始時間</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                    <span> ~ </span>
+                    <select
+                      className="cute-select"
+                      value={setting.end}
+                      onChange={(e) =>
+                        handleTimeSelect(date, "end", e.target.value)
+                      }
+                    >
+                      <option value="">終了時間</option>
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
