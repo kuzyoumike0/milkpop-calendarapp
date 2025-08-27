@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
@@ -79,7 +78,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // ===== 保存（共有リンク生成＋即遷移） =====
+  // ===== 保存（共有リンク生成） =====
   const handleSave = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日付を入力してください");
@@ -107,12 +106,11 @@ const RegisterPage = () => {
     if (res.ok) {
       const token = (await res.json()).token;
       const url = `${window.location.origin}/share/${token}`;
-      setShareUrl(url); // コピー用に保持
+      setShareUrl(url);
       setSchedules([...schedules, newSchedule]);
       setTitle("");
       setSelectedDates([]);
       setTimeSettings({});
-      window.open(url, "_blank"); // ←即遷移
     }
   };
 
@@ -209,7 +207,7 @@ const RegisterPage = () => {
             onClickDay={handleDateClick}
             tileContent={({ date }) => {
               const holiday = getHolidayName(date);
-              return holiday ? <p className="holiday-name">{holiday}</p> : null;
+              return holiday ? <div className="holiday-name">{holiday}</div> : null;
             }}
             tileClassName={({ date }) => {
               const dateStr = date
@@ -257,7 +255,9 @@ const RegisterPage = () => {
       </button>
       {shareUrl && (
         <div className="share-link-box">
-          <input type="text" value={shareUrl} readOnly />
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
           <button
             className="copy-btn"
             onClick={() => navigator.clipboard.writeText(shareUrl)}
