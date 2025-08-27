@@ -149,11 +149,16 @@
 }
 
 /* 選択日 */
+/* 選択日 → 背景色だけ変更。形はセルのまま */
 .selected-date {
-  background: #fdb9c8 !important;
-  color: #000 !important;
+  background: #fdb9c8 !important;  /* ピンク背景 */
+  color: #000 !important;          /* 黒文字 */
   font-weight: bold;
+  border: none !important;
+  border-radius: 0 !important;     /* ← 円形禁止 */
+  box-shadow: none !important;     /* ← 光や影禁止 */
 }
+
 
 /* 他月 */
 .other-month { opacity: 0.3; }
