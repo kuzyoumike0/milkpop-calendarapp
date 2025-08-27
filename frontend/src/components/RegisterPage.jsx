@@ -13,7 +13,7 @@ const RegisterPage = () => {
   const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeStart, setRangeStart] = useState(null);
-  const [timeSettings, setTimeSettings] = useState({}); // 各日ごと
+  const [timeSettings, setTimeSettings] = useState({});
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
@@ -193,8 +193,8 @@ const RegisterPage = () => {
         <div className="selected-list">
           <h3>選択中の日程</h3>
           {selectedDates.map((d) => (
-            <div key={d} className="selected-button">
-              <span className="date-label">{d}</span>
+            <div key={d} className="selected-card">
+              <div className="date-badge">{d}</div>
               <div className="time-buttons">
                 {["終日", "昼", "夜", "時間指定"].map((t) => (
                   <button
