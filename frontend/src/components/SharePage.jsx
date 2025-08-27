@@ -17,8 +17,8 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 編集対象ユーザ
-  const [editingUser, setEditingUser] = useState(null);
+  // ===== 編集用（みんなの回答） =====
+  const [editedResponses, setEditedResponses] = useState({}); // { username: {dateKey: value} }
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -50,7 +50,7 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 回答変更 =====
+  // ===== 自分の入力変更 =====
   const handleChange = (dateKey, value) => {
     setResponses((prev) => ({
       ...prev,
@@ -58,7 +58,7 @@ const SharePage = () => {
     }));
   };
 
-  // ===== 保存 =====
+  // ===== 自分の保存 =====
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
@@ -77,32 +77,35 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== 他ユーザの回答編集 =====
-  const handleResponseEdit = async (user, dateKey, newValue) => {
-    const target = allResponses.find((r) => r.username === user);
-    if (!target) return;
+  // ===== 他ユーザーの編集保存 =====
+  const handleOtherChange = (user, dateKey, value) => {
+    setEditedResponses((prev) => ({
+      ...prev,
+      [user]: { ...prev[user], [dateKey]: value },
+    }));
+  };
 
-    const updatedResponses = {
-      ...target.responses,
-      [dateKey]: newValue,
+  const handleOtherSave = async (user) => {
+    const userResponse = allResponses.find((r) => r.username === user);
+    if (!userResponse) return;
+
+    const newRes = {
+      user_id: userResponse.user_id,
+      username: userResponse.username,
+      responses: { ...userResponse.responses, ...editedResponses[user] },
     };
 
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: target.user_id,
-        username: target.username,
-        responses: updatedResponses,
-      }),
+      body: JSON.stringify(newRes),
     });
 
-    // 即座に state を更新
-    setAllResponses((prev) =>
-      prev.map((r) =>
-        r.username === user ? { ...r, responses: updatedResponses } : r
-      )
-    );
+    setEditedResponses((prev) => {
+      const copy = { ...prev };
+      delete copy[user];
+      return copy;
+    });
   };
 
   // ===== 日付フォーマット =====
@@ -115,6 +118,7 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
+  // ユニークユーザー
   const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
 
   return (
@@ -137,9 +141,7 @@ const SharePage = () => {
               : `${d.date} (${d.timeType})`;
           return (
             <div key={dateKey} className="date-response">
-              <span className="date-label">
-                {formatDate(d.date, d.timeType)}
-              </span>
+              <span className="date-label">{formatDate(d.date, d.timeType)}</span>
               <select
                 className="attendance-select"
                 value={responses[dateKey] || "-"}
@@ -168,16 +170,7 @@ const SharePage = () => {
             <tr>
               <th>日程</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>
-                  <span
-                    className="editable-username"
-                    onClick={() =>
-                      setEditingUser(editingUser === user ? null : user)
-                    }
-                  >
-                    {user}
-                  </span>
-                </th>
+                <th key={user}>{user}</th>
               ))}
             </tr>
           </thead>
@@ -194,25 +187,31 @@ const SharePage = () => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
                     );
-                    const currentVal =
-                      userResponse?.responses?.[dateKey] || "-";
+                    const currentValue =
+                      editedResponses[user]?.[dateKey] ??
+                      userResponse?.responses?.[dateKey] ??
+                      "-";
                     return (
                       <td key={user}>
-                        {editingUser === user ? (
-                          <select
-                            value={currentVal}
-                            onChange={(e) =>
-                              handleResponseEdit(user, dateKey, e.target.value)
-                            }
+                        <select
+                          value={currentValue}
+                          onChange={(e) =>
+                            handleOtherChange(user, dateKey, e.target.value)
+                          }
+                        >
+                          {attendanceOptions.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                        {editedResponses[user] && (
+                          <button
+                            className="save-btn small"
+                            onClick={() => handleOtherSave(user)}
                           >
-                            {attendanceOptions.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          currentVal
+                            保存
+                          </button>
                         )}
                       </td>
                     );
