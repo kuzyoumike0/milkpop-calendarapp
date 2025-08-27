@@ -65,7 +65,7 @@
 .calendar-container {
   display: flex;
   justify-content: space-between;
-  gap: 40px;   /* カレンダーとリストの間隔 */
+  gap: 40px;
   margin: 0 auto;
   max-width: 1400px; /* 全体幅制限 */
 }
@@ -116,7 +116,7 @@
   table-layout: fixed;
 }
 .calendar-table tr {
-  height: 100px;
+  height: 100px; /* 行の高さを均等に */
 }
 .calendar-table th {
   padding: 14px;
@@ -148,17 +148,20 @@
   100% { box-shadow: 0 0 24px #fdb9c8, 0 0 36px #fdb9c8; }
 }
 
-/* 選択日 */
-/* 選択日 → 背景色だけ変更。形はセルのまま */
+/* 選択日 → セル全体を強調（小さくならない） */
 .selected-date {
-  background: #fdb9c8 !important;  /* ピンク背景 */
-  color: #000 !important;          /* 黒文字 */
+  background: #fdb9c8 !important;
+  color: #000 !important;
   font-weight: bold;
   border: none !important;
-  border-radius: 0 !important;     /* ← 円形禁止 */
-  box-shadow: none !important;     /* ← 光や影禁止 */
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
 
 /* 他月 */
 .other-month { opacity: 0.3; }
