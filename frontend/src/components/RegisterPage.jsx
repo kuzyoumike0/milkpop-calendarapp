@@ -39,9 +39,7 @@ const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
 
-  // 日付ごとの時間帯設定 & 時間指定
   const [timeSettings, setTimeSettings] = useState({});
-  // 共有リンク
   const [shareUrl, setShareUrl] = useState("");
 
   useEffect(() => {
@@ -62,7 +60,7 @@ const RegisterPage = () => {
   const handleSelect = (date) => {
     const exists = selectedDates.find((d) => isSameDate(d, date));
 
-    // ✅ もう一度クリックされたら解除
+    // ✅ もう一度クリックで解除
     if (exists) {
       setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
       return;
@@ -98,7 +96,7 @@ const RegisterPage = () => {
     return h ? h[0].name : null;
   };
 
-  // 時間区分の切り替え
+  // 時間区分切替
   const toggleTime = (date, type) => {
     const key = formatDateKey(date);
     setTimeSettings((prev) => {
@@ -109,7 +107,6 @@ const RegisterPage = () => {
     });
   };
 
-  // 時間指定の変更
   const handleTimeChange = (date, type, value) => {
     const key = formatDateKey(date);
     setTimeSettings((prev) => ({
@@ -118,7 +115,6 @@ const RegisterPage = () => {
     }));
   };
 
-  // ✅ 共有リンク生成（バックエンドに保存して share_token を取得）
   const generateShareLink = async () => {
     try {
       const payload = {
@@ -171,7 +167,6 @@ const RegisterPage = () => {
         className="title-input"
       />
 
-      {/* モード切替 */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -194,7 +189,6 @@ const RegisterPage = () => {
       </div>
 
       <div className="calendar-container">
-        {/* カレンダー本体 */}
         <div className="calendar-box">
           <div className="calendar-header">
             <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
@@ -246,7 +240,6 @@ const RegisterPage = () => {
           </table>
         </div>
 
-        {/* 選択中リスト */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
           {[...selectedDates]
@@ -287,41 +280,10 @@ const RegisterPage = () => {
                       時間指定
                     </button>
                   </div>
-
-                  {setting.showTimeSelect && (
-                    <div className="time-selects">
-                      <select
-                        className="cute-select"
-                        value={setting.start || ""}
-                        onChange={(e) => handleTimeChange(d, "start", e.target.value)}
-                      >
-                        <option value="">開始時刻</option>
-                        {Array.from({ length: 24 }).map((_, h) => (
-                          <option key={h} value={`${h}:00`}>
-                            {h}:00
-                          </option>
-                        ))}
-                      </select>
-                      <span>〜</span>
-                      <select
-                        className="cute-select"
-                        value={setting.end || ""}
-                        onChange={(e) => handleTimeChange(d, "end", e.target.value)}
-                      >
-                        <option value="">終了時刻</option>
-                        {Array.from({ length: 24 }).map((_, h) => (
-                          <option key={h} value={`${h}:00`}>
-                            {h}:00
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                 </div>
               );
             })}
 
-          {/* 共有リンク発行 */}
           <button className="share-btn" onClick={generateShareLink}>
             共有リンク発行
           </button>
