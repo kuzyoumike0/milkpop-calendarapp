@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -7,101 +6,90 @@ import "../register.css";
 
 const hd = new Holidays("JP");
 
-// JST 今日
-const todayJST = new Date(
-  new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-);
-
 const RegisterPage = () => {
-  const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single");
   const [selectedDates, setSelectedDates] = useState([]);
-  const [shareUrl, setShareUrl] = useState("");
+  const [mode, setMode] = useState("single");
+  const [title, setTitle] = useState("");
+  const [shareLink, setShareLink] = useState("");
 
-  const handleDateChange = (date) => {
+  // 日付クリック処理
+  const handleDateClick = (date) => {
+    const dateStr = date.toISOString().split("T")[0];
     if (mode === "single") {
-      setSelectedDates([date]);
-    } else if (mode === "multi") {
-      const exists = selectedDates.some(
-        (d) => d.toDateString() === date.toDateString()
-      );
-      if (exists) {
-        setSelectedDates(selectedDates.filter(
-          (d) => d.toDateString() !== date.toDateString()
-        ));
+      setSelectedDates([dateStr]);
+    } else if (mode === "multiple") {
+      if (selectedDates.includes(dateStr)) {
+        setSelectedDates(selectedDates.filter((d) => d !== dateStr));
       } else {
-        setSelectedDates([...selectedDates, date]);
+        setSelectedDates([...selectedDates, dateStr]);
       }
     } else if (mode === "range") {
       if (selectedDates.length === 0 || selectedDates.length === 2) {
-        setSelectedDates([date]);
+        setSelectedDates([dateStr]);
       } else if (selectedDates.length === 1) {
-        const [start] = selectedDates;
-        if (date < start) {
-          setSelectedDates([date, start]);
+        const start = new Date(selectedDates[0]);
+        const end = date;
+        if (start <= end) {
+          const range = [];
+          let cur = new Date(start);
+          while (cur <= end) {
+            range.push(cur.toISOString().split("T")[0]);
+            cur.setDate(cur.getDate() + 1);
+          }
+          setSelectedDates(range);
         } else {
-          setSelectedDates([start, date]);
+          const range = [];
+          let cur = new Date(end);
+          while (cur <= start) {
+            range.push(cur.toISOString().split("T")[0]);
+            cur.setDate(cur.getDate() + 1);
+          }
+          setSelectedDates(range);
         }
       }
     }
   };
 
-  const isSelected = (date) => {
-    if (mode === "single" || mode === "multi") {
-      return selectedDates.some((d) => d.toDateString() === date.toDateString());
+  // カレンダーセルのクラス名
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const day = date.getDay();
+      if (day === 0) return "sunday";
+      if (day === 6) return "saturday";
+      const dateStr = date.toISOString().split("T")[0];
+      if (selectedDates.includes(dateStr)) return "selected-date";
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+      if (dateStr === todayStr) return "today";
     }
-    if (mode === "range" && selectedDates.length === 2) {
-      const [start, end] = selectedDates;
-      return date >= start && date <= end;
+    return null;
+  };
+
+  // 祝日名を日付の下に表示
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const holiday = hd.isHoliday(date);
+      return (
+        <div className="day-cell">
+          <div className="day-number">{date.getDate()}</div>
+          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+        </div>
+      );
     }
-    return false;
+    return null;
   };
 
   // 共有リンク生成
   const generateShareLink = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
-    setShareUrl(url);
+    setShareLink(url);
   };
 
+  // リンクコピー
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl);
-    alert("リンクをコピーしました！");
-  };
-
-  // 📌 カレンダータイルの描画（祝日名のみ追加）
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      return (
-        <>
-          {holiday && <div className="holiday-name">{holiday[0].name}</div>}
-        </>
-      );
-    }
-    return null;
-  };
-
-  // 📌 タイルにクラスを付与（日曜赤 / 土曜青 / 祝日赤 / 今日 / 選択日）
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      const isSunday = date.getDay() === 0;
-      const isSaturday = date.getDay() === 6;
-      const isToday =
-        date.getFullYear() === todayJST.getFullYear() &&
-        date.getMonth() === todayJST.getMonth() &&
-        date.getDate() === todayJST.getDate();
-
-      return [
-        isSunday ? "sunday" : "",
-        isSaturday ? "saturday" : "",
-        holiday ? "holiday" : "",
-        isToday ? "today" : "",
-        isSelected(date) ? "selected-date" : "",
-      ].join(" ");
-    }
-    return "";
+    navigator.clipboard.writeText(shareLink);
+    alert("コピーしました！");
   };
 
   return (
@@ -115,7 +103,7 @@ const RegisterPage = () => {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      {/* モード切替 */}
+      {/* モード切り替え */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -124,8 +112,8 @@ const RegisterPage = () => {
           単日
         </button>
         <button
-          className={mode === "multi" ? "active" : ""}
-          onClick={() => setMode("multi")}
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => setMode("multiple")}
         >
           複数選択
         </button>
@@ -137,34 +125,31 @@ const RegisterPage = () => {
         </button>
       </div>
 
+      {/* カレンダー */}
       <div className="calendar-container">
         <div className="calendar-box">
           <Calendar
-            onClickDay={handleDateChange}
-            value={selectedDates}
-            tileContent={tileContent}
+            onClickDay={handleDateClick}
+            value={null}
             tileClassName={tileClassName}
-            calendarType="US"
-            locale="ja-JP"
+            tileContent={tileContent}
           />
         </div>
+
+        {/* 選択中の日程 */}
         <div className="selected-list">
           <h3>選択中の日程</h3>
-          {selectedDates.length === 0 && <p>まだ選択されていません</p>}
-          {selectedDates.length > 0 && (
-            <ul>
-              {mode === "range" && selectedDates.length === 2 ? (
-                <li>
-                  {selectedDates[0].toLocaleDateString()} ~{" "}
-                  {selectedDates[1].toLocaleDateString()}
-                </li>
-              ) : (
-                selectedDates.map((d, i) => (
-                  <li key={i}>{d.toLocaleDateString()}</li>
-                ))
-              )}
-            </ul>
-          )}
+          {selectedDates.map((d) => (
+            <div key={d} className="selected-card">
+              <span className="date-badge">{d}</span>
+              <div className="time-buttons">
+                <button className="time-btn">終日</button>
+                <button className="time-btn">午前</button>
+                <button className="time-btn">午後</button>
+                <button className="time-btn">時間指定</button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -172,10 +157,10 @@ const RegisterPage = () => {
       <button className="save-btn" onClick={generateShareLink}>
         共有リンクを発行
       </button>
-      {shareUrl && (
+      {shareLink && (
         <div className="share-link-box">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
+          <a href={shareLink} target="_blank" rel="noopener noreferrer">
+            {shareLink}
           </a>
           <button className="copy-btn" onClick={copyToClipboard}>
             コピー
