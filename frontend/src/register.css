@@ -312,12 +312,23 @@
     width: 100%;
   }
   .calendar-table tr {
-    height: 60px; /* 高さを詰める */
+    height: 60px;
   }
   .calendar-table td {
     min-width: auto;
     min-height: auto;
     height: 60px;
     font-size: 1rem;
+  }
+  /* スマホでも今日セル強調 */
+  .calendar-table td.today {
+    font-size: 1rem;
+    padding: 2px;
+  }
+  /* スマホでも選択セル強調 */
+  .calendar-table td.selected-date {
+    font-size: 1rem;
+    background-color: #fdb9c8 !important;
+    box-shadow: 0 0 4px rgba(0,0,0,0.2);
   }
 }
