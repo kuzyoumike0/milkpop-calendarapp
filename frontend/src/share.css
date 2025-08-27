@@ -108,3 +108,29 @@
   text-decoration: underline;
   cursor: pointer;
 }
+/* 日付ラベルを黒＆ポップに */
+.date-label {
+  font-weight: bold;
+  color: #222;
+  font-size: 14px;
+}
+
+/* 自分の回答：日付とプルダウンを少し離す */
+.my-response-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;  /* ← スペース追加 */
+  margin-bottom: 6px;
+}
+
+/* ユーザ名リンクの色を見やすく */
+.editable-username {
+  color: #0055cc;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.editable-username:hover {
+  color: #ff3366;
+}
