@@ -1,4 +1,4 @@
-/* ====== シェアページ全体 ====== */
+/* ====== ページ全体 ====== */
 .share-container {
   padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
@@ -9,36 +9,34 @@
   align-items: center;
 }
 
-/* タイトル */
 .share-title {
   font-size: 26px;
   font-weight: bold;
-  color: #fff;
   margin-bottom: 20px;
+  color: #fff;
   text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
 }
 
-/* ====== 入力フォーム ====== */
+/* ====== 回答フォーム ====== */
 .response-form {
   width: 100%;
-  max-width: 900px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 20px;
+  max-width: 1000px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   margin-bottom: 30px;
 }
 
 .username-input {
   width: 100%;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 10px;
+  border-radius: 10px;
   border: none;
-  margin-bottom: 15px;
-  font-size: 16px;
+  font-size: 15px;
+  margin-bottom: 16px;
+  background: #fff;
   font-weight: bold;
-  background: rgba(255,255,255,0.9);
   color: #333;
 }
 
@@ -50,133 +48,140 @@
 }
 
 .date-label {
-  font-weight: bold;
   font-size: 15px;
-  color: #222;
+  font-weight: bold;
+  color: #333;
 }
 
-.attendance-select {
-  min-width: 80px;
-}
-
-/* 保存ボタン */
 .save-btn {
   width: 100%;
   background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
-  padding: 12px;
+  padding: 12px 20px;
   border: none;
   border-radius: 12px;
+  font-size: 15px;
   font-weight: bold;
-  font-size: 16px;
   cursor: pointer;
-  margin-top: 10px;
   transition: 0.2s;
+  margin-top: 15px;
 }
 .save-btn:hover {
   opacity: 0.9;
 }
 
 .save-message {
-  margin-top: 8px;
-  font-size: 14px;
+  margin-top: 10px;
   color: #004CA0;
   font-weight: bold;
+  text-align: center;
 }
 
-/* ====== みんなの回答 ====== */
+/* ====== テーブル（みんなの回答） ====== */
 .all-responses {
   width: 100%;
-  max-width: 1100px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 20px;
+  max-width: 1000px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
 .all-responses h2 {
   font-size: 20px;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   font-weight: bold;
   color: #004CA0;
 }
 
-/* テーブル */
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 .responses-table th {
   background: #004CA0;
   color: #fff;
-  padding: 10px;
+  padding: 12px;
+  font-size: 14px;
   text-align: center;
-  font-weight: bold;
 }
 
 .responses-table td {
   padding: 10px;
   text-align: center;
-  background: rgba(255,255,255,0.4);
-  color: #222;
+  font-size: 14px;
+  color: #333;
 }
 
-.responses-table tr:nth-child(even) td {
-  background: rgba(255,182,193,0.3); /* ピンクの薄い色 */
+.responses-table tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.6);
+}
+.responses-table tr:nth-child(odd) {
+  background: rgba(253, 185, 200, 0.6);
 }
 
-/* 編集可能なユーザー名リンク */
+/* ====== ユーザー名リンク ====== */
 .editable-username {
-  color: #fff; /* 白文字 */
+  color: #fff; /* 白で統一 */
   font-weight: bold;
-  cursor: pointer;
   text-decoration: underline;
+  cursor: pointer;
+  transition: 0.2s;
 }
 .editable-username:hover {
-  opacity: 0.8;
+  color: #FDB9C8;
 }
 
-/* ====== プルダウン（お洒落版） ====== */
-.responses-table select {
+/* ====== プルダウン（統一・視認性アップ） ====== */
+select,
+.responses-table select,
+.attendance-select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 
-  background: linear-gradient(135deg, #FDB9C8, #a6c1ee);
-  color: #fff;
+  background: #fff;
+  color: #333;
   font-weight: bold;
-  padding: 6px 28px 6px 12px;
-  border-radius: 20px;
-  border: none;
+  padding: 8px 32px 8px 12px;
+  border-radius: 12px;
+  border: 2px solid #a6c1ee;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  transition: 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
 }
 
 /* ホバー時 */
-.responses-table select:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+select:hover,
+.responses-table select:hover,
+.attendance-select:hover {
+  border-color: #004CA0;
+  box-shadow: 0 3px 8px rgba(0,76,160,0.25);
 }
 
 /* フォーカス時 */
-.responses-table select:focus {
+select:focus,
+.responses-table select:focus,
+.attendance-select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0,76,160,0.5);
+  border-color: #FDB9C8;
+  box-shadow: 0 0 0 3px rgba(253,185,200,0.5);
 }
 
 /* ▼アイコン */
-.responses-table select {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23fff' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+select,
+.responses-table select,
+.attendance-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='2' fill='none'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 12px;
 }
 
-/* セル中央寄せ */
+/* セル中央に配置 */
 .responses-table td select {
   display: block;
   margin: auto;
