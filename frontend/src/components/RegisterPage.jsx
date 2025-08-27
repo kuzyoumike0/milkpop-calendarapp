@@ -18,10 +18,11 @@ const RegisterPage = () => {
   const [schedules, setSchedules] = useState([]);
 
   // === JST 今日を正しく取得 ===
-  const jstNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  const today = jstNow.toISOString().split("T")[0];
+  const jstToday = new Date().toLocaleDateString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+  });
+  const [y, m, d] = jstToday.split("/");
+  const today = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
   // ===== 日付クリック =====
   const handleDateClick = (date) => {
@@ -124,7 +125,9 @@ const RegisterPage = () => {
         >
           <option value="">開始時間</option>
           {hours.map((h) => (
-            <option key={h} value={h}>{h}</option>
+            <option key={h} value={h}>
+              {h}
+            </option>
           ))}
         </select>
         <span> ~ </span>
@@ -140,7 +143,9 @@ const RegisterPage = () => {
         >
           <option value="">終了時間</option>
           {hours.map((h) => (
-            <option key={h} value={h}>{h}</option>
+            <option key={h} value={h}>
+              {h}
+            </option>
           ))}
         </select>
       </div>
@@ -162,9 +167,24 @@ const RegisterPage = () => {
 
       {/* 選択モードタブ */}
       <div className="mode-tabs">
-        <button className={mode === "single" ? "active" : ""} onClick={() => setMode("single")}>単日</button>
-        <button className={mode === "multiple" ? "active" : ""} onClick={() => setMode("multiple")}>複数選択</button>
-        <button className={mode === "range" ? "active" : ""} onClick={() => setMode("range")}>範囲選択</button>
+        <button
+          className={mode === "single" ? "active" : ""}
+          onClick={() => setMode("single")}
+        >
+          単日
+        </button>
+        <button
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => setMode("multiple")}
+        >
+          複数選択
+        </button>
+        <button
+          className={mode === "range" ? "active" : ""}
+          onClick={() => setMode("range")}
+        >
+          範囲選択
+        </button>
       </div>
 
       {/* カレンダーとリスト */}
@@ -181,7 +201,7 @@ const RegisterPage = () => {
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today"; // JST基準の今日
+              if (dateStr === today) return "today";
               if (getHolidayName(date)) return "holiday";
               if (date.getDay() === 0) return "sunday";
               if (date.getDay() === 6) return "saturday";
@@ -199,7 +219,9 @@ const RegisterPage = () => {
                 {["終日", "昼", "夜", "時間指定"].map((t) => (
                   <button
                     key={t}
-                    className={`time-btn ${timeSettings[d]?.type === t ? "active" : ""}`}
+                    className={`time-btn ${
+                      timeSettings[d]?.type === t ? "active" : ""
+                    }`}
                     onClick={() => handleTimeChange(d, t)}
                   >
                     {t}
@@ -213,11 +235,18 @@ const RegisterPage = () => {
       </div>
 
       {/* 共有リンク */}
-      <button className="save-btn" onClick={handleSave}>共有リンクを発行</button>
+      <button className="save-btn" onClick={handleSave}>
+        共有リンクを発行
+      </button>
       {shareUrl && (
         <div className="share-link-box">
           <input type="text" value={shareUrl} readOnly />
-          <button className="copy-btn" onClick={() => navigator.clipboard.writeText(shareUrl)}>コピー</button>
+          <button
+            className="copy-btn"
+            onClick={() => navigator.clipboard.writeText(shareUrl)}
+          >
+            コピー
+          </button>
         </div>
       )}
     </div>
