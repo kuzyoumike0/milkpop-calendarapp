@@ -23,15 +23,21 @@ const SharePage = () => {
   // ===== スケジュール読み込み =====
   useEffect(() => {
     const fetchSchedule = async () => {
-      const res = await fetch(`/api/schedules/${token}`);
-      const data = await res.json();
-      setSchedule(data);
+      try {
+        const res = await fetch(`/api/schedules/${token}`);
+        if (!res.ok) throw new Error("schedule fetch failed");
+        const data = await res.json();
+        setSchedule(data);
 
-      const res2 = await fetch(`/api/schedules/${token}/responses`);
-      const data2 = await res2.json();
-      setAllResponses(data2);
+        const res2 = await fetch(`/api/schedules/${token}/responses`);
+        if (!res2.ok) throw new Error("responses fetch failed");
+        const data2 = await res2.json();
+        setAllResponses(data2);
+      } catch (err) {
+        console.error("読み込みエラー:", err);
+      }
     };
-    fetchSchedule();
+    if (token) fetchSchedule();
 
     socket.emit("joinSchedule", token);
     socket.on("updateResponses", (newRes) => {
@@ -69,12 +75,17 @@ const SharePage = () => {
       username,
       responses,
     };
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
-    });
-    setSaveMessage("保存しました！");
+    try {
+      await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(res),
+      });
+      setSaveMessage("保存しました！");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      setSaveMessage("保存に失敗しました");
+    }
   };
 
   // ===== 他ユーザーの編集保存 =====
@@ -95,25 +106,31 @@ const SharePage = () => {
       responses: { ...userResponse.responses, ...editedResponses[user] },
     };
 
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newRes),
-    });
+    try {
+      await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRes),
+      });
 
-    setEditedResponses((prev) => {
-      const copy = { ...prev };
-      delete copy[user];
-      return copy;
-    });
+      setEditedResponses((prev) => {
+        const copy = { ...prev };
+        delete copy[user];
+        return copy;
+      });
+    } catch (err) {
+      console.error("他ユーザー保存エラー:", err);
+    }
   };
 
   // ===== 日付フォーマット =====
-  const formatDate = (dateStr, timeType) => {
+  const formatDate = (dateStr, timeType, start, end) => {
     const d = new Date(dateStr);
-    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${
-      timeType || "未定"
-    }）`;
+    const base = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+    if (timeType === "時間指定" && start && end) {
+      return `${base} (${start} ~ ${end})`;
+    }
+    return `${base}（${timeType || "未定"}）`;
   };
 
   if (!schedule) return <div>読み込み中...</div>;
@@ -134,14 +151,16 @@ const SharePage = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        {schedule.dates.map((d) => {
+        {schedule?.dates?.map((d) => {
           const dateKey =
             d.timeType === "時間指定" && d.startTime && d.endTime
               ? `${d.date} (${d.startTime} ~ ${d.endTime})`
               : `${d.date} (${d.timeType})`;
           return (
             <div key={dateKey} className="date-response">
-              <span className="date-label">{formatDate(d.date, d.timeType)}</span>
+              <span className="date-label">
+                {formatDate(d.date, d.timeType, d.startTime, d.endTime)}
+              </span>
               <select
                 className="attendance-select"
                 value={responses[dateKey] || "-"}
@@ -175,14 +194,14 @@ const SharePage = () => {
             </tr>
           </thead>
           <tbody>
-            {schedule.dates.map((d) => {
+            {schedule?.dates?.map((d) => {
               const dateKey =
                 d.timeType === "時間指定" && d.startTime && d.endTime
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
                   : `${d.date} (${d.timeType})`;
               return (
                 <tr key={dateKey}>
-                  <td>{formatDate(d.date, d.timeType)}</td>
+                  <td>{formatDate(d.date, d.timeType, d.startTime, d.endTime)}</td>
                   {uniqueUsers.map((user) => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
