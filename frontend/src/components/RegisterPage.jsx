@@ -3,16 +3,25 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Holidays from "date-holidays";
 import "../register.css";
+import { useNavigate } from "react-router-dom";
 
 const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [selectedDates, setSelectedDates] = useState([]);
+  const [selectedTimes, setSelectedTimes] = useState({});
   const [mode, setMode] = useState("single");
   const [title, setTitle] = useState("");
   const [shareLink, setShareLink] = useState("");
+  const navigate = useNavigate();
 
-  // 日付クリック処理
+  // JST基準の今日
+  const jstNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+  const todayStr = jstNow.toISOString().split("T")[0];
+
+  // 日付クリック
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     if (mode === "single") {
@@ -41,13 +50,23 @@ const RegisterPage = () => {
     }
   };
 
-  // JST基準の今日
-  const jstNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  const todayStr = jstNow.toISOString().split("T")[0];
+  // ボタンの時間区分を選択
+  const handleTimeSelect = (date, time) => {
+    setSelectedTimes((prev) => ({
+      ...prev,
+      [date]: { type: time, start: "", end: "" }
+    }));
+  };
 
-  // クラス名付与
+  // 時間指定（プルダウン変更）
+  const handleTimeChange = (date, field, value) => {
+    setSelectedTimes((prev) => ({
+      ...prev,
+      [date]: { ...prev[date], [field]: value }
+    }));
+  };
+
+  // タイルのクラス名
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const classes = [];
@@ -63,7 +82,7 @@ const RegisterPage = () => {
     return null;
   };
 
-  // 祝日名表示
+  // タイルの中に祝日名
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
@@ -79,13 +98,21 @@ const RegisterPage = () => {
     const token = Math.random().toString(36).substring(2, 10);
     const url = `${window.location.origin}/share/${token}`;
     setShareLink(url);
+
+    // データを保存（SharePageで読み込む）
+    localStorage.setItem(
+      `share-${token}`,
+      JSON.stringify({ title, selectedDates, selectedTimes })
+    );
+
+    // そのまま共有ページに遷移
+    navigate(`/share/${token}`);
   };
 
-  // コピー
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareLink);
-    alert("コピーしました！");
-  };
+  // 時間リスト
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
 
   return (
     <div className="register-page">
@@ -135,11 +162,49 @@ const RegisterPage = () => {
             <div key={d} className="selected-card">
               <span className="date-badge">{d}</span>
               <div className="time-buttons">
-                <button className="time-btn">終日</button>
-                <button className="time-btn">昼</button>
-                <button className="time-btn">夜</button>
-                <button className="time-btn">時間指定</button>
+                {["終日", "昼", "夜", "時間指定"].map((t) => (
+                  <button
+                    key={t}
+                    className={`time-btn ${
+                      selectedTimes[d]?.type === t ? "active" : ""
+                    }`}
+                    onClick={() => handleTimeSelect(d, t)}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
+              {selectedTimes[d]?.type === "時間指定" && (
+                <div className="time-selects">
+                  <select
+                    className="cute-select"
+                    value={selectedTimes[d]?.start || ""}
+                    onChange={(e) =>
+                      handleTimeChange(d, "start", e.target.value)
+                    }
+                  >
+                    <option value="">開始</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                  <span>〜</span>
+                  <select
+                    className="cute-select"
+                    value={selectedTimes[d]?.end || ""}
+                    onChange={(e) => handleTimeChange(d, "end", e.target.value)}
+                  >
+                    <option value="">終了</option>
+                    {hours.map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -148,13 +213,14 @@ const RegisterPage = () => {
       <button className="save-btn" onClick={generateShareLink}>
         共有リンクを発行
       </button>
+
       {shareLink && (
         <div className="share-link-box">
           <a href={shareLink} target="_blank" rel="noopener noreferrer">
             {shareLink}
           </a>
-          <button className="copy-btn" onClick={copyToClipboard}>
-            コピー
+          <button className="copy-btn" onClick={() => navigator.clipboard.writeText(shareLink)}>
+            📋 コピー
           </button>
         </div>
       )}
