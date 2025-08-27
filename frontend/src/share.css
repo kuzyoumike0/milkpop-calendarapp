@@ -1,136 +1,146 @@
+/* コンテナ */
 .share-container {
   padding: 20px;
   font-family: "Zen Maru Gothic", sans-serif;
 }
 
 .share-title {
-  font-size: 1.5rem;
   text-align: center;
   margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
-/* ===== 自分の回答 ===== */
-.my-response-box {
-  background: #fce4ec;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.my-response-box h2 {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-  color: #333;
+/* === 自分の回答 === */
+.my-responses {
+  margin-bottom: 30px;
 }
 
 .username-input {
   width: 100%;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin-bottom: 12px;
-}
-
-.my-responses-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.my-response-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.85rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.my-response-item .date-label {
-  font-weight: 500;
-  color: #444;
-  font-size: 0.8rem;
-}
-
-.my-response-item .attendance-select {
-  width: 70px;
-  padding: 3px;
-  font-size: 0.8rem;
+  max-width: 400px;
+  padding: 8px;
+  margin-bottom: 15px;
   border-radius: 6px;
   border: 1px solid #bbb;
 }
 
-/* ===== みんなの回答 ===== */
-.responses-grid {
+.my-responses-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.my-response-item {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-.response-card {
-  background: #f3e5f5;
-  border-radius: 12px;
-  padding: 10px 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-.response-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.date-label {
   font-weight: 600;
   margin-bottom: 6px;
+  font-size: 0.85rem;
 }
 
-.response-users {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.user-response {
-  background: #fff;
+.attendance-select {
+  width: 100%;
+  padding: 5px;
+  font-size: 0.85rem;
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-.user-response .username {
-  font-weight: 500;
-  color: #333;
-}
-
-.user-response .response-value {
-  color: #666;
+  border: 1px solid #bbb;
+  background: #fafafa;
 }
 
 .save-btn {
-  margin-top: 10px;
-  background: linear-gradient(to right, #4a90e2, #9013fe);
-  color: #fff;
+  display: block;
+  width: 100%;
+  padding: 10px;
   border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
+  background: linear-gradient(90deg, #355c7d, #6c5b7b, #c06c84);
+  color: white;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
 }
 
 .save-btn:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
-/* ===== スマホ対応 ===== */
-@media (max-width: 768px) {
-  .my-responses-list {
-    grid-template-columns: 1fr;
-  }
+.save-message {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: green;
+}
+
+/* === みんなの回答 === */
+.response-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 15px;
+}
+
+.response-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.response-date {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.response-aggregate {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.response-aggregate .circle {
+  color: green;
+  margin-right: 6px;
+}
+
+.response-aggregate .cross {
+  color: red;
+  margin-right: 6px;
+}
+
+.response-aggregate .triangle {
+  color: orange;
+}
+
+.response-users {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-response {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: #f8f8f8;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.user-response:hover {
+  background: #eee;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-answer {
+  font-weight: bold;
 }
