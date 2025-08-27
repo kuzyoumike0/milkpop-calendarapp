@@ -1,143 +1,122 @@
-/* 共通 */
 .share-container {
   padding: 20px;
-  font-family: "Zen Maru Gothic", sans-serif;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 1100px;
+  margin: auto;
 }
 
 .share-title {
   text-align: center;
+  font-size: 24px;
   margin-bottom: 20px;
-  font-size: 1.6rem;
-  font-weight: bold;
+  color: #444;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
-/* === 自分の回答 === */
+/* 自分の回答 */
 .my-responses {
-  margin-bottom: 25px;
-}
-
-.username-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  margin-bottom: 30px;
 }
 
 .my-responses-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .my-response-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 12px;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .date-label {
-  font-weight: 600;
+  font-weight: bold;
+  color: #333;
 }
 
-.attendance-select {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #bbb;
+.fancy-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: linear-gradient(145deg, #fefefe, #f3f3f3);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fancy-select:hover {
+  border-color: #888;
   background: #f9f9f9;
 }
 
 .save-btn {
+  margin-top: 12px;
+  padding: 10px;
   width: 100%;
-  margin-top: 15px;
-  padding: 12px;
   border: none;
+  border-radius: 8px;
   background: linear-gradient(90deg, #355c7d, #6c5b7b, #c06c84);
   color: white;
-  font-size: 1rem;
-  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
+  transition: opacity 0.2s;
 }
 
 .save-btn:hover {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
-/* === みんなの回答 === */
-.all-responses {
-  margin-top: 30px;
+.save-message {
+  margin-top: 8px;
+  color: green;
+  font-weight: bold;
 }
 
-.response-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+/* みんなの回答 */
+.all-responses h2 {
+  margin-top: 20px;
+  font-size: 20px;
 }
 
-.response-card {
-  background: #ffffff;
+.filter-box {
+  margin: 10px 0;
+}
+
+.responses-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
   border-radius: 10px;
-  padding: 14px;
+  overflow: hidden;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-.response-date {
+.responses-table th,
+.responses-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+
+.responses-table th {
+  background: #355c7d;
+  color: #fff;
   font-weight: bold;
-  margin-bottom: 6px;
-  font-size: 1rem;
 }
 
-.response-aggregate {
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-}
-
-.response-aggregate .circle {
+.count-ok {
   color: green;
-  margin-right: 10px;
+  font-weight: bold;
 }
-
-.response-aggregate .cross {
+.count-ng {
   color: red;
-  margin-right: 10px;
+  font-weight: bold;
 }
-
-.response-aggregate .triangle {
+.count-maybe {
   color: orange;
-}
-
-.response-users {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.user-response {
-  display: flex;
-  justify-content: space-between;
-  background: #f7f7f7;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.user-response:hover {
-  background: #ececec;
-}
-
-.user-name {
-  font-weight: 600;
-  color: #333;
-}
-
-.user-answer {
   font-weight: bold;
 }
