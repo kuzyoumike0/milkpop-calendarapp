@@ -71,14 +71,25 @@
   overflow-y: auto;
 }
 
-/* 選択日強調（カレンダー） */
+/* カレンダー選択日 */
 .selected-date {
   background: #fdb9c8 !important;
-  border: 2px solid #004ca0 !important;
   color: white !important;
   font-weight: bold;
-  border-radius: 50% !important;
+  border-radius: 50% !important; /* 丸 */
+  border: 2px solid #004ca0 !important;
   box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+/* 今日（JST基準で強調） */
+.today {
+  background: #004ca0 !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  border: 3px solid #fdb9c8 !important;
+  box-shadow: 0 0 10px rgba(253,185,200,0.8);
 }
 
 /* 選択中の日程カード */
@@ -231,13 +242,4 @@
   font-size: 0.7rem;
   display: block;
   margin-top: 2px;
-}
-
-/* 今日 */
-.today {
-  background: #fdb9c8 !important;
-  color: white !important;
-  font-weight: bold !important;
-  border-radius: 50% !important;
-  border: 2px solid #004ca0 !important;
 }
