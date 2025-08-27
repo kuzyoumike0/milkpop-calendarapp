@@ -175,86 +175,91 @@ const SharePage = () => {
             <option value="maybe">△がある日程</option>
           </select>
         </div>
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>回答数</th>
-              {uniqueUsers.map((user) => (
-                <th key={user}>
-                  {editingUser === user ? (
-                    <div>
-                      <button className="username-save-btn" onClick={handleEditSave}>
-                        保存
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="editable-username"
-                      onClick={() => handleUserEdit(user)}
-                    >
-                      {user}
-                    </span>
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedule?.dates?.map((d) => {
-              const dateKey =
-                d.timeType === "時間指定" && d.startTime && d.endTime
-                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                  : `${d.date} (${d.timeType})`;
+        <div className="table-container">
+          <table className="responses-table">
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>回答数</th>
+                {uniqueUsers.map((user) => (
+                  <th key={user}>
+                    {editingUser === user ? (
+                      <span className="editing-label">{user} 編集中</span>
+                    ) : (
+                      <span
+                        className="editable-username"
+                        onClick={() => handleUserEdit(user)}
+                      >
+                        {user}
+                      </span>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {schedule?.dates?.map((d) => {
+                const dateKey =
+                  d.timeType === "時間指定" && d.startTime && d.endTime
+                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                    : `${d.date} (${d.timeType})`;
 
-              const counts = { "○": 0, "✖": 0, "△": 0 };
-              allResponses.forEach((r) => {
-                const ans = r.responses?.[dateKey];
-                if (ans && counts[ans] !== undefined) counts[ans]++;
-              });
+                const counts = { "○": 0, "✖": 0, "△": 0 };
+                allResponses.forEach((r) => {
+                  const ans = r.responses?.[dateKey];
+                  if (ans && counts[ans] !== undefined) counts[ans]++;
+                });
 
-              return (
-                <tr key={dateKey}>
-                  <td className="date-label">{formatDate(d)}</td>
-                  <td>
-                    <span className="count-ok">○{counts["○"]}</span>{" "}
-                    <span className="count-ng">✖{counts["✖"]}</span>{" "}
-                    <span className="count-maybe">△{counts["△"]}</span>
-                  </td>
-                  {uniqueUsers.map((user) => {
-                    const userResponse = allResponses.find((r) => r.username === user);
-                    const value = userResponse?.responses?.[dateKey] || "-";
+                return (
+                  <tr key={dateKey}>
+                    <td className="date-label">{formatDate(d)}</td>
+                    <td>
+                      <span className="count-ok">○{counts["○"]}</span>{" "}
+                      <span className="count-ng">✖{counts["✖"]}</span>{" "}
+                      <span className="count-maybe">△{counts["△"]}</span>
+                    </td>
+                    {uniqueUsers.map((user) => {
+                      const userResponse = allResponses.find((r) => r.username === user);
+                      const value = userResponse?.responses?.[dateKey] || "-";
 
-                    return (
-                      <td key={user}>
-                        {editingUser === user ? (
-                          <select
-                            className="fancy-select"
-                            value={editedResponses[dateKey] || value}
-                            onChange={(e) =>
-                              setEditedResponses((prev) => ({
-                                ...prev,
-                                [dateKey]: e.target.value,
-                              }))
-                            }
-                          >
-                            {attendanceOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      return (
+                        <td key={user}>
+                          {editingUser === user ? (
+                            <select
+                              className="fancy-select"
+                              value={editedResponses[dateKey] || value}
+                              onChange={(e) =>
+                                setEditedResponses((prev) => ({
+                                  ...prev,
+                                  [dateKey]: e.target.value,
+                                }))
+                              }
+                            >
+                              {attendanceOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {editingUser && (
+            <div className="edit-save-bar">
+              <button className="username-save-btn" onClick={handleEditSave}>
+                {editingUser} の編集を保存
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
