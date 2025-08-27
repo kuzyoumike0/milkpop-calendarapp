@@ -1,4 +1,3 @@
-/* ページ全体 */
 .register-page {
   padding: 20px;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
@@ -16,10 +15,9 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
-/* タイトル入力 */
 .title-input {
   display: block;
-  width: 60%;
+  width: 40%; /* 短くしてバランス */
   margin: 0 auto 20px auto;
   padding: 10px;
   border-radius: 12px;
@@ -30,7 +28,6 @@
   color: white;
 }
 
-/* タブ */
 .mode-tabs {
   display: flex;
   justify-content: center;
@@ -53,7 +50,6 @@
   color: white;
 }
 
-/* カレンダーとリスト */
 .calendar-container {
   display: flex;
   gap: 20px;
@@ -83,7 +79,6 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* 保存ボタン */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -146,7 +141,7 @@
   padding: 10px 0;
 }
 
-/* 曜日色と祝日 */
+/* 日曜・土曜・祝日 */
 .sunday {
   color: #e60033 !important;
 }
@@ -169,7 +164,9 @@
 
 /* 今日 */
 .today {
-  border: 2px solid #000 !important;
-  background: rgba(255,255,255,0.7) !important;
-  border-radius: 50%;
+  background: #fdb9c8 !important;
+  color: white !important;
+  font-weight: bold !important;
+  border-radius: 50% !important;
+  border: 2px solid #004ca0 !important;
 }
