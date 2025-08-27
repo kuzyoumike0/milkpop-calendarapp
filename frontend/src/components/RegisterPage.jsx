@@ -49,19 +49,32 @@ const RegisterPage = () => {
     a.getDate() === b.getDate();
 
   const handleSelect = (date) => {
+    // 単日
     if (mode === "single") {
-      setSelectedDates([date]);
-    } else if (mode === "multiple") {
+      if (selectedDates.length === 1 && isSameDate(selectedDates[0], date)) {
+        setSelectedDates([]); // 解除
+      } else {
+        setSelectedDates([date]);
+      }
+    }
+
+    // 複数
+    else if (mode === "multiple") {
       const exists = selectedDates.find((d) => isSameDate(d, date));
       if (exists) {
-        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
+        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date))); // 解除
       } else {
         setSelectedDates([...selectedDates, date]);
       }
-    } else if (mode === "range") {
-      if (selectedDates.length === 0 || selectedDates.length === 2) {
+    }
+
+    // 範囲
+    else if (mode === "range") {
+      if (selectedDates.length === 0 || selectedDates.length > 1) {
+        // 一回目クリック
         setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
+        // 二回目クリックで範囲
         const start = selectedDates[0];
         const range = [];
         const min = start < date ? start : date;
