@@ -15,6 +15,7 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
+/* タイトル入力フォーム → カレンダー幅に合わせる */
 .title-input {
   display: block;
   width: 70%; /* カレンダー幅に合わせる */
@@ -71,7 +72,7 @@
   overflow-y: auto;
 }
 
-/* カレンダーのデフォルト四角 */
+/* ===== カレンダーのデフォルト四角 ===== */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -103,21 +104,23 @@
   box-shadow: 0 0 12px rgba(253,185,200,0.9);
 }
 
-/* hover */
+/* hover時 */
 .react-calendar__tile:hover {
   transform: scale(1.05);
   background: rgba(253,185,200,0.6) !important;
   color: #000 !important;
 }
 
-/* 祝日名を下に表示 */
+/* ===== 祝日名を下に表示 ===== */
 .holiday-name {
   color: #e60033 !important;
   font-size: 0.7rem;
   margin-top: 2px;
+  display: block;
+  text-align: center;
 }
 
-/* 選択中の日程カード */
+/* ===== 選択中の日程カード ===== */
 .selected-card {
   background: white;
   border-radius: 16px;
@@ -129,6 +132,7 @@
   gap: 10px;
 }
 
+/* 日付バッジ */
 .date-badge {
   display: inline-block;
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
@@ -139,6 +143,7 @@
   border-radius: 20px;
 }
 
+/* 時間帯ボタン */
 .time-buttons {
   display: flex;
   gap: 6px;
@@ -161,6 +166,7 @@
   font-weight: bold;
 }
 
+/* 時間指定用セレクト */
 .cute-select {
   padding: 6px 10px;
   border-radius: 12px;
@@ -171,6 +177,7 @@
   transition: 0.2s;
 }
 
+/* 保存ボタン */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -183,6 +190,7 @@
   cursor: pointer;
 }
 
+/* 共有リンク表示エリア */
 .share-link-box {
   display: flex;
   justify-content: center;
