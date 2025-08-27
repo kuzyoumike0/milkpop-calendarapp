@@ -17,11 +17,10 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // === JST 今日を正しく取得 ===
+  // === JST 今日 ===
   const jstNow = new Date().toLocaleDateString("ja-JP", {
     timeZone: "Asia/Tokyo",
   });
-  // "2025/8/27" → "2025-08-27"
   const [yy, mm, dd] = jstNow.split("/");
   const today = `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(
     2,
@@ -80,7 +79,7 @@ const RegisterPage = () => {
     }));
   };
 
-  // ===== 保存 =====
+  // ===== 保存（共有リンク生成） =====
   const handleSave = async () => {
     if (!title || selectedDates.length === 0) {
       alert("タイトルと日付を入力してください");
@@ -107,7 +106,8 @@ const RegisterPage = () => {
     });
     if (res.ok) {
       const token = (await res.json()).token;
-      setShareUrl(`${window.location.origin}/share/${token}`);
+      const url = `${window.location.origin}/share/${token}`;
+      setShareUrl(url); // ←毎回新しいURL
       setSchedules([...schedules, newSchedule]);
       setTitle("");
       setSelectedDates([]);
@@ -115,13 +115,11 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 祝日名 =====
   const getHolidayName = (date) => {
     const h = hd.isHoliday(date);
     return h ? h[0].name : null;
   };
 
-  // ===== 時間指定ドロップダウン =====
   const renderTimeDropdown = (d) => {
     if (timeSettings[d]?.type !== "時間指定") return null;
     const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -258,7 +256,9 @@ const RegisterPage = () => {
       </button>
       {shareUrl && (
         <div className="share-link-box">
-          <input type="text" value={shareUrl} readOnly />
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+            {shareUrl}
+          </a>
           <button
             className="copy-btn"
             onClick={() => navigator.clipboard.writeText(shareUrl)}
