@@ -186,3 +186,10 @@ select,
   display: block;
   margin: auto;
 }
+/* 小さい保存ボタン */
+.save-btn.small {
+  padding: 4px 10px;
+  font-size: 12px;
+  margin-left: 6px;
+  border-radius: 8px;
+}
