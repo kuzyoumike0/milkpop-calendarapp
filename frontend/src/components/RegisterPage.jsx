@@ -1,5 +1,5 @@
 // frontend/src/components/RegisterPage.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Calendar from "react-calendar";
 import Holidays from "date-holidays";
 import { v4 as uuidv4 } from "uuid";
@@ -17,7 +17,7 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // ===== カレンダーで日付クリック =====
+  // ===== 日付クリック =====
   const handleDateClick = (date) => {
     const dateStr = date.toISOString().split("T")[0];
     if (selectedDates.includes(dateStr)) {
@@ -27,9 +27,12 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 保存 =====
+  // ===== 保存処理 =====
   const handleSave = async () => {
-    if (!title || selectedDates.length === 0) return alert("タイトルと日付を入力してください");
+    if (!title || selectedDates.length === 0) {
+      alert("タイトルと日付を入力してください");
+      return;
+    }
 
     const newSchedule = {
       id: uuidv4(),
@@ -56,13 +59,13 @@ const RegisterPage = () => {
     }
   };
 
-  // ===== 祝日名を返す =====
+  // ===== 祝日判定 =====
   const getHolidayName = (date) => {
     const h = hd.isHoliday(date);
     return h ? h[0].name : null;
   };
 
-  // ===== 時間選択のドロップダウンを作る =====
+  // ===== 時間指定ドロップダウン =====
   const renderTimeDropdown = () => {
     if (timeType !== "時間指定") return null;
     const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -136,15 +139,45 @@ const RegisterPage = () => {
 
         {/* 時間帯選択 */}
         <div className="time-options">
-          <label><input type="radio" value="終日" checked={timeType === "終日"} onChange={(e) => setTimeType(e.target.value)} /> 終日</label>
-          <label><input type="radio" value="昼" checked={timeType === "昼"} onChange={(e) => setTimeType(e.target.value)} /> 昼</label>
-          <label><input type="radio" value="夜" checked={timeType === "夜"} onChange={(e) => setTimeType(e.target.value)} /> 夜</label>
-          <label><input type="radio" value="時間指定" checked={timeType === "時間指定"} onChange={(e) => setTimeType(e.target.value)} /> 時間指定</label>
+          <label>
+            <input
+              type="radio"
+              value="終日"
+              checked={timeType === "終日"}
+              onChange={(e) => setTimeType(e.target.value)}
+            /> 終日
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="昼"
+              checked={timeType === "昼"}
+              onChange={(e) => setTimeType(e.target.value)}
+            /> 昼
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="夜"
+              checked={timeType === "夜"}
+              onChange={(e) => setTimeType(e.target.value)}
+            /> 夜
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="時間指定"
+              checked={timeType === "時間指定"}
+              onChange={(e) => setTimeType(e.target.value)}
+            /> 時間指定
+          </label>
         </div>
 
         {renderTimeDropdown()}
 
-        <button className="save-btn" onClick={handleSave}>共有リンクを発行</button>
+        <button className="save-btn" onClick={handleSave}>
+          共有リンクを発行
+        </button>
         {shareUrl && (
           <div className="share-link-box">
             <input type="text" value={shareUrl} readOnly className="share-link" />
@@ -158,7 +191,7 @@ const RegisterPage = () => {
         )}
       </div>
 
-      {/* 登録済みカレンダー一覧 */}
+      {/* 登録済みスケジュール一覧 */}
       <div className="schedules-list">
         <h2>登録済みスケジュール</h2>
         <ul>
