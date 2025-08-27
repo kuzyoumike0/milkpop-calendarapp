@@ -26,47 +26,14 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.my-responses h2 {
-  margin-bottom: 12px;
-  font-size: 20px;
-  color: #333;
-}
+.my-responses h2 { margin-bottom: 12px; }
 
 .username-input.short {
   width: 40%;
   padding: 8px 12px;
   border-radius: 10px;
   border: 2px solid #ddd;
-  font-size: 15px;
   margin-bottom: 15px;
-  outline: none;
-  transition: 0.2s;
-}
-.username-input.short:focus {
-  border-color: #ff88cc;
-  box-shadow: 0 0 8px rgba(255,136,204,0.6);
-}
-
-/* 自分の回答リスト */
-.my-responses-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.my-response-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255,255,255,0.35);
-  padding: 10px 14px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.date-label {
-  font-weight: bold;
-  color: #333;
 }
 
 /* プルダウン */
@@ -77,11 +44,9 @@
   background: #fffafc;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
 }
 .fancy-select:hover {
   border-color: #ff88cc;
-  background: #fff0f8;
 }
 .fancy-select .opt-ok { color: green; }
 .fancy-select .opt-ng { color: red; }
@@ -99,17 +64,14 @@
   color: white;
   font-weight: bold;
   font-size: 16px;
-  cursor: pointer;
-  transition: opacity 0.2s;
 }
-.save-btn:hover {
-  opacity: 0.85;
-}
-
-.save-message {
-  margin-top: 10px;
-  color: green;
-  font-weight: bold;
+.mini-save-btn {
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #6c5bcd;
+  color: white;
+  font-size: 12px;
 }
 
 /* みんなの回答 */
@@ -117,21 +79,12 @@
   background: rgba(255, 255, 255, 0.25);
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.all-responses h2 {
-  margin-bottom: 12px;
-  font-size: 20px;
-  color: #333;
 }
 
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255,255,255,0.35);
 }
 
 .responses-table th,
@@ -144,35 +97,14 @@
 .responses-table th {
   background: #355c7d;
   color: #fff;
-  font-weight: bold;
 }
 
 .count-ok { color: green; font-weight: bold; }
 .count-ng { color: red; font-weight: bold; }
 .count-maybe { color: orange; font-weight: bold; }
 
-/* 編集可能セル */
 .editable-username {
   color: #0077cc;
   text-decoration: underline;
   cursor: pointer;
-  transition: 0.2s;
-}
-.editable-username:hover {
-  color: #ff66aa;
-}
-
-/* 編集UI */
-.mini-save-btn {
-  margin-left: 6px;
-  padding: 5px 8px;
-  border: none;
-  border-radius: 8px;
-  background: #6a5acd;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-}
-.mini-save-btn:hover {
-  background: #483d8b;
 }
