@@ -16,11 +16,12 @@ const SharePage = () => {
   const [userId] = useState(() => crypto.randomUUID());
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
-
-  // ===== フィルタリング =====
   const [filter, setFilter] = useState("all");
 
-  // ===== スケジュール読み込み =====
+  // 🔹ユーザ名編集モード
+  const [editingUser, setEditingUser] = useState(null);
+  const [newUsername, setNewUsername] = useState("");
+
   useEffect(() => {
     if (!token) return;
 
@@ -61,7 +62,6 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // ===== 入力変更 =====
   const handleChange = (dateKey, value) => {
     setResponses((prev) => ({
       ...prev,
@@ -69,7 +69,6 @@ const SharePage = () => {
     }));
   };
 
-  // ===== 保存 =====
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
@@ -88,7 +87,20 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== 日付フォーマット =====
+  const handleUsernameSave = async (oldName) => {
+    if (!newUsername.trim()) return;
+    await fetch(`/api/schedules/${token}/edit-username`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        oldName,
+        newName: newUsername.trim(),
+      }),
+    });
+    setEditingUser(null);
+    setNewUsername("");
+  };
+
   const formatDate = (d) => {
     const date = new Date(d.date);
     const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
@@ -100,10 +112,8 @@ const SharePage = () => {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // ユニークユーザー
   const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
 
-  // ===== フィルタ処理 =====
   const filteredDates = schedule.dates.filter((d) => {
     const dateKey =
       d.timeType === "時間指定" && d.startTime && d.endTime
@@ -118,19 +128,19 @@ const SharePage = () => {
 
     if (filter === "good") return aggregate["○"] > aggregate["✖"];
     if (filter === "bad") return aggregate["✖"] >= aggregate["○"];
-    return true; // all
+    return true;
   });
 
   return (
-    <div className="share-container">
+    <div className="share-container gradient-bg">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
       {/* 自分の回答 */}
-      <div className="my-responses">
+      <div className="my-responses card-box">
         <h2>自分の回答</h2>
         <input
           type="text"
-          className="username-input"
+          className="username-input cute-input"
           placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -164,10 +174,8 @@ const SharePage = () => {
       </div>
 
       {/* みんなの回答 */}
-      <div className="all-responses">
+      <div className="all-responses card-box">
         <h2>みんなの回答</h2>
-
-        {/* フィルタ */}
         <div className="filter-box">
           <label>フィルタ: </label>
           <select
@@ -180,14 +188,40 @@ const SharePage = () => {
             <option value="bad">✖ が多い日</option>
           </select>
         </div>
-
         <table className="responses-table">
           <thead>
             <tr>
               <th>日付</th>
               <th>回答数</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>{user}</th>
+                <th key={user}>
+                  {editingUser === user ? (
+                    <div className="username-edit-box">
+                      <input
+                        type="text"
+                        className="cute-input"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value)}
+                      />
+                      <button
+                        className="mini-save-btn"
+                        onClick={() => handleUsernameSave(user)}
+                      >
+                        保存
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="editable-username"
+                      onClick={() => {
+                        setEditingUser(user);
+                        setNewUsername(user);
+                      }}
+                    >
+                      {user}
+                    </span>
+                  )}
+                </th>
               ))}
             </tr>
           </thead>
@@ -198,7 +232,6 @@ const SharePage = () => {
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
                   : `${d.date} (${d.timeType})`;
 
-              // 集計
               const aggregate = { "○": 0, "✖": 0, "△": 0 };
               allResponses.forEach((r) => {
                 const ans = r.responses?.[dateKey];
