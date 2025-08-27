@@ -71,14 +71,74 @@
   overflow-y: auto;
 }
 
-.selected-item {
+/* 選択中の日程をボタン風に */
+.selected-button {
   background: white;
-  border-radius: 12px;
-  padding: 10px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: 0.2s;
+}
+.selected-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
 }
 
+.date-label {
+  font-weight: bold;
+  color: #333;
+}
+
+/* 時間帯ボタン */
+.time-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.time-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 20px;
+  background: #eee;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.time-btn:hover {
+  background: #fdb9c8;
+  color: white;
+}
+
+.time-btn.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+}
+
+/* 可愛いセレクト */
+.cute-select {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid #004ca0;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cute-select:hover {
+  background: #fdb9c8;
+  color: white;
+  border-color: #fdb9c8;
+}
+
+/* 保存ボタン */
 .save-btn {
   display: block;
   margin: 20px auto;
