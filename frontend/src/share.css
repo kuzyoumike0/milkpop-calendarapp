@@ -2,21 +2,52 @@
   padding: 20px;
   max-width: 1100px;
   margin: auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  border-radius: 16px;
 }
 
+/* タイトル */
 .share-title {
   text-align: center;
-  font-size: 24px;
+  font-size: 26px;
   margin-bottom: 20px;
   color: #444;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  font-weight: bold;
 }
 
 /* 自分の回答 */
 .my-responses {
   margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.my-responses h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+  color: #333;
+}
+
+.username-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  font-size: 16px;
+  margin-bottom: 15px;
+  outline: none;
+  transition: 0.2s;
+}
+.username-input:focus {
+  border-color: #ff88cc;
+  box-shadow: 0 0 8px rgba(255,136,204,0.6);
+}
+
+/* 自分の回答リスト */
 .my-responses-list {
   display: flex;
   flex-direction: column;
@@ -28,9 +59,9 @@
   justify-content: space-between;
   align-items: center;
   background: #fff;
-  padding: 8px 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .date-label {
@@ -38,52 +69,62 @@
   color: #333;
 }
 
+/* プルダウンを可愛く */
 .fancy-select {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: linear-gradient(145deg, #fefefe, #f3f3f3);
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+  background: linear-gradient(145deg, #ffffff, #f3f3f3);
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: 0.2s;
+  font-size: 15px;
 }
-
 .fancy-select:hover {
-  border-color: #888;
-  background: #f9f9f9;
+  border-color: #ff88cc;
+  background: #fff0f8;
 }
 
+/* 保存ボタン */
 .save-btn {
-  margin-top: 12px;
-  padding: 10px;
+  margin-top: 16px;
+  padding: 12px;
   width: 100%;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   background: linear-gradient(90deg, #355c7d, #6c5b7b, #c06c84);
   color: white;
   font-weight: bold;
+  font-size: 16px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
-
 .save-btn:hover {
   opacity: 0.85;
 }
 
 .save-message {
-  margin-top: 8px;
+  margin-top: 10px;
   color: green;
   font-weight: bold;
 }
 
 /* みんなの回答 */
+.all-responses {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 .all-responses h2 {
-  margin-top: 20px;
+  margin-bottom: 12px;
   font-size: 20px;
+  color: #333;
 }
 
 .filter-box {
-  margin: 10px 0;
+  margin: 10px 0 15px;
 }
 
 .responses-table {
@@ -97,7 +138,7 @@
 
 .responses-table th,
 .responses-table td {
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid #ddd;
   text-align: center;
 }
@@ -119,4 +160,43 @@
 .count-maybe {
   color: orange;
   font-weight: bold;
+}
+
+/* 編集可能ユーザ名 */
+.editable-username {
+  color: #0077cc;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.editable-username:hover {
+  color: #ff66aa;
+}
+
+/* インライン編集ボックス */
+.username-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.username-edit-input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  font-size: 14px;
+}
+
+.mini-save-btn {
+  padding: 5px 8px;
+  border: none;
+  border-radius: 8px;
+  background: #6a5acd;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.mini-save-btn:hover {
+  background: #483d8b;
 }
