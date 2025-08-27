@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
+import "../common.css";
 import "../share.css";
 
 const attendanceOptions = [
-  { value: "-", label: "－", class: "opt-none" },
-  { value: "○", label: "○ 出席", class: "opt-ok" },
-  { value: "✖", label: "✖ 欠席", class: "opt-ng" },
-  { value: "△", label: "△ 未定", class: "opt-maybe" },
+  { value: "○", label: "○ 出席" },
+  { value: "✖", label: "✖ 欠席" },
+  { value: "△", label: "△ 未定" },
+  { value: "-", label: "- 未回答" },
 ];
 const socket = io();
 
@@ -20,11 +21,9 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 複数ユーザ編集モード管理
-  const [editingUsers, setEditingUsers] = useState({});
-  const [editValues, setEditValues] = useState({});
-
-  const [filter, setFilter] = useState("all");
+  // 編集モード管理
+  const [editingUser, setEditingUser] = useState(null);
+  const [editedResponses, setEditedResponses] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -63,17 +62,16 @@ const SharePage = () => {
     };
   }, [token]);
 
-  // 自分の回答保存
+  const handleChange = (dateKey, value) => {
+    setResponses((prev) => ({ ...prev, [dateKey]: value }));
+  };
+
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
       return;
     }
-    const res = {
-      user_id: userId,
-      username,
-      responses,
-    };
+    const res = { user_id: userId, username, responses };
     await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -83,26 +81,15 @@ const SharePage = () => {
   };
 
   // 編集開始
-  const startEdit = (user) => {
-    setEditingUsers((prev) => ({ ...prev, [user]: true }));
+  const handleUserEdit = (user) => {
+    setEditingUser(user);
     const target = allResponses.find((r) => r.username === user);
-    setEditValues((prev) => ({
-      ...prev,
-      [user]: { ...(target?.responses || {}) },
-    }));
-  };
-
-  // 値変更
-  const changeEditValue = (user, dateKey, value) => {
-    setEditValues((prev) => ({
-      ...prev,
-      [user]: { ...prev[user], [dateKey]: value },
-    }));
+    setEditedResponses({ ...(target?.responses || {}) });
   };
 
   // 編集保存
-  const saveEdit = async (user) => {
-    const target = allResponses.find((r) => r.username === user);
+  const handleEditSave = async () => {
+    const target = allResponses.find((r) => r.username === editingUser);
     if (!target) return;
 
     await fetch(`/api/schedules/${token}/responses`, {
@@ -110,16 +97,13 @@ const SharePage = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: target.user_id,
-        username: target.username,
-        responses: editValues[user],
+        username: editingUser,
+        responses: editedResponses,
       }),
     });
 
-    setEditingUsers((prev) => {
-      const copy = { ...prev };
-      delete copy[user];
-      return copy;
-    });
+    setEditingUser(null);
+    setEditedResponses({});
   };
 
   const formatDate = (d) => {
@@ -144,10 +128,10 @@ const SharePage = () => {
         <h2>自分の回答</h2>
         <input
           type="text"
-          className="username-input short"
           placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="username-input"
         />
         <div className="my-responses-list">
           {schedule?.dates?.map((d) => {
@@ -158,24 +142,17 @@ const SharePage = () => {
             return (
               <div key={dateKey} className="my-response-item">
                 <span className="date-label">{formatDate(d)}</span>
-                <div className="pull-right">
-                  <select
-                    className="fancy-select"
-                    value={responses[dateKey] || "-"}
-                    onChange={(e) =>
-                      setResponses((prev) => ({
-                        ...prev,
-                        [dateKey]: e.target.value,
-                      }))
-                    }
-                  >
-                    {attendanceOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value} className={opt.class}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  className="fancy-select"
+                  value={responses[dateKey] || "-"}
+                  onChange={(e) => handleChange(dateKey, e.target.value)}
+                >
+                  {attendanceOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             );
           })}
@@ -190,19 +167,14 @@ const SharePage = () => {
       <div className="all-responses">
         <h2>みんなの回答</h2>
         <div className="filter-box">
-          フィルタ:{" "}
-          <select
-            className="fancy-select"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
+          <label>フィルタ: </label>
+          <select className="fancy-select">
             <option value="all">すべて表示</option>
-            <option value="ok">○がある日だけ</option>
-            <option value="ng">✖がある日だけ</option>
-            <option value="maybe">△がある日だけ</option>
+            <option value="ok">○がある日程</option>
+            <option value="ng">✖がある日程</option>
+            <option value="maybe">△がある日程</option>
           </select>
         </div>
-
         <table className="responses-table">
           <thead>
             <tr>
@@ -210,17 +182,16 @@ const SharePage = () => {
               <th>回答数</th>
               {uniqueUsers.map((user) => (
                 <th key={user}>
-                  {editingUsers[user] ? (
-                    <>
-                      <span>{user}</span>
-                      <button className="mini-save-btn" onClick={() => saveEdit(user)}>
+                  {editingUser === user ? (
+                    <div>
+                      <button className="username-save-btn" onClick={handleEditSave}>
                         保存
                       </button>
-                    </>
+                    </div>
                   ) : (
                     <span
                       className="editable-username"
-                      onClick={() => startEdit(user)}
+                      onClick={() => handleUserEdit(user)}
                     >
                       {user}
                     </span>
@@ -230,75 +201,58 @@ const SharePage = () => {
             </tr>
           </thead>
           <tbody>
-            {schedule?.dates
-              ?.filter((d) => {
-                const dateKey =
-                  d.timeType === "時間指定" && d.startTime && d.endTime
-                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                    : `${d.date} (${d.timeType})`;
+            {schedule?.dates?.map((d) => {
+              const dateKey =
+                d.timeType === "時間指定" && d.startTime && d.endTime
+                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                  : `${d.date} (${d.timeType})`;
 
-                const counts = { "○": 0, "✖": 0, "△": 0 };
-                allResponses.forEach((r) => {
-                  const val = r.responses?.[dateKey];
-                  if (counts[val] !== undefined) counts[val]++;
-                });
+              const counts = { "○": 0, "✖": 0, "△": 0 };
+              allResponses.forEach((r) => {
+                const ans = r.responses?.[dateKey];
+                if (ans && counts[ans] !== undefined) counts[ans]++;
+              });
 
-                if (filter === "ok" && counts["○"] === 0) return false;
-                if (filter === "ng" && counts["✖"] === 0) return false;
-                if (filter === "maybe" && counts["△"] === 0) return false;
+              return (
+                <tr key={dateKey}>
+                  <td className="date-label">{formatDate(d)}</td>
+                  <td>
+                    <span className="count-ok">○{counts["○"]}</span>{" "}
+                    <span className="count-ng">✖{counts["✖"]}</span>{" "}
+                    <span className="count-maybe">△{counts["△"]}</span>
+                  </td>
+                  {uniqueUsers.map((user) => {
+                    const userResponse = allResponses.find((r) => r.username === user);
+                    const value = userResponse?.responses?.[dateKey] || "-";
 
-                return true;
-              })
-              .map((d) => {
-                const dateKey =
-                  d.timeType === "時間指定" && d.startTime && d.endTime
-                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                    : `${d.date} (${d.timeType})`;
-
-                const counts = { "○": 0, "✖": 0, "△": 0 };
-                allResponses.forEach((r) => {
-                  const val = r.responses?.[dateKey];
-                  if (counts[val] !== undefined) counts[val]++;
-                });
-
-                return (
-                  <tr key={dateKey}>
-                    <td className="date-label">{formatDate(d)}</td>
-                    <td>
-                      <span className="count-ok">○{counts["○"]}</span>{" "}
-                      <span className="count-ng">✖{counts["✖"]}</span>{" "}
-                      <span className="count-maybe">△{counts["△"]}</span>
-                    </td>
-                    {uniqueUsers.map((user) => {
-                      const userResponse = allResponses.find(
-                        (r) => r.username === user
-                      );
-                      const val = userResponse?.responses?.[dateKey] || "-";
-
-                      if (editingUsers[user]) {
-                        return (
-                          <td key={user}>
-                            <select
-                              className="fancy-select"
-                              value={editValues[user]?.[dateKey] || "-"}
-                              onChange={(e) =>
-                                changeEditValue(user, dateKey, e.target.value)
-                              }
-                            >
-                              {attendanceOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        );
-                      }
-                      return <td key={user}>{val}</td>;
-                    })}
-                  </tr>
-                );
-              })}
+                    return (
+                      <td key={user}>
+                        {editingUser === user ? (
+                          <select
+                            className="fancy-select"
+                            value={editedResponses[dateKey] || value}
+                            onChange={(e) =>
+                              setEditedResponses((prev) => ({
+                                ...prev,
+                                [dateKey]: e.target.value,
+                              }))
+                            }
+                          >
+                            {attendanceOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          value
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
