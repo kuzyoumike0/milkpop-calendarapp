@@ -60,19 +60,18 @@ const RegisterPage = () => {
 
   // 日付クリック処理
   const handleSelect = (date) => {
+    const exists = selectedDates.find((d) => isSameDate(d, date));
+
+    // ✅ もう一度クリックされたら解除
+    if (exists) {
+      setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
+      return;
+    }
+
     if (mode === "single") {
-      if (selectedDates.length === 1 && isSameDate(selectedDates[0], date)) {
-        setSelectedDates([]);
-      } else {
-        setSelectedDates([date]);
-      }
+      setSelectedDates([date]);
     } else if (mode === "multiple") {
-      const exists = selectedDates.find((d) => isSameDate(d, date));
-      if (exists) {
-        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
-      } else {
-        setSelectedDates([...selectedDates, date]);
-      }
+      setSelectedDates([...selectedDates, date]);
     } else if (mode === "range") {
       if (selectedDates.length === 0 || selectedDates.length > 1) {
         setSelectedDates([date]);
@@ -127,17 +126,11 @@ const RegisterPage = () => {
         dates: selectedDates.map((d) => {
           const key = formatDateKey(d);
           const setting = timeSettings[key] || {};
-          const active = setting.activeTimes || {};
-
-          // === 時間帯の決定ロジック ===
-          let timeType = "終日";
-          if (active["午前"]) timeType = "午前";
-          if (active["午後"]) timeType = "午後";
-          if (setting.start && setting.end) timeType = "時間指定";
-
           return {
-            date: formatDateKey(d),
-            timeType,
+            date: key,
+            timeType: setting.showTimeSelect
+              ? "時間指定"
+              : Object.keys(setting.activeTimes || {}).find((k) => setting.activeTimes[k]) || "終日",
             startTime: setting.start || null,
             endTime: setting.end || null,
           };
