@@ -20,7 +20,7 @@
 /* 自分の回答 */
 .my-responses {
   margin-bottom: 30px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.2);
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -32,17 +32,17 @@
   color: #333;
 }
 
-.username-input {
-  width: 100%;
-  padding: 10px 14px;
+.username-input.short {
+  width: 40%;
+  padding: 8px 12px;
   border-radius: 10px;
   border: 2px solid #ddd;
-  font-size: 16px;
+  font-size: 15px;
   margin-bottom: 15px;
   outline: none;
   transition: 0.2s;
 }
-.username-input:focus {
+.username-input.short:focus {
   border-color: #ff88cc;
   box-shadow: 0 0 8px rgba(255,136,204,0.6);
 }
@@ -58,7 +58,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
+  background: rgba(255,255,255,0.3);
   padding: 10px 14px;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -69,16 +69,15 @@
   color: #333;
 }
 
-/* プルダウンを可愛く */
+/* プルダウン */
 .fancy-select {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 2px solid #ccc;
-  background: linear-gradient(145deg, #ffffff, #f3f3f3);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  background: #fffafc;
   font-weight: bold;
   cursor: pointer;
   transition: 0.2s;
-  font-size: 15px;
 }
 .fancy-select:hover {
   border-color: #ff88cc;
@@ -111,7 +110,7 @@
 
 /* みんなの回答 */
 .all-responses {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.2);
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -123,22 +122,17 @@
   color: #333;
 }
 
-.filter-box {
-  margin: 10px 0 15px;
-}
-
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .responses-table th,
 .responses-table td {
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid #ddd;
   text-align: center;
 }
@@ -162,7 +156,7 @@
   font-weight: bold;
 }
 
-/* 編集可能ユーザ名 */
+/* ユーザ名セル（編集可能） */
 .editable-username {
   color: #0077cc;
   text-decoration: underline;
@@ -173,21 +167,9 @@
   color: #ff66aa;
 }
 
-/* インライン編集ボックス */
-.username-edit-box {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.username-edit-input {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #aaa;
-  font-size: 14px;
-}
-
+/* 編集UI */
 .mini-save-btn {
+  margin-left: 6px;
   padding: 5px 8px;
   border: none;
   border-radius: 8px;
@@ -195,7 +177,6 @@
   color: white;
   font-size: 13px;
   cursor: pointer;
-  transition: 0.2s;
 }
 .mini-save-btn:hover {
   background: #483d8b;
