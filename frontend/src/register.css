@@ -17,6 +17,7 @@
   text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
 }
 
+/* タイトル入力 */
 .title-input {
   width: 40%;
   padding: 10px;
@@ -97,11 +98,20 @@
   font-weight: bold;
 }
 
-/* 選択済み */
+/* 選択済み（複数・範囲） */
 .selected-date {
   background: #004CA0 !important;
   color: #fff !important;
   border-radius: 50%;
+}
+
+/* 選択中の日を強調 */
+.selected-day {
+  background: #FDB9C8 !important;
+  border-radius: 50%;
+  color: #000 !important;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
 }
 
 /* 範囲 */
@@ -216,12 +226,4 @@
   font-size: 12px;
   font-weight: bold;
   cursor: pointer;
-}
-/* 選択中の日を強調 */
-.selected-day {
-  background: #FDB9C8 !important;
-  border-radius: 50%;
-  color: #000 !important;
-  font-weight: bold;
-  box-shadow: 0 0 8px rgba(0,0,0,0.4);
 }
