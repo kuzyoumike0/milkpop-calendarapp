@@ -1,8 +1,6 @@
-// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import "../common.css";
 import "../share.css";
 
 const attendanceOptions = ["-", "○", "✖", "△"];
@@ -16,11 +14,10 @@ const SharePage = () => {
   const [userId] = useState(() => crypto.randomUUID());
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
-  const [filter, setFilter] = useState("all");
 
-  // 🔹ユーザ名編集モード
-  const [editingUser, setEditingUser] = useState(null);
-  const [newUsername, setNewUsername] = useState("");
+  // 編集用
+  const [editingCell, setEditingCell] = useState(null); // {user, dateKey}
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -30,10 +27,7 @@ const SharePage = () => {
         const res = await fetch(`/api/schedules/${token}`);
         if (!res.ok) throw new Error("スケジュール取得失敗");
         const data = await res.json();
-        setSchedule({
-          ...data,
-          dates: data.dates || [],
-        });
+        setSchedule({ ...data, dates: data.dates || [] });
 
         const res2 = await fetch(`/api/schedules/${token}/responses`);
         if (!res2.ok) throw new Error("レスポンス取得失敗");
@@ -87,18 +81,36 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  const handleUsernameSave = async (oldName) => {
-    if (!newUsername.trim()) return;
-    await fetch(`/api/schedules/${token}/edit-username`, {
+  // ユーザセル編集
+  const startEdit = (user, dateKey, currentValue) => {
+    setEditingCell({ user, dateKey });
+    setEditValue(currentValue);
+  };
+
+  const saveEdit = async () => {
+    if (!editingCell) return;
+    const { user, dateKey } = editingCell;
+
+    const target = allResponses.find((r) => r.username === user);
+    if (!target) return;
+
+    const newResponses = {
+      ...target.responses,
+      [dateKey]: editValue,
+    };
+
+    await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        oldName,
-        newName: newUsername.trim(),
+        user_id: target.user_id,
+        username: target.username,
+        responses: newResponses,
       }),
     });
-    setEditingUser(null);
-    setNewUsername("");
+
+    setEditingCell(null);
+    setEditValue("");
   };
 
   const formatDate = (d) => {
@@ -114,33 +126,16 @@ const SharePage = () => {
 
   const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
 
-  const filteredDates = schedule.dates.filter((d) => {
-    const dateKey =
-      d.timeType === "時間指定" && d.startTime && d.endTime
-        ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-        : `${d.date} (${d.timeType})`;
-
-    const aggregate = { "○": 0, "✖": 0, "△": 0 };
-    allResponses.forEach((r) => {
-      const ans = r.responses?.[dateKey];
-      if (aggregate[ans] !== undefined) aggregate[ans]++;
-    });
-
-    if (filter === "good") return aggregate["○"] > aggregate["✖"];
-    if (filter === "bad") return aggregate["✖"] >= aggregate["○"];
-    return true;
-  });
-
   return (
-    <div className="share-container gradient-bg">
+    <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
       {/* 自分の回答 */}
-      <div className="my-responses card-box">
+      <div className="my-responses">
         <h2>自分の回答</h2>
         <input
           type="text"
-          className="username-input cute-input"
+          className="username-input short"
           placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -169,90 +164,84 @@ const SharePage = () => {
             );
           })}
         </div>
-        <button className="save-btn" onClick={handleSave}>保存する</button>
+        <button className="save-btn" onClick={handleSave}>
+          保存する
+        </button>
         {saveMessage && <p className="save-message">{saveMessage}</p>}
       </div>
 
       {/* みんなの回答 */}
-      <div className="all-responses card-box">
+      <div className="all-responses">
         <h2>みんなの回答</h2>
-        <div className="filter-box">
-          <label>フィルタ: </label>
-          <select
-            className="fancy-select"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">すべて表示</option>
-            <option value="good">○ が多い日</option>
-            <option value="bad">✖ が多い日</option>
-          </select>
-        </div>
         <table className="responses-table">
           <thead>
             <tr>
               <th>日付</th>
               <th>回答数</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>
-                  {editingUser === user ? (
-                    <div className="username-edit-box">
-                      <input
-                        type="text"
-                        className="cute-input"
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                      />
-                      <button
-                        className="mini-save-btn"
-                        onClick={() => handleUsernameSave(user)}
-                      >
-                        保存
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="editable-username"
-                      onClick={() => {
-                        setEditingUser(user);
-                        setNewUsername(user);
-                      }}
-                    >
-                      {user}
-                    </span>
-                  )}
-                </th>
+                <th key={user}>{user}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredDates.map((d) => {
+            {schedule?.dates?.map((d) => {
               const dateKey =
                 d.timeType === "時間指定" && d.startTime && d.endTime
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
                   : `${d.date} (${d.timeType})`;
 
-              const aggregate = { "○": 0, "✖": 0, "△": 0 };
+              const counts = { "○": 0, "✖": 0, "△": 0 };
               allResponses.forEach((r) => {
-                const ans = r.responses?.[dateKey];
-                if (aggregate[ans] !== undefined) aggregate[ans]++;
+                const val = r.responses?.[dateKey];
+                if (counts[val] !== undefined) counts[val]++;
               });
 
               return (
                 <tr key={dateKey}>
                   <td>{formatDate(d)}</td>
                   <td>
-                    <span className="count-ok">○{aggregate["○"]}</span>{" "}
-                    <span className="count-ng">✖{aggregate["✖"]}</span>{" "}
-                    <span className="count-maybe">△{aggregate["△"]}</span>
+                    <span className="count-ok">○{counts["○"]}</span>{" "}
+                    <span className="count-ng">✖{counts["✖"]}</span>{" "}
+                    <span className="count-maybe">△{counts["△"]}</span>
                   </td>
                   {uniqueUsers.map((user) => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
                     );
+                    const val = userResponse?.responses?.[dateKey] || "-";
+
+                    if (
+                      editingCell &&
+                      editingCell.user === user &&
+                      editingCell.dateKey === dateKey
+                    ) {
+                      return (
+                        <td key={user}>
+                          <select
+                            className="fancy-select"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                          >
+                            {attendanceOptions.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                          <button className="mini-save-btn" onClick={saveEdit}>
+                            保存
+                          </button>
+                        </td>
+                      );
+                    }
+
                     return (
-                      <td key={user}>
-                        {userResponse?.responses?.[dateKey] || "-"}
+                      <td
+                        key={user}
+                        className="editable-username"
+                        onClick={() => startEdit(user, dateKey, val)}
+                      >
+                        {val}
                       </td>
                     );
                   })}
