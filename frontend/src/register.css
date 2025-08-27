@@ -71,31 +71,34 @@
   overflow-y: auto;
 }
 
-/* カレンダーのデフォルトは四角 */
+/* カレンダーのデフォルト四角 */
 .react-calendar__tile {
   border-radius: 8px;
   padding: 10px 0;
   transition: 0.2s;
+  text-align: center;
 }
 
-/* 選択日 → 四角ピンク */
+/* 選択日 → ピンク背景＋黒文字 */
 .selected-date {
   background: #fdb9c8 !important;
-  color: #fff !important;
+  color: #000 !important; /* 黒文字で視認性UP */
   font-weight: bold !important;
-  border-radius: 8px !important; /* 四角 */
+  border-radius: 8px !important;
   border: 2px solid #004ca0 !important;
   box-shadow: 0 0 8px rgba(0,0,0,0.3);
+  text-align: center;
 }
 
-/* 今日 → 四角青背景＋ピンク枠 */
+/* 今日 → 青背景＋ピンク枠＋白文字 */
 .today {
   background: #004ca0 !important;
-  color: #fff !important;
+  color: #fff !important; /* 白文字で反転 */
   font-weight: bold !important;
-  border-radius: 8px !important; /* 四角 */
+  border-radius: 8px !important;
   border: 3px solid #fdb9c8 !important;
   box-shadow: 0 0 12px rgba(253,185,200,0.9);
+  text-align: center;
 }
 
 /* hover */
