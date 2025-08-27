@@ -71,40 +71,36 @@
   overflow-y: auto;
 }
 
-/* タイルを正円化 */
+/* カレンダーのデフォルトは四角 */
 .react-calendar__tile {
-  border-radius: 50% !important;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+  border-radius: 8px;
+  padding: 10px 0;
   transition: 0.2s;
 }
 
-/* 選択日 */
+/* 選択日 → 四角ピンク */
 .selected-date {
   background: #fdb9c8 !important;
   color: #fff !important;
   font-weight: bold !important;
-  border-radius: 50% !important;
+  border-radius: 8px !important; /* 四角 */
   border: 2px solid #004ca0 !important;
   box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
-/* 今日 */
+/* 今日 → 四角青背景＋ピンク枠 */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold !important;
-  border-radius: 50% !important;
+  border-radius: 8px !important; /* 四角 */
   border: 3px solid #fdb9c8 !important;
   box-shadow: 0 0 12px rgba(253,185,200,0.9);
 }
 
 /* hover */
 .react-calendar__tile:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   background: rgba(253,185,200,0.6) !important;
   color: #000 !important;
 }
