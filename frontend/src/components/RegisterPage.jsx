@@ -1,131 +1,85 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import Holidays from "date-holidays";
+import "react-calendar/dist/Calendar.css";
 import "../register.css";
-import { v4 as uuidv4 } from "uuid";
 
-// 日本の祝日ライブラリ
-const hd = new Holidays("JP");
-
-// JST日付 → "YYYY-MM-DD"
-const formatDateJST = (date) => {
-  const jstDate = new Date(
-    date.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  return jstDate.toISOString().split("T")[0];
+// 日本時間の今日を取得する関数
+const getTodayJST = () => {
+  const now = new Date();
+  const jstOffset = 9 * 60; // 日本はUTC+9時間
+  const localOffset = now.getTimezoneOffset(); // 分単位
+  const diff = jstOffset + localOffset;
+  const jst = new Date(now.getTime() + diff * 60 * 1000);
+  return jst;
 };
 
-// JSTの今日
-const todayStr = formatDateJST(new Date());
-
 const RegisterPage = () => {
-  const [mode, setMode] = useState("single");
+  const [mode, setMode] = useState("range"); // 単日/複数/範囲
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-  const [responses, setResponses] = useState({});
-  const [shareUrl, setShareUrl] = useState("");
+  const hd = new Holidays("JP");
+
+  // 日本時間の今日
+  const today = getTodayJST();
 
   // 日付クリック処理
-  const handleDateClick = (date) => {
-    const dateStr = formatDateJST(date);
+  const handleDateChange = (date) => {
     if (mode === "single") {
-      setSelectedDates([dateStr]);
+      setSelectedDates([date]);
     } else if (mode === "multiple") {
-      setSelectedDates((prev) =>
-        prev.includes(dateStr) ? prev.filter((d) => d !== dateStr) : [...prev, dateStr]
-      );
+      setSelectedDates((prev) => {
+        const exists = prev.find((d) => d.toDateString() === date.toDateString());
+        if (exists) {
+          return prev.filter((d) => d.toDateString() !== date.toDateString());
+        }
+        return [...prev, date];
+      });
     } else if (mode === "range") {
-      if (selectedDates.length === 0) {
-        setSelectedDates([dateStr]);
+      if (selectedDates.length === 0 || selectedDates.length === 2) {
+        setSelectedDates([date]);
       } else if (selectedDates.length === 1) {
         const start = selectedDates[0];
-        const range = getRangeDates(start, dateStr);
+        const range = [];
+        const min = start < date ? start : date;
+        const max = start > date ? start : date;
+        let cur = new Date(min);
+        while (cur <= max) {
+          range.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
         setSelectedDates(range);
-      } else {
-        setSelectedDates([dateStr]);
       }
     }
   };
 
-  // 範囲モード
-  const getRangeDates = (start, end) => {
-    const range = [];
-    let cur = new Date(start);
-    const endDate = new Date(end);
-    while (cur <= endDate) {
-      range.push(formatDateJST(cur));
-      cur.setDate(cur.getDate() + 1);
-    }
-    return range;
-  };
+  const isSelected = (date) =>
+    selectedDates.some((d) => d.toDateString() === date.toDateString());
 
-  // タイルクラス
-  const tileClassName = ({ date, view }) => {
-    if (view === "month") {
-      const classes = [];
-      const day = date.getDay();
-      if (day === 0) classes.push("sunday");
-      if (day === 6) classes.push("saturday");
-
-      const dateStr = formatDateJST(date);
-      if (dateStr === todayStr) classes.push("today");
-      if (selectedDates.includes(dateStr)) classes.push("selected-date");
-      return classes;
-    }
-    return null;
-  };
-
-  // 祝日名を日付下に表示
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const holiday = hd.isHoliday(date);
       if (holiday) {
-        return <div className="holiday-name">{holiday.name}</div>;
+        return (
+          <p style={{ fontSize: "0.6em", color: "red" }}>{holiday[0].name}</p>
+        );
       }
     }
-    return null;
-  };
-
-  // 時間区分切替
-  const toggleTime = (date, time) => {
-    setResponses((prev) => {
-      const current = prev[date] || {};
-      const updated = {
-        ...current,
-        [time]: !current[time],
-      };
-      return { ...prev, [date]: updated };
-    });
-  };
-
-  // 共有リンク発行
-  const handleShare = () => {
-    const token = uuidv4();
-    const url = `${window.location.origin}/share/${token}`;
-    setShareUrl(url);
-    console.log("保存データ", { title, selectedDates, responses, token });
-  };
-
-  // コピー
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl);
-    alert("リンクをコピーしました！");
   };
 
   return (
-    <div className="register-page">
-      <h2 className="page-title">日程登録</h2>
+    <div className="register-container">
+      <h1 className="banner">MilkPOP Calendar</h1>
+
       <input
         type="text"
         placeholder="タイトルを入力"
-        className="title-input"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        className="title-input"
       />
 
-      <div className="mode-tabs">
+      <div className="mode-buttons">
         <button
           className={mode === "single" ? "active" : ""}
           onClick={() => setMode("single")}
@@ -146,51 +100,59 @@ const RegisterPage = () => {
         </button>
       </div>
 
-      <div className="calendar-container">
-        <div className="calendar-box">
+      <div className="calendar-list">
+        <div className="calendar-container">
           <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={tileClassName}
-            tileContent={tileContent}
             locale="ja-JP"
+            calendarType="US"
+            tileContent={tileContent}
+            onClickDay={handleDateChange}
+            tileClassName={({ date }) => {
+              let classes = "";
+              // 今日をJST基準で強調
+              if (
+                date.getFullYear() === today.getFullYear() &&
+                date.getMonth() === today.getMonth() &&
+                date.getDate() === today.getDate()
+              ) {
+                classes += " today";
+              }
+              // 選択日
+              if (isSelected(date)) {
+                classes += " selected";
+              }
+              // 土曜青
+              if (date.getDay() === 6) {
+                classes += " saturday";
+              }
+              // 日曜赤
+              if (date.getDay() === 0) {
+                classes += " sunday";
+              }
+              return classes;
+            }}
           />
         </div>
 
-        <div className="selected-list">
-          <h3>選択中の日程</h3>
-          {selectedDates.map((date) => (
-            <div key={date} className="selected-card">
-              <span className="date-badge">{date}</span>
-              <div className="time-buttons">
-                {["終日", "昼", "夜", "時間指定"].map((time) => (
-                  <button
-                    key={time}
-                    className={`time-btn ${responses[date]?.[time] ? "active" : ""}`}
-                    onClick={() => toggleTime(date, time)}
-                  >
-                    {time}
-                  </button>
-                ))}
+        <div className="list-container">
+          <h2>選択中の日程</h2>
+          {selectedDates.map((d, idx) => (
+            <div key={idx} className="selected-item">
+              <strong>
+                {d.getFullYear()}-
+                {String(d.getMonth() + 1).padStart(2, "0")}-
+                {String(d.getDate()).padStart(2, "0")}
+              </strong>
+              <div className="time-options">
+                <button>終日</button>
+                <button>昼</button>
+                <button>夜</button>
+                <button>時間指定</button>
               </div>
             </div>
           ))}
         </div>
       </div>
-
-      <button className="save-btn" onClick={handleShare}>
-        共有リンクを発行
-      </button>
-
-      {shareUrl && (
-        <div className="share-link-box">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            {shareUrl}
-          </a>
-          <button className="copy-btn" onClick={copyToClipboard}>
-            コピー
-          </button>
-        </div>
-      )}
     </div>
   );
 };
