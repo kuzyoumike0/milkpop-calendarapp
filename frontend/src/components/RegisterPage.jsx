@@ -6,34 +6,19 @@ import Holidays from "date-holidays";
 import "../register.css";
 import { v4 as uuidv4 } from "uuid";
 
-// 日本の祝日
+// 日本の祝日ライブラリ
 const hd = new Holidays("JP");
 
-// JSTの日付フォーマット YYYY-MM-DD
+// JST日付 → "YYYY-MM-DD"
 const formatDateJST = (date) => {
-  return new Date(
+  const jstDate = new Date(
     date.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  )
-    .toISOString()
-    .split("T")[0];
+  );
+  return jstDate.toISOString().split("T")[0];
 };
 
 // JSTの今日
-const getTodayJST = () => {
-  const now = new Date();
-  const jstString = now.toLocaleDateString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  // 2025/08/27 → 2025-08-27
-  return jstString.replace(/\//g, "-")
-                  .replace(/-(\d)-/g, "-0$1-")
-                  .replace(/-(\d)$/, "-0$1");
-};
-
-const todayStr = getTodayJST();
+const todayStr = formatDateJST(new Date());
 
 const RegisterPage = () => {
   const [mode, setMode] = useState("single");
@@ -64,7 +49,7 @@ const RegisterPage = () => {
     }
   };
 
-  // 範囲モード用 日付配列生成
+  // 範囲モード
   const getRangeDates = (start, end) => {
     const range = [];
     let cur = new Date(start);
@@ -76,7 +61,7 @@ const RegisterPage = () => {
     return range;
   };
 
-  // 曜日・祝日・今日判定
+  // タイルクラス
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const classes = [];
@@ -87,7 +72,6 @@ const RegisterPage = () => {
       const dateStr = formatDateJST(date);
       if (dateStr === todayStr) classes.push("today");
       if (selectedDates.includes(dateStr)) classes.push("selected-date");
-
       return classes;
     }
     return null;
@@ -104,7 +88,7 @@ const RegisterPage = () => {
     return null;
   };
 
-  // 時間区分選択
+  // 時間区分切替
   const toggleTime = (date, time) => {
     setResponses((prev) => {
       const current = prev[date] || {};
@@ -121,11 +105,10 @@ const RegisterPage = () => {
     const token = uuidv4();
     const url = `${window.location.origin}/share/${token}`;
     setShareUrl(url);
-    // ここでバックエンドに POST してデータ保存するのが本来の流れ
     console.log("保存データ", { title, selectedDates, responses, token });
   };
 
-  // リンクコピー
+  // コピー
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     alert("リンクをコピーしました！");
@@ -182,9 +165,7 @@ const RegisterPage = () => {
                 {["終日", "昼", "夜", "時間指定"].map((time) => (
                   <button
                     key={time}
-                    className={`time-btn ${
-                      responses[date]?.[time] ? "active" : ""
-                    }`}
+                    className={`time-btn ${responses[date]?.[time] ? "active" : ""}`}
                     onClick={() => toggleTime(date, time)}
                   >
                     {time}
