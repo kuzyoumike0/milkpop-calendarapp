@@ -67,7 +67,7 @@
 }
 
 .calendar-box {
-  flex: 9; /* カレンダー広め */
+  flex: 9;
   background: rgba(255, 255, 255, 0.2);
   padding: 30px;
   border-radius: 20px;
@@ -119,7 +119,6 @@
   font-size: 1.2rem;
 }
 
-/* ===== セル: 形は一定で崩れない ===== */
 .calendar-table td {
   width: 14%;           
   height: 100px;        
@@ -135,14 +134,16 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* 今日 */
+/* 今日（特別強調） */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold;
+  border: 4px solid #fdb9c8;   /* 太枠追加 */
+  box-sizing: border-box;
 }
 
-/* 選択日: 色だけ変更 */
+/* 選択日 */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
@@ -162,7 +163,7 @@
   color: #004ca0;
 }
 
-/* 祝日名 */
+/* 祝日 */
 .holiday-name {
   font-size: 0.8rem;
   color: red;
