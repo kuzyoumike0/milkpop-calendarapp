@@ -1,3 +1,6 @@
+/* =====================
+   RegisterPage 共通レイアウト
+===================== */
 .register-page {
   padding: 20px;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
@@ -6,6 +9,7 @@
   color: #222;
 }
 
+/* タイトル */
 .page-title {
   text-align: center;
   font-size: 2rem;
@@ -15,6 +19,7 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+/* タイトル入力 */
 .title-input {
   display: block;
   width: 60%;          /* カレンダー幅に近づける */
@@ -29,6 +34,7 @@
   color: white;
 }
 
+/* モード切替ボタン */
 .mode-tabs {
   display: flex;
   justify-content: center;
@@ -43,12 +49,14 @@
   font-weight: bold;
   background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
+  transition: 0.2s;
 }
 .mode-tabs button.active {
   background: linear-gradient(90deg, #004ca0, #fdb9c8);
   color: white;
 }
 
+/* カレンダーと選択リストの横並び */
 .calendar-container {
   display: flex;
   gap: 20px;
@@ -68,7 +76,9 @@
   overflow-y: auto;
 }
 
-/* ==== カレンダー ==== */
+/* =====================
+   react-calendar カレンダー
+===================== */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -111,7 +121,9 @@
   border-radius: 8px !important;
 }
 
-/* ==== 選択中の日程 ==== */
+/* =====================
+   選択中の日程カード
+===================== */
 .selected-card {
   background: white;
   border-radius: 16px;
@@ -132,7 +144,7 @@
   border-radius: 20px;
 }
 
-/* ボタン */
+/* ボタン群 */
 .time-buttons {
   display: flex;
   gap: 6px;
@@ -157,7 +169,9 @@
   font-weight: bold;
 }
 
-/* 共有リンク */
+/* =====================
+   共有リンク
+===================== */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -190,7 +204,10 @@
 .copy-btn:hover {
   opacity: 0.8;
 }
-/* 時間指定プルダウン */
+
+/* =====================
+   時間指定プルダウン
+===================== */
 .time-selects {
   display: flex;
   gap: 6px;
