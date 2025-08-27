@@ -109,7 +109,12 @@
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  table-layout: fixed;
+  table-layout: fixed; /* 列幅均等 */
+}
+
+/* 各行を固定高さにしてつぶれ防止 */
+.calendar-table tr {
+  height: 100px; /* 1週ごとの高さ */
 }
 
 .calendar-table th {
@@ -119,10 +124,8 @@
   font-size: 1.2rem;
 }
 
-/* ===== セル固定（崩れ防止） ===== */
+/* ===== セル固定 ===== */
 .calendar-table td {
-  width: 14%;           
-  height: 100px;        
   box-sizing: border-box;
   display: flex;              /* flexで中央揃え */
   align-items: center;
