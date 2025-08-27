@@ -17,7 +17,7 @@
 
 .title-input {
   display: block;
-  width: 70%; /* カレンダー幅に合わせる */
+  width: 70%;
   margin: 0 auto 20px auto;
   padding: 10px;
   border-radius: 12px;
@@ -71,7 +71,6 @@
   overflow-y: auto;
 }
 
-/* カレンダーのデフォルト四角 */
 .react-calendar__tile {
   border-radius: 8px;
   height: 60px !important;
@@ -79,46 +78,37 @@
   align-items: center;
   justify-content: center;
   transition: 0.2s;
-  text-align: center;
   padding: 0 !important;
 }
 
-/* 選択日 → ピンク背景＋黒文字 */
 .selected-date {
   background: #fdb9c8 !important;
   color: #000 !important;
   font-weight: bold !important;
   border-radius: 8px !important;
   border: 2px solid #004ca0 !important;
-  box-shadow: 0 0 8px rgba(0,0,0,0.3);
 }
 
-/* 今日 → 青背景＋ピンク枠＋白文字 */
 .today {
   background: #004ca0 !important;
   color: #fff !important;
   font-weight: bold !important;
   border-radius: 8px !important;
   border: 3px solid #fdb9c8 !important;
-  box-shadow: 0 0 12px rgba(253,185,200,0.9);
 }
 
-/* hover */
 .react-calendar__tile:hover {
   transform: scale(1.05);
   background: rgba(253,185,200,0.6) !important;
   color: #000 !important;
 }
 
-/* 祝日名を下に表示 */
 .holiday-name {
   color: #e60033 !important;
   font-size: 0.7rem;
   margin-top: 2px;
-  display: block;
 }
 
-/* 選択中の日程カード */
 .selected-card {
   background: white;
   border-radius: 16px;
@@ -162,47 +152,22 @@
   font-weight: bold;
 }
 
-/* ===== プルダウン（時間指定用） ===== */
-.time-select-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .cute-select {
-  padding: 8px 14px;
-  border-radius: 14px;
+  padding: 6px 10px;
+  border-radius: 12px;
   border: 2px solid #004ca0;
-  background: #000;              /* 通常時：黒背景 */
-  font-size: 0.95rem;
-  font-weight: bold;
-  color: #fff;                   /* 通常時：白文字 */
+  background: #000;   /* 黒背景 */
+  color: #fff;        /* 白文字 */
+  font-size: 0.9rem;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-  transition: all 0.25s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20'%3E%3Cpath fill='%23ffffff' d='M5.25 7.5L10 12.25L14.75 7.5H5.25Z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 14px;
-  padding-right: 30px;
+  transition: 0.2s;
 }
 
-/* option のデザイン（プルダウンを開いた時のリスト） */
 .cute-select option {
-  background: #000;    /* 黒背景 */
-  color: #fff;         /* 白文字 */
-  padding: 8px;
-}
-
-/* 選択中の項目 */
-.cute-select option:checked {
-  background: #004ca0;
+  background: #000;
   color: #fff;
 }
 
-/* 保存ボタン */
 .save-btn {
   display: block;
   margin: 20px auto;
@@ -222,22 +187,11 @@
   gap: 10px;
 }
 
-.share-link-box a {
-  color: #004ca0;
-  text-decoration: underline;
-}
-
-/* 日曜・土曜・祝日 */
-.sunday {
-  color: #e60033 !important;
-}
-.saturday {
-  color: #004ca0 !important;
-}
-.holiday, .holiday-name {
-  color: #e60033 !important;
-  font-weight: bold;
-  font-size: 0.7rem;
-  display: block;
-  margin-top: 2px;
+.copy-btn {
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #004ca0;
+  color: white;
+  cursor: pointer;
 }
