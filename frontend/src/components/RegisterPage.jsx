@@ -10,7 +10,7 @@ const hd = new Holidays("JP");
 
 const RegisterPage = () => {
   const [title, setTitle] = useState("");
-  const [mode, setMode] = useState("single");
+  const [mode, setMode] = useState("single"); // single / multiple / range
   const [selectedDates, setSelectedDates] = useState([]);
   const [rangeStart, setRangeStart] = useState(null);
   const [timeType, setTimeType] = useState("終日");
@@ -19,10 +19,11 @@ const RegisterPage = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [schedules, setSchedules] = useState([]);
 
-  // JST現在日付を取得
-  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" }))
-    .toISOString()
-    .split("T")[0];
+  // === 日本時間の今日を取得 ===
+  const jstNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+  const today = jstNow.toISOString().split("T")[0];
 
   // ===== 日付クリック =====
   const handleDateClick = (date) => {
@@ -151,10 +152,10 @@ const RegisterPage = () => {
             tileClassName={({ date }) => {
               const dateStr = date.toISOString().split("T")[0];
               if (selectedDates.includes(dateStr)) return "selected-date";
-              if (dateStr === today) return "today"; // 当日
-              if (getHolidayName(date)) return "holiday"; // 祝日
-              if (date.getDay() === 0) return "sunday"; // 日曜
-              if (date.getDay() === 6) return "saturday"; // 土曜
+              if (dateStr === today) return "today"; // JST 今日
+              if (getHolidayName(date)) return "holiday";
+              if (date.getDay() === 0) return "sunday";
+              if (date.getDay() === 6) return "saturday";
               return null;
             }}
           />
