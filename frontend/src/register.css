@@ -2,7 +2,7 @@
    RegisterPage 全体
 ===================== */
 .register-page {
-  padding: 40px; /* 余白を確保 */
+  padding: 40px;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
   min-height: 100vh;
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
@@ -67,7 +67,7 @@
   justify-content: space-between;
   gap: 40px;
   margin: 0 auto;
-  max-width: 1400px; /* 全体幅制限 */
+  max-width: 1400px;
 }
 
 .calendar-box {
@@ -116,7 +116,7 @@
   table-layout: fixed;
 }
 .calendar-table tr {
-  height: 100px; /* 行の高さを均等に */
+  height: 100px;
 }
 .calendar-table th {
   padding: 14px;
@@ -150,12 +150,15 @@
 
 /* 選択セル → セル全体を強調（小さくならない） */
 .calendar-table td.selected-date {
-  background: #fdb9c8 !important;
+  background-color: #fdb9c8 !important;
   color: #000 !important;
   font-weight: bold;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+
+  text-align: center;
+  vertical-align: middle;
 }
 
 /* 他月 */
