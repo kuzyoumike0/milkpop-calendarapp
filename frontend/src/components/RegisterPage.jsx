@@ -58,6 +58,7 @@ const RegisterPage = () => {
       date.getDate()
     ).padStart(2, "0")}`;
 
+  // 日付クリック処理
   const handleSelect = (date) => {
     if (mode === "single") {
       if (selectedDates.length === 1 && isSameDate(selectedDates[0], date)) {
@@ -103,10 +104,7 @@ const RegisterPage = () => {
     const key = formatDateKey(date);
     setTimeSettings((prev) => {
       const current = prev[key] || {};
-      const newActive = { ...current.activeTimes };
-      if (!newActive) {
-        newActive = {};
-      }
+      const newActive = { ...(current.activeTimes || {}) };
       newActive[type] = !newActive[type];
       return { ...prev, [key]: { ...current, activeTimes: newActive } };
     });
@@ -145,6 +143,7 @@ const RegisterPage = () => {
         className="title-input"
       />
 
+      {/* モード切替 */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -167,6 +166,7 @@ const RegisterPage = () => {
       </div>
 
       <div className="calendar-container">
+        {/* カレンダー本体 */}
         <div className="calendar-box">
           <div className="calendar-header">
             <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
@@ -218,6 +218,7 @@ const RegisterPage = () => {
           </table>
         </div>
 
+        {/* 選択中リスト */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
           {selectedDates.map((d, idx) => {
