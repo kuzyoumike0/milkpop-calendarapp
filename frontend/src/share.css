@@ -1,31 +1,27 @@
-/* ====== ページ全体 ====== */
+/* ===== 全体 ===== */
 .share-container {
-  padding: 20px;
   font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  padding: 20px;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .share-title {
+  text-align: center;
   font-size: 26px;
   font-weight: bold;
-  margin-bottom: 20px;
   color: #fff;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
 }
 
-/* ====== 回答フォーム ====== */
+/* ===== フォーム部分 ===== */
 .response-form {
-  width: 100%;
-  max-width: 1000px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.2);
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  margin-bottom: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
 }
 
 .username-input {
@@ -33,163 +29,146 @@
   padding: 10px;
   border-radius: 10px;
   border: none;
-  font-size: 15px;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
+  font-size: 16px;
   background: #fff;
-  font-weight: bold;
   color: #333;
 }
 
 .date-response {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .date-label {
   font-size: 15px;
-  font-weight: bold;
   color: #333;
+  font-weight: bold;
 }
 
+.attendance-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.attendance-select:hover {
+  background: #fbc2eb;
+  border-color: #a6c1ee;
+}
+
+/* 保存ボタン */
 .save-btn {
   width: 100%;
   background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
-  padding: 12px 20px;
+  padding: 12px;
   border: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 14px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
+  margin-top: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
   transition: 0.2s;
-  margin-top: 15px;
 }
+
 .save-btn:hover {
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .save-message {
-  margin-top: 10px;
-  color: #004CA0;
-  font-weight: bold;
   text-align: center;
+  color: #004CA0;
+  margin-top: 8px;
+  font-weight: bold;
 }
 
-/* ====== テーブル（みんなの回答） ====== */
+/* ===== みんなの回答 ===== */
 .all-responses {
-  width: 100%;
-  max-width: 1000px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 16px;
+  background: rgba(255,255,255,0.2);
   padding: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .all-responses h2 {
-  font-size: 20px;
-  margin-bottom: 12px;
+  font-size: 18px;
   font-weight: bold;
   color: #004CA0;
+  margin-bottom: 12px;
 }
 
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
-  border-radius: 12px;
+  text-align: center;
 }
 
 .responses-table th {
   background: #004CA0;
   color: #fff;
-  padding: 12px;
-  font-size: 14px;
-  text-align: center;
+  padding: 10px;
+  font-weight: bold;
 }
 
 .responses-table td {
   padding: 10px;
-  text-align: center;
-  font-size: 14px;
-  color: #333;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 .responses-table tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255,255,255,0.4);
 }
 .responses-table tr:nth-child(odd) {
-  background: rgba(253, 185, 200, 0.6);
+  background: rgba(255,200,220,0.4);
 }
 
-/* ====== ユーザー名リンク ====== */
+/* ===== ユーザ名リンク ===== */
 .editable-username {
-  color: #fff; /* 白で統一 */
+  color: #fff;
+  cursor: pointer;
   font-weight: bold;
   text-decoration: underline;
-  cursor: pointer;
   transition: 0.2s;
 }
 .editable-username:hover {
   color: #FDB9C8;
 }
 
-/* ====== プルダウン（統一・視認性アップ） ====== */
-select,
-.responses-table select,
-.attendance-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background: #fff;
-  color: #333;
-  font-weight: bold;
-  padding: 8px 32px 8px 12px;
-  border-radius: 12px;
-  border: 2px solid #a6c1ee;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
+/* ===== ユーザ名編集モード ===== */
+.username-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
 }
 
-/* ホバー時 */
-select:hover,
-.responses-table select:hover,
-.attendance-select:hover {
-  border-color: #004CA0;
-  box-shadow: 0 3px 8px rgba(0,76,160,0.25);
-}
-
-/* フォーカス時 */
-select:focus,
-.responses-table select:focus,
-.attendance-select:focus {
-  outline: none;
-  border-color: #FDB9C8;
-  box-shadow: 0 0 0 3px rgba(253,185,200,0.5);
-}
-
-/* ▼アイコン */
-select,
-.responses-table select,
-.attendance-select {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
-}
-
-/* セル中央に配置 */
-.responses-table td select {
-  display: block;
-  margin: auto;
-}
-/* 小さい保存ボタン */
-.save-btn.small {
-  padding: 4px 10px;
-  font-size: 12px;
-  margin-left: 6px;
+.username-edit-input {
+  padding: 6px 10px;
   border-radius: 8px;
+  border: 1px solid #aaa;
+  font-size: 14px;
+}
+
+.username-save-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.username-save-btn:hover {
+  opacity: 0.85;
 }
