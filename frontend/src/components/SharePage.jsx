@@ -1,4 +1,3 @@
-// frontend/src/components/SharePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -17,9 +16,9 @@ const SharePage = () => {
   const [responses, setResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ===== ユーザ名編集用 =====
+  // 編集対象ユーザ
   const [editingUser, setEditingUser] = useState(null);
-  const [newUsername, setNewUsername] = useState("");
+  const [editingResponses, setEditingResponses] = useState({});
 
   // ===== スケジュール読み込み =====
   useEffect(() => {
@@ -32,7 +31,7 @@ const SharePage = () => {
         const data = await res.json();
         setSchedule({
           ...data,
-          dates: data.dates || [], // datesが無ければ空配列を補完
+          dates: data.dates || [],
         });
 
         const res2 = await fetch(`/api/schedules/${token}/responses`);
@@ -70,7 +69,7 @@ const SharePage = () => {
     }));
   };
 
-  // ===== 保存 =====
+  // ===== 保存（自分の回答） =====
   const handleSave = async () => {
     if (!username) {
       setSaveMessage("名前を入力してください");
@@ -89,24 +88,33 @@ const SharePage = () => {
     setSaveMessage("保存しました！");
   };
 
-  // ===== ユーザ名編集 =====
-  const handleUsernameEdit = (user) => {
-    setEditingUser(user);
-    setNewUsername(user);
+  // ===== ユーザの回答を編集開始 =====
+  const handleEditUser = (user) => {
+    setEditingUser(user.username);
+    setEditingResponses({ ...user.responses });
   };
 
-  const handleUsernameSave = async (oldName) => {
-    if (!newUsername.trim()) return;
-    await fetch(`/api/schedules/${token}/edit-username`, {
+  // ===== 編集中の回答を変更 =====
+  const handleEditResponseChange = (dateKey, value) => {
+    setEditingResponses((prev) => ({
+      ...prev,
+      [dateKey]: value,
+    }));
+  };
+
+  // ===== 編集保存 =====
+  const handleEditSave = async (user) => {
+    await fetch(`/api/schedules/${token}/responses`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        oldName,
-        newName: newUsername.trim(),
+        user_id: user.user_id,
+        username: user.username,
+        responses: editingResponses,
       }),
     });
     setEditingUser(null);
-    setNewUsername("");
+    setEditingResponses({});
   };
 
   // ===== 日付フォーマット =====
@@ -128,7 +136,7 @@ const SharePage = () => {
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* 入力フォーム */}
+      {/* 自分の入力フォーム */}
       <div className="response-form">
         <input
           type="text"
@@ -137,7 +145,7 @@ const SharePage = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        {schedule?.dates?.map((d) => {  // ← 安全にmap
+        {schedule?.dates?.map((d) => {
           const dateKey =
             d.timeType === "時間指定" && d.startTime && d.endTime
               ? `${d.date} (${d.startTime} ~ ${d.endTime})`
@@ -173,36 +181,12 @@ const SharePage = () => {
             <tr>
               <th>日程</th>
               {uniqueUsers.map((user) => (
-                <th key={user}>
-                  {editingUser === user ? (
-                    <div className="username-edit-box">
-                      <input
-                        type="text"
-                        className="username-edit-input"
-                        value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                      />
-                      <button
-                        className="username-save-btn"
-                        onClick={() => handleUsernameSave(user)}
-                      >
-                        保存
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="editable-username"
-                      onClick={() => handleUsernameEdit(user)}
-                    >
-                      {user}
-                    </span>
-                  )}
-                </th>
+                <th key={user}>{user}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {schedule?.dates?.map((d) => {   // ← 安全にmap
+            {schedule?.dates?.map((d) => {
               const dateKey =
                 d.timeType === "時間指定" && d.startTime && d.endTime
                   ? `${d.date} (${d.startTime} ~ ${d.endTime})`
@@ -214,8 +198,39 @@ const SharePage = () => {
                     const userResponse = allResponses.find(
                       (r) => r.username === user
                     );
+
+                    if (editingUser === user) {
+                      return (
+                        <td key={user}>
+                          <select
+                            className="attendance-select"
+                            value={editingResponses[dateKey] || "-"}
+                            onChange={(e) =>
+                              handleEditResponseChange(dateKey, e.target.value)
+                            }
+                          >
+                            {attendanceOptions.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      );
+                    }
+
                     return (
-                      <td key={user}>
+                      <td
+                        key={user}
+                        className="editable-cell"
+                        onClick={() =>
+                          handleEditUser({
+                            username: user,
+                            user_id: userResponse?.user_id,
+                            responses: userResponse?.responses || {},
+                          })
+                        }
+                      >
                         {userResponse?.responses?.[dateKey] || "-"}
                       </td>
                     );
@@ -225,6 +240,31 @@ const SharePage = () => {
             })}
           </tbody>
         </table>
+
+        {editingUser && (
+          <div className="edit-actions">
+            <button
+              className="save-btn"
+              onClick={() => {
+                const targetUser = allResponses.find(
+                  (r) => r.username === editingUser
+                );
+                handleEditSave(targetUser);
+              }}
+            >
+              編集保存
+            </button>
+            <button
+              className="cancel-btn"
+              onClick={() => {
+                setEditingUser(null);
+                setEditingResponses({});
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
