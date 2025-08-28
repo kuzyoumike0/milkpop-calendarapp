@@ -10,7 +10,10 @@ export default function SharePage() {
   const [myResponses, setMyResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
   const [filter, setFilter] = useState("all");
-  const [editingUser, setEditingUser] = useState(null);
+
+  // 編集用の一時データ
+  const [editData, setEditData] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
 
   // データ取得
   useEffect(() => {
@@ -71,20 +74,36 @@ export default function SharePage() {
     return [...dates].sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
-  // 回答セル保存
-  const saveUserResponse = async (user_id, date, value) => {
+  // 編集モードにする
+  const startEditing = () => {
+    const temp = {};
+    responses.forEach((r) => {
+      temp[r.username] = { ...r.responses };
+    });
+    setEditData(temp);
+    setIsEditing(true);
+  };
+
+  // 編集保存
+  const saveEditedResponses = async () => {
     try {
-      await fetch(`/api/schedules/${token}/responses/${user_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, response: value }),
-      });
+      for (const uname of Object.keys(editData)) {
+        const r = responses.find((res) => res.username === uname);
+        if (!r) continue;
+
+        await fetch(`/api/schedules/${token}/responses/${r.user_id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ responses: editData[uname] }),
+        });
+      }
+      setIsEditing(false);
 
       const updated = await fetch(`/api/schedules/${token}/responses`);
       const data = await updated.json();
       setResponses(data);
     } catch (err) {
-      console.error("回答更新エラー:", err);
+      console.error("更新エラー:", err);
     }
   };
 
@@ -111,7 +130,10 @@ export default function SharePage() {
                   month: "long",
                   day: "numeric",
                 })}
-                {d.timeType && `（${d.timeType}）`}
+                {d.timeType &&
+                  (d.timeType === "時間指定"
+                    ? `（時間指定 ${d.startTime} ~ ${d.endTime}）`
+                    : `（${d.timeType}）`)}
               </span>
               <select
                 className="fancy-select"
@@ -178,8 +200,10 @@ export default function SharePage() {
                         month: "long",
                         day: "numeric",
                       })}
-                      {d.timeType && `（${d.timeType}）`}
-                      {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
+                      {d.timeType &&
+                        (d.timeType === "時間指定"
+                          ? `（時間指定 ${d.startTime} ~ ${d.endTime}）`
+                          : `（${d.timeType}）`)}
                     </td>
                     <td>
                       <span className="count-ok">○{counts.ok}</span>
@@ -187,30 +211,32 @@ export default function SharePage() {
                       <span className="count-maybe"> △{counts.maybe}</span>
                     </td>
                     {userList.map((uname, idx) => {
-                      const userResponse = counts.users.find((u) => u.username === uname);
-                      const current = userResponse?.response || "–";
+                      const r = responses.find((res) => res.username === uname);
+                      const current = r?.responses[d.date] || "–";
+
                       return (
                         <td key={idx}>
-                          {editingUser === `${d.date}-${uname}` ? (
+                          {isEditing ? (
                             <select
-                              value={current === "–" ? "" : current}
-                              onChange={(e) => {
-                                saveUserResponse(userResponse?.user_id, d.date, e.target.value);
-                                setEditingUser(null);
-                              }}
+                              value={editData[uname]?.[d.date] || current}
+                              onChange={(e) =>
+                                setEditData((prev) => ({
+                                  ...prev,
+                                  [uname]: {
+                                    ...prev[uname],
+                                    [d.date]: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="fancy-select"
                             >
                               <option value="">–</option>
-                              <option value="○">○ 参加</option>
-                              <option value="✕">✕ 不参加</option>
-                              <option value="△">△ 未定</option>
+                              <option value="○">○</option>
+                              <option value="✕">✕</option>
+                              <option value="△">△</option>
                             </select>
                           ) : (
-                            <span
-                              className="editable-username"
-                              onClick={() => setEditingUser(`${d.date}-${uname}`)}
-                            >
-                              {current}
-                            </span>
+                            current
                           )}
                         </td>
                       );
@@ -221,6 +247,16 @@ export default function SharePage() {
             </tbody>
           </table>
         </div>
+
+        {!isEditing ? (
+          <button className="save-btn" onClick={startEditing}>
+            編集する
+          </button>
+        ) : (
+          <button className="save-btn" onClick={saveEditedResponses}>
+            保存する
+          </button>
+        )}
       </div>
     </div>
   );
