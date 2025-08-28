@@ -74,6 +74,24 @@ export default function SharePage() {
     return count;
   };
 
+  // 並べ替え後の日付リストを返す
+  const getSortedDates = () => {
+    if (!schedule) return [];
+    let sorted = [...schedule.dates];
+
+    sorted.sort((a, b) => {
+      const ca = countResponses(a.date);
+      const cb = countResponses(b.date);
+
+      if (filter === "ok") return cb["○"] - ca["○"];
+      if (filter === "ng") return cb["✕"] - ca["✕"];
+      if (filter === "maybe") return cb["△"] - ca["△"];
+      return new Date(a.date) - new Date(b.date); // デフォルトは日付順
+    });
+
+    return sorted;
+  };
+
   if (loading) return <div className="share-container">読み込み中...</div>;
   if (!schedule) return <div className="share-container">スケジュールが見つかりません</div>;
 
@@ -82,7 +100,7 @@ export default function SharePage() {
       <h1 className="share-title">MilkPOP Calendar</h1>
 
       {/* 自分の回答 */}
-      <div className="my-responses">
+      <div className="my-responses gradient-box">
         <h2>自分の回答</h2>
         <input
           type="text"
@@ -125,7 +143,7 @@ export default function SharePage() {
       </div>
 
       {/* みんなの回答 */}
-      <div className="all-responses">
+      <div className="all-responses gradient-box">
         <h2>みんなの回答</h2>
 
         {/* フィルタ */}
@@ -152,7 +170,7 @@ export default function SharePage() {
               </tr>
             </thead>
             <tbody>
-              {schedule.dates.map((d, i) => {
+              {getSortedDates().map((d, i) => {
                 const counts = countResponses(d.date);
                 return (
                   <tr key={i}>
