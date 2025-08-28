@@ -11,11 +11,10 @@ export default function SharePage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [filter, setFilter] = useState("all");
 
-  // 編集中のユーザ
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
 
-  // スケジュールと回答取得
+  // データ取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -79,9 +78,9 @@ export default function SharePage() {
     return <div className="share-container">読み込み中...</div>;
   }
 
-  // 日付ごとに集計
+  // 集計
   const aggregate = schedule.dates.map((d) => {
-    const counts = { ○: 0, ✕: 0, △: 0 };
+    const counts = { "○": 0, "✕": 0, "△": 0 };
     const users = [];
 
     responses.forEach((r) => {
@@ -95,7 +94,6 @@ export default function SharePage() {
     return { ...d, counts, users };
   });
 
-  // ユーザ一覧
   const userList = [...new Set(responses.map((r) => r.username))];
 
   return (
@@ -130,9 +128,9 @@ export default function SharePage() {
                 }
               >
                 <option value="未回答">- 未回答</option>
-                <option value="○">○ 参加</option>
-                <option value="✕">✕ 不参加</option>
-                <option value="△">△ 未定</option>
+                <option value="○">{"\u25CB"} 参加</option>
+                <option value="✕">{"\u2715"} 不参加</option>
+                <option value="△">{"\u25B3"} 未定</option>
               </select>
             </div>
           ))}
@@ -155,9 +153,9 @@ export default function SharePage() {
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">すべて表示</option>
-            <option value="ok">○多い順</option>
-            <option value="ng">✕多い順</option>
-            <option value="maybe">△多い順</option>
+            <option value="ok">{"\u25CB"} 多い順</option>
+            <option value="ng">{"\u2715"} 多い順</option>
+            <option value="maybe">{"\u25B3"} 多い順</option>
           </select>
         </label>
 
@@ -189,9 +187,18 @@ export default function SharePage() {
                       : `（${d.timeType}）`}
                   </td>
                   <td>
-                    <span className="count-ok">○{d.counts["○"]}</span>{" "}
-                    <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
-                    <span className="count-maybe">△{d.counts["△"]}</span>
+                    <span className="count-ok">
+                      {"\u25CB"}
+                      {d.counts["○"]}
+                    </span>{" "}
+                    <span className="count-ng">
+                      {"\u2715"}
+                      {d.counts["✕"]}
+                    </span>{" "}
+                    <span className="count-maybe">
+                      {"\u25B3"}
+                      {d.counts["△"]}
+                    </span>
                   </td>
                   {userList.map((uname, uidx) => {
                     const userResponse = d.users.find(
@@ -213,9 +220,9 @@ export default function SharePage() {
                             }
                           >
                             <option value="-">- 未回答</option>
-                            <option value="○">○</option>
-                            <option value="✕">✕</option>
-                            <option value="△">△</option>
+                            <option value="○">{"\u25CB"}</option>
+                            <option value="✕">{"\u2715"}</option>
+                            <option value="△">{"\u25B3"}</option>
                           </select>
                         ) : (
                           current
