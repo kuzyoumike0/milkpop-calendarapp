@@ -13,21 +13,18 @@ export default function SharePage() {
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
   const [filter, setFilter] = useState("all");
-  const [editMode, setEditMode] = useState(false);
+  const [editingUser, setEditingUser] = useState(null); // 👈 編集中ユーザ
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // スケジュール取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
-      .then((data) => setSchedule(data))
-      .catch((err) => console.error("取得失敗:", err));
+      .then((data) => setSchedule(data));
 
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
-      .then((data) => setResponses(data))
-      .catch((err) => console.error("回答取得失敗:", err));
+      .then((data) => setResponses(data));
 
     socket.emit("joinSchedule", token);
 
@@ -37,9 +34,7 @@ export default function SharePage() {
         .then((data) => setResponses(data));
     });
 
-    return () => {
-      socket.off("scheduleUpdated");
-    };
+    return () => socket.off("scheduleUpdated");
   }, [token]);
 
   if (!schedule) return <div>読み込み中...</div>;
@@ -55,25 +50,20 @@ export default function SharePage() {
     }
   };
 
-  // 保存
+  // 自分の回答保存
   const handleSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          responses: myResponses,
-        }),
+        body: JSON.stringify({ username, responses: myResponses }),
       });
-      if (!res.ok) throw new Error("保存失敗");
       const updated = await res.json();
       setResponses(updated);
       socket.emit("updateSchedule", token);
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch (err) {
-      console.error("保存エラー:", err);
+    } catch {
       alert("保存に失敗しました");
     }
   };
@@ -85,17 +75,16 @@ export default function SharePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          username: editingUser,
           responses: editedResponses,
         }),
       });
-      if (!res.ok) throw new Error("保存失敗");
       const updated = await res.json();
       setResponses(updated);
       socket.emit("updateSchedule", token);
-      setEditMode(false);
-    } catch (err) {
-      console.error("編集保存エラー:", err);
+      setEditingUser(null);
+    } catch {
+      alert("保存に失敗しました");
     }
   };
 
@@ -123,7 +112,6 @@ export default function SharePage() {
           onChange={(e) => setUsername(e.target.value)}
           className="username-input"
         />
-
         <div className="my-responses-list">
           {schedule.dates.map((d, idx) => (
             <div key={idx} className="my-response-item">
@@ -143,7 +131,6 @@ export default function SharePage() {
             </div>
           ))}
         </div>
-
         <button className="save-btn" onClick={handleSave}>
           保存する
         </button>
@@ -153,7 +140,7 @@ export default function SharePage() {
       {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
-        <div style={{ marginBottom: "12px" }}>
+        <div style={{ marginBottom: "20px" }}>
           フィルタ：
           <select
             className="fancy-select"
@@ -167,75 +154,70 @@ export default function SharePage() {
           </select>
         </div>
 
-        <div className="table-container">
-          <table className="responses-table">
-            <thead>
-              <tr>
-                <th>日付</th>
-                <th>回答数</th>
-                {responses.map((r, idx) => (
-                  <th key={idx}>{r.username}</th>
+        <table className="responses-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>回答数</th>
+              {responses.map((r, idx) => (
+                <th key={idx}>
+                  <span
+                    className="editable-username"
+                    onClick={() => {
+                      setEditingUser(r.username);
+                      setEditedResponses(r.responses);
+                    }}
+                  >
+                    {r.username}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {summary.map((d, idx) => (
+              <tr key={idx}>
+                <td>{formatDate(d)}</td>
+                <td>
+                  <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
+                  <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
+                  <span className="count-maybe">△{d.counts["△"]}</span>
+                </td>
+                {responses.map((r, uIdx) => (
+                  <td key={uIdx}>
+                    {editingUser === r.username ? (
+                      <select
+                        className="fancy-select"
+                        value={editedResponses[d.date] || "-"}
+                        onChange={(e) =>
+                          setEditedResponses({
+                            ...editedResponses,
+                            [d.date]: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="-">- 未回答</option>
+                        <option value="◯">◯ 参加</option>
+                        <option value="✕">✕ 不参加</option>
+                        <option value="△">△ 未定</option>
+                      </select>
+                    ) : (
+                      r.responses[d.date] || "-"
+                    )}
+                  </td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {summary.map((d, idx) => (
-                <tr key={idx}>
-                  <td>{formatDate(d)}</td>
-                  <td>
-                    <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
-                    <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
-                    <span className="count-maybe">△{d.counts["△"]}</span>
-                  </td>
-                  {responses.map((r, uIdx) => (
-                    <td key={uIdx}>
-                      {editMode && r.username === username ? (
-                        <select
-                          className="fancy-select"
-                          value={editedResponses[d.date] || r.responses[d.date] || "-"}
-                          onChange={(e) =>
-                            setEditedResponses({
-                              ...editedResponses,
-                              [d.date]: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="-">- 未回答</option>
-                          <option value="◯">◯ 参加</option>
-                          <option value="✕">✕ 不参加</option>
-                          <option value="△">△ 未定</option>
-                        </select>
-                      ) : (
-                        r.responses[d.date] || "-"
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
 
-          {responses.some((r) => r.username === username) && (
-            <div className="edit-save-bar">
-              {!editMode ? (
-                <button
-                  className="username-save-btn"
-                  onClick={() => {
-                    const myData = responses.find((r) => r.username === username);
-                    setEditedResponses(myData ? myData.responses : {});
-                    setEditMode(true);
-                  }}
-                >
-                  編集する
-                </button>
-              ) : (
-                <button className="username-save-btn" onClick={handleEditSave}>
-                  編集を保存
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        {editingUser && (
+          <div className="edit-save-bar">
+            <button className="username-save-btn" onClick={handleEditSave}>
+              編集を保存
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
