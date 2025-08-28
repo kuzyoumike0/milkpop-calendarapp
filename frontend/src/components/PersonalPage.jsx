@@ -87,13 +87,18 @@ export default function PersonalPage() {
   // 登録処理
   const handleRegister = () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
+
     const newEvent = {
       id: Date.now(),
       title,
       memo,
       dates: { ...selectedDates },
     };
-    setEvents([...events, newEvent]);
+
+    // 追加して即座に反映（prevで安全に更新）
+    setEvents((prev) => [...prev, newEvent]);
+
+    // 入力欄をリセット
     setTitle("");
     setMemo("");
     setSelectedDates({});
