@@ -15,10 +15,8 @@ export default function RegisterPage() {
 
   const hd = new Holidays("JP");
 
-  // 日本時間の今日
-  const today = new Date().toLocaleDateString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-  });
+  // 日本時間の今日（ISO形式）
+  const todayIso = new Date().toISOString().split("T")[0];
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -27,14 +25,13 @@ export default function RegisterPage() {
   const lastDay = new Date(year, month + 1, 0);
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // ==== 範囲の日付を配列化 ====
+  // ==== 範囲の日付を配列化（ISO形式）====
   const getDatesBetween = (start, end) => {
     const dates = [];
     let current = new Date(start);
     while (current <= end) {
-      dates.push(
-        current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
-      );
+      const iso = new Date(current).toISOString().split("T")[0];
+      dates.push(iso);
       current.setDate(current.getDate() + 1);
     }
     return dates;
@@ -42,20 +39,18 @@ export default function RegisterPage() {
 
   // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
-    const dateStr = date.toLocaleDateString("ja-JP", {
-      timeZone: "Asia/Tokyo",
-    });
+    const dateIso = new Date(date).toISOString().split("T")[0]; // ISO形式
 
     if (mode === "multiple") {
       // 複数選択モード：クリックで ON/OFF
-      if (selectedDates[dateStr]) {
+      if (selectedDates[dateIso]) {
         const updated = { ...selectedDates };
-        delete updated[dateStr];
+        delete updated[dateIso];
         setSelectedDates(updated);
       } else {
         setSelectedDates({
           ...selectedDates,
-          [dateStr]: {
+          [dateIso]: {
             timeType: "allday",
             startTime: "09:00",
             endTime: "18:00",
@@ -104,15 +99,11 @@ export default function RegisterPage() {
     if (!title || Object.keys(selectedDates).length === 0) return;
 
     try {
-      // バックエンドが配列前提なので、オブジェクト → 配列 に変換する
-      // 日付は YYYY-MM-DD に統一
-      const datesArray = Object.entries(selectedDates).map(([date, d]) => {
-        const isoDate = new Date(date).toISOString().split("T")[0];
-        return {
-          date: isoDate,
-          ...d,
-        };
-      });
+      // selectedDates ですでに ISO形式なのでそのまま渡す
+      const datesArray = Object.entries(selectedDates).map(([date, d]) => ({
+        date,
+        ...d,
+      }));
 
       const res = await fetch("/api/schedules", {
         method: "POST",
@@ -214,9 +205,7 @@ export default function RegisterPage() {
                       return <td key={dow}></td>;
                     }
                     const date = new Date(year, month, dateNum);
-                    const dateStr = date.toLocaleDateString("ja-JP", {
-                      timeZone: "Asia/Tokyo",
-                    });
+                    const dateIso = new Date(date).toISOString().split("T")[0]; // ISO形式
 
                     // 祝日チェック
                     const holidayInfo = hd.isHoliday(date);
@@ -225,8 +214,8 @@ export default function RegisterPage() {
                     let cellClass = "cell";
                     if (date.getDay() === 0) cellClass += " sunday";
                     if (date.getDay() === 6) cellClass += " saturday";
-                    if (dateStr === today) cellClass += " today";
-                    if (selectedDates[dateStr]) cellClass += " selected";
+                    if (dateIso === todayIso) cellClass += " today";
+                    if (selectedDates[dateIso]) cellClass += " selected";
 
                     // 範囲プレビュー
                     if (
@@ -269,14 +258,14 @@ export default function RegisterPage() {
             {Object.keys(selectedDates).length > 0 ? (
               Object.entries(selectedDates)
                 .sort((a, b) => new Date(a[0]) - new Date(b[0]))
-                .map(([dateStr, setting], i) => (
+                .map(([dateIso, setting], i) => (
                   <div key={i} className="date-card">
-                    <span className="date-label">{dateStr}</span>
+                    <span className="date-label">{dateIso}</span>
                     <div className="time-options">
                       <button
                         className={setting.timeType === "allday" ? "active" : ""}
                         onClick={() =>
-                          updateTimeSetting(dateStr, "timeType", "allday")
+                          updateTimeSetting(dateIso, "timeType", "allday")
                         }
                       >
                         終日
@@ -284,7 +273,7 @@ export default function RegisterPage() {
                       <button
                         className={setting.timeType === "day" ? "active" : ""}
                         onClick={() =>
-                          updateTimeSetting(dateStr, "timeType", "day")
+                          updateTimeSetting(dateIso, "timeType", "day")
                         }
                       >
                         午前
@@ -292,7 +281,7 @@ export default function RegisterPage() {
                       <button
                         className={setting.timeType === "night" ? "active" : ""}
                         onClick={() =>
-                          updateTimeSetting(dateStr, "timeType", "night")
+                          updateTimeSetting(dateIso, "timeType", "night")
                         }
                       >
                         午後
@@ -300,7 +289,7 @@ export default function RegisterPage() {
                       <button
                         className={setting.timeType === "custom" ? "active" : ""}
                         onClick={() =>
-                          updateTimeSetting(dateStr, "timeType", "custom")
+                          updateTimeSetting(dateIso, "timeType", "custom")
                         }
                       >
                         時間指定
@@ -312,7 +301,7 @@ export default function RegisterPage() {
                           className="cute-select"
                           value={setting.startTime}
                           onChange={(e) =>
-                            updateTimeSetting(dateStr, "startTime", e.target.value)
+                            updateTimeSetting(dateIso, "startTime", e.target.value)
                           }
                         >
                           {Array.from({ length: 24 }, (_, i) => {
@@ -329,7 +318,7 @@ export default function RegisterPage() {
                           className="cute-select"
                           value={setting.endTime}
                           onChange={(e) =>
-                            updateTimeSetting(dateStr, "endTime", e.target.value)
+                            updateTimeSetting(dateIso, "endTime", e.target.value)
                           }
                         >
                           {Array.from({ length: 24 }, (_, i) => {
