@@ -10,7 +10,6 @@ body, html {
   color: #222;
 }
 
-/* コンテナ */
 .share-container {
   padding: 20px;
   max-width: 1100px;
@@ -18,7 +17,6 @@ body, html {
   color: #222;
 }
 
-/* タイトル */
 .share-title {
   text-align: center;
   font-size: 24px;
@@ -65,18 +63,34 @@ body, html {
   color: #111;
 }
 
-/* 回答プルダウン */
-.fancy-select {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: none;
-  background: linear-gradient(145deg, #111, #333);
+/* プルダウン（黒背景・白文字） */
+.fancy-select,
+.fancy-filter,
+.responses-table td select {
+  background: #111;
   color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
   font-weight: bold;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
-.fancy-select:hover {
-  background: linear-gradient(145deg, #004ca0, #fdb9c8);
+
+.fancy-select:hover,
+.fancy-filter:hover,
+.responses-table td select:hover {
+  background: #333;
+}
+
+.fancy-select option,
+.fancy-filter option,
+.responses-table td select option {
+  background: #111;
+  color: #fff;
 }
 
 /* 保存ボタン */
@@ -114,24 +128,9 @@ body, html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* フィルタ */
 .filter-box {
   margin-bottom: 12px;
   font-weight: bold;
-}
-
-.fancy-filter {
-  padding: 6px 12px;
-  border-radius: 10px;
-  border: none;
-  background: #111;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-.fancy-filter:hover {
-  background: #333;
 }
 
 /* ======================
@@ -152,9 +151,10 @@ body, html {
 .responses-table th,
 .responses-table td {
   padding: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
   text-align: center;
   font-size: 0.95rem;
+  color: #fff;
 }
 
 .responses-table th {
@@ -166,56 +166,17 @@ body, html {
   z-index: 2;
 }
 
-/* 回答数の色 */
-.count-ok { color: green; font-weight: bold; }
+/* 回答数色 */
+.count-ok { color: limegreen; font-weight: bold; }
 .count-ng { color: red; font-weight: bold; }
 .count-maybe { color: orange; font-weight: bold; }
 
-/* ======================
-   ユーザ名編集
-====================== */
+/* 編集可能セル */
 .editable-username {
-  color: orange;
-  font-weight: bold;
   cursor: pointer;
-  text-decoration: underline;
-  transition: color 0.2s ease, background 0.2s ease;
-  padding: 2px 6px;
-  border-radius: 6px;
+  font-weight: bold;
+  transition: 0.2s;
 }
 .editable-username:hover {
-  color: #ff4b91;
-  background: rgba(255, 75, 145, 0.15);
-}
-
-/* 編集時入力欄 */
-.responses-table th input {
-  width: 90%;
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 0.9rem;
-}
-
-/* 編集保存バー */
-.edit-save-bar {
-  text-align: center;
-  margin-top: 12px;
-  padding: 10px;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
-  border-radius: 8px;
-}
-
-.username-save-btn {
-  background: #7b4397;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.username-save-btn:hover {
-  background: #c06c84;
+  color: #fdb9c8;
 }
