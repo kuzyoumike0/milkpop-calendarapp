@@ -12,7 +12,23 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  // 編集用
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState("");
+
   // スケジュール取得 & 回答一覧取得
+  const fetchResponses = async () => {
+    try {
+      const res2 = await fetch(`/api/schedules/${token}/responses`);
+      if (res2.ok) {
+        const list = await res2.json();
+        setResponses(list);
+      }
+    } catch (err) {
+      console.error("回答一覧取得エラー:", err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -21,11 +37,7 @@ export default function SharePage() {
         const data = await res.json();
         setSchedule(data);
 
-        const res2 = await fetch(`/api/schedules/${token}/responses`);
-        if (res2.ok) {
-          const list = await res2.json();
-          setResponses(list);
-        }
+        await fetchResponses();
       } catch (err) {
         console.error("API取得エラー:", err);
       } finally {
@@ -40,7 +52,7 @@ export default function SharePage() {
     setAnswers({ ...answers, [date]: value });
   };
 
-  // 保存処理
+  // 自分の回答保存
   const handleSave = async () => {
     if (!username) {
       alert("名前を入力してください");
@@ -64,28 +76,56 @@ export default function SharePage() {
     }
   };
 
-  // 回答集計
-  const countResponses = (date) => {
-    let count = { "○": 0, "✕": 0, "△": 0 };
-    responses.forEach((r) => {
-      const val = r.responses[date];
-      if (val && count[val] !== undefined) count[val]++;
-    });
-    return count;
+  // ユーザ名保存処理
+  const saveUsername = async () => {
+    try {
+      const res = await fetch(`/api/schedule_responses/${editingUser}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: editName }),
+      });
+      if (!res.ok) throw new Error("保存失敗");
+      setEditingUser(null);
+      await fetchResponses();
+    } catch (err) {
+      alert("ユーザ名の保存に失敗しました");
+    }
   };
 
-  // 並べ替え後の日付リストを返す
+  // 回答集計 + ユーザ名付き
+  const aggregateResponses = () => {
+    const agg = {};
+    responses.forEach((r) => {
+      Object.entries(r.responses).forEach(([date, resp]) => {
+        if (!agg[date]) {
+          agg[date] = { ok: 0, ng: 0, maybe: 0, users: [] };
+        }
+        if (resp === "○" || resp === "ok") agg[date].ok++;
+        if (resp === "✕" || resp === "ng") agg[date].ng++;
+        if (resp === "△" || resp === "maybe") agg[date].maybe++;
+        agg[date].users.push({
+          user_id: r.id,
+          username: r.username,
+          response: resp,
+        });
+      });
+    });
+    return agg;
+  };
+
+  // 並べ替え後の日付リスト
   const getSortedDates = () => {
     if (!schedule) return [];
     let sorted = [...schedule.dates];
+    const agg = aggregateResponses();
 
     sorted.sort((a, b) => {
-      const ca = countResponses(a.date);
-      const cb = countResponses(b.date);
+      const ca = agg[a.date] || { ok: 0, ng: 0, maybe: 0 };
+      const cb = agg[b.date] || { ok: 0, ng: 0, maybe: 0 };
 
-      if (filter === "ok") return cb["○"] - ca["○"];
-      if (filter === "ng") return cb["✕"] - ca["✕"];
-      if (filter === "maybe") return cb["△"] - ca["△"];
+      if (filter === "ok") return cb.ok - ca.ok;
+      if (filter === "ng") return cb.ng - ca.ng;
+      if (filter === "maybe") return cb.maybe - ca.maybe;
       return new Date(a.date) - new Date(b.date); // デフォルトは日付順
     });
 
@@ -94,6 +134,8 @@ export default function SharePage() {
 
   if (loading) return <div className="share-container">読み込み中...</div>;
   if (!schedule) return <div className="share-container">スケジュールが見つかりません</div>;
+
+  const aggregated = aggregateResponses();
 
   return (
     <div className="share-container">
@@ -166,12 +208,17 @@ export default function SharePage() {
             <thead>
               <tr>
                 <th>日付</th>
-                <th>回答数</th>
+                <th>回答</th>
               </tr>
             </thead>
             <tbody>
               {getSortedDates().map((d, i) => {
-                const counts = countResponses(d.date);
+                const counts = aggregated[d.date] || {
+                  ok: 0,
+                  ng: 0,
+                  maybe: 0,
+                  users: [],
+                };
                 return (
                   <tr key={i}>
                     <td>
@@ -181,12 +228,72 @@ export default function SharePage() {
                         day: "numeric",
                       })}
                       {d.timeType && `（${d.timeType}）`}
-                      {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
+                      {d.startTime &&
+                        d.endTime &&
+                        ` (${d.startTime} ~ ${d.endTime})`}
                     </td>
                     <td>
-                      <span className="count-ok">○{counts["○"]}</span>{" "}
-                      <span className="count-ng">✕{counts["✕"]}</span>{" "}
-                      <span className="count-maybe">△{counts["△"]}</span>
+                      <span className="count-ok">
+                        ○{counts.ok}{" "}
+                        {counts.users
+                          .filter((u) => u.response === "○" || u.response === "ok")
+                          .map((u) =>
+                            editingUser === u.user_id ? (
+                              <input
+                                key={u.user_id}
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                              />
+                            ) : (
+                              <span
+                                key={u.user_id}
+                                className="editable-username"
+                                onClick={() => {
+                                  setEditingUser(u.user_id);
+                                  setEditName(u.username);
+                                }}
+                              >
+                                {u.username}
+                              </span>
+                            )
+                          )}
+                      </span>
+
+                      <span className="count-ng">
+                        ✕{counts.ng}{" "}
+                        {counts.users
+                          .filter((u) => u.response === "✕" || u.response === "ng")
+                          .map((u) => (
+                            <span
+                              key={u.user_id}
+                              className="editable-username"
+                              onClick={() => {
+                                setEditingUser(u.user_id);
+                                setEditName(u.username);
+                              }}
+                            >
+                              {u.username}
+                            </span>
+                          ))}
+                      </span>
+
+                      <span className="count-maybe">
+                        △{counts.maybe}{" "}
+                        {counts.users
+                          .filter((u) => u.response === "△" || u.response === "maybe")
+                          .map((u) => (
+                            <span
+                              key={u.user_id}
+                              className="editable-username"
+                              onClick={() => {
+                                setEditingUser(u.user_id);
+                                setEditName(u.username);
+                              }}
+                            >
+                              {u.username}
+                            </span>
+                          ))}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -194,6 +301,15 @@ export default function SharePage() {
             </tbody>
           </table>
         </div>
+
+        {/* 編集保存バー */}
+        {editingUser && (
+          <div className="edit-save-bar">
+            <button className="username-save-btn" onClick={saveUsername}>
+              ユーザ名を保存
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
