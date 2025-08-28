@@ -14,6 +14,9 @@ export default function Header({ user }) {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
+                <Link to="/usage" className="nav-link">
+          使い方
+        </Link>
         <Link to="/register" className="nav-link">
           日程登録
         </Link>
@@ -22,9 +25,6 @@ export default function Header({ user }) {
             個人スケジュール
           </Link>
         )}
-        <Link to="/usage" className="nav-link">
-          使い方
-        </Link>
         {user ? (
           <a href="/auth/logout" className="nav-btn">
             ログアウト
