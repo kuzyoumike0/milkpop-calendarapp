@@ -8,58 +8,73 @@ const hd = new Holidays("JP");
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date()); // 表示中の年月
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [mode, setMode] = useState("single"); // single | multi | range
-  const [timeType, setTimeType] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
-  const [rangeStart, setRangeStart] = useState(null);
   const [events, setEvents] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("single"); // single / multi / range
+  const [rangeStart, setRangeStart] = useState(null);
 
   const token = localStorage.getItem("jwt");
 
-  // ===== カレンダー生成 =====
-  const getCalendarDays = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+  // === DBから取得 ===
+  useEffect(() => {
+    fetch("/api/personal-events", {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setEvents(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("取得失敗:", err));
+  }, [token]);
+
+  // === カレンダー生成 ===
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today);
+
+  const getMonthDays = (year, month) => {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
     const days = [];
-    const startDay = firstDay.getDay(); // 曜日
-    const totalDays = lastDay.getDate();
+    let current = new Date(firstDay);
+    current.setDate(current.getDate() - current.getDay()); // 週頭まで戻す
 
-    // 前の月の余白
-    for (let i = 0; i < startDay; i++) {
-      days.push(null);
-    }
-    // 今月の日
-    for (let d = 1; d <= totalDays; d++) {
-      days.push(new Date(year, month, d));
+    while (current <= lastDay || current.getDay() !== 0) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
     }
     return days;
   };
 
-  // ===== 日付クリック =====
+  const monthDays = getMonthDays(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth()
+  );
+
+  // === 日付クリック処理 ===
   const handleDateClick = (day) => {
     if (!day) return;
+    const dateStr = day.toISOString().split("T")[0];
 
     if (mode === "single") {
-      setSelectedDates([day]);
+      setSelectedDates([
+        { date: dateStr, timeType: "allday", startTime: null, endTime: null },
+      ]);
     } else if (mode === "multi") {
-      const exists = selectedDates.find(
-        (d) => d.toDateString() === day.toDateString()
-      );
+      const exists = selectedDates.find((d) => d.date === dateStr);
       if (exists) {
-        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== day.toDateString()));
+        setSelectedDates(selectedDates.filter((d) => d.date !== dateStr));
       } else {
-        setSelectedDates([...selectedDates, day]);
+        setSelectedDates([
+          ...selectedDates,
+          { date: dateStr, timeType: "allday", startTime: null, endTime: null },
+        ]);
       }
     } else if (mode === "range") {
       if (!rangeStart) {
         setRangeStart(day);
-        setSelectedDates([day]);
+        setSelectedDates([
+          { date: dateStr, timeType: "allday", startTime: null, endTime: null },
+        ]);
       } else {
         const rangeEnd = day;
         const start = rangeStart < rangeEnd ? rangeStart : rangeEnd;
@@ -68,7 +83,12 @@ const PersonalPage = () => {
         const rangeDays = [];
         let current = new Date(start);
         while (current <= end) {
-          rangeDays.push(new Date(current));
+          rangeDays.push({
+            date: current.toISOString().split("T")[0],
+            timeType: "allday",
+            startTime: null,
+            endTime: null,
+          });
           current.setDate(current.getDate() + 1);
         }
         setSelectedDates(rangeDays);
@@ -77,7 +97,7 @@ const PersonalPage = () => {
     }
   };
 
-  // ===== 保存 =====
+  // === 保存処理 ===
   const handleRegister = () => {
     if (!title.trim() || selectedDates.length === 0) {
       return alert("タイトルと日程を入力してください");
@@ -86,12 +106,7 @@ const PersonalPage = () => {
     const newEvent = {
       title,
       memo,
-      dates: selectedDates.map((d) => ({
-        date: d.toISOString().split("T")[0],
-        timeType,
-        startTime: timeType === "custom" ? startTime : null,
-        endTime: timeType === "custom" ? endTime : null,
-      })),
+      dates: selectedDates,
     };
 
     fetch("/api/personal-events", {
@@ -113,15 +128,38 @@ const PersonalPage = () => {
       .catch((err) => console.error("保存失敗:", err));
   };
 
-  // ====== レンダリング ======
-  const days = getCalendarDays();
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  // === 編集 ===
+  const handleEdit = (id) => {
+    const ev = events.find((e) => e.id === id);
+    if (!ev) return;
+    setTitle(ev.title);
+    setMemo(ev.memo);
+    setSelectedDates(ev.dates || []);
+    // 編集対象を削除（保存時に新規で追加）
+    setEvents(events.filter((e) => e.id !== id));
+    fetch(`/api/personal-events/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  };
+
+  // === 削除 ===
+  const handleDelete = (id) => {
+    fetch(`/api/personal-events/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(() => {
+        setEvents(events.filter((e) => e.id !== id));
+      })
+      .catch((err) => console.error("削除失敗:", err));
+  };
 
   return (
     <div className="personal-page">
       <h1 className="page-title">個人日程登録ページ</h1>
 
+      {/* 入力フォーム */}
       <input
         type="text"
         className="title-input"
@@ -129,7 +167,6 @@ const PersonalPage = () => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
       <textarea
         className="memo-input"
         placeholder="メモを入力してください"
@@ -143,57 +180,86 @@ const PersonalPage = () => {
           <button
             key={m}
             className={mode === m ? "active" : ""}
-            onClick={() => {
-              setMode(m);
-              setSelectedDates([]);
-              setRangeStart(null);
-            }}
+            onClick={() => setMode(m)}
           >
             {m === "single" ? "単日" : m === "multi" ? "複数選択" : "範囲選択"}
           </button>
         ))}
       </div>
 
+      {/* レイアウト */}
       <div className="calendar-list-container">
-        {/* ===== カレンダー ===== */}
+        {/* カレンダー */}
         <div className="calendar-box">
           <div className="calendar-header">
-            <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
+            <button
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(
+                    currentMonth.getFullYear(),
+                    currentMonth.getMonth() - 1,
+                    1
+                  )
+                )
+              }
+            >
+              ◀
+            </button>
             <span>
-              {year}年 {month + 1}月
+              {currentMonth.getFullYear()}年 {currentMonth.getMonth() + 1}月
             </span>
-            <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
+            <button
+              onClick={() =>
+                setCurrentMonth(
+                  new Date(
+                    currentMonth.getFullYear(),
+                    currentMonth.getMonth() + 1,
+                    1
+                  )
+                )
+              }
+            >
+              ▶
+            </button>
           </div>
-
           <table className="calendar-table">
             <thead>
               <tr>
-                {["日", "月", "火", "水", "木", "金", "土"].map((w, i) => (
-                  <th key={i}>{w}</th>
+                {["日", "月", "火", "水", "木", "金", "土"].map((d, i) => (
+                  <th
+                    key={i}
+                    className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}
+                  >
+                    {d}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {[...Array(Math.ceil(days.length / 7))].map((_, rowIndex) => (
-                <tr key={rowIndex}>
-                  {days.slice(rowIndex * 7, rowIndex * 7 + 7).map((day, i) => {
-                    if (!day) return <td key={i}></td>;
-
-                    const isSelected = selectedDates.some(
-                      (d) => d.toDateString() === day.toDateString()
-                    );
+              {Array.from({ length: monthDays.length / 7 }).map((_, w) => (
+                <tr key={w}>
+                  {monthDays.slice(w * 7, w * 7 + 7).map((day, i) => {
+                    const dateStr = day.toISOString().split("T")[0];
                     const holiday = hd.isHoliday(day);
-
+                    const isSelected = selectedDates.some(
+                      (d) => d.date === dateStr
+                    );
+                    const isOtherMonth =
+                      day.getMonth() !== currentMonth.getMonth();
                     return (
                       <td
                         key={i}
-                        className={`${isSelected ? "selected-date" : ""} ${
-                          day.getDay() === 0 ? "sunday" : day.getDay() === 6 ? "saturday" : ""
-                        }`}
+                        className={`${isOtherMonth ? "other-month" : ""} ${
+                          isSelected ? "selected-date" : ""
+                        } ${holiday ? "sunday" : ""}`}
                         onClick={() => handleDateClick(day)}
                       >
                         {day.getDate()}
-                        {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+                        {holiday && (
+                          <span className="holiday-name">
+                            {holiday[0].name}
+                          </span>
+                        )}
                       </td>
                     );
                   })}
@@ -203,85 +269,99 @@ const PersonalPage = () => {
           </table>
         </div>
 
-        {/* ===== 選択中の日程 ===== */}
+        {/* 選択中リスト */}
         <div className="list-container">
           <h2>選択中の日程</h2>
           {selectedDates.map((d, i) => (
             <div key={i} className="selected-card">
-              <span className="date-badge">{d.toLocaleDateString("ja-JP")}</span>
+              <span className="date-badge">{d.date}</span>
+              <div className="time-buttons">
+                {["allday", "day", "night", "custom"].map((type) => (
+                  <button
+                    key={type}
+                    className={`time-btn ${d.timeType === type ? "active" : ""}`}
+                    onClick={() => {
+                      const newDates = [...selectedDates];
+                      newDates[i].timeType = type;
+                      setSelectedDates(newDates);
+                    }}
+                  >
+                    {type === "allday"
+                      ? "終日"
+                      : type === "day"
+                      ? "午前"
+                      : type === "night"
+                      ? "午後"
+                      : "時間指定"}
+                  </button>
+                ))}
+              </div>
+              {d.timeType === "custom" && (
+                <div className="custom-time">
+                  <select
+                    value={d.startTime || "09:00"}
+                    onChange={(e) => {
+                      const newDates = [...selectedDates];
+                      newDates[i].startTime = e.target.value;
+                      setSelectedDates(newDates);
+                    }}
+                    className="cute-select"
+                  >
+                    {Array.from({ length: 24 }).map((_, h) => (
+                      <option key={h} value={`${String(h).padStart(2, "0")}:00`}>
+                        {`${String(h).padStart(2, "0")}:00`}
+                      </option>
+                    ))}
+                  </select>
+                  <span>〜</span>
+                  <select
+                    value={d.endTime || "18:00"}
+                    onChange={(e) => {
+                      const newDates = [...selectedDates];
+                      newDates[i].endTime = e.target.value;
+                      setSelectedDates(newDates);
+                    }}
+                    className="cute-select"
+                  >
+                    {Array.from({ length: 24 }).map((_, h) => (
+                      <option key={h} value={`${String(h).padStart(2, "0")}:00`}>
+                        {`${String(h).padStart(2, "0")}:00`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           ))}
-
-          {/* 時間区分 */}
-          <div className="time-buttons">
-            {["allday", "day", "night", "custom"].map((type) => (
-              <button
-                key={type}
-                className={`time-btn ${timeType === type ? "active" : ""}`}
-                onClick={() => setTimeType(type)}
-              >
-                {type === "allday"
-                  ? "終日"
-                  : type === "day"
-                  ? "午前"
-                  : type === "night"
-                  ? "午後"
-                  : "時間指定"}
-              </button>
-            ))}
-          </div>
-
-          {timeType === "custom" && (
-            <div className="custom-time">
-              <select
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="cute-select"
-              >
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const h = String(i).padStart(2, "0");
-                  return (
-                    <option key={i} value={`${h}:00`}>
-                      {`${h}:00`}
-                    </option>
-                  );
-                })}
-              </select>
-              <span>〜</span>
-              <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="cute-select"
-              >
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const h = String(i).padStart(2, "0");
-                  return (
-                    <option key={i} value={`${h}:00`}>
-                      {`${h}:00`}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          )}
-
           <button className="register-btn" onClick={handleRegister}>
             登録する
           </button>
-
-          <h2>登録済みの予定</h2>
-          <ul>
-            {events.map((ev, i) => (
-              <li key={i}>
-                <strong>{ev.title}</strong>{" "}
-                {ev.dates.map((d, j) => (
-                  <span key={j}>{d.date}({d.timeType}) </span>
-                ))}
-                {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
-              </li>
-            ))}
-          </ul>
         </div>
+      </div>
+
+      {/* 登録済み */}
+      <div className="registered-container">
+        <h2>登録済みの予定</h2>
+        <ul>
+          {events.map((ev) => (
+            <li key={ev.id} className="registered-card">
+              <strong>{ev.title}</strong> {ev.memo && <p>{ev.memo}</p>}
+              <ul>
+                {ev.dates.map((d, i) => (
+                  <li key={i}>
+                    {d.date} ({d.timeType}
+                    {d.startTime && d.endTime
+                      ? ` ${d.startTime}~${d.endTime}`
+                      : ""}
+                    )
+                  </li>
+                ))}
+              </ul>
+              <button onClick={() => handleEdit(ev.id)}>編集</button>
+              <button onClick={() => handleDelete(ev.id)}>削除</button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
