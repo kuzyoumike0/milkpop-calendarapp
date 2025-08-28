@@ -21,9 +21,11 @@ export default function Header({ user }) {
         <Link to="/register" className="nav-link">
           日程登録
         </Link>
-        <Link to="/personal" className="nav-link">
-          個人日程登録
-        </Link>
+        {user && (
+          <Link to="/personal" className="nav-link">
+            個人日程登録
+          </Link>
+        )}
         {user ? (
           <a href="/auth/logout" className="nav-btn">
             ログアウト
@@ -61,13 +63,15 @@ export default function Header({ user }) {
         >
           日程登録
         </Link>
-        <Link
-          to="/personal"
-          className="nav-link-mobile"
-          onClick={() => setMenuOpen(false)}
-        >
-          個人日程登録
-        </Link>
+        {user && (
+          <Link
+            to="/personal"
+            className="nav-link-mobile"
+            onClick={() => setMenuOpen(false)}
+          >
+            個人日程登録
+          </Link>
+        )}
         {user ? (
           <a
             href="/auth/logout"
