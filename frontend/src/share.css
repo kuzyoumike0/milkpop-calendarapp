@@ -1,37 +1,50 @@
+/* ======================
+   ページ全体
+====================== */
+body, html {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
+  color: #222;
+}
+
+/* コンテナ */
 .share-container {
   padding: 20px;
   max-width: 1100px;
   margin: auto;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  border-radius: 10px;
-  color: #fff;
+  color: #222;
 }
 
+/* タイトル */
 .share-title {
   text-align: center;
   font-size: 24px;
   margin-bottom: 20px;
-  color: white;
+  color: #fff;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* 自分の回答 */
-.my-responses,
-.all-responses {
+/* ======================
+   自分の回答
+====================== */
+.my-responses {
   margin-bottom: 30px;
   padding: 15px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee); /* 🔹グラデ背景に変更 */
-  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
-  color: #111;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .username-input {
   width: 60%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
   margin-bottom: 12px;
+  font-size: 1rem;
 }
 
 .my-responses-list {
@@ -52,24 +65,24 @@
   color: #111;
 }
 
-/* 回答用セレクト */
+/* 回答プルダウン */
 .fancy-select {
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fff;
+  border: none;
+  background: linear-gradient(145deg, #111, #333);
+  color: #fff;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s;
 }
 .fancy-select:hover {
-  border-color: #888;
-  background: #f9f9f9;
+  background: linear-gradient(145deg, #004ca0, #fdb9c8);
 }
 
+/* 保存ボタン */
 .save-btn {
-  margin-top: 12px;
-  padding: 10px;
+  margin-top: 14px;
+  padding: 12px;
   width: 100%;
   border: none;
   border-radius: 8px;
@@ -77,6 +90,11 @@
   color: white;
   font-weight: bold;
   cursor: pointer;
+  transition: 0.2s;
+}
+.save-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
 }
 
 .save-message {
@@ -85,79 +103,119 @@
   font-weight: bold;
 }
 
-/* みんなの回答テーブル */
+/* ======================
+   みんなの回答
+====================== */
+.all-responses {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* フィルタ */
+.filter-box {
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.fancy-filter {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.fancy-filter:hover {
+  background: #333;
+}
+
+/* ======================
+   回答テーブル
+====================== */
+.table-container {
+  overflow-x: auto;
+}
+
 .responses-table {
   width: 100%;
   border-collapse: collapse;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  background: rgba(255,255,255,0.2);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 .responses-table th,
 .responses-table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
+  font-size: 0.95rem;
 }
 
 .responses-table th {
   background: #355c7d;
   color: #fff;
   font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
+/* 回答数の色 */
 .count-ok { color: green; font-weight: bold; }
 .count-ng { color: red; font-weight: bold; }
 .count-maybe { color: orange; font-weight: bold; }
 
-/* フィルタ */
-.filter-box {
-  margin: 10px 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: bold;
-  color: #222;
-}
-
-.fancy-filter {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 25px;
-  background: #111;   /* 🔹黒背景 */
-  color: #fff;        /* 🔹白文字 */
-  font-weight: bold;
-  cursor: pointer;
-  appearance: none;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.25s ease-in-out;
-}
-
-.fancy-filter:hover {
-  transform: scale(1.05);
-  background: #222;
-}
-
-.fancy-filter option {
-  background: #111; /* 🔹展開時の背景も黒 */
-  color: #fff;      /* 🔹展開時の文字色も白 */
-}
-/* ページ全体の背景をグラデに統一 */
-body, html {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-}
+/* ======================
+   ユーザ名編集
+====================== */
 .editable-username {
   color: orange;
   font-weight: bold;
   cursor: pointer;
   text-decoration: underline;
-  margin: 0 4px;
+  transition: color 0.2s ease, background 0.2s ease;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 .editable-username:hover {
   color: #ff4b91;
+  background: rgba(255, 75, 145, 0.15);
+}
+
+/* 編集時入力欄 */
+.responses-table th input {
+  width: 90%;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+/* 編集保存バー */
+.edit-save-bar {
+  text-align: center;
+  margin-top: 12px;
+  padding: 10px;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  border-radius: 8px;
+}
+
+.username-save-btn {
+  background: #7b4397;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.username-save-btn:hover {
+  background: #c06c84;
 }
