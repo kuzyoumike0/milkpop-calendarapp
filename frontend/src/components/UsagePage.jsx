@@ -17,7 +17,10 @@ export default function UsagePage() {
         <p>
           サイトの入り口です。ここから日程登録ページや個人スケジュールページへ遷移できます。
         </p>
-        <img src="/screenshot1.png" alt="トップページ説明" className="usage-img" />
+        <figure className="usage-figure">
+          <img src="/screenshot1.png" alt="トップページ説明" className="usage-img" />
+          <figcaption className="usage-caption">トップページのスクリーンショット</figcaption>
+        </figure>
       </section>
 
       <section className="usage-section">
@@ -25,7 +28,10 @@ export default function UsagePage() {
         <p>
           イベントや予定を入力して、共有リンクを発行できます。日付選択はカレンダーUIで直感的に行えます。
         </p>
-        <img src="/screenshot2.png" alt="日程登録ページ説明" className="usage-img" />
+        <figure className="usage-figure">
+          <img src="/screenshot2.png" alt="日程登録ページ説明" className="usage-img" />
+          <figcaption className="usage-caption">日程登録ページのスクリーンショット</figcaption>
+        </figure>
       </section>
 
       <section className="usage-section">
@@ -33,7 +39,10 @@ export default function UsagePage() {
         <p>
           自分専用の予定を登録できます。タイトル・メモ・時間帯・複数日選択など、柔軟にスケジュールを管理できます。
         </p>
-        <img src="/screenshot3.png" alt="個人スケジュールページ説明" className="usage-img" />
+        <figure className="usage-figure">
+          <img src="/screenshot3.png" alt="個人スケジュールページ説明" className="usage-img" />
+          <figcaption className="usage-caption">個人スケジュールページのスクリーンショット</figcaption>
+        </figure>
       </section>
 
       <div className="back-links">
