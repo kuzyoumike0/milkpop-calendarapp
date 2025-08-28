@@ -10,6 +10,8 @@ export default function RegisterPage() {
   const [shareLink, setShareLink] = useState("");
   const [rangeStart, setRangeStart] = useState(null);
   const [rangeEnd, setRangeEnd] = useState(null);
+  const [hoverDate, setHoverDate] = useState(null);
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
 
   const hd = new Holidays("JP");
 
@@ -40,43 +42,45 @@ export default function RegisterPage() {
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-    // すでに選択済み → 解除
-    if (selectedDates[dateStr]) {
-      const updated = { ...selectedDates };
-      delete updated[dateStr];
-      setSelectedDates(updated);
-      return;
+    if (mode === "multiple") {
+      // 複数選択モード：クリックで ON/OFF
+      if (selectedDates[dateStr]) {
+        const updated = { ...selectedDates };
+        delete updated[dateStr];
+        setSelectedDates(updated);
+      } else {
+        setSelectedDates({
+          ...selectedDates,
+          [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
+        });
+      }
+    } else if (mode === "range") {
+      // 範囲選択モード
+      if (rangeStart && !rangeEnd) {
+        setRangeEnd(date);
+        const datesInRange =
+          date >= rangeStart
+            ? getDatesBetween(rangeStart, date)
+            : getDatesBetween(date, rangeStart);
+
+        const updated = { ...selectedDates };
+        datesInRange.forEach((d) => {
+          updated[d] = {
+            timeType: "allday",
+            startTime: "09:00",
+            endTime: "18:00",
+          };
+        });
+        setSelectedDates(updated);
+        setRangeStart(null);
+        setRangeEnd(null);
+        setHoverDate(null);
+      } else {
+        setRangeStart(date);
+        setRangeEnd(null);
+        setHoverDate(null);
+      }
     }
-
-    // 範囲選択モード
-    if (rangeStart && !rangeEnd) {
-      setRangeEnd(date);
-      const datesInRange =
-        date >= rangeStart
-          ? getDatesBetween(rangeStart, date)
-          : getDatesBetween(date, rangeStart);
-
-      const updated = { ...selectedDates };
-      datesInRange.forEach((d) => {
-        updated[d] = {
-          timeType: "allday",
-          startTime: "09:00",
-          endTime: "18:00",
-        };
-      });
-      setSelectedDates(updated);
-      setRangeStart(null);
-      setRangeEnd(null);
-      return;
-    }
-
-    // 単独選択
-    setSelectedDates({
-      ...selectedDates,
-      [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
-    });
-    setRangeStart(date);
-    setRangeEnd(null);
   };
 
   // ==== 時間区分変更 ====
@@ -135,6 +139,30 @@ export default function RegisterPage() {
         onChange={(e) => setTitle(e.target.value)}
       />
 
+      {/* モード切替 */}
+      <div className="select-mode">
+        <button
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => {
+            setMode("multiple");
+            setRangeStart(null);
+            setRangeEnd(null);
+          }}
+        >
+          複数選択
+        </button>
+        <button
+          className={mode === "range" ? "active" : ""}
+          onClick={() => {
+            setMode("range");
+            setRangeStart(null);
+            setRangeEnd(null);
+          }}
+        >
+          範囲選択
+        </button>
+      </div>
+
       <div className="calendar-list-container">
         {/* カレンダー */}
         <div className="calendar-container">
@@ -178,6 +206,19 @@ export default function RegisterPage() {
                     if (date.getDay() === 6) cellClass += " saturday";
                     if (dateStr === today) cellClass += " today";
                     if (selectedDates[dateStr]) cellClass += " selected";
+
+                    // 範囲プレビュー
+                    if (
+                      mode === "range" &&
+                      rangeStart &&
+                      !rangeEnd &&
+                      hoverDate &&
+                      ((date >= rangeStart && date <= hoverDate) ||
+                        (date <= rangeStart && date >= hoverDate))
+                    ) {
+                      cellClass += " range-preview";
+                    }
+
                     if (isHoliday) cellClass += " holiday";
 
                     return (
@@ -185,6 +226,7 @@ export default function RegisterPage() {
                         key={dow}
                         className={cellClass}
                         onClick={() => handleDateClick(date)}
+                        onMouseEnter={() => setHoverDate(date)}
                       >
                         <div>{dateNum}</div>
                         {isHoliday && (
