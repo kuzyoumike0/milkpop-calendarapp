@@ -1,5 +1,5 @@
-// backend/index.js （完全統合版 v2）
-// 旧版API互換: aggregate, deleteResponse, updateResponses, 回答キー正規化を維持
+// backend/index.js （完全統合版 v3）
+// フロントと同じキー生成: timeType を日本語化して保存/集計で利用
 
 import express from "express";
 import cors from "cors";
@@ -31,7 +31,7 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
-// ===== 基本設定/ミドルウェア =====
+// ===== 基本設定 =====
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(compression());
@@ -39,7 +39,7 @@ app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-// CORS（本番 FRONTEND_URL、未設定なら許容）
+// CORS
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || true,
@@ -48,9 +48,11 @@ app.use(
 );
 
 // ヘルスチェック
-app.get("/healthz", (_req, res) => res.status(200).json({ ok: true, env: NODE_ENV }));
+app.get("/healthz", (_req, res) =>
+  res.status(200).json({ ok: true, env: NODE_ENV })
+);
 
-// 軽いレートリミット（/api 配下）
+// 軽いレートリミット
 app.use(
   "/api",
   rateLimit({
@@ -117,7 +119,6 @@ io.on("connection", (socket) => {
 // ===== 認証 =====
 app.use("/auth", authRouter);
 
-// Cookie または Authorization: Bearer の JWT を検証
 function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
@@ -136,6 +137,15 @@ function authRequired(req, res, next) {
 app.get("/api/me", authRequired, (req, res) => {
   res.json({ user: req.user });
 });
+
+// ==== 共通: timeType 日本語化 ====
+function timeLabel(t) {
+  if (t === "allday") return "終日";
+  if (t === "day") return "午前";
+  if (t === "night") return "午後";
+  if (t === "custom") return "時間指定";
+  return t;
+}
 
 // ===== schedules API =====
 
@@ -164,7 +174,13 @@ app.post("/api/schedules", async (req, res) => {
     const result = await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [id, title || "無題スケジュール", JSON.stringify(dates), JSON.stringify(options || {}), shareToken]
+      [
+        id,
+        title || "無題スケジュール",
+        JSON.stringify(dates),
+        JSON.stringify(options || {}),
+        shareToken,
+      ]
     );
     res.json({ share_token: result.rows[0].share_token });
   } catch (err) {
@@ -173,11 +189,14 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// 特定スケジュール取得（共有ページ）
+// 特定スケジュール取得
 app.get("/api/schedules/:token", async (req, res) => {
   try {
     const { token } = req.params;
-    const result = await pool.query("SELECT * FROM schedules WHERE share_token=$1", [token]);
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE share_token=$1",
+      [token]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
@@ -188,7 +207,7 @@ app.get("/api/schedules/:token", async (req, res) => {
   }
 });
 
-// 出欠回答 保存/更新（旧版互換：user_id 必須＆キー正規化＋イベント名）
+// 出欠回答 保存/更新
 app.post("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
@@ -208,13 +227,13 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
     const scheduleId = schedule.rows[0].id;
     const dates = schedule.rows[0].dates;
 
-    // 旧版と同じキー正規化
+    // === フロントと同じキー形式に正規化 ===
     const normalizedResponses = {};
     dates.forEach((d) => {
       const key =
-        d.timeType === "時間指定" && d.startTime && d.endTime
+        d.timeType === "custom" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.timeType})`;
+          : `${d.date} (${timeLabel(d.timeType)})`;
       normalizedResponses[key] = responses[key] || "-";
     });
 
@@ -225,10 +244,14 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
        DO UPDATE SET username=EXCLUDED.username,
                      responses=EXCLUDED.responses,
                      created_at=CURRENT_TIMESTAMP`,
-      [scheduleId, user_id, username || "匿名", JSON.stringify(normalizedResponses)]
+      [
+        scheduleId,
+        user_id,
+        username || "匿名",
+        JSON.stringify(normalizedResponses),
+      ]
     );
 
-    // 旧版イベント名で通知
     io.to(token).emit("updateResponses", {
       user_id,
       username,
@@ -246,7 +269,10 @@ app.post("/api/schedules/:token/responses", async (req, res) => {
 app.get("/api/schedules/:token/responses", async (req, res) => {
   try {
     const { token } = req.params;
-    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
@@ -263,11 +289,14 @@ app.get("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
-// 出欠集計（旧版互換）
+// 出欠集計
 app.get("/api/schedules/:token/aggregate", async (req, res) => {
   try {
     const { token } = req.params;
-    const schedule = await pool.query("SELECT id, dates FROM schedules WHERE share_token=$1", [token]);
+    const schedule = await pool.query(
+      "SELECT id, dates FROM schedules WHERE share_token=$1",
+      [token]
+    );
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
@@ -282,15 +311,15 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
     const aggregate = {};
     dates.forEach((d) => {
       const key =
-        d.timeType === "時間指定" && d.startTime && d.endTime
+        d.timeType === "custom" && d.startTime && d.endTime
           ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${d.timeType})`;
-      aggregate[key] = { "○": 0, "✖": 0, "△": 0 };
+          : `${d.date} (${timeLabel(d.timeType)})`;
+      aggregate[key] = { "◯": 0, "✕": 0, "△": 0 };
     });
 
     responses.rows.forEach((row) => {
       Object.entries(row.responses).forEach(([key, status]) => {
-        if (aggregate[key] && ["○", "✖", "△"].includes(status)) {
+        if (aggregate[key] && ["◯", "✕", "△"].includes(status)) {
           aggregate[key][status]++;
         }
       });
@@ -303,11 +332,14 @@ app.get("/api/schedules/:token/aggregate", async (req, res) => {
   }
 });
 
-// 特定ユーザー回答の削除（旧版互換＋イベント名）
+// 出欠回答削除
 app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
   try {
     const { token, user_id } = req.params;
-    const schedule = await pool.query("SELECT id FROM schedules WHERE share_token=$1", [token]);
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
     if (schedule.rows.length === 0) {
       return res.status(404).json({ error: "共有リンクが無効です" });
     }
@@ -332,8 +364,6 @@ app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
 });
 
 // ===== 個人スケジュール API =====
-
-// 取得（旧版互換）
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -347,7 +377,6 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 保存（旧版互換）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body || {};
@@ -358,7 +387,14 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [id, req.user.discord_id, title, memo || "", JSON.stringify(dates), JSON.stringify(options || {})]
+      [
+        id,
+        req.user.discord_id,
+        title,
+        memo || "",
+        JSON.stringify(dates),
+        JSON.stringify(options || {}),
+      ]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -367,7 +403,6 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// （拡張）更新/削除もサポート
 app.put("/api/personal-events/:id", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
@@ -377,7 +412,14 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
        SET title=$1, memo=$2, dates=$3, options=$4, created_at=CURRENT_TIMESTAMP
        WHERE id=$5 AND user_id=$6
        RETURNING *`,
-      [title, memo || "", JSON.stringify(dates), JSON.stringify(options || {}), id, req.user.discord_id]
+      [
+        title,
+        memo || "",
+        JSON.stringify(dates),
+        JSON.stringify(options || {}),
+        id,
+        req.user.discord_id,
+      ]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "予定が見つかりません" });
@@ -406,36 +448,28 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   }
 });
 
-// ===== Reactビルド配信（frontend/build） =====
+// ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendDist = path.resolve(__dirname, "../frontend/build");
 const indexHtmlPath = path.join(frontendDist, "index.html");
 const hasIndex = fs.existsSync(indexHtmlPath);
+
 if (!hasIndex) {
-  console.warn(
-    "⚠️ frontend/build/index.html が見つかりません。",
-    "\n   → `cd frontend && npm run build` を実行してください。"
-  );
+  console.warn("⚠️ frontend/build/index.html が見つかりません。");
 }
 
 app.use(
   express.static(frontendDist, {
     index: "index.html",
     maxAge: NODE_ENV === "production" ? "1d" : 0,
-    setHeaders: (res) => {
-      res.setHeader("X-Content-Type-Options", "nosniff");
-      res.setHeader("Referrer-Policy", "no-referrer");
-    },
   })
 );
 
-// /api 未定義は JSON 404
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
 
-// SPA ルーティング（最後のキャッチオール）
 app.get("*", (_req, res) => {
   if (!hasIndex) {
     return res
@@ -446,12 +480,10 @@ app.get("*", (_req, res) => {
 });
 
 // ===== エラーハンドラ =====
-/* eslint-disable no-unused-vars */
 app.use((err, _req, res, _next) => {
   console.error("🔥 Unhandled error:", err);
   res.status(500).json({ error: "Internal Server Error" });
 });
-/* eslint-enable no-unused-vars */
 
 // ===== サーバー起動 =====
 server.listen(PORT, () => {
@@ -463,7 +495,9 @@ const shutdown = (signal) => {
   console.log(`\n${signal} received. Closing server...`);
   server.close(() => {
     console.log("HTTP server closed.");
-    try { pool.end?.(); } catch {}
+    try {
+      pool.end?.();
+    } catch {}
     process.exit(0);
   });
   setTimeout(() => process.exit(1), 8000).unref();
