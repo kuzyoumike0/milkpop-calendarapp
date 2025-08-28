@@ -74,10 +74,11 @@ export default function SharePage() {
       });
       await res.json();
 
-      // 即時反映
-      fetch(`/api/schedules/${token}/responses`)
-        .then((res) => res.json())
-        .then((data) => setResponses(data));
+      // 即時反映（自分の回答を responses にマージ）
+      setResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== userId);
+        return [...others, { user_id: userId, username, responses: myResponses }];
+      });
 
       socket.emit("updateResponses", token);
 
@@ -102,9 +103,11 @@ export default function SharePage() {
       });
       await res.json();
 
-      fetch(`/api/schedules/${token}/responses`)
-        .then((res) => res.json())
-        .then((data) => setResponses(data));
+      // 即時反映（編集したユーザの回答を更新）
+      setResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== editingUser);
+        return [...others, { user_id: editingUser, username: editingUser, responses: editedResponses }];
+      });
 
       socket.emit("updateResponses", token);
       setEditingUser(null);
@@ -201,7 +204,7 @@ export default function SharePage() {
                   <span
                     className="editable-username"
                     onClick={() => {
-                      setEditingUser(r.username);
+                      setEditingUser(r.user_id);
                       setEditedResponses(r.responses);
                     }}
                   >
@@ -222,7 +225,7 @@ export default function SharePage() {
                 </td>
                 {responses.map((r, uIdx) => (
                   <td key={uIdx}>
-                    {editingUser === r.username ? (
+                    {editingUser === r.user_id ? (
                       <select
                         className="fancy-select"
                         value={editedResponses[d.key] || "-"}
