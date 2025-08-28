@@ -65,14 +65,27 @@ export default function SharePage() {
 
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
-      .then((data) => setResponses(data));
+      .then((data) => {
+        // ★ 読み込み時に normalizeResponses を適用
+        const fixed = data.map((r) => ({
+          ...r,
+          responses: normalizeResponses(r.responses),
+        }));
+        setResponses(fixed);
+      });
 
     socket.emit("joinSchedule", token);
 
     socket.on("updateResponses", () => {
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
-        .then((data) => setResponses(data));
+        .then((data) => {
+          const fixed = data.map((r) => ({
+            ...r,
+            responses: normalizeResponses(r.responses),
+          }));
+          setResponses(fixed);
+        });
     });
 
     return () => socket.off("updateResponses");
