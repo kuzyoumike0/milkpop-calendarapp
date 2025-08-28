@@ -61,7 +61,7 @@
 .usage-img {
   display: block;
   width: 100%;
-  max-width: 200px;   /* PCでは必ず200pxまで */
+  max-width: 400px;   /* PCでは必ず400pxまで */
   height: auto;
   margin: 0 auto;
   border-radius: 12px;
