@@ -1,32 +1,38 @@
+/* ===== ページ全体 ===== */
 .personal-page {
-  padding: 40px;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  padding: 30px;
   min-height: 100vh;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
   color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   box-sizing: border-box;
 }
 
+/* ===== タイトル ===== */
 .page-title {
   text-align: center;
-  font-size: 2.4rem;
+  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 20px;
   color: white;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
-.title-input, .memo-input {
-  display: block;
-  width: 60%;
-  max-width: 700px;
-  margin: 0 auto 20px auto;
-  padding: 14px;
+/* ===== 入力欄 ===== */
+.title-input,
+.memo-input {
+  width: 70%;
+  max-width: 600px;
+  padding: 12px;
+  margin: 10px 0;
   border-radius: 12px;
   border: none;
+  font-size: 1rem;
   text-align: center;
-  font-size: 1.1rem;
-  background: rgba(255,255,255,0.8);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
 .memo-input {
@@ -34,183 +40,112 @@
   resize: none;
 }
 
-/* モード切替 */
-.mode-tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-.mode-tabs button {
-  padding: 12px 24px;
-  margin: 0 6px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  background: rgba(255,255,255,0.7);
-}
-.mode-tabs button.active {
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: #fff;
-}
-
-/* カレンダーと選択中日程 横並び */
+/* ===== カレンダーと選択中エリア ===== */
 .calendar-list-container {
   display: flex;
-  gap: 30px;
   justify-content: center;
   align-items: flex-start;
-  margin-bottom: 40px;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 20px;
+  gap: 20px;
 }
 
-/* カレンダー */
-.calendar-box {
-  flex: 7;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 20px;
+/* ===== カレンダー（左 7 割） ===== */
+.calendar-container {
+  flex: 0 0 65%; /* 左 65% */
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-}
-.calendar-header {
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+}
+
+/* 自作カレンダーサイズ調整 */
+.custom-calendar {
+  width: 90%;       /* 横幅を縮小 */
+  max-width: 650px; /* 最大幅を制限 */
+}
+
+/* ===== 右側（選択日程 & 登録済み予定） ===== */
+.side-panel {
+  flex: 0 0 30%; /* 右 30% */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== 選択中の日程表示 ===== */
+.selected-dates {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.selected-dates h2 {
+  font-size: 1.1rem;
   margin-bottom: 10px;
 }
-.calendar-table {
-  width: 100%;
-  text-align: center;
-  border-collapse: collapse;
-}
-.calendar-table td, .calendar-table th {
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.calendar-table td:hover {
-  background: rgba(255,255,255,0.3);
-}
-.today {
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4) !important;
-  color: white !important;
-  font-weight: bold;
-}
-.selected-date {
-  background: #fdb9c8 !important;
-  color: black;
-  font-weight: bold;
-}
-.sunday { color: #e60033; }
-.saturday { color: #004ca0; }
-.other-month { opacity: 0.3; }
-.holiday-name {
-  font-size: 0.8rem;
-  color: red;
-  display: block;
-}
 
-/* 選択中日程 */
-.selected-box {
-  flex: 5;
-  background: rgba(255,255,255,0.2);
-  padding: 20px;
-  border-radius: 20px;
-}
-.selected-card {
-  background: #fff;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 12px;
-}
-.date-badge {
+.selected-date-item {
   display: inline-block;
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: bold;
-}
-.time-buttons {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-}
-.time-btn {
-  padding: 6px 12px;
-  border-radius: 12px;
-  border: none;
-  background: #eee;
-  cursor: pointer;
-}
-.time-btn.active {
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-}
-.custom-time {
-  margin-top: 10px;
-}
-.custom-time select {
+  margin: 4px;
   padding: 6px 10px;
-  border-radius: 8px;
-  background: black;
-  color: white;
-}
-
-/* 登録ボタン */
-.register-btn {
-  margin-top: 16px;
-  padding: 12px 24px;
   border-radius: 20px;
-  border: none;
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* 登録済みリスト */
-.list-container {
-  background: rgba(255,255,255,0.2);
-  padding: 20px;
-  border-radius: 20px;
-}
-.event-item {
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-.event-main {
-  font-weight: bold;
-}
-/* 時間指定のプルダウンをお洒落に */
-.cute-select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding: 10px 16px;
-  border-radius: 14px;
-  border: 2px solid #FDB9C8;
-  background: linear-gradient(135deg, #111, #333);
+  background: linear-gradient(135deg, #004ca0, #fdb9c8);
   color: #fff;
+  font-size: 0.9rem;
+}
+
+/* ===== 登録済みの予定 ===== */
+.events-list {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.events-list h2 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+/* ===== 時間指定プルダウン（お洒落バージョン） ===== */
+.custom-time select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  margin: 0 5px;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, #222, #555);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  appearance: none;
+}
+
+.custom-time select:focus {
+  outline: none;
+  background: linear-gradient(135deg, #004ca0, #fdb9c8);
+}
+
+/* ===== 登録ボタン ===== */
+.register-btn {
+  margin-top: 20px;
+  padding: 12px 25px;
   font-size: 1rem;
   font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-.cute-select:hover {
-  background: linear-gradient(135deg, #222, #444);
-  transform: scale(1.05);
-}
-
-.cute-select:focus {
-  outline: none;
-  border-color: #004CA0;
-  box-shadow: 0 0 12px rgba(0, 76, 160, 0.8);
-}
-
-.cute-select option {
-  background: #111;
   color: white;
-  font-size: 1rem;
+  background: linear-gradient(135deg, #004ca0, #fdb9c8);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+
+.register-btn:hover {
+  transform: scale(1.05);
 }
