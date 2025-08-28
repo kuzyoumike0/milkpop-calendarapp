@@ -12,6 +12,10 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  // 編集状態
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState("");
+
   // スケジュール取得 & 回答一覧取得
   const fetchResponses = async () => {
     try {
@@ -69,6 +73,22 @@ export default function SharePage() {
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
+    }
+  };
+
+  // ユーザ名保存
+  const saveUsername = async () => {
+    try {
+      const res = await fetch(`/api/schedule_responses/${editingUser}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: editName }),
+      });
+      if (!res.ok) throw new Error("保存失敗");
+      setEditingUser(null);
+      await fetchResponses(); // 再読み込み
+    } catch (err) {
+      alert("ユーザ名の保存に失敗しました");
     }
   };
 
@@ -191,9 +211,29 @@ export default function SharePage() {
               <tr>
                 <th>日付</th>
                 <th>回答数</th>
-                {userList.map((uname, idx) => (
-                  <th key={idx}>{uname}</th>
-                ))}
+                {userList.map((uname, idx) => {
+                  const userObj = responses.find((r) => r.username === uname);
+                  return (
+                    <th key={idx}>
+                      {editingUser === userObj?.id ? (
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                        />
+                      ) : (
+                        <span
+                          className="editable-username"
+                          onClick={() => {
+                            setEditingUser(userObj.id);
+                            setEditName(uname);
+                          }}
+                        >
+                          {uname}
+                        </span>
+                      )}
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -234,6 +274,15 @@ export default function SharePage() {
             </tbody>
           </table>
         </div>
+
+        {/* 編集保存ボタン */}
+        {editingUser && (
+          <div className="edit-save-bar">
+            <button className="username-save-btn" onClick={saveUsername}>
+              ユーザ名を保存
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
