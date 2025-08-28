@@ -149,3 +149,57 @@
 .register-btn:hover {
   transform: scale(1.05);
 }
+/* 共通セル */
+.cell {
+  width: 80px;
+  height: 80px;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  border-radius: 8px;
+}
+
+/* 日曜 → 赤 */
+.sunday {
+  color: #e60033; /* 紅色 */
+}
+
+/* 土曜 → 青 */
+.saturday {
+  color: #004ca0; /* 濃い青 */
+}
+
+/* 日本時間の今日を強調 */
+.today {
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(255, 100, 150, 0.7);
+  animation: neonPulse 2s infinite alternate;
+}
+
+/* 今日＋選択中 */
+.today.selected {
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  color: white;
+}
+
+/* 選択されたセル */
+.selected {
+  background: #fdb9c8;
+  color: #000;
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+/* 光るアニメーション */
+@keyframes neonPulse {
+  from {
+    box-shadow: 0 0 8px #ff9a9e, 0 0 16px #fad0c4;
+  }
+  to {
+    box-shadow: 0 0 16px #ff9a9e, 0 0 28px #fad0c4;
+  }
+}
