@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
+import { v4 as uuidv4 } from "uuid";
 import "../share.css";
 
 const socket = io();
@@ -17,6 +18,9 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
+  // ランダムな user_id を生成（固定化）
+  const [userId] = useState(() => uuidv4());
+
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -28,25 +32,25 @@ export default function SharePage() {
 
     socket.emit("joinSchedule", token);
 
-    socket.on("scheduleUpdated", () => {
+    socket.on("updateResponses", () => {
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
         .then((data) => setResponses(data));
     });
 
-    return () => socket.off("scheduleUpdated");
+    return () => socket.off("updateResponses");
   }, [token]);
 
   if (!schedule) return <div>読み込み中...</div>;
 
   // 日付フォーマット
-  const formatDate = (d) => {
+  const formatDate = (date, d) => {
     if (d.timeType === "時間指定") {
       const start = d.startTime || "09:00";
       const end = d.endTime || "18:00";
-      return `${d.date} （${start} ~ ${end}）`;
+      return `${date} （${start} ~ ${end}）`;
     } else {
-      return `${d.date} （${d.timeType}）`;
+      return `${date} （${d.timeType}）`;
     }
   };
 
@@ -56,13 +60,20 @@ export default function SharePage() {
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, responses: myResponses }),
+        body: JSON.stringify({
+          user_id: userId,
+          username,
+          responses: myResponses,
+        }),
       });
       const updated = await res.json();
 
       // 即時反映
-      setResponses(updated);
-      socket.emit("updateSchedule", token);
+      fetch(`/api/schedules/${token}/responses`)
+        .then((res) => res.json())
+        .then((data) => setResponses(data));
+
+      socket.emit("updateResponses", token);
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
@@ -78,30 +89,32 @@ export default function SharePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          user_id: editingUser, // ここは username じゃなく本来 user_id が必要
           username: editingUser,
           responses: editedResponses,
         }),
       });
       const updated = await res.json();
 
-      // 即時反映
-      setResponses(updated);
-      socket.emit("updateSchedule", token);
+      fetch(`/api/schedules/${token}/responses`)
+        .then((res) => res.json())
+        .then((data) => setResponses(data));
 
+      socket.emit("updateResponses", token);
       setEditingUser(null);
     } catch {
       alert("保存に失敗しました");
     }
   };
 
-  // 集計
-  const summary = schedule.dates.map((d) => {
+  // 集計 (dates はオブジェクトなので Object.entries)
+  const summary = Object.entries(schedule.dates || {}).map(([date, d]) => {
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
-      const val = r.responses[d.date];
+      const val = r.responses?.[`${date} (${d.timeType === "時間指定" ? `${d.startTime} ~ ${d.endTime}` : d.timeType})`];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-    return { ...d, counts };
+    return { date, ...d, counts };
   });
 
   // フィルター適用
@@ -127,14 +140,14 @@ export default function SharePage() {
           className="username-input"
         />
         <div className="my-responses-list">
-          {schedule.dates.map((d, idx) => (
+          {Object.entries(schedule.dates || {}).map(([date, d], idx) => (
             <div key={idx} className="my-response-item">
-              <span className="date-label">{formatDate(d)}</span>
+              <span className="date-label">{formatDate(date, d)}</span>
               <select
                 className="fancy-select"
-                value={myResponses[d.date] || "-"}
+                value={myResponses[date] || "-"}
                 onChange={(e) =>
-                  setMyResponses({ ...myResponses, [d.date]: e.target.value })
+                  setMyResponses({ ...myResponses, [date]: e.target.value })
                 }
               >
                 <option value="-">- 未回答</option>
@@ -191,7 +204,7 @@ export default function SharePage() {
           <tbody>
             {filteredSummary.map((d, idx) => (
               <tr key={idx}>
-                <td>{formatDate(d)}</td>
+                <td>{formatDate(d.date, d)}</td>
                 <td>
                   <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                   <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
