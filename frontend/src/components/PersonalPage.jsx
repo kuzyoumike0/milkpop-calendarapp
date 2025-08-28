@@ -59,10 +59,16 @@ const PersonalPage = () => {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
-  const formatDateKey = (date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-      date.getDate()
-    ).padStart(2, "0")}`;
+  // 🔽 バックスティックを使わず安全に書き直し
+  const formatDateKey = (date) => {
+    return (
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0")
+    );
+  };
 
   const holiday = (date) => {
     const h = hd.isHoliday(date);
@@ -136,7 +142,7 @@ const PersonalPage = () => {
     });
 
     const method = editingId ? "PUT" : "POST";
-    const url = editingId ? `/api/personal-events/${editingId}` : "/api/personal-events`;
+    const url = editingId ? `/api/personal-events/${editingId}` : "/api/personal-events";
 
     fetch(url, {
       method,
