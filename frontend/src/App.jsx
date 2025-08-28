@@ -24,7 +24,7 @@ function App() {
 
   // ログイン状態を確認
   useEffect(() => {
-    fetch("/api/me")
+    fetch("/api/me", { credentials: "include" })
       .then((res) => {
         if (res.ok) return res.json();
         throw new Error("not logged in");
@@ -66,7 +66,7 @@ function App() {
                 <h2>🔒 個人スケジュールページ</h2>
                 <p>このページを利用するには Discord ログインが必要です。</p>
                 <a
-                  href="/auth/discord/login"
+                  href="/auth/discord"
                   style={{
                     display: "inline-block",
                     marginTop: "20px",
