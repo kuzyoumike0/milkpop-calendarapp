@@ -79,7 +79,7 @@ export default function SharePage() {
   }
 
   // 日付ごとに集計
-  const aggregate = schedule.dates.map((d) => {
+  let aggregate = schedule.dates.map((d) => {
     const counts = { "○": 0, "✕": 0, "△": 0 };
     const users = [];
 
@@ -93,6 +93,15 @@ export default function SharePage() {
 
     return { ...d, counts, users };
   });
+
+  // 並び替え処理
+  if (filter === "ok") {
+    aggregate.sort((a, b) => b.counts["○"] - a.counts["○"]);
+  } else if (filter === "ng") {
+    aggregate.sort((a, b) => b.counts["✕"] - a.counts["✕"]);
+  } else if (filter === "maybe") {
+    aggregate.sort((a, b) => b.counts["△"] - a.counts["△"]);
+  }
 
   const userList = [...new Set(responses.map((r) => r.username))];
 
