@@ -1,8 +1,6 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
 import Holidays from "date-holidays";
-import "react-calendar/dist/Calendar.css";
 import "../personal.css";
 
 const hd = new Holidays("JP");
@@ -10,59 +8,90 @@ const hd = new Holidays("JP");
 const PersonalPage = () => {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [date, setDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date()); // 表示中の年月
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [mode, setMode] = useState("single"); // single | multi | range
   const [timeType, setTimeType] = useState("allday");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("18:00");
+  const [rangeStart, setRangeStart] = useState(null);
   const [events, setEvents] = useState([]);
-  const [startTime, setStartTime] = useState("00:00");
-  const [endTime, setEndTime] = useState("23:59");
 
   const token = localStorage.getItem("jwt");
 
-  // 予定取得
-  useEffect(() => {
-    if (!token) return;
+  // ===== カレンダー生成 =====
+  const getCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
 
-    fetch("/api/personal-events", {
-      headers: { Authorization: `Bearer ${token}` },
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("取得失敗");
-        return res.json();
-      })
-      .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("取得失敗:", err);
-        setEvents([]);
-      });
-  }, [token]);
+    const days = [];
+    const startDay = firstDay.getDay(); // 曜日
+    const totalDays = lastDay.getDate();
 
-  // 祝日判定
-  const tileContent = ({ date, view }) => {
-    if (view === "month") {
-      const holiday = hd.isHoliday(date);
-      if (holiday && holiday[0]) {
-        return <p className="holiday-name">{holiday[0].name}</p>;
-      }
+    // 前の月の余白
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
     }
-    return null;
+    // 今月の日
+    for (let d = 1; d <= totalDays; d++) {
+      days.push(new Date(year, month, d));
+    }
+    return days;
   };
 
-  // 保存
+  // ===== 日付クリック =====
+  const handleDateClick = (day) => {
+    if (!day) return;
+
+    if (mode === "single") {
+      setSelectedDates([day]);
+    } else if (mode === "multi") {
+      const exists = selectedDates.find(
+        (d) => d.toDateString() === day.toDateString()
+      );
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => d.toDateString() !== day.toDateString()));
+      } else {
+        setSelectedDates([...selectedDates, day]);
+      }
+    } else if (mode === "range") {
+      if (!rangeStart) {
+        setRangeStart(day);
+        setSelectedDates([day]);
+      } else {
+        const rangeEnd = day;
+        const start = rangeStart < rangeEnd ? rangeStart : rangeEnd;
+        const end = rangeStart < rangeEnd ? rangeEnd : rangeStart;
+
+        const rangeDays = [];
+        let current = new Date(start);
+        while (current <= end) {
+          rangeDays.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        setSelectedDates(rangeDays);
+        setRangeStart(null);
+      }
+    }
+  };
+
+  // ===== 保存 =====
   const handleRegister = () => {
-    if (!title.trim()) return alert("タイトルを入力してください");
+    if (!title.trim() || selectedDates.length === 0) {
+      return alert("タイトルと日程を入力してください");
+    }
 
     const newEvent = {
       title,
       memo,
-      dates: [
-        {
-          date: date.toISOString().split("T")[0],
-          timeType,
-          startTime: timeType === "custom" ? startTime : null,
-          endTime: timeType === "custom" ? endTime : null,
-        },
-      ],
+      dates: selectedDates.map((d) => ({
+        date: d.toISOString().split("T")[0],
+        timeType,
+        startTime: timeType === "custom" ? startTime : null,
+        endTime: timeType === "custom" ? endTime : null,
+      })),
     };
 
     fetch("/api/personal-events", {
@@ -74,20 +103,20 @@ const PersonalPage = () => {
       credentials: "include",
       body: JSON.stringify(newEvent),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("保存失敗");
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((saved) => {
         setEvents([...events, saved]);
         setTitle("");
         setMemo("");
+        setSelectedDates([]);
       })
-      .catch((err) => {
-        console.error("保存失敗:", err);
-        alert("保存に失敗しました");
-      });
+      .catch((err) => console.error("保存失敗:", err));
   };
+
+  // ====== レンダリング ======
+  const days = getCalendarDays();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
   return (
     <div className="personal-page">
@@ -108,22 +137,82 @@ const PersonalPage = () => {
         onChange={(e) => setMemo(e.target.value)}
       />
 
+      {/* モード切替 */}
+      <div className="mode-tabs">
+        {["single", "multi", "range"].map((m) => (
+          <button
+            key={m}
+            className={mode === m ? "active" : ""}
+            onClick={() => {
+              setMode(m);
+              setSelectedDates([]);
+              setRangeStart(null);
+            }}
+          >
+            {m === "single" ? "単日" : m === "multi" ? "複数選択" : "範囲選択"}
+          </button>
+        ))}
+      </div>
+
       <div className="calendar-list-container">
-        <div className="calendar-container">
-          <Calendar
-            onChange={setDate}
-            value={date}
-            locale="ja-JP"
-            calendarType="gregory"
-            tileContent={tileContent}
-          />
+        {/* ===== カレンダー ===== */}
+        <div className="calendar-box">
+          <div className="calendar-header">
+            <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
+            <span>
+              {year}年 {month + 1}月
+            </span>
+            <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
+          </div>
+
+          <table className="calendar-table">
+            <thead>
+              <tr>
+                {["日", "月", "火", "水", "木", "金", "土"].map((w, i) => (
+                  <th key={i}>{w}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(Math.ceil(days.length / 7))].map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                  {days.slice(rowIndex * 7, rowIndex * 7 + 7).map((day, i) => {
+                    if (!day) return <td key={i}></td>;
+
+                    const isSelected = selectedDates.some(
+                      (d) => d.toDateString() === day.toDateString()
+                    );
+                    const holiday = hd.isHoliday(day);
+
+                    return (
+                      <td
+                        key={i}
+                        className={`${isSelected ? "selected-date" : ""} ${
+                          day.getDay() === 0 ? "sunday" : day.getDay() === 6 ? "saturday" : ""
+                        }`}
+                        onClick={() => handleDateClick(day)}
+                      >
+                        {day.getDate()}
+                        {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
+        {/* ===== 選択中の日程 ===== */}
         <div className="list-container">
           <h2>選択中の日程</h2>
-          <p className="selected-date-badge">
-            {date.toLocaleDateString("ja-JP")}
-          </p>
+          {selectedDates.map((d, i) => (
+            <div key={i} className="selected-card">
+              <span className="date-badge">{d.toLocaleDateString("ja-JP")}</span>
+            </div>
+          ))}
+
+          {/* 時間区分 */}
           <div className="time-buttons">
             {["allday", "day", "night", "custom"].map((type) => (
               <button
@@ -184,8 +273,10 @@ const PersonalPage = () => {
           <ul>
             {events.map((ev, i) => (
               <li key={i}>
-                <strong>{ev.dates?.[0]?.date}</strong>{" "}
-                {ev.title} ({ev.dates?.[0]?.timeType})
+                <strong>{ev.title}</strong>{" "}
+                {ev.dates.map((d, j) => (
+                  <span key={j}>{d.date}({d.timeType}) </span>
+                ))}
                 {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
               </li>
             ))}
