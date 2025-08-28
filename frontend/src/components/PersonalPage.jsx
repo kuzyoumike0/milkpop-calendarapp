@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import React, { useState } from "react";
 import "../personal.css";
 
 export default function PersonalPage() {
@@ -12,10 +10,25 @@ export default function PersonalPage() {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
 
-  // 日本時間で今日
+  // 日本時間の今日
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-  // 日付クリック処理（複数選択対応）
+  // === カレンダー生成 ===
+  const year = new Date().getFullYear();
+  const month = new Date().getMonth(); // 0始まり
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // 日付リストを作成
+  const dates = [];
+  for (let i = 1; i <= lastDay.getDate(); i++) {
+    dates.push(new Date(year, month, i));
+  }
+
+  // 曜日を日本語
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
+  // クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
     if (selectedDates.includes(dateStr)) {
@@ -44,19 +57,6 @@ export default function PersonalPage() {
     setTimeType("allday");
   };
 
-  // 曜日カラー設定
-  const tileClassName = ({ date }) => {
-    const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
-    let classes = ["cell"];
-
-    if (date.getDay() === 0) classes.push("sunday");
-    if (date.getDay() === 6) classes.push("saturday");
-    if (dateStr === today) classes.push("today");
-    if (selectedDates.includes(dateStr)) classes.push("selected");
-
-    return classes.join(" ");
-  };
-
   return (
     <div className="personal-page">
       <h1 className="page-title">個人日程登録</h1>
@@ -77,13 +77,51 @@ export default function PersonalPage() {
       />
 
       <div className="calendar-list-container">
-        {/* カレンダー */}
+        {/* 自作カレンダー */}
         <div className="calendar-container">
-          <Calendar
-            onClickDay={handleDateClick}
-            tileClassName={tileClassName}
-            calendarType="US" // 日曜始まり
-          />
+          <table className="custom-calendar">
+            <thead>
+              <tr>
+                {weekdays.map((day, i) => (
+                  <th key={i} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>
+                    {day}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 6 }, (_, week) => (
+                <tr key={week}>
+                  {Array.from({ length: 7 }, (_, dow) => {
+                    const dateNum = week * 7 + dow - firstDay.getDay() + 1;
+                    if (dateNum < 1 || dateNum > lastDay.getDate()) {
+                      return <td key={dow}></td>;
+                    }
+                    const date = new Date(year, month, dateNum);
+                    const dateStr = date.toLocaleDateString("ja-JP", {
+                      timeZone: "Asia/Tokyo",
+                    });
+
+                    let cellClass = "cell";
+                    if (date.getDay() === 0) cellClass += " sunday";
+                    if (date.getDay() === 6) cellClass += " saturday";
+                    if (dateStr === today) cellClass += " today";
+                    if (selectedDates.includes(dateStr)) cellClass += " selected";
+
+                    return (
+                      <td
+                        key={dow}
+                        className={cellClass}
+                        onClick={() => handleDateClick(date)}
+                      >
+                        {dateNum}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* 右側パネル */}
