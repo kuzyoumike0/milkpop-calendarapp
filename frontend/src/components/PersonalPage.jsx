@@ -5,9 +5,10 @@ import "../personal.css";
 export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [selectedDates, setSelectedDates] = useState({}); // ← 日付ごとのオブジェクト
+  const [selectedDates, setSelectedDates] = useState({}); // 日付ごとの設定オブジェクト
   const [events, setEvents] = useState([]);
 
+  // 日本時間の今日
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
   // ==== カレンダー生成 ====
@@ -15,7 +16,8 @@ export default function PersonalPage() {
   const month = new Date().getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const hd = new Holidays("JP");
+
+  const hd = new Holidays("JP"); // 日本の祝日
 
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -63,6 +65,7 @@ export default function PersonalPage() {
     <div className="personal-page">
       <h1 className="page-title">個人日程登録</h1>
 
+      {/* 入力欄 */}
       <input
         type="text"
         className="title-input"
@@ -102,6 +105,8 @@ export default function PersonalPage() {
                     const dateStr = date.toLocaleDateString("ja-JP", {
                       timeZone: "Asia/Tokyo",
                     });
+
+                    // 祝日チェック
                     const holidayInfo = hd.isHoliday(date);
                     const isHoliday = holidayInfo && holidayInfo[0];
 
@@ -133,6 +138,7 @@ export default function PersonalPage() {
 
         {/* 右側パネル */}
         <div className="side-panel">
+          {/* 選択中の日程 */}
           <div className="selected-dates">
             <h2>選択中の日程</h2>
             {Object.keys(selectedDates).length > 0 ? (
@@ -147,8 +153,8 @@ export default function PersonalPage() {
                       }
                     >
                       <option value="allday">終日</option>
-                      <option value="day">昼</option>
-                      <option value="night">夜</option>
+                      <option value="day">午前</option>
+                      <option value="night">午後</option>
                       <option value="custom">時間指定</option>
                     </select>
                     {setting.timeType === "custom" && (
@@ -194,10 +200,12 @@ export default function PersonalPage() {
             )}
           </div>
 
+          {/* 登録ボタン */}
           <button className="register-btn" onClick={handleRegister}>
             登録
           </button>
 
+          {/* 登録済み予定 */}
           <div className="events-list">
             <h2>登録済み予定</h2>
             {events.length > 0 ? (
@@ -206,14 +214,23 @@ export default function PersonalPage() {
                   <p>
                     <strong>{ev.title}</strong>
                   </p>
-                  {Object.entries(ev.dates).map(([date, setting], j) => (
-                    <p key={j}>
-                      {date}：
-                      {setting.timeType === "custom"
-                        ? `${setting.startTime} ~ ${setting.endTime}`
-                        : setting.timeType}
-                    </p>
-                  ))}
+                  {Object.entries(ev.dates).map(([date, setting], j) => {
+                    let timeLabel = "";
+                    if (setting.timeType === "allday") {
+                      timeLabel = "終日";
+                    } else if (setting.timeType === "day") {
+                      timeLabel = "午前";
+                    } else if (setting.timeType === "night") {
+                      timeLabel = "午後";
+                    } else if (setting.timeType === "custom") {
+                      timeLabel = `${setting.startTime} ~ ${setting.endTime}`;
+                    }
+                    return (
+                      <p key={j}>
+                        {date}：{timeLabel}
+                      </p>
+                    );
+                  })}
                   <p>{ev.memo}</p>
                 </div>
               ))
