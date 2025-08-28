@@ -91,6 +91,23 @@ export default function RegisterPage() {
     });
   };
 
+  // ==== 時間タイプを日本語表記に変換 ====
+  const getTimeLabel = (setting) => {
+    if (!setting) return "";
+    switch (setting.timeType) {
+      case "allday":
+        return "終日";
+      case "day":
+        return "午前";
+      case "night":
+        return "午後";
+      case "custom":
+        return `${setting.startTime} ~ ${setting.endTime}`;
+      default:
+        return "";
+    }
+  };
+
   // ==== 登録処理 ====
   const handleRegister = async () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
@@ -250,7 +267,7 @@ export default function RegisterPage() {
                 .sort((a, b) => new Date(a[0]) - new Date(b[0]))
                 .map(([dateStr, setting], i) => (
                   <div key={i} className="date-card">
-                    <span className="date-label">{dateStr}</span>
+                    <span className="date-label">{dateStr} （{getTimeLabel(setting)}）</span>
                     <div className="time-options">
                       <button
                         className={setting.timeType === "allday" ? "active" : ""}
@@ -303,7 +320,7 @@ export default function RegisterPage() {
                             );
                           })}
                         </select>
-                        <span> ~ </span>
+                        <span className="time-separator"> ~ </span>
                         <select
                           className="cute-select"
                           value={setting.endTime}
