@@ -287,6 +287,13 @@
   margin-top: 2px;
 }
 
+/* 範囲プレビュー */
+.range-preview {
+  background: rgba(0, 76, 160, 0.25);
+  border: 2px dashed #004ca0;
+  border-radius: 8px;
+}
+
 /* レスポンシブ */
 @media (max-width: 768px) {
   .calendar-list-container {
