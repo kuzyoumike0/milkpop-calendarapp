@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [rangeStart, setRangeStart] = useState(null);
+  const [mode, setMode] = useState("single"); // "single" | "multi" | "range"
 
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
   const year = currentDate.getFullYear();
@@ -23,9 +24,7 @@ export default function RegisterPage() {
     const dates = [];
     let current = new Date(start);
     while (current <= end) {
-      dates.push(
-        current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
-      );
+      dates.push(current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" }));
       current.setDate(current.getDate() + 1);
     }
     return dates;
@@ -35,23 +34,13 @@ export default function RegisterPage() {
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-    if (rangeStart) {
-      // 範囲終了クリック
-      const datesInRange =
-        date >= rangeStart
-          ? getDatesBetween(rangeStart, date)
-          : getDatesBetween(date, rangeStart);
-
-      const updated = { ...selectedDates };
-      datesInRange.forEach((d) => {
-        updated[d] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
+    if (mode === "single") {
+      setSelectedDates({
+        [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
       });
-      setSelectedDates(updated);
+    }
 
-      // 範囲選択完了 → リセット
-      setRangeStart(null);
-    } else {
-      // 単独クリック
+    if (mode === "multi") {
       if (selectedDates[dateStr]) {
         const updated = { ...selectedDates };
         delete updated[dateStr];
@@ -62,8 +51,23 @@ export default function RegisterPage() {
           [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
         });
       }
-      // 範囲開始日セット
-      setRangeStart(date);
+    }
+
+    if (mode === "range") {
+      if (rangeStart) {
+        const datesInRange =
+          date >= rangeStart
+            ? getDatesBetween(rangeStart, date)
+            : getDatesBetween(date, rangeStart);
+        const updated = { ...selectedDates };
+        datesInRange.forEach((d) => {
+          updated[d] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
+        });
+        setSelectedDates(updated);
+        setRangeStart(null);
+      } else {
+        setRangeStart(date);
+      }
     }
   };
 
@@ -96,6 +100,7 @@ export default function RegisterPage() {
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
+      {/* タイトル入力 */}
       <input
         type="text"
         className="title-input"
@@ -104,11 +109,27 @@ export default function RegisterPage() {
         onChange={(e) => setTitle(e.target.value)}
       />
 
+      {/* モード切替 */}
+      <div className="select-mode">
+        <button className={mode === "single" ? "active" : ""} onClick={() => setMode("single")}>
+          単日
+        </button>
+        <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
+          複数選択
+        </button>
+        <button className={mode === "range" ? "active" : ""} onClick={() => setMode("range")}>
+          範囲選択
+        </button>
+      </div>
+
       <div className="calendar-list-container">
+        {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
             <button onClick={prevMonth}>◀</button>
-            <div className="calendar-title">{year}年 {month + 1}月</div>
+            <div className="calendar-title">
+              {year}年 {month + 1}月
+            </div>
             <button onClick={nextMonth}>▶</button>
           </div>
 
@@ -116,7 +137,9 @@ export default function RegisterPage() {
             <thead>
               <tr>
                 {weekdays.map((day, i) => (
-                  <th key={i} className={i===0?"sunday":i===6?"saturday":""}>{day}</th>
+                  <th key={i} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>
+                    {day}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -128,7 +151,7 @@ export default function RegisterPage() {
                     if (dateNum < 1 || dateNum > lastDay.getDate()) return <td key={dow}></td>;
 
                     const date = new Date(year, month, dateNum);
-                    const dateStr = date.toLocaleDateString("ja-JP",{timeZone:"Asia/Tokyo"});
+                    const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
                     const holidayInfo = hd.isHoliday(date);
                     const isHoliday = holidayInfo && holidayInfo[0];
 
@@ -152,71 +175,108 @@ export default function RegisterPage() {
           </table>
         </div>
 
+        {/* サイドパネル */}
         <div className="side-panel">
           <div className="selected-dates">
             <h2>選択中の日程</h2>
-            {Object.keys(selectedDates).length>0?(
-              Object.entries(selectedDates).map(([dateStr, setting],i)=>(
-                <div key={i} className="date-setting">
-                  <span className="selected-date-item">{dateStr}</span>
-                  <div className="custom-time">
-                    <select
-                      value={setting.timeType}
-                      onChange={(e)=>updateTimeSetting(dateStr,"timeType",e.target.value)}
+            {Object.keys(selectedDates).length > 0 ? (
+              Object.entries(selectedDates).map(([dateStr, setting], i) => (
+                <div key={i} className="date-card">
+                  <span className="date-label">{dateStr}</span>
+                  <div className="time-options">
+                    <button
+                      className={setting.timeType === "allday" ? "active" : ""}
+                      onClick={() => updateTimeSetting(dateStr, "timeType", "allday")}
                     >
-                      <option value="allday">終日</option>
-                      <option value="day">午前</option>
-                      <option value="night">午後</option>
-                      <option value="custom">時間指定</option>
-                    </select>
-                    {setting.timeType==="custom" && (
-                      <div style={{marginTop:"5px"}}>
-                        <select
-                          value={setting.startTime}
-                          onChange={(e)=>updateTimeSetting(dateStr,"startTime",e.target.value)}
-                        >
-                          {Array.from({length:24},(_,i)=>{
-                            const h=String(i).padStart(2,"0");
-                            return <option key={i} value={`${h}:00`}>{h}:00</option>;
-                          })}
-                        </select>
-                        <span> ~ </span>
-                        <select
-                          value={setting.endTime}
-                          onChange={(e)=>updateTimeSetting(dateStr,"endTime",e.target.value)}
-                        >
-                          {Array.from({length:24},(_,i)=>{
-                            const h=String(i).padStart(2,"0");
-                            return <option key={i} value={`${h}:00`}>{h}:00</option>;
-                          })}
-                        </select>
-                      </div>
-                    )}
+                      終日
+                    </button>
+                    <button
+                      className={setting.timeType === "day" ? "active" : ""}
+                      onClick={() => updateTimeSetting(dateStr, "timeType", "day")}
+                    >
+                      昼
+                    </button>
+                    <button
+                      className={setting.timeType === "night" ? "active" : ""}
+                      onClick={() => updateTimeSetting(dateStr, "timeType", "night")}
+                    >
+                      夜
+                    </button>
+                    <button
+                      className={setting.timeType === "custom" ? "active" : ""}
+                      onClick={() => updateTimeSetting(dateStr, "timeType", "custom")}
+                    >
+                      時間指定
+                    </button>
                   </div>
+                  {setting.timeType === "custom" && (
+                    <div className="time-range">
+                      <select
+                        value={setting.startTime}
+                        onChange={(e) => updateTimeSetting(dateStr, "startTime", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {h}:00
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <span> ~ </span>
+                      <select
+                        value={setting.endTime}
+                        onChange={(e) => updateTimeSetting(dateStr, "endTime", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {h}:00
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
                 </div>
               ))
-            ):<p>未選択</p>}
+            ) : (
+              <p>未選択</p>
+            )}
           </div>
 
-          <button className="register-btn" onClick={handleRegister}>登録</button>
+          <button className="register-btn" onClick={handleRegister}>
+            登録
+          </button>
 
           <div className="events-list">
             <h2>登録済み予定</h2>
-            {events.length>0?(
-              events.map(ev=>(
+            {events.length > 0 ? (
+              events.map((ev) => (
                 <div key={ev.id}>
-                  <p><strong>{ev.title}</strong></p>
-                  {Object.entries(ev.dates).map(([date,setting],j)=>{
-                    let timeLabel="";
-                    if(setting.timeType==="allday") timeLabel="終日";
-                    else if(setting.timeType==="day") timeLabel="午前";
-                    else if(setting.timeType==="night") timeLabel="午後";
-                    else if(setting.timeType==="custom") timeLabel=`${setting.startTime} ~ ${setting.endTime}`;
-                    return <p key={j}>{date}：{timeLabel}</p>;
+                  <p>
+                    <strong>{ev.title}</strong>
+                  </p>
+                  {Object.entries(ev.dates).map(([date, setting], j) => {
+                    let timeLabel = "";
+                    if (setting.timeType === "allday") timeLabel = "終日";
+                    else if (setting.timeType === "day") timeLabel = "昼";
+                    else if (setting.timeType === "night") timeLabel = "夜";
+                    else if (setting.timeType === "custom")
+                      timeLabel = `${setting.startTime} ~ ${setting.endTime}`;
+                    return (
+                      <p key={j}>
+                        {date}：{timeLabel}
+                      </p>
+                    );
                   })}
                 </div>
               ))
-            ):<p>まだ予定はありません</p>}
+            ) : (
+              <p>まだ予定はありません</p>
+            )}
           </div>
         </div>
       </div>
