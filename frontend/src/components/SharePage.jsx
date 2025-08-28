@@ -1,268 +1,141 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
-import "../common.css";
 import "../share.css";
 
-const attendanceOptions = [
-  { value: "○", label: "○ 出席" },
-  { value: "✖", label: "✖ 欠席" },
-  { value: "△", label: "△ 未定" },
-  { value: "-", label: "- 未回答" },
-];
-const socket = io();
-
-const SharePage = () => {
+export default function SharePage() {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
-  const [allResponses, setAllResponses] = useState([]);
+  const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [userId] = useState(() => crypto.randomUUID());
-  const [responses, setResponses] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
+  const [answers, setAnswers] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  // 編集モード管理
-  const [editingUser, setEditingUser] = useState(null);
-  const [editedResponses, setEditedResponses] = useState({});
-
+  // スケジュール取得
   useEffect(() => {
-    if (!token) return;
-
-    const fetchSchedule = async () => {
+    const fetchData = async () => {
       try {
         const res = await fetch(`/api/schedules/${token}`);
         if (!res.ok) throw new Error("スケジュール取得失敗");
         const data = await res.json();
-        setSchedule({ ...data, dates: data.dates || [] });
+        setSchedule(data);
 
+        // 既存回答も取得
         const res2 = await fetch(`/api/schedules/${token}/responses`);
-        if (!res2.ok) throw new Error("レスポンス取得失敗");
-        const data2 = await res2.json();
-        setAllResponses(data2);
+        if (res2.ok) {
+          const list = await res2.json();
+          setResponses(list);
+        }
       } catch (err) {
         console.error("API取得エラー:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchSchedule();
-
-    socket.emit("joinSchedule", token);
-    socket.on("updateResponses", (newRes) => {
-      setAllResponses((prev) => {
-        const others = prev.filter((r) => r.user_id !== newRes.user_id);
-        return [...others, newRes];
-      });
-    });
-    socket.on("deleteResponse", ({ user_id }) => {
-      setAllResponses((prev) => prev.filter((r) => r.user_id !== user_id));
-    });
-
-    return () => {
-      socket.off("updateResponses");
-      socket.off("deleteResponse");
-    };
+    fetchData();
   }, [token]);
 
-  const handleChange = (dateKey, value) => {
-    setResponses((prev) => ({ ...prev, [dateKey]: value }));
+  // プルダウン変更
+  const handleChange = (date, value) => {
+    setAnswers({ ...answers, [date]: value });
   };
 
+  // 保存
   const handleSave = async () => {
     if (!username) {
-      setSaveMessage("名前を入力してください");
+      alert("名前を入力してください");
       return;
     }
-    const res = { user_id: userId, username, responses };
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(res),
-    });
-    setSaveMessage("保存しました！");
-  };
-
-  // 編集開始
-  const handleUserEdit = (user) => {
-    setEditingUser(user);
-    const target = allResponses.find((r) => r.username === user);
-    setEditedResponses({ ...(target?.responses || {}) });
-  };
-
-  // 編集保存
-  const handleEditSave = async () => {
-    const target = allResponses.find((r) => r.username === editingUser);
-    if (!target) return;
-
-    await fetch(`/api/schedules/${token}/responses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: target.user_id,
-        username: editingUser,
-        responses: editedResponses,
-      }),
-    });
-
-    setEditingUser(null);
-    setEditedResponses({});
-  };
-
-  const formatDate = (d) => {
-    const date = new Date(d.date);
-    const base = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-    if (d.timeType === "時間指定" && d.startTime && d.endTime) {
-      return `${base} (${d.startTime} ~ ${d.endTime})`;
+    try {
+      const payload = { username, responses: answers };
+      const res = await fetch(`/api/schedules/${token}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("保存失敗");
+      const newRes = await res.json();
+      setResponses(newRes); // 即反映
+      alert("保存しました！");
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
     }
-    return `${base}（${d.timeType || "未定"}）`;
   };
 
-  if (!schedule) return <div>読み込み中...</div>;
-
-  const uniqueUsers = [...new Set(allResponses.map((r) => r.username))];
+  if (loading) return <div className="share-page">読み込み中...</div>;
+  if (!schedule) return <div className="share-page">スケジュールが見つかりません</div>;
 
   return (
-    <div className="share-container">
-      <h1 className="share-title">MilkPOP Calendar</h1>
+    <div className="share-page">
+      <h1 className="share-title">📅 {schedule.title}</h1>
 
-      {/* 自分の回答 */}
-      <div className="my-responses">
-        <h2>自分の回答</h2>
+      {/* 名前入力 */}
+      <div className="username-input">
         <input
           type="text"
-          placeholder="あなたの名前"
+          placeholder="お名前を入力"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="username-input"
         />
-        <div className="my-responses-list">
-          {schedule?.dates?.map((d) => {
-            const dateKey =
-              d.timeType === "時間指定" && d.startTime && d.endTime
-                ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                : `${d.date} (${d.timeType})`;
-            return (
-              <div key={dateKey} className="my-response-item">
-                <span className="date-label">{formatDate(d)}</span>
-                <select
-                  className="fancy-select"
-                  value={responses[dateKey] || "-"}
-                  onChange={(e) => handleChange(dateKey, e.target.value)}
-                >
-                  {attendanceOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            );
-          })}
-        </div>
-        <button className="save-btn" onClick={handleSave}>
-          保存する
-        </button>
-        {saveMessage && <p className="save-message">{saveMessage}</p>}
       </div>
 
-      {/* みんなの回答 */}
-      <div className="all-responses">
+      {/* 日程一覧 */}
+      <div className="date-list">
+        {schedule.dates.map((d, i) => (
+          <div key={i} className="date-item">
+            <span className="date-label">
+              {new Date(d.date).toLocaleDateString("ja-JP", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+            <select
+              value={answers[d.date] || ""}
+              onChange={(e) => handleChange(d.date, e.target.value)}
+            >
+              <option value="">選択してください</option>
+              <option value="○">○ 参加</option>
+              <option value="✕">✕ 不参加</option>
+            </select>
+          </div>
+        ))}
+      </div>
+
+      {/* 保存ボタン */}
+      <button className="save-btn" onClick={handleSave}>
+        保存
+      </button>
+
+      {/* 回答一覧 */}
+      <div className="responses-list">
         <h2>みんなの回答</h2>
-        <div className="filter-box">
-          <label>フィルタ: </label>
-          <select className="fancy-select">
-            <option value="all">すべて表示</option>
-            <option value="ok">○がある日程</option>
-            <option value="ng">✖がある日程</option>
-            <option value="maybe">△がある日程</option>
-          </select>
-        </div>
-        <div className="table-container">
-          <table className="responses-table">
-            <thead>
-              <tr>
-                <th>日付</th>
-                <th>回答数</th>
-                {uniqueUsers.map((user) => (
-                  <th key={user}>
-                    {editingUser === user ? (
-                      <span className="editing-label">{user} 編集中</span>
-                    ) : (
-                      <span
-                        className="editable-username"
-                        onClick={() => handleUserEdit(user)}
-                      >
-                        {user}
-                      </span>
-                    )}
-                  </th>
+        <table>
+          <thead>
+            <tr>
+              <th>名前</th>
+              {schedule.dates.map((d, i) => (
+                <th key={i}>
+                  {new Date(d.date).toLocaleDateString("ja-JP", {
+                    month: "numeric",
+                    day: "numeric",
+                  })}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {responses.map((r, i) => (
+              <tr key={i}>
+                <td>{r.username}</td>
+                {schedule.dates.map((d, j) => (
+                  <td key={j}>{r.responses[d.date] || "-"}</td>
                 ))}
               </tr>
-            </thead>
-            <tbody>
-              {schedule?.dates?.map((d) => {
-                const dateKey =
-                  d.timeType === "時間指定" && d.startTime && d.endTime
-                    ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-                    : `${d.date} (${d.timeType})`;
-
-                const counts = { "○": 0, "✖": 0, "△": 0 };
-                allResponses.forEach((r) => {
-                  const ans = r.responses?.[dateKey];
-                  if (ans && counts[ans] !== undefined) counts[ans]++;
-                });
-
-                return (
-                  <tr key={dateKey}>
-                    <td className="date-label">{formatDate(d)}</td>
-                    <td>
-                      <span className="count-ok">○{counts["○"]}</span>{" "}
-                      <span className="count-ng">✖{counts["✖"]}</span>{" "}
-                      <span className="count-maybe">△{counts["△"]}</span>
-                    </td>
-                    {uniqueUsers.map((user) => {
-                      const userResponse = allResponses.find((r) => r.username === user);
-                      const value = userResponse?.responses?.[dateKey] || "-";
-
-                      return (
-                        <td key={user}>
-                          {editingUser === user ? (
-                            <select
-                              className="fancy-select"
-                              value={editedResponses[dateKey] || value}
-                              onChange={(e) =>
-                                setEditedResponses((prev) => ({
-                                  ...prev,
-                                  [dateKey]: e.target.value,
-                                }))
-                              }
-                            >
-                              {attendanceOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            value
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {editingUser && (
-            <div className="edit-save-bar">
-              <button className="username-save-btn" onClick={handleEditSave}>
-                {editingUser} の編集を保存
-              </button>
-            </div>
-          )}
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
-};
-
-export default SharePage;
+}
