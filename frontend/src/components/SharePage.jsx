@@ -18,7 +18,7 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ランダムな user_id を生成（固定化）
+  // 固定化 user_id
   const [userId] = useState(() => uuidv4());
 
   useEffect(() => {
@@ -43,18 +43,28 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 日付フォーマット
-  const formatDate = (date, d) => {
-    if (d.timeType === "時間指定") {
-      const start = d.startTime || "09:00";
-      const end = d.endTime || "18:00";
-      return `${date} （${start} ~ ${end}）`;
-    } else {
-      return `${date} （${d.timeType}）`;
+  // ==== 時間タイプを日本語に変換 ====
+  const getTimeLabel = (d) => {
+    if (!d) return "";
+    switch (d.timeType) {
+      case "allday":
+        return "終日";
+      case "day":
+        return "午前";
+      case "night":
+        return "午後";
+      case "custom":
+        return `${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}`;
+      default:
+        return "";
     }
   };
 
-  // 自分の回答保存
+  // ==== 共通キー作成 ====
+  const getKey = (date, d) =>
+    `${date} (${d.timeType === "custom" ? `${d.startTime} ~ ${d.endTime}` : getTimeLabel(d)})`;
+
+  // ==== 自分の回答保存 ====
   const handleSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
@@ -66,9 +76,8 @@ export default function SharePage() {
           responses: myResponses,
         }),
       });
-      const updated = await res.json();
+      await res.json();
 
-      // 即時反映
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
         .then((data) => setResponses(data));
@@ -77,24 +86,24 @@ export default function SharePage() {
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch {
+    } catch (err) {
       alert("保存に失敗しました");
     }
   };
 
-  // 編集保存
+  // ==== 編集保存 ====
   const handleEditSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUser, // ここは username じゃなく本来 user_id が必要
-          username: editingUser,
+          user_id: editingUser.user_id,
+          username: editingUser.username,
           responses: editedResponses,
         }),
       });
-      const updated = await res.json();
+      await res.json();
 
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
@@ -107,17 +116,18 @@ export default function SharePage() {
     }
   };
 
-  // 集計 (dates はオブジェクトなので Object.entries)
+  // ==== 集計 ====
   const summary = Object.entries(schedule.dates || {}).map(([date, d]) => {
+    const key = getKey(date, d);
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
-      const val = r.responses?.[`${date} (${d.timeType === "時間指定" ? `${d.startTime} ~ ${d.endTime}` : d.timeType})`];
+      const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-    return { date, ...d, counts };
+    return { date, ...d, key, counts };
   });
 
-  // フィルター適用
+  // ==== フィルター適用 ====
   const filteredSummary = [...summary].sort((a, b) => {
     if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
     if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
@@ -140,23 +150,28 @@ export default function SharePage() {
           className="username-input"
         />
         <div className="my-responses-list">
-          {Object.entries(schedule.dates || {}).map(([date, d], idx) => (
-            <div key={idx} className="my-response-item">
-              <span className="date-label">{formatDate(date, d)}</span>
-              <select
-                className="fancy-select"
-                value={myResponses[date] || "-"}
-                onChange={(e) =>
-                  setMyResponses({ ...myResponses, [date]: e.target.value })
-                }
-              >
-                <option value="-">- 未回答</option>
-                <option value="◯">◯ 参加</option>
-                <option value="✕">✕ 不参加</option>
-                <option value="△">△ 未定</option>
-              </select>
-            </div>
-          ))}
+          {Object.entries(schedule.dates || {}).map(([date, d], idx) => {
+            const key = getKey(date, d);
+            return (
+              <div key={idx} className="my-response-item">
+                <span className="date-label">
+                  {date} （{getTimeLabel(d)}）
+                </span>
+                <select
+                  className="fancy-select"
+                  value={myResponses[key] || "-"}
+                  onChange={(e) =>
+                    setMyResponses({ ...myResponses, [key]: e.target.value })
+                  }
+                >
+                  <option value="-">- 未回答</option>
+                  <option value="◯">◯ 参加</option>
+                  <option value="✕">✕ 不参加</option>
+                  <option value="△">△ 未定</option>
+                </select>
+              </div>
+            );
+          })}
         </div>
         <button className="save-btn" onClick={handleSave}>
           保存する
@@ -191,7 +206,7 @@ export default function SharePage() {
                   <span
                     className="editable-username"
                     onClick={() => {
-                      setEditingUser(r.username);
+                      setEditingUser(r);
                       setEditedResponses(r.responses);
                     }}
                   >
@@ -204,35 +219,40 @@ export default function SharePage() {
           <tbody>
             {filteredSummary.map((d, idx) => (
               <tr key={idx}>
-                <td>{formatDate(d.date, d)}</td>
+                <td>
+                  {d.date} （{getTimeLabel(d)}）
+                </td>
                 <td>
                   <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                   <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
                   <span className="count-maybe">△{d.counts["△"]}</span>
                 </td>
-                {responses.map((r, uIdx) => (
-                  <td key={uIdx}>
-                    {editingUser === r.username ? (
-                      <select
-                        className="fancy-select"
-                        value={editedResponses[d.date] || "-"}
-                        onChange={(e) =>
-                          setEditedResponses({
-                            ...editedResponses,
-                            [d.date]: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="-">- 未回答</option>
-                        <option value="◯">◯ 参加</option>
-                        <option value="✕">✕ 不参加</option>
-                        <option value="△">△ 未定</option>
-                      </select>
-                    ) : (
-                      r.responses[d.date] || "-"
-                    )}
-                  </td>
-                ))}
+                {responses.map((r, uIdx) => {
+                  const key = d.key;
+                  return (
+                    <td key={uIdx}>
+                      {editingUser?.user_id === r.user_id ? (
+                        <select
+                          className="fancy-select"
+                          value={editedResponses[key] || "-"}
+                          onChange={(e) =>
+                            setEditedResponses({
+                              ...editedResponses,
+                              [key]: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="-">- 未回答</option>
+                          <option value="◯">◯ 参加</option>
+                          <option value="✕">✕ 不参加</option>
+                          <option value="△">△ 未定</option>
+                        </select>
+                      ) : (
+                        r.responses?.[key] || "-"
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
