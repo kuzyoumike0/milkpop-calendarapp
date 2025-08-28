@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import { v4 as uuidv4 } from "uuid";  // ← 追加
+import { v4 as uuidv4 } from "uuid";
 import "../register.css";
 
 export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState({});
-  const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [rangeStart, setRangeStart] = useState(null);
   const [mode, setMode] = useState("single");
-  const [shareUrl, setShareUrl] = useState(""); // ← 追加
+  const [shareUrl, setShareUrl] = useState("");
 
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
   const year = currentDate.getFullYear();
@@ -78,17 +77,10 @@ export default function RegisterPage() {
     });
   };
 
-  // 登録処理
+  // 登録処理 → SharePageに渡すだけ
   const handleRegister = () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
-    const newEvent = {
-      id: Date.now(),
-      title,
-      dates: { ...selectedDates },
-    };
-    setEvents((prev) => [...prev, newEvent]);
 
-    // 共有リンク生成
     const token = uuidv4();
     setShareUrl(`${window.location.origin}/share/${token}`);
 
@@ -131,7 +123,6 @@ export default function RegisterPage() {
       </div>
 
       <div className="calendar-list-container">
-        {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
             <button onClick={prevMonth}>◀</button>
@@ -183,7 +174,6 @@ export default function RegisterPage() {
           </table>
         </div>
 
-        {/* サイドパネル */}
         <div className="side-panel">
           <div className="selected-dates">
             <h2>選択中の日程</h2>
@@ -220,6 +210,7 @@ export default function RegisterPage() {
                   {setting.timeType === "custom" && (
                     <div className="time-range">
                       <select
+                        className="cute-select"
                         value={setting.startTime}
                         onChange={(e) => updateTimeSetting(dateStr, "startTime", e.target.value)}
                       >
@@ -234,6 +225,7 @@ export default function RegisterPage() {
                       </select>
                       <span> ~ </span>
                       <select
+                        className="cute-select"
                         value={setting.endTime}
                         onChange={(e) => updateTimeSetting(dateStr, "endTime", e.target.value)}
                       >
@@ -259,7 +251,7 @@ export default function RegisterPage() {
             登録
           </button>
 
-          {/* 共有リンク表示 */}
+          {/* 共有リンク表示のみ */}
           {shareUrl && (
             <div className="share-link-box">
               <p>共有リンク：</p>
@@ -267,28 +259,6 @@ export default function RegisterPage() {
               <button className="copy-btn" onClick={copyToClipboard}>コピー</button>
             </div>
           )}
-
-          <div className="events-list">
-            <h2>登録済み予定</h2>
-            {events.length > 0 ? (
-              events.map((ev) => (
-                <div key={ev.id}>
-                  <p><strong>{ev.title}</strong></p>
-                  {Object.entries(ev.dates).map(([date, setting], j) => {
-                    let timeLabel = "";
-                    if (setting.timeType === "allday") timeLabel = "終日";
-                    else if (setting.timeType === "day") timeLabel = "昼";
-                    else if (setting.timeType === "night") timeLabel = "夜";
-                    else if (setting.timeType === "custom")
-                      timeLabel = `${setting.startTime} ~ ${setting.endTime}`;
-                    return <p key={j}>{date}：{timeLabel}</p>;
-                  })}
-                </div>
-              ))
-            ) : (
-              <p>まだ予定はありません</p>
-            )}
-          </div>
         </div>
       </div>
     </div>
