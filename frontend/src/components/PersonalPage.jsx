@@ -4,13 +4,11 @@ import "../personal.css";
 
 const hd = new Holidays("JP");
 
-// 日本時間の今日
 const getTodayJST = () => {
   const now = new Date();
   return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 };
 
-// 月の日付を生成
 const generateCalendar = (year, month) => {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -41,7 +39,9 @@ const PersonalPage = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [weeks, setWeeks] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedDates, setSelectedDates] = useState([today]);
+
+  const [mode, setMode] = useState("single"); // single / multiple / range
 
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
@@ -64,27 +64,56 @@ const PersonalPage = () => {
     return h ? h[0].name : null;
   };
 
+  // 日付クリック
+  const handleSelect = (date) => {
+    if (mode === "single") {
+      setSelectedDates([date]);
+    } else if (mode === "multiple") {
+      const exists = selectedDates.some((d) => isSameDate(d, date));
+      if (exists) {
+        setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
+      } else {
+        setSelectedDates([...selectedDates, date]);
+      }
+    } else if (mode === "range") {
+      if (selectedDates.length === 0 || selectedDates.length > 1) {
+        setSelectedDates([date]);
+      } else {
+        const start = selectedDates[0];
+        const range = [];
+        const min = start < date ? start : date;
+        const max = start > date ? start : date;
+        let cur = new Date(min);
+        while (cur <= max) {
+          range.push(new Date(cur));
+          cur.setDate(cur.getDate() + 1);
+        }
+        setSelectedDates(range);
+      }
+    }
+  };
+
   // 登録
   const handleRegister = () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    const newEvent = {
+    const newEvents = selectedDates.map((d) => ({
       title,
       memo,
-      date: selectedDate.toISOString().split("T")[0],
+      date: d.toISOString().split("T")[0],
       timeType,
       startTime: timeType === "custom" ? startTime : null,
       endTime: timeType === "custom" ? endTime : null,
-    };
+    }));
 
     fetch("/api/personal-events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
+      body: JSON.stringify(newEvents),
     })
       .then((res) => res.json())
       .then((saved) => {
-        setEvents([...events, saved]);
+        setEvents([...events, ...(Array.isArray(saved) ? saved : [saved])]);
         setTitle("");
         setMemo("");
       })
@@ -95,7 +124,7 @@ const PersonalPage = () => {
     <div className="personal-page">
       <h1 className="page-title">個人日程登録ページ</h1>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <input
         type="text"
         className="title-input"
@@ -104,7 +133,7 @@ const PersonalPage = () => {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      {/* メモ入力 */}
+      {/* メモ */}
       <textarea
         className="memo-input"
         placeholder="メモを入力してください"
@@ -112,9 +141,30 @@ const PersonalPage = () => {
         onChange={(e) => setMemo(e.target.value)}
       />
 
+      {/* モード切替 */}
+      <div className="mode-tabs">
+        <button
+          className={mode === "single" ? "active" : ""}
+          onClick={() => setMode("single")}
+        >
+          単日
+        </button>
+        <button
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => setMode("multiple")}
+        >
+          複数選択
+        </button>
+        <button
+          className={mode === "range" ? "active" : ""}
+          onClick={() => setMode("range")}
+        >
+          範囲選択
+        </button>
+      </div>
+
       {/* カレンダー + 選択中日程 */}
       <div className="calendar-list-container">
-        {/* カレンダー */}
         <div className="calendar-box">
           <div className="calendar-header">
             <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
@@ -136,7 +186,7 @@ const PersonalPage = () => {
             {weeks.map((week, wi) =>
               week.map((date, di) => {
                 const isToday = isSameDate(date, today);
-                const isSelected = isSameDate(date, selectedDate);
+                const isSelected = selectedDates.some((d) => isSameDate(d, date));
                 const hol = holiday(date);
                 return (
                   <div
@@ -147,7 +197,7 @@ const PersonalPage = () => {
                       ${date.getDay() === 0 ? "sunday" : ""} 
                       ${date.getDay() === 6 ? "saturday" : ""} 
                       ${date.getMonth() !== currentMonth ? "other-month" : ""}`}
-                    onClick={() => setSelectedDate(date)}
+                    onClick={() => handleSelect(date)}
                   >
                     <span className="date-number">{date.getDate()}</span>
                     {hol && <span className="holiday-label">{hol}</span>}
@@ -161,11 +211,13 @@ const PersonalPage = () => {
         {/* 選択中日程 */}
         <div className="selected-box">
           <h2>選択中の日程</h2>
-          <p className="date-badge">
-            {selectedDate.getFullYear()}年
-            {String(selectedDate.getMonth() + 1).padStart(2, "0")}月
-            {String(selectedDate.getDate()).padStart(2, "0")}日
-          </p>
+          {selectedDates.map((d, idx) => (
+            <p key={idx} className="date-badge">
+              {d.getFullYear()}年
+              {String(d.getMonth() + 1).padStart(2, "0")}月
+              {String(d.getDate()).padStart(2, "0")}日
+            </p>
+          ))}
           <div className="time-buttons">
             {["allday", "day", "night"].map((type, idx) => (
               <button
