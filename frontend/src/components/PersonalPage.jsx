@@ -11,13 +11,13 @@ const getTodayJST = () => {
   return jst;
 };
 
-// 月の日付を生成（前月・次月も含めて表示）
+// 月の日付を生成
 const generateCalendar = (year, month) => {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const weeks = [];
   let current = new Date(firstDay);
-  current.setDate(current.getDate() - current.getDay()); // 週の先頭（日曜）まで戻す
+  current.setDate(current.getDate() - current.getDay());
 
   while (current <= lastDay || current.getDay() !== 0) {
     const week = [];
@@ -39,11 +39,14 @@ const PersonalPage = () => {
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
 
-  // カレンダー表示用
+  // カレンダー用
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [weeks, setWeeks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(today);
+
+  // 編集状態
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
@@ -65,17 +68,16 @@ const PersonalPage = () => {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
-  // 祝日判定
   const holiday = (date) => {
     const h = hd.isHoliday(date);
     return h ? h[0].name : null;
   };
 
-  // 予定登録
+  // 登録 or 更新
   const handleRegister = () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    const newEvent = {
+    const payload = {
       title,
       memo,
       date: selectedDate.toISOString().split("T")[0],
@@ -84,18 +86,68 @@ const PersonalPage = () => {
       endTime: timeType === "custom" ? endTime : null,
     };
 
-    fetch("/api/personal-events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
-    })
-      .then((res) => res.json())
-      .then((saved) => {
-        setEvents([...events, saved]);
-        setTitle("");
-        setMemo("");
+    if (editingId) {
+      // 編集中 → 更新API
+      fetch(`/api/personal-events/${editingId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       })
-      .catch((err) => console.error("保存失敗:", err));
+        .then((res) => res.json())
+        .then((updated) => {
+          setEvents(events.map((ev) => (ev.id === editingId ? updated : ev)));
+          resetForm();
+        })
+        .catch((err) => console.error("更新失敗:", err));
+    } else {
+      // 新規登録
+      fetch("/api/personal-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((saved) => {
+          setEvents([...events, saved]);
+          resetForm();
+        })
+        .catch((err) => console.error("保存失敗:", err));
+    }
+  };
+
+  // 削除
+  const handleDelete = (id) => {
+    if (!window.confirm("この予定を削除しますか？")) return;
+    fetch(`/api/personal-events/${id}`, { method: "DELETE" })
+      .then((res) => {
+        if (res.ok) {
+          setEvents(events.filter((ev) => ev.id !== id));
+        } else {
+          throw new Error("削除失敗");
+        }
+      })
+      .catch((err) => console.error(err));
+  };
+
+  // 編集開始
+  const startEdit = (ev) => {
+    setTitle(ev.title);
+    setMemo(ev.memo || "");
+    setSelectedDate(new Date(ev.date));
+    setTimeType(ev.timeType);
+    setStartTime(ev.startTime || "00:00");
+    setEndTime(ev.endTime || "23:59");
+    setEditingId(ev.id);
+  };
+
+  // フォームリセット
+  const resetForm = () => {
+    setTitle("");
+    setMemo("");
+    setTimeType("allday");
+    setStartTime("00:00");
+    setEndTime("23:59");
+    setEditingId(null);
   };
 
   return (
@@ -119,7 +171,7 @@ const PersonalPage = () => {
         onChange={(e) => setMemo(e.target.value)}
       />
 
-      {/* カレンダー & 予定リスト */}
+      {/* カレンダー & リスト */}
       <div className="calendar-list-container">
         {/* カレンダー */}
         <div className="calendar-box">
@@ -169,10 +221,14 @@ const PersonalPage = () => {
         <div className="list-container">
           <h2>登録済みの予定</h2>
           <ul>
-            {events.map((ev, i) => (
-              <li key={i}>
+            {events.map((ev) => (
+              <li key={ev.id || ev.date}>
                 <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
                 {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
+                <div className="event-actions">
+                  <button onClick={() => startEdit(ev)}>✏️ 編集</button>
+                  <button onClick={() => handleDelete(ev.id)}>❌ 削除</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -246,8 +302,13 @@ const PersonalPage = () => {
       )}
 
       <button className="register-btn" onClick={handleRegister}>
-        登録する
+        {editingId ? "更新する" : "登録する"}
       </button>
+      {editingId && (
+        <button className="cancel-btn" onClick={resetForm}>
+          キャンセル
+        </button>
+      )}
     </div>
   );
 };
