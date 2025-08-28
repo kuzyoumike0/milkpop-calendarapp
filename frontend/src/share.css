@@ -180,3 +180,34 @@ body {
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
 }
+/* ユーザ名リンク */
+.editable-username {
+  color: orange;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease, background 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.editable-username:hover {
+  color: #ff4b91;
+  background: rgba(255, 75, 145, 0.15);
+}
+
+/* 編集保存ボタンを可愛く */
+.username-save-btn {
+  background: linear-gradient(90deg, #4facfe, #f093fb);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.username-save-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
