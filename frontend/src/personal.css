@@ -131,3 +131,57 @@
   background: #fdb9c8;
   color: #000;
 }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 20px;
+}
+
+.weekday-header {
+  text-align: center;
+  font-weight: bold;
+  padding: 8px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.calendar-cell {
+  height: 90px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.2);
+  text-align: center;
+  padding-top: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.calendar-cell:hover {
+  transform: scale(1.05);
+  background: rgba(255,255,255,0.4);
+}
+
+.date-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.today {
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(255,100,150,0.6);
+}
+
+.sunday { color: #e60033; }
+.saturday { color: #004ca0; }
+
+.other-month {
+  opacity: 0.3;
+}
+
+.holiday-label {
+  display: block;
+  font-size: 0.7rem;
+  color: red;
+  margin-top: 2px;
+}
