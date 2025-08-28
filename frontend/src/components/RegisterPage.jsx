@@ -16,7 +16,9 @@ export default function RegisterPage() {
   const hd = new Holidays("JP");
 
   // 日本時間の今日
-  const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+  const today = new Date().toLocaleDateString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+  });
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -40,7 +42,9 @@ export default function RegisterPage() {
 
   // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
-    const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+    const dateStr = date.toLocaleDateString("ja-JP", {
+      timeZone: "Asia/Tokyo",
+    });
 
     if (mode === "multiple") {
       // 複数選択モード：クリックで ON/OFF
@@ -51,7 +55,11 @@ export default function RegisterPage() {
       } else {
         setSelectedDates({
           ...selectedDates,
-          [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
+          [dateStr]: {
+            timeType: "allday",
+            startTime: "09:00",
+            endTime: "18:00",
+          },
         });
       }
     } else if (mode === "range") {
@@ -91,34 +99,23 @@ export default function RegisterPage() {
     });
   };
 
-  // ==== 時間タイプを日本語表記に変換 ====
-  const getTimeLabel = (setting) => {
-    if (!setting) return "";
-    switch (setting.timeType) {
-      case "allday":
-        return "終日";
-      case "day":
-        return "午前";
-      case "night":
-        return "午後";
-      case "custom":
-        return `${setting.startTime} ~ ${setting.endTime}`;
-      default:
-        return "";
-    }
-  };
-
   // ==== 登録処理 ====
   const handleRegister = async () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
 
     try {
+      // バックエンドが配列前提なので、オブジェクト → 配列 に変換する
+      const datesArray = Object.entries(selectedDates).map(([date, d]) => ({
+        date,
+        ...d,
+      }));
+
       const res = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          dates: selectedDates,
+          dates: datesArray,
         }),
       });
       const data = await res.json();
@@ -195,7 +192,10 @@ export default function RegisterPage() {
             <thead>
               <tr>
                 {weekdays.map((day, i) => (
-                  <th key={i} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>
+                  <th
+                    key={i}
+                    className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}
+                  >
                     {day}
                   </th>
                 ))}
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                 .sort((a, b) => new Date(a[0]) - new Date(b[0]))
                 .map(([dateStr, setting], i) => (
                   <div key={i} className="date-card">
-                    <span className="date-label">{dateStr} （{getTimeLabel(setting)}）</span>
+                    <span className="date-label">{dateStr}</span>
                     <div className="time-options">
                       <button
                         className={setting.timeType === "allday" ? "active" : ""}
@@ -320,7 +320,7 @@ export default function RegisterPage() {
                             );
                           })}
                         </select>
-                        <span className="time-separator"> ~ </span>
+                        <span> ~ </span>
                         <select
                           className="cute-select"
                           value={setting.endTime}
