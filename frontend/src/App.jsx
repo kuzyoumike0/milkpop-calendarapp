@@ -18,6 +18,15 @@ import "./share.css";
 import "./top.css";
 import "./usage.css"; // ← 追加
 
+// リダイレクト
+function MeRedirect() {
+  useEffect(() => {
+    // ログイン後はトップページへ誘導
+    window.location.replace("/");
+  }, []);
+  return <div style={{ textAlign: "center", padding: "50px" }}>ログイン完了...</div>;
+}
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +95,7 @@ function App() {
         />
         <Route path="/share/:token" element={<SharePage />} />
         <Route path="/usage" element={<UsagePage />} /> {/* ← 追加 */}
+        <Route path="/me" element={<MeRedirect />} />
       </Routes>
 
       {/* 共通フッター */}
