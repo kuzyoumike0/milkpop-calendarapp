@@ -355,7 +355,6 @@ app.get("*", (_req, res) => {
 app.use((err, _req, res, _next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal Server Error" });});
-});
 
 // ===== サーバー起動 =====
 server.listen(PORT, () => {
