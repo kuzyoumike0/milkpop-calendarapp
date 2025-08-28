@@ -36,7 +36,6 @@ export default function SharePage() {
     return `${isoDate} (${timeLabel(d.timeType)})`;
   };
 
-  // === responses のキーを YYYY-MM-DD に正規化 ===
   const normalizeResponses = (obj) => {
     const normalized = {};
     Object.entries(obj || {}).forEach(([k, v]) => {
@@ -49,20 +48,43 @@ export default function SharePage() {
   };
 
   useEffect(() => {
+    console.log("=== SharePage useEffect START ===", token);
+
     fetch(`/api/schedules/${token}`)
-      .then((res) => res.json())
-      .then((data) => setSchedule(data));
+      .then((res) => {
+        console.log("schedule API status:", res.status);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("=== schedule from server ===");
+        console.log(JSON.stringify(data, null, 2));
+        setSchedule(data);
+      })
+      .catch((err) => console.error("schedule fetch error:", err));
 
     fetch(`/api/schedules/${token}/responses`)
-      .then((res) => res.json())
-      .then((data) => setResponses(data));
+      .then((res) => {
+        console.log("responses API status:", res.status);
+        return res.json();
+      })
+      .then((data) => {
+        console.log("=== responses from server ===");
+        console.log(JSON.stringify(data, null, 2));
+        setResponses(data);
+      })
+      .catch((err) => console.error("responses fetch error:", err));
 
     socket.emit("joinSchedule", token);
 
     socket.on("updateResponses", () => {
+      console.log(">>> socket updateResponses event fired");
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
-        .then((data) => setResponses(data));
+        .then((data) => {
+          console.log("=== responses from server (socket update) ===");
+          console.log(JSON.stringify(data, null, 2));
+          setResponses(data);
+        });
     });
 
     return () => socket.off("updateResponses");
@@ -70,7 +92,6 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // === 自分の回答保存 ===
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -78,9 +99,10 @@ export default function SharePage() {
     }
 
     const normalized = normalizeResponses(myResponses);
+    console.log(">>> handleSave: normalized myResponses =", normalized);
 
     try {
-      await fetch(`/api/schedules/${token}/responses`, {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,6 +111,9 @@ export default function SharePage() {
           responses: normalized,
         }),
       });
+      console.log("save API status:", res.status);
+      const json = await res.json();
+      console.log("save API response:", json);
 
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== userId);
@@ -99,18 +124,18 @@ export default function SharePage() {
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch {
-      alert("保存に失敗しました");
+    } catch (err) {
+      console.error("save error:", err);
     }
   };
 
-  // === 編集保存 ===
   const handleEditSave = async () => {
     try {
       const user = responses.find((r) => r.user_id === editingUser);
       const normalized = normalizeResponses(editedResponses);
+      console.log(">>> handleEditSave: normalized editedResponses =", normalized);
 
-      await fetch(`/api/schedules/${token}/responses`, {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,6 +144,9 @@ export default function SharePage() {
           responses: normalized,
         }),
       });
+      console.log("edit save API status:", res.status);
+      const json = await res.json();
+      console.log("edit save API response:", json);
 
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== editingUser);
@@ -130,12 +158,11 @@ export default function SharePage() {
 
       socket.emit("updateResponses", token);
       setEditingUser(null);
-    } catch {
-      alert("保存に失敗しました");
+    } catch (err) {
+      console.error("edit save error:", err);
     }
   };
 
-  // === 集計 ===
   const summary = (schedule.dates || []).map((d) => {
     const key = buildKey(d.date, d);
     const counts = { "◯": 0, "✕": 0, "△": 0 };
@@ -143,6 +170,7 @@ export default function SharePage() {
       const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
+    console.log(">>> summary row:", key, "counts=", counts);
     return { ...d, key, counts };
   });
 
@@ -157,7 +185,6 @@ export default function SharePage() {
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* 自分の回答 */}
       <div className="my-responses">
         <h2>自分の回答</h2>
         <input
@@ -195,23 +222,8 @@ export default function SharePage() {
         {saveMessage && <div className="save-message">{saveMessage}</div>}
       </div>
 
-      {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
-        <div style={{ marginBottom: "20px" }}>
-          フィルタ：
-          <select
-            className="fancy-select"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">すべて表示</option>
-            <option value="ok">◯ 多い順</option>
-            <option value="ng">✕ 多い順</option>
-            <option value="maybe">△ 多い順</option>
-          </select>
-        </div>
-
         <table className="responses-table">
           <thead>
             <tr>
@@ -222,6 +234,7 @@ export default function SharePage() {
                   <span
                     className="editable-username"
                     onClick={() => {
+                      console.log(">>> start editing:", r);
                       setEditingUser(r.user_id);
                       setEditedResponses(r.responses);
                     }}
