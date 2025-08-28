@@ -18,7 +18,7 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 固定化 user_id
+  // ランダムな user_id を生成（固定化）
   const [userId] = useState(() => uuidv4());
 
   useEffect(() => {
@@ -43,28 +43,19 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // ==== 時間タイプを日本語に変換 ====
+  // 時間ラベルを整形
   const getTimeLabel = (d) => {
-    if (!d) return "";
-    switch (d.timeType) {
-      case "allday":
-        return "終日";
-      case "day":
-        return "午前";
-      case "night":
-        return "午後";
-      case "custom":
-        return `${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}`;
-      default:
-        return "";
-    }
+    if (d.timeType === "allday") return "終日";
+    if (d.timeType === "day") return "午前";
+    if (d.timeType === "night") return "午後";
+    if (d.timeType === "custom") return `${d.startTime} ~ ${d.endTime}`;
+    return d.timeType;
   };
 
-  // ==== 共通キー作成 ====
-  const getKey = (date, d) =>
-    `${date} (${d.timeType === "custom" ? `${d.startTime} ~ ${d.endTime}` : getTimeLabel(d)})`;
+  // 日付フォーマット
+  const formatDate = (date, d) => `${date} （${getTimeLabel(d)}）`;
 
-  // ==== 自分の回答保存 ====
+  // 自分の回答保存
   const handleSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
@@ -78,6 +69,7 @@ export default function SharePage() {
       });
       await res.json();
 
+      // 即時反映
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
         .then((data) => setResponses(data));
@@ -86,20 +78,20 @@ export default function SharePage() {
 
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch (err) {
+    } catch {
       alert("保存に失敗しました");
     }
   };
 
-  // ==== 編集保存 ====
+  // 編集保存
   const handleEditSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUser.user_id,
-          username: editingUser.username,
+          user_id: editingUser, // 本来 user_id だが簡易的に username で識別
+          username: editingUser,
           responses: editedResponses,
         }),
       });
@@ -116,18 +108,22 @@ export default function SharePage() {
     }
   };
 
-  // ==== 集計 ====
+  // 集計
   const summary = Object.entries(schedule.dates || {}).map(([date, d]) => {
-    const key = getKey(date, d);
+    const key =
+      d.timeType === "custom"
+        ? `${date} (${d.startTime} ~ ${d.endTime})`
+        : `${date} (${getTimeLabel(d)})`;
+
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
       const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-    return { date, ...d, key, counts };
+    return { date, key, ...d, counts };
   });
 
-  // ==== フィルター適用 ====
+  // フィルター適用
   const filteredSummary = [...summary].sort((a, b) => {
     if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
     if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
@@ -151,12 +147,14 @@ export default function SharePage() {
         />
         <div className="my-responses-list">
           {Object.entries(schedule.dates || {}).map(([date, d], idx) => {
-            const key = getKey(date, d);
+            const key =
+              d.timeType === "custom"
+                ? `${date} (${d.startTime} ~ ${d.endTime})`
+                : `${date} (${getTimeLabel(d)})`;
+
             return (
               <div key={idx} className="my-response-item">
-                <span className="date-label">
-                  {date} （{getTimeLabel(d)}）
-                </span>
+                <span className="date-label">{formatDate(date, d)}</span>
                 <select
                   className="fancy-select"
                   value={myResponses[key] || "-"}
@@ -206,7 +204,7 @@ export default function SharePage() {
                   <span
                     className="editable-username"
                     onClick={() => {
-                      setEditingUser(r);
+                      setEditingUser(r.username);
                       setEditedResponses(r.responses);
                     }}
                   >
@@ -219,26 +217,24 @@ export default function SharePage() {
           <tbody>
             {filteredSummary.map((d, idx) => (
               <tr key={idx}>
-                <td>
-                  {d.date} （{getTimeLabel(d)}）
-                </td>
+                <td>{formatDate(d.date, d)}</td>
                 <td>
                   <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                   <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
                   <span className="count-maybe">△{d.counts["△"]}</span>
                 </td>
                 {responses.map((r, uIdx) => {
-                  const key = d.key;
+                  const val = r.responses?.[d.key] || "-";
                   return (
                     <td key={uIdx}>
-                      {editingUser?.user_id === r.user_id ? (
+                      {editingUser === r.username ? (
                         <select
                           className="fancy-select"
-                          value={editedResponses[key] || "-"}
+                          value={editedResponses[d.key] || "-"}
                           onChange={(e) =>
                             setEditedResponses({
                               ...editedResponses,
-                              [key]: e.target.value,
+                              [d.key]: e.target.value,
                             })
                           }
                         >
@@ -248,7 +244,7 @@ export default function SharePage() {
                           <option value="△">△ 未定</option>
                         </select>
                       ) : (
-                        r.responses?.[key] || "-"
+                        val
                       )}
                     </td>
                   );
