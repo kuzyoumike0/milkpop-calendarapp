@@ -28,6 +28,7 @@
 .nav-links {
   display: flex;
   gap: 1.2rem;
+  transition: all 0.4s ease-in-out;
 }
 
 .nav-link, .nav-btn {
@@ -44,20 +45,32 @@
   color: #000;
 }
 
-/* ハンバーガーメニュー初期は非表示 */
+/* ====== ハンバーガーメニュー ====== */
 .hamburger {
   display: none;
   flex-direction: column;
   cursor: pointer;
+  z-index: 1100;
 }
 
 .hamburger span {
   background: #FDB9C8;
   height: 3px;
-  width: 25px;
+  width: 28px;
   margin: 4px 0;
   border-radius: 3px;
-  transition: 0.3s;
+  transition: all 0.4s ease;
+}
+
+/* ハンバーガーが開いたとき ✕ に変形 */
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
 }
 
 /* ====== フッター ====== */
@@ -88,19 +101,23 @@ footer {
 
 @media (max-width: 768px) {
   .nav-links {
-    display: none; /* スマホでは非表示にしてハンバーガーを使う */
+    display: none;
     flex-direction: column;
     width: 100%;
     text-align: center;
     margin-top: 1rem;
+    background: rgba(0,0,0,0.9);
+    border-top: 2px solid #FDB9C8;
+    padding: 1rem 0;
+    animation: slideDown 0.4s ease forwards;
   }
 
   .hamburger {
-    display: flex; /* スマホで表示 */
+    display: flex;
   }
 
   .nav-links.open {
-    display: flex; /* ハンバーガークリックで展開 */
+    display: flex;
   }
 
   .logo-link {
@@ -127,5 +144,17 @@ footer {
   footer {
     font-size: 0.75rem;
     padding: 0.6rem;
+  }
+}
+
+/* ====== アニメーション ====== */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
