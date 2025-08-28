@@ -128,9 +128,14 @@ export default function SharePage() {
       <div className="all-responses">
         <h2>みんなの回答</h2>
 
-        <div>
-          フィルタ：
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+        {/* フィルタ */}
+        <div className="filter-box">
+          <span>フィルタ：</span>
+          <select
+            className="fancy-filter"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
             <option value="all">すべて表示</option>
             <option value="ok">○ 多い順</option>
             <option value="ng">✕ 多い順</option>
