@@ -205,6 +205,39 @@ export default function RegisterPage() {
                       時間指定
                     </button>
                   </div>
+                  {setting.timeType === "custom" && (
+                    <div className="time-range">
+                      <select
+                        className="cute-select"
+                        value={setting.startTime}
+                        onChange={(e) => updateTimeSetting(dateStr, "startTime", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {h}:00
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <span className="time-separator">〜</span>
+                      <select
+                        className="cute-select"
+                        value={setting.endTime}
+                        onChange={(e) => updateTimeSetting(dateStr, "endTime", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {h}:00
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
@@ -216,16 +249,13 @@ export default function RegisterPage() {
             登録
           </button>
 
-          {/* 共有リンク表示 */}
           {shareUrl && (
             <div className="share-link-box">
               <p>共有リンク：</p>
               <a href={shareUrl} target="_blank" rel="noreferrer" className="share-link">
                 {shareUrl}
               </a>
-              <button className="copy-btn" onClick={copyToClipboard}>
-                📋 コピー
-              </button>
+              <button className="copy-btn" onClick={copyToClipboard}>📋 コピー</button>
             </div>
           )}
         </div>
