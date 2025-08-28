@@ -1,4 +1,3 @@
-// frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
@@ -8,8 +7,7 @@ const hd = new Holidays("JP");
 // 日本時間の今日
 const getTodayJST = () => {
   const now = new Date();
-  const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-  return jst;
+  return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 };
 
 // 月の日付を生成
@@ -42,6 +40,7 @@ const PersonalPage = () => {
   const [memo, setMemo] = useState("");
   const [timeSettings, setTimeSettings] = useState({});
   const [events, setEvents] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
@@ -49,9 +48,15 @@ const PersonalPage = () => {
 
   useEffect(() => {
     fetch("/api/personal-events")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("ログインが必要です");
+        return res.json();
+      })
       .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch(() => setEvents([]));
+      .catch((err) => {
+        console.error("取得失敗:", err);
+        setEvents([]);
+      });
   }, []);
 
   const isSameDate = (a, b) =>
@@ -110,9 +115,10 @@ const PersonalPage = () => {
     });
   };
 
-  // 保存
-  const handleRegister = () => {
+  // 保存（新規 or 編集）
+  const handleRegister = async () => {
     if (!title.trim()) return alert("タイトルを入力してください");
+    if (selectedDates.length === 0) return alert("日程を選択してください");
 
     const newEvent = {
       title,
@@ -130,19 +136,68 @@ const PersonalPage = () => {
       options: {},
     };
 
-    fetch("/api/personal-events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
-    })
-      .then((res) => res.json())
-      .then((saved) => {
+    try {
+      const url = editingId ? `/api/personal-events/${editingId}` : "/api/personal-events";
+      const method = editingId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newEvent),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "保存に失敗しました");
+      }
+
+      const saved = await res.json();
+      if (editingId) {
+        setEvents(events.map((ev) => (ev.id === editingId ? saved : ev)));
+      } else {
         setEvents([...events, saved]);
-        setTitle("");
-        setMemo("");
-        setSelectedDates([]);
-      })
-      .catch((err) => console.error("保存失敗:", err));
+      }
+
+      setTitle("");
+      setMemo("");
+      setSelectedDates([]);
+      setTimeSettings({});
+      setEditingId(null);
+      alert("登録しました！");
+    } catch (err) {
+      console.error("保存失敗:", err);
+      alert("保存に失敗しました: " + err.message);
+    }
+  };
+
+  // 編集開始
+  const handleEdit = (event) => {
+    setEditingId(event.id);
+    setTitle(event.title);
+    setMemo(event.memo);
+    setSelectedDates(event.dates.map((d) => new Date(d.date)));
+    const settings = {};
+    event.dates.forEach((d) => {
+      settings[d.date] = {
+        timeType: d.timeType,
+        start: d.startTime,
+        end: d.endTime,
+      };
+    });
+    setTimeSettings(settings);
+  };
+
+  // 削除
+  const handleDelete = async (id) => {
+    if (!window.confirm("削除しますか？")) return;
+    try {
+      const res = await fetch(`/api/personal-events/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("削除に失敗しました");
+      setEvents(events.filter((ev) => ev.id !== id));
+    } catch (err) {
+      console.error("削除失敗:", err);
+      alert("削除に失敗しました");
+    }
   };
 
   return (
@@ -302,7 +357,7 @@ const PersonalPage = () => {
               );
             })}
           <button className="register-btn" onClick={handleRegister}>
-            登録する
+            {editingId ? "更新する" : "登録する"}
           </button>
         </div>
       </div>
@@ -313,16 +368,26 @@ const PersonalPage = () => {
         <ul>
           {events.map((ev) => (
             <li key={ev.id} className="event-item">
-              <strong>{ev.title}</strong>
-              {ev.dates.map((d, idx) => (
-                <div key={idx}>
-                  📅 {d.date}（{d.timeType}）
-                  {d.timeType === "時間指定" && d.startTime && d.endTime && (
-                    <span> {d.startTime}〜{d.endTime}</span>
-                  )}
-                </div>
-              ))}
-              {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
+              <div className="event-main">
+                <strong>{ev.title}</strong>
+                {ev.dates.map((d, idx) => (
+                  <div key={idx}>
+                    📅 {d.date}（{d.timeType}）
+                    {d.timeType === "時間指定" && d.startTime && d.endTime && (
+                      <span> {d.startTime}〜{d.endTime}</span>
+                    )}
+                  </div>
+                ))}
+                {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
+              </div>
+              <div className="event-actions">
+                <button className="edit-btn" onClick={() => handleEdit(ev)}>
+                  ✏️ 編集
+                </button>
+                <button className="delete-btn" onClick={() => handleDelete(ev.id)}>
+                  🗑 削除
+                </button>
+              </div>
             </li>
           ))}
         </ul>
