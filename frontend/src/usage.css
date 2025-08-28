@@ -24,7 +24,9 @@
   font-size: 1.2rem;
 }
 
-/* セクションごと */
+/* =============================
+   セクション
+============================= */
 .usage-section {
   margin: 40px auto;
   max-width: 800px;
@@ -32,6 +34,7 @@
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  text-align: center;   /* 中央寄せ */
 }
 
 .usage-section h2 {
@@ -44,43 +47,34 @@
   font-size: 1rem;
   margin-bottom: 15px;
   line-height: 1.6;
+  text-align: center;   /* 中央寄せ */
 }
 
 /* =============================
    画像とキャプション
 ============================= */
-
-/* figure 全体 */
 .usage-figure {
   margin: 20px auto;
   text-align: center;
 }
 
-/* 画像本体 */
-/* 画像をレスポンシブ対応で調整 */
 .usage-img {
   display: block;
-  width: 100%;          /* 親要素に合わせる */
-  max-width: 500px;     /* PCでは最大500pxまで */
-  height: auto;         /* 縦横比維持 */
-  margin: 0 auto;       /* センター配置 */
+  width: 80%;          /* セクション幅の80% */
+  max-width: 400px;    /* 全て同じ最大サイズ */
+  height: auto;
+  margin: 0 auto;
   border-radius: 12px;
-  border: 3px solid #fdb9c8;
+  border: 2px solid #fdb9c8;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* figure 全体 */
-.usage-figure {
-  margin: 20px auto;
-  text-align: center;
-}
-
-/* キャプション */
 .usage-caption {
   margin-top: 8px;
   font-size: 0.9rem;
   color: #eee;
   font-style: italic;
+  text-align: center;
 }
 
 /* =============================
