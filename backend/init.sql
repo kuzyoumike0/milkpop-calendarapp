@@ -1,3 +1,5 @@
+-- milkpop-calendarapp/backend/init.sql
+
 -- スキーマ固定（任意だが推奨）
 SET search_path TO public;
 
