@@ -8,6 +8,9 @@ export default function RegisterPage() {
   const [selectedDates, setSelectedDates] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [shareLink, setShareLink] = useState("");
+  const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
+
   const hd = new Holidays("JP");
 
   // 日本時間の今日
@@ -18,14 +21,26 @@ export default function RegisterPage() {
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
+  // ==== 範囲の日付を配列化 ====
+  const getDatesBetween = (start, end) => {
+    const dates = [];
+    let current = new Date(start);
+    while (current <= end) {
+      dates.push(
+        current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
+      );
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
 
   // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-    // すでに選択済みなら解除
+    // すでに選択済み → 解除
     if (selectedDates[dateStr]) {
       const updated = { ...selectedDates };
       delete updated[dateStr];
@@ -33,11 +48,35 @@ export default function RegisterPage() {
       return;
     }
 
-    // 未選択なら追加
+    // 範囲選択モード
+    if (rangeStart && !rangeEnd) {
+      setRangeEnd(date);
+      const datesInRange =
+        date >= rangeStart
+          ? getDatesBetween(rangeStart, date)
+          : getDatesBetween(date, rangeStart);
+
+      const updated = { ...selectedDates };
+      datesInRange.forEach((d) => {
+        updated[d] = {
+          timeType: "allday",
+          startTime: "09:00",
+          endTime: "18:00",
+        };
+      });
+      setSelectedDates(updated);
+      setRangeStart(null);
+      setRangeEnd(null);
+      return;
+    }
+
+    // 単独選択
     setSelectedDates({
       ...selectedDates,
       [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
     });
+    setRangeStart(date);
+    setRangeEnd(null);
   };
 
   // ==== 時間区分変更 ====
@@ -72,12 +111,8 @@ export default function RegisterPage() {
   };
 
   // ==== 月移動 ====
-  const prevMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-  const nextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   // ==== コピー ====
   const copyToClipboard = () => {
@@ -166,12 +201,10 @@ export default function RegisterPage() {
 
         {/* サイドパネル */}
         <div className="side-panel">
-          {/* 選択日程 */}
           <div className="events-list">
             <h2>選択中の日程</h2>
             {Object.keys(selectedDates).length > 0 ? (
               Object.entries(selectedDates)
-                // 日付順にソート
                 .sort((a, b) => new Date(a[0]) - new Date(b[0]))
                 .map(([dateStr, setting], i) => (
                   <div key={i} className="date-card">
@@ -254,12 +287,10 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* 登録ボタン */}
           <button className="register-btn" onClick={handleRegister}>
             登録
           </button>
 
-          {/* 共有リンク */}
           {shareLink && (
             <div className="share-link-box">
               <a href={shareLink} target="_blank" rel="noreferrer">
