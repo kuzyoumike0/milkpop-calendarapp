@@ -142,6 +142,83 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
+// 詳細取得（共有ページ用）
+app.get("/api/schedules/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM schedules WHERE share_token = $1",
+      [token]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("スケジュール取得エラー:", err);
+    res.status(500).json({ error: "スケジュール取得エラー" });
+  }
+});
+
+// 回答一覧取得
+app.get("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+    const result = await pool.query(
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      [schedule.rows[0].id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("回答取得エラー:", err);
+    res.status(500).json({ error: "回答取得エラー" });
+  }
+});
+
+// 回答保存
+app.post("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { username, responses } = req.body;
+
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+
+    const scheduleId = schedule.rows[0].id;
+
+    // user_id は username をそのまま使う（ログインしていないのでユニーク用）
+    await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id) 
+       DO UPDATE SET username=$3, responses=$4, created_at=CURRENT_TIMESTAMP`,
+      [scheduleId, username, username, JSON.stringify(responses)]
+    );
+
+    const updated = await pool.query(
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      [scheduleId]
+    );
+
+    res.json(updated.rows);
+  } catch (err) {
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存エラー" });
+  }
+});
+
 // ===== 個人スケジュール API =====
 
 // 一覧取得
