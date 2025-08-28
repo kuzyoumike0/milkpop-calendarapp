@@ -18,7 +18,7 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // 固定化された user_id
+  // ランダムな user_id を生成（固定化）
   const [userId] = useState(() => uuidv4());
 
   useEffect(() => {
@@ -45,25 +45,19 @@ export default function SharePage() {
 
   // 日付フォーマット
   const formatDate = (date, d) => {
-    if (d.timeType === "custom") {
+    if (d.timeType === "時間指定") {
       const start = d.startTime || "09:00";
       const end = d.endTime || "18:00";
       return `${date} （${start} ~ ${end}）`;
-    } else if (d.timeType === "allday") {
-      return `${date} （終日）`;
-    } else if (d.timeType === "day") {
-      return `${date} （午前）`;
-    } else if (d.timeType === "night") {
-      return `${date} （午後）`;
     } else {
       return `${date} （${d.timeType}）`;
     }
   };
 
-  // 自分の回答保存
+  // 自分の回答保存（即反映）
   const handleSave = async () => {
     try {
-      await fetch(`/api/schedules/${token}/responses`, {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -72,10 +66,13 @@ export default function SharePage() {
           responses: myResponses,
         }),
       });
+      const updated = await res.json();
 
-      fetch(`/api/schedules/${token}/responses`)
-        .then((res) => res.json())
-        .then((data) => setResponses(data));
+      // 即時反映
+      setResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== updated.user_id);
+        return [...others, updated];
+      });
 
       socket.emit("updateResponses", token);
 
@@ -86,22 +83,25 @@ export default function SharePage() {
     }
   };
 
-  // 編集保存
+  // 編集保存（即反映）
   const handleEditSave = async () => {
     try {
-      await fetch(`/api/schedules/${token}/responses`, {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUser, // 本来は user_id を使う
+          user_id: editingUser,
           username: editingUser,
           responses: editedResponses,
         }),
       });
+      const updated = await res.json();
 
-      fetch(`/api/schedules/${token}/responses`)
-        .then((res) => res.json())
-        .then((data) => setResponses(data));
+      // 即時反映
+      setResponses((prev) => {
+        const others = prev.filter((r) => r.user_id !== updated.user_id);
+        return [...others, updated];
+      });
 
       socket.emit("updateResponses", token);
       setEditingUser(null);
@@ -110,20 +110,18 @@ export default function SharePage() {
     }
   };
 
-  // 集計
+  // 集計 (dates はオブジェクトなので Object.entries)
   const summary = Object.entries(schedule.dates || {}).map(([date, d]) => {
-    const key =
-      d.timeType === "custom"
-        ? `${date} (${d.startTime} ~ ${d.endTime})`
-        : `${date} (${d.timeType})`;
-
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
+      const key =
+        d.timeType === "時間指定"
+          ? `${date} (${d.startTime} ~ ${d.endTime})`
+          : `${date} (${d.timeType})`;
       const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-
-    return { date, ...d, key, counts };
+    return { date, ...d, counts };
   });
 
   // フィルター適用
@@ -149,30 +147,23 @@ export default function SharePage() {
           className="username-input"
         />
         <div className="my-responses-list">
-          {Object.entries(schedule.dates || {}).map(([date, d], idx) => {
-            const key =
-              d.timeType === "custom"
-                ? `${date} (${d.startTime} ~ ${d.endTime})`
-                : `${date} (${d.timeType})`;
-
-            return (
-              <div key={idx} className="my-response-item">
-                <span className="date-label">{formatDate(date, d)}</span>
-                <select
-                  className="fancy-select"
-                  value={myResponses[key] || "-"}
-                  onChange={(e) =>
-                    setMyResponses({ ...myResponses, [key]: e.target.value })
-                  }
-                >
-                  <option value="-">- 未回答</option>
-                  <option value="◯">◯ 参加</option>
-                  <option value="✕">✕ 不参加</option>
-                  <option value="△">△ 未定</option>
-                </select>
-              </div>
-            );
-          })}
+          {Object.entries(schedule.dates || {}).map(([date, d], idx) => (
+            <div key={idx} className="my-response-item">
+              <span className="date-label">{formatDate(date, d)}</span>
+              <select
+                className="fancy-select"
+                value={myResponses[date] || "-"}
+                onChange={(e) =>
+                  setMyResponses({ ...myResponses, [date]: e.target.value })
+                }
+              >
+                <option value="-">- 未回答</option>
+                <option value="◯">◯ 参加</option>
+                <option value="✕">✕ 不参加</option>
+                <option value="△">△ 未定</option>
+              </select>
+            </div>
+          ))}
         </div>
         <button className="save-btn" onClick={handleSave}>
           保存する
@@ -207,7 +198,7 @@ export default function SharePage() {
                   <span
                     className="editable-username"
                     onClick={() => {
-                      setEditingUser(r.username);
+                      setEditingUser(r.user_id);
                       setEditedResponses(r.responses);
                     }}
                   >
@@ -218,31 +209,29 @@ export default function SharePage() {
             </tr>
           </thead>
           <tbody>
-            {filteredSummary.map((d, idx) => (
-              <tr key={idx}>
-                {/* 左列：日付 & 時間ラベル */}
-                <td>{formatDate(d.date, d)}</td>
-
-                {/* 2列目：集計 */}
-                <td>
-                  <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
-                  <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
-                  <span className="count-maybe">△{d.counts["△"]}</span>
-                </td>
-
-                {/* 以降：各ユーザの回答セル */}
-                {responses.map((r, uIdx) => {
-                  const val = r.responses?.[d.key] || "-";
-                  return (
+            {filteredSummary.map((d, idx) => {
+              const key =
+                d.timeType === "時間指定"
+                  ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+                  : `${d.date} (${d.timeType})`;
+              return (
+                <tr key={idx}>
+                  <td>{formatDate(d.date, d)}</td>
+                  <td>
+                    <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
+                    <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
+                    <span className="count-maybe">△{d.counts["△"]}</span>
+                  </td>
+                  {responses.map((r, uIdx) => (
                     <td key={uIdx}>
-                      {editingUser === r.username ? (
+                      {editingUser === r.user_id ? (
                         <select
                           className="fancy-select"
-                          value={editedResponses[d.key] || "-"}
+                          value={editedResponses[key] || "-"}
                           onChange={(e) =>
                             setEditedResponses({
                               ...editedResponses,
-                              [d.key]: e.target.value,
+                              [key]: e.target.value,
                             })
                           }
                         >
@@ -252,13 +241,13 @@ export default function SharePage() {
                           <option value="△">△ 未定</option>
                         </select>
                       ) : (
-                        val
+                        r.responses?.[key] || "-"
                       )}
                     </td>
-                  );
-                })}
-              </tr>
-            ))}
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
