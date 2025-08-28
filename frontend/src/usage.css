@@ -51,3 +51,14 @@
   font-style: italic;
   margin-top: 15px;
 }
+/* frontend/src/usage.css */
+
+.usage-img {
+  display: block;
+  width: 600px;      /* 横幅を固定 */
+  max-width: 90%;    /* スマホでは縮小してはみ出さない */
+  height: auto;      /* 縦横比を維持してリサイズ */
+  margin: 20px auto; /* センター配置 */
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+}
