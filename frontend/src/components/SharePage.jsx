@@ -12,10 +12,6 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  // 編集用
-  const [editingUser, setEditingUser] = useState(null);
-  const [editName, setEditName] = useState("");
-
   // スケジュール取得 & 回答一覧取得
   const fetchResponses = async () => {
     try {
@@ -76,23 +72,7 @@ export default function SharePage() {
     }
   };
 
-  // ユーザ名保存処理
-  const saveUsername = async () => {
-    try {
-      const res = await fetch(`/api/schedule_responses/${editingUser}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: editName }),
-      });
-      if (!res.ok) throw new Error("保存失敗");
-      setEditingUser(null);
-      await fetchResponses();
-    } catch (err) {
-      alert("ユーザ名の保存に失敗しました");
-    }
-  };
-
-  // 回答集計 + ユーザ名付き
+  // 回答集計
   const aggregateResponses = () => {
     const agg = {};
     responses.forEach((r) => {
@@ -136,6 +116,7 @@ export default function SharePage() {
   if (!schedule) return <div className="share-container">スケジュールが見つかりません</div>;
 
   const aggregated = aggregateResponses();
+  const userList = [...new Set(responses.map((r) => r.username))];
 
   return (
     <div className="share-container">
@@ -203,24 +184,24 @@ export default function SharePage() {
           </select>
         </div>
 
+        {/* マトリクス表 */}
         <div className="table-container">
           <table className="responses-table">
             <thead>
               <tr>
                 <th>日付</th>
-                <th>回答</th>
+                <th>回答数</th>
+                {userList.map((uname, idx) => (
+                  <th key={idx}>{uname}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {getSortedDates().map((d, i) => {
-                const counts = aggregated[d.date] || {
-                  ok: 0,
-                  ng: 0,
-                  maybe: 0,
-                  users: [],
-                };
+                const counts = aggregated[d.date] || { ok: 0, ng: 0, maybe: 0, users: [] };
                 return (
                   <tr key={i}>
+                    {/* 日付 */}
                     <td>
                       {new Date(d.date).toLocaleDateString("ja-JP", {
                         year: "numeric",
@@ -228,88 +209,31 @@ export default function SharePage() {
                         day: "numeric",
                       })}
                       {d.timeType && `（${d.timeType}）`}
-                      {d.startTime &&
-                        d.endTime &&
-                        ` (${d.startTime} ~ ${d.endTime})`}
+                      {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
                     </td>
+
+                    {/* 回答数 */}
                     <td>
-                      <span className="count-ok">
-                        ○{counts.ok}{" "}
-                        {counts.users
-                          .filter((u) => u.response === "○" || u.response === "ok")
-                          .map((u) =>
-                            editingUser === u.user_id ? (
-                              <input
-                                key={u.user_id}
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                              />
-                            ) : (
-                              <span
-                                key={u.user_id}
-                                className="editable-username"
-                                onClick={() => {
-                                  setEditingUser(u.user_id);
-                                  setEditName(u.username);
-                                }}
-                              >
-                                {u.username}
-                              </span>
-                            )
-                          )}
-                      </span>
-
-                      <span className="count-ng">
-                        ✕{counts.ng}{" "}
-                        {counts.users
-                          .filter((u) => u.response === "✕" || u.response === "ng")
-                          .map((u) => (
-                            <span
-                              key={u.user_id}
-                              className="editable-username"
-                              onClick={() => {
-                                setEditingUser(u.user_id);
-                                setEditName(u.username);
-                              }}
-                            >
-                              {u.username}
-                            </span>
-                          ))}
-                      </span>
-
-                      <span className="count-maybe">
-                        △{counts.maybe}{" "}
-                        {counts.users
-                          .filter((u) => u.response === "△" || u.response === "maybe")
-                          .map((u) => (
-                            <span
-                              key={u.user_id}
-                              className="editable-username"
-                              onClick={() => {
-                                setEditingUser(u.user_id);
-                                setEditName(u.username);
-                              }}
-                            >
-                              {u.username}
-                            </span>
-                          ))}
-                      </span>
+                      <span className="count-ok">○{counts.ok}</span>
+                      <span className="count-ng"> ✕{counts.ng}</span>
+                      <span className="count-maybe"> △{counts.maybe}</span>
                     </td>
+
+                    {/* 各ユーザの回答 */}
+                    {userList.map((uname, idx) => {
+                      const userResponse = counts.users.find((u) => u.username === uname);
+                      let symbol = "–";
+                      if (userResponse?.response === "○" || userResponse?.response === "ok") symbol = "○";
+                      if (userResponse?.response === "✕" || userResponse?.response === "ng") symbol = "✕";
+                      if (userResponse?.response === "△" || userResponse?.response === "maybe") symbol = "△";
+                      return <td key={idx}>{symbol}</td>;
+                    })}
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-
-        {/* 編集保存バー */}
-        {editingUser && (
-          <div className="edit-save-bar">
-            <button className="username-save-btn" onClick={saveUsername}>
-              ユーザ名を保存
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
