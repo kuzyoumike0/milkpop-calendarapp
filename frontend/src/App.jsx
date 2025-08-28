@@ -5,6 +5,7 @@ import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
+import UsagePage from "./components/UsagePage"; // ← 追加
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -15,6 +16,7 @@ import "./personal.css";
 import "./register.css";
 import "./share.css";
 import "./top.css";
+import "./usage.css"; // ← 追加
 
 function App() {
   const [user, setUser] = useState(null);
@@ -38,7 +40,11 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div style={{ textAlign: "center", padding: "50px" }}>読み込み中...</div>;
+    return (
+      <div style={{ textAlign: "center", padding: "50px" }}>
+        読み込み中...
+      </div>
+    );
   }
 
   return (
@@ -79,6 +85,7 @@ function App() {
           }
         />
         <Route path="/share/:token" element={<SharePage />} />
+        <Route path="/usage" element={<UsagePage />} /> {/* ← 追加 */}
       </Routes>
 
       {/* 共通フッター */}
