@@ -36,6 +36,18 @@ export default function SharePage() {
     return `${isoDate} (${timeLabel(d.timeType)})`;
   };
 
+  // === responses のキーを YYYY-MM-DD に正規化 ===
+  const normalizeResponses = (obj) => {
+    const normalized = {};
+    Object.entries(obj || {}).forEach(([k, v]) => {
+      const datePart = k.split(" ")[0];
+      const iso = new Date(datePart).toISOString().split("T")[0];
+      const rest = k.substring(k.indexOf(" "));
+      normalized[`${iso}${rest}`] = v;
+    });
+    return normalized;
+  };
+
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -65,6 +77,8 @@ export default function SharePage() {
       return;
     }
 
+    const normalized = normalizeResponses(myResponses);
+
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -72,13 +86,13 @@ export default function SharePage() {
         body: JSON.stringify({
           user_id: userId,
           username,
-          responses: myResponses,
+          responses: normalized,
         }),
       });
 
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== userId);
-        return [...others, { user_id: userId, username, responses: myResponses }];
+        return [...others, { user_id: userId, username, responses: normalized }];
       });
 
       socket.emit("updateResponses", token);
@@ -94,6 +108,7 @@ export default function SharePage() {
   const handleEditSave = async () => {
     try {
       const user = responses.find((r) => r.user_id === editingUser);
+      const normalized = normalizeResponses(editedResponses);
 
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -101,7 +116,7 @@ export default function SharePage() {
         body: JSON.stringify({
           user_id: editingUser,
           username: user?.username || "未入力",
-          responses: editedResponses,
+          responses: normalized,
         }),
       });
 
@@ -109,11 +124,7 @@ export default function SharePage() {
         const others = prev.filter((r) => r.user_id !== editingUser);
         return [
           ...others,
-          {
-            user_id: editingUser,
-            username: user?.username || "未入力",
-            responses: editedResponses,
-          },
+          { user_id: editingUser, username: user?.username || "未入力", responses: normalized },
         ];
       });
 
