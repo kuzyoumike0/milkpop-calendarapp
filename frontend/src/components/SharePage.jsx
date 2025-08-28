@@ -58,6 +58,7 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
+  // === 自分の回答保存 ===
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -89,14 +90,17 @@ export default function SharePage() {
     }
   };
 
+  // === 編集保存 ===
   const handleEditSave = async () => {
     try {
+      const user = responses.find((r) => r.user_id === editingUser);
+
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: editingUser,
-          username: editingUser,
+          username: user?.username || "未入力",
           responses: editedResponses,
         }),
       });
@@ -105,7 +109,11 @@ export default function SharePage() {
         const others = prev.filter((r) => r.user_id !== editingUser);
         return [
           ...others,
-          { user_id: editingUser, username: editingUser, responses: editedResponses },
+          {
+            user_id: editingUser,
+            username: user?.username || "未入力",
+            responses: editedResponses,
+          },
         ];
       });
 
@@ -116,6 +124,7 @@ export default function SharePage() {
     }
   };
 
+  // === 集計 ===
   const summary = (schedule.dates || []).map((d) => {
     const key = buildKey(d.date, d);
     const counts = { "◯": 0, "✕": 0, "△": 0 };
