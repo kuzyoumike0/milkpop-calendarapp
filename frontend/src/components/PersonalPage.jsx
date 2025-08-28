@@ -1,14 +1,17 @@
+// frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
 
 const hd = new Holidays("JP");
 
+// 日本時間の今日
 const getTodayJST = () => {
   const now = new Date();
   return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 };
 
+// 月の日付を生成
 const generateCalendar = (year, month) => {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -31,10 +34,7 @@ const PersonalPage = () => {
   const today = getTodayJST();
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-  const [timeType, setTimeType] = useState("allday");
   const [events, setEvents] = useState([]);
-  const [startTime, setStartTime] = useState("00:00");
-  const [endTime, setEndTime] = useState("23:59");
 
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
@@ -42,6 +42,7 @@ const PersonalPage = () => {
   const [selectedDates, setSelectedDates] = useState([today]);
 
   const [mode, setMode] = useState("single"); // single / multiple / range
+  const [timeSettings, setTimeSettings] = useState({});
 
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
@@ -59,12 +60,15 @@ const PersonalPage = () => {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
 
+  const formatDateKey = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
   const holiday = (date) => {
     const h = hd.isHoliday(date);
     return h ? h[0].name : null;
   };
 
-  // 日付クリック
+  // 日付クリック処理
   const handleSelect = (date) => {
     if (mode === "single") {
       setSelectedDates([date]);
@@ -93,18 +97,41 @@ const PersonalPage = () => {
     }
   };
 
+  // 時間区分切替
+  const setDateTimeType = (date, type) => {
+    const key = formatDateKey(date);
+    setTimeSettings((prev) => ({
+      ...prev,
+      [key]: { ...(prev[key] || {}), type }
+    }));
+  };
+
+  // 時間指定
+  const setDateCustomTime = (date, start, end) => {
+    const key = formatDateKey(date);
+    setTimeSettings((prev) => ({
+      ...prev,
+      [key]: { ...(prev[key] || {}), type: "custom", start, end }
+    }));
+  };
+
   // 登録
   const handleRegister = () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    const newEvents = selectedDates.map((d) => ({
-      title,
-      memo,
-      date: d.toISOString().split("T")[0],
-      timeType,
-      startTime: timeType === "custom" ? startTime : null,
-      endTime: timeType === "custom" ? endTime : null,
-    }));
+    const newEvents = selectedDates.map((d) => {
+      const key = formatDateKey(d);
+      const setting = timeSettings[key] || { type: "allday" };
+
+      return {
+        title,
+        memo,
+        date: key,
+        timeType: setting.type,
+        startTime: setting.type === "custom" ? setting.start : null,
+        endTime: setting.type === "custom" ? setting.end : null,
+      };
+    });
 
     fetch("/api/personal-events", {
       method: "POST",
@@ -168,9 +195,7 @@ const PersonalPage = () => {
         <div className="calendar-box">
           <div className="calendar-header">
             <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
-            <span>
-              {currentYear}年 {currentMonth + 1}月
-            </span>
+            <span>{currentYear}年 {currentMonth + 1}月</span>
             <button onClick={() => setCurrentMonth(currentMonth + 1)}>▶</button>
           </div>
 
@@ -211,48 +236,62 @@ const PersonalPage = () => {
         {/* 選択中日程 */}
         <div className="selected-box">
           <h2>選択中の日程</h2>
-          {selectedDates.map((d, idx) => (
-            <p key={idx} className="date-badge">
-              {d.getFullYear()}年
-              {String(d.getMonth() + 1).padStart(2, "0")}月
-              {String(d.getDate()).padStart(2, "0")}日
-            </p>
-          ))}
-          <div className="time-buttons">
-            {["allday", "day", "night"].map((type, idx) => (
-              <button
-                key={idx}
-                className={`time-btn ${timeType === type ? "active" : ""}`}
-                onClick={() => setTimeType(type)}
-              >
-                {type === "allday" ? "終日" : type === "day" ? "午前" : "午後"}
-              </button>
-            ))}
-            <button
-              className={`time-btn ${timeType === "custom" ? "active" : ""}`}
-              onClick={() => setTimeType("custom")}
-            >
-              時間指定
-            </button>
-          </div>
+          {selectedDates.map((d, idx) => {
+            const key = formatDateKey(d);
+            const setting = timeSettings[key] || { type: "allday" };
 
-          {timeType === "custom" && (
-            <div className="custom-time">
-              <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const h = String(i).padStart(2, "0");
-                  return <option key={i}>{`${h}:00`}</option>;
-                })}
-              </select>
-              <span>〜</span>
-              <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-                {Array.from({ length: 24 }).map((_, i) => {
-                  const h = String(i).padStart(2, "0");
-                  return <option key={i}>{`${h}:00`}</option>;
-                })}
-              </select>
-            </div>
-          )}
+            return (
+              <div key={idx} className="selected-card">
+                <p className="date-badge">
+                  {d.getFullYear()}年{String(d.getMonth() + 1).padStart(2, "0")}月{String(d.getDate()).padStart(2, "0")}日
+                </p>
+
+                {/* 区分ボタン */}
+                <div className="time-buttons">
+                  {["allday", "day", "night"].map((type) => (
+                    <button
+                      key={type}
+                      className={`time-btn ${setting.type === type ? "active" : ""}`}
+                      onClick={() => setDateTimeType(d, type)}
+                    >
+                      {type === "allday" ? "終日" : type === "day" ? "午前" : "午後"}
+                    </button>
+                  ))}
+                  <button
+                    className={`time-btn ${setting.type === "custom" ? "active" : ""}`}
+                    onClick={() => setDateTimeType(d, "custom")}
+                  >
+                    時間指定
+                  </button>
+                </div>
+
+                {/* 時間指定プルダウン */}
+                {setting.type === "custom" && (
+                  <div className="custom-time">
+                    <select
+                      value={setting.start || "00:00"}
+                      onChange={(e) => setDateCustomTime(d, e.target.value, setting.end || "23:59")}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                    <span>〜</span>
+                    <select
+                      value={setting.end || "23:59"}
+                      onChange={(e) => setDateCustomTime(d, setting.start || "00:00", e.target.value)}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           <button className="register-btn" onClick={handleRegister}>
             登録する
