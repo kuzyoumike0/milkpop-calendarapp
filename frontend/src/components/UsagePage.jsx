@@ -12,6 +12,7 @@ export default function UsagePage() {
         「MilkPOP Calendar」の使い方を、画像付きで分かりやすく説明します。
       </p>
 
+      {/* トップページ説明 */}
       <section className="usage-section">
         <h2>① トップページ</h2>
         <p>
@@ -23,6 +24,7 @@ export default function UsagePage() {
         </figure>
       </section>
 
+      {/* 日程登録ページ説明 */}
       <section className="usage-section">
         <h2>② 日程登録ページ</h2>
         <p>
@@ -34,6 +36,7 @@ export default function UsagePage() {
         </figure>
       </section>
 
+      {/* 個人スケジュールページ説明 */}
       <section className="usage-section">
         <h2>③ 個人スケジュールページ</h2>
         <p>
@@ -45,6 +48,7 @@ export default function UsagePage() {
         </figure>
       </section>
 
+      {/* 戻るリンク */}
       <div className="back-links">
         <Link to="/" className="nav-btn">🏠 トップへ戻る</Link>
       </div>
