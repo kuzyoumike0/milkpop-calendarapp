@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const hd = new Holidays("JP");
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
+  // 範囲の日付を配列にする
   const getDatesBetween = (start, end) => {
     const dates = [];
     let current = new Date(start);
@@ -30,6 +31,7 @@ export default function RegisterPage() {
     return dates;
   };
 
+  // 日付クリック
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
@@ -70,6 +72,7 @@ export default function RegisterPage() {
     }
   };
 
+  // 時間設定を更新
   const updateTimeSetting = (dateStr, field, value) => {
     setSelectedDates({
       ...selectedDates,
@@ -77,7 +80,7 @@ export default function RegisterPage() {
     });
   };
 
-  // 登録処理
+  // 登録処理（共有リンク発行）
   const handleRegister = () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
     const token = uuidv4();
@@ -121,6 +124,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="calendar-list-container">
+        {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
             <button onClick={prevMonth}>◀</button>
@@ -172,6 +176,7 @@ export default function RegisterPage() {
           </table>
         </div>
 
+        {/* サイドパネル */}
         <div className="side-panel">
           <div className="selected-dates">
             <h2>選択中の日程</h2>
@@ -205,6 +210,8 @@ export default function RegisterPage() {
                       時間指定
                     </button>
                   </div>
+
+                  {/* 時間指定が選ばれたときだけプルダウン表示 */}
                   {setting.timeType === "custom" && (
                     <div className="time-range">
                       <select
@@ -255,7 +262,9 @@ export default function RegisterPage() {
               <a href={shareUrl} target="_blank" rel="noreferrer" className="share-link">
                 {shareUrl}
               </a>
-              <button className="copy-btn" onClick={copyToClipboard}>📋 コピー</button>
+              <button className="copy-btn" onClick={copyToClipboard}>
+                📋 コピー
+              </button>
             </div>
           )}
         </div>
