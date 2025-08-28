@@ -180,3 +180,13 @@ body, html {
 .editable-username:hover {
   color: #fdb9c8;
 }
+/* ユーザ名リンク */
+.editable-username {
+  color: #ffcc00;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+.editable-username:hover {
+  color: #ff6699;
+}
