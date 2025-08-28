@@ -115,17 +115,17 @@ const PersonalPage = () => {
     }));
   };
 
-  // DB登録
+  // 登録 or 更新
   const handleRegister = () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    // 選択中日程を日付順にソート
     const sortedDates = [...selectedDates].sort((a, b) => a - b);
 
     const newEvents = sortedDates.map((d) => {
       const key = formatDateKey(d);
       const setting = timeSettings[key] || { type: "allday" };
       return {
+        id: editingId,
         title,
         memo,
         date: key,
@@ -135,26 +135,62 @@ const PersonalPage = () => {
       };
     });
 
-    fetch("/api/personal-events", {
-      method: "POST",
+    const method = editingId ? "PUT" : "POST";
+    const url = editingId ? `/api/personal-events/${editingId}` : "/api/personal-events`;
+
+    fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newEvents),
     })
       .then((res) => res.json())
       .then((saved) => {
-        // DBから返ったものを反映
-        setEvents([...events, ...(Array.isArray(saved) ? saved : [saved])]);
+        if (editingId) {
+          // 更新
+          setEvents(events.map((ev) => (ev.id === editingId ? saved : ev)));
+        } else {
+          // 新規
+          setEvents([...events, ...(Array.isArray(saved) ? saved : [saved])]);
+        }
+        // 入力リセット
         setTitle("");
         setMemo("");
+        setEditingId(null);
       })
       .catch((err) => console.error("保存失敗:", err));
+  };
+
+  // 編集開始
+  const handleEdit = (ev) => {
+    setTitle(ev.title);
+    setMemo(ev.memo);
+    setSelectedDates([new Date(ev.date)]);
+    setEditingId(ev.id);
+    setTimeSettings({
+      [ev.date]: {
+        type: ev.timeType,
+        start: ev.startTime,
+        end: ev.endTime,
+      },
+    });
+  };
+
+  // 削除
+  const handleDelete = (id) => {
+    fetch(`/api/personal-events/${id}`, { method: "DELETE" })
+      .then((res) => {
+        if (res.ok) {
+          setEvents(events.filter((ev) => ev.id !== id));
+        }
+      })
+      .catch((err) => console.error("削除失敗:", err));
   };
 
   return (
     <div className="personal-page">
       <h1 className="page-title">個人日程登録ページ</h1>
 
-      {/* タイトル入力 */}
+      {/* タイトル */}
       <input
         type="text"
         className="title-input"
@@ -163,7 +199,7 @@ const PersonalPage = () => {
         onChange={(e) => setTitle(e.target.value)}
       />
 
-      {/* メモ入力 */}
+      {/* メモ */}
       <textarea
         className="memo-input"
         placeholder="メモを入力してください"
@@ -242,7 +278,7 @@ const PersonalPage = () => {
           );
         })}
         <button className="register-btn" onClick={handleRegister}>
-          登録する
+          {editingId ? "更新する" : "登録する"}
         </button>
       </div>
 
@@ -250,10 +286,16 @@ const PersonalPage = () => {
       <div className="list-container full">
         <h2>登録済みの予定</h2>
         <ul>
-          {events.map((ev, i) => (
-            <li key={i}>
-              <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
+          {events.map((ev) => (
+            <li key={ev.id} className="event-item">
+              <div className="event-main">
+                <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
+              </div>
               {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
+              <div className="event-actions">
+                <button className="edit-btn" onClick={() => handleEdit(ev)}>✏ 編集</button>
+                <button className="delete-btn" onClick={() => handleDelete(ev.id)}>❌ 削除</button>
+              </div>
             </li>
           ))}
         </ul>
