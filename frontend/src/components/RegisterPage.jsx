@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
