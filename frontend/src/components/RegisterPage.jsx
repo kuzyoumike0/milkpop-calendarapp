@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
@@ -11,12 +10,18 @@ export default function RegisterPage() {
   const [rangeStart, setRangeStart] = useState(null);
   const [rangeEnd, setRangeEnd] = useState(null);
   const [hoverDate, setHoverDate] = useState(null);
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [mode, setMode] = useState("multiple");
 
   const hd = new Holidays("JP");
 
-  // 日本時間の今日（ISO形式）
-  const todayIso = new Date().toISOString().split("T")[0];
+  // === JST日付を YYYY-MM-DD で返す関数 ===
+  const toJstIsoDate = (date) => {
+    const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000); // UTC → JST
+    return jst.toISOString().split("T")[0];
+  };
+
+  // 今日 (JST)
+  const todayIso = toJstIsoDate(new Date());
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -25,13 +30,12 @@ export default function RegisterPage() {
   const lastDay = new Date(year, month + 1, 0);
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // ==== 範囲の日付を配列化（ISO形式）====
+  // ==== 範囲の日付を配列化 ====
   const getDatesBetween = (start, end) => {
     const dates = [];
     let current = new Date(start);
     while (current <= end) {
-      const iso = new Date(current).toISOString().split("T")[0];
-      dates.push(iso);
+      dates.push(toJstIsoDate(current));
       current.setDate(current.getDate() + 1);
     }
     return dates;
@@ -39,10 +43,9 @@ export default function RegisterPage() {
 
   // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
-    const dateIso = new Date(date).toISOString().split("T")[0]; // ISO形式
+    const dateIso = toJstIsoDate(date);
 
     if (mode === "multiple") {
-      // 複数選択モード：クリックで ON/OFF
       if (selectedDates[dateIso]) {
         const updated = { ...selectedDates };
         delete updated[dateIso];
@@ -58,7 +61,6 @@ export default function RegisterPage() {
         });
       }
     } else if (mode === "range") {
-      // 範囲選択モード
       if (rangeStart && !rangeEnd) {
         setRangeEnd(date);
         const datesInRange =
@@ -99,7 +101,6 @@ export default function RegisterPage() {
     if (!title || Object.keys(selectedDates).length === 0) return;
 
     try {
-      // selectedDates ですでに ISO形式なのでそのまま渡す
       const datesArray = Object.entries(selectedDates).map(([date, d]) => ({
         date,
         ...d,
@@ -139,7 +140,6 @@ export default function RegisterPage() {
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
-      {/* タイトル入力 */}
       <input
         type="text"
         className="title-input"
@@ -173,7 +173,6 @@ export default function RegisterPage() {
       </div>
 
       <div className="calendar-list-container">
-        {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
             <button onClick={prevMonth}>◀</button>
@@ -205,9 +204,8 @@ export default function RegisterPage() {
                       return <td key={dow}></td>;
                     }
                     const date = new Date(year, month, dateNum);
-                    const dateIso = new Date(date).toISOString().split("T")[0]; // ISO形式
+                    const dateIso = toJstIsoDate(date);
 
-                    // 祝日チェック
                     const holidayInfo = hd.isHoliday(date);
                     const isHoliday = holidayInfo && holidayInfo[0];
 
@@ -217,7 +215,6 @@ export default function RegisterPage() {
                     if (dateIso === todayIso) cellClass += " today";
                     if (selectedDates[dateIso]) cellClass += " selected";
 
-                    // 範囲プレビュー
                     if (
                       mode === "range" &&
                       rangeStart &&
@@ -240,7 +237,9 @@ export default function RegisterPage() {
                       >
                         <div>{dateNum}</div>
                         {isHoliday && (
-                          <div className="holiday-name">{holidayInfo[0].name}</div>
+                          <div className="holiday-name">
+                            {holidayInfo[0].name}
+                          </div>
                         )}
                       </td>
                     );
@@ -301,7 +300,11 @@ export default function RegisterPage() {
                           className="cute-select"
                           value={setting.startTime}
                           onChange={(e) =>
-                            updateTimeSetting(dateIso, "startTime", e.target.value)
+                            updateTimeSetting(
+                              dateIso,
+                              "startTime",
+                              e.target.value
+                            )
                           }
                         >
                           {Array.from({ length: 24 }, (_, i) => {
