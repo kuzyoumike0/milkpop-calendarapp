@@ -134,11 +134,12 @@ export default function PersonalPage() {
         <div className="calendar-container">
           <div className="calendar-header">
             <button onClick={prevMonth}>◀</button>
-            <span>
+            <div className="calendar-title">
               {year}年 {month + 1}月
-            </span>
+            </div>
             <button onClick={nextMonth}>▶</button>
           </div>
+
           <table className="custom-calendar">
             <thead>
               <tr>
