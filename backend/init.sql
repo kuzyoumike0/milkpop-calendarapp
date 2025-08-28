@@ -1,5 +1,3 @@
--- milkpop-calendarapp/backend/init.sql
-
 -- =========================
 -- schedules（共有スケジュール）
 -- =========================
@@ -30,11 +28,11 @@ CREATE TABLE IF NOT EXISTS schedule_responses (
 -- =========================
 CREATE TABLE IF NOT EXISTS personal_schedules (
     id UUID PRIMARY KEY,
-    share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+    user_id VARCHAR(64) NOT NULL,   -- Discord のユーザーIDで紐付け
     title TEXT NOT NULL,
     memo TEXT,
-    dates JSONB NOT NULL,
-    options JSONB,
+    dates JSONB NOT NULL,           -- 複数日程も保存できる
+    options JSONB,                  -- 時間区分などを保持
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
