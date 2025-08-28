@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../share.css";
 
@@ -7,154 +7,103 @@ export default function SharePage() {
   const [schedule, setSchedule] = useState(null);
   const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
-  const [answers, setAnswers] = useState({});
+  const [myResponses, setMyResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-
-  // 編集状態
   const [editingUser, setEditingUser] = useState(null);
-  const [editName, setEditName] = useState("");
 
-  // スケジュール取得 & 回答一覧取得
-  const fetchResponses = async () => {
-    try {
-      const res2 = await fetch(`/api/schedules/${token}/responses`);
-      if (res2.ok) {
-        const list = await res2.json();
-        setResponses(list);
-      }
-    } catch (err) {
-      console.error("回答一覧取得エラー:", err);
-    }
-  };
-
+  // データ取得
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/schedules/${token}`);
-        if (!res.ok) throw new Error("スケジュール取得失敗");
-        const data = await res.json();
-        setSchedule(data);
+    fetch(`/api/schedules/${token}`)
+      .then((res) => res.json())
+      .then((data) => setSchedule(data))
+      .catch((err) => console.error("API取得エラー:", err));
 
-        await fetchResponses();
-      } catch (err) {
-        console.error("API取得エラー:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetch(`/api/schedules/${token}/responses`)
+      .then((res) => res.json())
+      .then((data) => setResponses(data))
+      .catch((err) => console.error("レスポンス取得エラー:", err));
   }, [token]);
 
-  // プルダウン変更
-  const handleChange = (date, value) => {
-    setAnswers({ ...answers, [date]: value });
-  };
+  if (!schedule) return <div>読み込み中...</div>;
+
+  const dates = schedule.dates;
 
   // 自分の回答保存
-  const handleSave = async () => {
-    if (!username) {
-      alert("名前を入力してください");
-      return;
-    }
+  const saveMyResponses = async () => {
     try {
-      const payload = { username, responses: answers };
-      const res = await fetch(`/api/schedules/${token}/responses`, {
+      await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ username, responses: myResponses }),
       });
-      if (!res.ok) throw new Error("保存失敗");
-      const newRes = await res.json();
-      setResponses(newRes); // 即反映
-      setSaveMessage("✅ 保存しました！");
+      setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
-    }
-  };
 
-  // ユーザ名保存
-  const saveUsername = async () => {
-    try {
-      const res = await fetch(`/api/schedule_responses/${editingUser}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: editName }),
-      });
-      if (!res.ok) throw new Error("保存失敗");
-      setEditingUser(null);
-      await fetchResponses(); // 再読み込み
+      const updated = await fetch(`/api/schedules/${token}/responses`);
+      const data = await updated.json();
+      setResponses(data);
     } catch (err) {
-      alert("ユーザ名の保存に失敗しました");
+      console.error("保存エラー:", err);
     }
   };
 
   // 回答集計
-  const aggregateResponses = () => {
-    const agg = {};
-    responses.forEach((r) => {
-      Object.entries(r.responses).forEach(([date, resp]) => {
-        if (!agg[date]) {
-          agg[date] = { ok: 0, ng: 0, maybe: 0, users: [] };
-        }
-        if (resp === "○" || resp === "ok") agg[date].ok++;
-        if (resp === "✕" || resp === "ng") agg[date].ng++;
-        if (resp === "△" || resp === "maybe") agg[date].maybe++;
-        agg[date].users.push({
-          user_id: r.id,
-          username: r.username,
-          response: resp,
-        });
-      });
+  const aggregated = {};
+  dates.forEach((d) => {
+    aggregated[d.date] = { ok: 0, ng: 0, maybe: 0, users: [] };
+  });
+  responses.forEach((r) => {
+    Object.entries(r.responses).forEach(([date, resp]) => {
+      if (!aggregated[date]) return;
+      if (resp === "○") aggregated[date].ok++;
+      if (resp === "✕") aggregated[date].ng++;
+      if (resp === "△") aggregated[date].maybe++;
+      aggregated[date].users.push({ user_id: r.user_id, username: r.username, response: resp });
     });
-    return agg;
-  };
+  });
 
-  // 並べ替え後の日付リスト
-  const getSortedDates = () => {
-    if (!schedule) return [];
-    let sorted = [...schedule.dates];
-    const agg = aggregateResponses();
-
-    sorted.sort((a, b) => {
-      const ca = agg[a.date] || { ok: 0, ng: 0, maybe: 0 };
-      const cb = agg[b.date] || { ok: 0, ng: 0, maybe: 0 };
-
-      if (filter === "ok") return cb.ok - ca.ok;
-      if (filter === "ng") return cb.ng - ca.ng;
-      if (filter === "maybe") return cb.maybe - ca.maybe;
-      return new Date(a.date) - new Date(b.date); // デフォルトは日付順
-    });
-
-    return sorted;
-  };
-
-  if (loading) return <div className="share-container">読み込み中...</div>;
-  if (!schedule) return <div className="share-container">スケジュールが見つかりません</div>;
-
-  const aggregated = aggregateResponses();
+  // 全ユーザリスト
   const userList = [...new Set(responses.map((r) => r.username))];
+
+  // 並び替え
+  const getSortedDates = () => {
+    return [...dates].sort((a, b) => new Date(a.date) - new Date(b.date));
+  };
+
+  // 回答セル保存
+  const saveUserResponse = async (user_id, date, value) => {
+    try {
+      await fetch(`/api/schedules/${token}/responses/${user_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, response: value }),
+      });
+
+      const updated = await fetch(`/api/schedules/${token}/responses`);
+      const data = await updated.json();
+      setResponses(data);
+    } catch (err) {
+      console.error("回答更新エラー:", err);
+    }
+  };
 
   return (
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* 自分の回答 */}
-      <div className="my-responses gradient-box">
+      {/* 自分の回答入力 */}
+      <div className="my-responses">
         <h2>自分の回答</h2>
         <input
           type="text"
-          className="username-input"
           placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="username-input"
         />
-
         <div className="my-responses-list">
-          {schedule.dates.map((d, i) => (
+          {dates.map((d, i) => (
             <div key={i} className="my-response-item">
               <span className="date-label">
                 {new Date(d.date).toLocaleDateString("ja-JP", {
@@ -163,14 +112,15 @@ export default function SharePage() {
                   day: "numeric",
                 })}
                 {d.timeType && `（${d.timeType}）`}
-                {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
               </span>
               <select
                 className="fancy-select"
-                value={answers[d.date] || ""}
-                onChange={(e) => handleChange(d.date, e.target.value)}
+                value={myResponses[d.date] || ""}
+                onChange={(e) =>
+                  setMyResponses({ ...myResponses, [d.date]: e.target.value })
+                }
               >
-                <option value="">- 未回答</option>
+                <option value="">-未回答</option>
                 <option value="○">○ 参加</option>
                 <option value="✕">✕ 不参加</option>
                 <option value="△">△ 未定</option>
@@ -178,70 +128,50 @@ export default function SharePage() {
             </div>
           ))}
         </div>
-
-        <button className="save-btn" onClick={handleSave}>
+        <button className="save-btn" onClick={saveMyResponses}>
           保存する
         </button>
         {saveMessage && <div className="save-message">{saveMessage}</div>}
       </div>
 
       {/* みんなの回答 */}
-      <div className="all-responses gradient-box">
+      <div className="all-responses">
         <h2>みんなの回答</h2>
-
-        {/* フィルタ */}
         <div className="filter-box">
-          <span>フィルタ：</span>
+          フィルタ：
           <select
             className="fancy-filter"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">すべて表示</option>
-            <option value="ok">○ 多い順</option>
-            <option value="ng">✕ 多い順</option>
-            <option value="maybe">△ 多い順</option>
+            <option value="ok">○多い順</option>
+            <option value="ng">✕多い順</option>
+            <option value="maybe">△多い順</option>
           </select>
         </div>
 
-        {/* マトリクス表 */}
         <div className="table-container">
           <table className="responses-table">
             <thead>
               <tr>
                 <th>日付</th>
                 <th>回答数</th>
-                {userList.map((uname, idx) => {
-                  const userObj = responses.find((r) => r.username === uname);
-                  return (
-                    <th key={idx}>
-                      {editingUser === userObj?.id ? (
-                        <input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                        />
-                      ) : (
-                        <span
-                          className="editable-username"
-                          onClick={() => {
-                            setEditingUser(userObj.id);
-                            setEditName(uname);
-                          }}
-                        >
-                          {uname}
-                        </span>
-                      )}
-                    </th>
-                  );
-                })}
+                {userList.map((uname, idx) => (
+                  <th key={idx}>{uname}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {getSortedDates().map((d, i) => {
-                const counts = aggregated[d.date] || { ok: 0, ng: 0, maybe: 0, users: [] };
+                const counts = aggregated[d.date] || {
+                  ok: 0,
+                  ng: 0,
+                  maybe: 0,
+                  users: [],
+                };
                 return (
                   <tr key={i}>
-                    {/* 日付 */}
                     <td>
                       {new Date(d.date).toLocaleDateString("ja-JP", {
                         year: "numeric",
@@ -251,22 +181,39 @@ export default function SharePage() {
                       {d.timeType && `（${d.timeType}）`}
                       {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
                     </td>
-
-                    {/* 回答数 */}
                     <td>
                       <span className="count-ok">○{counts.ok}</span>
                       <span className="count-ng"> ✕{counts.ng}</span>
                       <span className="count-maybe"> △{counts.maybe}</span>
                     </td>
-
-                    {/* 各ユーザの回答 */}
                     {userList.map((uname, idx) => {
                       const userResponse = counts.users.find((u) => u.username === uname);
-                      let symbol = "–";
-                      if (userResponse?.response === "○" || userResponse?.response === "ok") symbol = "○";
-                      if (userResponse?.response === "✕" || userResponse?.response === "ng") symbol = "✕";
-                      if (userResponse?.response === "△" || userResponse?.response === "maybe") symbol = "△";
-                      return <td key={idx}>{symbol}</td>;
+                      const current = userResponse?.response || "–";
+                      return (
+                        <td key={idx}>
+                          {editingUser === `${d.date}-${uname}` ? (
+                            <select
+                              value={current === "–" ? "" : current}
+                              onChange={(e) => {
+                                saveUserResponse(userResponse?.user_id, d.date, e.target.value);
+                                setEditingUser(null);
+                              }}
+                            >
+                              <option value="">–</option>
+                              <option value="○">○ 参加</option>
+                              <option value="✕">✕ 不参加</option>
+                              <option value="△">△ 未定</option>
+                            </select>
+                          ) : (
+                            <span
+                              className="editable-username"
+                              onClick={() => setEditingUser(`${d.date}-${uname}`)}
+                            >
+                              {current}
+                            </span>
+                          )}
+                        </td>
+                      );
                     })}
                   </tr>
                 );
@@ -274,15 +221,6 @@ export default function SharePage() {
             </tbody>
           </table>
         </div>
-
-        {/* 編集保存ボタン */}
-        {editingUser && (
-          <div className="edit-save-bar">
-            <button className="username-save-btn" onClick={saveUsername}>
-              ユーザ名を保存
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
