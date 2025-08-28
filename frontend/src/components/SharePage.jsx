@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from "react";
+// frontend/src/components/SharePage.jsx
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import io from "socket.io-client";
 import "../share.css";
+
+const socket = io();
 
 export default function SharePage() {
   const { token } = useParams();
@@ -8,102 +12,102 @@ export default function SharePage() {
   const [responses, setResponses] = useState([]);
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
-  const [saveMessage, setSaveMessage] = useState("");
   const [filter, setFilter] = useState("all");
-
-  const [editingUser, setEditingUser] = useState(null);
+  const [editMode, setEditMode] = useState(false);
   const [editedResponses, setEditedResponses] = useState({});
+  const [saveMessage, setSaveMessage] = useState("");
 
-  // スケジュールと回答を取得
+  // スケジュール取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
       .then((data) => setSchedule(data))
-      .catch(() => alert("スケジュール取得失敗"));
+      .catch((err) => console.error("取得失敗:", err));
 
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
       .then((data) => setResponses(data))
-      .catch(() => alert("回答取得失敗"));
+      .catch((err) => console.error("回答取得失敗:", err));
+
+    socket.emit("joinSchedule", token);
+
+    socket.on("scheduleUpdated", () => {
+      fetch(`/api/schedules/${token}/responses`)
+        .then((res) => res.json())
+        .then((data) => setResponses(data));
+    });
+
+    return () => {
+      socket.off("scheduleUpdated");
+    };
   }, [token]);
 
-  // 自分の回答を保存
+  if (!schedule) return <div>読み込み中...</div>;
+
+  // 日付フォーマット
+  const formatDate = (d) => {
+    if (d.timeType === "時間指定") {
+      const start = d.startTime || "09:00";
+      const end = d.endTime || "18:00";
+      return `${d.date} （${start} ~ ${end}）`;
+    } else {
+      return `${d.date} （${d.timeType}）`;
+    }
+  };
+
+  // 保存
   const handleSave = async () => {
     try {
-      const payload = {
-        username,
-        responses: schedule.dates.map((d) => ({
-          date: d.date,
-          response: myResponses[d.date] || "未回答",
-        })),
-      };
-
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          username,
+          responses: myResponses,
+        }),
       });
-
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("保存失敗");
       const updated = await res.json();
       setResponses(updated);
+      socket.emit("updateSchedule", token);
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
-    } catch {
-      alert("保存失敗");
+    } catch (err) {
+      console.error("保存エラー:", err);
+      alert("保存に失敗しました");
     }
   };
 
-  // 編集保存（管理者用）
+  // 編集保存
   const handleEditSave = async () => {
     try {
-      const res = await fetch(`/api/schedules/${token}/responses/admin-edit`, {
+      const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editedResponses),
+        body: JSON.stringify({
+          username,
+          responses: editedResponses,
+        }),
       });
-
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("保存失敗");
       const updated = await res.json();
       setResponses(updated);
-      setEditingUser(null);
-      setEditedResponses({});
-      alert("編集を保存しました");
-    } catch {
-      alert("編集保存失敗");
+      socket.emit("updateSchedule", token);
+      setEditMode(false);
+    } catch (err) {
+      console.error("編集保存エラー:", err);
     }
   };
 
-  if (!schedule) {
-    return <div className="share-container">読み込み中...</div>;
-  }
-
-  // 日付ごとに集計
-  let aggregate = schedule.dates.map((d) => {
-    const counts = { "○": 0, "✕": 0, "△": 0 };
-    const users = [];
-
+  // 集計
+  const summary = schedule.dates.map((d) => {
+    const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
-      const resp = r.responses.find((res) => res.date === d.date);
-      if (resp) {
-        counts[resp.response] = (counts[resp.response] || 0) + 1;
-        users.push({ username: r.username, response: resp.response });
-      }
+      const val = r.responses[d.date];
+      if (val && counts[val] !== undefined) counts[val]++;
     });
-
-    return { ...d, counts, users };
+    return { ...d, counts };
   });
-
-  // 並び替え処理
-  if (filter === "ok") {
-    aggregate.sort((a, b) => b.counts["○"] - a.counts["○"]);
-  } else if (filter === "ng") {
-    aggregate.sort((a, b) => b.counts["✕"] - a.counts["✕"]);
-  } else if (filter === "maybe") {
-    aggregate.sort((a, b) => b.counts["△"] - a.counts["△"]);
-  }
-
-  const userList = [...new Set(responses.map((r) => r.username))];
 
   return (
     <div className="share-container">
@@ -114,32 +118,27 @@ export default function SharePage() {
         <h2>自分の回答</h2>
         <input
           type="text"
-          className="username-input"
           placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="username-input"
         />
 
         <div className="my-responses-list">
           {schedule.dates.map((d, idx) => (
             <div key={idx} className="my-response-item">
-              <span className="date-label">
-                {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
-                {d.timeType === "時間指定"
-                  ? `（${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}）`
-                  : `（${d.timeType}）`}
-              </span>
+              <span className="date-label">{formatDate(d)}</span>
               <select
                 className="fancy-select"
-                value={myResponses[d.date] || "未回答"}
+                value={myResponses[d.date] || "-"}
                 onChange={(e) =>
                   setMyResponses({ ...myResponses, [d.date]: e.target.value })
                 }
               >
-                <option value="未回答">- 未回答</option>
-                <option value="○">{"\u25CB"} 参加</option>
-                <option value="✕">{"\u2715"} 不参加</option>
-                <option value="△">{"\u25B3"} 未定</option>
+                <option value="-">- 未回答</option>
+                <option value="◯">◯ 参加</option>
+                <option value="✕">✕ 不参加</option>
+                <option value="△">△ 未定</option>
               </select>
             </div>
           ))}
@@ -154,19 +153,19 @@ export default function SharePage() {
       {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
-        <label>
+        <div style={{ marginBottom: "12px" }}>
           フィルタ：
           <select
-            className="fancy-filter"
+            className="fancy-select"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="all">すべて表示</option>
-            <option value="ok">{"\u25CB"} 多い順</option>
-            <option value="ng">{"\u2715"} 多い順</option>
-            <option value="maybe">{"\u25B3"} 多い順</option>
+            <option value="ok">◯ 多い順</option>
+            <option value="ng">✕ 多い順</option>
+            <option value="maybe">△ 多い順</option>
           </select>
-        </label>
+        </div>
 
         <div className="table-container">
           <table className="responses-table">
@@ -174,81 +173,66 @@ export default function SharePage() {
               <tr>
                 <th>日付</th>
                 <th>回答数</th>
-                {userList.map((uname, idx) => (
-                  <th key={idx}>
-                    <span
-                      className="editable-username"
-                      onClick={() => setEditingUser(uname)}
-                    >
-                      {uname}
-                    </span>
-                  </th>
+                {responses.map((r, idx) => (
+                  <th key={idx}>{r.username}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {aggregate.map((d, idx) => (
+              {summary.map((d, idx) => (
                 <tr key={idx}>
+                  <td>{formatDate(d)}</td>
                   <td>
-                    {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
-                    {d.timeType === "時間指定"
-                      ? `（${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}）`
-                      : `（${d.timeType}）`}
+                    <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
+                    <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
+                    <span className="count-maybe">△{d.counts["△"]}</span>
                   </td>
-                  <td>
-                    <span className="count-ok">
-                      {"\u25CB"}
-                      {d.counts["○"]}
-                    </span>{" "}
-                    <span className="count-ng">
-                      {"\u2715"}
-                      {d.counts["✕"]}
-                    </span>{" "}
-                    <span className="count-maybe">
-                      {"\u25B3"}
-                      {d.counts["△"]}
-                    </span>
-                  </td>
-                  {userList.map((uname, uidx) => {
-                    const userResponse = d.users.find(
-                      (u) => u.username === uname
-                    );
-                    const current = userResponse?.response || "-";
-
-                    return (
-                      <td key={uidx}>
-                        {editingUser === uname ? (
-                          <select
-                            className="fancy-select"
-                            value={editedResponses[`${uname}-${d.date}`] || current}
-                            onChange={(e) =>
-                              setEditedResponses({
-                                ...editedResponses,
-                                [`${uname}-${d.date}`]: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="-">- 未回答</option>
-                            <option value="○">{"\u25CB"}</option>
-                            <option value="✕">{"\u2715"}</option>
-                            <option value="△">{"\u25B3"}</option>
-                          </select>
-                        ) : (
-                          current
-                        )}
-                      </td>
-                    );
-                  })}
+                  {responses.map((r, uIdx) => (
+                    <td key={uIdx}>
+                      {editMode && r.username === username ? (
+                        <select
+                          className="fancy-select"
+                          value={editedResponses[d.date] || r.responses[d.date] || "-"}
+                          onChange={(e) =>
+                            setEditedResponses({
+                              ...editedResponses,
+                              [d.date]: e.target.value,
+                            })
+                          }
+                        >
+                          <option value="-">- 未回答</option>
+                          <option value="◯">◯ 参加</option>
+                          <option value="✕">✕ 不参加</option>
+                          <option value="△">△ 未定</option>
+                        </select>
+                      ) : (
+                        r.responses[d.date] || "-"
+                      )}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {editingUser && (
+          {responses.some((r) => r.username === username) && (
             <div className="edit-save-bar">
-              <button className="username-save-btn" onClick={handleEditSave}>
-                編集を保存
-              </button>
+              {!editMode ? (
+                <button
+                  className="username-save-btn"
+                  onClick={() => {
+                    const myData = responses.find((r) => r.username === username);
+                    setEditedResponses(myData ? myData.responses : {});
+                    setEditMode(true);
+                  }}
+                >
+                  編集する
+                </button>
+              ) : (
+                <button className="username-save-btn" onClick={handleEditSave}>
+                  編集を保存
+                </button>
+              )}
             </div>
           )}
         </div>
