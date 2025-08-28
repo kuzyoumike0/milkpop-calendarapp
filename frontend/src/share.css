@@ -144,3 +144,10 @@
   background: #111; /* 🔹展開時の背景も黒 */
   color: #fff;      /* 🔹展開時の文字色も白 */
 }
+/* ページ全体の背景をグラデに統一 */
+body, html {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+}
