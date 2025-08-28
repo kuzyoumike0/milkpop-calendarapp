@@ -250,8 +250,8 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 2px solid #fdb9c8;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
+  background: #111;            /* 🔹背景をポップな黒 */
+  color: #fff;                 /* 🔹文字色を白 */
   font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
@@ -259,7 +259,11 @@
   transition: all 0.3s ease;
 }
 .custom-time select:hover {
-  background: linear-gradient(135deg, #004ca0, #fdb9c8);
+  background: #222;            /* 🔹ホバー時は少し明るい黒 */
+}
+.custom-time option {
+  background: #111;            /* 🔹展開時の背景も黒 */
+  color: #fff;                 /* 🔹展開時も白文字 */
 }
 .custom-time span {
   font-weight: bold;
