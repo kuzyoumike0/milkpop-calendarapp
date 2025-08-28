@@ -4,14 +4,12 @@ import "../register.css";
 
 const hd = new Holidays("JP");
 
-// 日本時間の今日
 const getTodayJST = () => {
   const now = new Date();
   const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
   return jst;
 };
 
-// 月の日付を生成
 const generateCalendar = (year, month) => {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -38,7 +36,6 @@ const RegisterPage = () => {
   const [mode, setMode] = useState("range");
   const [selectedDates, setSelectedDates] = useState([]);
   const [title, setTitle] = useState("");
-
   const [timeSettings, setTimeSettings] = useState({});
   const [shareUrl, setShareUrl] = useState("");
 
@@ -56,15 +53,12 @@ const RegisterPage = () => {
       date.getDate()
     ).padStart(2, "0")}`;
 
-  // 日付クリック処理
   const handleSelect = (date) => {
     const exists = selectedDates.find((d) => isSameDate(d, date));
-
     if (exists) {
       setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
       return;
     }
-
     if (mode === "single") {
       setSelectedDates([date]);
     } else if (mode === "multiple") {
@@ -95,13 +89,16 @@ const RegisterPage = () => {
     return h ? h[0].name : null;
   };
 
-  // 時間区分切替
   const toggleTime = (date, type) => {
     const key = formatDateKey(date);
     setTimeSettings((prev) => {
       const current = prev[key] || {};
-      const newActive = { ...(current.activeTimes || {}) };
-      newActive[type] = !newActive[type];
+      let newActive = {};
+      if (type === "時間指定") {
+        newActive = { 時間指定: true };
+      } else {
+        newActive = { [type]: !current.activeTimes?.[type] };
+      }
       return { ...prev, [key]: { ...current, activeTimes: newActive } };
     });
   };
@@ -121,13 +118,24 @@ const RegisterPage = () => {
         dates: selectedDates.map((d) => {
           const key = formatDateKey(d);
           const setting = timeSettings[key] || {};
+          const activeType =
+            setting.showTimeSelect || setting.activeTimes?.["時間指定"]
+              ? "時間指定"
+              : Object.keys(setting.activeTimes || {}).find((k) => setting.activeTimes[k]) || "終日";
+
+          let startTime = setting.start || null;
+          let endTime = setting.end || null;
+
+          if (activeType === "時間指定") {
+            if (!startTime) startTime = "09:00";
+            if (!endTime) endTime = "18:00";
+          }
+
           return {
             date: key,
-            timeType: setting.showTimeSelect
-              ? "時間指定"
-              : Object.keys(setting.activeTimes || {}).find((k) => setting.activeTimes[k]) || "終日",
-            startTime: setting.start || null,
-            endTime: setting.end || null,
+            timeType: activeType,
+            startTime,
+            endTime,
           };
         }),
       };
@@ -140,7 +148,6 @@ const RegisterPage = () => {
 
       if (!res.ok) throw new Error("共有リンク生成失敗");
       const data = await res.json();
-
       const url = `${window.location.origin}/share/${data.share_token}`;
       setShareUrl(url);
     } catch (err) {
@@ -157,8 +164,6 @@ const RegisterPage = () => {
   return (
     <div className="register-page">
       <h1 className="page-title">MilkPOP Calendar</h1>
-
-      {/* タイトル入力フォーム */}
       <input
         type="text"
         placeholder="タイトルを入力"
@@ -166,37 +171,17 @@ const RegisterPage = () => {
         onChange={(e) => setTitle(e.target.value)}
         className="title-input"
       />
-
-      {/* モード選択 */}
       <div className="mode-tabs">
-        <button
-          className={mode === "single" ? "active" : ""}
-          onClick={() => setMode("single")}
-        >
-          単日
-        </button>
-        <button
-          className={mode === "multiple" ? "active" : ""}
-          onClick={() => setMode("multiple")}
-        >
-          複数選択
-        </button>
-        <button
-          className={mode === "range" ? "active" : ""}
-          onClick={() => setMode("range")}
-        >
-          範囲選択
-        </button>
+        <button className={mode === "single" ? "active" : ""} onClick={() => setMode("single")}>単日</button>
+        <button className={mode === "multiple" ? "active" : ""} onClick={() => setMode("multiple")}>複数選択</button>
+        <button className={mode === "range" ? "active" : ""} onClick={() => setMode("range")}>範囲選択</button>
       </div>
 
-      {/* カレンダー */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar-header">
             <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
-            <span>
-              {currentYear}年 {currentMonth + 1}月
-            </span>
+            <span>{currentYear}年 {currentMonth + 1}月</span>
             <button onClick={() => setCurrentMonth(currentMonth + 1)}>▶</button>
           </div>
 
@@ -223,9 +208,7 @@ const RegisterPage = () => {
                     return (
                       <td
                         key={j}
-                        className={`cell 
-                          ${isToday ? "today" : ""} 
-                          ${selected ? "selected-date" : ""} 
+                        className={`cell ${isToday ? "today" : ""} ${selected ? "selected-date" : ""} 
                           ${date.getDay() === 0 ? "sunday" : ""} 
                           ${date.getDay() === 6 ? "saturday" : ""} 
                           ${!isCurrentMonth ? "other-month" : ""}`}
@@ -242,95 +225,67 @@ const RegisterPage = () => {
           </table>
         </div>
 
-        {/* 選択中の日程リスト */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
-          {[...selectedDates]
-            .sort((a, b) => a - b)
-            .map((d, idx) => {
-              const key = formatDateKey(d);
-              const setting = timeSettings[key] || {};
-              const active = setting.activeTimes || {};
-              return (
-                <div key={idx} className="selected-card">
-                  <span className="date-badge">
-                    {d.getFullYear()}-
-                    {String(d.getMonth() + 1).padStart(2, "0")}-
-                    {String(d.getDate()).padStart(2, "0")}
-                  </span>
-                  <div className="time-buttons">
-                    {["終日", "午前", "午後"].map((label) => (
-                      <button
-                        key={label}
-                        className={`time-btn ${active[label] ? "active" : ""}`}
-                        onClick={() => toggleTime(d, label)}
-                      >
-                        {label}
-                      </button>
-                    ))}
+          {[...selectedDates].sort((a, b) => a - b).map((d, idx) => {
+            const key = formatDateKey(d);
+            const setting = timeSettings[key] || {};
+            const active = setting.activeTimes || {};
+            return (
+              <div key={idx} className="selected-card">
+                <span className="date-badge">
+                  {d.getFullYear()}-{String(d.getMonth() + 1).padStart(2, "0")}-{String(d.getDate()).padStart(2, "0")}
+                </span>
+                <div className="time-buttons">
+                  {["終日", "午前", "午後"].map((label) => (
                     <button
-                      className="time-btn"
-                      onClick={() =>
-                        setTimeSettings((prev) => ({
-                          ...prev,
-                          [key]: {
-                            ...prev[key],
-                            showTimeSelect: !prev[key]?.showTimeSelect,
-                          },
-                        }))
-                      }
+                      key={label}
+                      className={`time-btn ${active[label] ? "active" : ""}`}
+                      onClick={() => toggleTime(d, label)}
                     >
-                      時間指定
+                      {label}
                     </button>
-                  </div>
-
-                  {/* 時間指定用プルダウン */}
-                  {setting.showTimeSelect && (
-                    <div className="custom-time">
-                      <select
-                        value={setting.start || "09:00"}
-                        onChange={(e) => handleTimeChange(d, "start", e.target.value)}
-                      >
-                        {Array.from({ length: 24 }).map((_, i) => {
-                          const h = String(i).padStart(2, "0");
-                          return (
-                            <option key={i} value={`${h}:00`}>
-                              {`${h}:00`}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <span>〜</span>
-                      <select
-                        value={setting.end || "18:00"}
-                        onChange={(e) => handleTimeChange(d, "end", e.target.value)}
-                      >
-                        {Array.from({ length: 24 }).map((_, i) => {
-                          const h = String(i).padStart(2, "0");
-                          return (
-                            <option key={i} value={`${h}:00`}>
-                              {`${h}:00`}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  )}
+                  ))}
+                  <button
+                    className={`time-btn ${active["時間指定"] ? "active" : ""}`}
+                    onClick={() => toggleTime(d, "時間指定")}
+                  >
+                    時間指定
+                  </button>
                 </div>
-              );
-            })}
 
-          <button className="share-btn" onClick={generateShareLink}>
-            共有リンク発行
-          </button>
+                {active["時間指定"] && (
+                  <div className="custom-time">
+                    <select
+                      value={setting.start || "09:00"}
+                      onChange={(e) => handleTimeChange(d, "start", e.target.value)}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i} value={`${h}:00`}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                    <span>〜</span>
+                    <select
+                      value={setting.end || "18:00"}
+                      onChange={(e) => handleTimeChange(d, "end", e.target.value)}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i} value={`${h}:00`}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <button className="share-btn" onClick={generateShareLink}>共有リンク発行</button>
           {shareUrl && (
             <div className="share-link-box">
-              <a href={shareUrl} target="_blank" rel="noreferrer">
-                {shareUrl}
-              </a>
-              <button className="copy-btn" onClick={copyToClipboard}>
-                コピー
-              </button>
+              <a href={shareUrl} target="_blank" rel="noreferrer">{shareUrl}</a>
+              <button className="copy-btn" onClick={copyToClipboard}>コピー</button>
             </div>
           )}
         </div>
