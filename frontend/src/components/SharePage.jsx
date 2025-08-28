@@ -18,7 +18,7 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ランダムな user_id を生成（固定化）
+  // 固定化された user_id
   const [userId] = useState(() => uuidv4());
 
   useEffect(() => {
@@ -43,22 +43,27 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 時間ラベルを整形
-  const getTimeLabel = (d) => {
-    if (d.timeType === "allday") return "終日";
-    if (d.timeType === "day") return "午前";
-    if (d.timeType === "night") return "午後";
-    if (d.timeType === "custom") return `${d.startTime} ~ ${d.endTime}`;
-    return d.timeType;
-  };
-
   // 日付フォーマット
-  const formatDate = (date, d) => `${date} （${getTimeLabel(d)}）`;
+  const formatDate = (date, d) => {
+    if (d.timeType === "custom") {
+      const start = d.startTime || "09:00";
+      const end = d.endTime || "18:00";
+      return `${date} （${start} ~ ${end}）`;
+    } else if (d.timeType === "allday") {
+      return `${date} （終日）`;
+    } else if (d.timeType === "day") {
+      return `${date} （午前）`;
+    } else if (d.timeType === "night") {
+      return `${date} （午後）`;
+    } else {
+      return `${date} （${d.timeType}）`;
+    }
+  };
 
   // 自分の回答保存
   const handleSave = async () => {
     try {
-      const res = await fetch(`/api/schedules/${token}/responses`, {
+      await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -67,9 +72,7 @@ export default function SharePage() {
           responses: myResponses,
         }),
       });
-      await res.json();
 
-      // 即時反映
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
         .then((data) => setResponses(data));
@@ -86,16 +89,15 @@ export default function SharePage() {
   // 編集保存
   const handleEditSave = async () => {
     try {
-      const res = await fetch(`/api/schedules/${token}/responses`, {
+      await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: editingUser, // 本来 user_id だが簡易的に username で識別
+          user_id: editingUser, // 本来は user_id を使う
           username: editingUser,
           responses: editedResponses,
         }),
       });
-      await res.json();
 
       fetch(`/api/schedules/${token}/responses`)
         .then((res) => res.json())
@@ -113,14 +115,15 @@ export default function SharePage() {
     const key =
       d.timeType === "custom"
         ? `${date} (${d.startTime} ~ ${d.endTime})`
-        : `${date} (${getTimeLabel(d)})`;
+        : `${date} (${d.timeType})`;
 
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
       const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-    return { date, key, ...d, counts };
+
+    return { date, ...d, key, counts };
   });
 
   // フィルター適用
@@ -150,7 +153,7 @@ export default function SharePage() {
             const key =
               d.timeType === "custom"
                 ? `${date} (${d.startTime} ~ ${d.endTime})`
-                : `${date} (${getTimeLabel(d)})`;
+                : `${date} (${d.timeType})`;
 
             return (
               <div key={idx} className="my-response-item">
@@ -217,12 +220,17 @@ export default function SharePage() {
           <tbody>
             {filteredSummary.map((d, idx) => (
               <tr key={idx}>
+                {/* 左列：日付 & 時間ラベル */}
                 <td>{formatDate(d.date, d)}</td>
+
+                {/* 2列目：集計 */}
                 <td>
                   <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                   <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
                   <span className="count-maybe">△{d.counts["△"]}</span>
                 </td>
+
+                {/* 以降：各ユーザの回答セル */}
                 {responses.map((r, uIdx) => {
                   const val = r.responses?.[d.key] || "-";
                   return (
