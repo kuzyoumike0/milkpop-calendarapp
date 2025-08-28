@@ -17,7 +17,6 @@ export default function UsagePage() {
         <p>
           サイトの入り口です。ここから日程登録ページや個人スケジュールページへ遷移できます。
         </p>
-        {/* public/screenshot1.png を利用 */}
         <img src="/screenshot1.png" alt="トップページ説明" className="usage-img" />
       </section>
 
