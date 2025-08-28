@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../common.css";
 
-export default function Header() {
+export default function Header({ user }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -14,15 +14,26 @@ export default function Header() {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
-        <Link to="/personal" className="nav-link">
-          個人スケジュール
-        </Link>
         <Link to="/register" className="nav-link">
           日程登録
         </Link>
-        <a href="/auth/discord" className="nav-btn">
-          Discordログイン
-        </a>
+        {user && (
+          <Link to="/personal" className="nav-link">
+            個人スケジュール
+          </Link>
+        )}
+        <Link to="/usage" className="nav-link">
+          使い方
+        </Link>
+        {user ? (
+          <a href="/auth/logout" className="nav-btn">
+            ログアウト
+          </a>
+        ) : (
+          <a href="/auth/discord/login" className="nav-btn">
+            Discordログイン
+          </a>
+        )}
       </nav>
 
       {/* ハンバーガーメニュー（スマホ用） */}
@@ -37,19 +48,46 @@ export default function Header() {
 
       {/* モバイルメニュー */}
       <div className={`nav-links-mobile ${menuOpen ? "open" : ""}`}>
-        <Link to="/personal" className="nav-link-mobile" onClick={() => setMenuOpen(false)}>
-          個人スケジュール
-        </Link>
-        <Link to="/register" className="nav-link-mobile" onClick={() => setMenuOpen(false)}>
-          日程登録
-        </Link>
-        <a
-          href="/auth/discord"
-          className="nav-btn-mobile"
+        <Link
+          to="/register"
+          className="nav-link-mobile"
           onClick={() => setMenuOpen(false)}
         >
-          Discordログイン
-        </a>
+          日程登録
+        </Link>
+        {user && (
+          <Link
+            to="/personal"
+            className="nav-link-mobile"
+            onClick={() => setMenuOpen(false)}
+          >
+            個人スケジュール
+          </Link>
+        )}
+        <Link
+          to="/usage"
+          className="nav-link-mobile"
+          onClick={() => setMenuOpen(false)}
+        >
+          使い方
+        </Link>
+        {user ? (
+          <a
+            href="/auth/logout"
+            className="nav-btn-mobile"
+            onClick={() => setMenuOpen(false)}
+          >
+            ログアウト
+          </a>
+        ) : (
+          <a
+            href="/auth/discord/login"
+            className="nav-btn-mobile"
+            onClick={() => setMenuOpen(false)}
+          >
+            Discordログイン
+          </a>
+        )}
       </div>
     </header>
   );
