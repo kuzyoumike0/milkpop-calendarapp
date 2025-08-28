@@ -60,10 +60,10 @@
 
 .usage-img {
   display: block;
-  width: 80%;          /* セクション幅の80% */
-  max-width: 400px;    /* 全て同じ最大サイズ */
+  width: 100%;          /* 親に合わせる */
+  max-width: 300px;     /* PCでも必ず最大300pxまで */
   height: auto;
-  margin: 0 auto;
+  margin: 0 auto;       /* センター寄せ */
   border-radius: 12px;
   border: 2px solid #fdb9c8;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -76,6 +76,7 @@
   font-style: italic;
   text-align: center;
 }
+
 
 /* =============================
    戻るリンク
