@@ -31,7 +31,7 @@ export default function Header({ user }) {
             ログアウト
           </a>
         ) : (
-          <a href="/auth/discord/login" className="nav-btn">
+          <a href="/auth/discord" className="nav-btn">
             Discordログイン
           </a>
         )}
