@@ -1,78 +1,46 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
-import { v4 as uuidv4 } from "uuid";
 import "../register.css";
 
 export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [selectedDates, setSelectedDates] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [rangeStart, setRangeStart] = useState(null);
-  const [mode, setMode] = useState("single");
-  const [shareUrl, setShareUrl] = useState("");
+  const [shareLink, setShareLink] = useState("");
+  const hd = new Holidays("JP");
 
+  // 日本時間の今日
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+
+  // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 
-  const hd = new Holidays("JP");
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // 範囲の日付を配列にする
-  const getDatesBetween = (start, end) => {
-    const dates = [];
-    let current = new Date(start);
-    while (current <= end) {
-      dates.push(current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" }));
-      current.setDate(current.getDate() + 1);
-    }
-    return dates;
-  };
-
-  // 日付クリック
+  // ==== 日付クリック処理 ====
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-    if (mode === "single") {
-      setSelectedDates({
-        [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
-      });
+    // すでに選択済みなら解除
+    if (selectedDates[dateStr]) {
+      const updated = { ...selectedDates };
+      delete updated[dateStr];
+      setSelectedDates(updated);
+      return;
     }
 
-    if (mode === "multi") {
-      if (selectedDates[dateStr]) {
-        const updated = { ...selectedDates };
-        delete updated[dateStr];
-        setSelectedDates(updated);
-      } else {
-        setSelectedDates({
-          ...selectedDates,
-          [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
-        });
-      }
-    }
-
-    if (mode === "range") {
-      if (rangeStart) {
-        const datesInRange =
-          date >= rangeStart
-            ? getDatesBetween(rangeStart, date)
-            : getDatesBetween(date, rangeStart);
-        const updated = { ...selectedDates };
-        datesInRange.forEach((d) => {
-          updated[d] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
-        });
-        setSelectedDates(updated);
-        setRangeStart(null);
-      } else {
-        setRangeStart(date);
-      }
-    }
+    // 未選択なら追加
+    setSelectedDates({
+      ...selectedDates,
+      [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
+    });
   };
 
-  // 時間設定を更新
+  // ==== 時間区分変更 ====
   const updateTimeSetting = (dateStr, field, value) => {
     setSelectedDates({
       ...selectedDates,
@@ -80,28 +48,50 @@ export default function RegisterPage() {
     });
   };
 
-  // 登録処理（共有リンク発行）
-  const handleRegister = () => {
+  // ==== 登録処理 ====
+  const handleRegister = async () => {
     if (!title || Object.keys(selectedDates).length === 0) return;
-    const token = uuidv4();
-    setShareUrl(`${window.location.origin}/share/${token}`);
 
-    setTitle("");
-    setSelectedDates({});
-    setRangeStart(null);
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dates: selectedDates,
+        }),
+      });
+      const data = await res.json();
+      if (data.share_token) {
+        const url = `${window.location.origin}/share/${data.share_token}`;
+        setShareLink(url);
+      }
+    } catch (err) {
+      console.error("登録エラー:", err);
+    }
   };
 
+  // ==== 月移動 ====
+  const prevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+  const nextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  // ==== コピー ====
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl);
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      alert("リンクをコピーしました！");
+    }
   };
-
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
+      {/* タイトル入力 */}
       <input
         type="text"
         className="title-input"
@@ -109,19 +99,6 @@ export default function RegisterPage() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
-      {/* モード切替 */}
-      <div className="select-mode">
-        <button className={mode === "single" ? "active" : ""} onClick={() => setMode("single")}>
-          単日
-        </button>
-        <button className={mode === "multi" ? "active" : ""} onClick={() => setMode("multi")}>
-          複数選択
-        </button>
-        <button className={mode === "range" ? "active" : ""} onClick={() => setMode("range")}>
-          範囲選択
-        </button>
-      </div>
 
       <div className="calendar-list-container">
         {/* カレンダー */}
@@ -149,10 +126,15 @@ export default function RegisterPage() {
                 <tr key={week}>
                   {Array.from({ length: 7 }, (_, dow) => {
                     const dateNum = week * 7 + dow - firstDay.getDay() + 1;
-                    if (dateNum < 1 || dateNum > lastDay.getDate()) return <td key={dow}></td>;
-
+                    if (dateNum < 1 || dateNum > lastDay.getDate()) {
+                      return <td key={dow}></td>;
+                    }
                     const date = new Date(year, month, dateNum);
-                    const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
+                    const dateStr = date.toLocaleDateString("ja-JP", {
+                      timeZone: "Asia/Tokyo",
+                    });
+
+                    // 祝日チェック
                     const holidayInfo = hd.isHoliday(date);
                     const isHoliday = holidayInfo && holidayInfo[0];
 
@@ -164,9 +146,15 @@ export default function RegisterPage() {
                     if (isHoliday) cellClass += " holiday";
 
                     return (
-                      <td key={dow} className={cellClass} onClick={() => handleDateClick(date)}>
+                      <td
+                        key={dow}
+                        className={cellClass}
+                        onClick={() => handleDateClick(date)}
+                      >
                         <div>{dateNum}</div>
-                        {isHoliday && <div className="holiday-name">{holidayInfo[0].name}</div>}
+                        {isHoliday && (
+                          <div className="holiday-name">{holidayInfo[0].name}</div>
+                        )}
                       </td>
                     );
                   })}
@@ -178,92 +166,108 @@ export default function RegisterPage() {
 
         {/* サイドパネル */}
         <div className="side-panel">
-          <div className="selected-dates">
+          {/* 選択日程 */}
+          <div className="events-list">
             <h2>選択中の日程</h2>
             {Object.keys(selectedDates).length > 0 ? (
-              Object.entries(selectedDates).map(([dateStr, setting], i) => (
-                <div key={i} className="date-card">
-                  <span className="date-label">{dateStr}</span>
-                  <div className="time-options">
-                    <button
-                      className={setting.timeType === "allday" ? "active" : ""}
-                      onClick={() => updateTimeSetting(dateStr, "timeType", "allday")}
-                    >
-                      終日
-                    </button>
-                    <button
-                      className={setting.timeType === "day" ? "active" : ""}
-                      onClick={() => updateTimeSetting(dateStr, "timeType", "day")}
-                    >
-                      昼
-                    </button>
-                    <button
-                      className={setting.timeType === "night" ? "active" : ""}
-                      onClick={() => updateTimeSetting(dateStr, "timeType", "night")}
-                    >
-                      夜
-                    </button>
-                    <button
-                      className={setting.timeType === "custom" ? "active" : ""}
-                      onClick={() => updateTimeSetting(dateStr, "timeType", "custom")}
-                    >
-                      時間指定
-                    </button>
-                  </div>
-
-                  {/* 時間指定が選ばれたときだけプルダウン表示 */}
-                  {setting.timeType === "custom" && (
-                    <div className="time-range">
-                      <select
-                        className="cute-select"
-                        value={setting.startTime}
-                        onChange={(e) => updateTimeSetting(dateStr, "startTime", e.target.value)}
+              Object.entries(selectedDates)
+                // 日付順にソート
+                .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+                .map(([dateStr, setting], i) => (
+                  <div key={i} className="date-card">
+                    <span className="date-label">{dateStr}</span>
+                    <div className="time-options">
+                      <button
+                        className={setting.timeType === "allday" ? "active" : ""}
+                        onClick={() =>
+                          updateTimeSetting(dateStr, "timeType", "allday")
+                        }
                       >
-                        {Array.from({ length: 24 }, (_, i) => {
-                          const h = String(i).padStart(2, "0");
-                          return (
-                            <option key={i} value={`${h}:00`}>
-                              {h}:00
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <span className="time-separator">〜</span>
-                      <select
-                        className="cute-select"
-                        value={setting.endTime}
-                        onChange={(e) => updateTimeSetting(dateStr, "endTime", e.target.value)}
+                        終日
+                      </button>
+                      <button
+                        className={setting.timeType === "day" ? "active" : ""}
+                        onClick={() =>
+                          updateTimeSetting(dateStr, "timeType", "day")
+                        }
                       >
-                        {Array.from({ length: 24 }, (_, i) => {
-                          const h = String(i).padStart(2, "0");
-                          return (
-                            <option key={i} value={`${h}:00`}>
-                              {h}:00
-                            </option>
-                          );
-                        })}
-                      </select>
+                        午前
+                      </button>
+                      <button
+                        className={setting.timeType === "night" ? "active" : ""}
+                        onClick={() =>
+                          updateTimeSetting(dateStr, "timeType", "night")
+                        }
+                      >
+                        午後
+                      </button>
+                      <button
+                        className={setting.timeType === "custom" ? "active" : ""}
+                        onClick={() =>
+                          updateTimeSetting(dateStr, "timeType", "custom")
+                        }
+                      >
+                        時間指定
+                      </button>
                     </div>
-                  )}
-                </div>
-              ))
+                    {setting.timeType === "custom" && (
+                      <div className="time-range">
+                        <select
+                          className="cute-select"
+                          value={setting.startTime}
+                          onChange={(e) =>
+                            updateTimeSetting(dateStr, "startTime", e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const hour = String(i).padStart(2, "0");
+                            return (
+                              <option key={i} value={`${hour}:00`}>
+                                {hour}:00
+                              </option>
+                            );
+                          })}
+                        </select>
+                        <span> ~ </span>
+                        <select
+                          className="cute-select"
+                          value={setting.endTime}
+                          onChange={(e) =>
+                            updateTimeSetting(dateStr, "endTime", e.target.value)
+                          }
+                        >
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const hour = String(i).padStart(2, "0");
+                            return (
+                              <option key={i} value={`${hour}:00`}>
+                                {hour}:00
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                ))
             ) : (
               <p>未選択</p>
             )}
           </div>
 
+          {/* 登録ボタン */}
           <button className="register-btn" onClick={handleRegister}>
             登録
           </button>
 
-          {shareUrl && (
+          {/* 共有リンク */}
+          {shareLink && (
             <div className="share-link-box">
-              <p>共有リンク：</p>
-              <a href={shareUrl} target="_blank" rel="noreferrer" className="share-link">
-                {shareUrl}
+              <a href={shareLink} target="_blank" rel="noreferrer">
+                {shareLink}
               </a>
+              <br />
               <button className="copy-btn" onClick={copyToClipboard}>
-                📋 コピー
+                コピー
               </button>
             </div>
           )}
