@@ -9,6 +9,7 @@
   color: #fff;
   position: relative;
   z-index: 1000;
+  flex-wrap: wrap; /* 小さい画面で折り返し */
 }
 
 .logo-link {
@@ -33,4 +34,45 @@ footer {
   font-family: 'Mochiy Pop P One', 'Kaisei Decol', sans-serif;
   border-top: 2px solid #004CA0;
   margin-top: auto;
+}
+
+/* ====== レスポンシブ対応 ====== */
+@media (max-width: 1024px) {
+  .logo-link {
+    font-size: 1.6rem;
+  }
+  footer {
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-link {
+    font-size: 1.4rem;
+    padding: 0.3rem 0.8rem;
+  }
+
+  footer {
+    font-size: 0.85rem;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-link {
+    font-size: 1.2rem;
+    padding: 0.2rem 0.6rem;
+  }
+
+  footer {
+    font-size: 0.75rem;
+    padding: 0.6rem;
+  }
 }
