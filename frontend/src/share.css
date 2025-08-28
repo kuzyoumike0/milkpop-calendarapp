@@ -151,3 +151,13 @@ body, html {
   min-height: 100vh;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
 }
+.editable-username {
+  color: orange;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  margin: 0 4px;
+}
+.editable-username:hover {
+  color: #ff4b91;
+}
