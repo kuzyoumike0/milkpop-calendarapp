@@ -203,3 +203,20 @@
     box-shadow: 0 0 16px #ff9a9e, 0 0 28px #fad0c4;
   }
 }
+/* 祝日（赤文字） */
+.holiday {
+  color: #e60033 !important; /* 赤 */
+}
+
+/* 祝日名 */
+.holiday-name {
+  font-size: 0.7rem;
+  color: #e60033;
+  margin-top: 2px;
+}
+
+/* ホバー時の色変化 */
+.cell:hover {
+  background: linear-gradient(135deg, #ffd1dc, #ffb3c6);
+  transform: scale(1.05);
+}
