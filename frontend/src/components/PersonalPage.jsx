@@ -45,9 +45,6 @@ const PersonalPage = () => {
   const [weeks, setWeeks] = useState([]);
   const [selectedDate, setSelectedDate] = useState(today);
 
-  // 編集状態
-  const [editingId, setEditingId] = useState(null);
-
   useEffect(() => {
     setWeeks(generateCalendar(currentYear, currentMonth));
   }, [currentYear, currentMonth]);
@@ -73,11 +70,11 @@ const PersonalPage = () => {
     return h ? h[0].name : null;
   };
 
-  // 登録 or 更新
+  // 登録
   const handleRegister = () => {
     if (!title.trim()) return alert("タイトルを入力してください");
 
-    const payload = {
+    const newEvent = {
       title,
       memo,
       date: selectedDate.toISOString().split("T")[0],
@@ -86,68 +83,18 @@ const PersonalPage = () => {
       endTime: timeType === "custom" ? endTime : null,
     };
 
-    if (editingId) {
-      // 編集中 → 更新API
-      fetch(`/api/personal-events/${editingId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    fetch("/api/personal-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newEvent),
+    })
+      .then((res) => res.json())
+      .then((saved) => {
+        setEvents([...events, saved]);
+        setTitle("");
+        setMemo("");
       })
-        .then((res) => res.json())
-        .then((updated) => {
-          setEvents(events.map((ev) => (ev.id === editingId ? updated : ev)));
-          resetForm();
-        })
-        .catch((err) => console.error("更新失敗:", err));
-    } else {
-      // 新規登録
-      fetch("/api/personal-events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-        .then((res) => res.json())
-        .then((saved) => {
-          setEvents([...events, saved]);
-          resetForm();
-        })
-        .catch((err) => console.error("保存失敗:", err));
-    }
-  };
-
-  // 削除
-  const handleDelete = (id) => {
-    if (!window.confirm("この予定を削除しますか？")) return;
-    fetch(`/api/personal-events/${id}`, { method: "DELETE" })
-      .then((res) => {
-        if (res.ok) {
-          setEvents(events.filter((ev) => ev.id !== id));
-        } else {
-          throw new Error("削除失敗");
-        }
-      })
-      .catch((err) => console.error(err));
-  };
-
-  // 編集開始
-  const startEdit = (ev) => {
-    setTitle(ev.title);
-    setMemo(ev.memo || "");
-    setSelectedDate(new Date(ev.date));
-    setTimeType(ev.timeType);
-    setStartTime(ev.startTime || "00:00");
-    setEndTime(ev.endTime || "23:59");
-    setEditingId(ev.id);
-  };
-
-  // フォームリセット
-  const resetForm = () => {
-    setTitle("");
-    setMemo("");
-    setTimeType("allday");
-    setStartTime("00:00");
-    setEndTime("23:59");
-    setEditingId(null);
+      .catch((err) => console.error("保存失敗:", err));
   };
 
   return (
@@ -171,7 +118,7 @@ const PersonalPage = () => {
         onChange={(e) => setMemo(e.target.value)}
       />
 
-      {/* カレンダー & リスト */}
+      {/* カレンダー + 選択中日程 */}
       <div className="calendar-list-container">
         {/* カレンダー */}
         <div className="calendar-box">
@@ -217,98 +164,76 @@ const PersonalPage = () => {
           </div>
         </div>
 
-        {/* 登録済みリスト */}
-        <div className="list-container">
-          <h2>登録済みの予定</h2>
-          <ul>
-            {events.map((ev) => (
-              <li key={ev.id || ev.date}>
-                <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
-                {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
-                <div className="event-actions">
-                  <button onClick={() => startEdit(ev)}>✏️ 編集</button>
-                  <button onClick={() => handleDelete(ev.id)}>❌ 削除</button>
-                </div>
-              </li>
+        {/* 選択中日程 */}
+        <div className="selected-box">
+          <h2>選択中の日程</h2>
+          <p className="date-badge">
+            {selectedDate.getFullYear()}年
+            {String(selectedDate.getMonth() + 1).padStart(2, "0")}月
+            {String(selectedDate.getDate()).padStart(2, "0")}日
+          </p>
+          <div className="time-buttons">
+            {["allday", "day", "night"].map((type, idx) => (
+              <button
+                key={idx}
+                className={`time-btn ${timeType === type ? "active" : ""}`}
+                onClick={() => setTimeType(type)}
+              >
+                {type === "allday" ? "終日" : type === "day" ? "午前" : "午後"}
+              </button>
             ))}
-          </ul>
+            <button
+              className={`time-btn ${timeType === "custom" ? "active" : ""}`}
+              onClick={() => setTimeType("custom")}
+            >
+              時間指定
+            </button>
+          </div>
+
+          {timeType === "custom" && (
+            <div className="custom-time">
+              <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const h = String(i).padStart(2, "0");
+                  return (
+                    <option key={i} value={`${h}:00`}>
+                      {`${h}:00`}
+                    </option>
+                  );
+                })}
+              </select>
+              <span>〜</span>
+              <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const h = String(i).padStart(2, "0");
+                  return (
+                    <option key={i} value={`${h}:00`}>
+                      {`${h}:00`}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
+          <button className="register-btn" onClick={handleRegister}>
+            登録する
+          </button>
         </div>
       </div>
 
-      {/* 時間区分選択 */}
-      <div className="time-options">
-        <label>
-          <input
-            type="radio"
-            value="allday"
-            checked={timeType === "allday"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          終日
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="day"
-            checked={timeType === "day"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          昼
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="night"
-            checked={timeType === "night"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          夜
-        </label>
-        <label>
-          <input
-            type="radio"
-            value="custom"
-            checked={timeType === "custom"}
-            onChange={(e) => setTimeType(e.target.value)}
-          />
-          時間指定
-        </label>
+      {/* 登録済み予定リスト */}
+      <div className="list-container full">
+        <h2>登録済みの予定</h2>
+        <ul>
+          {events.map((ev, i) => (
+            <li key={i}>
+              <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
+              {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
+            </li>
+          ))}
+        </ul>
       </div>
-
-      {timeType === "custom" && (
-        <div className="custom-time">
-          <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
-            {Array.from({ length: 24 }).map((_, i) => {
-              const h = String(i).padStart(2, "0");
-              return (
-                <option key={i} value={`${h}:00`}>
-                  {`${h}:00`}
-                </option>
-              );
-            })}
-          </select>
-          <span>〜</span>
-          <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
-            {Array.from({ length: 24 }).map((_, i) => {
-              const h = String(i).padStart(2, "0");
-              return (
-                <option key={i} value={`${h}:00`}>
-                  {`${h}:00`}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      )}
-
-      <button className="register-btn" onClick={handleRegister}>
-        {editingId ? "更新する" : "登録する"}
-      </button>
-      {editingId && (
-        <button className="cancel-btn" onClick={resetForm}>
-          キャンセル
-        </button>
-      )}
     </div>
   );
 };
