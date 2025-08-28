@@ -7,13 +7,16 @@ export default function PersonalPage() {
   const [memo, setMemo] = useState("");
   const [selectedDates, setSelectedDates] = useState({}); // 日付ごとの設定オブジェクト
   const [events, setEvents] = useState([]);
+  const [currentDate, setCurrentDate] = useState(new Date()); // 今表示している月
+  const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
 
   // 日本時間の今日
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
   // ==== カレンダー生成 ====
-  const year = new Date().getFullYear();
-  const month = new Date().getMonth();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 
@@ -21,20 +24,55 @@ export default function PersonalPage() {
 
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
+  // 範囲の日付を配列化
+  const getDatesBetween = (start, end) => {
+    const dates = [];
+    let current = new Date(start);
+    while (current <= end) {
+      dates.push(
+        current.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })
+      );
+      current.setDate(current.getDate() + 1);
+    }
+    return dates;
+  };
+
   // 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
-    if (selectedDates[dateStr]) {
-      // 選択解除
+
+    if (rangeStart && !rangeEnd) {
+      // 範囲終了を設定
+      setRangeEnd(date);
+
+      const datesInRange =
+        date >= rangeStart
+          ? getDatesBetween(rangeStart, date)
+          : getDatesBetween(date, rangeStart);
+
       const updated = { ...selectedDates };
-      delete updated[dateStr];
+      datesInRange.forEach((d) => {
+        updated[d] = {
+          timeType: "allday",
+          startTime: "09:00",
+          endTime: "18:00",
+        };
+      });
       setSelectedDates(updated);
     } else {
-      // デフォルト設定付きで追加
-      setSelectedDates({
-        ...selectedDates,
-        [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
-      });
+      // 単独選択
+      if (selectedDates[dateStr]) {
+        const updated = { ...selectedDates };
+        delete updated[dateStr];
+        setSelectedDates(updated);
+      } else {
+        setSelectedDates({
+          ...selectedDates,
+          [dateStr]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
+        });
+      }
+      setRangeStart(date);
+      setRangeEnd(null);
     }
   };
 
@@ -59,6 +97,17 @@ export default function PersonalPage() {
     setTitle("");
     setMemo("");
     setSelectedDates({});
+    setRangeStart(null);
+    setRangeEnd(null);
+  };
+
+  // 月移動
+  const prevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
   };
 
   return (
@@ -83,6 +132,13 @@ export default function PersonalPage() {
       <div className="calendar-list-container">
         {/* 自作カレンダー */}
         <div className="calendar-container">
+          <div className="calendar-header">
+            <button onClick={prevMonth}>◀</button>
+            <span>
+              {year}年 {month + 1}月
+            </span>
+            <button onClick={nextMonth}>▶</button>
+          </div>
           <table className="custom-calendar">
             <thead>
               <tr>
