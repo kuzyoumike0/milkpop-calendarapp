@@ -62,6 +62,11 @@ export default function SharePage() {
 
   // 自分の回答保存
   const handleSave = async () => {
+    if (!username.trim()) {
+      alert("名前を入力してください");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
@@ -106,7 +111,10 @@ export default function SharePage() {
       // 即時反映（編集したユーザの回答を更新）
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== editingUser);
-        return [...others, { user_id: editingUser, username: editingUser, responses: editedResponses }];
+        return [
+          ...others,
+          { user_id: editingUser, username: editingUser, responses: editedResponses },
+        ];
       });
 
       socket.emit("updateResponses", token);
@@ -208,7 +216,7 @@ export default function SharePage() {
                       setEditedResponses(r.responses);
                     }}
                   >
-                    {r.username}
+                    {r.username && r.username.trim() !== "" ? r.username : "未入力"}
                   </span>
                 </th>
               ))}
