@@ -75,6 +75,18 @@ router.get("/discord", (_req, res) => {
   res.redirect(url);
 });
 
+//ログアウト
+router.get("/logout", (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
+  res.clearCookie("token", {
+    path: "/",
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "None" : "Lax",
+  });
+  res.redirect(process.env.FRONTEND_URL || "/");
+});
+
 // コールバック
 router.get("/discord/callback", async (req, res) => {
   const code = req.query.code;
