@@ -11,10 +11,11 @@ export default function SharePage() {
   const [saveMessage, setSaveMessage] = useState("");
   const [filter, setFilter] = useState("all");
 
-  // 編集モードのユーザ名
+  // 編集中のユーザ
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
 
+  // スケジュールと回答取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -54,7 +55,7 @@ export default function SharePage() {
     }
   };
 
-  // 他人の回答編集を保存
+  // 管理者編集保存
   const handleEditSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses/admin-edit`, {
@@ -78,7 +79,7 @@ export default function SharePage() {
     return <div className="share-container">読み込み中...</div>;
   }
 
-  // 日付ごとの集計
+  // 日付ごとに集計
   const aggregate = schedule.dates.map((d) => {
     const counts = { ○: 0, ✕: 0, △: 0 };
     const users = [];
@@ -94,7 +95,7 @@ export default function SharePage() {
     return { ...d, counts, users };
   });
 
-  // 全ユーザリスト
+  // ユーザ一覧
   const userList = [...new Set(responses.map((r) => r.username))];
 
   return (
@@ -118,9 +119,7 @@ export default function SharePage() {
               <span className="date-label">
                 {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
                 {d.timeType === "時間指定"
-                  ? `（${d.timeType} ${d.startTime || "??:??"} ~ ${
-                      d.endTime || "??:??"
-                    }）`
+                  ? `（${d.startTime} ~ ${d.endTime}）`
                   : `（${d.timeType}）`}
               </span>
               <select
@@ -186,9 +185,7 @@ export default function SharePage() {
                   <td>
                     {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
                     {d.timeType === "時間指定"
-                      ? `（${d.startTime || "??:??"} ~ ${
-                          d.endTime || "??:??"
-                        }）`
+                      ? `（${d.startTime} ~ ${d.endTime}）`
                       : `（${d.timeType}）`}
                   </td>
                   <td>
@@ -216,9 +213,9 @@ export default function SharePage() {
                             }
                           >
                             <option value="-">- 未回答</option>
-                            <option value="○">○ 参加</option>
-                            <option value="✕">✕ 不参加</option>
-                            <option value="△">△ 未定</option>
+                            <option value="○">○</option>
+                            <option value="✕">✕</option>
+                            <option value="△">△</option>
                           </select>
                         ) : (
                           current
