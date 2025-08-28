@@ -18,10 +18,8 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ランダムな user_id を生成（固定化）
   const [userId] = useState(() => uuidv4());
 
-  // timeType → 日本語ラベル変換
   const timeLabel = (t) => {
     if (t === "allday") return "終日";
     if (t === "day") return "午前";
@@ -30,12 +28,12 @@ export default function SharePage() {
     return t;
   };
 
-  // 共通のキー生成
   const buildKey = (date, d) => {
+    const isoDate = new Date(date).toISOString().split("T")[0];
     if (d.timeType === "custom" && d.startTime && d.endTime) {
-      return `${date} (${d.startTime} ~ ${d.endTime})`;
+      return `${isoDate} (${d.startTime} ~ ${d.endTime})`;
     }
-    return `${date} (${timeLabel(d.timeType)})`;
+    return `${isoDate} (${timeLabel(d.timeType)})`;
   };
 
   useEffect(() => {
@@ -60,7 +58,6 @@ export default function SharePage() {
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // 自分の回答保存
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -68,7 +65,7 @@ export default function SharePage() {
     }
 
     try {
-      const res = await fetch(`/api/schedules/${token}/responses`, {
+      await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,9 +74,7 @@ export default function SharePage() {
           responses: myResponses,
         }),
       });
-      await res.json();
 
-      // 即時反映（自分の回答を responses にマージ）
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== userId);
         return [...others, { user_id: userId, username, responses: myResponses }];
@@ -94,10 +89,9 @@ export default function SharePage() {
     }
   };
 
-  // 編集保存
   const handleEditSave = async () => {
     try {
-      const res = await fetch(`/api/schedules/${token}/responses`, {
+      await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -106,9 +100,7 @@ export default function SharePage() {
           responses: editedResponses,
         }),
       });
-      await res.json();
 
-      // 即時反映（編集したユーザの回答を更新）
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== editingUser);
         return [
@@ -124,7 +116,6 @@ export default function SharePage() {
     }
   };
 
-  // 集計
   const summary = (schedule.dates || []).map((d) => {
     const key = buildKey(d.date, d);
     const counts = { "◯": 0, "✕": 0, "△": 0 };
@@ -135,7 +126,6 @@ export default function SharePage() {
     return { ...d, key, counts };
   });
 
-  // フィルター適用
   const filteredSummary = [...summary].sort((a, b) => {
     if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
     if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
