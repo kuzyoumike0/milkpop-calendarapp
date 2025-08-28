@@ -1,30 +1,34 @@
 # ===== Frontend build stage =====
-FROM node:18 AS frontend
+FROM node:18-alpine AS frontend
 WORKDIR /app/frontend
+
+# 依存関係のみ先にコピー（ビルドキャッシュ最適化）
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci
+
+# ソースをコピーしてビルド
 COPY frontend/ ./
 RUN npm run build
 
-# ===== Backend stage =====
-FROM node:18 AS backend
-#WORKDIR /app/backend
-WORKDIR /app
 
-# ===== backend 依存 =====
-#COPY backend/package*.json ./
-#RUN npm install --production
-#COPY backend/ ./
+# ===== Backend runtime stage =====
+FROM node:18-alpine AS backend
+WORKDIR /app
+ENV NODE_ENV=production
+
+# backend 依存関係（キャッシュ最適化）
 COPY backend/package*.json ./backend/
-RUN npm --prefix backend install --production
+RUN npm --prefix backend ci --omit=dev
+
+# backend ソース
 COPY backend ./backend
 
-# frontend のビルド成果物を backend/public にコピー
-#COPY --from=frontend /app/frontend/build ./public
+# フロントのビルド成果物を /app/frontend/build に配置
+# （backend/index.js は ../frontend/build を参照）
 COPY --from=frontend /app/frontend/build ./frontend/build
 
-WORKDIR /app/backend
-
+# ポート公開
 EXPOSE 5000
-CMD ["npm", "start"]
 
+# 直接 node で起動（npm 経由だと SIGTERM 伝播の挙動が異なるため）
+CMD ["node", "backend/index.js"]
