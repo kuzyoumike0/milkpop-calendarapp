@@ -181,3 +181,36 @@
 .event-main {
   font-weight: bold;
 }
+/* 時間指定のプルダウンをお洒落に */
+.cute-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 2px solid #FDB9C8;
+  background: linear-gradient(135deg, #111, #333);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.cute-select:hover {
+  background: linear-gradient(135deg, #222, #444);
+  transform: scale(1.05);
+}
+
+.cute-select:focus {
+  outline: none;
+  border-color: #004CA0;
+  box-shadow: 0 0 12px rgba(0, 76, 160, 0.8);
+}
+
+.cute-select option {
+  background: #111;
+  color: white;
+  font-size: 1rem;
+}
