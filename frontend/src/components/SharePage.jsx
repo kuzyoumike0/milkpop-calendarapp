@@ -114,14 +114,14 @@ export default function SharePage() {
   };
 
   // 集計
-  const summary = Object.entries(schedule.dates || {}).map(([date, d]) => {
-    const key = buildKey(date, d);
+  const summary = (schedule.dates || []).map((d) => {
+    const key = buildKey(d.date, d);
     const counts = { "◯": 0, "✕": 0, "△": 0 };
     responses.forEach((r) => {
       const val = r.responses?.[key];
       if (val && counts[val] !== undefined) counts[val]++;
     });
-    return { date, ...d, key, counts };
+    return { ...d, key, counts };
   });
 
   // フィルター適用
@@ -147,8 +147,8 @@ export default function SharePage() {
           className="username-input"
         />
         <div className="my-responses-list">
-          {Object.entries(schedule.dates || {}).map(([date, d], idx) => {
-            const key = buildKey(date, d);
+          {(schedule.dates || []).map((d, idx) => {
+            const key = buildKey(d.date, d);
             return (
               <div key={idx} className="my-response-item">
                 <span className="date-label">{key}</span>
