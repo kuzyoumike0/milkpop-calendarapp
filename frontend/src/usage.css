@@ -34,7 +34,7 @@
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-  text-align: center;   /* 中央寄せ */
+  text-align: center;   /* 文字中央寄せ */
 }
 
 .usage-section h2 {
@@ -60,23 +60,22 @@
 
 .usage-img {
   display: block;
-  width: 100%;          /* 親に合わせる */
-  max-width: 300px;     /* PCでも必ず最大300pxまで */
+  width: 100%;
+  max-width: 200px;   /* PCでは必ず200pxまで */
   height: auto;
-  margin: 0 auto;       /* センター寄せ */
+  margin: 0 auto;
   border-radius: 12px;
   border: 2px solid #fdb9c8;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .usage-caption {
-  margin-top: 8px;
-  font-size: 0.9rem;
+  margin-top: 6px;
+  font-size: 0.85rem;
   color: #eee;
   font-style: italic;
   text-align: center;
 }
-
 
 /* =============================
    戻るリンク
@@ -84,4 +83,13 @@
 .back-links {
   text-align: center;
   margin-top: 50px;
+}
+
+/* =============================
+   スマホ対応
+============================= */
+@media (max-width: 600px) {
+  .usage-img {
+    max-width: 100%;   /* スマホでは幅いっぱい */
+  }
 }
