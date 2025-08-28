@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Holidays from "date-holidays";
 import "../personal.css";
 
 export default function PersonalPage() {
@@ -13,22 +14,25 @@ export default function PersonalPage() {
   // 日本時間の今日
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
-  // === カレンダー生成 ===
+  // ==== カレンダー生成 ====
   const year = new Date().getFullYear();
   const month = new Date().getMonth(); // 0始まり
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
 
-  // 日付リストを作成
+  // Holidays ライブラリ
+  const hd = new Holidays("JP");
+
+  // 日付リスト
   const dates = [];
   for (let i = 1; i <= lastDay.getDate(); i++) {
     dates.push(new Date(year, month, i));
   }
 
-  // 曜日を日本語
+  // 曜日
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // クリック処理
+  // 日付クリック
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
     if (selectedDates.includes(dateStr)) {
@@ -102,11 +106,16 @@ export default function PersonalPage() {
                       timeZone: "Asia/Tokyo",
                     });
 
+                    // 祝日チェック
+                    const holidayInfo = hd.isHoliday(date);
+                    const isHoliday = holidayInfo && holidayInfo[0];
+
                     let cellClass = "cell";
                     if (date.getDay() === 0) cellClass += " sunday";
                     if (date.getDay() === 6) cellClass += " saturday";
                     if (dateStr === today) cellClass += " today";
                     if (selectedDates.includes(dateStr)) cellClass += " selected";
+                    if (isHoliday) cellClass += " holiday";
 
                     return (
                       <td
@@ -114,7 +123,10 @@ export default function PersonalPage() {
                         className={cellClass}
                         onClick={() => handleDateClick(date)}
                       >
-                        {dateNum}
+                        <div>{dateNum}</div>
+                        {isHoliday && (
+                          <div className="holiday-name">{holidayInfo[0].name}</div>
+                        )}
                       </td>
                     );
                   })}
