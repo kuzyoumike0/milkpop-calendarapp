@@ -1,3 +1,4 @@
+// frontend/src/components/Header.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "../common.css";
@@ -14,17 +15,15 @@ export default function Header({ user }) {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
-                <Link to="/usage" className="nav-link">
+        <Link to="/usage" className="nav-link">
           使い方
         </Link>
         <Link to="/register" className="nav-link">
           日程登録
         </Link>
-        {user && (
-          <Link to="/personal" className="nav-link">
-            個人スケジュール
-          </Link>
-        )}
+        <Link to="/personal" className="nav-link">
+          個人日程登録
+        </Link>
         {user ? (
           <a href="/auth/logout" className="nav-btn">
             ログアウト
@@ -49,27 +48,25 @@ export default function Header({ user }) {
       {/* モバイルメニュー */}
       <div className={`nav-links-mobile ${menuOpen ? "open" : ""}`}>
         <Link
+          to="/usage"
+          className="nav-link-mobile"
+          onClick={() => setMenuOpen(false)}
+        >
+          使い方
+        </Link>
+        <Link
           to="/register"
           className="nav-link-mobile"
           onClick={() => setMenuOpen(false)}
         >
           日程登録
         </Link>
-        {user && (
-          <Link
-            to="/personal"
-            className="nav-link-mobile"
-            onClick={() => setMenuOpen(false)}
-          >
-            個人スケジュール
-          </Link>
-        )}
         <Link
-          to="/usage"
+          to="/personal"
           className="nav-link-mobile"
           onClick={() => setMenuOpen(false)}
         >
-          使い方
+          個人日程登録
         </Link>
         {user ? (
           <a
