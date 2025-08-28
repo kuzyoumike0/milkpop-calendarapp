@@ -1,4 +1,3 @@
-// frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
@@ -9,6 +8,7 @@ const getTodayJST = () => {
   return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 };
 
+// 月単位カレンダー生成
 const generateCalendar = (year, month) => {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -146,13 +146,10 @@ const PersonalPage = () => {
       .then((res) => res.json())
       .then((saved) => {
         if (editingId) {
-          // 更新
           setEvents(events.map((ev) => (ev.id === editingId ? saved : ev)));
         } else {
-          // 新規
           setEvents([...events, ...(Array.isArray(saved) ? saved : [saved])]);
         }
-        // 入力リセット
         setTitle("");
         setMemo("");
         setEditingId(null);
@@ -160,37 +157,10 @@ const PersonalPage = () => {
       .catch((err) => console.error("保存失敗:", err));
   };
 
-  // 編集開始
-  const handleEdit = (ev) => {
-    setTitle(ev.title);
-    setMemo(ev.memo);
-    setSelectedDates([new Date(ev.date)]);
-    setEditingId(ev.id);
-    setTimeSettings({
-      [ev.date]: {
-        type: ev.timeType,
-        start: ev.startTime,
-        end: ev.endTime,
-      },
-    });
-  };
-
-  // 削除
-  const handleDelete = (id) => {
-    fetch(`/api/personal-events/${id}`, { method: "DELETE" })
-      .then((res) => {
-        if (res.ok) {
-          setEvents(events.filter((ev) => ev.id !== id));
-        }
-      })
-      .catch((err) => console.error("削除失敗:", err));
-  };
-
   return (
     <div className="personal-page">
       <h1 className="page-title">個人日程登録ページ</h1>
 
-      {/* タイトル */}
       <input
         type="text"
         className="title-input"
@@ -198,8 +168,6 @@ const PersonalPage = () => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-
-      {/* メモ */}
       <textarea
         className="memo-input"
         placeholder="メモを入力してください"
@@ -220,66 +188,115 @@ const PersonalPage = () => {
         </button>
       </div>
 
-      {/* 選択中日程 */}
-      <div className="selected-box">
-        <h2>選択中の日程</h2>
-        {[...selectedDates].sort((a, b) => a - b).map((d, idx) => {
-          const key = formatDateKey(d);
-          const setting = timeSettings[key] || { type: "allday" };
-          return (
-            <div key={idx} className="selected-card">
-              <p className="date-badge">
-                {d.getFullYear()}年{String(d.getMonth() + 1).padStart(2, "0")}月
-                {String(d.getDate()).padStart(2, "0")}日
-              </p>
+      <div className="calendar-list-container">
+        {/* カレンダー */}
+        <div className="calendar-box">
+          <div className="calendar-header">
+            <button onClick={() => setCurrentMonth(currentMonth - 1)}>◀</button>
+            <span>{currentYear}年 {currentMonth + 1}月</span>
+            <button onClick={() => setCurrentMonth(currentMonth + 1)}>▶</button>
+          </div>
+          <table className="calendar-table">
+            <thead>
+              <tr>
+                <th className="sunday">日</th>
+                <th>月</th>
+                <th>火</th>
+                <th>水</th>
+                <th>木</th>
+                <th>金</th>
+                <th className="saturday">土</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weeks.map((week, i) => (
+                <tr key={i}>
+                  {week.map((date, j) => {
+                    const isToday = isSameDate(date, today);
+                    const selected = selectedDates.some((d) => isSameDate(d, date));
+                    const hol = holiday(date);
+                    const isCurrentMonth = date.getMonth() === currentMonth;
+                    return (
+                      <td
+                        key={j}
+                        className={`cell 
+                          ${isToday ? "today" : ""} 
+                          ${selected ? "selected-date" : ""} 
+                          ${date.getDay() === 0 ? "sunday" : ""} 
+                          ${date.getDay() === 6 ? "saturday" : ""} 
+                          ${!isCurrentMonth ? "other-month" : ""}`}
+                        onClick={() => isCurrentMonth && handleSelect(date)}
+                      >
+                        {date.getDate()}
+                        {hol && <div className="holiday-name">{hol}</div>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-              <div className="time-buttons">
-                {["allday", "day", "night"].map((type) => (
+        {/* 選択中日程 */}
+        <div className="selected-box">
+          <h2>選択中の日程</h2>
+          {[...selectedDates].sort((a, b) => a - b).map((d, idx) => {
+            const key = formatDateKey(d);
+            const setting = timeSettings[key] || { type: "allday" };
+            return (
+              <div key={idx} className="selected-card">
+                <p className="date-badge">
+                  {d.getFullYear()}年{String(d.getMonth() + 1).padStart(2, "0")}月
+                  {String(d.getDate()).padStart(2, "0")}日
+                </p>
+                <div className="time-buttons">
+                  {["allday", "day", "night"].map((type) => (
+                    <button
+                      key={type}
+                      className={`time-btn ${setting.type === type ? "active" : ""}`}
+                      onClick={() => setDateTimeType(d, type)}
+                    >
+                      {type === "allday" ? "終日" : type === "day" ? "午前" : "午後"}
+                    </button>
+                  ))}
                   <button
-                    key={type}
-                    className={`time-btn ${setting.type === type ? "active" : ""}`}
-                    onClick={() => setDateTimeType(d, type)}
+                    className={`time-btn ${setting.type === "custom" ? "active" : ""}`}
+                    onClick={() => setDateTimeType(d, "custom")}
                   >
-                    {type === "allday" ? "終日" : type === "day" ? "午前" : "午後"}
+                    時間指定
                   </button>
-                ))}
-                <button
-                  className={`time-btn ${setting.type === "custom" ? "active" : ""}`}
-                  onClick={() => setDateTimeType(d, "custom")}
-                >
-                  時間指定
-                </button>
-              </div>
-
-              {setting.type === "custom" && (
-                <div className="custom-time">
-                  <select
-                    value={setting.start || "00:00"}
-                    onChange={(e) => setDateCustomTime(d, e.target.value, setting.end || "23:59")}
-                  >
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const h = String(i).padStart(2, "0");
-                      return <option key={i}>{`${h}:00`}</option>;
-                    })}
-                  </select>
-                  <span>〜</span>
-                  <select
-                    value={setting.end || "23:59"}
-                    onChange={(e) => setDateCustomTime(d, setting.start || "00:00", e.target.value)}
-                  >
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const h = String(i).padStart(2, "0");
-                      return <option key={i}>{`${h}:00`}</option>;
-                    })}
-                  </select>
                 </div>
-              )}
-            </div>
-          );
-        })}
-        <button className="register-btn" onClick={handleRegister}>
-          {editingId ? "更新する" : "登録する"}
-        </button>
+                {setting.type === "custom" && (
+                  <div className="custom-time">
+                    <select
+                      value={setting.start || "00:00"}
+                      onChange={(e) => setDateCustomTime(d, e.target.value, setting.end || "23:59")}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                    <span>〜</span>
+                    <select
+                      value={setting.end || "23:59"}
+                      onChange={(e) => setDateCustomTime(d, setting.start || "00:00", e.target.value)}
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const h = String(i).padStart(2, "0");
+                        return <option key={i}>{`${h}:00`}</option>;
+                      })}
+                    </select>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <button className="register-btn" onClick={handleRegister}>
+            {editingId ? "更新する" : "登録する"}
+          </button>
+        </div>
       </div>
 
       {/* 登録済みリスト */}
@@ -292,10 +309,6 @@ const PersonalPage = () => {
                 <strong>{ev.date}</strong> {ev.title} ({ev.timeType})
               </div>
               {ev.memo && <p className="memo-text">📝 {ev.memo}</p>}
-              <div className="event-actions">
-                <button className="edit-btn" onClick={() => handleEdit(ev)}>✏ 編集</button>
-                <button className="delete-btn" onClick={() => handleDelete(ev.id)}>❌ 削除</button>
-              </div>
             </li>
           ))}
         </ul>
