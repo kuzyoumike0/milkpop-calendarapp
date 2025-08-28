@@ -7,8 +7,7 @@ const hd = new Holidays("JP");
 // 日本時間の今日
 const getTodayJST = () => {
   const now = new Date();
-  const jst = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
-  return jst;
+  return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" }));
 };
 
 // 月の日付を生成
@@ -39,7 +38,6 @@ const PersonalPage = () => {
   const [startTime, setStartTime] = useState("00:00");
   const [endTime, setEndTime] = useState("23:59");
 
-  // カレンダー用
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [weeks, setWeeks] = useState([]);
@@ -49,15 +47,11 @@ const PersonalPage = () => {
     setWeeks(generateCalendar(currentYear, currentMonth));
   }, [currentYear, currentMonth]);
 
-  // サーバーから予定取得
   useEffect(() => {
     fetch("/api/personal-events")
       .then((res) => res.json())
       .then((data) => setEvents(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("取得失敗:", err);
-        setEvents([]);
-      });
+      .catch(() => setEvents([]));
   }, []);
 
   const isSameDate = (a, b) =>
@@ -195,22 +189,14 @@ const PersonalPage = () => {
               <select value={startTime} onChange={(e) => setStartTime(e.target.value)}>
                 {Array.from({ length: 24 }).map((_, i) => {
                   const h = String(i).padStart(2, "0");
-                  return (
-                    <option key={i} value={`${h}:00`}>
-                      {`${h}:00`}
-                    </option>
-                  );
+                  return <option key={i}>{`${h}:00`}</option>;
                 })}
               </select>
               <span>〜</span>
               <select value={endTime} onChange={(e) => setEndTime(e.target.value)}>
                 {Array.from({ length: 24 }).map((_, i) => {
                   const h = String(i).padStart(2, "0");
-                  return (
-                    <option key={i} value={`${h}:00`}>
-                      {`${h}:00`}
-                    </option>
-                  );
+                  return <option key={i}>{`${h}:00`}</option>;
                 })}
               </select>
             </div>
