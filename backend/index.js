@@ -1,8 +1,6 @@
 // backend/index.js （完全統合版 v2）
 // 旧版API互換: aggregate, deleteResponse, updateResponses, 回答キー正規化を維持
 
-import 'dotenv/config';
-
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
