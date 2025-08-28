@@ -13,7 +13,7 @@ export default function SharePage() {
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
   const [filter, setFilter] = useState("all");
-  const [editingUser, setEditingUser] = useState(null); // 👈 編集中ユーザ
+  const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -59,8 +59,11 @@ export default function SharePage() {
         body: JSON.stringify({ username, responses: myResponses }),
       });
       const updated = await res.json();
+
+      // 即時反映
       setResponses(updated);
       socket.emit("updateSchedule", token);
+
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
     } catch {
@@ -80,8 +83,11 @@ export default function SharePage() {
         }),
       });
       const updated = await res.json();
+
+      // 即時反映
       setResponses(updated);
       socket.emit("updateSchedule", token);
+
       setEditingUser(null);
     } catch {
       alert("保存に失敗しました");
@@ -96,6 +102,14 @@ export default function SharePage() {
       if (val && counts[val] !== undefined) counts[val]++;
     });
     return { ...d, counts };
+  });
+
+  // フィルター適用
+  const filteredSummary = [...summary].sort((a, b) => {
+    if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
+    if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
+    if (filter === "maybe") return b.counts["△"] - a.counts["△"];
+    return 0;
   });
 
   return (
@@ -175,7 +189,7 @@ export default function SharePage() {
             </tr>
           </thead>
           <tbody>
-            {summary.map((d, idx) => (
+            {filteredSummary.map((d, idx) => (
               <tr key={idx}>
                 <td>{formatDate(d)}</td>
                 <td>
