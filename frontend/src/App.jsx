@@ -22,7 +22,7 @@ import "./usage.css"; // ← 追加
 function MeRedirect() {
   useEffect(() => {
     // ログイン後はトップページへ誘導
-    window.location.replace("/");
+    window.location.replace("/personal");
   }, []);
   return <div style={{ textAlign: "center", padding: "50px" }}>ログイン完了...</div>;
 }
