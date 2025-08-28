@@ -155,3 +155,21 @@
   color: white;
   font-weight: bold;
 }
+.mode-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.mode-tabs button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  font-weight: bold;
+  cursor: pointer;
+}
+.mode-tabs button.active {
+  background: linear-gradient(90deg, #004ca0, #fdb9c8);
+  color: white;
+}
