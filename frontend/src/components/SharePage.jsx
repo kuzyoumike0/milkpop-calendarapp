@@ -10,6 +10,7 @@ export default function SharePage() {
   const [answers, setAnswers] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
 
   // スケジュール取得 & 回答一覧取得
   useEffect(() => {
@@ -63,19 +64,30 @@ export default function SharePage() {
     }
   };
 
+  // 回答集計
+  const countResponses = (date) => {
+    let count = { "○": 0, "✕": 0, "△": 0 };
+    responses.forEach((r) => {
+      const val = r.responses[date];
+      if (val && count[val] !== undefined) count[val]++;
+    });
+    return count;
+  };
+
   if (loading) return <div className="share-container">読み込み中...</div>;
   if (!schedule) return <div className="share-container">スケジュールが見つかりません</div>;
 
   return (
     <div className="share-container">
-      <h1 className="share-title">📅 {schedule.title}</h1>
+      <h1 className="share-title">MilkPOP Calendar</h1>
 
       {/* 自分の回答 */}
       <div className="my-responses">
+        <h2>自分の回答</h2>
         <input
           type="text"
           className="username-input"
-          placeholder="お名前を入力"
+          placeholder="あなたの名前"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -86,16 +98,18 @@ export default function SharePage() {
               <span className="date-label">
                 {new Date(d.date).toLocaleDateString("ja-JP", {
                   year: "numeric",
-                  month: "numeric",
+                  month: "long",
                   day: "numeric",
                 })}
+                {d.timeType && `（${d.timeType}）`}
+                {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
               </span>
               <select
                 className="fancy-select"
                 value={answers[d.date] || ""}
                 onChange={(e) => handleChange(d.date, e.target.value)}
               >
-                <option value="">選択してください</option>
+                <option value="">- 未回答</option>
                 <option value="○">○ 参加</option>
                 <option value="✕">✕ 不参加</option>
                 <option value="△">△ 未定</option>
@@ -105,7 +119,7 @@ export default function SharePage() {
         </div>
 
         <button className="save-btn" onClick={handleSave}>
-          保存
+          保存する
         </button>
         {saveMessage && <div className="save-message">{saveMessage}</div>}
       </div>
@@ -113,39 +127,47 @@ export default function SharePage() {
       {/* みんなの回答 */}
       <div className="all-responses">
         <h2>みんなの回答</h2>
+
+        <div>
+          フィルタ：
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="all">すべて表示</option>
+            <option value="ok">○ 多い順</option>
+            <option value="ng">✕ 多い順</option>
+            <option value="maybe">△ 多い順</option>
+          </select>
+        </div>
+
         <div className="table-container">
           <table className="responses-table">
             <thead>
               <tr>
-                <th>名前</th>
-                {schedule.dates.map((d, i) => (
-                  <th key={i}>
-                    {new Date(d.date).toLocaleDateString("ja-JP", {
-                      month: "numeric",
-                      day: "numeric",
-                    })}
-                  </th>
-                ))}
+                <th>日付</th>
+                <th>回答数</th>
               </tr>
             </thead>
             <tbody>
-              {responses.map((r, i) => (
-                <tr key={i}>
-                  <td className="editable-username">{r.username}</td>
-                  {schedule.dates.map((d, j) => {
-                    const val = r.responses[d.date] || "-";
-                    let cls = "";
-                    if (val === "○") cls = "count-ok";
-                    else if (val === "✕") cls = "count-ng";
-                    else if (val === "△") cls = "count-maybe";
-                    return (
-                      <td key={j} className={cls}>
-                        {val}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
+              {schedule.dates.map((d, i) => {
+                const counts = countResponses(d.date);
+                return (
+                  <tr key={i}>
+                    <td>
+                      {new Date(d.date).toLocaleDateString("ja-JP", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                      {d.timeType && `（${d.timeType}）`}
+                      {d.startTime && d.endTime && ` (${d.startTime} ~ ${d.endTime})`}
+                    </td>
+                    <td>
+                      <span className="count-ok">○{counts["○"]}</span>{" "}
+                      <span className="count-ng">✕{counts["✕"]}</span>{" "}
+                      <span className="count-maybe">△{counts["△"]}</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
