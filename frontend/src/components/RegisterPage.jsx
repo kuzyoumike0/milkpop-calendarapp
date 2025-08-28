@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Holidays from "date-holidays";
+import { v4 as uuidv4 } from "uuid";  // ← 追加
 import "../register.css";
 
 export default function RegisterPage() {
@@ -8,7 +9,8 @@ export default function RegisterPage() {
   const [events, setEvents] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [rangeStart, setRangeStart] = useState(null);
-  const [mode, setMode] = useState("single"); // "single" | "multi" | "range"
+  const [mode, setMode] = useState("single");
+  const [shareUrl, setShareUrl] = useState(""); // ← 追加
 
   const today = new Date().toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
   const year = currentDate.getFullYear();
@@ -19,7 +21,6 @@ export default function RegisterPage() {
   const hd = new Holidays("JP");
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // 範囲の日付を配列化
   const getDatesBetween = (start, end) => {
     const dates = [];
     let current = new Date(start);
@@ -30,7 +31,6 @@ export default function RegisterPage() {
     return dates;
   };
 
-  // 日付クリック処理
   const handleDateClick = (date) => {
     const dateStr = date.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" });
 
@@ -71,7 +71,6 @@ export default function RegisterPage() {
     }
   };
 
-  // 時間区分変更
   const updateTimeSetting = (dateStr, field, value) => {
     setSelectedDates({
       ...selectedDates,
@@ -88,9 +87,19 @@ export default function RegisterPage() {
       dates: { ...selectedDates },
     };
     setEvents((prev) => [...prev, newEvent]);
+
+    // 共有リンク生成
+    const token = uuidv4();
+    setShareUrl(`${window.location.origin}/share/${token}`);
+
     setTitle("");
     setSelectedDates({});
     setRangeStart(null);
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    alert("リンクをコピーしました！");
   };
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -100,7 +109,6 @@ export default function RegisterPage() {
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
 
-      {/* タイトル入力 */}
       <input
         type="text"
         className="title-input"
@@ -251,14 +259,21 @@ export default function RegisterPage() {
             登録
           </button>
 
+          {/* 共有リンク表示 */}
+          {shareUrl && (
+            <div className="share-link-box">
+              <p>共有リンク：</p>
+              <a href={shareUrl} target="_blank" rel="noreferrer">{shareUrl}</a>
+              <button className="copy-btn" onClick={copyToClipboard}>コピー</button>
+            </div>
+          )}
+
           <div className="events-list">
             <h2>登録済み予定</h2>
             {events.length > 0 ? (
               events.map((ev) => (
                 <div key={ev.id}>
-                  <p>
-                    <strong>{ev.title}</strong>
-                  </p>
+                  <p><strong>{ev.title}</strong></p>
                   {Object.entries(ev.dates).map(([date, setting], j) => {
                     let timeLabel = "";
                     if (setting.timeType === "allday") timeLabel = "終日";
@@ -266,11 +281,7 @@ export default function RegisterPage() {
                     else if (setting.timeType === "night") timeLabel = "夜";
                     else if (setting.timeType === "custom")
                       timeLabel = `${setting.startTime} ~ ${setting.endTime}`;
-                    return (
-                      <p key={j}>
-                        {date}：{timeLabel}
-                      </p>
-                    );
+                    return <p key={j}>{date}：{timeLabel}</p>;
                   })}
                 </div>
               ))
