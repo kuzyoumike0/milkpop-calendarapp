@@ -1,3 +1,4 @@
+// frontend/src/components/RegisterPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
@@ -60,7 +61,6 @@ const RegisterPage = () => {
   const handleSelect = (date) => {
     const exists = selectedDates.find((d) => isSameDate(d, date));
 
-    // ✅ もう一度クリックで解除
     if (exists) {
       setSelectedDates(selectedDates.filter((d) => !isSameDate(d, date)));
       return;
@@ -159,6 +159,7 @@ const RegisterPage = () => {
     <div className="register-page">
       <h1 className="page-title">MilkPOP Calendar</h1>
 
+      {/* タイトル入力フォーム */}
       <input
         type="text"
         placeholder="タイトルを入力"
@@ -167,6 +168,7 @@ const RegisterPage = () => {
         className="title-input"
       />
 
+      {/* モード選択 */}
       <div className="mode-tabs">
         <button
           className={mode === "single" ? "active" : ""}
@@ -188,6 +190,7 @@ const RegisterPage = () => {
         </button>
       </div>
 
+      {/* カレンダー */}
       <div className="calendar-container">
         <div className="calendar-box">
           <div className="calendar-header">
@@ -240,6 +243,7 @@ const RegisterPage = () => {
           </table>
         </div>
 
+        {/* 選択中の日程リスト */}
         <div className="selected-list">
           <h2>選択中の日程</h2>
           {[...selectedDates]
@@ -252,7 +256,7 @@ const RegisterPage = () => {
                 <div key={idx} className="selected-card">
                   <span className="date-badge">
                     {d.getFullYear()}-
-                    {String(d.getMonth() + 1).padStart(2, "0")}- 
+                    {String(d.getMonth() + 1).padStart(2, "0")}-
                     {String(d.getDate()).padStart(2, "0")}
                   </span>
                   <div className="time-buttons">
@@ -280,6 +284,39 @@ const RegisterPage = () => {
                       時間指定
                     </button>
                   </div>
+
+                  {/* 時間指定用プルダウン */}
+                  {setting.showTimeSelect && (
+                    <div className="custom-time">
+                      <select
+                        value={setting.start || "09:00"}
+                        onChange={(e) => handleTimeChange(d, "start", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }).map((_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {`${h}:00`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <span>〜</span>
+                      <select
+                        value={setting.end || "18:00"}
+                        onChange={(e) => handleTimeChange(d, "end", e.target.value)}
+                      >
+                        {Array.from({ length: 24 }).map((_, i) => {
+                          const h = String(i).padStart(2, "0");
+                          return (
+                            <option key={i} value={`${h}:00`}>
+                              {`${h}:00`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                  )}
                 </div>
               );
             })}
