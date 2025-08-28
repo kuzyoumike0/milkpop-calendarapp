@@ -27,7 +27,7 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser());
 
-// CORS（本番：FRONTEND_URL、未設定時はワイルドカード許容）
+// CORS（本番は FRONTEND_URL、未設定ならワイルドカード許容）
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || true,
@@ -107,6 +107,8 @@ app.get("/api/me", authRequired, (req, res) => {
 });
 
 // ===== schedules API =====
+
+// 一覧
 app.get("/api/schedules", async (_req, res) => {
   try {
     const result = await pool.query(
@@ -119,6 +121,7 @@ app.get("/api/schedules", async (_req, res) => {
   }
 });
 
+// 作成
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates, options } = req.body;
