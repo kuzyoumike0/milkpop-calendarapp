@@ -48,6 +48,20 @@ export default function UsagePage() {
         </figure>
       </section>
 
+      {/* 共有日程ページ説明 */}
+      <section className="usage-section">
+        <h2>④ 共有日程ページ</h2>
+        <p>
+          登録した日程を他の人と共有できます。共有リンクを発行すると、参加者はそのリンクから日程に対して
+          「〇 / △ / ✕」の回答を入力できます。  
+          入力された回答は即時反映され、表形式で見やすく確認できます。
+        </p>
+        <figure className="usage-figure">
+          <img src="/screenshot4.png" alt="共有日程ページ説明" className="usage-img" />
+          <figcaption className="usage-caption">共有日程ページのスクリーンショット</figcaption>
+        </figure>
+      </section>
+
       {/* 戻るリンク */}
       <div className="back-links">
         <Link to="/" className="nav-btn">🏠 トップへ戻る</Link>
