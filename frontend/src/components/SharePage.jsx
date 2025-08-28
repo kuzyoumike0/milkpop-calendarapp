@@ -14,7 +14,7 @@ export default function SharePage() {
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
 
-  // データ取得
+  // スケジュールと回答を取得
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
@@ -27,7 +27,7 @@ export default function SharePage() {
       .catch(() => alert("回答取得失敗"));
   }, [token]);
 
-  // 自分の回答保存
+  // 自分の回答を保存
   const handleSave = async () => {
     try {
       const payload = {
@@ -54,7 +54,7 @@ export default function SharePage() {
     }
   };
 
-  // 管理者編集保存
+  // 編集保存（管理者用）
   const handleEditSave = async () => {
     try {
       const res = await fetch(`/api/schedules/${token}/responses/admin-edit`, {
@@ -78,7 +78,7 @@ export default function SharePage() {
     return <div className="share-container">読み込み中...</div>;
   }
 
-  // 集計
+  // 日付ごとに集計
   const aggregate = schedule.dates.map((d) => {
     const counts = { "○": 0, "✕": 0, "△": 0 };
     const users = [];
@@ -117,7 +117,7 @@ export default function SharePage() {
               <span className="date-label">
                 {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
                 {d.timeType === "時間指定"
-                  ? `（${d.startTime} ~ ${d.endTime}）`
+                  ? `（${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}）`
                   : `（${d.timeType}）`}
               </span>
               <select
@@ -183,7 +183,7 @@ export default function SharePage() {
                   <td>
                     {new Date(d.date).toLocaleDateString("ja-JP")}{" "}
                     {d.timeType === "時間指定"
-                      ? `（${d.startTime} ~ ${d.endTime}）`
+                      ? `（${d.startTime || "09:00"} ~ ${d.endTime || "18:00"}）`
                       : `（${d.timeType}）`}
                   </td>
                   <td>
