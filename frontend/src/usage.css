@@ -37,3 +37,17 @@
 .usage-page ul {
   padding-left: 20px;
 }
+.image-placeholder {
+  width: 100%;
+  height: 220px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed #fdb9c8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  font-style: italic;
+  margin-top: 15px;
+}
