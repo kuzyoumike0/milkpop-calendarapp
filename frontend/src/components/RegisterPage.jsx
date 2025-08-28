@@ -105,10 +105,14 @@ export default function RegisterPage() {
 
     try {
       // バックエンドが配列前提なので、オブジェクト → 配列 に変換する
-      const datesArray = Object.entries(selectedDates).map(([date, d]) => ({
-        date,
-        ...d,
-      }));
+      // 日付は YYYY-MM-DD に統一
+      const datesArray = Object.entries(selectedDates).map(([date, d]) => {
+        const isoDate = new Date(date).toISOString().split("T")[0];
+        return {
+          date: isoDate,
+          ...d,
+        };
+      });
 
       const res = await fetch("/api/schedules", {
         method: "POST",
