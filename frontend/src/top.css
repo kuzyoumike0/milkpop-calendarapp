@@ -12,18 +12,18 @@
 /* 画像 */
 .hero-image img {
   width: 1040px;
+  max-width: 100%; /* 👈 スマホで横幅に収まるようにする */
   height: auto;
   margin-bottom: 20px;
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
 }
 
 /* ガラスカード */
-/* ガラスカード */
 .glass-card {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   padding: 30px;
-  display: inline-block;   /* 👈 インラインブロックにして幅を中身に合わせる */
+  display: inline-block;
   max-width: 90%;
   text-align: center;
   margin: 0 auto;
@@ -37,10 +37,9 @@
 /* pタグやリンクが余計に広げないよう調整 */
 .glass-card p,
 .glass-card .top-links {
-  display: inline-block;   /* 👈 横幅を必要な分だけに */
+  display: inline-block;
   text-align: center;
 }
-
 
 /* タイトル */
 .welcome-title {
@@ -50,6 +49,33 @@
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+/* ====== リンクボタン ====== */
+.top-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap; /* 横が狭いとき折り返し */
+  margin-top: 20px;
+}
+
+.top-links a {
+  display: inline-block;
+  background: #FDB9C8;
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.top-links a:hover {
+  background: #004CA0;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
 /* アニメーション */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
@@ -57,14 +83,55 @@
 }
 
 /* ===== レスポンシブ対応 ===== */
+@media (max-width: 1024px) {
+  .welcome-title {
+    font-size: 22px;
+  }
+  .glass-card {
+    padding: 25px;
+  }
+}
+
 @media (max-width: 768px) {
   .glass-card {
-    width: 100%;     /* スマホでは横幅いっぱい */
-    max-width: 100%; /* 左右に余白を持たせたいならここを90%に */
+    width: 100%;
+    max-width: 95%;
     padding: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
   }
 
   .welcome-title {
     font-size: 20px;
+  }
+
+  .top-links {
+    flex-direction: column; /* 👈 スマホでは縦並び */
+    gap: 0.8rem;
+    align-items: center;
+  }
+
+  .top-links a {
+    width: 90%; /* ボタンを横幅広めに */
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-page {
+    padding: 20px;
+  }
+
+  .glass-card {
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .welcome-title {
+    font-size: 18px;
+  }
+
+  .top-links a {
+    padding: 10px 15px;
+    font-size: 0.95rem;
   }
 }
