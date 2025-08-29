@@ -286,15 +286,60 @@ export default function PersonalPage() {
                       </li>
                     ))}
                   </ul>
-                  <button className="save-btn" onClick={() => saveEditedSchedule(item.id)}>
-                    💾 保存する
-                  </button>
-                </div>
-              ))}
-            </div>
+                  <div key={item.id} className="schedule-card">
+  <div className="schedule-header">
+    <strong>{item.title}</strong>
+  </div>
+  <ul className="schedule-dates">
+    {editedSchedules[item.id]?.map((d, i) => (
+      <li key={i}>
+        {d.date}
+        <div className="time-options">
+          {["allday", "day", "night", "custom"].map((t) => (
+            <button
+              key={t}
+              className={`option-btn ${d.timeType === t ? "active" : ""}`}
+              onClick={() =>
+                updateLocalDate(item.id, i, {
+                  timeType: t,
+                  ...(t === "custom" ? { startTime: "09:00", endTime: "18:00" } : {}),
+                })
+              }
+            >
+              {t === "allday" ? "終日" : t === "day" ? "午前" : t === "night" ? "午後" : "時間指定"}
+            </button>
+          ))}
+        </div>
+        {d.timeType === "custom" && (
+          <div className="time-range">
+            <select
+              className="cute-select"
+              value={d.startTime}
+              onChange={(e) => updateLocalDate(item.id, i, { startTime: e.target.value })}
+            >
+              {Array.from({ length: 24 }, (_, h) => {
+                const t = `${String(h).padStart(2, "0")}:00`;
+                return <option key={t} value={t}>{t}</option>;
+              })}
+            </select>
+            <span className="time-separator">〜</span>
+            <select
+              className="cute-select"
+              value={d.endTime}
+              onChange={(e) => updateLocalDate(item.id, i, { endTime: e.target.value })}
+            >
+              {Array.from({ length: 24 }, (_, h) => {
+                const t = `${String(h).padStart(2, "0")}:00`;
+                return <option key={t} value={t}>{t}</option>;
+              })}
+            </select>
           </div>
-        </>
-      )}
-    </div>
-  );
-}
+        )}
+      </li>
+    ))}
+  </ul>
+  {/* ✅ 保存ボタンを右下に配置 */}
+  <button className="card-save-btn" onClick={() => saveEditedSchedule(item.id)}>
+    💾 保存する
+  </button>
+</div>
