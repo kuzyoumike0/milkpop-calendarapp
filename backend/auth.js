@@ -1,4 +1,3 @@
-// backend/auth.js
 import express from "express";
 import jwt from "jsonwebtoken";
 import pool from "./db.js"; // pg Pool
@@ -12,7 +11,6 @@ const {
   DISCORD_CLIENT_SECRET,
   DISCORD_REDIRECT_URI,
   FRONTEND_URL,
-  NODE_ENV,
 } = process.env;
 
 if (!JWT_SECRET) {
@@ -58,14 +56,8 @@ router.get("/discord", (_req, res) => {
   res.redirect(url);
 });
 
-// ログアウト
+// ログアウト（localStorage 方式なので Cookie はクリア不要、ただのリダイレクトでOK）
 router.get("/logout", (_req, res) => {
-  res.clearCookie("token", {
-    path: "/",
-    httpOnly: true,
-    secure: true,     // ✅ 本番では必ず true
-    sameSite: "None", // ✅ 本番では必ず None
-  });
   res.redirect(FRONTEND_URL || "/");
 });
 
@@ -138,24 +130,15 @@ router.get("/discord/callback", async (req, res) => {
     const jwtToken = jwt.sign(
       {
         userId,
-        discord_id: userData.id,   // ✅ 小文字で統一
+        discord_id: userData.id,
         username: userData.username,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // === 5. Cookie 発行 ===
-    res.cookie("token", jwtToken, {
-      httpOnly: true,
-      secure: true,     // ✅ 本番は必須
-      sameSite: "None", // ✅ 本番は必須
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日
-      path: "/",
-    });
-
-    // === 6. フロントの /me へ ===
-    const redirect = new URL("/me", FRONTEND_URL);
+    // === 5. フロントの /auth/success に JWT を渡す ===
+    const redirect = new URL(`/auth/success?token=${jwtToken}`, FRONTEND_URL);
     return res.redirect(redirect.toString());
   } catch (err) {
     console.error("Discord callback error:", err);
