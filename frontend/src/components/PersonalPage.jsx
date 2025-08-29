@@ -9,9 +9,6 @@ export default function PersonalPage() {
   const [selectedDates, setSelectedDates] = useState({});
   const [mode, setMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
-  const [timeType, setTimeType] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
   const [schedules, setSchedules] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [shareLink, setShareLink] = useState("");
@@ -59,7 +56,7 @@ export default function PersonalPage() {
       setSelectedDates((prev) => {
         const newDates = { ...prev };
         if (newDates[iso]) delete newDates[iso];
-        else newDates[iso] = { timeType, startTime, endTime };
+        else newDates[iso] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
         return newDates;
       });
     } else if (mode === "range") {
@@ -72,7 +69,7 @@ export default function PersonalPage() {
         let d = new Date(start);
         while (d <= end) {
           const dIso = d.toISOString().split("T")[0];
-          rangeDates[dIso] = { timeType, startTime, endTime };
+          rangeDates[dIso] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
           d.setDate(d.getDate() + 1);
         }
         setSelectedDates((prev) => ({ ...prev, ...rangeDates }));
@@ -138,9 +135,6 @@ export default function PersonalPage() {
       setTitle("");
       setMemo("");
       setSelectedDates({});
-      setTimeType("allday");
-      setStartTime("09:00");
-      setEndTime("18:00");
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -294,18 +288,86 @@ export default function PersonalPage() {
               {Object.keys(selectedDates).length === 0 ? (
                 <p style={{ color: "white" }}>まだ日程が選択されていません</p>
               ) : (
-                Object.entries(selectedDates).map(([date, info]) => (
+                Object.entries(selectedDates)
+                  .sort(([a], [b]) => new Date(a) - new Date(b))
+                  .map(([date, info]) => (
                   <div key={date} className="schedule-item">
                     <div><strong>{date}</strong></div>
-                    <div>
-                      {info.timeType === "allday"
-                        ? "終日"
-                        : info.timeType === "day"
-                        ? "午前"
-                        : info.timeType === "night"
-                        ? "午後"
-                        : `${info.startTime}〜${info.endTime}`}
+
+                    {/* 時間帯ボタン */}
+                    <div className="time-options">
+                      {["allday", "day", "night", "custom"].map((type) => (
+                        <button
+                          key={type}
+                          className={`time-btn ${info.timeType === type ? "active" : ""}`}
+                          onClick={() =>
+                            setSelectedDates((prev) => ({
+                              ...prev,
+                              [date]: {
+                                ...prev[date],
+                                timeType: type,
+                                startTime: type === "custom" ? "09:00" : null,
+                                endTime: type === "custom" ? "10:00" : null,
+                              },
+                            }))
+                          }
+                        >
+                          {type === "allday"
+                            ? "終日"
+                            : type === "day"
+                            ? "午前"
+                            : type === "night"
+                            ? "午後"
+                            : "時間指定"}
+                        </button>
+                      ))}
                     </div>
+
+                    {/* 時間指定プルダウン */}
+                    {info.timeType === "custom" && (
+                      <div className="time-range">
+                        <select
+                          className="cute-select"
+                          value={info.startTime}
+                          onChange={(e) =>
+                            setSelectedDates((prev) => ({
+                              ...prev,
+                              [date]: { ...prev[date], startTime: e.target.value },
+                            }))
+                          }
+                        >
+                          {Array.from({ length: 24 }).map((_, i) => {
+                            const hour = String(i).padStart(2, "0") + ":00";
+                            return (
+                              <option key={hour} value={hour}>
+                                {hour}
+                              </option>
+                            );
+                          })}
+                        </select>
+                        <span className="time-separator">〜</span>
+                        <select
+                          className="cute-select"
+                          value={info.endTime}
+                          onChange={(e) =>
+                            setSelectedDates((prev) => ({
+                              ...prev,
+                              [date]: { ...prev[date], endTime: e.target.value },
+                            }))
+                          }
+                        >
+                          {Array.from({ length: 24 }).map((_, i) => {
+                            const hour = String(i).padStart(2, "0") + ":00";
+                            return (
+                              <option key={hour} value={hour}>
+                                {hour}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+
                     <button className="remove-btn" onClick={() => removeSelectedDate(date)}>❌</button>
                   </div>
                 ))
