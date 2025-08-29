@@ -1,5 +1,5 @@
-// backend/index.js （完全統合版 v7）
-// schedules API に時間指定対応を追加
+// backend/index.js （完全統合版 v8）
+// schedules + personal_schedules API 完備
 
 import express from "express";
 import cors from "cors";
@@ -159,7 +159,6 @@ app.post("/api/schedules", async (req, res) => {
       return res.status(400).json({ error: "タイトルと日程が必須です" });
     }
 
-    // ✅ 日付ごとに timeType/startTime/endTime を保存
     const normalizedDates = dates.map((d) => ({
       date: d.date,
       timeType: d.timeType || "allday",
@@ -210,6 +209,92 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
   } catch (err) {
     console.error("❌ schedules取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// ===== personal_schedules API =====
+
+// 新規作成
+app.post("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const { title, memo, dates, options } = req.body;
+    if (!title || !Array.isArray(dates) || dates.length === 0) {
+      return res.status(400).json({ error: "タイトルと日程が必須です" });
+    }
+
+    const normalizedDates = dates.map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    const id = uuidv4();
+    await pool.query(
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [id, req.user.id, title, memo || "", JSON.stringify(normalizedDates), options || {}]
+    );
+
+    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+  } catch (err) {
+    console.error("❌ personal_schedules 作成失敗:", err);
+    res.status(500).json({ error: "作成失敗" });
+  }
+});
+
+// 一覧取得
+app.get("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    res.json(result.rows.map((r) => ({ ...r, dates: r.dates || [] })));
+  } catch (err) {
+    console.error("❌ personal_schedules 取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 更新
+app.put("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, memo, dates, options } = req.body;
+    const normalizedDates = (dates || []).map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    await pool.query(
+      `UPDATE personal_schedules
+       SET title=$1, memo=$2, dates=$3, options=$4
+       WHERE id=$5 AND user_id=$6`,
+      [title, memo || "", JSON.stringify(normalizedDates), options || {}, id, req.user.id]
+    );
+
+    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+  } catch (err) {
+    console.error("❌ personal_schedules 更新失敗:", err);
+    res.status(500).json({ error: "更新失敗" });
+  }
+});
+
+// 削除
+app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2`,
+      [id, req.user.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ personal_schedules 削除失敗:", err);
+    res.status(500).json({ error: "削除失敗" });
   }
 });
 
