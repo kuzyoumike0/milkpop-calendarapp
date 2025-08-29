@@ -7,7 +7,7 @@ export default function RegisterPage() {
   const [title, setTitle] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState({});
-  const [mode, setMode] = useState("single"); // "single" | "multiple" | "range"
+  const [mode, setMode] = useState("single");
   const [rangeStart, setRangeStart] = useState(null);
   const [shareLink, setShareLink] = useState("");
 
@@ -124,6 +124,11 @@ export default function RegisterPage() {
     `${String(i).padStart(2, "0")}:00`
   );
 
+  // ==== 日付ソート ====
+  const sortedDates = Object.entries(selectedDates).sort(
+    ([a], [b]) => new Date(a) - new Date(b)
+  );
+
   return (
     <div className="register-page">
       <h1 className="page-title">日程登録</h1>
@@ -220,10 +225,10 @@ export default function RegisterPage() {
         {/* ==== 右：選択済みリスト ==== */}
         <div className="side-panel">
           <h2>選択中の日程</h2>
-          {Object.keys(selectedDates).length === 0 ? (
+          {sortedDates.length === 0 ? (
             <p>まだ日程が選択されていません</p>
           ) : (
-            Object.entries(selectedDates).map(([date, info]) => (
+            sortedDates.map(([date, info]) => (
               <div key={date} className="date-card">
                 <div className="date-label">{date}</div>
 
@@ -232,7 +237,7 @@ export default function RegisterPage() {
                   {["allday", "day", "night", "custom"].map((type) => (
                     <button
                       key={type}
-                      className={info.timeType === type ? "active" : ""}
+                      className={`time-btn ${info.timeType === type ? "active" : ""}`}
                       onClick={() => handleTimeTypeChange(date, type)}
                     >
                       {type === "allday"
