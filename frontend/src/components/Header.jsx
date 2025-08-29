@@ -82,7 +82,7 @@ export default function Header({ user }) {
           </a>
         ) : (
           <a
-            href="/auth/discord/login"
+            href="/auth/discord"
             className="nav-btn-mobile"
             onClick={() => setMenuOpen(false)}
           >
