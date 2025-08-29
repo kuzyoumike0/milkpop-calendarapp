@@ -13,6 +13,7 @@ export default function PersonalPage() {
   const [schedules, setSchedules] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [shareLink, setShareLink] = useState("");
+  const [editedSchedules, setEditedSchedules] = useState({}); // ✅ ローカル編集用
 
   const hd = new Holidays("JP");
   const token = localStorage.getItem("jwt");
@@ -25,9 +26,51 @@ export default function PersonalPage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setSchedules(data))
+      .then((data) => {
+        setSchedules(data);
+        // 初期値をコピー
+        const map = {};
+        data.forEach((s) => {
+          map[s.id] = [...s.dates];
+        });
+        setEditedSchedules(map);
+      })
       .catch((err) => console.error(err));
   }, [token]);
+
+  // ==== 登録済みのローカル変更 ====
+  const updateLocalDate = (scheduleId, index, changes) => {
+    setEditedSchedules((prev) => {
+      const updated = [...(prev[scheduleId] || [])];
+      updated[index] = { ...updated[index], ...changes };
+      return { ...prev, [scheduleId]: updated };
+    });
+  };
+
+  // ==== 保存ボタン（登録済み） ====
+  const saveEditedSchedule = async (scheduleId) => {
+    if (!token) return;
+    try {
+      const payload = { dates: editedSchedules[scheduleId] };
+      await fetch(`/api/personal-events/${scheduleId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      setSchedules((prev) =>
+        prev.map((s) =>
+          s.id === scheduleId ? { ...s, dates: editedSchedules[scheduleId] } : s
+        )
+      );
+      alert("保存しました！");
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    }
+  };
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -66,7 +109,7 @@ export default function PersonalPage() {
     });
   };
 
-  // ==== 保存 ====
+  // ==== 選択済み保存 ====
   const handleSave = async () => {
     if (Object.keys(selectedDates).length === 0 || !title.trim()) {
       alert("日付とタイトルを入力してください");
@@ -109,6 +152,7 @@ export default function PersonalPage() {
         });
         const newItem = await res.json();
         setSchedules((prev) => [...prev, newItem]);
+        setEditedSchedules((prev) => ({ ...prev, [newItem.id]: [...newItem.dates] }));
       }
 
       setTitle("");
@@ -117,28 +161,6 @@ export default function PersonalPage() {
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
-    }
-  };
-
-  // ==== DB保存済みスケジュール編集 ====
-  const updateScheduleDates = async (scheduleId, newDates) => {
-    if (!token) return;
-    try {
-      const payload = { dates: newDates };
-      await fetch(`/api/personal-events/${scheduleId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      setSchedules((prev) =>
-        prev.map((s) => (s.id === scheduleId ? { ...s, dates: newDates } : s))
-      );
-    } catch (err) {
-      console.error(err);
-      alert("更新に失敗しました");
     }
   };
 
@@ -165,35 +187,14 @@ export default function PersonalPage() {
             className="memo-input"
           />
 
-          {/* モード切替 */}
-          <div className="select-mode">
-            <button
-              className={mode === "multiple" ? "active" : ""}
-              onClick={() => setMode("multiple")}
-            >
-              複数選択
-            </button>
-            <button
-              className={mode === "range" ? "active" : ""}
-              onClick={() => setMode("range")}
-            >
-              範囲選択
-            </button>
-          </div>
-
+          {/* カレンダー */}
           <div className="calendar-list-container">
-            {/* ==== カレンダー ==== */}
             <div className="calendar-container">
               <div className="calendar-header">
-                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-                  ◀
-                </button>
+                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
                 <span>{year}年 {month + 1}月</span>
-                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-                  ▶
-                </button>
+                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
               </div>
-
               <table className="calendar-table">
                 <thead>
                   <tr>
@@ -209,16 +210,10 @@ export default function PersonalPage() {
                         const isToday = iso === todayIso;
                         const isSelected = selectedDates[iso];
                         const holiday = hd.isHoliday(d);
-
                         return (
                           <td
                             key={j}
-                            className={`calendar-cell
-                              ${isToday ? "today" : ""}
-                              ${isSelected ? "selected" : ""}
-                              ${holiday ? "holiday" : ""}
-                              ${j === 0 ? "sunday" : ""}
-                              ${j === 6 ? "saturday" : ""}`}
+                            className={`calendar-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
                             onClick={() => handleDateClick(d)}
                           >
                             {d.getMonth() === month ? d.getDate() : ""}
@@ -230,205 +225,72 @@ export default function PersonalPage() {
                   ))}
                 </tbody>
               </table>
-
               <button className="save-btn" onClick={handleSave}>
                 {editingId ? "更新する" : "登録する"}
               </button>
             </div>
 
-            {/* ==== 選択済み ==== */}
+            {/* 選択済みカード */}
             <div className="registered-list">
-              <h2>選択済み日程</h2>
-              {Object.keys(selectedDates).length === 0 ? (
-                <p style={{ color: "white" }}>まだ日程が選択されていません</p>
-              ) : (
-                Object.entries(selectedDates)
-                  .sort(([a], [b]) => new Date(a) - new Date(b))
-                  .map(([date, info]) => (
-                    <div key={date} className="schedule-card">
-                      <div className="schedule-header">
-                        <strong className="schedule-title">{date}</strong>
-                      </div>
-                      <div className="time-options">
-                        <button
-                          className={`option-btn ${info.timeType === "allday" ? "active" : ""}`}
-                          onClick={() =>
-                            setSelectedDates((prev) => ({ ...prev, [date]: { timeType: "allday" } }))
-                          }
-                        >
-                          終日
-                        </button>
-                        <button
-                          className={`option-btn ${info.timeType === "day" ? "active" : ""}`}
-                          onClick={() =>
-                            setSelectedDates((prev) => ({ ...prev, [date]: { timeType: "day" } }))
-                          }
-                        >
-                          午前
-                        </button>
-                        <button
-                          className={`option-btn ${info.timeType === "night" ? "active" : ""}`}
-                          onClick={() =>
-                            setSelectedDates((prev) => ({ ...prev, [date]: { timeType: "night" } }))
-                          }
-                        >
-                          午後
-                        </button>
-                        <button
-                          className={`option-btn ${info.timeType === "custom" ? "active" : ""}`}
-                          onClick={() =>
-                            setSelectedDates((prev) => ({
-                              ...prev,
-                              [date]: { timeType: "custom", startTime: "09:00", endTime: "18:00" },
-                            }))
-                          }
-                        >
-                          時間指定
-                        </button>
-                      </div>
-                      {info.timeType === "custom" && (
-                        <div className="time-range">
-                          <select
-                            className="cute-select"
-                            value={info.startTime}
-                            onChange={(e) =>
-                              setSelectedDates((prev) => ({
-                                ...prev,
-                                [date]: { ...info, startTime: e.target.value },
-                              }))
-                            }
-                          >
-                            {Array.from({ length: 24 }, (_, i) => {
-                              const t = `${String(i).padStart(2, "0")}:00`;
-                              return <option key={t} value={t}>{t}</option>;
-                            })}
-                          </select>
-                          <span className="time-separator">〜</span>
-                          <select
-                            className="cute-select"
-                            value={info.endTime}
-                            onChange={(e) =>
-                              setSelectedDates((prev) => ({
-                                ...prev,
-                                [date]: { ...info, endTime: e.target.value },
-                              }))
-                            }
-                          >
-                            {Array.from({ length: 24 }, (_, i) => {
-                              const t = `${String(i).padStart(2, "0")}:00`;
-                              return <option key={t} value={t}>{t}</option>;
-                            })}
-                          </select>
-                        </div>
-                      )}
-                      <div className="schedule-actions">
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => removeSelectedDate(date)}
-                        >
-                          🗑 削除
-                        </button>
-                      </div>
-                    </div>
-                  ))
-              )}
-
-              {/* ==== 登録済み予定 ==== */}
               <h2>登録済み予定</h2>
-              {schedules.length === 0 ? (
-                <p style={{ color: "white" }}>まだ予定がありません</p>
-              ) : (
-                schedules.map((item) => (
-                  <div key={item.id} className="schedule-card">
-                    <div className="schedule-header">
-                      <strong className="schedule-title">{item.title}</strong>
-                      <p className="schedule-memo">{item.memo}</p>
-                    </div>
-                    <ul className="schedule-dates">
-                      {item.dates.map((d, i) => (
-                        <li key={i}>
-                          <span className="date-label">{d.date}</span>
-                          <div className="time-options">
-                            <button
-                              className={`option-btn ${d.timeType === "allday" ? "active" : ""}`}
-                              onClick={() =>
-                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                  idx === i ? { ...x, timeType: "allday" } : x
-                                ))
-                              }
-                            >
-                              終日
-                            </button>
-                            <button
-                              className={`option-btn ${d.timeType === "day" ? "active" : ""}`}
-                              onClick={() =>
-                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                  idx === i ? { ...x, timeType: "day" } : x
-                                ))
-                              }
-                            >
-                              午前
-                            </button>
-                            <button
-                              className={`option-btn ${d.timeType === "night" ? "active" : ""}`}
-                              onClick={() =>
-                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                  idx === i ? { ...x, timeType: "night" } : x
-                                ))
-                              }
-                            >
-                              午後
-                            </button>
-                            <button
-                              className={`option-btn ${d.timeType === "custom" ? "active" : ""}`}
-                              onClick={() =>
-                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                  idx === i ? { ...x, timeType: "custom", startTime: "09:00", endTime: "18:00" } : x
-                                ))
-                              }
-                            >
-                              時間指定
-                            </button>
-                          </div>
-                          {d.timeType === "custom" && (
-                            <div className="time-range">
-                              <select
-                                className="cute-select"
-                                value={d.startTime}
-                                onChange={(e) =>
-                                  updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                    idx === i ? { ...x, startTime: e.target.value } : x
-                                  ))
-                                }
-                              >
-                                {Array.from({ length: 24 }, (_, h) => {
-                                  const t = `${String(h).padStart(2, "0")}:00`;
-                                  return <option key={t} value={t}>{t}</option>;
-                                })}
-                              </select>
-                              <span className="time-separator">〜</span>
-                              <select
-                                className="cute-select"
-                                value={d.endTime}
-                                onChange={(e) =>
-                                  updateScheduleDates(item.id, item.dates.map((x, idx) =>
-                                    idx === i ? { ...x, endTime: e.target.value } : x
-                                  ))
-                                }
-                              >
-                                {Array.from({ length: 24 }, (_, h) => {
-                                  const t = `${String(h).padStart(2, "0")}:00`;
-                                  return <option key={t} value={t}>{t}</option>;
-                                })}
-                              </select>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+              {schedules.map((item) => (
+                <div key={item.id} className="schedule-card">
+                  <div className="schedule-header">
+                    <strong>{item.title}</strong>
                   </div>
-                ))
-              )}
+                  <ul className="schedule-dates">
+                    {editedSchedules[item.id]?.map((d, i) => (
+                      <li key={i}>
+                        {d.date}
+                        <div className="time-options">
+                          {["allday", "day", "night", "custom"].map((t) => (
+                            <button
+                              key={t}
+                              className={`option-btn ${d.timeType === t ? "active" : ""}`}
+                              onClick={() =>
+                                updateLocalDate(item.id, i, {
+                                  timeType: t,
+                                  ...(t === "custom" ? { startTime: "09:00", endTime: "18:00" } : {}),
+                                })
+                              }
+                            >
+                              {t === "allday" ? "終日" : t === "day" ? "午前" : t === "night" ? "午後" : "時間指定"}
+                            </button>
+                          ))}
+                        </div>
+                        {d.timeType === "custom" && (
+                          <div className="time-range">
+                            <select
+                              className="cute-select"
+                              value={d.startTime}
+                              onChange={(e) => updateLocalDate(item.id, i, { startTime: e.target.value })}
+                            >
+                              {Array.from({ length: 24 }, (_, h) => {
+                                const t = `${String(h).padStart(2, "0")}:00`;
+                                return <option key={t} value={t}>{t}</option>;
+                              })}
+                            </select>
+                            <span className="time-separator">〜</span>
+                            <select
+                              className="cute-select"
+                              value={d.endTime}
+                              onChange={(e) => updateLocalDate(item.id, i, { endTime: e.target.value })}
+                            >
+                              {Array.from({ length: 24 }, (_, h) => {
+                                const t = `${String(h).padStart(2, "0")}:00`;
+                                return <option key={t} value={t}>{t}</option>;
+                              })}
+                            </select>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="save-btn" onClick={() => saveEditedSchedule(item.id)}>
+                    💾 保存する
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </>
