@@ -13,6 +13,7 @@ export default function PersonalPage() {
   const [endTime, setEndTime] = useState("18:00");
   const [schedules, setSchedules] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [shareLink, setShareLink] = useState("");
 
   const hd = new Holidays("JP");
   const token = localStorage.getItem("token"); // ✅ Discordログイン時に保存したJWTを利用
@@ -142,6 +143,27 @@ export default function PersonalPage() {
     if (item.dates?.[0]?.timeType === "custom") {
       setStartTime(item.dates?.[0]?.startTime || "09:00");
       setEndTime(item.dates?.[0]?.endTime || "18:00");
+    }
+  };
+
+  // ==== 共有リンク発行 ====
+  const handleShare = async (id) => {
+    if (!token) {
+      alert("ログインしてください");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/personal-events/${id}/share`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      setShareLink(`${window.location.origin}/personal/${data.share_token}`);
+    } catch (err) {
+      console.error(err);
+      alert("共有リンク発行に失敗しました");
     }
   };
 
@@ -296,11 +318,22 @@ export default function PersonalPage() {
                   <div className="actions">
                     <button onClick={() => handleEdit(item)}>✏️ 編集</button>
                     <button onClick={() => handleDelete(item.id)}>🗑 削除</button>
+                    <button onClick={() => handleShare(item.id)}>🔗 共有リンク発行</button>
                   </div>
                 </div>
               ))
             )}
           </div>
+
+          {/* 共有リンク表示 */}
+          {shareLink && (
+            <div className="share-link-box">
+              <a href={shareLink} target="_blank" rel="noreferrer">{shareLink}</a>
+              <button onClick={() => navigator.clipboard.writeText(shareLink)}>
+                コピー
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
