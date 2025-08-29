@@ -231,3 +231,20 @@
   color: #fff;
   cursor: pointer;
 }
+/* 選択済み日程の削除ボタン */
+.remove-btn {
+  margin-top: 6px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: #ff4d6d;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.remove-btn:hover {
+  background: #e60033;
+  transform: scale(1.05);
+}
