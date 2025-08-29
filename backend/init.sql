@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS personal_schedules (
     memo TEXT,
     dates JSONB NOT NULL,           -- 複数日程も保存できる
     options JSONB,                  -- 時間区分などを保持
+    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULLなら未発行）
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
