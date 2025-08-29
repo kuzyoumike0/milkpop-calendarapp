@@ -13,8 +13,17 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/me", { credentials: "include" });
+        const token = localStorage.getItem("jwt");
+        if (!token) throw new Error("no token");
+
+        const res = await fetch("/api/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (!res.ok) throw new Error("unauthorized");
+
         const data = await res.json(); // { user: {...} }
         setUser(data.user);
       } catch {
@@ -26,13 +35,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = async () => {
-    // GET版
+    // localStorage の jwt を削除
+    localStorage.removeItem("jwt");
+    // サーバー側のセッションも削除
     window.location.href = "/auth/logout";
-    // もしPOSTにするなら:
-    // await fetch("/auth/logout", { method: "POST", credentials: "include" });
-    // setUser(null);
   };
 
   const value = { user, setUser, loading, logout };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
