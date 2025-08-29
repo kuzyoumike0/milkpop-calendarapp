@@ -1,4 +1,3 @@
-// frontend/src/components/RegisterPage.jsx
 import React, { useState } from "react";
 import Holidays from "date-holidays";
 import "../register.css";
@@ -37,12 +36,14 @@ export default function RegisterPage() {
     const iso = date.toISOString().split("T")[0];
 
     if (mode === "single") {
-      setSelectedDates({ [iso]: true });
+      setSelectedDates({
+        [iso]: { timeType: "allday", startTime: "09:00", endTime: "18:00" },
+      });
     } else if (mode === "multiple") {
       setSelectedDates((prev) => {
         const newDates = { ...prev };
         if (newDates[iso]) delete newDates[iso];
-        else newDates[iso] = true;
+        else newDates[iso] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
         return newDates;
       });
     } else if (mode === "range") {
@@ -55,20 +56,65 @@ export default function RegisterPage() {
         let d = new Date(start);
         while (d <= end) {
           const dIso = d.toISOString().split("T")[0];
-          rangeDates[dIso] = true;
+          rangeDates[dIso] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
           d.setDate(d.getDate() + 1);
         }
-        setSelectedDates(rangeDates);
+        setSelectedDates((prev) => ({ ...prev, ...rangeDates }));
         setRangeStart(null);
       }
     }
   };
 
-  // ==== 共有リンク発行 ====
-  const handleShare = () => {
-    const token = Math.random().toString(36).substring(2, 10);
-    setShareLink(`${window.location.origin}/share/${token}`);
+  // ==== 時間帯変更 ====
+  const handleTimeTypeChange = (date, type) => {
+    setSelectedDates((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        timeType: type,
+      },
+    }));
   };
+
+  const handleTimeChange = (date, field, value) => {
+    setSelectedDates((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        [field]: value,
+      },
+    }));
+  };
+
+  // ==== 共有リンク発行 ====
+  const handleShare = async () => {
+    const payload = {
+      title,
+      dates: Object.entries(selectedDates).map(([date, info]) => ({
+        date,
+        ...info,
+      })),
+    };
+
+    // API保存
+    try {
+      const res = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setShareLink(`${window.location.origin}/share/${data.share_token}`);
+    } catch (err) {
+      console.error(err);
+      alert("保存に失敗しました");
+    }
+  };
+
+  // ==== 時間候補（1時間ごと） ====
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
 
   return (
     <div className="register-page">
@@ -161,8 +207,60 @@ export default function RegisterPage() {
             <p>まだ日程が選択されていません</p>
           ) : (
             <ul>
-              {Object.keys(selectedDates).map((date) => (
-                <li key={date}>{date}</li>
+              {Object.entries(selectedDates).map(([date, info]) => (
+                <li key={date}>
+                  <div><strong>{date}</strong></div>
+                  <div className="time-options">
+                    <button
+                      className={info.timeType === "allday" ? "active" : ""}
+                      onClick={() => handleTimeTypeChange(date, "allday")}
+                    >
+                      終日
+                    </button>
+                    <button
+                      className={info.timeType === "day" ? "active" : ""}
+                      onClick={() => handleTimeTypeChange(date, "day")}
+                    >
+                      午前
+                    </button>
+                    <button
+                      className={info.timeType === "night" ? "active" : ""}
+                      onClick={() => handleTimeTypeChange(date, "night")}
+                    >
+                      午後
+                    </button>
+                    <button
+                      className={info.timeType === "custom" ? "active" : ""}
+                      onClick={() => handleTimeTypeChange(date, "custom")}
+                    >
+                      時間指定
+                    </button>
+                  </div>
+
+                  {info.timeType === "custom" && (
+                    <div className="time-range">
+                      <select
+                        value={info.startTime}
+                        onChange={(e) => handleTimeChange(date, "startTime", e.target.value)}
+                        className="cute-select"
+                      >
+                        {hours.map((h) => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span className="time-separator">〜</span>
+                      <select
+                        value={info.endTime}
+                        onChange={(e) => handleTimeChange(date, "endTime", e.target.value)}
+                        className="cute-select"
+                      >
+                        {hours.map((h) => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </li>
               ))}
             </ul>
           )}
