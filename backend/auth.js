@@ -1,4 +1,7 @@
-// backend/auth.js
+// backend/auth.js （修正版）
+// ✅ JWT を Cookie と Bearer 両方で扱えるよう統一
+// ✅ Discord OAuth2 → DB保存 → JWT発行 → Cookie保存 → フロント /me へリダイレクト
+
 import express from "express";
 import jwt from "jsonwebtoken";
 import pool from "./db.js";
@@ -19,7 +22,7 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-// ==== 認可画面へ ====
+// ===== Discord OAuth 認可画面へ =====
 router.get("/discord", (_req, res) => {
   const scope = encodeURIComponent("identify");
   const url = `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(
@@ -30,7 +33,7 @@ router.get("/discord", (_req, res) => {
   res.redirect(url);
 });
 
-// ==== ログアウト ====
+// ===== ログアウト =====
 router.get("/logout", (req, res) => {
   const isProd = NODE_ENV === "production";
   res.clearCookie("token", {
@@ -42,13 +45,13 @@ router.get("/logout", (req, res) => {
   res.redirect(FRONTEND_URL || "/");
 });
 
-// ==== コールバック ====
+// ===== コールバック処理 =====
 router.get("/discord/callback", async (req, res) => {
   const code = req.query.code;
-  if (!code) return res.status(400).send("Codeがありません");
+  if (!code) return res.status(400).send("Code がありません");
 
   try {
-    // アクセストークン取得
+    // ---- アクセストークン取得 ----
     const params = new URLSearchParams();
     params.append("client_id", DISCORD_CLIENT_ID);
     params.append("client_secret", DISCORD_CLIENT_SECRET);
@@ -63,42 +66,61 @@ router.get("/discord/callback", async (req, res) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
+    if (!tokenRes.ok) {
+      const text = await tokenRes.text();
+      console.error("Token exchange failed:", tokenRes.status, text);
+      return res.status(502).send("Discordトークン取得に失敗しました");
+    }
+
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
     const refreshToken = tokenData.refresh_token;
 
-    // ユーザー情報取得
+    if (!accessToken) {
+      return res.status(502).send("Discordトークンが不正です");
+    }
+
+    // ---- ユーザー情報取得 ----
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
+
+    if (!userRes.ok) {
+      const text = await userRes.text();
+      console.error("User fetch failed:", userRes.status, text);
+      return res.status(502).send("Discordユーザー取得に失敗しました");
+    }
+
     const userData = await userRes.json();
 
-    // DB保存
+    // ---- DB Upsert ----
     const upsert = await pool.query(
       `
       INSERT INTO public.users (discord_id, username, access_token, refresh_token)
       VALUES ($1, $2, $3, $4)
       ON CONFLICT (discord_id) DO UPDATE
-        SET username=EXCLUDED.username,
-            access_token=EXCLUDED.access_token,
-            refresh_token=EXCLUDED.refresh_token
+        SET username = EXCLUDED.username,
+            access_token = EXCLUDED.access_token,
+            refresh_token = EXCLUDED.refresh_token
       RETURNING id
       `,
       [userData.id, userData.username, accessToken, refreshToken]
     );
+
     const userId = upsert.rows[0].id;
 
-    // JWT発行（snake_caseに統一）
+    // ---- JWT 発行 ----
     const jwtToken = jwt.sign(
       {
-        id: userId,
-        discord_id: userData.id, // ✅ snake_case に修正
+        userId,
+        discord_id: userData.id,
         username: userData.username,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    // ---- Cookie 保存 ----
     const isProd = NODE_ENV === "production";
     res.cookie("token", jwtToken, {
       httpOnly: true,
@@ -108,11 +130,12 @@ router.get("/discord/callback", async (req, res) => {
       path: "/",
     });
 
-    // フロントの /me にリダイレクト
-    res.redirect(`${FRONTEND_URL}/me`);
+    // ---- フロントへリダイレクト ----
+    const redirect = new URL("/me", FRONTEND_URL);
+    return res.redirect(redirect.toString());
   } catch (err) {
     console.error("Discord callback error:", err);
-    res.status(500).send("Discordログインに失敗しました");
+    return res.status(500).send("Discordログインに失敗しました");
   }
 });
 
