@@ -210,7 +210,161 @@ app.get("/api/schedules/:token", async (req, res) => {
   }
 });
 
-// ...（中略: 出欠APIは v4 と同じなので省略）...
+// 出欠回答 保存/更新
+app.post("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { user_id, username, responses } = req.body || {};
+
+    if (!user_id || !responses) {
+      return res.status(400).json({ error: "ユーザーIDと回答は必須です" });
+    }
+
+    const schedule = await pool.query(
+      "SELECT id, dates FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
+
+    // === フロントと同じキー形式に正規化 ===
+    const normalizedResponses = {};
+    dates.forEach((d) => {
+      const key =
+        d.timeType === "custom" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${timeLabel(d.timeType)})`;
+      normalizedResponses[key] = responses[key] || "-";
+    });
+
+    await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username=EXCLUDED.username,
+                     responses=EXCLUDED.responses,
+                     created_at=CURRENT_TIMESTAMP`,
+      [
+        scheduleId,
+        user_id,
+        username || "匿名",
+        JSON.stringify(normalizedResponses),
+      ]
+    );
+
+    io.to(token).emit("updateResponses", {
+      user_id,
+      username,
+      responses: normalizedResponses,
+    });
+
+    res.json({ user_id, username, responses: normalizedResponses });
+  } catch (err) {
+    console.error("回答保存エラー:", err);
+    res.status(500).json({ error: "回答保存エラー" });
+  }
+});
+
+// 出欠回答 一覧取得
+app.get("/api/schedules/:token/responses", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
+    const result = await pool.query(
+      "SELECT user_id, username, responses, created_at FROM schedule_responses WHERE schedule_id=$1 ORDER BY created_at DESC",
+      [scheduleId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("回答一覧取得エラー:", err);
+    res.status(500).json({ error: "回答一覧取得エラー" });
+  }
+});
+
+// 出欠集計
+app.get("/api/schedules/:token/aggregate", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const schedule = await pool.query(
+      "SELECT id, dates FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+    const dates = schedule.rows[0].dates;
+
+    const responses = await pool.query(
+      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
+      [scheduleId]
+    );
+
+    const aggregate = {};
+    dates.forEach((d) => {
+      const key =
+        d.timeType === "custom" && d.startTime && d.endTime
+          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
+          : `${d.date} (${timeLabel(d.timeType)})`;
+      aggregate[key] = { "◯": 0, "✕": 0, "△": 0 };
+    });
+
+    responses.rows.forEach((row) => {
+      Object.entries(row.responses).forEach(([key, status]) => {
+        if (aggregate[key] && ["◯", "✕", "△"].includes(status)) {
+          aggregate[key][status]++;
+        }
+      });
+    });
+
+    res.json(aggregate);
+  } catch (err) {
+    console.error("集計エラー:", err);
+    res.status(500).json({ error: "集計エラー" });
+  }
+});
+
+// 出欠回答削除
+app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
+  try {
+    const { token, user_id } = req.params;
+    const schedule = await pool.query(
+      "SELECT id FROM schedules WHERE share_token=$1",
+      [token]
+    );
+    if (schedule.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    const scheduleId = schedule.rows[0].id;
+
+    const result = await pool.query(
+      "DELETE FROM schedule_responses WHERE schedule_id=$1 AND user_id=$2 RETURNING *",
+      [scheduleId, user_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "ユーザーが見つかりません" });
+    }
+
+    io.to(token).emit("deleteResponse", { user_id });
+
+    res.json({ message: "削除しました", deleted: result.rows[0] });
+  } catch (err) {
+    console.error("削除エラー:", err);
+    res.status(500).json({ error: "削除エラー" });
+  }
+});
 
 // ===== 個人スケジュール API =====
 app.get("/api/personal-events", authRequired, async (req, res) => {
@@ -249,6 +403,51 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
   } catch (err) {
     console.error("個人スケジュール保存エラー:", err);
     res.status(500).json({ error: "個人スケジュール保存エラー" });
+  }
+});
+
+app.put("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, memo, dates, options } = req.body || {};
+    const result = await pool.query(
+      `UPDATE personal_schedules
+       SET title=$1, memo=$2, dates=$3, options=$4, created_at=CURRENT_TIMESTAMP
+       WHERE id=$5 AND user_id=$6
+       RETURNING *`,
+      [
+        title,
+        memo || "",
+        JSON.stringify(dates),
+        JSON.stringify(options || {}),
+        id,
+        req.user.discord_id,
+      ]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "予定が見つかりません" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("更新エラー:", err);
+    res.status(500).json({ error: "更新エラー" });
+  }
+});
+
+app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2 RETURNING *",
+      [id, req.user.discord_id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "予定が見つかりません" });
+    }
+    res.json({ message: "削除しました", deleted: result.rows[0] });
+  } catch (err) {
+    console.error("削除エラー:", err);
+    res.status(500).json({ error: "削除エラー" });
   }
 });
 
@@ -292,5 +491,60 @@ app.get("/api/personal-share/:token", async (req, res) => {
   }
 });
 
-// ===== Reactビルド配信（省略部分は v4 と同じ） =====
-// ...
+// ===== Reactビルド配信 =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDist = path.resolve(__dirname, "../frontend/build");
+const indexHtmlPath = path.join(frontendDist, "index.html");
+const hasIndex = fs.existsSync(indexHtmlPath);
+
+if (!hasIndex) {
+  console.warn("⚠️ frontend/build/index.html が見つかりません。");
+}
+
+app.use(
+  express.static(frontendDist, {
+    index: "index.html",
+    maxAge: NODE_ENV === "production" ? "1d" : 0,
+  })
+);
+
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "API not found" });
+});
+
+app.get("*", (_req, res) => {
+  if (!hasIndex) {
+    return res
+      .status(500)
+      .send("Frontend build is missing. Please run `cd frontend && npm run build`.");
+  }
+  res.sendFile(indexHtmlPath);
+});
+
+// ===== エラーハンドラ =====
+app.use((err, _req, res, _next) => {
+  console.error("🔥 Unhandled error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// ===== サーバー起動 =====
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} (env: ${NODE_ENV})`);
+});
+
+// ===== グレースフルシャットダウン =====
+const shutdown = (signal) => {
+  console.log(`\n${signal} received. Closing server...`);
+  server.close(() => {
+    console.log("HTTP server closed.");
+    try {
+      pool.end?.();
+    } catch {}
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 8000).unref();
+};
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
