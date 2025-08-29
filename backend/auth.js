@@ -63,8 +63,8 @@ router.get("/logout", (_req, res) => {
   res.clearCookie("token", {
     path: "/",
     httpOnly: true,
-    secure: NODE_ENV === "production",
-    sameSite: "None", // ✅ 本番は必ず None にする
+    secure: NODE_ENV === "production", // ✅ 本番では true
+    sameSite: "None",                  // ✅ 本番では必ず None
   });
   res.redirect(FRONTEND_URL || "/");
 });
@@ -75,7 +75,7 @@ router.get("/discord/callback", async (req, res) => {
   if (!code) return res.status(400).send("Codeがありません");
 
   try {
-    // アクセストークン取得
+    // === 1. アクセストークン取得 ===
     const params = new URLSearchParams();
     params.append("client_id", DISCORD_CLIENT_ID);
     params.append("client_secret", DISCORD_CLIENT_SECRET);
@@ -105,7 +105,7 @@ router.get("/discord/callback", async (req, res) => {
       return res.status(502).send("Discordトークンが不正です");
     }
 
-    // ユーザー情報取得
+    // === 2. ユーザー情報取得 ===
     const userRes = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -118,7 +118,7 @@ router.get("/discord/callback", async (req, res) => {
 
     const userData = await userRes.json();
 
-    // DB upsert
+    // === 3. DB upsert ===
     const upsert = await pool.query(
       `
         INSERT INTO public.users (discord_id, username, access_token, refresh_token)
@@ -134,27 +134,27 @@ router.get("/discord/callback", async (req, res) => {
 
     const userId = upsert.rows[0].id;
 
-    // JWT 発行
+    // === 4. JWT 発行 ===
     const jwtToken = jwt.sign(
       {
         userId,
-        discord_id: userData.id,
+        discord_id: userData.id,   // ✅ 小文字で統一
         username: userData.username,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // ✅ Cookie 発行（本番: Secure + SameSite=None）
+    // === 5. Cookie 発行 ===
     res.cookie("token", jwtToken, {
       httpOnly: true,
-      secure: NODE_ENV === "production",
-      sameSite: "None", // ✅ 本番は必ず None
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: NODE_ENV === "production", // ✅ 本番は true
+      sameSite: "None",                  // ✅ 本番は None
+      maxAge: 7 * 24 * 60 * 60 * 1000,   // 7日
       path: "/",
     });
 
-    // フロントの /me へ
+    // === 6. フロントの /me へ ===
     const redirect = new URL("/me", FRONTEND_URL);
     return res.redirect(redirect.toString());
   } catch (err) {
