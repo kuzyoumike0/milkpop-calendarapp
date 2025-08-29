@@ -21,7 +21,7 @@ import "./usage.css"; // ← 追加
 // リダイレクト
 function MeRedirect() {
   useEffect(() => {
-    // ログイン後はトップページへ誘導
+    // ログイン後は個人ページへ
     window.location.replace("/personal");
   }, []);
   return <div style={{ textAlign: "center", padding: "50px" }}>ログイン完了...</div>;
@@ -33,19 +33,29 @@ function App() {
 
   // ログイン状態を確認
   useEffect(() => {
-    fetch("/api/me", { credentials: "include" })
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    fetch("/api/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
       .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("not logged in");
+        if (!res.ok) throw new Error("not logged in");
+        return res.json();
       })
       .then((data) => {
         setUser(data.user);
-        setLoading(false);
       })
       .catch(() => {
         setUser(null);
-        setLoading(false);
-      });
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
