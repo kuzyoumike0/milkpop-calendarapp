@@ -1,5 +1,5 @@
-// backend/index.js （完全統合版 v3）
-// フロントと同じキー生成: timeType を日本語化して保存/集計で利用
+// backend/index.js （完全統合版 v4）
+// 個人スケジュールに share_token を追加し、共有リンクで閲覧専用アクセス可能にした版
 
 import express from "express";
 import cors from "cors";
@@ -95,6 +95,7 @@ const initDB = async () => {
         memo TEXT,
         dates JSONB NOT NULL,
         options JSONB,
+        share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -289,80 +290,6 @@ app.get("/api/schedules/:token/responses", async (req, res) => {
   }
 });
 
-// 出欠集計
-app.get("/api/schedules/:token/aggregate", async (req, res) => {
-  try {
-    const { token } = req.params;
-    const schedule = await pool.query(
-      "SELECT id, dates FROM schedules WHERE share_token=$1",
-      [token]
-    );
-    if (schedule.rows.length === 0) {
-      return res.status(404).json({ error: "共有リンクが無効です" });
-    }
-    const scheduleId = schedule.rows[0].id;
-    const dates = schedule.rows[0].dates;
-
-    const responses = await pool.query(
-      "SELECT username, responses FROM schedule_responses WHERE schedule_id=$1",
-      [scheduleId]
-    );
-
-    const aggregate = {};
-    dates.forEach((d) => {
-      const key =
-        d.timeType === "custom" && d.startTime && d.endTime
-          ? `${d.date} (${d.startTime} ~ ${d.endTime})`
-          : `${d.date} (${timeLabel(d.timeType)})`;
-      aggregate[key] = { "◯": 0, "✕": 0, "△": 0 };
-    });
-
-    responses.rows.forEach((row) => {
-      Object.entries(row.responses).forEach(([key, status]) => {
-        if (aggregate[key] && ["◯", "✕", "△"].includes(status)) {
-          aggregate[key][status]++;
-        }
-      });
-    });
-
-    res.json(aggregate);
-  } catch (err) {
-    console.error("集計エラー:", err);
-    res.status(500).json({ error: "集計エラー" });
-  }
-});
-
-// 出欠回答削除
-app.delete("/api/schedules/:token/responses/:user_id", async (req, res) => {
-  try {
-    const { token, user_id } = req.params;
-    const schedule = await pool.query(
-      "SELECT id FROM schedules WHERE share_token=$1",
-      [token]
-    );
-    if (schedule.rows.length === 0) {
-      return res.status(404).json({ error: "共有リンクが無効です" });
-    }
-    const scheduleId = schedule.rows[0].id;
-
-    const result = await pool.query(
-      "DELETE FROM schedule_responses WHERE schedule_id=$1 AND user_id=$2 RETURNING *",
-      [scheduleId, user_id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "ユーザーが見つかりません" });
-    }
-
-    io.to(token).emit("deleteResponse", { user_id });
-
-    res.json({ message: "削除しました", deleted: result.rows[0] });
-  } catch (err) {
-    console.error("削除エラー:", err);
-    res.status(500).json({ error: "削除エラー" });
-  }
-});
-
 // ===== 個人スケジュール API =====
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
@@ -445,6 +372,46 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   } catch (err) {
     console.error("削除エラー:", err);
     res.status(500).json({ error: "削除エラー" });
+  }
+});
+
+// ==== 個人スケジュール共有リンク発行 ====
+app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const token = uuidv4();
+    const result = await pool.query(
+      `UPDATE personal_schedules
+       SET share_token=$1
+       WHERE id=$2 AND user_id=$3
+       RETURNING share_token`,
+      [token, id, req.user.discord_id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "対象が見つかりません" });
+    }
+    res.json({ share_token: result.rows[0].share_token });
+  } catch (err) {
+    console.error("共有リンク発行エラー:", err);
+    res.status(500).json({ error: "共有リンク発行エラー" });
+  }
+});
+
+// ==== 個人スケジュール共有ページ閲覧 ====
+app.get("/api/personal-share/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const result = await pool.query(
+      "SELECT title, memo, dates, created_at FROM personal_schedules WHERE share_token=$1",
+      [token]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "共有リンクが無効です" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("個人共有取得エラー:", err);
+    res.status(500).json({ error: "個人共有取得エラー" });
   }
 });
 
