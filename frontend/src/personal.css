@@ -248,3 +248,75 @@
   background: #e60033;
   transform: scale(1.05);
 }
+/* 登録済み予定カード */
+.schedule-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.schedule-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.schedule-header {
+  margin-bottom: 10px;
+}
+.schedule-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.schedule-memo {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.schedule-dates {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.schedule-dates li {
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.date-label {
+  font-weight: bold;
+}
+.time-label {
+  font-style: italic;
+}
+
+/* アクションボタン */
+.schedule-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.edit-btn {
+  background: linear-gradient(135deg, #4cafef, #004ca0);
+  color: #fff;
+}
+.delete-btn {
+  background: linear-gradient(135deg, #ff6b6b, #e60033);
+  color: #
