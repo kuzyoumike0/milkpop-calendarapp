@@ -120,6 +120,28 @@ export default function PersonalPage() {
     }
   };
 
+  // ==== DB保存済みスケジュール編集 ====
+  const updateScheduleDates = async (scheduleId, newDates) => {
+    if (!token) return;
+    try {
+      const payload = { dates: newDates };
+      await fetch(`/api/personal-events/${scheduleId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === scheduleId ? { ...s, dates: newDates } : s))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("更新に失敗しました");
+    }
+  };
+
   return (
     <div className="personal-container">
       <h1 className="page-title">個人日程登録</h1>
@@ -227,8 +249,6 @@ export default function PersonalPage() {
                       <div className="schedule-header">
                         <strong className="schedule-title">{date}</strong>
                       </div>
-
-                      {/* 時間帯選択ボタン */}
                       <div className="time-options">
                         <button
                           className={`option-btn ${info.timeType === "allday" ? "active" : ""}`}
@@ -266,8 +286,6 @@ export default function PersonalPage() {
                           時間指定
                         </button>
                       </div>
-
-                      {/* 時間指定プルダウン */}
                       {info.timeType === "custom" && (
                         <div className="time-range">
                           <select
@@ -282,11 +300,7 @@ export default function PersonalPage() {
                           >
                             {Array.from({ length: 24 }, (_, i) => {
                               const t = `${String(i).padStart(2, "0")}:00`;
-                              return (
-                                <option key={t} value={t}>
-                                  {t}
-                                </option>
-                              );
+                              return <option key={t} value={t}>{t}</option>;
                             })}
                           </select>
                           <span className="time-separator">〜</span>
@@ -302,17 +316,11 @@ export default function PersonalPage() {
                           >
                             {Array.from({ length: 24 }, (_, i) => {
                               const t = `${String(i).padStart(2, "0")}:00`;
-                              return (
-                                <option key={t} value={t}>
-                                  {t}
-                                </option>
-                              );
+                              return <option key={t} value={t}>{t}</option>;
                             })}
                           </select>
                         </div>
                       )}
-
-                      {/* 削除ボタン */}
                       <div className="schedule-actions">
                         <button
                           className="action-btn delete-btn"
@@ -323,6 +331,103 @@ export default function PersonalPage() {
                       </div>
                     </div>
                   ))
+              )}
+
+              {/* ==== 登録済み予定 ==== */}
+              <h2>登録済み予定</h2>
+              {schedules.length === 0 ? (
+                <p style={{ color: "white" }}>まだ予定がありません</p>
+              ) : (
+                schedules.map((item) => (
+                  <div key={item.id} className="schedule-card">
+                    <div className="schedule-header">
+                      <strong className="schedule-title">{item.title}</strong>
+                      <p className="schedule-memo">{item.memo}</p>
+                    </div>
+                    <ul className="schedule-dates">
+                      {item.dates.map((d, i) => (
+                        <li key={i}>
+                          <span className="date-label">{d.date}</span>
+                          <div className="time-options">
+                            <button
+                              className={`option-btn ${d.timeType === "allday" ? "active" : ""}`}
+                              onClick={() =>
+                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                  idx === i ? { ...x, timeType: "allday" } : x
+                                ))
+                              }
+                            >
+                              終日
+                            </button>
+                            <button
+                              className={`option-btn ${d.timeType === "day" ? "active" : ""}`}
+                              onClick={() =>
+                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                  idx === i ? { ...x, timeType: "day" } : x
+                                ))
+                              }
+                            >
+                              午前
+                            </button>
+                            <button
+                              className={`option-btn ${d.timeType === "night" ? "active" : ""}`}
+                              onClick={() =>
+                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                  idx === i ? { ...x, timeType: "night" } : x
+                                ))
+                              }
+                            >
+                              午後
+                            </button>
+                            <button
+                              className={`option-btn ${d.timeType === "custom" ? "active" : ""}`}
+                              onClick={() =>
+                                updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                  idx === i ? { ...x, timeType: "custom", startTime: "09:00", endTime: "18:00" } : x
+                                ))
+                              }
+                            >
+                              時間指定
+                            </button>
+                          </div>
+                          {d.timeType === "custom" && (
+                            <div className="time-range">
+                              <select
+                                className="cute-select"
+                                value={d.startTime}
+                                onChange={(e) =>
+                                  updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                    idx === i ? { ...x, startTime: e.target.value } : x
+                                  ))
+                                }
+                              >
+                                {Array.from({ length: 24 }, (_, h) => {
+                                  const t = `${String(h).padStart(2, "0")}:00`;
+                                  return <option key={t} value={t}>{t}</option>;
+                                })}
+                              </select>
+                              <span className="time-separator">〜</span>
+                              <select
+                                className="cute-select"
+                                value={d.endTime}
+                                onChange={(e) =>
+                                  updateScheduleDates(item.id, item.dates.map((x, idx) =>
+                                    idx === i ? { ...x, endTime: e.target.value } : x
+                                  ))
+                                }
+                              >
+                                {Array.from({ length: 24 }, (_, h) => {
+                                  const t = `${String(h).padStart(2, "0")}:00`;
+                                  return <option key={t} value={t}>{t}</option>;
+                                })}
+                              </select>
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
               )}
             </div>
           </div>
