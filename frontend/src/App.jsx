@@ -5,7 +5,7 @@ import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
-import UsagePage from "./components/UsagePage"; // ← 追加
+import UsagePage from "./components/UsagePage"; 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -16,12 +16,11 @@ import "./personal.css";
 import "./register.css";
 import "./share.css";
 import "./top.css";
-import "./usage.css"; // ← 追加
+import "./usage.css";
 
 // リダイレクト
 function MeRedirect() {
   useEffect(() => {
-    // ログイン後は個人ページへ
     window.location.replace("/personal");
   }, []);
   return <div style={{ textAlign: "center", padding: "50px" }}>ログイン完了...</div>;
@@ -31,7 +30,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ログイン状態を確認
+  // ログイン状態を確認（Bearer JWT 利用）
   useEffect(() => {
     const token = localStorage.getItem("jwt");
     if (!token) {
@@ -46,16 +45,17 @@ function App() {
       },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("not logged in");
-        return res.json();
+        if (res.ok) return res.json();
+        throw new Error("not logged in");
       })
       .then((data) => {
         setUser(data.user);
+        setLoading(false);
       })
       .catch(() => {
         setUser(null);
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -104,7 +104,7 @@ function App() {
           }
         />
         <Route path="/share/:token" element={<SharePage />} />
-        <Route path="/usage" element={<UsagePage />} /> {/* ← 追加 */}
+        <Route path="/usage" element={<UsagePage />} />
         <Route path="/me" element={<MeRedirect />} />
       </Routes>
 
