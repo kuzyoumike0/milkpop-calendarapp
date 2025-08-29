@@ -379,3 +379,39 @@
   gap: 10px;
   margin-top: 15px;
 }
+/* 登録済み予定カード */
+.schedule-card {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative; /* ✅ 保存ボタンを絶対配置するため */
+}
+.schedule-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* 保存ボタンを右下に固定 */
+.card-save-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #004ca0, #fdb9c8);
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  transition: 0.2s;
+}
+.card-save-btn:hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+}
