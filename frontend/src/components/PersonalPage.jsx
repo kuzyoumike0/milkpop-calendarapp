@@ -16,6 +16,8 @@ export default function PersonalPage() {
 
   const hd = new Holidays("JP");
   const token = localStorage.getItem("jwt");
+
+  // ✅ ここで1回だけ todayIso を定義
   const todayIso = new Date().toISOString().split("T")[0];
 
   // ==== 初回読み込み ====
@@ -182,7 +184,8 @@ export default function PersonalPage() {
     weeks.push(week);
   }
 
-  const todayIso = new Date().toISOString().split("T")[0];
+  // ✅ 重複していた `const todayIso` は削除済み
+
   const hours = Array.from({ length: 24 }, (_, i) =>
     `${String(i).padStart(2, "0")}:00`
   );
