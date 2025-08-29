@@ -14,10 +14,13 @@ const AuthSuccess = () => {
     if (token) {
       // localStorage に保存
       localStorage.setItem("jwt", token);
-      // ホームページなどにリダイレクト
-      navigate("/dashboard");
+      console.log("✅ JWT保存:", token);
+
+      // ✅ 個人ページにリダイレクト
+      navigate("/personal");
     } else {
       alert("ログインに失敗しました");
+      navigate("/");
     }
   }, [location, navigate]);
 
