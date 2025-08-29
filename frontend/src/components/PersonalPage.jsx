@@ -7,7 +7,7 @@ export default function PersonalPage() {
   const [memo, setMemo] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState({});
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [mode, setMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
   const [timeType, setTimeType] = useState("allday");
   const [startTime, setStartTime] = useState("09:00");
@@ -55,15 +55,11 @@ export default function PersonalPage() {
   // ==== 日付クリック ====
   const handleDateClick = (date) => {
     const iso = date.toISOString().split("T")[0];
-
     if (mode === "multiple") {
       setSelectedDates((prev) => {
         const newDates = { ...prev };
-        if (newDates[iso]) {
-          delete newDates[iso];
-        } else {
-          newDates[iso] = { timeType, startTime, endTime };
-        }
+        if (newDates[iso]) delete newDates[iso];
+        else newDates[iso] = { timeType, startTime, endTime };
         return newDates;
       });
     } else if (mode === "range") {
@@ -83,6 +79,15 @@ export default function PersonalPage() {
         setRangeStart(null);
       }
     }
+  };
+
+  // ==== 個別削除 ====
+  const removeSelectedDate = (date) => {
+    setSelectedDates((prev) => {
+      const newDates = { ...prev };
+      delete newDates[date];
+      return newDates;
+    });
   };
 
   // ==== 保存 ====
@@ -105,6 +110,7 @@ export default function PersonalPage() {
 
     try {
       if (editingId) {
+        // 更新
         await fetch(`/api/personal-events/${editingId}`, {
           method: "PUT",
           headers: {
@@ -118,6 +124,7 @@ export default function PersonalPage() {
         );
         setEditingId(null);
       } else {
+        // 新規
         const res = await fetch("/api/personal-events", {
           method: "POST",
           headers: {
@@ -130,6 +137,7 @@ export default function PersonalPage() {
         setSchedules((prev) => [...prev, newItem]);
       }
 
+      // リセット
       setTitle("");
       setMemo("");
       setSelectedDates({});
@@ -142,13 +150,10 @@ export default function PersonalPage() {
     }
   };
 
-  // ==== 削除 ====
+  // ==== 登録済み削除 ====
   const handleDelete = async (id) => {
     if (!window.confirm("この予定を削除しますか？")) return;
-    if (!token) {
-      alert("ログインしてください");
-      return;
-    }
+    if (!token) return;
     try {
       await fetch(`/api/personal-events/${id}`, {
         method: "DELETE",
@@ -157,11 +162,10 @@ export default function PersonalPage() {
       setSchedules((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
       console.error(err);
-      alert("削除に失敗しました");
     }
   };
 
-  // ==== 編集 ====
+  // ==== 登録済み編集 ====
   const handleEdit = (item) => {
     setEditingId(item.id);
     setTitle(item.title);
@@ -180,10 +184,7 @@ export default function PersonalPage() {
 
   // ==== 共有リンク ====
   const handleShare = async (id) => {
-    if (!token) {
-      alert("ログインしてください");
-      return;
-    }
+    if (!token) return;
     try {
       const res = await fetch(`/api/personal-events/${id}/share`, {
         method: "POST",
@@ -193,7 +194,6 @@ export default function PersonalPage() {
       setShareLink(`${window.location.origin}/personal/${data.share_token}`);
     } catch (err) {
       console.error(err);
-      alert("共有リンク発行に失敗しました");
     }
   };
 
@@ -205,6 +205,7 @@ export default function PersonalPage() {
         <p style={{ color: "red" }}>このページを使うにはログインしてください。</p>
       ) : (
         <>
+          {/* 入力欄 */}
           <input
             type="text"
             placeholder="タイトルを入力してください"
@@ -219,7 +220,7 @@ export default function PersonalPage() {
             className="memo-input"
           />
 
-          {/* === モード切替ボタン === */}
+          {/* モード切替 */}
           <div className="select-mode">
             <button
               className={mode === "multiple" ? "active" : ""}
@@ -236,7 +237,7 @@ export default function PersonalPage() {
           </div>
 
           <div className="calendar-list-container">
-            {/* === カレンダー === */}
+            {/* カレンダー */}
             <div className="calendar-container">
               <div className="calendar-header">
                 <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
@@ -257,7 +258,6 @@ export default function PersonalPage() {
                         const iso = d.toISOString().split("T")[0];
                         const isToday = iso === todayIso;
                         const holiday = hd.isHoliday(d);
-
                         return (
                           <td
                             key={j}
@@ -277,48 +277,12 @@ export default function PersonalPage() {
                 </tbody>
               </table>
 
-              {/* === 時間帯 === */}
+              {/* 時間帯 */}
               <div className="time-options">
-                <label>
-                  <input
-                    type="radio"
-                    name="timeType"
-                    value="allday"
-                    checked={timeType === "allday"}
-                    onChange={() => setTimeType("allday")}
-                  />
-                  終日
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="timeType"
-                    value="day"
-                    checked={timeType === "day"}
-                    onChange={() => setTimeType("day")}
-                  />
-                  午前
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="timeType"
-                    value="night"
-                    checked={timeType === "night"}
-                    onChange={() => setTimeType("night")}
-                  />
-                  午後
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="timeType"
-                    value="custom"
-                    checked={timeType === "custom"}
-                    onChange={() => setTimeType("custom")}
-                  />
-                  時間指定
-                </label>
+                <label><input type="radio" name="timeType" value="allday" checked={timeType === "allday"} onChange={() => setTimeType("allday")} /> 終日</label>
+                <label><input type="radio" name="timeType" value="day" checked={timeType === "day"} onChange={() => setTimeType("day")} /> 午前</label>
+                <label><input type="radio" name="timeType" value="night" checked={timeType === "night"} onChange={() => setTimeType("night")} /> 午後</label>
+                <label><input type="radio" name="timeType" value="custom" checked={timeType === "custom"} onChange={() => setTimeType("custom")} /> 時間指定</label>
                 {timeType === "custom" && (
                   <span>
                     <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
@@ -333,7 +297,7 @@ export default function PersonalPage() {
               </button>
             </div>
 
-            {/* === 登録済みリスト === */}
+            {/* 選択済み & 登録済み */}
             <div className="registered-list">
               <h2>選択済み日程</h2>
               {Object.keys(selectedDates).length === 0 ? (
@@ -351,6 +315,7 @@ export default function PersonalPage() {
                         ? "午後"
                         : `${info.startTime}〜${info.endTime}`}
                     </div>
+                    <button className="remove-btn" onClick={() => removeSelectedDate(date)}>❌</button>
                   </div>
                 ))
               )}
@@ -365,9 +330,7 @@ export default function PersonalPage() {
                       <strong>{item.title}</strong>
                       <p>{item.memo}</p>
                     </div>
-                    <div>
-                      {item.dates?.[0]?.date} / {item.dates?.[0]?.timeType}
-                    </div>
+                    <div>{item.dates?.[0]?.date} / {item.dates?.[0]?.timeType}</div>
                     <div className="actions">
                       <button onClick={() => handleEdit(item)}>✏️ 編集</button>
                       <button onClick={() => handleDelete(item.id)}>🗑 削除</button>
