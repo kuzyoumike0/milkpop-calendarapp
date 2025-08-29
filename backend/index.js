@@ -1,7 +1,5 @@
-// backend/index.js （完全統合版 v6）
-// 個人スケジュールに share_token を追加し、共有リンクで閲覧専用アクセス可能
-// ✅ authRequired を Bearer 優先に修正
-// ✅ CORS を本番フロントURLに固定
+// backend/index.js （完全統合版 v7）
+// schedules API に時間指定対応を追加
 
 import express from "express";
 import cors from "cors";
@@ -142,16 +140,78 @@ app.get("/api/me", authRequired, (req, res) => {
 });
 
 // ==== 共通: timeType 日本語化 ====
-function timeLabel(t) {
+function timeLabel(t, s, e) {
   if (t === "allday") return "終日";
   if (t === "day") return "午前";
   if (t === "night") return "午後";
-  if (t === "custom") return "時間指定";
+  if (t === "custom") return `${s}〜${e}`;
   return t;
 }
 
 // ===== schedules API =====
-// （省略せず残しています、あなたの前回コードと同じ処理です）
+
+// 新規作成
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates } = req.body;
+
+    if (!title || !Array.isArray(dates) || dates.length === 0) {
+      return res.status(400).json({ error: "タイトルと日程が必須です" });
+    }
+
+    // ✅ 日付ごとに timeType/startTime/endTime を保存
+    const normalizedDates = dates.map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    const shareToken = uuidv4();
+
+    const result = await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, share_token`,
+      [uuidv4(), title, JSON.stringify(normalizedDates), {}, shareToken]
+    );
+
+    res.json({ id: result.rows[0].id, share_token: result.rows[0].share_token });
+  } catch (err) {
+    console.error("❌ schedules作成失敗:", err);
+    res.status(500).json({ error: "作成失敗" });
+  }
+});
+
+// 一覧取得（共有ページ用）
+app.get("/api/schedules/:shareToken", async (req, res) => {
+  try {
+    const { shareToken } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM schedules WHERE share_token = $1 LIMIT 1`,
+      [shareToken]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+
+    const schedule = result.rows[0];
+    const dates = schedule.dates.map((d) => ({
+      ...d,
+      label: timeLabel(d.timeType, d.startTime, d.endTime),
+    }));
+
+    res.json({
+      id: schedule.id,
+      title: schedule.title,
+      dates,
+    });
+  } catch (err) {
+    console.error("❌ schedules取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
 
 // ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
