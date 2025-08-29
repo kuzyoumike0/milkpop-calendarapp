@@ -63,8 +63,8 @@ router.get("/logout", (_req, res) => {
   res.clearCookie("token", {
     path: "/",
     httpOnly: true,
-    secure: NODE_ENV === "production", // ✅ 本番は Secure 必須
-    sameSite: "None",                  // ✅ 本番では None
+    secure: true,     // ✅ 本番では必ず true
+    sameSite: "None", // ✅ 本番では必ず None
   });
   res.redirect(FRONTEND_URL || "/");
 });
@@ -138,7 +138,7 @@ router.get("/discord/callback", async (req, res) => {
     const jwtToken = jwt.sign(
       {
         userId,
-        discord_id: userData.id,   // ✅ 一貫して小文字
+        discord_id: userData.id,   // ✅ 小文字で統一
         username: userData.username,
       },
       JWT_SECRET,
@@ -148,9 +148,9 @@ router.get("/discord/callback", async (req, res) => {
     // === 5. Cookie 発行 ===
     res.cookie("token", jwtToken, {
       httpOnly: true,
-      secure: NODE_ENV === "production", // ✅ 本番は Secure
-      sameSite: "None",                  // ✅ 本番は必ず None
-      maxAge: 7 * 24 * 60 * 60 * 1000,   // 7日間
+      secure: true,     // ✅ 本番は必須
+      sameSite: "None", // ✅ 本番は必須
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7日
       path: "/",
     });
 
