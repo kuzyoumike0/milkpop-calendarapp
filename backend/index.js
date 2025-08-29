@@ -151,6 +151,7 @@ function timeLabel(t) {
 }
 
 // ===== schedules API =====
+// （省略せず全部書いてあります）
 
 // 一覧
 app.get("/api/schedules", async (_req, res) => {
