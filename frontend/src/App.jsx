@@ -7,7 +7,7 @@ import SharePage from "./components/SharePage";
 import UsagePage from "./components/UsagePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AuthSuccess from "./pages/AuthSuccess"; // ✅ 追加
+import AuthSuccess from "./components/AuthSuccess"; // ✅ 追加
 
 // ====== CSS 全部読み込み ======
 import "./common.css";
