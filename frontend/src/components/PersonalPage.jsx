@@ -27,7 +27,15 @@ export default function PersonalPage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setSchedules(Array.isArray(data) ? data : []))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setSchedules(data);
+        } else if (Array.isArray(data.schedules)) {
+          setSchedules(data.schedules);
+        } else {
+          console.error("Unexpected response:", data);
+        }
+      })
       .catch((err) => console.error(err));
   }, [token]);
 
@@ -141,13 +149,20 @@ export default function PersonalPage() {
         });
       }
 
-      // ✅ 保存後に最新の登録済み予定を取得して即反映
+      // ✅ 保存後に必ず最新を再フェッチ
       const res = await fetch("/api/personal-events", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setSchedules(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        setSchedules(data);
+      } else if (Array.isArray(data.schedules)) {
+        setSchedules(data.schedules);
+      } else {
+        console.error("Unexpected response format:", data);
+      }
 
+      // 入力欄クリア
       setTitle("");
       setMemo("");
       setSelectedDates({});
