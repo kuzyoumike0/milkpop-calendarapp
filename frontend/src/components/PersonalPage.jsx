@@ -234,15 +234,61 @@ export default function PersonalPage() {
           </div>
 
           <div className="calendar-list-container">
-            {/* カレンダー */}
+            {/* ==== カレンダー ==== */}
             <div className="calendar-container">
-              {/* 省略（カレンダーUI） */}
-              <button className="save-btn" onClick={handleSave}>
+              <div className="calendar-header">
+                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
+                  ◀
+                </button>
+                <span>{year}年 {month + 1}月</span>
+                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
+                  ▶
+                </button>
+              </div>
+
+              <table className="calendar-table">
+                <thead>
+                  <tr>
+                    <th>日</th><th>月</th><th>火</th><th>水</th>
+                    <th>木</th><th>金</th><th>土</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {weeks.map((week, i) => (
+                    <tr key={i}>
+                      {week.map((d, j) => {
+                        const iso = d.toISOString().split("T")[0];
+                        const isToday = iso === todayIso;
+                        const isSelected = selectedDates[iso];
+                        const holiday = hd.isHoliday(d);
+
+                        return (
+                          <td
+                            key={j}
+                            className={`cell
+                              ${isToday ? "today" : ""}
+                              ${isSelected ? "selected" : ""}
+                              ${holiday ? "holiday" : ""}
+                              ${j === 0 ? "sunday" : ""}
+                              ${j === 6 ? "saturday" : ""}`}
+                            onClick={() => handleDateClick(d)}
+                          >
+                            {d.getMonth() === month ? d.getDate() : ""}
+                            {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <button className="register-btn" onClick={handleSave}>
                 {editingId ? "更新する" : "登録する"}
               </button>
             </div>
 
-            {/* 選択済み & 登録済み */}
+            {/* ==== 選択済み & 登録済み ==== */}
             <div className="registered-list">
               <h2>選択済み日程</h2>
               {Object.keys(selectedDates).length === 0 ? (
@@ -275,7 +321,6 @@ export default function PersonalPage() {
                       <strong>{item.title}</strong>
                       <p>{item.memo}</p>
                     </div>
-                    {/* ✅ 複数日程をすべて表示 */}
                     <ul>
                       {item.dates?.map((d, i) => (
                         <li key={i}>
