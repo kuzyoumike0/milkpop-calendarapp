@@ -7,7 +7,8 @@ export default function PersonalPage({ user }) {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [mode, setMode] = useState("single"); // "single" | "multiple" | "range"
+  const [selectedDates, setSelectedDates] = useState([]);
   const [timeType, setTimeType] = useState("allday");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
@@ -19,10 +20,8 @@ export default function PersonalPage({ user }) {
 
   // ==== 初回読み込み ====
   useEffect(() => {
-    if (!user) return; // 未ログインなら何もしない
     fetch("/api/personal-events", {
-      method: "GET",
-      credentials: "include", // ✅ Cookie送信
+      credentials: "include",
     })
       .then((res) => {
         if (!res.ok) throw new Error("認証エラー");
@@ -30,7 +29,7 @@ export default function PersonalPage({ user }) {
       })
       .then((data) => setSchedules(data))
       .catch((err) => console.error(err));
-  }, [user]);
+  }, []);
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -51,27 +50,55 @@ export default function PersonalPage({ user }) {
 
   const todayIso = new Date().toISOString().split("T")[0];
 
+  // ==== 日付クリック処理 ====
+  const handleDateClick = (iso) => {
+    if (mode === "single") {
+      setSelectedDates([iso]);
+    } else if (mode === "multiple") {
+      setSelectedDates((prev) =>
+        prev.includes(iso) ? prev.filter((d) => d !== iso) : [...prev, iso]
+      );
+    } else if (mode === "range") {
+      if (selectedDates.length === 0) {
+        setSelectedDates([iso]);
+      } else if (selectedDates.length === 1) {
+        let start = new Date(selectedDates[0]);
+        let end = new Date(iso);
+        if (start > end) [start, end] = [end, start];
+        const range = [];
+        let d = new Date(start);
+        while (d <= end) {
+          range.push(d.toISOString().split("T")[0]);
+          d.setDate(d.getDate() + 1);
+        }
+        setSelectedDates(range);
+      } else {
+        setSelectedDates([iso]); // リセットして新規範囲開始
+      }
+    }
+  };
+
   // ==== 登録処理 ====
   const handleSave = async () => {
-    if (!selectedDate || !title.trim()) {
+    if (selectedDates.length === 0 || !title.trim()) {
       alert("日付とタイトルを入力してください");
-      return;
-    }
-    if (!user) {
-      alert("ログインしてください");
       return;
     }
 
     const payload = {
       title,
       memo,
-      dates: [{ date: selectedDate, timeType, startTime, endTime }],
+      dates: selectedDates.map((date) => ({
+        date,
+        timeType,
+        startTime,
+        endTime,
+      })),
       options: {},
     };
 
     try {
       if (editingId) {
-        // 編集
         await fetch(`/api/personal-events/${editingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -83,7 +110,6 @@ export default function PersonalPage({ user }) {
         );
         setEditingId(null);
       } else {
-        // 新規
         const res = await fetch("/api/personal-events", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -97,7 +123,7 @@ export default function PersonalPage({ user }) {
       // 入力リセット
       setTitle("");
       setMemo("");
-      setSelectedDate(null);
+      setSelectedDates([]);
       setTimeType("allday");
       setStartTime("09:00");
       setEndTime("18:00");
@@ -110,11 +136,6 @@ export default function PersonalPage({ user }) {
   // ==== 削除 ====
   const handleDelete = async (id) => {
     if (!window.confirm("この予定を削除しますか？")) return;
-    if (!user) {
-      alert("ログインしてください");
-      return;
-    }
-
     try {
       await fetch(`/api/personal-events/${id}`, {
         method: "DELETE",
@@ -132,7 +153,7 @@ export default function PersonalPage({ user }) {
     setEditingId(item.id);
     setTitle(item.title);
     setMemo(item.memo || "");
-    setSelectedDate(item.dates?.[0]?.date || "");
+    setSelectedDates(item.dates.map((d) => d.date));
     setTimeType(item.dates?.[0]?.timeType || "allday");
     if (item.dates?.[0]?.timeType === "custom") {
       setStartTime(item.dates?.[0]?.startTime || "09:00");
@@ -142,10 +163,6 @@ export default function PersonalPage({ user }) {
 
   // ==== 共有リンク発行 ====
   const handleShare = async (id) => {
-    if (!user) {
-      alert("ログインしてください");
-      return;
-    }
     try {
       const res = await fetch(`/api/personal-events/${id}/share`, {
         method: "POST",
@@ -162,173 +179,211 @@ export default function PersonalPage({ user }) {
   return (
     <div className="personal-container">
       <h1 className="page-title">個人日程登録</h1>
+      <p>ようこそ、{user?.username} さん！</p>
 
-      {!user ? (
-        <p style={{ color: "red" }}>このページを使うにはログインしてください。</p>
-      ) : (
-        <>
-          <p>ようこそ、{user.username} さん！</p>
+      <input
+        type="text"
+        placeholder="タイトルを入力してください"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="title-input"
+      />
+      <textarea
+        placeholder="メモを入力してください"
+        value={memo}
+        onChange={(e) => setMemo(e.target.value)}
+        className="memo-input"
+      />
 
+      {/* モード切替 */}
+      <div className="mode-switch">
+        <label>
           <input
-            type="text"
-            placeholder="タイトルを入力してください"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="title-input"
-          />
-          <textarea
-            placeholder="メモを入力してください"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            className="memo-input"
-          />
+            type="radio"
+            value="single"
+            checked={mode === "single"}
+            onChange={() => setMode("single")}
+          />{" "}
+          単日
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="multiple"
+            checked={mode === "multiple"}
+            onChange={() => setMode("multiple")}
+          />{" "}
+          複数
+        </label>
+        <label>
+          <input
+            type="radio"
+            value="range"
+            checked={mode === "range"}
+            onChange={() => setMode("range")}
+          />{" "}
+          範囲
+        </label>
+      </div>
 
-          {/* カレンダー */}
-          <div className="calendar-container">
-            <div className="calendar-header">
-              <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-                ◀
-              </button>
-              <span>{year}年 {month + 1}月</span>
-              <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-                ▶
-              </button>
-            </div>
-            <table className="calendar-table">
-              <thead>
-                <tr>
-                  <th>日</th><th>月</th><th>火</th><th>水</th>
-                  <th>木</th><th>金</th><th>土</th>
-                </tr>
-              </thead>
-              <tbody>
-                {weeks.map((week, i) => (
-                  <tr key={i}>
-                    {week.map((d, j) => {
-                      const iso = d.toISOString().split("T")[0];
-                      const isToday = iso === todayIso;
-                      const holiday = hd.isHoliday(d);
-
-                      return (
-                        <td
-                          key={j}
-                          className={`calendar-cell 
-                            ${isToday ? "today" : ""} 
-                            ${selectedDate === iso ? "selected" : ""} 
-                            ${holiday ? "holiday" : ""}`}
-                          onClick={() => setSelectedDate(iso)}
-                        >
-                          {d.getMonth() === month ? d.getDate() : ""}
-                          {holiday && (
-                            <div className="holiday-label">{holiday[0].name}</div>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* 時間帯選択 */}
-          <div className="time-options">
-            <label>
-              <input
-                type="radio"
-                name="timeType"
-                value="allday"
-                checked={timeType === "allday"}
-                onChange={() => setTimeType("allday")}
-              />
-              終日
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="timeType"
-                value="day"
-                checked={timeType === "day"}
-                onChange={() => setTimeType("day")}
-              />
-              午前
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="timeType"
-                value="night"
-                checked={timeType === "night"}
-                onChange={() => setTimeType("night")}
-              />
-              午後
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="timeType"
-                value="custom"
-                checked={timeType === "custom"}
-                onChange={() => setTimeType("custom")}
-              />
-              時間指定
-            </label>
-            {timeType === "custom" && (
-              <span>
-                <input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-                〜
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </span>
-            )}
-          </div>
-
-          <button className="save-btn" onClick={handleSave}>
-            {editingId ? "更新する" : "登録する"}
+      {/* カレンダー */}
+      <div className="calendar-container">
+        <div className="calendar-header">
+          <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
+            ◀
           </button>
+          <span>
+            {year}年 {month + 1}月
+          </span>
+          <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
+            ▶
+          </button>
+        </div>
+        <table className="calendar-table">
+          <thead>
+            <tr>
+              <th>日</th>
+              <th>月</th>
+              <th>火</th>
+              <th>水</th>
+              <th>木</th>
+              <th>金</th>
+              <th>土</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weeks.map((week, i) => (
+              <tr key={i}>
+                {week.map((d, j) => {
+                  const iso = d.toISOString().split("T")[0];
+                  const isToday = iso === todayIso;
+                  const holiday = hd.isHoliday(d);
+                  const isSelected = selectedDates.includes(iso);
 
-          {/* 登録済み一覧 */}
-          <div className="registered-list">
-            <h2>登録済み予定</h2>
-            {schedules.length === 0 ? (
-              <p>まだ予定がありません</p>
-            ) : (
-              schedules.map((item) => (
-                <div key={item.id} className="schedule-item">
-                  <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.memo}</p>
-                  </div>
-                  <div>
-                    {item.dates?.[0]?.date} / {item.dates?.[0]?.timeType}
-                  </div>
-                  <div className="actions">
-                    <button onClick={() => handleEdit(item)}>✏️ 編集</button>
-                    <button onClick={() => handleDelete(item.id)}>🗑 削除</button>
-                    <button onClick={() => handleShare(item.id)}>🔗 共有リンク発行</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                  return (
+                    <td
+                      key={j}
+                      className={`calendar-cell 
+                        ${isToday ? "today" : ""} 
+                        ${isSelected ? "selected" : ""} 
+                        ${holiday ? "holiday" : ""}`}
+                      onClick={() => handleDateClick(iso)}
+                    >
+                      {d.getMonth() === month ? d.getDate() : ""}
+                      {holiday && (
+                        <div className="holiday-label">{holiday[0].name}</div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-          {/* 共有リンク表示 */}
-          {shareLink && (
-            <div className="share-link-box">
-              <a href={shareLink} target="_blank" rel="noreferrer">{shareLink}</a>
-              <button onClick={() => navigator.clipboard.writeText(shareLink)}>
-                コピー
-              </button>
+      {/* 時間帯選択 */}
+      <div className="time-options">
+        <label>
+          <input
+            type="radio"
+            name="timeType"
+            value="allday"
+            checked={timeType === "allday"}
+            onChange={() => setTimeType("allday")}
+          />
+          終日
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="timeType"
+            value="day"
+            checked={timeType === "day"}
+            onChange={() => setTimeType("day")}
+          />
+          午前
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="timeType"
+            value="night"
+            checked={timeType === "night"}
+            onChange={() => setTimeType("night")}
+          />
+          午後
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="timeType"
+            value="custom"
+            checked={timeType === "custom"}
+            onChange={() => setTimeType("custom")}
+          />
+          時間指定
+        </label>
+        {timeType === "custom" && (
+          <span>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+            〜
+            <input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </span>
+        )}
+      </div>
+
+      <button className="save-btn" onClick={handleSave}>
+        {editingId ? "更新する" : "登録する"}
+      </button>
+
+      {/* 登録済み一覧 */}
+      <div className="registered-list">
+        <h2>登録済み予定</h2>
+        {schedules.length === 0 ? (
+          <p>まだ予定がありません</p>
+        ) : (
+          schedules.map((item) => (
+            <div key={item.id} className="schedule-item">
+              <div>
+                <strong>{item.title}</strong>
+                <p>{item.memo}</p>
+              </div>
+              <div>
+                {item.dates.map((d, idx) => (
+                  <div key={idx}>
+                    {d.date} / {d.timeType}
+                  </div>
+                ))}
+              </div>
+              <div className="actions">
+                <button onClick={() => handleEdit(item)}>✏️ 編集</button>
+                <button onClick={() => handleDelete(item.id)}>🗑 削除</button>
+                <button onClick={() => handleShare(item.id)}>🔗 共有リンク発行</button>
+              </div>
             </div>
-          )}
-        </>
+          ))
+        )}
+      </div>
+
+      {/* 共有リンク表示 */}
+      {shareLink && (
+        <div className="share-link-box">
+          <a href={shareLink} target="_blank" rel="noreferrer">
+            {shareLink}
+          </a>
+          <button onClick={() => navigator.clipboard.writeText(shareLink)}>
+            コピー
+          </button>
+        </div>
       )}
     </div>
   );
