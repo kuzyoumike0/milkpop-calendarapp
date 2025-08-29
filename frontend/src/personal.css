@@ -415,3 +415,49 @@
   transform: scale(1.08);
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
 }
+.selected-dates {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  color: #fff;
+}
+
+.selected-date-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+.time-options {
+  display: flex;
+  gap: 8px;
+}
+
+.option-btn {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.option-btn.active {
+  background: #004ca0;
+  color: #fff;
+  font-weight: bold;
+}
+
+.cute-select {
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 14px;
+  margin: 0 5px;
+}
