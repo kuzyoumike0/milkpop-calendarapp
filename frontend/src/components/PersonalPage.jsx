@@ -6,7 +6,9 @@ export default function PersonalPage() {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDates, setSelectedDates] = useState({});
+  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
+  const [rangeStart, setRangeStart] = useState(null);
   const [timeType, setTimeType] = useState("allday");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
@@ -50,9 +52,42 @@ export default function PersonalPage() {
 
   const todayIso = new Date().toISOString().split("T")[0];
 
+  // ==== 日付クリック ====
+  const handleDateClick = (date) => {
+    const iso = date.toISOString().split("T")[0];
+
+    if (mode === "multiple") {
+      setSelectedDates((prev) => {
+        const newDates = { ...prev };
+        if (newDates[iso]) {
+          delete newDates[iso];
+        } else {
+          newDates[iso] = { timeType, startTime, endTime };
+        }
+        return newDates;
+      });
+    } else if (mode === "range") {
+      if (!rangeStart) {
+        setRangeStart(date);
+      } else {
+        const start = rangeStart < date ? rangeStart : date;
+        const end = rangeStart < date ? date : rangeStart;
+        const rangeDates = {};
+        let d = new Date(start);
+        while (d <= end) {
+          const dIso = d.toISOString().split("T")[0];
+          rangeDates[dIso] = { timeType, startTime, endTime };
+          d.setDate(d.getDate() + 1);
+        }
+        setSelectedDates((prev) => ({ ...prev, ...rangeDates }));
+        setRangeStart(null);
+      }
+    }
+  };
+
   // ==== 保存 ====
   const handleSave = async () => {
-    if (!selectedDate || !title.trim()) {
+    if (Object.keys(selectedDates).length === 0 || !title.trim()) {
       alert("日付とタイトルを入力してください");
       return;
     }
@@ -61,12 +96,12 @@ export default function PersonalPage() {
       return;
     }
 
-    const payload = {
-      title,
-      memo,
-      dates: [{ date: selectedDate, timeType, startTime, endTime }],
-      options: {},
-    };
+    const datesArray = Object.entries(selectedDates).map(([date, info]) => ({
+      date,
+      ...info,
+    }));
+
+    const payload = { title, memo, dates: datesArray, options: {} };
 
     try {
       if (editingId) {
@@ -95,10 +130,9 @@ export default function PersonalPage() {
         setSchedules((prev) => [...prev, newItem]);
       }
 
-      // 入力リセット
       setTitle("");
       setMemo("");
-      setSelectedDate(null);
+      setSelectedDates({});
       setTimeType("allday");
       setStartTime("09:00");
       setEndTime("18:00");
@@ -132,12 +166,16 @@ export default function PersonalPage() {
     setEditingId(item.id);
     setTitle(item.title);
     setMemo(item.memo || "");
-    setSelectedDate(item.dates?.[0]?.date || "");
-    setTimeType(item.dates?.[0]?.timeType || "allday");
-    if (item.dates?.[0]?.timeType === "custom") {
-      setStartTime(item.dates?.[0]?.startTime || "09:00");
-      setEndTime(item.dates?.[0]?.endTime || "18:00");
-    }
+    setSelectedDates(
+      item.dates?.reduce((acc, d) => {
+        acc[d.date] = {
+          timeType: d.timeType,
+          startTime: d.startTime,
+          endTime: d.endTime,
+        };
+        return acc;
+      }, {}) || {}
+    );
   };
 
   // ==== 共有リンク ====
@@ -167,7 +205,6 @@ export default function PersonalPage() {
         <p style={{ color: "red" }}>このページを使うにはログインしてください。</p>
       ) : (
         <>
-          {/* 入力欄 */}
           <input
             type="text"
             placeholder="タイトルを入力してください"
@@ -182,38 +219,35 @@ export default function PersonalPage() {
             className="memo-input"
           />
 
+          {/* === モード切替ボタン === */}
+          <div className="select-mode">
+            <button
+              className={mode === "multiple" ? "active" : ""}
+              onClick={() => setMode("multiple")}
+            >
+              複数選択
+            </button>
+            <button
+              className={mode === "range" ? "active" : ""}
+              onClick={() => setMode("range")}
+            >
+              範囲選択
+            </button>
+          </div>
+
           <div className="calendar-list-container">
             {/* === カレンダー === */}
             <div className="calendar-container">
               <div className="calendar-header">
-                <button
-                  onClick={() =>
-                    setCurrentDate(new Date(year, month - 1, 1))
-                  }
-                >
-                  ◀
-                </button>
-                <span>
-                  {year}年 {month + 1}月
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentDate(new Date(year, month + 1, 1))
-                  }
-                >
-                  ▶
-                </button>
+                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
+                <span>{year}年 {month + 1}月</span>
+                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
               </div>
               <table className="calendar-table">
                 <thead>
                   <tr>
-                    <th>日</th>
-                    <th>月</th>
-                    <th>火</th>
-                    <th>水</th>
-                    <th>木</th>
-                    <th>金</th>
-                    <th>土</th>
+                    <th>日</th><th>月</th><th>火</th><th>水</th>
+                    <th>木</th><th>金</th><th>土</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -227,18 +261,14 @@ export default function PersonalPage() {
                         return (
                           <td
                             key={j}
-                            className={`calendar-cell
-                              ${isToday ? "today" : ""}
-                              ${selectedDate === iso ? "selected" : ""}
+                            className={`calendar-cell 
+                              ${isToday ? "today" : ""} 
+                              ${selectedDates[iso] ? "selected" : ""} 
                               ${holiday ? "holiday" : ""}`}
-                            onClick={() => setSelectedDate(iso)}
+                            onClick={() => handleDateClick(d)}
                           >
                             {d.getMonth() === month ? d.getDate() : ""}
-                            {holiday && (
-                              <div className="holiday-label">
-                                {holiday[0].name}
-                              </div>
-                            )}
+                            {holiday && <div className="holiday-label">{holiday[0].name}</div>}
                           </td>
                         );
                       })}
@@ -247,7 +277,7 @@ export default function PersonalPage() {
                 </tbody>
               </table>
 
-              {/* 時間帯 */}
+              {/* === 時間帯 === */}
               <div className="time-options">
                 <label>
                   <input
@@ -291,17 +321,9 @@ export default function PersonalPage() {
                 </label>
                 {timeType === "custom" && (
                   <span>
-                    <input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
+                    <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
                     〜
-                    <input
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
+                    <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
                   </span>
                 )}
               </div>
@@ -313,6 +335,26 @@ export default function PersonalPage() {
 
             {/* === 登録済みリスト === */}
             <div className="registered-list">
+              <h2>選択済み日程</h2>
+              {Object.keys(selectedDates).length === 0 ? (
+                <p style={{ color: "white" }}>まだ日程が選択されていません</p>
+              ) : (
+                Object.entries(selectedDates).map(([date, info]) => (
+                  <div key={date} className="schedule-item">
+                    <div><strong>{date}</strong></div>
+                    <div>
+                      {info.timeType === "allday"
+                        ? "終日"
+                        : info.timeType === "day"
+                        ? "午前"
+                        : info.timeType === "night"
+                        ? "午後"
+                        : `${info.startTime}〜${info.endTime}`}
+                    </div>
+                  </div>
+                ))
+              )}
+
               <h2>登録済み予定</h2>
               {schedules.length === 0 ? (
                 <p style={{ color: "white" }}>まだ予定がありません</p>
@@ -337,16 +379,8 @@ export default function PersonalPage() {
 
               {shareLink && (
                 <div className="share-link-box">
-                  <a href={shareLink} target="_blank" rel="noreferrer">
-                    {shareLink}
-                  </a>
-                  <button
-                    onClick={() =>
-                      navigator.clipboard.writeText(shareLink)
-                    }
-                  >
-                    コピー
-                  </button>
+                  <a href={shareLink} target="_blank" rel="noreferrer">{shareLink}</a>
+                  <button onClick={() => navigator.clipboard.writeText(shareLink)}>コピー</button>
                 </div>
               )}
             </div>
