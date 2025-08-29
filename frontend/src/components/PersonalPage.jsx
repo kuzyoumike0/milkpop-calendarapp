@@ -12,13 +12,13 @@ export default function PersonalPage() {
   const [rangeStart, setRangeStart] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [editedSchedules, setEditedSchedules] = useState({});
 
   const hd = new Holidays("JP");
   const token = localStorage.getItem("jwt");
-
-  // ✅ ここで1回だけ todayIso を定義
   const todayIso = new Date().toISOString().split("T")[0];
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
 
   // ==== 初回読み込み ====
   useEffect(() => {
@@ -27,15 +27,7 @@ export default function PersonalPage() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => {
-        const arr = Array.isArray(data) ? data : [];
-        setSchedules(arr);
-        const map = {};
-        arr.forEach((s) => {
-          map[s.id] = Array.isArray(s.dates) ? [...s.dates] : [];
-        });
-        setEditedSchedules(map);
-      })
+      .then((data) => setSchedules(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));
   }, [token]);
 
@@ -138,12 +130,8 @@ export default function PersonalPage() {
           },
           body: JSON.stringify(payload),
         });
-        setSchedules((prev) =>
-          prev.map((s) => (s.id === editingId ? { ...s, ...payload } : s))
-        );
-        setEditingId(null);
       } else {
-        const res = await fetch("/api/personal-events", {
+        await fetch("/api/personal-events", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -151,16 +139,19 @@ export default function PersonalPage() {
           },
           body: JSON.stringify(payload),
         });
-        const newItem = await res.json();
-        setSchedules((prev) => [...prev, newItem]);
-        setEditedSchedules((prev) => ({
-          ...prev,
-          [newItem.id]: Array.isArray(newItem.dates) ? [...newItem.dates] : [],
-        }));
       }
+
+      // ✅ 保存後に最新の登録済み予定を取得して即反映
+      const res = await fetch("/api/personal-events", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setSchedules(Array.isArray(data) ? data : []);
+
       setTitle("");
       setMemo("");
       setSelectedDates({});
+      setEditingId(null);
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -183,12 +174,6 @@ export default function PersonalPage() {
     }
     weeks.push(week);
   }
-
-  // ✅ 重複していた `const todayIso` は削除済み
-
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
 
   const sortedDates = Object.entries(selectedDates).sort(
     ([a], [b]) => new Date(a) - new Date(b)
