@@ -153,6 +153,7 @@
   text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
+/* シンプルなリストアイテム */
 .schedule-item {
   background: rgba(255,255,255,0.15);
   padding: 12px;
@@ -231,6 +232,7 @@
   color: #fff;
   cursor: pointer;
 }
+
 /* 選択済み日程の削除ボタン */
 .remove-btn {
   margin-top: 6px;
@@ -248,6 +250,7 @@
   background: #e60033;
   transform: scale(1.05);
 }
+
 /* 登録済み予定カード */
 .schedule-card {
   background: rgba(255, 255, 255, 0.15);
@@ -319,4 +322,13 @@
 }
 .delete-btn {
   background: linear-gradient(135deg, #ff6b6b, #e60033);
-  color: #
+  color: #fff;
+}
+.share-btn {
+  background: linear-gradient(135deg, #fdb9c8, #ff80ab);
+  color: #fff;
+}
+.action-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
