@@ -18,8 +18,6 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  const [userId] = useState(() => uuidv4());
-
   // ==== timeType → 日本語 ====
   const timeLabel = (t) => {
     if (t === "allday") return "終日";
@@ -66,7 +64,6 @@ export default function SharePage() {
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
       .then((data) => {
-        // ★ 読み込み時に normalizeResponses を適用
         const fixed = data.map((r) => ({
           ...r,
           responses: normalizeResponses(r.responses),
@@ -101,22 +98,24 @@ export default function SharePage() {
     }
 
     const normalized = normalizeResponses(myResponses);
+    const newUserId = uuidv4(); // ✅ 保存のたびに新しいIDを発行
 
     try {
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user_id: userId,
+          user_id: newUserId,
           username,
           responses: normalized,
         }),
       });
 
-      setResponses((prev) => {
-        const others = prev.filter((r) => r.user_id !== userId);
-        return [...others, { user_id: userId, username, responses: normalized }];
-      });
+      // 既存を消さずに追加
+      setResponses((prev) => [
+        ...prev,
+        { user_id: newUserId, username, responses: normalized },
+      ]);
 
       socket.emit("updateResponses", token);
 
