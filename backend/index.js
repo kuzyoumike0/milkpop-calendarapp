@@ -1,5 +1,6 @@
-// backend/index.js （完全統合版 v8）
+// backend/index.js （完全統合版 v9）
 // schedules + personal_schedules API 完備
+// personal_schedules: dates を必ず配列で返却
 
 import express from "express";
 import cors from "cors";
@@ -250,7 +251,13 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
       `SELECT * FROM personal_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
       [req.user.id]
     );
-    res.json(result.rows.map((r) => ({ ...r, dates: r.dates || [] })));
+
+    const rows = result.rows.map((r) => ({
+      ...r,
+      dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"), // ✅ 強制配列化
+    }));
+
+    res.json(rows);
   } catch (err) {
     console.error("❌ personal_schedules 取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
