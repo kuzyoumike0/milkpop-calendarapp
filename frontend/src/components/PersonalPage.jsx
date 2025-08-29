@@ -42,12 +42,11 @@ export default function PersonalPage() {
     const iso = date.toISOString().split("T")[0];
     if (mode === "range") {
       if (!rangeStart) {
-        setRangeStart(iso);
+        setRangeStart(date);
         return;
       }
-      let start = new Date(rangeStart);
-      let end = new Date(iso);
-      if (end < start) [start, end] = [end, start];
+      let start = rangeStart < date ? rangeStart : date;
+      let end = rangeStart < date ? date : rangeStart;
 
       const newDates = { ...selectedDates };
       let d = new Date(start);
@@ -84,6 +83,29 @@ export default function PersonalPage() {
       delete newDates[date];
       return newDates;
     });
+  };
+
+  // ==== 時間帯変更 ====
+  const handleTimeTypeChange = (date, type) => {
+    setSelectedDates((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        timeType: type,
+        startTime: type === "custom" ? "09:00" : null,
+        endTime: type === "custom" ? "10:00" : null,
+      },
+    }));
+  };
+
+  const handleTimeChange = (date, field, value) => {
+    setSelectedDates((prev) => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        [field]: value,
+      },
+    }));
   };
 
   // ==== 保存 ====
@@ -160,218 +182,202 @@ export default function PersonalPage() {
     weeks.push(week);
   }
 
+  const todayIso = new Date().toISOString().split("T")[0];
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    `${String(i).padStart(2, "0")}:00`
+  );
+
+  const sortedDates = Object.entries(selectedDates).sort(
+    ([a], [b]) => new Date(a) - new Date(b)
+  );
+
   return (
-    <div className="personal-container">
+    <div className="personal-page">
       <h1 className="page-title">個人日程登録</h1>
+      <input
+        type="text"
+        placeholder="タイトルを入力してください"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="title-input"
+      />
+      <textarea
+        placeholder="メモを入力してください"
+        value={memo}
+        onChange={(e) => setMemo(e.target.value)}
+        className="memo-input"
+      />
 
-      {!token ? (
-        <p style={{ color: "red" }}>このページを使うにはログインしてください。</p>
-      ) : (
-        <>
-          <input
-            type="text"
-            placeholder="タイトルを入力してください"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="title-input"
-          />
-          <textarea
-            placeholder="メモを入力してください"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            className="memo-input"
-          />
+      {/* モード切替 */}
+      <div className="select-mode">
+        <button
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => setMode("multiple")}
+        >
+          複数選択
+        </button>
+        <button
+          className={mode === "range" ? "active" : ""}
+          onClick={() => setMode("range")}
+        >
+          範囲選択
+        </button>
+      </div>
 
-          {/* モード切替 */}
-          <div className="mode-toggle">
-            <label>
-              <input
-                type="radio"
-                value="multiple"
-                checked={mode === "multiple"}
-                onChange={() => setMode("multiple")}
-              />
-              複数選択
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="range"
-                checked={mode === "range"}
-                onChange={() => setMode("range")}
-              />
-              範囲選択
-            </label>
+      <div className="calendar-list-container">
+        {/* カレンダー */}
+        <div className="calendar-container">
+          <div className="calendar-header">
+            <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
+              ◀
+            </button>
+            <span>
+              {year}年 {month + 1}月
+            </span>
+            <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
+              ▶
+            </button>
           </div>
-
-          {/* 7:3 レイアウト */}
-          <div className="calendar-list-container">
-            {/* カレンダー（左7割） */}
-            <div className="calendar-area">
-              <div className="calendar-header">
-                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-                  ◀
-                </button>
-                <span>
-                  {year}年 {month + 1}月
-                </span>
-                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-                  ▶
-                </button>
-              </div>
-              <table className="calendar-table">
-                <thead>
-                  <tr>
-                    <th>日</th>
-                    <th>月</th>
-                    <th>火</th>
-                    <th>水</th>
-                    <th>木</th>
-                    <th>金</th>
-                    <th>土</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {weeks.map((week, i) => (
-                    <tr key={i}>
-                      {week.map((d, j) => {
-                        const iso = d.toISOString().split("T")[0];
-                        const isToday = iso === todayIso;
-                        const isSelected = selectedDates[iso];
-                        const holiday = hd.isHoliday(d);
-                        return (
-                          <td
-                            key={j}
-                            className={`calendar-cell ${isToday ? "today" : ""} ${
-                              isSelected ? "selected" : ""
-                            }`}
-                            onClick={() => handleDateClick(d)}
-                          >
-                            {d.getMonth() === month ? d.getDate() : ""}
-                            {holiday && (
-                              <div className="holiday-label">{holiday[0].name}</div>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* 選択中日程（右3割） */}
-            <div className="selected-area">
-              <h2>選択中の日程</h2>
-              {Object.entries(selectedDates).map(([date, info]) => (
-                <div key={date} className="selected-date-item">
-                  <span className="date-label">{date}</span>
-                  <div className="time-options">
-                    {["allday", "day", "night", "custom"].map((t) => (
-                      <button
-                        key={t}
-                        className={`option-btn ${info.timeType === t ? "active" : ""}`}
-                        onClick={() =>
-                          setSelectedDates((prev) => ({
-                            ...prev,
-                            [date]: {
-                              ...prev[date],
-                              timeType: t,
-                              ...(t === "custom"
-                                ? { startTime: "09:00", endTime: "18:00" }
-                                : {}),
-                            },
-                          }))
-                        }
+          <table className="calendar-table">
+            <thead>
+              <tr>
+                <th>日</th>
+                <th>月</th>
+                <th>火</th>
+                <th>水</th>
+                <th>木</th>
+                <th>金</th>
+                <th>土</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weeks.map((week, i) => (
+                <tr key={i}>
+                  {week.map((d, j) => {
+                    const iso = d.toISOString().split("T")[0];
+                    const isToday = iso === todayIso;
+                    const isSelected = selectedDates[iso];
+                    const holiday = hd.isHoliday(d);
+                    return (
+                      <td
+                        key={j}
+                        className={`cell
+                          ${isToday ? "today" : ""}
+                          ${isSelected ? "selected" : ""}
+                          ${holiday ? "holiday" : ""}
+                          ${j === 0 ? "sunday" : ""}
+                          ${j === 6 ? "saturday" : ""}`}
+                        onClick={() => handleDateClick(d)}
                       >
-                        {t === "allday"
-                          ? "終日"
-                          : t === "day"
-                          ? "午前"
-                          : t === "night"
-                          ? "午後"
-                          : "時間指定"}
-                      </button>
-                    ))}
-                  </div>
-                  {info.timeType === "custom" && (
-                    <div className="time-range">
-                      <select
-                        className="cute-select"
-                        value={info.startTime}
-                        onChange={(e) =>
-                          setSelectedDates((prev) => ({
-                            ...prev,
-                            [date]: { ...prev[date], startTime: e.target.value },
-                          }))
-                        }
-                      >
-                        {Array.from({ length: 24 }, (_, h) => {
-                          const t = `${String(h).padStart(2, "0")}:00`;
-                          return (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <span className="time-separator">〜</span>
-                      <select
-                        className="cute-select"
-                        value={info.endTime}
-                        onChange={(e) =>
-                          setSelectedDates((prev) => ({
-                            ...prev,
-                            [date]: { ...prev[date], endTime: e.target.value },
-                          }))
-                        }
-                      >
-                        {Array.from({ length: 24 }, (_, h) => {
-                          const t = `${String(h).padStart(2, "0")}:00`;
-                          return (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  )}
-                  <button className="remove-btn" onClick={() => removeSelectedDate(date)}>
-                    ✖
-                  </button>
-                </div>
+                        {d.getMonth() === month ? d.getDate() : ""}
+                        {holiday && (
+                          <div className="holiday-name">{holiday[0].name}</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
+        </div>
 
-          {/* 保存ボタン */}
-          <button className="save-btn" onClick={handleSave}>
-            {editingId ? "更新する" : "登録する"}
-          </button>
+        {/* 選択中リスト */}
+        <div className="side-panel">
+          <h2>選択中の日程</h2>
+          {sortedDates.length === 0 ? (
+            <p>まだ日程が選択されていません</p>
+          ) : (
+            sortedDates.map(([date, info]) => (
+              <div key={date} className="date-card">
+                <div className="date-label">{date}</div>
 
-          {/* 登録済み日程リスト */}
-          <div className="registered-list">
-            <h2>登録済み予定</h2>
-            {schedules.map((item) => (
-              <div key={item.id} className="schedule-card">
-                <div className="schedule-header">
-                  <strong>{item.title}</strong>
-                  {item.memo && <p className="schedule-memo">{item.memo}</p>}
+                <div className="time-options">
+                  {["allday", "day", "night", "custom"].map((type) => (
+                    <button
+                      key={type}
+                      className={`time-btn ${
+                        info.timeType === type ? "active" : ""
+                      }`}
+                      onClick={() => handleTimeTypeChange(date, type)}
+                    >
+                      {type === "allday"
+                        ? "終日"
+                        : type === "day"
+                        ? "午前"
+                        : type === "night"
+                        ? "午後"
+                        : "時間指定"}
+                    </button>
+                  ))}
                 </div>
-                <ul className="schedule-dates">
-                  {Array.isArray(item.dates) &&
-                    item.dates.map((d, i) => (
-                      <li key={i}>
-                        <span>{d.date}</span> ({d.timeType})
-                      </li>
-                    ))}
-                </ul>
+
+                {info.timeType === "custom" && (
+                  <div className="time-range">
+                    <select
+                      className="cute-select"
+                      value={info.startTime}
+                      onChange={(e) =>
+                        handleTimeChange(date, "startTime", e.target.value)
+                      }
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="time-separator">〜</span>
+                    <select
+                      className="cute-select"
+                      value={info.endTime}
+                      onChange={(e) =>
+                        handleTimeChange(date, "endTime", e.target.value)
+                      }
+                    >
+                      {hours.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <button
+                  className="remove-btn"
+                  onClick={() => removeSelectedDate(date)}
+                >
+                  ✖
+                </button>
               </div>
-            ))}
+            ))
+          )}
+          <button className="register-btn" onClick={handleSave}>
+            保存する
+          </button>
+        </div>
+      </div>
+
+      {/* 登録済みリスト */}
+      <div className="registered-list">
+        <h2>登録済み予定</h2>
+        {schedules.map((item) => (
+          <div key={item.id} className="schedule-card">
+            <div className="schedule-header">
+              <strong>{item.title}</strong>
+              {item.memo && <p className="schedule-memo">{item.memo}</p>}
+            </div>
+            <ul className="schedule-dates">
+              {Array.isArray(item.dates) &&
+                item.dates.map((d, i) => (
+                  <li key={i}>
+                    <span>{d.date}</span> ({d.timeType})
+                  </li>
+                ))}
+            </ul>
           </div>
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
