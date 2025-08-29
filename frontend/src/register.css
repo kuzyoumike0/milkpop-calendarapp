@@ -121,82 +121,44 @@
 /* サイドパネル */
 .side-panel {
   flex: 0 0 30%;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 20px;
+  color: #fff;
 }
 
-/* 日程カード */
-.date-card {
-  background: rgba(255,255,255,0.15);
-  padding: 10px;
-  border-radius: 12px;
+.side-panel h2 {
+  font-size: 1.3rem;
+  font-weight: bold;
   margin-bottom: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-.date-label {
-  font-weight: bold;
-  display: inline-block;
-  color: #fff;
-}
-.time-options {
-  display: flex;
-  gap: 5px;
-  margin-top: 6px;
-}
-.time-options button {
-  flex: 1;
-  padding: 4px 6px;
-  border: none;
-  border-radius: 8px;
-  background: #ddd;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-.time-options button.active {
-  background: linear-gradient(135deg, #004ca0, #fdb9c8);
-  color: #fff;
-  font-weight: bold;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
+  padding-bottom: 4px;
 }
 
-/* 時間指定プルダウン */
-.time-range {
-  margin-top: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.side-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
-.cute-select {
-  padding: 8px 14px;
-  border-radius: 12px;
-  border: none;
-  margin: 0 6px;
+
+.side-panel li {
+  background: rgba(255,255,255,0.2);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: bold;
   font-size: 0.95rem;
-  background: #000;   /* 背景黒 */
-  color: #fff;       /* 文字白 */
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-  transition: 0.2s;
-  appearance: none;
-}
-.cute-select:hover {
-  transform: scale(1.05);
-  background: #222;  /* 濃い黒に */
-}
-.cute-select:focus {
-  outline: none;
-  box-shadow: 0 0 6px #fff;
-}
-.time-separator {
-  margin: 0 5px;
   color: #fff;
-  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 /* 登録ボタン */
 .register-btn {
-  margin-top: 20px;
+  margin-top: 10px;
   padding: 12px 25px;
   font-size: 1rem;
   font-weight: bold;
@@ -207,6 +169,7 @@
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   transition: transform 0.15s;
+  text-align: center;
 }
 .register-btn:hover {
   transform: scale(1.05);
