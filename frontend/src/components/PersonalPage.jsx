@@ -9,7 +9,7 @@ export default function PersonalPage() {
   const [selectedDates, setSelectedDates] = useState({});
   const [mode, setMode] = useState("multiple");
   const [rangeStart, setRangeStart] = useState(null);
-  const [schedules, setSchedules] = useState([]);
+  const [schedules, setSchedules] = useState([]); // ✅ 初期は配列
   const [editingId, setEditingId] = useState(null);
   const [shareLink, setShareLink] = useState("");
   const [editedSchedules, setEditedSchedules] = useState({}); // ✅ ローカル編集用
@@ -24,13 +24,23 @@ export default function PersonalPage() {
     fetch("/api/personal-events", {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("fetch error");
+        return res.json();
+      })
       .then((data) => {
-        setSchedules(data);
+        // ✅ 常に配列に変換
+        const arr = Array.isArray(data)
+          ? data
+          : data
+          ? Object.values(data)
+          : [];
+        setSchedules(arr);
+
         // 初期値をコピー
         const map = {};
-        data.forEach((s) => {
-          map[s.id] = [...s.dates];
+        arr.forEach((s) => {
+          map[s.id] = Array.isArray(s.dates) ? [...s.dates] : [];
         });
         setEditedSchedules(map);
       })
@@ -40,7 +50,9 @@ export default function PersonalPage() {
   // ==== 登録済みのローカル変更 ====
   const updateLocalDate = (scheduleId, index, changes) => {
     setEditedSchedules((prev) => {
-      const updated = [...(prev[scheduleId] || [])];
+      const updated = Array.isArray(prev[scheduleId])
+        ? [...prev[scheduleId]]
+        : [];
       updated[index] = { ...updated[index], ...changes };
       return { ...prev, [scheduleId]: updated };
     });
@@ -50,7 +62,7 @@ export default function PersonalPage() {
   const saveEditedSchedule = async (scheduleId) => {
     if (!token) return;
     try {
-      const payload = { dates: editedSchedules[scheduleId] };
+      const payload = { dates: editedSchedules[scheduleId] || [] };
       await fetch(`/api/personal-events/${scheduleId}`, {
         method: "PUT",
         headers: {
@@ -158,7 +170,7 @@ export default function PersonalPage() {
         setSchedules((prev) => [...prev, newItem]);
         setEditedSchedules((prev) => ({
           ...prev,
-          [newItem.id]: [...newItem.dates],
+          [newItem.id]: Array.isArray(newItem.dates) ? [...newItem.dates] : [],
         }));
       }
 
@@ -261,100 +273,105 @@ export default function PersonalPage() {
             {/* 登録済みカード */}
             <div className="registered-list">
               <h2>登録済み予定</h2>
-              {schedules.map((item) => (
-                <div key={item.id} className="schedule-card">
-                  <div className="schedule-header">
-                    <strong>{item.title}</strong>
-                    {item.memo && (
-                      <p className="schedule-memo">{item.memo}</p>
-                    )}
+              {Array.isArray(schedules) &&
+                schedules.map((item) => (
+                  <div key={item.id} className="schedule-card">
+                    <div className="schedule-header">
+                      <strong>{item.title}</strong>
+                      {item.memo && (
+                        <p className="schedule-memo">{item.memo}</p>
+                      )}
+                    </div>
+
+                    <ul className="schedule-dates">
+                      {Array.isArray(editedSchedules[item.id]) &&
+                        editedSchedules[item.id].map((d, i) => (
+                          <li key={i}>
+                            <span className="date-label">{d.date}</span>
+                            <div className="time-options">
+                              {["allday", "day", "night", "custom"].map((t) => (
+                                <button
+                                  key={t}
+                                  className={`option-btn ${
+                                    d.timeType === t ? "active" : ""
+                                  }`}
+                                  onClick={() =>
+                                    updateLocalDate(item.id, i, {
+                                      timeType: t,
+                                      ...(t === "custom"
+                                        ? {
+                                            startTime: "09:00",
+                                            endTime: "18:00",
+                                          }
+                                        : {}),
+                                    })
+                                  }
+                                >
+                                  {t === "allday"
+                                    ? "終日"
+                                    : t === "day"
+                                    ? "午前"
+                                    : t === "night"
+                                    ? "午後"
+                                    : "時間指定"}
+                                </button>
+                              ))}
+                            </div>
+
+                            {d.timeType === "custom" && (
+                              <div className="time-range">
+                                <select
+                                  className="cute-select"
+                                  value={d.startTime}
+                                  onChange={(e) =>
+                                    updateLocalDate(item.id, i, {
+                                      startTime: e.target.value,
+                                    })
+                                  }
+                                >
+                                  {Array.from({ length: 24 }, (_, h) => {
+                                    const t = `${String(h).padStart(2, "0")}:00`;
+                                    return (
+                                      <option key={t} value={t}>
+                                        {t}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                                <span className="time-separator">〜</span>
+                                <select
+                                  className="cute-select"
+                                  value={d.endTime}
+                                  onChange={(e) =>
+                                    updateLocalDate(item.id, i, {
+                                      endTime: e.target.value,
+                                    })
+                                  }
+                                >
+                                  {Array.from({ length: 24 }, (_, h) => {
+                                    const t = `${String(h).padStart(2, "0")}:00`;
+                                    return (
+                                      <option key={t} value={t}>
+                                        {t}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                    </ul>
+
+                    {/* ✅ 保存ボタン */}
+                    <button
+                      className="card-save-btn"
+                      onClick={() => saveEditedSchedule(item.id)}
+                    >
+                      💾 保存する
+                    </button>
                   </div>
-
-                  <ul className="schedule-dates">
-                    {editedSchedules[item.id]?.map((d, i) => (
-                      <li key={i}>
-                        <span className="date-label">{d.date}</span>
-                        <div className="time-options">
-                          {["allday", "day", "night", "custom"].map((t) => (
-                            <button
-                              key={t}
-                              className={`option-btn ${
-                                d.timeType === t ? "active" : ""
-                              }`}
-                              onClick={() =>
-                                updateLocalDate(item.id, i, {
-                                  timeType: t,
-                                  ...(t === "custom"
-                                    ? { startTime: "09:00", endTime: "18:00" }
-                                    : {}),
-                                })
-                              }
-                            >
-                              {t === "allday"
-                                ? "終日"
-                                : t === "day"
-                                ? "午前"
-                                : t === "night"
-                                ? "午後"
-                                : "時間指定"}
-                            </button>
-                          ))}
-                        </div>
-
-                        {d.timeType === "custom" && (
-                          <div className="time-range">
-                            <select
-                              className="cute-select"
-                              value={d.startTime}
-                              onChange={(e) =>
-                                updateLocalDate(item.id, i, {
-                                  startTime: e.target.value,
-                                })
-                              }
-                            >
-                              {Array.from({ length: 24 }, (_, h) => {
-                                const t = `${String(h).padStart(2, "0")}:00`;
-                                return (
-                                  <option key={t} value={t}>
-                                    {t}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                            <span className="time-separator">〜</span>
-                            <select
-                              className="cute-select"
-                              value={d.endTime}
-                              onChange={(e) =>
-                                updateLocalDate(item.id, i, {
-                                  endTime: e.target.value,
-                                })
-                              }
-                            >
-                              {Array.from({ length: 24 }, (_, h) => {
-                                const t = `${String(h).padStart(2, "0")}:00`;
-                                return (
-                                  <option key={t} value={t}>
-                                    {t}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* ✅ 保存ボタン */}
-                  <button
-                    className="card-save-btn"
-                    onClick={() => saveEditedSchedule(item.id)}
-                  >
-                    💾 保存する
-                  </button>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </>
