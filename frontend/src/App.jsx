@@ -5,7 +5,7 @@ import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
 import SharePage from "./components/SharePage";
-import UsagePage from "./components/UsagePage"; 
+import UsagePage from "./components/UsagePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
@@ -30,30 +30,26 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ログイン状態を確認（Bearer JWT 利用）
+  // ✅ Cookieベースのログイン状態確認
   useEffect(() => {
-    const token = localStorage.getItem("jwt");
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
+    console.log("🔍 /api/me 呼び出し開始");
 
     fetch("/api/me", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      method: "GET",
+      credentials: "include", // ✅ Cookieを送信
     })
-      .then((res) => {
-        if (res.ok) return res.json();
-        throw new Error("not logged in");
-      })
-      .then((data) => {
+      .then(async (res) => {
+        console.log("📡 /api/me response status:", res.status);
+        if (!res.ok) throw new Error("not logged in");
+        const data = await res.json();
+        console.log("✅ /api/me response data:", data);
         setUser(data.user);
-        setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn("❌ /api/me error:", err);
         setUser(null);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, []);
