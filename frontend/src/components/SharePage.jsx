@@ -59,7 +59,16 @@ export default function SharePage() {
   useEffect(() => {
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
-      .then((data) => setSchedule(data));
+      .then((data) => {
+        // ✅ 日付ソートしてからセット
+        const sorted = {
+          ...data,
+          dates: [...(data.dates || [])].sort(
+            (a, b) => new Date(a.date) - new Date(b.date)
+          ),
+        };
+        setSchedule(sorted);
+      });
 
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
@@ -172,7 +181,7 @@ export default function SharePage() {
     if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
     if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
     if (filter === "maybe") return b.counts["△"] - a.counts["△"];
-    return 0;
+    return new Date(a.date) - new Date(b.date); // ✅ デフォルトは日付順
   });
 
   return (
@@ -227,7 +236,7 @@ export default function SharePage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">すべて表示</option>
+            <option value="all">すべて表示（日付順）</option>
             <option value="ok">◯ 多い順</option>
             <option value="ng">✕ 多い順</option>
             <option value="maybe">△ 多い順</option>
