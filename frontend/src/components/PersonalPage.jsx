@@ -1,4 +1,3 @@
-// frontend/src/components/PersonalPage.jsx
 import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
@@ -95,7 +94,12 @@ export default function PersonalPage() {
     setSelectedDates((prev) => {
       const newDates = { ...prev };
       if (newDates[iso]) delete newDates[iso];
-      else newDates[iso] = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
+      else
+        newDates[iso] = {
+          timeType: "allday",
+          startTime: "09:00",
+          endTime: "18:00",
+        };
       return newDates;
     });
   };
@@ -152,7 +156,10 @@ export default function PersonalPage() {
         });
         const newItem = await res.json();
         setSchedules((prev) => [...prev, newItem]);
-        setEditedSchedules((prev) => ({ ...prev, [newItem.id]: [...newItem.dates] }));
+        setEditedSchedules((prev) => ({
+          ...prev,
+          [newItem.id]: [...newItem.dates],
+        }));
       }
 
       setTitle("");
@@ -191,15 +198,30 @@ export default function PersonalPage() {
           <div className="calendar-list-container">
             <div className="calendar-container">
               <div className="calendar-header">
-                <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>◀</button>
-                <span>{year}年 {month + 1}月</span>
-                <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>▶</button>
+                <button
+                  onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+                >
+                  ◀
+                </button>
+                <span>
+                  {year}年 {month + 1}月
+                </span>
+                <button
+                  onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+                >
+                  ▶
+                </button>
               </div>
               <table className="calendar-table">
                 <thead>
                   <tr>
-                    <th>日</th><th>月</th><th>火</th><th>水</th>
-                    <th>木</th><th>金</th><th>土</th>
+                    <th>日</th>
+                    <th>月</th>
+                    <th>火</th>
+                    <th>水</th>
+                    <th>木</th>
+                    <th>金</th>
+                    <th>土</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -213,11 +235,17 @@ export default function PersonalPage() {
                         return (
                           <td
                             key={j}
-                            className={`calendar-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
+                            className={`calendar-cell ${
+                              isToday ? "today" : ""
+                            } ${isSelected ? "selected" : ""}`}
                             onClick={() => handleDateClick(d)}
                           >
                             {d.getMonth() === month ? d.getDate() : ""}
-                            {holiday && <div className="holiday-label">{holiday[0].name}</div>}
+                            {holiday && (
+                              <div className="holiday-label">
+                                {holiday[0].name}
+                              </div>
+                            )}
                           </td>
                         );
                       })}
@@ -230,55 +258,86 @@ export default function PersonalPage() {
               </button>
             </div>
 
-            {/* 選択済みカード */}
+            {/* 登録済みカード */}
             <div className="registered-list">
               <h2>登録済み予定</h2>
               {schedules.map((item) => (
                 <div key={item.id} className="schedule-card">
                   <div className="schedule-header">
                     <strong>{item.title}</strong>
+                    {item.memo && (
+                      <p className="schedule-memo">{item.memo}</p>
+                    )}
                   </div>
+
                   <ul className="schedule-dates">
                     {editedSchedules[item.id]?.map((d, i) => (
                       <li key={i}>
-                        {d.date}
+                        <span className="date-label">{d.date}</span>
                         <div className="time-options">
                           {["allday", "day", "night", "custom"].map((t) => (
                             <button
                               key={t}
-                              className={`option-btn ${d.timeType === t ? "active" : ""}`}
+                              className={`option-btn ${
+                                d.timeType === t ? "active" : ""
+                              }`}
                               onClick={() =>
                                 updateLocalDate(item.id, i, {
                                   timeType: t,
-                                  ...(t === "custom" ? { startTime: "09:00", endTime: "18:00" } : {}),
+                                  ...(t === "custom"
+                                    ? { startTime: "09:00", endTime: "18:00" }
+                                    : {}),
                                 })
                               }
                             >
-                              {t === "allday" ? "終日" : t === "day" ? "午前" : t === "night" ? "午後" : "時間指定"}
+                              {t === "allday"
+                                ? "終日"
+                                : t === "day"
+                                ? "午前"
+                                : t === "night"
+                                ? "午後"
+                                : "時間指定"}
                             </button>
                           ))}
                         </div>
+
                         {d.timeType === "custom" && (
                           <div className="time-range">
                             <select
                               className="cute-select"
                               value={d.startTime}
-                              onChange={(e) => updateLocalDate(item.id, i, { startTime: e.target.value })}
+                              onChange={(e) =>
+                                updateLocalDate(item.id, i, {
+                                  startTime: e.target.value,
+                                })
+                              }
                             >
                               {Array.from({ length: 24 }, (_, h) => {
                                 const t = `${String(h).padStart(2, "0")}:00`;
-                                return <option key={t} value={t}>{t}</option>;
+                                return (
+                                  <option key={t} value={t}>
+                                    {t}
+                                  </option>
+                                );
                               })}
                             </select>
                             <span className="time-separator">〜</span>
                             <select
                               className="cute-select"
                               value={d.endTime}
-                              onChange={(e) => updateLocalDate(item.id, i, { endTime: e.target.value })}
+                              onChange={(e) =>
+                                updateLocalDate(item.id, i, {
+                                  endTime: e.target.value,
+                                })
+                              }
                             >
                               {Array.from({ length: 24 }, (_, h) => {
                                 const t = `${String(h).padStart(2, "0")}:00`;
-                                return <option key={t} value={t}>{t}</option>;
+                                return (
+                                  <option key={t} value={t}>
+                                    {t}
+                                  </option>
+                                );
                               })}
                             </select>
                           </div>
@@ -286,60 +345,20 @@ export default function PersonalPage() {
                       </li>
                     ))}
                   </ul>
-                  <div key={item.id} className="schedule-card">
-  <div className="schedule-header">
-    <strong>{item.title}</strong>
-  </div>
-  <ul className="schedule-dates">
-    {editedSchedules[item.id]?.map((d, i) => (
-      <li key={i}>
-        {d.date}
-        <div className="time-options">
-          {["allday", "day", "night", "custom"].map((t) => (
-            <button
-              key={t}
-              className={`option-btn ${d.timeType === t ? "active" : ""}`}
-              onClick={() =>
-                updateLocalDate(item.id, i, {
-                  timeType: t,
-                  ...(t === "custom" ? { startTime: "09:00", endTime: "18:00" } : {}),
-                })
-              }
-            >
-              {t === "allday" ? "終日" : t === "day" ? "午前" : t === "night" ? "午後" : "時間指定"}
-            </button>
-          ))}
-        </div>
-        {d.timeType === "custom" && (
-          <div className="time-range">
-            <select
-              className="cute-select"
-              value={d.startTime}
-              onChange={(e) => updateLocalDate(item.id, i, { startTime: e.target.value })}
-            >
-              {Array.from({ length: 24 }, (_, h) => {
-                const t = `${String(h).padStart(2, "0")}:00`;
-                return <option key={t} value={t}>{t}</option>;
-              })}
-            </select>
-            <span className="time-separator">〜</span>
-            <select
-              className="cute-select"
-              value={d.endTime}
-              onChange={(e) => updateLocalDate(item.id, i, { endTime: e.target.value })}
-            >
-              {Array.from({ length: 24 }, (_, h) => {
-                const t = `${String(h).padStart(2, "0")}:00`;
-                return <option key={t} value={t}>{t}</option>;
-              })}
-            </select>
+
+                  {/* ✅ 保存ボタン */}
+                  <button
+                    className="card-save-btn"
+                    onClick={() => saveEditedSchedule(item.id)}
+                  >
+                    💾 保存する
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
-      </li>
-    ))}
-  </ul>
-  {/* ✅ 保存ボタンを右下に配置 */}
-  <button className="card-save-btn" onClick={() => saveEditedSchedule(item.id)}>
-    💾 保存する
-  </button>
-</div>
+        </>
+      )}
+    </div>
+  );
+}
