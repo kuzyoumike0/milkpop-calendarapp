@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
 
-export default function PersonalPage() {
+export default function PersonalPage({ user }) {
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -16,15 +16,13 @@ export default function PersonalPage() {
   const [shareLink, setShareLink] = useState("");
 
   const hd = new Holidays("JP");
-  const token = localStorage.getItem("token"); // ✅ Discordログイン時に保存したJWTを利用
 
   // ==== 初回読み込み ====
   useEffect(() => {
-    if (!token) return; // 未ログインなら何もしない
+    if (!user) return; // 未ログインなら何もしない
     fetch("/api/personal-events", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      method: "GET",
+      credentials: "include", // ✅ Cookie送信
     })
       .then((res) => {
         if (!res.ok) throw new Error("認証エラー");
@@ -32,7 +30,7 @@ export default function PersonalPage() {
       })
       .then((data) => setSchedules(data))
       .catch((err) => console.error(err));
-  }, [token]);
+  }, [user]);
 
   // ==== カレンダー生成 ====
   const year = currentDate.getFullYear();
@@ -59,7 +57,7 @@ export default function PersonalPage() {
       alert("日付とタイトルを入力してください");
       return;
     }
-    if (!token) {
+    if (!user) {
       alert("ログインしてください");
       return;
     }
@@ -76,10 +74,8 @@ export default function PersonalPage() {
         // 編集
         await fetch(`/api/personal-events/${editingId}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         setSchedules((prev) =>
@@ -90,10 +86,8 @@ export default function PersonalPage() {
         // 新規
         const res = await fetch("/api/personal-events", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify(payload),
         });
         const newItem = await res.json();
@@ -116,7 +110,7 @@ export default function PersonalPage() {
   // ==== 削除 ====
   const handleDelete = async (id) => {
     if (!window.confirm("この予定を削除しますか？")) return;
-    if (!token) {
+    if (!user) {
       alert("ログインしてください");
       return;
     }
@@ -124,7 +118,7 @@ export default function PersonalPage() {
     try {
       await fetch(`/api/personal-events/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       });
       setSchedules((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
@@ -148,16 +142,14 @@ export default function PersonalPage() {
 
   // ==== 共有リンク発行 ====
   const handleShare = async (id) => {
-    if (!token) {
+    if (!user) {
       alert("ログインしてください");
       return;
     }
     try {
       const res = await fetch(`/api/personal-events/${id}/share`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       const data = await res.json();
       setShareLink(`${window.location.origin}/personal/${data.share_token}`);
@@ -171,10 +163,12 @@ export default function PersonalPage() {
     <div className="personal-container">
       <h1 className="page-title">個人日程登録</h1>
 
-      {!token ? (
+      {!user ? (
         <p style={{ color: "red" }}>このページを使うにはログインしてください。</p>
       ) : (
         <>
+          <p>ようこそ、{user.username} さん！</p>
+
           <input
             type="text"
             placeholder="タイトルを入力してください"
