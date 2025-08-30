@@ -1,6 +1,7 @@
-// backend/index.js （完全統合版 v9）
+// backend/index.js （完全統合版 v10）
 // schedules + personal_schedules API 完備
 // personal_schedules: dates を必ず配列で返却
+// options を JSON.stringify して保存
 
 import express from "express";
 import cors from "cors";
@@ -34,7 +35,19 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 
 // ===== 基本設定 =====
 app.set("trust proxy", 1);
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://pagead2.googlesyndication.com"],
+        frameSrc: ["'self'", "https://*.google.com", "https://*.googlesyndication.com"],
+        imgSrc: ["'self'", "https://*.googleusercontent.com", "https://*.googlesyndication.com", "data:"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(compression());
 app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
@@ -173,7 +186,7 @@ app.post("/api/schedules", async (req, res) => {
       `INSERT INTO schedules (id, title, dates, options, share_token)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, share_token`,
-      [uuidv4(), title, JSON.stringify(normalizedDates), {}, shareToken]
+      [uuidv4(), title, JSON.stringify(normalizedDates), JSON.stringify({}), shareToken]
     );
 
     res.json({ id: result.rows[0].id, share_token: result.rows[0].share_token });
@@ -236,7 +249,14 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     await pool.query(
       `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [id, req.user.discord_id, title, memo || "", JSON.stringify(normalizedDates), options || {}]
+      [
+        id,
+        req.user.discord_id,
+        title,
+        memo || "",
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}), // ✅ stringify
+      ]
     );
 
     res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
@@ -254,10 +274,21 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
       [req.user.discord_id]
     );
 
-    const rows = result.rows.map((r) => ({
-      ...r,
-      dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"), // ✅ 強制配列化
-    }));
+    const rows = result.rows.map((r) => {
+      let dates = [];
+      try {
+        dates = Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]");
+      } catch {
+        dates = [];
+      }
+      return {
+        id: r.id,
+        title: r.title,
+        memo: r.memo,
+        dates,
+        options: r.options || {},
+      };
+    });
 
     res.json(rows);
   } catch (err) {
@@ -282,7 +313,14 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
       `UPDATE personal_schedules
        SET title=$1, memo=$2, dates=$3, options=$4
        WHERE id=$5 AND user_id=$6`,
-      [title, memo || "", JSON.stringify(normalizedDates), options || {}, id, req.user.discord_id]
+      [
+        title,
+        memo || "",
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}), // ✅ stringify
+        id,
+        req.user.discord_id,
+      ]
     );
 
     res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
