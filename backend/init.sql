@@ -55,3 +55,20 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- =========================
 CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
 ON schedule_responses(schedule_id, user_id);
+
+-- =========================
+-- 削除再作成
+-- =========================
+DROP TABLE IF EXISTS personal_schedules CASCADE;
+CREATE TABLE personal_schedules (
+    id UUID PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL,   -- ログインユーザーで紐付け
+    title TEXT NOT NULL,
+    memo TEXT,
+    dates JSONB NOT NULL,           -- 複数日程も保存できる
+    options JSONB,                  -- 時間区分などを保持
+    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULL可）
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
