@@ -56,4 +56,5 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
 ON schedule_responses(schedule_id, user_id);
 
+ALTER TABLE personal_schedules DROP COLUMN share_id;
 ALTER TABLE personal_schedules ADD COLUMN share_token VARCHAR(64) UNIQUE;
