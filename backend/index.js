@@ -234,7 +234,7 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     await pool.query(
       `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [id, req.user.id, title, memo || "", JSON.stringify(normalizedDates), options || {}]
+      [id, req.user.discord_id, title, memo || "", JSON.stringify(normalizedDates), options || {}]
     );
 
     res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
@@ -249,7 +249,7 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT * FROM personal_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
-      [req.user.id]
+      [req.user.discord_id]
     );
 
     const rows = result.rows.map((r) => ({
@@ -280,7 +280,7 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
       `UPDATE personal_schedules
        SET title=$1, memo=$2, dates=$3, options=$4
        WHERE id=$5 AND user_id=$6`,
-      [title, memo || "", JSON.stringify(normalizedDates), options || {}, id, req.user.id]
+      [title, memo || "", JSON.stringify(normalizedDates), options || {}, id, req.user.discord_id]
     );
 
     res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
@@ -296,7 +296,7 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
     const { id } = req.params;
     await pool.query(
       `DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2`,
-      [id, req.user.id]
+      [id, req.user.discord_id]
     );
     res.json({ success: true });
   } catch (err) {
