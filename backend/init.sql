@@ -56,8 +56,20 @@ CREATE TABLE IF NOT EXISTS public.users (
 CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
 ON schedule_responses(schedule_id, user_id);
 
--- =========================
--- ❌ 不要なカラムを削除 / ✅ 正しいカラムに統一
--- =========================
-ALTER TABLE personal_schedules DROP COLUMN IF EXISTS share_id;
-ALTER TABLE personal_schedules ADD COLUMN IF NOT EXISTS share_token VARCHAR(64) UNIQUE;
+
+
+
+
+
+DROP TABLE IF EXISTS personal_schedules CASCADE;
+
+CREATE TABLE personal_schedules (
+    id UUID PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL,
+    title TEXT NOT NULL,
+    memo TEXT,
+    dates JSONB NOT NULL,
+    options JSONB,
+    share_token VARCHAR(64) UNIQUE, -- ✅ これを確実に追加
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
