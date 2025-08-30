@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
@@ -30,11 +31,20 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Cookie方式の確認はもう不要かも（localStorageに切り替えたので）
+  // ✅ localStorage の JWT を使って /api/me に問い合わせる
   useEffect(() => {
+    const token = localStorage.getItem("jwt");
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     fetch("/api/me", {
       method: "GET",
-      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`, // 👈 JWT を渡す
+      },
     })
       .then(async (res) => {
         if (!res.ok) throw new Error("not logged in");
