@@ -61,4 +61,3 @@ ON schedule_responses(schedule_id, user_id);
 -- =========================
 ALTER TABLE personal_schedules DROP COLUMN IF EXISTS share_id;
 ALTER TABLE personal_schedules ADD COLUMN IF NOT EXISTS share_token VARCHAR(64) UNIQUE;
-
