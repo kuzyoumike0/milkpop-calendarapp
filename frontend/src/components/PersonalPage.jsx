@@ -129,8 +129,9 @@ export default function PersonalPage() {
     const payload = { title, memo, dates: datesArray, options: {} };
 
     try {
+      let newItem;
       if (editingId) {
-        await fetch(`/api/personal-events/${editingId}`, {
+        const res = await fetch(`/api/personal-events/${editingId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -138,8 +139,13 @@ export default function PersonalPage() {
           },
           body: JSON.stringify(payload),
         });
+        newItem = await res.json();
+        setSchedules((prev) =>
+          prev.map((s) => (s.id === editingId ? newItem : s))
+        );
+        setEditingId(null);
       } else {
-        await fetch("/api/personal-events", {
+        const res = await fetch("/api/personal-events", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -147,26 +153,15 @@ export default function PersonalPage() {
           },
           body: JSON.stringify(payload),
         });
-      }
-
-      // ✅ 保存後に必ず最新を再フェッチ
-      const res = await fetch("/api/personal-events", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setSchedules(data);
-      } else if (Array.isArray(data.schedules)) {
-        setSchedules(data.schedules);
-      } else {
-        console.error("Unexpected response format:", data);
+        newItem = await res.json();
+        // ✅ 即リストに追加
+        setSchedules((prev) => [...prev, newItem]);
       }
 
       // 入力欄クリア
       setTitle("");
       setMemo("");
       setSelectedDates({});
-      setEditingId(null);
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
