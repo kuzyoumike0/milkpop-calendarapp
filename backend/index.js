@@ -197,15 +197,17 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
     }
 
     const schedule = result.rows[0];
-    const dates = schedule.dates.map((d) => ({
-      ...d,
-      label: timeLabel(d.timeType, d.startTime, d.endTime),
-    }));
+    const dates = Array.isArray(schedule.dates)
+      ? schedule.dates
+      : JSON.parse(schedule.dates || "[]");
 
     res.json({
       id: schedule.id,
       title: schedule.title,
-      dates,
+      dates: dates.map((d) => ({
+        ...d,
+        label: timeLabel(d.timeType, d.startTime, d.endTime),
+      })),
     });
   } catch (err) {
     console.error("❌ schedules取得失敗:", err);
