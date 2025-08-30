@@ -1,7 +1,6 @@
 // backend/index.js （完全統合版 v10）
 // schedules + personal_schedules API 完備
-// personal_schedules: dates を必ず配列で返却
-// options を JSON.stringify して保存
+// CSP修正 / optionsをJSON.stringify対応 / personal_schedulesからshare_id排除
 
 import express from "express";
 import cors from "cors";
@@ -40,9 +39,30 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://pagead2.googlesyndication.com"],
-        frameSrc: ["'self'", "https://*.google.com", "https://*.googlesyndication.com"],
-        imgSrc: ["'self'", "https://*.googleusercontent.com", "https://*.googlesyndication.com", "data:"],
+        scriptSrc: [
+          "'self'",
+          "https://pagead2.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+        ],
+        frameSrc: [
+          "'self'",
+          "https://*.google.com",
+          "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+        ],
+        connectSrc: [
+          "'self'",
+          "https://*.google.com",
+          "https://*.googlesyndication.com",
+          "https://ep1.adtrafficquality.google",
+        ],
+        imgSrc: [
+          "'self'",
+          "https://*.googleusercontent.com",
+          "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+          "data:",
+        ],
       },
     },
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -138,13 +158,15 @@ function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
     const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
-    const token = bearer || req.cookies?.token; // ✅ Bearer 優先
+    const token = bearer || req.cookies?.token;
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("🔑 JWT payload:", payload); // デバッグ用
     req.user = payload;
     return next();
-  } catch {
+  } catch (err) {
+    console.error("❌ authRequired failed:", err.message);
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
@@ -210,17 +232,15 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
     }
 
     const schedule = result.rows[0];
-    const dates = Array.isArray(schedule.dates)
-      ? schedule.dates
-      : JSON.parse(schedule.dates || "[]");
+    const dates = schedule.dates.map((d) => ({
+      ...d,
+      label: timeLabel(d.timeType, d.startTime, d.endTime),
+    }));
 
     res.json({
       id: schedule.id,
       title: schedule.title,
-      dates: dates.map((d) => ({
-        ...d,
-        label: timeLabel(d.timeType, d.startTime, d.endTime),
-      })),
+      dates,
     });
   } catch (err) {
     console.error("❌ schedules取得失敗:", err);
@@ -247,15 +267,16 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
 
     const id = uuidv4();
     await pool.query(
-      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         id,
         req.user.discord_id,
         title,
         memo || "",
         JSON.stringify(normalizedDates),
-        JSON.stringify(options || {}), // ✅ stringify
+        JSON.stringify(options || {}),
+        null,
       ]
     );
 
@@ -274,21 +295,10 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
       [req.user.discord_id]
     );
 
-    const rows = result.rows.map((r) => {
-      let dates = [];
-      try {
-        dates = Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]");
-      } catch {
-        dates = [];
-      }
-      return {
-        id: r.id,
-        title: r.title,
-        memo: r.memo,
-        dates,
-        options: r.options || {},
-      };
-    });
+    const rows = result.rows.map((r) => ({
+      ...r,
+      dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
+    }));
 
     res.json(rows);
   } catch (err) {
@@ -317,7 +327,7 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
         title,
         memo || "",
         JSON.stringify(normalizedDates),
-        JSON.stringify(options || {}), // ✅ stringify
+        JSON.stringify(options || {}),
         id,
         req.user.discord_id,
       ]
