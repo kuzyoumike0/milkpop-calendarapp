@@ -28,17 +28,17 @@ CREATE TABLE IF NOT EXISTS schedule_responses (
 -- =========================
 CREATE TABLE IF NOT EXISTS personal_schedules (
     id UUID PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,   -- Discord のユーザーIDで紐付け
+    user_id VARCHAR(64) NOT NULL,   -- ✅ ログインユーザーで紐付け
     title TEXT NOT NULL,
     memo TEXT,
-    dates JSONB NOT NULL,           -- 複数日程も保存できる
-    options JSONB,                  -- 時間区分などを保持
-    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULLなら未発行）
+    dates JSONB NOT NULL,           -- 複数日程保存
+    options JSONB,                  -- 時間帯設定など
+    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク（NULLなら未発行）
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================
--- users（Discordの個人識別情報）
+-- users（Discord認証情報）
 -- =========================
 CREATE TABLE IF NOT EXISTS public.users (
   id            BIGSERIAL PRIMARY KEY,
