@@ -1,40 +1,43 @@
 # =============================
-# ベースイメージ: Node.js 20
+# 1. Frontend Build Stage
 # =============================
-FROM node:20
+FROM node:20-alpine AS frontend-build
 
-# 作業ディレクトリ作成
-WORKDIR /app
-
-# =============================
-# 依存関係インストール
-# =============================
-
-# frontend
 WORKDIR /app/frontend
+
+# package.json と lock をコピーして依存解決
 COPY frontend/package*.json ./
+COPY frontend/craco.config.js ./
 RUN npm install
 
-# backend
-WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install --omit=dev
-
-# =============================
-# ソースコードコピー
-# =============================
-WORKDIR /app
-COPY . .
-
-# =============================
-# frontend ビルド
-# =============================
-WORKDIR /app/frontend
+# ソースをコピーしてビルド
+COPY frontend/ ./
 RUN npm run build
 
+
 # =============================
-# サーバー起動
+# 2. Backend Stage
 # =============================
-WORKDIR /app/backend
-EXPOSE 3000
-CMD ["npm", "start"]
+FROM node:20-alpine AS backend
+
+WORKDIR /app
+
+# backend の依存関係をインストール
+COPY backend/package*.json ./
+RUN npm install
+
+# backend ソースをコピー
+COPY backend/ ./
+
+# frontend の build 出力をコピーして static として配信
+COPY --from=frontend-build /app/frontend/build ./frontend/build
+
+# 環境変数（Railway / Docker Compose で上書きする想定）
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# 公開ポート
+EXPOSE 5000
+
+# 起動コマンド
+CMD ["node", "index.js"]
