@@ -43,10 +43,10 @@ export default function Footer() {
           className="adsbygoogle"
           style={{ display: "block", margin: "20px auto", textAlign: "center" }}
           data-ad-client="ca-pub-1851621870746917"
-          data-ad-slot="1234567890"   // ← AdSense 管理画面で発行される広告ユニットIDに置き換え
+          data-ad-slot="1234567890" /* ← AdSense 管理画面の広告ユニットIDに置き換え */
           data-ad-format="auto"
           data-full-width-responsive="true"
-        ></ins>
+        />
       </div>
     </footer>
   );
