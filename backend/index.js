@@ -1,6 +1,7 @@
 // backend/index.js （完全統合版 v11）
 // schedules + personal_schedules API 完備
-// personal_schedules は share_id を必ず発行（共有用URL対応）
+// ✅ 個人スケジュールは share_id = NULL で作成
+// ✅ /api/personal-events/:id/share で共有リンクを後から発行可能
 
 import express from "express";
 import cors from "cors";
@@ -129,7 +130,7 @@ const initDB = async () => {
         memo TEXT,
         dates JSONB NOT NULL,
         options JSONB,
-        share_id VARCHAR(64) UNIQUE NOT NULL,
+        share_id UUID, -- ✅ NULL許容。共有発行時に schedules.id を保存
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -266,11 +267,9 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     }));
 
     const id = uuidv4();
-    const shareId = uuidv4(); // ✅ 共有用IDを必ず発行
-
     await pool.query(
       `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+       VALUES ($1, $2, $3, $4, $5, $6, NULL)`,
       [
         id,
         req.user.discord_id,
@@ -278,19 +277,10 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
         memo || "",
         JSON.stringify(normalizedDates),
         JSON.stringify(options || {}),
-        shareId,
       ]
     );
 
-    res.json({
-      id,
-      title,
-      memo,
-      dates: normalizedDates,
-      options: options || {},
-      share_id: shareId,
-      share_url: `${process.env.FRONTEND_URL}/personal/share/${shareId}`,
-    });
+    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
   } catch (err) {
     console.error("❌ personal_schedules 作成失敗:", err);
     res.status(500).json({ error: "作成失敗" });
@@ -317,33 +307,51 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 共有URLで取得
-app.get("/api/personal/share/:shareId", async (req, res) => {
+// 共有リンク発行
+app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
   try {
-    const { shareId } = req.params;
-    const result = await pool.query(
-      `SELECT * FROM personal_schedules WHERE share_id=$1 LIMIT 1`,
-      [shareId]
-    );
+    const { id } = req.params;
 
+    // 1. 個人スケジュールを取得
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules WHERE id=$1 AND user_id=$2`,
+      [id, req.user.discord_id]
+    );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: "スケジュールが見つかりません" });
+      return res.status(404).json({ error: "対象スケジュールが見つかりません" });
     }
 
-    const schedule = result.rows[0];
+    const personal = result.rows[0];
+
+    // 2. schedules にコピー
+    const shareId = uuidv4();
+    const shareToken = uuidv4();
+    await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        shareId,
+        personal.title,
+        JSON.stringify(personal.dates),
+        JSON.stringify(personal.options || {}),
+        shareToken,
+      ]
+    );
+
+    // 3. personal_schedules に share_id を保存
+    await pool.query(
+      `UPDATE personal_schedules SET share_id=$1 WHERE id=$2 AND user_id=$3`,
+      [shareId, id, req.user.discord_id]
+    );
+
     res.json({
-      id: schedule.id,
-      title: schedule.title,
-      memo: schedule.memo,
-      dates: Array.isArray(schedule.dates)
-        ? schedule.dates
-        : JSON.parse(schedule.dates || "[]"),
-      options: schedule.options,
-      created_at: schedule.created_at,
+      share_id: shareId,
+      share_token: shareToken,
+      share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
     });
   } catch (err) {
-    console.error("❌ personal_schedules 共有取得失敗:", err);
-    res.status(500).json({ error: "取得失敗" });
+    console.error("❌ personal_schedules 共有失敗:", err);
+    res.status(500).json({ error: "共有リンク発行失敗" });
   }
 });
 
