@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Holidays from "date-holidays";
-import "../personal.css"; // ← ご提示のCSS（上記）が入っている想定
+import api from "../api";
+import "../personal.css";
 
 export default function PersonalPage() {
   // ====== 状態 ======
@@ -27,6 +28,22 @@ export default function PersonalPage() {
   // 祝日（日本）
   const hd = useMemo(() => new Holidays("JP"), []);
 
+  // 初回ロード：個人予定一覧
+  useEffect(() => {
+    // API: GET /api/personal-schedules
+    api
+      .get("/api/personal-schedules")
+      .then((data) => {
+        // 想定レスポンス: [{id,date,title,memo,timeType,startTime,endTime}, ...]
+        const arr = Array.isArray(data) ? data : [];
+        arr.sort((a, b) => (a.date < b.date ? -1 : 1));
+        setSchedules(arr);
+      })
+      .catch(() => {
+        // 取得失敗時は空のままにしておく
+      });
+  }, []);
+
   // ====== 日付ユーティリティ ======
   const y = current.getFullYear();
   const m = current.getMonth(); // 0-11
@@ -42,18 +59,21 @@ export default function PersonalPage() {
   const weekHeaders = ["日", "月", "火", "水", "木", "金", "土"];
 
   // 時間帯ラベル
-  const timeLabel = () => {
-    switch (timeType) {
+  const timeLabel = (item) => {
+    const t = item?.timeType ?? timeType;
+    const s = item?.startTime ?? startTime;
+    const e = item?.endTime ?? endTime;
+    switch (t) {
       case "allday":
         return "終日";
       case "morning":
         return "昼（09:00-18:00）";
       case "afternoon":
-        return "昼（12:00-18:00）";
+        return "午後（12:00-18:00）";
       case "night":
         return "夜（18:00-24:00）";
       case "custom":
-        return `${startTime}〜${endTime}`;
+        return `${s}〜${e}`;
       default:
         return "";
     }
@@ -113,41 +133,45 @@ export default function PersonalPage() {
     }
   };
 
-  // ====== 登録 ======
-  const handleRegister = () => {
+  // ====== 登録（API） ======
+  const handleRegister = async () => {
     if (!title.trim() || selectedDates.size === 0) return;
 
-    const timeInfo =
-      timeType === "custom" ? { startTime, endTime } : { startTime: null, endTime: null };
+    const payload = {
+      // 一括登録API（バックエンドで配列を受け取る想定）
+      items: Array.from(selectedDates).map((d) => ({
+        date: d,
+        title: title.trim(),
+        memo: memo.trim(),
+        timeType,
+        startTime: timeType === "custom" ? startTime : null,
+        endTime: timeType === "custom" ? endTime : null,
+      })),
+    };
 
-    const newItems = Array.from(selectedDates).map((d) => ({
-      id: `${d}-${Date.now()}`,
-      date: d,
-      title: title.trim(),
-      memo: memo.trim(),
-      timeType,
-      ...timeInfo,
-    }));
+    try {
+      // API: POST /api/personal-schedules (→ 登録内容の配列を返す想定)
+      const created = await api.post("/api/personal-schedules", payload);
+      const list = Array.isArray(created) ? created : [];
+      const merged = [...schedules, ...list].sort((a, b) => (a.date < b.date ? -1 : 1));
+      setSchedules(merged);
 
-    // 追記 & ソート（昇順）
-    const merged = [...schedules, ...newItems].sort((a, b) => (a.date < b.date ? -1 : 1));
-    setSchedules(merged);
-
-    // フォームリセット（タイトルは残すならここを消す）
-    setMemo("");
-    setSelectedDates(new Set());
-    setRangeStart(null);
+      // 入力をクリア（タイトル維持したい場合は title を残してOK）
+      setMemo("");
+      setSelectedDates(new Set());
+      setRangeStart(null);
+    } catch (e) {
+      console.error(e);
+      // 失敗してもUIは維持
+    }
   };
 
   // ====== カレンダー描画（テーブル） ======
   const buildCalendarMatrix = () => {
     const cells = [];
-    // 先頭の空白セル
     for (let i = 0; i < firstWeekday; i++) cells.push(null);
-    // 月の日付
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-    // 7列ごとに分割
     const rows = [];
     for (let i = 0; i < cells.length; i += 7) {
       rows.push(cells.slice(i, i + 7));
@@ -238,7 +262,7 @@ export default function PersonalPage() {
           <table className="calendar-table">
             <thead>
               <tr>
-                {weekHeaders.map((w, idx) => (
+                {["日", "月", "火", "水", "木", "金", "土"].map((w, idx) => (
                   <th key={w} className={weekdayClass(idx)}>
                     {w}
                   </th>
@@ -249,14 +273,11 @@ export default function PersonalPage() {
               {matrix.map((row, rIdx) => (
                 <tr key={rIdx}>
                   {row.map((cell, cIdx) => {
-                    if (cell === null) {
-                      return <td key={`e-${rIdx}-${cIdx}`} className="cell"></td>;
-                    }
+                    if (cell === null) return <td key={`e-${rIdx}-${cIdx}`} className="cell" />;
                     const dateStr = ymdd(y, m, cell);
                     const weekday = (firstWeekday + rIdx * 7 + cIdx) % 7;
                     const holidayName = getHoliday(y, m, cell);
 
-                    // クラス構築
                     const classes = ["cell", weekdayClass(weekday)];
                     if (holidayName) classes.push("holiday");
                     if (isToday(y, m, cell)) classes.push("today");
@@ -283,7 +304,6 @@ export default function PersonalPage() {
         <aside className="side-panel">
           <div>
             <h2>選択中の日程</h2>
-
             {selectedDates.size === 0 ? (
               <div className="date-card">
                 <div className="date-label">未選択</div>
@@ -371,7 +391,7 @@ export default function PersonalPage() {
           schedules.map((s) => (
             <div className="schedule-card" key={s.id}>
               <div className="schedule-header">
-                {s.date}　/　{timeType === "custom" ? `${s.startTime}〜${s.endTime}` : timeLabel()}
+                {s.date}　/　{timeLabel(s)}
               </div>
               <div>
                 <strong>{s.title}</strong>
