@@ -23,19 +23,6 @@ CREATE TABLE IF NOT EXISTS schedule_responses (
     UNIQUE(schedule_id, user_id)
 );
 
--- =========================
--- personal_schedules（個人スケジュール）
--- =========================
-CREATE TABLE IF NOT EXISTS personal_schedules (
-    id UUID PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,   -- ✅ ログインユーザーで紐付け
-    title TEXT NOT NULL,
-    memo TEXT,
-    dates JSONB NOT NULL,           -- 複数日程保存
-    options JSONB,                  -- 時間帯設定など
-    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク（NULLなら未発行）
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- =========================
 -- users（Discord認証情報）
