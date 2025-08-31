@@ -45,16 +45,16 @@ ON schedule_responses(schedule_id, user_id);
 
 
 
-
 DROP TABLE IF EXISTS personal_schedules CASCADE;
+
 CREATE TABLE personal_schedules (
     id UUID PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,   -- ログインユーザーID
+    user_id VARCHAR(64) NOT NULL,
     title TEXT NOT NULL,
     memo TEXT,
-    dates JSONB NOT NULL,           -- 複数日程保存
-    options JSONB,                  -- 時間帯など
-    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULLも可）
+    dates JSONB NOT NULL,
+    options JSONB,
+    share_token VARCHAR(64) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
