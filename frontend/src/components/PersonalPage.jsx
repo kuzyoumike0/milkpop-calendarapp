@@ -3,19 +3,19 @@ import Holidays from "date-holidays";
 import "../personal.css";
 
 /**
- * 個人日程登録ページ
- * - モード切替: 単日/範囲/複数
- * - 今日(日本時間)の強調
- * - 選択中日程：終日/午前/午後/時間指定（時間指定は1時間刻みプルダウン）
- * - 祝日表示（日本）
+ * 個人日程登録（1日ずつ：終日/午前/午後/時間指定 を設定可能）
+ * - モード: 単日 / 範囲 / 複数
+ * - 日本の祝日表示
+ * - 日本時間の「今日」を強調
+ * - 右側パネルで選択中の日付ごとに時間帯設定（時間指定時は1時間刻みのプルダウン）
  */
 export default function PersonalPage() {
-  /** ===================== ユーティリティ ===================== */
+  /** ===== 共通ユーティリティ ===== */
   const pad2 = (n) => String(n).padStart(2, "0");
   const ymd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   const ymdd = (Y, M, D) => `${Y}-${pad2(M + 1)}-${pad2(D)}`;
 
-  // “今日”を日本時間で判定（JST=UTC+9）
+  // 日本時間の今日（JST）
   const todayJST = (() => {
     const now = new Date();
     const utc = now.getTime() + now.getTimezoneOffset() * 60000;
@@ -23,35 +23,34 @@ export default function PersonalPage() {
     return ymd(jst);
   })();
 
-  /** ===================== 状態 ===================== */
-  // 表示中の年月
+  /** ===== 状態 ===== */
+  // 表示月（1日に固定）
   const [current, setCurrent] = useState(() => {
-    const jst = new Date(new Date().getTime() + (-new Date().getTimezoneOffset() + 540) * 60000);
-    return new Date(jst.getFullYear(), jst.getMonth(), 1);
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  // タイトル / メモ
+  // 入力
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
 
-  // 選択モード: single | range | multiple
-  const [mode, setMode] = useState("single");
-  const [rangeStart, setRangeStart] = useState(null); // 1回目クリック保持（yyyy-mm-dd）
-  const [selectedDates, setSelectedDates] = useState(new Set()); // yyyy-mm-dd の集合
+  // 選択モード
+  const [mode, setMode] = useState("single"); // single | range | multiple
+  const [rangeStart, setRangeStart] = useState(null); // yyyy-mm-dd or null
 
-  // 時間帯: allday | morning | afternoon | night?（要件は午前・午後・終日・時間指定）
-  // 仕様に忠実に「終日(allday) / 午前(morning) / 午後(afternoon) / 時間指定(custom)」
-  const [timeType, setTimeType] = useState("allday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  // 選択された日付
+  // Set: 表示・登録用の選択集合
+  const [selectedDates, setSelectedDates] = useState(new Set());
+  // Map: 日付ごとの時間帯設定 { [dateStr]: {timeType, startTime, endTime} }
+  const [dateOptions, setDateOptions] = useState({}); // 例: { "2025-09-01": {timeType:"allday", startTime:null, endTime:null} }
 
-  // 登録済み（ローカル即時反映）
+  // 登録済みスケジュール（ローカル即時反映）
   const [schedules, setSchedules] = useState([]);
 
   // 祝日（日本）
   const hd = useMemo(() => new Holidays("JP"), []);
 
-  /** ===================== カレンダー派生値 ===================== */
+  /** ===== カレンダー派生値 ===== */
   const y = current.getFullYear();
   const m = current.getMonth();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -59,13 +58,13 @@ export default function PersonalPage() {
   const weekdayHeaders = ["日", "月", "火", "水", "木", "金", "土"];
 
   // 1時間刻み 00:00〜24:00
-  const timeOptions = useMemo(() => {
+  const timeOptions1h = useMemo(() => {
     const arr = [];
     for (let h = 0; h <= 24; h++) arr.push(`${pad2(h)}:00`);
     return arr;
   }, []);
 
-  /** ===================== 祝日/クラス ===================== */
+  /** ===== 祝日/クラス ===== */
   const holidayName = (Y, M, D) => {
     const info = hd.isHoliday(new Date(Y, M, D));
     return info ? info[0]?.name : null;
@@ -74,46 +73,88 @@ export default function PersonalPage() {
   const isSelected = (Y, M, D) => selectedDates.has(ymdd(Y, M, D));
   const weekdayClass = (w) => (w === 0 ? "sunday" : w === 6 ? "saturday" : "");
 
-  /** ===================== モード別クリック処理 ===================== */
-  const selectSingle = (dateStr) => setSelectedDates(new Set([dateStr]));
-
-  const toggleMultiple = (dateStr) => {
-    setSelectedDates((prev) => {
-      const next = new Set(prev);
-      next.has(dateStr) ? next.delete(dateStr) : next.add(dateStr);
-      return next;
+  /** ===== 選択集合・オプションの更新ヘルパ ===== */
+  const ensureDefaultOption = (dateStr) => {
+    // 初期は「終日」
+    setDateOptions((prev) => {
+      if (prev[dateStr]) return prev;
+      return {
+        ...prev,
+        [dateStr]: { timeType: "allday", startTime: null, endTime: null },
+      };
     });
   };
 
-  const selectRange = (dateStr) => {
-    if (!rangeStart) {
-      setRangeStart(dateStr);
-      setSelectedDates(new Set([dateStr]));
-      return;
-    }
-    const a = new Date(rangeStart);
-    const b = new Date(dateStr);
-    const start = a <= b ? a : b;
-    const end = a <= b ? b : a;
-
-    const next = new Set();
-    const cur = new Date(start);
-    while (cur <= end) {
-      next.add(ymd(cur));
-      cur.setDate(cur.getDate() + 1);
-    }
-    setSelectedDates(next);
-    setRangeStart(null);
+  const addDate = (dateStr) => {
+    setSelectedDates((prev) => {
+      const next = new Set(prev);
+      next.add(dateStr);
+      return next;
+    });
+    ensureDefaultOption(dateStr);
   };
 
+  const removeDate = (dateStr) => {
+    setSelectedDates((prev) => {
+      const next = new Set(prev);
+      next.delete(dateStr);
+      return next;
+    });
+    setDateOptions((prev) => {
+      const copy = { ...prev };
+      delete copy[dateStr];
+      return copy;
+    });
+  };
+
+  /** ===== モード別クリック処理 ===== */
   const handleCellClick = (Y, M, D) => {
     const dateStr = ymdd(Y, M, D);
-    if (mode === "single") selectSingle(dateStr);
-    else if (mode === "multiple") toggleMultiple(dateStr);
-    else if (mode === "range") selectRange(dateStr);
+
+    if (mode === "single") {
+      setSelectedDates(new Set([dateStr]));
+      setDateOptions((prev) => ({
+        // single切替時は、既存設定があれば活かし、なければデフォルト設定を入れる
+        [dateStr]: prev[dateStr] || { timeType: "allday", startTime: null, endTime: null },
+      }));
+      setRangeStart(null);
+      return;
+    }
+
+    if (mode === "multiple") {
+      if (selectedDates.has(dateStr)) removeDate(dateStr);
+      else addDate(dateStr);
+      return;
+    }
+
+    if (mode === "range") {
+      if (!rangeStart) {
+        setRangeStart(dateStr);
+        setSelectedDates(new Set([dateStr]));
+        ensureDefaultOption(dateStr);
+        return;
+      }
+      const a = new Date(rangeStart);
+      const b = new Date(dateStr);
+      const start = a <= b ? a : b;
+      const end = a <= b ? b : a;
+
+      const next = new Set();
+      const opts = { ...dateOptions };
+      const cur = new Date(start);
+      while (cur <= end) {
+        const ds = ymd(cur);
+        next.add(ds);
+        if (!opts[ds]) opts[ds] = { timeType: "allday", startTime: null, endTime: null };
+        cur.setDate(cur.getDate() + 1);
+      }
+      setSelectedDates(next);
+      setDateOptions(opts);
+      setRangeStart(null);
+    }
   };
 
-  /** ===================== カレンダー行列 ===================== */
+  /** ===== カレンダー行列 ===== */
   const matrix = useMemo(() => {
     const cells = [];
     for (let i = 0; i < firstWeekday; i++) cells.push(null);
@@ -123,50 +164,84 @@ export default function PersonalPage() {
     return rows;
   }, [firstWeekday, daysInMonth]);
 
-  /** ===================== 登録 ===================== */
+  /** ===== 時間帯のUI/更新（各日付ごと） ===== */
+  const setTimeTypeForDate = (dateStr, t) => {
+    setDateOptions((prev) => {
+      const old = prev[dateStr] || { timeType: "allday", startTime: null, endTime: null };
+      let startTime = old.startTime;
+      let endTime = old.endTime;
+      if (t !== "custom") {
+        startTime = null;
+        endTime = null;
+      } else {
+        // 初期値（未設定なら）
+        startTime = startTime || "09:00";
+        endTime = endTime || "18:00";
+      }
+      return { ...prev, [dateStr]: { timeType: t, startTime, endTime } };
+    });
+  };
+
+  const setStartForDate = (dateStr, v) => {
+    setDateOptions((prev) => {
+      const old = prev[dateStr] || { timeType: "custom", startTime: null, endTime: null };
+      return { ...prev, [dateStr]: { ...old, startTime: v, timeType: "custom" } };
+    });
+  };
+
+  const setEndForDate = (dateStr, v) => {
+    setDateOptions((prev) => {
+      const old = prev[dateStr] || { timeType: "custom", startTime: null, endTime: null };
+      return { ...prev, [dateStr]: { ...old, endTime: v, timeType: "custom" } };
+    });
+  };
+
+  /** ===== 登録 ===== */
   const handleRegister = () => {
     if (!title.trim() || selectedDates.size === 0) return;
 
     const newItems = Array.from(selectedDates)
       .sort()
-      .map((date) => ({
-        id: `${date}-${Date.now()}`,
-        date,
-        title: title.trim(),
-        memo: memo.trim(),
-        timeType,
-        startTime: timeType === "custom" ? startTime : null,
-        endTime: timeType === "custom" ? endTime : null,
-      }));
+      .map((date) => {
+        const opt = dateOptions[date] || { timeType: "allday", startTime: null, endTime: null };
+        return {
+          id: `${date}-${Date.now()}`,
+          date,
+          title: title.trim(),
+          memo: memo.trim(),
+          timeType: opt.timeType,
+          startTime: opt.timeType === "custom" ? opt.startTime : null,
+          endTime: opt.timeType === "custom" ? opt.endTime : null,
+        };
+      });
 
     const merged = [...schedules, ...newItems].sort((a, b) => (a.date < b.date ? -1 : 1));
     setSchedules(merged);
 
-    // 画面に残したい入力は残す。選択だけリセット
+    // 選択状態のみリセット（タイトル/メモは残す）
     setSelectedDates(new Set());
+    setDateOptions({});
     setRangeStart(null);
   };
 
-  /** ===================== 時間帯ラベル ===================== */
+  /** ===== 時間帯ラベル ===== */
   const timeLabel = (t, s, e) => {
     if (t === "allday") return "終日";
     if (t === "morning") return "午前";
     if (t === "afternoon") return "午後";
-    if (t === "custom") return `${s}〜${e}`;
+    if (t === "custom") return `${s ?? "—"}〜${e ?? "—"}`;
     return "";
   };
 
-  /** ===================== 月移動 ===================== */
+  /** ===== 月移動 ===== */
   const prevMonth = () => setCurrent(new Date(y, m - 1, 1));
   const nextMonth = () => setCurrent(new Date(y, m + 1, 1));
 
-  /** ===================== JSX ===================== */
+  /** ===== JSX ===== */
   return (
     <div className="personal-page">
-      {/* タイトル */}
       <h1 className="page-title">個人日程登録</h1>
 
-      {/* 入力欄 */}
       <input
         className="title-input"
         type="text"
@@ -181,7 +256,7 @@ export default function PersonalPage() {
         onChange={(e) => setMemo(e.target.value)}
       />
 
-      {/* モード切替（単日 / 範囲選択 / 複数選択） */}
+      {/* モード切替 */}
       <div className="select-mode">
         {[
           { key: "single", label: "単日選択" },
@@ -194,6 +269,7 @@ export default function PersonalPage() {
             onClick={() => {
               setMode(b.key);
               setSelectedDates(new Set());
+              setDateOptions({});
               setRangeStart(null);
             }}
           >
@@ -202,7 +278,6 @@ export default function PersonalPage() {
         ))}
       </div>
 
-      {/* カレンダー + 右サイド */}
       <div className="calendar-list-container">
         {/* カレンダー */}
         <div className="calendar-container">
@@ -239,7 +314,7 @@ export default function PersonalPage() {
                     const hName = holidayName(y, m, cell);
 
                     if (hName) classes.push("holiday");
-                    if (isToday(y, m, cell)) classes.push("today"); // ← 日本時間の今日を強調
+                    if (isToday(y, m, cell)) classes.push("today"); // 日本時間の今日を強調
                     if (isSelected(y, m, cell)) classes.push("selected");
 
                     return (
@@ -259,7 +334,7 @@ export default function PersonalPage() {
           </table>
         </div>
 
-        {/* 右サイド：選択中の日程 + 時間帯 + 登録ボタン */}
+        {/* 右サイド：選択中の日程ごとの時間帯設定 */}
         <aside className="side-panel">
           <div>
             <h2>選択中の日程</h2>
@@ -278,62 +353,61 @@ export default function PersonalPage() {
             ) : (
               Array.from(selectedDates)
                 .sort()
-                .map((d) => (
-                  <div className="date-card" key={d}>
-                    <div className="date-label">{d}</div>
-                    <div style={{ opacity: 0.9 }}>{timeLabel(timeType, startTime, endTime)}</div>
-                  </div>
-                ))
-            )}
-          </div>
+                .map((d) => {
+                  const opt = dateOptions[d] || { timeType: "allday", startTime: null, endTime: null };
+                  return (
+                    <div className="date-card" key={d}>
+                      <div className="date-label">{d}</div>
 
-          {/* 時間帯ボタン */}
-          <div>
-            <h2>時間帯</h2>
-            <div className="time-options">
-              {[
-                { k: "allday", t: "終日" },
-                { k: "morning", t: "午前" },
-                { k: "afternoon", t: "午後" },
-                { k: "custom", t: "時間指定" },
-              ].map((opt) => (
-                <button
-                  key={opt.k}
-                  className={`time-btn ${timeType === opt.k ? "active" : ""}`}
-                  onClick={() => setTimeType(opt.k)}
-                >
-                  {opt.t}
-                </button>
-              ))}
-            </div>
+                      {/* 各日付ごとの時間帯ボタン */}
+                      <div className="time-options">
+                        {[
+                          { k: "allday", t: "終日" },
+                          { k: "morning", t: "午前" },
+                          { k: "afternoon", t: "午後" },
+                          { k: "custom", t: "時間指定" },
+                        ].map((o) => (
+                          <button
+                            key={o.k}
+                            className={`time-btn ${opt.timeType === o.k ? "active" : ""}`}
+                            onClick={() => setTimeTypeForDate(d, o.k)}
+                          >
+                            {o.t}
+                          </button>
+                        ))}
+                      </div>
 
-            {/* 時間指定の場合のみ、1時間刻みプルダウン表示 */}
-            {timeType === "custom" && (
-              <div className="time-range">
-                <select
-                  className="cute-select"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                >
-                  {timeOptions.map((t) => (
-                    <option key={`s-${t}`} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-                <span className="time-separator">〜</span>
-                <select
-                  className="cute-select"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                >
-                  {timeOptions.map((t) => (
-                    <option key={`e-${t}`} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                      {/* 時間指定のときだけプルダウン */}
+                      {opt.timeType === "custom" && (
+                        <div className="time-range">
+                          <select
+                            className="cute-select"
+                            value={opt.startTime || "09:00"}
+                            onChange={(e) => setStartForDate(d, e.target.value)}
+                          >
+                            {timeOptions1h.map((t) => (
+                              <option key={`s-${d}-${t}`} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="time-separator">〜</span>
+                          <select
+                            className="cute-select"
+                            value={opt.endTime || "18:00"}
+                            onChange={(e) => setEndForDate(d, e.target.value)}
+                          >
+                            {timeOptions1h.map((t) => (
+                              <option key={`e-${d}-${t}`} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
             )}
           </div>
 
@@ -343,7 +417,7 @@ export default function PersonalPage() {
         </aside>
       </div>
 
-      {/* 画面下の登録済み一覧（中央寄せカード） */}
+      {/* 画面下：登録済み一覧 */}
       <section className="registered-list">
         <h2 className="schedule-header">登録済みスケジュール</h2>
         {schedules.length === 0 ? (
