@@ -46,22 +46,15 @@ ON schedule_responses(schedule_id, user_id);
 
 
 
-
--- =========================
--- 既存 personal_schedules を削除
--- =========================
 DROP TABLE IF EXISTS personal_schedules CASCADE;
-
--- =========================
--- 再作成: personal_schedules（個人スケジュール）
--- =========================
 CREATE TABLE personal_schedules (
     id UUID PRIMARY KEY,
-    user_id VARCHAR(64) NOT NULL,   -- ✅ ログインユーザーID
+    user_id VARCHAR(64) NOT NULL,   -- ログインユーザーID
     title TEXT NOT NULL,
     memo TEXT,
     dates JSONB NOT NULL,           -- 複数日程保存
     options JSONB,                  -- 時間帯など
-    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULLでも可）
+    share_token VARCHAR(64) UNIQUE, -- ✅ 共有リンク用（NULLも可）
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
