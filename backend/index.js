@@ -1,4 +1,4 @@
-// backend/index.js （完全統合版 v10）
+// backend/index.js （完全統合版 v11）
 // schedules + personal_schedules API 完備
 // CSP修正 / optionsをJSON.stringify対応 / personal_schedulesからshare_id排除
 
@@ -55,6 +55,7 @@ app.use(
           "https://*.google.com",
           "https://*.googlesyndication.com",
           "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
         ],
         imgSrc: [
           "'self'",
@@ -129,7 +130,6 @@ const initDB = async () => {
         memo TEXT,
         dates JSONB NOT NULL,
         options JSONB,
-        share_token VARCHAR(64) UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -162,7 +162,7 @@ function authRequired(req, res, next) {
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("🔑 JWT payload:", payload); // デバッグ用
+    console.log("🔑 JWT payload:", payload);
     req.user = payload;
     return next();
   } catch (err) {
@@ -267,8 +267,8 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
 
     const id = uuidv4();
     await pool.query(
-      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_token)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         id,
         req.user.discord_id,
@@ -276,7 +276,6 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
         memo || "",
         JSON.stringify(normalizedDates),
         JSON.stringify(options || {}),
-        null,
       ]
     );
 
