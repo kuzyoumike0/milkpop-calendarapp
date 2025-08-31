@@ -1,6 +1,6 @@
 // backend/index.js （完全統合版 v11）
 // schedules + personal_schedules API 完備
-// CSP修正 / optionsをJSON.stringify対応 / personal_schedulesからshare_id排除
+// personal_schedules は share_id を必ず発行（共有用URL対応）
 
 import express from "express";
 import cors from "cors";
@@ -55,7 +55,6 @@ app.use(
           "https://*.google.com",
           "https://*.googlesyndication.com",
           "https://ep1.adtrafficquality.google",
-          "https://ep2.adtrafficquality.google",
         ],
         imgSrc: [
           "'self'",
@@ -130,6 +129,7 @@ const initDB = async () => {
         memo TEXT,
         dates JSONB NOT NULL,
         options JSONB,
+        share_id VARCHAR(64) UNIQUE NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -266,9 +266,11 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     }));
 
     const id = uuidv4();
+    const shareId = uuidv4(); // ✅ 共有用IDを必ず発行
+
     await pool.query(
-      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         id,
         req.user.discord_id,
@@ -276,10 +278,19 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
         memo || "",
         JSON.stringify(normalizedDates),
         JSON.stringify(options || {}),
+        shareId,
       ]
     );
 
-    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+    res.json({
+      id,
+      title,
+      memo,
+      dates: normalizedDates,
+      options: options || {},
+      share_id: shareId,
+      share_url: `${process.env.FRONTEND_URL}/personal/share/${shareId}`,
+    });
   } catch (err) {
     console.error("❌ personal_schedules 作成失敗:", err);
     res.status(500).json({ error: "作成失敗" });
@@ -302,6 +313,36 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("❌ personal_schedules 取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 共有URLで取得
+app.get("/api/personal/share/:shareId", async (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules WHERE share_id=$1 LIMIT 1`,
+      [shareId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+
+    const schedule = result.rows[0];
+    res.json({
+      id: schedule.id,
+      title: schedule.title,
+      memo: schedule.memo,
+      dates: Array.isArray(schedule.dates)
+        ? schedule.dates
+        : JSON.parse(schedule.dates || "[]"),
+      options: schedule.options,
+      created_at: schedule.created_at,
+    });
+  } catch (err) {
+    console.error("❌ personal_schedules 共有取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
   }
 });
