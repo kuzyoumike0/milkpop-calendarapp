@@ -12,6 +12,7 @@ export default function PersonalPage() {
   const [rangeStart, setRangeStart] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [shareLink, setShareLink] = useState(""); // ✅ 追加: 共有リンク保存用
 
   const hd = new Holidays("JP");
   const token = localStorage.getItem("jwt");
@@ -154,8 +155,13 @@ export default function PersonalPage() {
           body: JSON.stringify(payload),
         });
         newItem = await res.json();
-        // ✅ 即リストに追加
         setSchedules((prev) => [...prev, newItem]);
+
+        // ✅ 共有リンク作成
+        if (newItem.share_id) {
+          const url = `${window.location.origin}/personal/share/${newItem.share_id}`;
+          setShareLink(url);
+        }
       }
 
       // 入力欄クリア
@@ -355,6 +361,25 @@ export default function PersonalPage() {
           </button>
         </div>
       </div>
+
+      {/* ✅ 共有リンク */}
+      {shareLink && (
+        <div className="share-link-box">
+          <p>共有リンク:</p>
+          <a href={shareLink} target="_blank" rel="noreferrer">
+            {shareLink}
+          </a>
+          <button
+            className="copy-btn"
+            onClick={() => {
+              navigator.clipboard.writeText(shareLink);
+              alert("リンクをコピーしました！");
+            }}
+          >
+            コピー
+          </button>
+        </div>
+      )}
 
       {/* 登録済みリスト */}
       <div className="registered-list">
