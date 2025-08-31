@@ -1,406 +1,462 @@
-// frontend/src/components/PersonalPage.jsx
-import React, { useState, useEffect } from "react";
-import Holidays from "date-holidays";
-import "../personal.css";
+// backend/index.js （完全統合版 v11）
+// schedules + personal_schedules API 完備
+// ✅ 個人スケジュールは share_id = NULL で作成
+// ✅ /api/personal-events/:id/share で共有リンクを後から発行可能
 
-export default function PersonalPage() {
-  const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState({});
-  const [mode, setMode] = useState("multiple"); // "multiple" or "range"
-  const [rangeStart, setRangeStart] = useState(null);
-  const [schedules, setSchedules] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [shareLink, setShareLink] = useState(""); // ✅ 追加: 共有リンク保存用
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import { v4 as uuidv4 } from "uuid";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import fs from "fs";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
+import jwt from "jsonwebtoken";
 
-  const hd = new Holidays("JP");
-  const token = localStorage.getItem("jwt");
-  const todayIso = new Date().toISOString().split("T")[0];
-  const hours = Array.from({ length: 24 }, (_, i) =>
-    `${String(i).padStart(2, "0")}:00`
-  );
+import authRouter from "./auth.js";
+import pool from "./db.js";
 
-  // ==== 初回読み込み ====
-  useEffect(() => {
-    if (!token) return;
-    fetch("/api/personal-events", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setSchedules(data);
-        } else if (Array.isArray(data.schedules)) {
-          setSchedules(data.schedules);
-        } else {
-          console.error("Unexpected response:", data);
-        }
-      })
-      .catch((err) => console.error(err));
-  }, [token]);
+const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+});
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || "development";
 
-  // ==== 日付クリック ====
-  const handleDateClick = (date) => {
-    const iso = date.toISOString().split("T")[0];
-    if (mode === "range") {
-      if (!rangeStart) {
-        setRangeStart(date);
-        return;
-      }
-      let start = rangeStart < date ? rangeStart : date;
-      let end = rangeStart < date ? date : rangeStart;
-
-      const newDates = { ...selectedDates };
-      let d = new Date(start);
-      while (d <= end) {
-        const key = d.toISOString().split("T")[0];
-        newDates[key] = {
-          timeType: "allday",
-          startTime: "09:00",
-          endTime: "18:00",
-        };
-        d.setDate(d.getDate() + 1);
-      }
-      setSelectedDates(newDates);
-      setRangeStart(null);
-    } else {
-      setSelectedDates((prev) => {
-        const newDates = { ...prev };
-        if (newDates[iso]) delete newDates[iso];
-        else
-          newDates[iso] = {
-            timeType: "allday",
-            startTime: "09:00",
-            endTime: "18:00",
-          };
-        return newDates;
-      });
-    }
-  };
-
-  // ==== 個別削除 ====
-  const removeSelectedDate = (date) => {
-    setSelectedDates((prev) => {
-      const newDates = { ...prev };
-      delete newDates[date];
-      return newDates;
-    });
-  };
-
-  // ==== 時間帯変更 ====
-  const handleTimeTypeChange = (date, type) => {
-    setSelectedDates((prev) => ({
-      ...prev,
-      [date]: {
-        ...prev[date],
-        timeType: type,
-        startTime: type === "custom" ? "09:00" : null,
-        endTime: type === "custom" ? "10:00" : null,
+// ===== 基本設定 =====
+app.set("trust proxy", 1);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          "https://pagead2.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+        ],
+        frameSrc: [
+          "'self'",
+          "https://*.google.com",
+          "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+        ],
+        connectSrc: [
+          "'self'",
+          "https://*.google.com",
+          "https://*.googlesyndication.com",
+          "https://ep1.adtrafficquality.google",
+        ],
+        imgSrc: [
+          "'self'",
+          "https://*.googleusercontent.com",
+          "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+          "data:",
+        ],
       },
-    }));
-  };
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+app.use(compression());
+app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 
-  const handleTimeChange = (date, field, value) => {
-    setSelectedDates((prev) => ({
-      ...prev,
-      [date]: {
-        ...prev[date],
-        [field]: value,
-      },
-    }));
-  };
+// ===== CORS =====
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
-  // ==== 保存 ====
-  const handleSave = async () => {
-    if (Object.keys(selectedDates).length === 0 || !title.trim()) {
-      alert("日付とタイトルを入力してください");
-      return;
-    }
-    if (!token) {
-      alert("ログインしてください");
-      return;
-    }
+// ヘルスチェック
+app.get("/healthz", (_req, res) =>
+  res.status(200).json({ ok: true, env: NODE_ENV })
+);
 
-    const datesArray = Object.entries(selectedDates).map(([date, info]) => ({
-      date,
-      ...info,
-    }));
+// 軽いレートリミット
+app.use(
+  "/api",
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
-    const payload = { title, memo, dates: datesArray, options: {} };
-
-    try {
-      let newItem;
-      if (editingId) {
-        const res = await fetch(`/api/personal-events/${editingId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-        newItem = await res.json();
-        setSchedules((prev) =>
-          prev.map((s) => (s.id === editingId ? newItem : s))
-        );
-        setEditingId(null);
-      } else {
-        const res = await fetch("/api/personal-events", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-        newItem = await res.json();
-        setSchedules((prev) => [...prev, newItem]);
-
-        // ✅ 共有リンク作成
-        if (newItem.share_id) {
-          const url = `${window.location.origin}/personal/share/${newItem.share_id}`;
-          setShareLink(url);
-        }
-      }
-
-      // 入力欄クリア
-      setTitle("");
-      setMemo("");
-      setSelectedDates({});
-    } catch (err) {
-      console.error(err);
-      alert("保存に失敗しました");
-    }
-  };
-
-  // ==== カレンダー生成 ====
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-
-  const weeks = [];
-  let day = new Date(firstDay);
-  while (day <= lastDay) {
-    const week = [];
-    for (let i = 0; i < 7; i++) {
-      week.push(new Date(day));
-      day.setDate(day.getDate() + 1);
-    }
-    weeks.push(week);
+// ===== DB初期化 =====
+const initDB = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id UUID PRIMARY KEY,
+        title TEXT NOT NULL,
+        dates JSONB NOT NULL,
+        options JSONB,
+        share_token VARCHAR(64) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schedule_responses (
+        id SERIAL PRIMARY KEY,
+        schedule_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
+        user_id VARCHAR(64) NOT NULL,
+        username TEXT,
+        responses JSONB NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(schedule_id, user_id)
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS personal_schedules (
+        id UUID PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        title TEXT NOT NULL,
+        memo TEXT,
+        dates JSONB NOT NULL,
+        options JSONB,
+        share_id UUID, -- ✅ NULL許容。共有発行時に schedules.id を保存
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Database initialized");
+  } catch (err) {
+    console.error("❌ DB初期化エラー:", err);
   }
+};
+initDB();
 
-  const sortedDates = Object.entries(selectedDates).sort(
-    ([a], [b]) => new Date(a) - new Date(b)
-  );
+// ===== Socket.IO =====
+io.on("connection", (socket) => {
+  console.log("🟢 A user connected:", socket.id);
+  socket.on("joinSchedule", (token) => {
+    if (typeof token === "string" && token.length > 0) socket.join(token);
+  });
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 A user disconnected:", socket.id, reason);
+  });
+});
 
-  return (
-    <div className="personal-page">
-      <h1 className="page-title">個人日程登録</h1>
-      <input
-        type="text"
-        placeholder="タイトルを入力してください"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="title-input"
-      />
-      <textarea
-        placeholder="メモを入力してください"
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-        className="memo-input"
-      />
+// ===== 認証 =====
+app.use("/auth", authRouter);
 
-      {/* モード切替 */}
-      <div className="select-mode">
-        <button
-          className={mode === "multiple" ? "active" : ""}
-          onClick={() => setMode("multiple")}
-        >
-          複数選択
-        </button>
-        <button
-          className={mode === "range" ? "active" : ""}
-          onClick={() => setMode("range")}
-        >
-          範囲選択
-        </button>
-      </div>
+function authRequired(req, res, next) {
+  try {
+    const header = req.get("Authorization") || "";
+    const bearer = header.startsWith("Bearer ") ? header.slice(7) : null;
+    const token = bearer || req.cookies?.token;
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-      <div className="calendar-list-container">
-        {/* カレンダー */}
-        <div className="calendar-container">
-          <div className="calendar-header">
-            <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>
-              ◀
-            </button>
-            <span>
-              {year}年 {month + 1}月
-            </span>
-            <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>
-              ▶
-            </button>
-          </div>
-          <table className="calendar-table">
-            <thead>
-              <tr>
-                <th>日</th>
-                <th>月</th>
-                <th>火</th>
-                <th>水</th>
-                <th>木</th>
-                <th>金</th>
-                <th>土</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weeks.map((week, i) => (
-                <tr key={i}>
-                  {week.map((d, j) => {
-                    const iso = d.toISOString().split("T")[0];
-                    const isToday = iso === todayIso;
-                    const isSelected = selectedDates[iso];
-                    const holiday = hd.isHoliday(d);
-                    return (
-                      <td
-                        key={j}
-                        className={`cell
-                          ${isToday ? "today" : ""}
-                          ${isSelected ? "selected" : ""}
-                          ${holiday ? "holiday" : ""}
-                          ${j === 0 ? "sunday" : ""}
-                          ${j === 6 ? "saturday" : ""}`}
-                        onClick={() => handleDateClick(d)}
-                      >
-                        {d.getMonth() === month ? d.getDate() : ""}
-                        {holiday && (
-                          <div className="holiday-name">{holiday[0].name}</div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 選択中リスト */}
-        <div className="side-panel">
-          <h2>選択中の日程</h2>
-          {sortedDates.length === 0 ? (
-            <p>まだ日程が選択されていません</p>
-          ) : (
-            sortedDates.map(([date, info]) => (
-              <div key={date} className="date-card">
-                <div className="date-label">{date}</div>
-
-                <div className="time-options">
-                  {["allday", "day", "night", "custom"].map((type) => (
-                    <button
-                      key={type}
-                      className={`time-btn ${
-                        info.timeType === type ? "active" : ""
-                      }`}
-                      onClick={() => handleTimeTypeChange(date, type)}
-                    >
-                      {type === "allday"
-                        ? "終日"
-                        : type === "day"
-                        ? "午前"
-                        : type === "night"
-                        ? "午後"
-                        : "時間指定"}
-                    </button>
-                  ))}
-                </div>
-
-                {info.timeType === "custom" && (
-                  <div className="time-range">
-                    <select
-                      className="cute-select"
-                      value={info.startTime}
-                      onChange={(e) =>
-                        handleTimeChange(date, "startTime", e.target.value)
-                      }
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="time-separator">〜</span>
-                    <select
-                      className="cute-select"
-                      value={info.endTime}
-                      onChange={(e) =>
-                        handleTimeChange(date, "endTime", e.target.value)
-                      }
-                    >
-                      {hours.map((h) => (
-                        <option key={h} value={h}>
-                          {h}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                <button
-                  className="remove-btn"
-                  onClick={() => removeSelectedDate(date)}
-                >
-                  ✖
-                </button>
-              </div>
-            ))
-          )}
-          <button className="register-btn" onClick={handleSave}>
-            保存する
-          </button>
-        </div>
-      </div>
-
-      {/* ✅ 共有リンク */}
-      {shareLink && (
-        <div className="share-link-box">
-          <p>共有リンク:</p>
-          <a href={shareLink} target="_blank" rel="noreferrer">
-            {shareLink}
-          </a>
-          <button
-            className="copy-btn"
-            onClick={() => {
-              navigator.clipboard.writeText(shareLink);
-              alert("リンクをコピーしました！");
-            }}
-          >
-            コピー
-          </button>
-        </div>
-      )}
-
-      {/* 登録済みリスト */}
-      <div className="registered-list">
-        <h2>登録済み予定</h2>
-        {schedules.map((item) => (
-          <div key={item.id} className="schedule-card">
-            <div className="schedule-header">
-              <strong>{item.title}</strong>
-              {item.memo && <p className="schedule-memo">{item.memo}</p>}
-            </div>
-            <ul className="schedule-dates">
-              {Array.isArray(item.dates) &&
-                item.dates.map((d, i) => (
-                  <li key={i}>
-                    <span>{d.date}</span> ({d.timeType})
-                  </li>
-                ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("🔑 JWT payload:", payload);
+    req.user = payload;
+    return next();
+  } catch (err) {
+    console.error("❌ authRequired failed:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 }
+
+app.get("/api/me", authRequired, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// ==== 共通: timeType 日本語化 ====
+function timeLabel(t, s, e) {
+  if (t === "allday") return "終日";
+  if (t === "day") return "午前";
+  if (t === "night") return "午後";
+  if (t === "custom") return `${s}〜${e}`;
+  return t;
+}
+
+// ===== schedules API =====
+
+// 新規作成
+app.post("/api/schedules", async (req, res) => {
+  try {
+    const { title, dates } = req.body;
+
+    if (!title || !Array.isArray(dates) || dates.length === 0) {
+      return res.status(400).json({ error: "タイトルと日程が必須です" });
+    }
+
+    const normalizedDates = dates.map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    const shareToken = uuidv4();
+
+    const result = await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, share_token`,
+      [uuidv4(), title, JSON.stringify(normalizedDates), JSON.stringify({}), shareToken]
+    );
+
+    res.json({ id: result.rows[0].id, share_token: result.rows[0].share_token });
+  } catch (err) {
+    console.error("❌ schedules作成失敗:", err);
+    res.status(500).json({ error: "作成失敗" });
+  }
+});
+
+// 一覧取得（共有ページ用）
+app.get("/api/schedules/:shareToken", async (req, res) => {
+  try {
+    const { shareToken } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM schedules WHERE share_token = $1 LIMIT 1`,
+      [shareToken]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "スケジュールが見つかりません" });
+    }
+
+    const schedule = result.rows[0];
+    const dates = schedule.dates.map((d) => ({
+      ...d,
+      label: timeLabel(d.timeType, d.startTime, d.endTime),
+    }));
+
+    res.json({
+      id: schedule.id,
+      title: schedule.title,
+      dates,
+    });
+  } catch (err) {
+    console.error("❌ schedules取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// ===== personal_schedules API =====
+
+// 新規作成
+app.post("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const { title, memo, dates, options } = req.body;
+    if (!title || !Array.isArray(dates) || dates.length === 0) {
+      return res.status(400).json({ error: "タイトルと日程が必須です" });
+    }
+
+    const normalizedDates = dates.map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    const id = uuidv4();
+    await pool.query(
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_id)
+       VALUES ($1, $2, $3, $4, $5, $6, NULL)`,
+      [
+        id,
+        req.user.discord_id,
+        title,
+        memo || "",
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}),
+      ]
+    );
+
+    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+  } catch (err) {
+    console.error("❌ personal_schedules 作成失敗:", err);
+    res.status(500).json({ error: "作成失敗" });
+  }
+});
+
+// 一覧取得
+app.get("/api/personal-events", authRequired, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
+      [req.user.discord_id]
+    );
+
+    const rows = result.rows.map((r) => ({
+      ...r,
+      dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
+    }));
+
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ personal_schedules 取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 共有リンク発行
+app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. 個人スケジュールを取得
+    const result = await pool.query(
+      `SELECT * FROM personal_schedules WHERE id=$1 AND user_id=$2`,
+      [id, req.user.discord_id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "対象スケジュールが見つかりません" });
+    }
+
+    const personal = result.rows[0];
+
+    // 2. schedules にコピー
+    const shareId = uuidv4();
+    const shareToken = uuidv4();
+    await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        shareId,
+        personal.title,
+        JSON.stringify(personal.dates),
+        JSON.stringify(personal.options || {}),
+        shareToken,
+      ]
+    );
+
+    // 3. personal_schedules に share_id を保存
+    await pool.query(
+      `UPDATE personal_schedules SET share_id=$1 WHERE id=$2 AND user_id=$3`,
+      [shareId, id, req.user.discord_id]
+    );
+
+    res.json({
+      share_id: shareId,
+      share_token: shareToken,
+      share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
+    });
+  } catch (err) {
+    console.error("❌ personal_schedules 共有失敗:", err);
+    res.status(500).json({ error: "共有リンク発行失敗" });
+  }
+});
+
+// 更新
+app.put("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, memo, dates, options } = req.body;
+    const normalizedDates = (dates || []).map((d) => ({
+      date: d.date,
+      timeType: d.timeType || "allday",
+      startTime: d.startTime || "09:00",
+      endTime: d.endTime || "18:00",
+    }));
+
+    await pool.query(
+      `UPDATE personal_schedules
+       SET title=$1, memo=$2, dates=$3, options=$4
+       WHERE id=$5 AND user_id=$6`,
+      [
+        title,
+        memo || "",
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}),
+        id,
+        req.user.discord_id,
+      ]
+    );
+
+    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+  } catch (err) {
+    console.error("❌ personal_schedules 更新失敗:", err);
+    res.status(500).json({ error: "更新失敗" });
+  }
+});
+
+// 削除
+app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(
+      `DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2`,
+      [id, req.user.discord_id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ personal_schedules 削除失敗:", err);
+    res.status(500).json({ error: "削除失敗" });
+  }
+});
+
+// ===== Reactビルド配信 =====
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDist = path.resolve(__dirname, "../frontend/build");
+const indexHtmlPath = path.join(frontendDist, "index.html");
+const hasIndex = fs.existsSync(indexHtmlPath);
+
+if (!hasIndex) {
+  console.warn("⚠️ frontend/build/index.html が見つかりません。");
+}
+
+app.use(
+  express.static(frontendDist, {
+    index: "index.html",
+    maxAge: NODE_ENV === "production" ? "1d" : 0,
+  })
+);
+
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "API not found" });
+});
+
+app.get("*", (_req, res) => {
+  if (!hasIndex) {
+    return res
+      .status(500)
+      .send("Frontend build is missing. Please run `cd frontend && npm run build`.");
+  }
+  res.sendFile(indexHtmlPath);
+});
+
+// ===== エラーハンドラ =====
+app.use((err, _req, res, _next) => {
+  console.error("🔥 Unhandled error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// ===== サーバー起動 =====
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT} (env: ${NODE_ENV})`);
+});
+
+// ===== グレースフルシャットダウン =====
+const shutdown = (signal) => {
+  console.log(`\n${signal} received. Closing server...`);
+  server.close(() => {
+    console.log("HTTP server closed.");
+    try {
+      pool.end?.();
+    } catch {}
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 8000).unref();
+};
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
