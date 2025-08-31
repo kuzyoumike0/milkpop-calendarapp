@@ -44,9 +44,6 @@ CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
 ON schedule_responses(schedule_id, user_id);
 
 
-
-DROP TABLE IF EXISTS personal_schedules CASCADE;
-
 CREATE TABLE personal_schedules (
     id UUID PRIMARY KEY,
     user_id VARCHAR(64) NOT NULL,
@@ -58,3 +55,8 @@ CREATE TABLE personal_schedules (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 既存の外部キー制約を削除
+ALTER TABLE personal_schedules DROP CONSTRAINT IF EXISTS fk_share;
+
+-- share_id を NULL 許容に変更（必ず NOT NULL になっている場合）
+ALTER TABLE personal_schedules ALTER COLUMN share_id DROP NOT NULL;
