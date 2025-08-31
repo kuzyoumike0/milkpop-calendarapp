@@ -37,3 +37,9 @@ export async function deleteSchedule(id) {
   if (!res.ok) throw new Error("スケジュール削除エラー");
   return res.json();
 }
+export default {
+  fetchSchedules,
+  addSchedule,
+  updateSchedule,
+  deleteSchedule,
+};
