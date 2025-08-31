@@ -1,7 +1,8 @@
-// backend/index.js （完全統合版 v11）
+// backend/index.js （完全統合版 v12）
 // schedules + personal_schedules API 完備
-// ✅ 個人スケジュールは share_id = NULL で作成
-// ✅ /api/personal-events/:id/share で共有リンクを後から発行可能
+// ✅ 個人スケジュールは作成時に schedules へ自動コピー & share_id 連携（共有リンクを自動発行）★
+// ✅ /api/personal-events 一覧で常に share_url を返す（JOIN で share_token 取得）★
+// ✅ /api/personal-events/:id/share は既存リンクがあればそれを返す（冪等）★
 
 import express from "express";
 import cors from "cors";
@@ -130,7 +131,7 @@ const initDB = async () => {
         memo TEXT,
         dates JSONB NOT NULL,
         options JSONB,
-        share_id UUID, -- ✅ NULL許容。共有発行時に schedules.id を保存
+        share_id UUID, -- NULL許容。v12では作成時に原則セット
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -176,7 +177,7 @@ app.get("/api/me", authRequired, (req, res) => {
   res.json({ user: req.user });
 });
 
-// ==== 共通: timeType 日本語化 ====
+// ==== 共通: timeType 日本語化（注意: 既存仕様維持） ====
 function timeLabel(t, s, e) {
   if (t === "allday") return "終日";
   if (t === "day") return "午前";
@@ -187,7 +188,7 @@ function timeLabel(t, s, e) {
 
 // ===== schedules API =====
 
-// 新規作成
+// 新規作成（共有用）
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates } = req.body;
@@ -219,7 +220,7 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// 一覧取得（共有ページ用）
+// 一覧取得（共有ページ用：token で1件）
 app.get("/api/schedules/:shareToken", async (req, res) => {
   try {
     const { shareToken } = req.params;
@@ -251,7 +252,7 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
 
 // ===== personal_schedules API =====
 
-// 新規作成
+// ★ 作成時に共有リンクを自動発行（schedules にもコピー & share_id 設定）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -266,38 +267,76 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
       endTime: d.endTime || "18:00",
     }));
 
-    const id = uuidv4();
+    const personalId = uuidv4();
+    const shareId = uuidv4();
+    const shareToken = uuidv4();
+
+    // 1) schedules にコピー（共有用）
+    await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        shareId,
+        title,
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}),
+        shareToken,
+      ]
+    );
+
+    // 2) personal_schedules へ保存（share_id を紐づけ）
     await pool.query(
       `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_id)
-       VALUES ($1, $2, $3, $4, $5, $6, NULL)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
-        id,
+        personalId,
         req.user.discord_id,
         title,
         memo || "",
         JSON.stringify(normalizedDates),
         JSON.stringify(options || {}),
+        shareId,
       ]
     );
 
-    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+    res.json({
+      id: personalId,
+      title,
+      memo,
+      dates: normalizedDates,
+      options: options || {},
+      share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
+    });
   } catch (err) {
     console.error("❌ personal_schedules 作成失敗:", err);
     res.status(500).json({ error: "作成失敗" });
   }
 });
 
-// 一覧取得
+// ★ 一覧取得（常に share_url を含める：JOIN で share_token を取得）
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT * FROM personal_schedules WHERE user_id = $1 ORDER BY created_at DESC`,
+      `SELECT ps.*, s.share_token
+       FROM personal_schedules ps
+       LEFT JOIN schedules s ON ps.share_id = s.id
+       WHERE ps.user_id = $1
+       ORDER BY ps.created_at DESC`,
       [req.user.discord_id]
     );
 
     const rows = result.rows.map((r) => ({
-      ...r,
+      id: r.id,
+      user_id: r.user_id,
+      title: r.title,
+      memo: r.memo,
       dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
+      options: r.options,
+      share_id: r.share_id,
+      created_at: r.created_at,
+      share_url: r.share_token
+        ? `${process.env.FRONTEND_URL}/share/${r.share_token}`
+        : null,
     }));
 
     res.json(rows);
@@ -307,7 +346,7 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 共有リンク発行
+// ★ 共有リンク発行（冪等：既存があればそれを返す）
 app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
@@ -320,10 +359,24 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "対象スケジュールが見つかりません" });
     }
-
     const personal = result.rows[0];
 
-    // 2. schedules にコピー
+    // 2. 既存の共有があれば URL を返す
+    if (personal.share_id) {
+      const q = await pool.query(
+        `SELECT share_token FROM schedules WHERE id=$1`,
+        [personal.share_id]
+      );
+      if (q.rows.length > 0) {
+        return res.json({
+          share_id: personal.share_id,
+          share_url: `${process.env.FRONTEND_URL}/share/${q.rows[0].share_token}`,
+        });
+      }
+      // share_id はあるが schedules 行が無い場合は、下で再発行
+    }
+
+    // 3. 未発行 or 欠損時は新規発行
     const shareId = uuidv4();
     const shareToken = uuidv4();
     await pool.query(
@@ -332,13 +385,15 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
       [
         shareId,
         personal.title,
-        JSON.stringify(personal.dates),
+        JSON.stringify(
+          Array.isArray(personal.dates)
+            ? personal.dates
+            : JSON.parse(personal.dates || "[]")
+        ),
         JSON.stringify(personal.options || {}),
         shareToken,
       ]
     );
-
-    // 3. personal_schedules に share_id を保存
     await pool.query(
       `UPDATE personal_schedules SET share_id=$1 WHERE id=$2 AND user_id=$3`,
       [shareId, id, req.user.discord_id]
@@ -346,7 +401,6 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
 
     res.json({
       share_id: shareId,
-      share_token: shareToken,
       share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
     });
   } catch (err) {
@@ -396,11 +450,11 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
       `DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2`,
       [id, req.user.discord_id]
     );
-    res.json({ success: true });
   } catch (err) {
     console.error("❌ personal_schedules 削除失敗:", err);
-    res.status(500).json({ error: "削除失敗" });
+    return res.status(500).json({ error: "削除失敗" });
   }
+  res.json({ success: true });
 });
 
 // ===== Reactビルド配信 =====
@@ -421,10 +475,12 @@ app.use(
   })
 );
 
+// /api の未知パス
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
 
+// SPA のためのフォールバック
 app.get("*", (_req, res) => {
   if (!hasIndex) {
     return res
