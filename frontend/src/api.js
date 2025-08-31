@@ -35,8 +35,11 @@ export async function deleteSchedule(id) {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("スケジュール削除エラー");
-  return res.json();
+  // DELETE は 204 のことが多いので安全に処理
+  return res.status === 204 ? null : res.json();
 }
+
+// ✅ default export を追加
 export default {
   fetchSchedules,
   addSchedule,
