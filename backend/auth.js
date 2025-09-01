@@ -2,32 +2,21 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import pool from "./db.js"; // pg Pool
+import pool from "./db.js";
 
 const router = express.Router();
 
-// ==== 必須環境変数チェック ====
 const {
   JWT_SECRET,
   DISCORD_CLIENT_ID,
   DISCORD_CLIENT_SECRET,
   DISCORD_REDIRECT_URI,
   FRONTEND_URL,
-  NODE_ENV,
 } = process.env;
 
 if (!JWT_SECRET) {
   console.error("FATAL: JWT_SECRET is not set");
   process.exit(1);
-}
-
-for (const [k, v] of Object.entries({
-  DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET,
-  DISCORD_REDIRECT_URI,
-  FRONTEND_URL, // 未設定でも動くように後段でフォールバック済み
-})) {
-  if (!v) console.warn(`WARN: ${k} is not set`);
 }
 
 // ==== users テーブル初期化 ====
@@ -48,36 +37,30 @@ try {
 
 // ===== ヘルパ: Cookie 発行/削除 =====
 function setAuthCookie(res, token) {
-  // Railway で https 前提。本番は Secure: true、SameSite=Lax でトップレベル遷移は送信される
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true,                // ★ 本番では必ず https
+    secure: true, // 本番 https
     sameSite: "lax",
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7日
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 function clearAuthCookie(res) {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-  });
+  res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
 }
 
-// ==== Discord OAuth2 ====
+// ===== Discord OAuth2 =====
 
-// 認可画面へ（state でCSRF対策）
+// 認可開始（state で CSRF 対策）
 router.get("/discord", (req, res) => {
   try {
     const scope = encodeURIComponent("identify");
     const state = crypto.randomUUID();
 
-    // 10分だけ有効な state を Cookie に保存（Lax でトップレベル遷移時は送信される）
+    // 10分だけ有効な state を Cookie に保存
     res.cookie("oauth_state", state, {
       httpOnly: true,
-      secure: true, // 本番は https 前提
+      secure: true,
       sameSite: "lax",
       maxAge: 10 * 60 * 1000,
       path: "/",
@@ -98,12 +81,10 @@ router.get("/discord", (req, res) => {
   }
 });
 
-// ログアウト（Cookie を明示的に削除）
+// ログアウト
 router.get("/logout", (req, res) => {
   clearAuthCookie(res);
   res.clearCookie("oauth_state", { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
-
-  // FRONTEND_URL が無ければ現在のホストにフォールバック
   const base = FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
   return res.redirect(base);
 });
@@ -193,16 +174,13 @@ router.get("/discord/callback", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // === 5. HttpOnly Cookie にセット（これが肝心！）★ ===
+    // === 5. HttpOnly Cookie にセット（ここがポイント） ===
     setAuthCookie(res, jwtToken);
 
-    // === 6. フロントへリダイレクト ===
-    // URL に token を載せずに遷移（Cookie があるので不要）
-    // 既存互換が必要なら ?token= のまま残すことも可能（下のフラグで制御）
+    // === 6. フロントへ遷移 ===
+    // URL に token を載せる必要はない（Cookie があるため）。
     const base = FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-    const sendTokenInQuery = false; // ★既存互換が必要なら true に
-    const redirectUrl = new URL(sendTokenInQuery ? `/auth/success?token=${encodeURIComponent(jwtToken)}` : `/auth/success`, base);
-
+    const redirectUrl = new URL("/auth/success", base);
     return res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Discord callback error:", err);
