@@ -13,6 +13,7 @@ const {
   DISCORD_CLIENT_SECRET,
   DISCORD_REDIRECT_URI,
   FRONTEND_URL,
+  NODE_ENV,
 } = process.env;
 
 if (!JWT_SECRET) {
@@ -45,6 +46,26 @@ try {
   console.error("❌ users table bootstrap failed:", e.message);
 }
 
+// ===== ヘルパ: Cookie 発行/削除 =====
+function setAuthCookie(res, token) {
+  // Railway で https 前提。本番は Secure: true、SameSite=Lax でトップレベル遷移は送信される
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,                // ★ 本番では必ず https
+    sameSite: "lax",
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7日
+  });
+}
+function clearAuthCookie(res) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+  });
+}
+
 // ==== Discord OAuth2 ====
 
 // 認可画面へ（state でCSRF対策）
@@ -59,6 +80,7 @@ router.get("/discord", (req, res) => {
       secure: true, // 本番は https 前提
       sameSite: "lax",
       maxAge: 10 * 60 * 1000,
+      path: "/",
     });
 
     const url =
@@ -76,10 +98,10 @@ router.get("/discord", (req, res) => {
   }
 });
 
-// ログアウト（localStorage 方式なので Cookie はクリア不要、ただのリダイレクトでOK）
+// ログアウト（Cookie を明示的に削除）
 router.get("/logout", (req, res) => {
-  // state Cookie が残っていれば削除
-  res.clearCookie("oauth_state", { httpOnly: true, sameSite: "lax", secure: true });
+  clearAuthCookie(res);
+  res.clearCookie("oauth_state", { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
 
   // FRONTEND_URL が無ければ現在のホストにフォールバック
   const base = FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
@@ -99,7 +121,7 @@ router.get("/discord/callback", async (req, res) => {
       return res.status(400).send("state が不正です（CSRF防止）");
     }
     // 使い捨て
-    res.clearCookie("oauth_state", { httpOnly: true, sameSite: "lax", secure: true });
+    res.clearCookie("oauth_state", { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
 
     // === 1. アクセストークン取得 ===
     const params = new URLSearchParams();
@@ -171,12 +193,17 @@ router.get("/discord/callback", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // === 5. フロントの /auth/success に JWT を渡す ===
-    // FRONTEND_URL が未設定でも落ちないようフォールバック
-    const base = FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
-    const redirect = new URL(`/auth/success?token=${encodeURIComponent(jwtToken)}`, base);
+    // === 5. HttpOnly Cookie にセット（これが肝心！）★ ===
+    setAuthCookie(res, jwtToken);
 
-    return res.redirect(redirect.toString());
+    // === 6. フロントへリダイレクト ===
+    // URL に token を載せずに遷移（Cookie があるので不要）
+    // 既存互換が必要なら ?token= のまま残すことも可能（下のフラグで制御）
+    const base = FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+    const sendTokenInQuery = false; // ★既存互換が必要なら true に
+    const redirectUrl = new URL(sendTokenInQuery ? `/auth/success?token=${encodeURIComponent(jwtToken)}` : `/auth/success`, base);
+
+    return res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Discord callback error:", err);
     return res.status(500).send("Discordログインに失敗しました");
