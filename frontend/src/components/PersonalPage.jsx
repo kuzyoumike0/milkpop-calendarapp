@@ -1,9 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Holidays from "date-holidays";
 import "../personal.css";
+import {
+  createPersonalEvent,
+  listPersonalEvents,
+} from "../api";
 
 export default function PersonalPage() {
-  /** ===== 共通ユーティリティ ===== */
   const pad2 = (n) => String(n).padStart(2, "0");
   const ymd = (d) =>
     `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
@@ -17,32 +20,26 @@ export default function PersonalPage() {
     return ymd(jst);
   })();
 
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
-  /** ===== 状態 ===== */
+  // 状態
   const [current, setCurrent] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-
   const [title, setTitle] = useState("");
   const [memo, setMemo] = useState("");
-
   const [mode, setMode] = useState("single"); // single | range | multiple
   const [rangeStart, setRangeStart] = useState(null);
-
   const [selectedDates, setSelectedDates] = useState(new Set());
   const [dateOptions, setDateOptions] = useState({}); // {dateStr: {timeType, startTime, endTime}}
-
   const [schedules, setSchedules] = useState([]);
 
-  // Discord共有リンク（自動表示）
+  // Discord共有リンク（自動表示：/api/personal-events の share_url を用いる）
   const [shareLinks, setShareLinks] = useState([]);
 
   // 祝日
   const hd = useMemo(() => new Holidays("JP"), []);
 
-  /** ===== カレンダー情報 ===== */
+  // カレンダー情報
   const y = current.getFullYear();
   const m = current.getMonth();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -55,7 +52,7 @@ export default function PersonalPage() {
     return arr;
   }, []);
 
-  /** ===== 判定 ===== */
+  // 祝日・クラス
   const holidayName = (Y, M, D) => {
     const info = hd.isHoliday(new Date(Y, M, D));
     return info ? info[0]?.name : null;
@@ -64,7 +61,7 @@ export default function PersonalPage() {
   const isSelected = (Y, M, D) => selectedDates.has(ymdd(Y, M, D));
   const weekdayClass = (w) => (w === 0 ? "sunday" : w === 6 ? "saturday" : "");
 
-  /** ===== 日付選択 ===== */
+  // 選択ヘルパ
   const ensureDefaultOption = (dateStr) => {
     setDateOptions((prev) =>
       prev[dateStr]
@@ -72,7 +69,6 @@ export default function PersonalPage() {
         : { ...prev, [dateStr]: { timeType: "allday", startTime: null, endTime: null } }
     );
   };
-
   const addDate = (dateStr) => {
     setSelectedDates((prev) => {
       const next = new Set(prev);
@@ -81,7 +77,6 @@ export default function PersonalPage() {
     });
     ensureDefaultOption(dateStr);
   };
-
   const removeDate = (dateStr) => {
     setSelectedDates((prev) => {
       const next = new Set(prev);
@@ -95,6 +90,7 @@ export default function PersonalPage() {
     });
   };
 
+  // クリック
   const handleCellClick = (Y, M, D) => {
     const dateStr = ymdd(Y, M, D);
     if (mode === "single") {
@@ -133,7 +129,7 @@ export default function PersonalPage() {
     }
   };
 
-  /** ===== カレンダー行列 ===== */
+  // 行列
   const matrix = useMemo(() => {
     const cells = [];
     for (let i = 0; i < firstWeekday; i++) cells.push(null);
@@ -143,7 +139,7 @@ export default function PersonalPage() {
     return rows;
   }, [firstWeekday, daysInMonth]);
 
-  /** ===== 時間帯設定 ===== */
+  // 時間帯設定
   const setTimeTypeForDate = (dateStr, t) => {
     setDateOptions((prev) => {
       const old =
@@ -171,9 +167,11 @@ export default function PersonalPage() {
       [dateStr]: { ...(p[dateStr] || {}), timeType: "custom", endTime: v },
     }));
 
-  /** ===== 登録 ===== */
-  const handleRegister = () => {
+  // 登録（ローカル反映 + サーバ登録するときは createPersonalEvent を使用）
+  const handleRegister = async () => {
     if (!title.trim() || selectedDates.size === 0) return;
+
+    // クライアント即時反映（ローカル）
     const newItems = Array.from(selectedDates).sort().map((date) => {
       const opt =
         dateOptions[date] || { timeType: "allday", startTime: null, endTime: null };
@@ -191,18 +189,52 @@ export default function PersonalPage() {
       a.date < b.date ? -1 : 1
     );
     setSchedules(merged);
+
+    // サーバ登録（共有リンクはサーバ側で自動発行 → 一覧に反映）
+    try {
+      const payload = Array.from(selectedDates).sort().map((d) => {
+        const opt = dateOptions[d] || { timeType: "allday" };
+        return {
+          date: d,
+          timeType: opt.timeType,
+          startTime: opt.timeType === "custom" ? (opt.startTime || "09:00") : null,
+          endTime: opt.timeType === "custom" ? (opt.endTime || "18:00") : null,
+        };
+      });
+
+      await createPersonalEvent({
+        title: title.trim(),
+        memo: memo.trim(),
+        dates: payload,
+        options: {},
+      });
+
+      // 再取得（share_url を含む）
+      await loadShareLinks();
+    } catch (e) {
+      console.error(e);
+    }
+
+    // 入力クリア
     setSelectedDates(new Set());
     setDateOptions({});
     setRangeStart(null);
   };
 
-  /** ===== Discord共有リンクを自動取得 ===== */
+  // 共有リンク（自動取得：/api/personal-events の share_url を使用）
   const loadShareLinks = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/personal-shares`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setShareLinks(Array.isArray(data) ? data : []);
+      const list = await listPersonalEvents();
+      // 表示用: title と share_url を持つカードにする
+      const shares = (list || [])
+        .filter((it) => !!it.share_url)
+        .map((it) => ({
+          id: it.id,
+          title: it.title || "個人スケジュール",
+          url: it.share_url,
+          createdAt: it.created_at,
+        }));
+      setShareLinks(shares);
     } catch (e) {
       console.error(e);
     }
@@ -211,7 +243,7 @@ export default function PersonalPage() {
     loadShareLinks();
   }, []);
 
-  /** ===== 表示用 ===== */
+  // 表示ラベル
   const timeLabel = (t, s, e) =>
     t === "allday"
       ? "終日"
@@ -224,7 +256,6 @@ export default function PersonalPage() {
   const prevMonth = () => setCurrent(new Date(y, m - 1, 1));
   const nextMonth = () => setCurrent(new Date(y, m + 1, 1));
 
-  /** ===== JSX ===== */
   return (
     <div className="personal-page">
       <h1 className="page-title">個人日程登録</h1>
@@ -398,7 +429,7 @@ export default function PersonalPage() {
         </aside>
       </div>
 
-      {/* 登録済み予定 */}
+      {/* 登録済み予定（ローカル表示） */}
       <section className="registered-list">
         <h2 className="schedule-header">登録済みスケジュール</h2>
         {schedules.length === 0 ? (
@@ -427,7 +458,7 @@ export default function PersonalPage() {
           shareLinks.map((l) => (
             <div className="schedule-card" key={l.id}>
               <div className="schedule-header">
-                {l.title || "個人スケジュール"} / {l.discordUser}
+                {l.title}
               </div>
               <div>
                 <a
