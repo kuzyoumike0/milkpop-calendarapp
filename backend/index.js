@@ -1,10 +1,11 @@
 // backend/index.js
-// ===== 完全統合版 v15 (STEP1: CSP + /ads.txt) =====
+// ===== 完全統合版 v16 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
 // - schedules + personal_schedules API 完備
-// - Discord OAuth + JWT Cookie 認証（/auth は別ファイル）
-// - Helmet CSP: Google Ads / adtrafficquality ep1/ep2 画像・フレーム許可
+// - Discord OAuth + JWT Cookie/Authorization 認証（/auth は別ファイル）
+// - Helmet CSP: Google Ads / adtrafficquality (ep1/ep2) / adservice / tpc を許可
 // - /ads.txt 配信
 // - Socket.IO サポート
+// - CORS は FRONTEND_URL を優先
 
 import express from "express";
 import cors from "cors";
@@ -36,50 +37,55 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// ===== 基本設定 =====
 app.set("trust proxy", 1);
 
-// --- Helmet CSP（Google Ads / SODAR 画像のため ep1/ep2 を imgSrc に追加）---
+// ===== Helmet（CSP を広告対応に最適化）=====
 app.use(
   helmet({
     contentSecurityPolicy: {
+      useDefaults: true,
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
+          // AdSense / GPT
           "https://pagead2.googlesyndication.com",
-          "https://googleads.g.doubleclick.net",
-          "https://ep2.adtrafficquality.google",
-          "https://*.googletagservices.com",
+          "https://www.googletagservices.com",
+          "https://securepubads.g.doubleclick.net",
         ],
         frameSrc: [
           "'self'",
-          "https://*.google.com",
-          "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
-          "https://*.googletagservices.com",
-          "https://ep2.adtrafficquality.google",
+          "https://tpc.googlesyndication.com",
+          "https://adservice.google.com",
+          "https://adservice.google.co.jp",
+          "https://*.googlesyndication.com",
+          "https://*.google.com",
         ],
         connectSrc: [
           "'self'",
-          process.env.FRONTEND_URL || "http://localhost:3000",
-          process.env.BACKEND_URL || "https://milkpopcalendar-production.up.railway.app",
-          "https://milkpopcalendar-production.up.railway.app",
-          "https://*.google.com",
+          FRONTEND_URL,
+          process.env.BACKEND_URL || "",
           "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+          "https://adservice.google.com",
+          "https://adservice.google.co.jp",
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
-        ],
+        ].filter(Boolean),
         imgSrc: [
           "'self'",
+          "data:",
           "https://*.googleusercontent.com",
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
           "https://*.googletagservices.com",
-          "https://ep1.adtrafficquality.google", // ★ 追加
-          "https://ep2.adtrafficquality.google", // ★ 念のため許可
-          "data:",
+          // SODAR / traffic quality
+          "https://*.adtrafficquality.google",
+          "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
         ],
       },
     },
@@ -95,8 +101,10 @@ app.use(cookieParser());
 // ===== CORS =====
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: FRONTEND_URL,
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
@@ -105,9 +113,8 @@ app.get("/healthz", (_req, res) =>
   res.status(200).json({ ok: true, env: NODE_ENV })
 );
 
-// ===== /ads.txt を配信（AdSense 要求に対応）=====
+// ===== /ads.txt を配信（AdSense 推奨）=====
 app.get("/ads.txt", (_req, res) => {
-  // 必要に応じて環境変数化してもOK
   res
     .type("text/plain")
     .send("google.com, ca-pub-1851621870746917, DIRECT, f08c47fec0942fa0\n");
@@ -169,19 +176,19 @@ initDB();
 
 // ===== Socket.IO =====
 io.on("connection", (socket) => {
-  console.log("🟢 A user connected:", socket.id);
+  console.log("🟢 connected:", socket.id);
   socket.on("joinSchedule", (token) => {
     if (typeof token === "string" && token.length > 0) socket.join(token);
   });
   socket.on("disconnect", (reason) => {
-    console.log("🔴 A user disconnected:", socket.id, reason);
+    console.log("🔴 disconnected:", socket.id, reason);
   });
 });
 
 // ===== 認証（/auth は別ファイルで Cookie 発行）=====
 app.use("/auth", authRouter);
 
-// ===== 認証ミドルウェア =====
+// ===== 認証ミドルウェア（Cookie or Bearer どちらでもOK）=====
 function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
@@ -190,7 +197,7 @@ function authRequired(req, res, next) {
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload;
+    req.user = payload; // { userId, discord_id, username, iat, exp }
     return next();
   } catch (err) {
     console.error("❌ authRequired failed:", err.message);
@@ -202,12 +209,13 @@ app.get("/api/me", authRequired, (req, res) => {
   res.json({ user: req.user });
 });
 
-// ==== 共通: timeType 日本語化 ====
+// ==== 共通: timeType 日本語ラベル ====
+// ※ フロント実装に合わせて morning/afternoon/custom/allday をサポート
 function timeLabel(t, s, e) {
   if (t === "allday") return "終日";
-  if (t === "day") return "午前";
-  if (t === "night") return "午後";
-  if (t === "custom") return `${s}〜${e}`;
+  if (t === "morning") return "午前";
+  if (t === "afternoon") return "午後";
+  if (t === "custom") return `${s ?? ""}〜${e ?? ""}`;
   return t;
 }
 
@@ -236,7 +244,10 @@ app.post("/api/schedules", async (req, res) => {
       [uuidv4(), title, JSON.stringify(normalizedDates), JSON.stringify({}), shareToken]
     );
 
-    res.json({ id: result.rows[0].id, share_token: result.rows[0].share_token });
+    res.json({
+      id: result.rows[0].id,
+      share_token: result.rows[0].share_token,
+    });
   } catch (err) {
     console.error("❌ schedules作成失敗:", err);
     res.status(500).json({ error: "作成失敗" });
@@ -268,7 +279,7 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
 
 // ===== personal_schedules API =====
 
-// 作成（作成時に schedules にコピー → 共有リンク自動発行）
+// 作成（作成時に schedules にもコピー → 共有リンク自動発行）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -286,17 +297,20 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     const shareId = uuidv4();
     const shareToken = uuidv4();
 
+    // schedules へコピー
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
        VALUES ($1,$2,$3,$4,$5)`,
       [shareId, title, JSON.stringify(normalizedDates), JSON.stringify(options || {}), shareToken]
     );
+
+    // personal_schedules を作成
     await pool.query(
       `INSERT INTO personal_schedules (id,user_id,title,memo,dates,options,share_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         personalId,
-        req.user.discord_id,
+        req.user.discord_id, // Cookie/JWT の discord_id
         title,
         memo || "",
         JSON.stringify(normalizedDates),
@@ -308,10 +322,10 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     res.json({
       id: personalId,
       title,
-      memo,
+      memo: memo || "",
       dates: normalizedDates,
       options: options || {},
-      share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
+      share_url: `${FRONTEND_URL}/share/${shareToken}`,
     });
   } catch (err) {
     console.error("❌ personal_schedules 作成失敗:", err);
@@ -333,9 +347,7 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
     const rows = result.rows.map((r) => ({
       ...r,
       dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
-      share_url: r.share_token
-        ? `${process.env.FRONTEND_URL}/share/${r.share_token}`
-        : null,
+      share_url: r.share_token ? `${FRONTEND_URL}/share/${r.share_token}` : null,
     }));
     res.json(rows);
   } catch (err) {
@@ -368,7 +380,7 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
         req.user.discord_id,
       ]
     );
-    res.json({ id, title, memo, dates: normalizedDates, options: options || {} });
+    res.json({ id, title, memo: memo || "", dates: normalizedDates, options: options || {} });
   } catch (err) {
     console.error("❌ personal_schedules 更新失敗:", err);
     res.status(500).json({ error: "更新失敗" });
