@@ -1,10 +1,4 @@
-// backend/index.js （完全統合版 v13a 前半）
-// schedules + personal_schedules API 完備
-// ✅ 個人スケジュールは作成時に schedules にコピー → share_id を保存（共有リンク自動発行）
-// ✅ /api/personal-events 一覧で share_url を常に返す
-// ✅ /api/personal-events/:id/share は既存リンクがあればそれを返す（冪等）
-// ✅ helmet の CSP に Railway 本番API & Google Ads 関連を追加
-
+// backend/index.js （完全統合版 v13c）
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -55,6 +49,7 @@ app.use(
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
           "https://*.googletagservices.com",
+          "https://ep2.adtrafficquality.google", // ★ 追加：Ads 側フレーム
         ],
         connectSrc: [
           "'self'",
@@ -92,12 +87,12 @@ app.use(
   })
 );
 
-// ===== ヘルスチェック =====
+// ヘルスチェック
 app.get("/healthz", (_req, res) =>
   res.status(200).json({ ok: true, env: NODE_ENV })
 );
 
-// ===== 軽いレートリミット =====
+// 軽いレートリミット
 app.use(
   "/api",
   rateLimit({
@@ -173,9 +168,11 @@ function authRequired(req, res, next) {
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("🔑 JWT payload:", payload);
     req.user = payload;
     return next();
   } catch (err) {
+    console.error("❌ authRequired failed:", err.message);
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
@@ -194,54 +191,72 @@ function timeLabel(t, s, e) {
 }
 
 // ===== schedules API =====
+
+// 新規作成（共有用）
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates } = req.body;
+
     if (!title || !Array.isArray(dates) || dates.length === 0) {
       return res.status(400).json({ error: "タイトルと日程が必須です" });
     }
+
     const normalizedDates = dates.map((d) => ({
       date: d.date,
       timeType: d.timeType || "allday",
       startTime: d.startTime || "09:00",
       endTime: d.endTime || "18:00",
     }));
+
     const shareToken = uuidv4();
+
     const result = await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1,$2,$3,$4,$5)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id, share_token`,
       [uuidv4(), title, JSON.stringify(normalizedDates), JSON.stringify({}), shareToken]
     );
+
     res.json({ id: result.rows[0].id, share_token: result.rows[0].share_token });
   } catch (err) {
+    console.error("❌ schedules作成失敗:", err);
     res.status(500).json({ error: "作成失敗" });
   }
 });
 
+// 一覧取得（共有ページ用）: share_token で1件
 app.get("/api/schedules/:shareToken", async (req, res) => {
   try {
     const { shareToken } = req.params;
     const result = await pool.query(
-      `SELECT * FROM schedules WHERE share_token=$1 LIMIT 1`,
+      `SELECT * FROM schedules WHERE share_token = $1 LIMIT 1`,
       [shareToken]
     );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "スケジュールが見つかりません" });
     }
+
     const schedule = result.rows[0];
     const dates = schedule.dates.map((d) => ({
       ...d,
       label: timeLabel(d.timeType, d.startTime, d.endTime),
     }));
-    res.json({ id: schedule.id, title: schedule.title, dates });
+
+    res.json({
+      id: schedule.id,
+      title: schedule.title,
+      dates,
+    });
   } catch (err) {
+    console.error("❌ schedules取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
   }
 });
+
 // ===== personal_schedules API =====
 
-// 個人スケジュール作成（作成時に schedules にコピー → 共有リンク自動発行）
+// 作成（作成時に schedules にコピー → 共有リンク自動発行）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -260,17 +275,23 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     const shareId = uuidv4();
     const shareToken = uuidv4();
 
-    // schedules にコピー
+    // schedules にコピー（共有用）
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [shareId, title, JSON.stringify(normalizedDates), JSON.stringify(options || {}), shareToken]
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        shareId,
+        title,
+        JSON.stringify(normalizedDates),
+        JSON.stringify(options || {}),
+        shareToken,
+      ]
     );
 
-    // personal_schedules へ保存
+    // personal_schedules へ保存（share_id 紐付け）
     await pool.query(
-      `INSERT INTO personal_schedules (id,user_id,title,memo,dates,options,share_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      `INSERT INTO personal_schedules (id, user_id, title, memo, dates, options, share_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         personalId,
         req.user.discord_id,
@@ -296,21 +317,27 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 一覧取得（share_url も返す）
+// 一覧取得（常に share_url を含める）
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT ps.*, s.share_token
        FROM personal_schedules ps
        LEFT JOIN schedules s ON ps.share_id = s.id
-       WHERE ps.user_id=$1
+       WHERE ps.user_id = $1
        ORDER BY ps.created_at DESC`,
       [req.user.discord_id]
     );
 
     const rows = result.rows.map((r) => ({
-      ...r,
+      id: r.id,
+      user_id: r.user_id,
+      title: r.title,
+      memo: r.memo,
       dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
+      options: r.options,
+      share_id: r.share_id,
+      created_at: r.created_at,
       share_url: r.share_token
         ? `${process.env.FRONTEND_URL}/share/${r.share_token}`
         : null,
@@ -323,12 +350,11 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 共有リンク発行（冪等：既存があれば再利用）
+// 共有リンク発行（冪等）
 app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 個人スケジュール取得
     const result = await pool.query(
       `SELECT * FROM personal_schedules WHERE id=$1 AND user_id=$2`,
       [id, req.user.discord_id]
@@ -338,9 +364,11 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
     }
     const personal = result.rows[0];
 
-    // 既存の共有リンクがあれば返す
     if (personal.share_id) {
-      const q = await pool.query(`SELECT share_token FROM schedules WHERE id=$1`, [personal.share_id]);
+      const q = await pool.query(
+        `SELECT share_token FROM schedules WHERE id=$1`,
+        [personal.share_id]
+      );
       if (q.rows.length > 0) {
         return res.json({
           share_id: personal.share_id,
@@ -349,17 +377,18 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
       }
     }
 
-    // なければ新規作成
     const shareId = uuidv4();
     const shareToken = uuidv4();
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
-       VALUES ($1,$2,$3,$4,$5)`,
+       VALUES ($1, $2, $3, $4, $5)`,
       [
         shareId,
         personal.title,
         JSON.stringify(
-          Array.isArray(personal.dates) ? personal.dates : JSON.parse(personal.dates || "[]")
+          Array.isArray(personal.dates)
+            ? personal.dates
+            : JSON.parse(personal.dates || "[]")
         ),
         JSON.stringify(personal.options || {}),
         shareToken,
@@ -375,7 +404,7 @@ app.post("/api/personal-events/:id/share", authRequired, async (req, res) => {
       share_url: `${process.env.FRONTEND_URL}/share/${shareToken}`,
     });
   } catch (err) {
-    console.error("❌ personal_schedules 共有発行失敗:", err);
+    console.error("❌ personal_schedules 共有失敗:", err);
     res.status(500).json({ error: "共有リンク発行失敗" });
   }
 });
@@ -385,7 +414,6 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, memo, dates, options } = req.body;
-
     const normalizedDates = (dates || []).map((d) => ({
       date: d.date,
       timeType: d.timeType || "allday",
@@ -422,11 +450,11 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
       `DELETE FROM personal_schedules WHERE id=$1 AND user_id=$2`,
       [id, req.user.discord_id]
     );
-    res.json({ success: true });
   } catch (err) {
     console.error("❌ personal_schedules 削除失敗:", err);
-    res.status(500).json({ error: "削除失敗" });
+    return res.status(500).json({ error: "削除失敗" });
   }
+  res.json({ success: true });
 });
 
 // ===== Reactビルド配信 =====
