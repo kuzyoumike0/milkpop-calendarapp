@@ -1,28 +1,30 @@
 // frontend/src/pages/AuthSuccess.jsx
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const AuthSuccess = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // URL から token を取得
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-
-    if (token) {
-      // localStorage に保存
-      localStorage.setItem("jwt", token);
-      console.log("✅ JWT保存:", token);
-
-      // ✅ 個人ページにリダイレクト
-      navigate("/personal");
-    } else {
-      alert("ログインに失敗しました");
-      navigate("/");
-    }
-  }, [location, navigate]);
+    // Cookie が既にセットされているので token の確認は不要
+    // /api/me を叩いて確認してもよい
+    const checkLogin = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (res.ok) {
+          console.log("✅ ログイン成功");
+          navigate("/personal");
+        } else {
+          console.warn("❌ /api/me 失敗");
+          navigate("/");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        navigate("/");
+      }
+    };
+    checkLogin();
+  }, [navigate]);
 
   return <div>ログイン中...</div>;
 };
