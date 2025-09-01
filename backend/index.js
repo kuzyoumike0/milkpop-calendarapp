@@ -1,8 +1,9 @@
 // backend/index.js
-// ===== 完全統合版 v14 =====
+// ===== 完全統合版 v15 (STEP1: CSP + /ads.txt) =====
 // - schedules + personal_schedules API 完備
-// - Discord OAuth + JWT Cookie 認証
-// - Helmet CSP Google Ads + Railway API 対応
+// - Discord OAuth + JWT Cookie 認証（/auth は別ファイル）
+// - Helmet CSP: Google Ads / adtrafficquality ep1/ep2 画像・フレーム許可
+// - /ads.txt 配信
 // - Socket.IO サポート
 
 import express from "express";
@@ -32,11 +33,14 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 // ===== 基本設定 =====
 app.set("trust proxy", 1);
+
+// --- Helmet CSP（Google Ads / SODAR 画像のため ep1/ep2 を imgSrc に追加）---
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -73,8 +77,8 @@ app.use(
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
           "https://*.googletagservices.com",
-          "https://ep1.adtrafficquality.google",
-          "https://ep2.adtrafficquality.google",
+          "https://ep1.adtrafficquality.google", // ★ 追加
+          "https://ep2.adtrafficquality.google", // ★ 念のため許可
           "data:",
         ],
       },
@@ -82,6 +86,7 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+
 app.use(compression());
 app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
@@ -95,12 +100,20 @@ app.use(
   })
 );
 
-// ヘルスチェック
+// ===== ヘルスチェック =====
 app.get("/healthz", (_req, res) =>
   res.status(200).json({ ok: true, env: NODE_ENV })
 );
 
-// 軽いレートリミット
+// ===== /ads.txt を配信（AdSense 要求に対応）=====
+app.get("/ads.txt", (_req, res) => {
+  // 必要に応じて環境変数化してもOK
+  res
+    .type("text/plain")
+    .send("google.com, ca-pub-1851621870746917, DIRECT, f08c47fec0942fa0\n");
+});
+
+// ===== 軽いレートリミット =====
 app.use(
   "/api",
   rateLimit({
@@ -165,9 +178,10 @@ io.on("connection", (socket) => {
   });
 });
 
-// ===== 認証 =====
+// ===== 認証（/auth は別ファイルで Cookie 発行）=====
 app.use("/auth", authRouter);
 
+// ===== 認証ミドルウェア =====
 function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
@@ -199,7 +213,7 @@ function timeLabel(t, s, e) {
 
 // ===== schedules API =====
 
-// 新規作成
+// 新規作成（共有用）
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates } = req.body;
@@ -229,7 +243,7 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// 一覧取得（共有ページ用）
+// 共有取得（share_token 指定）
 app.get("/api/schedules/:shareToken", async (req, res) => {
   try {
     const { shareToken } = req.params;
@@ -254,7 +268,7 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
 
 // ===== personal_schedules API =====
 
-// 個人スケジュール作成
+// 作成（作成時に schedules にコピー → 共有リンク自動発行）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -305,7 +319,7 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 一覧取得
+// 一覧取得（share_url を含める）
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const result = await pool.query(
@@ -394,10 +408,12 @@ app.use(
   })
 );
 
+// 未定義APIガード
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
 
+// SPA ルーティング
 app.get("*", (_req, res) => {
   if (!hasIndex) {
     return res
