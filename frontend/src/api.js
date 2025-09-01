@@ -1,75 +1,69 @@
 // frontend/src/api.js
-// ✅ 同一オリジン配信（Railway同一プロジェクト）を想定し、相対パスで叩く
-//    どうしても別ドメインのAPIにしたい場合のみ REACT_APP_API_URL を設定してください。
-const API_URL = (process.env.REACT_APP_API_URL || "").trim(); // 例: "" → 相対 /api
+// 共通APIラッパ。JWTを必ず付けて401時の扱いを統一。
 
-function url(path) {
-  if (!API_URL) return path; // 相対
-  return `${API_URL}${path}`;
+const BASE_URL = import.meta?.env?.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || "";
+
+function getToken() {
+  try {
+    return localStorage.getItem("jwt") || "";
+  } catch {
+    return "";
+  }
 }
 
-// ---- schedules（共有用） ----
-export async function fetchSharedSchedule(shareToken) {
-  const res = await fetch(url(`/api/schedules/${shareToken}`), { credentials: "include" });
-  if (!res.ok) throw new Error("共有スケジュール取得エラー");
-  return res.json();
-}
+async function request(path, { method = "GET", body, headers = {} } = {}) {
+  const token = getToken();
+  const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
-export async function createSharedSchedule(data) {
-  const res = await fetch(url(`/api/schedules`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
+  const res = await fetch(url, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: "include", // Cookie運用していなくてもCORS安定化に寄与
   });
-  if (!res.ok) throw new Error("共有スケジュール作成エラー");
-  return res.json();
+
+  if (res.status === 401) {
+    // 統一的にエラーへ
+    const text = await res.text().catch(() => "");
+    const msg = text || "認証エラー（401）。ログインが必要か、トークン期限切れです。";
+    const error = new Error(msg);
+    error.status = 401;
+    throw error;
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const error = new Error(text || `APIエラー: ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
+
+  // JSON でないことも想定して分岐
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return await res.json();
+  }
+  return await res.text();
 }
 
-// ---- personal_schedules（個人用） ----
-export async function createPersonalEvent(data) {
-  const res = await fetch(url(`/api/personal-events`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("個人スケジュール作成エラー");
-  return res.json();
+// ====== アプリ固有API ======
+
+export async function getPersonalEvents() {
+  return request("/api/personal-events");
 }
 
-export async function listPersonalEvents() {
-  const res = await fetch(url(`/api/personal-events`), { credentials: "include" });
-  if (!res.ok) throw new Error("個人スケジュール取得エラー");
-  return res.json();
+export async function createPersonalEvent(payload) {
+  return request("/api/personal-events", { method: "POST", body: payload });
 }
 
-export async function sharePersonalEvent(id) {
-  const res = await fetch(url(`/api/personal-events/${id}/share`), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("個人スケジュール共有リンク発行エラー");
-  return res.json();
-}
-
-export async function updatePersonalEvent(id, data) {
-  const res = await fetch(url(`/api/personal-events/${id}`), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("個人スケジュール更新エラー");
-  return res.json();
+export async function updatePersonalEvent(id, payload) {
+  return request(`/api/personal-events/${id}`, { method: "PUT", body: payload });
 }
 
 export async function deletePersonalEvent(id) {
-  const res = await fetch(url(`/api/personal-events/${id}`), {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("個人スケジュール削除エラー");
-  return res.json();
+  return request(`/api/personal-events/${id}`, { method: "DELETE" });
 }
