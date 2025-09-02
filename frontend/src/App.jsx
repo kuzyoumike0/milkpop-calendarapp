@@ -9,7 +9,7 @@ import PersonalPage from "./components/PersonalPage";
 import PersonalSharePage from "./components/PersonalSharePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AuthSuccess from "./pages/AuthSuccess";
+import AuthSuccess from "./components/AuthSuccess";
 
 export default function App() {
   return (
