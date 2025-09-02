@@ -1,8 +1,9 @@
 // backend/index.js
-// ===== 完全統合版 v16 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
+// ===== 完全統合版 v17 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
 // - schedules + personal_schedules API 完備
 // - Discord OAuth + JWT Cookie/Authorization 認証（/auth は別ファイル）
 // - Helmet CSP: Google Ads / adtrafficquality (ep1/ep2) / adservice / tpc を許可
+//   ※ sodar2.js ブロック対策として scriptSrcElem を追加
 // - /ads.txt 配信
 // - Socket.IO サポート
 // - CORS は FRONTEND_URL を優先
@@ -48,12 +49,24 @@ app.use(
       useDefaults: true,
       directives: {
         defaultSrc: ["'self'"],
+        // ▼ 一般的なスクリプト取得元
         scriptSrc: [
           "'self'",
-          // AdSense / GPT
           "https://pagead2.googlesyndication.com",
           "https://www.googletagservices.com",
           "https://securepubads.g.doubleclick.net",
+          // SODAR（自動広告のレイアウト調整用）
+          "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
+        ],
+        // ▼ script タグ由来の読み込みを明示許可（sodar2.js 対策）
+        scriptSrcElem: [
+          "'self'",
+          "https://pagead2.googlesyndication.com",
+          "https://www.googletagservices.com",
+          "https://securepubads.g.doubleclick.net",
+          "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
         ],
         frameSrc: [
           "'self'",
@@ -82,7 +95,7 @@ app.use(
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
           "https://*.googletagservices.com",
-          // SODAR / traffic quality
+          // SODAR / traffic quality（画像ビーコン等）
           "https://*.adtrafficquality.google",
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
