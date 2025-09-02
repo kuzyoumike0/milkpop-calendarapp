@@ -1,29 +1,28 @@
-// frontend/src/components/ShareLinkPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
-export default function ShareLinkPage() {
+export default function PersonalSharePage() {
   const { token } = useParams();
   const [loading, setLoading] = useState(true);
   const [schedule, setSchedule] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchSchedule = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/schedules/${token}`);
+        const res = await fetch(`/api/personal-events/share/${token}`);
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         setSchedule(data);
       } catch (e) {
-        console.error("共有リンク取得エラー:", e);
-        setError("共有スケジュールの取得に失敗しました。");
+        console.error("共有個人日程取得エラー:", e);
+        setError("この共有リンクは無効です。");
       } finally {
         setLoading(false);
       }
     };
-    fetchSchedule();
+    fetchData();
   }, [token]);
 
   const timeLabel = (t, s, e) =>
@@ -46,28 +45,23 @@ export default function ShareLinkPage() {
         </nav>
       </header>
 
-      <h1 className="page-title">共有スケジュール</h1>
+      <h1 className="page-title">共有された個人日程</h1>
 
       {loading ? (
         <div className="schedule-card">読み込み中...</div>
       ) : error ? (
         <div className="error">{error}</div>
       ) : !schedule ? (
-        <div className="schedule-card">スケジュールが見つかりません</div>
+        <div className="schedule-card">データが見つかりません</div>
       ) : (
         <section className="registered-list">
           <h2 className="schedule-header">{schedule.title}</h2>
-          {schedule.dates.length === 0 ? (
-            <div className="schedule-card">この共有にはまだ日程が登録されていません</div>
-          ) : (
-            schedule.dates.map((d, idx) => (
-              <div className="schedule-card" key={idx}>
-                <div className="schedule-header">
-                  {d.date} / {timeLabel(d.timeType, d.startTime, d.endTime)}
-                </div>
-              </div>
-            ))
-          )}
+          {schedule.memo && <p>{schedule.memo}</p>}
+          {schedule.dates.map((d, idx) => (
+            <div className="schedule-card" key={idx}>
+              {d.date} / {timeLabel(d.timeType, d.startTime, d.endTime)}
+            </div>
+          ))}
         </section>
       )}
     </div>
