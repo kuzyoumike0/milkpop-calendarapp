@@ -1,5 +1,5 @@
 // backend/index.js
-// ===== 完全統合版 v17 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
+// ===== 完全統合版 v18 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
 // - schedules + personal_schedules API 完備
 // - Discord OAuth + JWT Cookie/Authorization 認証（/auth は別ファイル）
 // - Helmet CSP: Google Ads / adtrafficquality (ep1/ep2) / adservice / tpc を許可
@@ -7,6 +7,7 @@
 // - /ads.txt 配信
 // - Socket.IO サポート
 // - CORS は FRONTEND_URL を優先
+// - ★ share_url 生成で FRONTEND_URL 未設定時は req 由来の URL を使用（確実にリンク表示）
 
 import express from "express";
 import cors from "cors";
@@ -38,7 +39,18 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const FRONTEND_URL_ENV = process.env.FRONTEND_URL || "http://localhost:3000";
+
+// ★ 共通フォールバック: 常に有効なベースURLを作る
+function resolveBaseUrl(req) {
+  // 1) 環境変数（優先）
+  const envUrl = FRONTEND_URL_ENV;
+  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/+$/, "");
+  // 2) リクエスト由来（同一オリジン配信やリバプロ下でも機能）
+  const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"] || req.get("host");
+  return `${proto}://${host}`;
+}
 
 app.set("trust proxy", 1);
 
@@ -49,17 +61,14 @@ app.use(
       useDefaults: true,
       directives: {
         defaultSrc: ["'self'"],
-        // ▼ 一般的なスクリプト取得元
         scriptSrc: [
           "'self'",
           "https://pagead2.googlesyndication.com",
           "https://www.googletagservices.com",
           "https://securepubads.g.doubleclick.net",
-          // SODAR（自動広告のレイアウト調整用）
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
-        // ▼ script タグ由来の読み込みを明示許可（sodar2.js 対策）
         scriptSrcElem: [
           "'self'",
           "https://pagead2.googlesyndication.com",
@@ -79,7 +88,7 @@ app.use(
         ],
         connectSrc: [
           "'self'",
-          FRONTEND_URL,
+          FRONTEND_URL_ENV,
           process.env.BACKEND_URL || "",
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
@@ -95,7 +104,6 @@ app.use(
           "https://*.googlesyndication.com",
           "https://googleads.g.doubleclick.net",
           "https://*.googletagservices.com",
-          // SODAR / traffic quality（画像ビーコン等）
           "https://*.adtrafficquality.google",
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
@@ -114,7 +122,7 @@ app.use(cookieParser());
 // ===== CORS =====
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: FRONTEND_URL_ENV,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -223,7 +231,6 @@ app.get("/api/me", authRequired, (req, res) => {
 });
 
 // ==== 共通: timeType 日本語ラベル ====
-// ※ フロント実装に合わせて morning/afternoon/custom/allday をサポート
 function timeLabel(t, s, e) {
   if (t === "allday") return "終日";
   if (t === "morning") return "午前";
@@ -332,13 +339,15 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
       ]
     );
 
+    // ★ ここで必ずフルURLを返す（FRONTEND_URL 未設定でもOK）
+    const baseUrl = resolveBaseUrl(req);
     res.json({
       id: personalId,
       title,
       memo: memo || "",
       dates: normalizedDates,
       options: options || {},
-      share_url: `${FRONTEND_URL}/share/${shareToken}`,
+      share_url: `${baseUrl}/share/${shareToken}`,
     });
   } catch (err) {
     console.error("❌ personal_schedules 作成失敗:", err);
@@ -357,10 +366,13 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
        ORDER BY ps.created_at DESC`,
       [req.user.discord_id]
     );
+
+    const baseUrl = resolveBaseUrl(req);
+
     const rows = result.rows.map((r) => ({
       ...r,
       dates: Array.isArray(r.dates) ? r.dates : JSON.parse(r.dates || "[]"),
-      share_url: r.share_token ? `${FRONTEND_URL}/share/${r.share_token}` : null,
+      share_url: r.share_token ? `${baseUrl}/share/${r.share_token}` : null,
     }));
     res.json(rows);
   } catch (err) {
