@@ -32,8 +32,9 @@ export default function PersonalPage() {
   const [dateOptions, setDateOptions] = useState({}); // {dateStr: {timeType, startTime, endTime}}
   const [schedules, setSchedules] = useState([]);
 
-  // 共有リンク一覧（/api/personal-events の share_url or /api/schedules/create で増える）
+  // 共有リンク一覧（personal-events と schedules/mine をマージ）
   const [shareLinks, setShareLinks] = useState([]);
+  const [loadingShares, setLoadingShares] = useState(false);
 
   // 読み込み/エラー表示
   const [loading, setLoading] = useState(false);
@@ -241,21 +242,61 @@ export default function PersonalPage() {
     setRangeStart(null);
   };
 
-  // ===== 共有リンク（/api/personal-events を参照） =====
+  // ===== 共有リンク一覧の取得（personal + schedules/mine をマージ）=====
   const loadShareLinks = async () => {
+    const base = window.location.origin;
     try {
-      setLoading(true);
+      setLoadingShares(true);
       setErrorMsg("");
-      const list = await listPersonalEvents();
-      const shares = (list || [])
-        .filter((it) => !!it.share_url)
-        .map((it) => ({
-          id: it.id,
-          title: it.title || "個人スケジュール",
-          url: it.share_url,
-          createdAt: it.created_at,
-        }));
-      setShareLinks(shares);
+
+      // 1) 個人イベント（旧来の share_url）
+      let personal = [];
+      try {
+        const list = await listPersonalEvents();
+        personal = (list || [])
+          .filter((it) => !!it.share_url)
+          .map((it) => ({
+            id: it.id,
+            title: it.title || "個人スケジュール",
+            url: it.share_url,
+            createdAt: it.created_at,
+            source: "personal",
+          }));
+      } catch (e) {
+        // 401等は上位でまとめて表示
+        console.warn("personal-events fetch warn:", e);
+      }
+
+      // 2) 空日程でも作れる共有（/api/schedules/create → /api/schedules/mine）
+      let mine = [];
+      try {
+        const res = await fetch("/api/schedules/mine", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const rows = await res.json();
+          mine = (rows || []).map((r) => ({
+            id: r.id,
+            title: r.title || "共有スケジュール",
+            url: `${base}/share/${r.share_token}`,
+            createdAt: r.created_at,
+            source: "mine",
+          }));
+        }
+      } catch (e) {
+        console.warn("schedules/mine fetch warn:", e);
+      }
+
+      // 3) マージ（url をキーに重複排除）
+      const map = new Map();
+      [...personal, ...mine].forEach((x) => {
+        if (!map.has(x.url)) map.set(x.url, x);
+      });
+      const merged = Array.from(map.values()).sort(
+        (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+      );
+
+      setShareLinks(merged);
     } catch (e) {
       console.error("共有リンク取得エラー:", e);
       if (e?.status === 401) {
@@ -264,7 +305,7 @@ export default function PersonalPage() {
         setErrorMsg("共有リンクの取得に失敗しました。");
       }
     } finally {
-      setLoading(false);
+      setLoadingShares(false);
     }
   };
 
@@ -278,7 +319,6 @@ export default function PersonalPage() {
       const res = await fetch("/api/schedules/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Cookie(JWT) 認証を利用 — 同一オリジンを想定。別オリジンの場合は CORS+credentials を整備。
         credentials: "include",
         body: JSON.stringify({
           title: title.trim() || "未設定スケジュール",
@@ -296,9 +336,9 @@ export default function PersonalPage() {
       const url = `${base}/share/${data.share_token}`;
       setShareMsg(`共有リンクを発行しました: ${url}`);
 
-      // 個人イベント一覧には出ない可能性があるため、明示的に即時画面反映しておく
+      // 即反映
       setShareLinks((prev) => [
-        { id: data.id, title: title.trim() || "未設定スケジュール", url, createdAt: new Date().toISOString() },
+        { id: data.id, title: title.trim() || "未設定スケジュール", url, createdAt: new Date().toISOString(), source: "mine" },
         ...prev,
       ]);
     } catch (e) {
@@ -566,14 +606,18 @@ export default function PersonalPage() {
         )}
       </section>
 
-      {/* 共有リンク一覧 */}
+      {/* 共有リンク一覧（読み込み中と空の表示を分岐） */}
       <section className="registered-list">
         <h2 className="schedule-header">共有リンク一覧</h2>
-        {shareLinks.length === 0 ? (
-          <div className="schedule-card">共有リンクを準備中...</div>
+        {loadingShares ? (
+          <div className="schedule-card">共有リンクを読み込み中...</div>
+        ) : shareLinks.length === 0 ? (
+          <div className="schedule-card">
+            まだ共有リンクがありません。「共有リンクを発行（0件でも可）」を押してください。
+          </div>
         ) : (
           shareLinks.map((l) => (
-            <div className="schedule-card" key={l.id}>
+            <div className="schedule-card" key={l.url}>
               <div className="schedule-header">{l.title}</div>
               <div>
                 <a
@@ -588,6 +632,7 @@ export default function PersonalPage() {
               {l.createdAt && (
                 <div style={{ opacity: 0.8, marginTop: 6 }}>
                   発行日時: {new Date(l.createdAt).toLocaleString()}
+                  {l.source ? `（${l.source}）` : ""}
                 </div>
               )}
             </div>
