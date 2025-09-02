@@ -30,11 +30,15 @@ export default function PersonalPage() {
   const [rangeStart, setRangeStart] = useState(null);
   const [selectedDates, setSelectedDates] = useState(new Set());
   const [dateOptions, setDateOptions] = useState({}); // {dateStr: {timeType, startTime, endTime}}
-  const [schedules, setSchedules] = useState([]);
+  const [schedules, setSchedules] = useState([]); // 画面内で直近登録したものの即時反映用
 
   // 共有リンク一覧（personal-events と schedules/mine をマージ）
   const [shareLinks, setShareLinks] = useState([]);
   const [loadingShares, setLoadingShares] = useState(false);
+
+  // 自分の保存済み日程（サーバ由来の正式データ）
+  const [myEvents, setMyEvents] = useState([]); // {id,title,memo,date,timeType,startTime,endTime,createdAt}[]
+  const [loadingMyEvents, setLoadingMyEvents] = useState(false);
 
   // 読み込み/エラー表示
   const [loading, setLoading] = useState(false);
@@ -223,8 +227,8 @@ export default function PersonalPage() {
         options: {},
       });
 
-      // 再取得（share_url を含む）
-      await loadShareLinks();
+      // 再取得（share_url / myEvents を含む）
+      await Promise.all([loadShareLinks(), loadMyEvents()]);
     } catch (e) {
       console.error("個人スケジュール登録エラー:", e);
       if (e?.status === 401) {
@@ -263,16 +267,13 @@ export default function PersonalPage() {
             source: "personal",
           }));
       } catch (e) {
-        // 401等は上位でまとめて表示
         console.warn("personal-events fetch warn:", e);
       }
 
       // 2) 空日程でも作れる共有（/api/schedules/create → /api/schedules/mine）
       let mine = [];
       try {
-        const res = await fetch("/api/schedules/mine", {
-          credentials: "include",
-        });
+        const res = await fetch("/api/schedules/mine", { credentials: "include" });
         if (res.ok) {
           const rows = await res.json();
           mine = (rows || []).map((r) => ({
@@ -309,6 +310,40 @@ export default function PersonalPage() {
     }
   };
 
+  // ===== 自分の保存済み日程を取得（表示用） =====
+  const loadMyEvents = async () => {
+    try {
+      setLoadingMyEvents(true);
+      setErrorMsg("");
+      const list = await listPersonalEvents(); // /api/personal-events
+      // フラット化して日付順に並べる
+      const flattened = (list || []).flatMap((p) => {
+        const dates = Array.isArray(p.dates) ? p.dates : [];
+        return dates.map((d) => ({
+          id: `${p.id}-${d.date}`,
+          title: p.title || "個人スケジュール",
+          memo: p.memo || "",
+          date: d.date,
+          timeType: d.timeType || "allday",
+          startTime: d.startTime || null,
+          endTime: d.endTime || null,
+          createdAt: p.created_at,
+        }));
+      });
+      flattened.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      setMyEvents(flattened);
+    } catch (e) {
+      console.error("自分の日程取得エラー:", e);
+      if (e?.status === 401) {
+        setErrorMsg("認証エラー（401）。ログインし直すか、JWTトークンを再発行してください。");
+      } else {
+        setErrorMsg("自分の日程の取得に失敗しました。");
+      }
+    } finally {
+      setLoadingMyEvents(false);
+    }
+  };
+
   // ===== 共有リンクを「日程0件でも」発行（/api/schedules/create） =====
   const createEmptyShare = async () => {
     try {
@@ -338,7 +373,13 @@ export default function PersonalPage() {
 
       // 即反映
       setShareLinks((prev) => [
-        { id: data.id, title: title.trim() || "未設定スケジュール", url, createdAt: new Date().toISOString(), source: "mine" },
+        {
+          id: data.id,
+          title: title.trim() || "未設定スケジュール",
+          url,
+          createdAt: new Date().toISOString(),
+          source: "mine",
+        },
         ...prev,
       ]);
     } catch (e) {
@@ -350,7 +391,8 @@ export default function PersonalPage() {
   };
 
   useEffect(() => {
-    loadShareLinks();
+    // 初回：共有リンク & 自分の日程 両方ロード
+    Promise.all([loadShareLinks(), loadMyEvents()]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -586,9 +628,9 @@ export default function PersonalPage() {
         </aside>
       </div>
 
-      {/* 登録済み予定（ローカル表示） */}
+      {/* 登録済み予定（ローカル即時反映の簡易表示） */}
       <section className="registered-list">
-        <h2 className="schedule-header">登録済みスケジュール</h2>
+        <h2 className="schedule-header">（この画面で直近追加した）登録済みスケジュール</h2>
         {schedules.length === 0 ? (
           <div className="schedule-card">まだ予定はありません</div>
         ) : (
@@ -601,6 +643,28 @@ export default function PersonalPage() {
                 <strong>{s.title}</strong>
               </div>
               {s.memo && <div style={{ marginTop: 4 }}>{s.memo}</div>}
+            </div>
+          ))
+        )}
+      </section>
+
+      {/* ★ 自分の保存済み日程（サーバ由来 / 常時閲覧） */}
+      <section className="registered-list">
+        <h2 className="schedule-header">あなたの個人日程（保存済み）</h2>
+        {loadingMyEvents ? (
+          <div className="schedule-card">読み込み中...</div>
+        ) : myEvents.length === 0 ? (
+          <div className="schedule-card">保存済みの日程はまだありません</div>
+        ) : (
+          myEvents.map((ev) => (
+            <div className="schedule-card" key={ev.id}>
+              <div className="schedule-header">
+                {ev.date} / {timeLabel(ev.timeType, ev.startTime, ev.endTime)}
+              </div>
+              <div>
+                <strong>{ev.title}</strong>
+              </div>
+              {ev.memo && <div style={{ marginTop: 4 }}>{ev.memo}</div>}
             </div>
           ))
         )}
