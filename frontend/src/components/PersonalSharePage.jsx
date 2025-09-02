@@ -1,8 +1,9 @@
 // frontend/src/components/PersonalSharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import "../personal.css";
+// ✅ 読み込み順を修正：common → personal
 import "../common.css";
+import "../personal.css";
 
 const fmtDate = (iso) => {
   try {
@@ -36,6 +37,7 @@ export default function PersonalSharePage() {
     let alive = true;
     (async () => {
       try {
+        // 共有閲覧API
         const res = await fetch(`/api/personal/view/${token}`);
         if (!res.ok) throw new Error("failed");
         const data = await res.json();
