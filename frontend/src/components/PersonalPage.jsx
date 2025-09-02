@@ -1,5 +1,6 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useMemo, useRef, useState } from "react";
+import "../personal.css"; // ★ これがないと personal.css が反映されません！
 
 /* ========================= ユーティリティ ========================= */
 const pad = (n) => String(n).padStart(2, "0");
@@ -88,7 +89,7 @@ export default function PersonalPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const [title, setTitle] = useState("");
-  const [memo, setMemo] = useState("");
+  the [memo, setMemo] = useState("");
 
   const [mode, setMode] = useState("single"); // single | range | multi
   const rangeStartRef = useRef(null);
@@ -457,9 +458,7 @@ export default function PersonalPage() {
             <div className="schedule-header">
               {rec.title}{" "}
               <span style={{ opacity: 0.7, fontWeight: 400, marginLeft: 8 }}>
-                （作成日時:{" "}
-                {new Date(rec.createdAt || Date.now()).toLocaleString("ja-JP")}
-                ）
+                （作成日時: {new Date(rec.createdAt || Date.now()).toLocaleString("ja-JP")}）
               </span>
             </div>
 
