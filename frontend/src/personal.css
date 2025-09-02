@@ -226,3 +226,10 @@
   50% { opacity: 0.4; }
   100% { opacity: 1; }
 }
+.personal-page.view-only .card-title {
+  color: #fff; /* 例えばタイトルを白に */
+}
+.personal-page.view-only .badge {
+  background: #004CA0; /* 閲覧用バッジだけ青に */
+  color: #fff;
+}
