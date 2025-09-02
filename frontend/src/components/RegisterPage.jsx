@@ -154,6 +154,14 @@ export default function RegisterPage() {
 
   /* ===================== 共有リンク発行 ===================== */
   const handleShare = async () => {
+    if (!title.trim()) {
+      alert("タイトルを入力してください");
+      return;
+    }
+    if (Object.keys(selectedDates).length === 0) {
+      alert("少なくとも1日を選択してください");
+      return;
+    }  
     const payload = {
       title,
       dates: Object.entries(selectedDates)
@@ -167,8 +175,22 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      setShareLink(`${window.location.origin}/share/${data.share_token}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error || "共有リンクの発行に失敗しました");
+        return;
+      }
+      // サーバが share_url を返してきたらそれを優先、なければ share_token で組み立て
+     const url =
+        data?.share_url ??
+        (data?.share_token ? `${window.location.origin}/share/${data.share_token}` : "");
+      if (!url) {
+        alert("共有リンクの生成に失敗しました（トークン未取得）");
+        console.error("unexpected response:", data);
+        return;
+      }
+      setShareLink(url);
+      
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -312,7 +334,13 @@ export default function RegisterPage() {
             ))
           )}
 
-          <button className="register-btn" onClick={handleShare}>共有リンク発行</button>
+          <button
+            className="register-btn"
+            onClick={handleShare}
+            disabled={!title.trim() || Object.keys(selectedDates).length === 0}
+          >
+            共有リンク発行
+          </button>
 
           {shareLink && (
             <div className="share-link-box">
