@@ -38,11 +38,13 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 const FRONTEND_URL_ENV = process.env.FRONTEND_URL || "http://localhost:3000";
 
 function resolveBaseUrl(req) {
-  const envUrl = FRONTEND_URL_ENV;
-  if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/+$/, "");
   const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  return `${proto}://${host}`;
+  const host  = req.headers["x-forwarded-host"] || req.get("host");
+  if (host) return `${proto}://${host}`;                 // ← リクエスト基準を最優先
+  if (FRONTEND_URL_ENV && /^https?:\/\//i.test(FRONTEND_URL_ENV)) {
+    return FRONTEND_URL_ENV.replace(/\/+$/, "");         // ← フォールバック
+  }
+  return "http://localhost:3000";
 }
 
 app.set("trust proxy", 1);
