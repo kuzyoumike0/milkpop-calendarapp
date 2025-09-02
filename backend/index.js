@@ -1,13 +1,8 @@
 // backend/index.js
-// ===== 完全統合版 v18 (CSP/ads.txt/認証/Socket.IO/個人スケジュール) =====
-// - schedules + personal_schedules API 完備
-// - Discord OAuth + JWT Cookie/Authorization 認証（/auth は別ファイル）
-// - Helmet CSP: Google Ads / adtrafficquality (ep1/ep2) / adservice / tpc を許可
-//   ※ sodar2.js ブロック対策として scriptSrcElem を追加
-// - /ads.txt 配信
-// - Socket.IO サポート
-// - CORS は FRONTEND_URL を優先
-// - ★ share_url 生成で FRONTEND_URL 未設定時は req 由来の URL を使用（確実にリンク表示）
+// ===== 完全統合版 v19 =====
+// - 変更点: Helmet CSP の frameSrc に ep1/ep2.adtrafficquality.google を追加
+//   （sodar2 の iframe ブロック解消）
+// - それ以外は v18 と同じ
 
 import express from "express";
 import cors from "cors";
@@ -41,12 +36,9 @@ const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
 const FRONTEND_URL_ENV = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// ★ 共通フォールバック: 常に有効なベースURLを作る
 function resolveBaseUrl(req) {
-  // 1) 環境変数（優先）
   const envUrl = FRONTEND_URL_ENV;
   if (envUrl && /^https?:\/\//i.test(envUrl)) return envUrl.replace(/\/+$/, "");
-  // 2) リクエスト由来（同一オリジン配信やリバプロ下でも機能）
   const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
   const host = req.headers["x-forwarded-host"] || req.get("host");
   return `${proto}://${host}`;
@@ -54,7 +46,7 @@ function resolveBaseUrl(req) {
 
 app.set("trust proxy", 1);
 
-// ===== Helmet（CSP を広告対応に最適化）=====
+// ===== Helmet（CSP）=====
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -77,6 +69,7 @@ app.use(
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
+        // ★ 追加: SODAR の iframe を許可
         frameSrc: [
           "'self'",
           "https://googleads.g.doubleclick.net",
@@ -85,6 +78,20 @@ app.use(
           "https://adservice.google.co.jp",
           "https://*.googlesyndication.com",
           "https://*.google.com",
+          "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
+        ],
+        // 互換のため child-src もそろえておく（古いUA用）
+        childSrc: [
+          "'self'",
+          "https://googleads.g.doubleclick.net",
+          "https://tpc.googlesyndication.com",
+          "https://adservice.google.com",
+          "https://adservice.google.co.jp",
+          "https://*.googlesyndication.com",
+          "https://*.google.com",
+          "https://ep1.adtrafficquality.google",
+          "https://ep2.adtrafficquality.google",
         ],
         connectSrc: [
           "'self'",
@@ -119,7 +126,6 @@ app.use(morgan(NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 
-// ===== CORS =====
 app.use(
   cors({
     origin: FRONTEND_URL_ENV,
@@ -129,19 +135,16 @@ app.use(
   })
 );
 
-// ===== ヘルスチェック =====
 app.get("/healthz", (_req, res) =>
   res.status(200).json({ ok: true, env: NODE_ENV })
 );
 
-// ===== /ads.txt を配信（AdSense 推奨）=====
 app.get("/ads.txt", (_req, res) => {
   res
     .type("text/plain")
     .send("google.com, ca-pub-1851621870746917, DIRECT, f08c47fec0942fa0\n");
 });
 
-// ===== 軽いレートリミット =====
 app.use(
   "/api",
   rateLimit({
@@ -152,7 +155,6 @@ app.use(
   })
 );
 
-// ===== DB初期化 =====
 const initDB = async () => {
   try {
     await pool.query(`
@@ -195,7 +197,6 @@ const initDB = async () => {
 };
 initDB();
 
-// ===== Socket.IO =====
 io.on("connection", (socket) => {
   console.log("🟢 connected:", socket.id);
   socket.on("joinSchedule", (token) => {
@@ -206,10 +207,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// ===== 認証（/auth は別ファイルで Cookie 発行）=====
 app.use("/auth", authRouter);
 
-// ===== 認証ミドルウェア（Cookie or Bearer どちらでもOK）=====
 function authRequired(req, res, next) {
   try {
     const header = req.get("Authorization") || "";
@@ -218,7 +217,7 @@ function authRequired(req, res, next) {
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = payload; // { userId, discord_id, username, iat, exp }
+    req.user = payload;
     return next();
   } catch (err) {
     console.error("❌ authRequired failed:", err.message);
@@ -230,7 +229,6 @@ app.get("/api/me", authRequired, (req, res) => {
   res.json({ user: req.user });
 });
 
-// ==== 共通: timeType 日本語ラベル ====
 function timeLabel(t, s, e) {
   if (t === "allday") return "終日";
   if (t === "morning") return "午前";
@@ -239,9 +237,6 @@ function timeLabel(t, s, e) {
   return t;
 }
 
-// ===== schedules API =====
-
-// 新規作成（共有用）
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates } = req.body;
@@ -274,7 +269,6 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
-// 共有取得（share_token 指定）
 app.get("/api/schedules/:shareToken", async (req, res) => {
   try {
     const { shareToken } = req.params;
@@ -297,9 +291,6 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
   }
 });
 
-// ===== personal_schedules API =====
-
-// 作成（作成時に schedules にもコピー → 共有リンク自動発行）
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -317,20 +308,18 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
     const shareId = uuidv4();
     const shareToken = uuidv4();
 
-    // schedules へコピー
     await pool.query(
       `INSERT INTO schedules (id, title, dates, options, share_token)
        VALUES ($1,$2,$3,$4,$5)`,
       [shareId, title, JSON.stringify(normalizedDates), JSON.stringify(options || {}), shareToken]
     );
 
-    // personal_schedules を作成
     await pool.query(
       `INSERT INTO personal_schedules (id,user_id,title,memo,dates,options,share_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         personalId,
-        req.user.discord_id, // Cookie/JWT の discord_id
+        req.user.discord_id,
         title,
         memo || "",
         JSON.stringify(normalizedDates),
@@ -339,7 +328,6 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
       ]
     );
 
-    // ★ ここで必ずフルURLを返す（FRONTEND_URL 未設定でもOK）
     const baseUrl = resolveBaseUrl(req);
     res.json({
       id: personalId,
@@ -355,7 +343,6 @@ app.post("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 一覧取得（share_url を含める）
 app.get("/api/personal-events", authRequired, async (req, res) => {
   try {
     const result = await pool.query(
@@ -381,7 +368,6 @@ app.get("/api/personal-events", authRequired, async (req, res) => {
   }
 });
 
-// 更新
 app.put("/api/personal-events/:id", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
@@ -412,7 +398,6 @@ app.put("/api/personal-events/:id", authRequired, async (req, res) => {
   }
 });
 
-// 削除
 app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   try {
     const { id } = req.params;
@@ -427,7 +412,6 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   }
 });
 
-// ===== Reactビルド配信 =====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendDist = path.resolve(__dirname, "../frontend/build");
@@ -445,12 +429,10 @@ app.use(
   })
 );
 
-// 未定義APIガード
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
 
-// SPA ルーティング
 app.get("*", (_req, res) => {
   if (!hasIndex) {
     return res
@@ -460,18 +442,15 @@ app.get("*", (_req, res) => {
   res.sendFile(indexHtmlPath);
 });
 
-// ===== エラーハンドラ =====
 app.use((err, _req, res, _next) => {
   console.error("🔥 Unhandled error:", err);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-// ===== サーバー起動 =====
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT} (env: ${NODE_ENV})`);
 });
 
-// ===== グレースフルシャットダウン =====
 const shutdown = (signal) => {
   console.log(`\n${signal} received. Closing server...`);
   server.close(() => {
