@@ -52,7 +52,6 @@ export default function Header({ user: userProp = null }) {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
-        <nav className="nav-links">
         {/* ← 先頭にユーザー名（チェック中は非表示） */}
         {!checking && user && (
           <span className="nav-user" title={user.username}>
