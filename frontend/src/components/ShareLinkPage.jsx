@@ -1,85 +1,75 @@
 // frontend/src/components/ShareLinkPage.jsx
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
-const ShareLinkPage = () => {
-  const [links, setLinks] = useState([]);
+export default function ShareLinkPage() {
+  const { token } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [schedule, setSchedule] = useState(null);
+  const [error, setError] = useState("");
 
-  // ===== 共有リンク取得 =====
   useEffect(() => {
-    const fetchLinks = async () => {
+    const fetchSchedule = async () => {
       try {
-        const res = await fetch("/api/share-links");
+        setLoading(true);
+        const res = await fetch(`/api/schedules/${token}`);
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        setLinks(data);
-      } catch (err) {
-        console.error("Error fetching share links:", err);
+        setSchedule(data);
+      } catch (e) {
+        console.error("共有リンク取得エラー:", e);
+        setError("共有スケジュールの取得に失敗しました。");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchLinks();
-  }, []);
+    fetchSchedule();
+  }, [token]);
 
-  // ===== URLコピー =====
-  const handleCopy = (url) => {
-    navigator.clipboard.writeText(url);
-    alert("URLをコピーしました！");
-  };
+  const timeLabel = (t, s, e) =>
+    t === "allday"
+      ? "終日"
+      : t === "morning"
+      ? "午前"
+      : t === "afternoon"
+      ? "午後"
+      : `${s ?? "—"}〜${e ?? "—"}`;
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
-      {/* ===== バナー ===== */}
-      <header className="bg-[#004CA0] text-white py-4 shadow-md flex justify-between items-center px-6">
-        <h1 className="text-2xl font-bold">MilkPOP Calendar</h1>
-        <nav className="space-x-4">
-          <Link
-            to="/register"
-            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
-          >
-            日程登録ページ
-          </Link>
-          <Link
-            to="/personal"
-            className="px-3 py-2 rounded-lg bg-[#FDB9C8] text-black font-semibold hover:opacity-80"
-          >
-            個人スケジュール
-          </Link>
+    <div className="share-page">
+      <header className="banner">
+        <div className="brand">MilkPOP Calendar</div>
+        <nav className="nav">
+          <Link to="/">トップ</Link>
+          <Link to="/register">日程登録</Link>
+          <Link to="/personal">個人スケジュール</Link>
         </nav>
       </header>
 
-      {/* ===== 本体 ===== */}
-      <main className="max-w-4xl mx-auto p-6">
-        <h2 className="text-xl font-bold mb-6 text-[#FDB9C8]">
-          発行された共有リンク一覧
-        </h2>
+      <h1 className="page-title">共有スケジュール</h1>
 
-        {links.length === 0 ? (
-          <p className="text-gray-400">まだ共有リンクは発行されていません。</p>
-        ) : (
-          <div className="space-y-4">
-            {links.map((link) => (
-              <div
-                key={link.id}
-                className="bg-[#1a1a1a] rounded-xl shadow p-4 flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-semibold text-lg text-[#FDB9C8]">
-                    {link.title || "タイトルなし"}
-                  </p>
-                  <p className="text-gray-300">{link.url}</p>
+      {loading ? (
+        <div className="schedule-card">読み込み中...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : !schedule ? (
+        <div className="schedule-card">スケジュールが見つかりません</div>
+      ) : (
+        <section className="registered-list">
+          <h2 className="schedule-header">{schedule.title}</h2>
+          {schedule.dates.length === 0 ? (
+            <div className="schedule-card">この共有にはまだ日程が登録されていません</div>
+          ) : (
+            schedule.dates.map((d, idx) => (
+              <div className="schedule-card" key={idx}>
+                <div className="schedule-header">
+                  {d.date} / {timeLabel(d.timeType, d.startTime, d.endTime)}
                 </div>
-                <button
-                  onClick={() => handleCopy(link.url)}
-                  className="px-4 py-2 rounded-lg bg-[#FDB9C8] text-black font-bold hover:opacity-80"
-                >
-                  コピー
-                </button>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+            ))
+          )}
+        </section>
+      )}
     </div>
   );
-};
-
-export default ShareLinkPage;
+}
