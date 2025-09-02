@@ -31,7 +31,7 @@ function ShareEntryPoint() {
     const t = new URLSearchParams(search).get("token");
     if (t) nav(`/share/${t}`, { replace: true });
   }, [search, nav]);
-  // token が無い /share は既存の SharePage をそのまま表示
+  // tokenが無ければ /share はそのまま SharePage を表示
   return <SharePage />;
 }
 
