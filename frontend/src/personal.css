@@ -1,235 +1,197 @@
-/* ====== ページ全体 ====== */
+/* ===== ページ土台 ===== */
 .personal-page {
-  padding: 20px;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
-  color: #fff;
-  background: linear-gradient(135deg, #FDB9C8, #004CA0);
   min-height: 100vh;
+  padding-bottom: 64px;
+  background: linear-gradient(135deg, #f8b8cc 0%, #b9b2e6 45%, #9fb6e6 100%);
+  color: #222;
+}
+
+/* バナー＆ナビ */
+.page-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-}
-
-/* ====== カード（ガラス風デザイン） ====== */
-.card.glass {
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 20px;
-  padding: 24px;
-  margin: 20px 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(10px);
-  width: 90%;
-  max-width: 800px;
-}
-
-/* ====== 見出し ====== */
-.card-title {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: #FDB9C8;
-}
-
-.section-title {
-  font-size: 1.2rem;
-  margin: 20px 0 10px;
-  border-left: 5px solid #FDB9C8;
-  padding-left: 10px;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #111;
   color: #fff;
 }
-
-/* ====== フォーム部分 ====== */
-.form-grid {
-  display: grid;
-  gap: 16px;
+.brand {
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
+  font-weight: 900;
+  letter-spacing: .5px;
+  color: #FDB9C8;
 }
-.form-row {
+.breadcrumbs {
   display: flex;
-  flex-direction: column;
+  gap: 8px;
 }
-.form-row label {
-  font-weight: bold;
-  margin-bottom: 6px;
-  color: #FDB9C8;
+.nav-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  color: #eee;
+  text-decoration: none;
+  font-size: 0.9rem;
 }
-.form-row input,
-.form-row textarea,
-.form-row select {
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid #aaa;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-.form-row input:focus,
-.form-row textarea:focus {
-  outline: none;
-  border-color: #FDB9C8;
-  box-shadow: 0 0 5px #FDB9C8;
+.nav-pill.active,
+.nav-pill:hover { background: #004CA0; color: #fff; }
+.header-actions { display:flex; gap:10px; align-items:center; }
+.share-compact { display:flex; gap:8px; align-items:center; }
+.share-compact-input {
+  width: 320px; padding:6px 10px; border-radius:10px; border:1px solid #444;
+  background: rgba(255,255,255,0.08); color:#fff;
 }
 
-/* ====== ボタン ====== */
-.btn {
-  padding: 8px 14px;
-  border-radius: 12px;
+/* タイトルと中央入力 */
+.ppage-title {
+  text-align: center;
+  margin: 28px 0 10px;
+  font-size: 2.2rem;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+.title-input-wrap { display: flex; justify-content: center; }
+.title-input {
+  width: min(720px, 90vw);
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: none;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12) inset, 0 8px 20px rgba(0,0,0,0.12);
+  font-size: 1rem;
+}
+
+/* モード切替ピル */
+.mode-toggle {
+  margin: 18px 0 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.pill {
+  padding: 8px 16px;
+  border-radius: 999px;
   border: none;
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff, #dcd6ff);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
-.btn.primary {
-  background: #FDB9C8;
-  color: #000;
-}
-.btn.primary:hover {
-  background: #fff;
-  color: #004CA0;
-}
-.btn.outline {
-  background: transparent;
-  border: 2px solid #FDB9C8;
-  color: #FDB9C8;
-}
-.btn.outline:hover {
-  background: #FDB9C8;
-  color: #000;
-}
-.btn.danger {
-  background: #a00028;
-  color: #fff;
-}
-.btn.danger:hover {
-  background: #ff4060;
-}
+.pill.active { background: linear-gradient(135deg, #FDB9C8, #7ea0e6); color: #fff; }
 
-/* ====== イベントリスト ====== */
-.event-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.event-item {
-  display: flex;
-  align-items: flex-start;
-  background: rgba(255, 255, 255, 0.1);
-  margin-bottom: 10px;
-  padding: 12px;
-  border-radius: 12px;
-}
-.event-date {
-  font-weight: bold;
-  margin-right: 15px;
-  min-width: 80px;
-  color: #FDB9C8;
-}
-.event-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-.event-meta {
-  margin-top: 4px;
-}
-.event-memo {
-  margin-top: 6px;
-  font-size: 0.9rem;
-  color: #eee;
-}
-.event-actions {
-  margin-left: auto;
-}
-
-/* ====== チップ（時間帯など） ====== */
-.chip {
-  display: inline-block;
-  background: #004CA0;
-  color: #fff;
-  font-size: 0.8rem;
-  padding: 3px 8px;
-  border-radius: 12px;
-  margin-right: 6px;
-}
-.chip.outline {
-  background: transparent;
-  border: 1px solid #FDB9C8;
-  color: #FDB9C8;
-}
-
-/* ====== 共有リンク表示 ====== */
-.share-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 10px 0;
-}
-.share-url {
-  flex: 1;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #aaa;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-/* ====== 外部リンク一覧 ====== */
-.link-list {
-  list-style: none;
-  padding: 0;
-}
-.link-item {
-  margin-bottom: 8px;
-}
-.cool-link {
-  color: #FDB9C8;
-  font-weight: bold;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-.cool-link:hover {
-  color: #fff;
-}
-
-/* ====== バッジ ====== */
-.badge {
-  font-size: 0.8rem;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: #FDB9C8;
-  color: #000;
-  margin-left: 10px;
-}
-
-/* ====== 補助テキスト ====== */
-.muted {
-  color: #ccc;
-  font-size: 0.9rem;
-}
-.muted.small {
-  font-size: 0.8rem;
-}
-.error {
-  color: #ff6b6b;
-  margin-bottom: 10px;
-}
-
-/* ====== スケルトン（ロード中） ====== */
-.skeleton-list {
+/* 2カラム */
+.ppage-grid {
+  margin: 8px auto 24px;
+  width: min(1200px, 92vw);
   display: grid;
-  gap: 12px;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
 }
-.skeleton-item {
-  height: 40px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  animation: pulse 1.5s infinite;
+
+/* ネオモーフィズム風カード */
+.neo-card {
+  background: rgba(255,255,255,0.35);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+  box-shadow: 6px 6px 20px rgba(0,0,0,0.15), -6px -6px 20px rgba(255,255,255,0.35);
 }
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.4; }
-  100% { opacity: 1; }
+
+/* 左：カレンダー枠 */
+.calendar-card { padding: 16px 18px; }
+.calendar-head { height: 10px; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 12px; }
+.calendar-body { padding: 8px; }
+.fallback-date-row { display:flex; align-items:center; gap:10px; margin-bottom: 10px; }
+.fallback-date-row label { font-weight: 700; color: #004CA0; }
+.calendar-placeholder {
+  min-height: 360px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.5);
+  border: 1px dashed rgba(0,0,0,0.12);
 }
-.personal-page.view-only .card-title {
-  color: #fff; /* 例えばタイトルを白に */
+
+/* 右：サイドパネル */
+.side-card { padding: 18px; }
+.side-title {
+  font-size: 1.1rem; font-weight: 800; color: #ffffff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  margin: 6px 0 12px;
 }
-.personal-page.view-only .badge {
-  background: #004CA0; /* 閲覧用バッジだけ青に */
+.side-row { display:flex; flex-direction: column; gap:6px; margin-bottom: 12px; }
+.side-row label { font-weight: 700; color: #fff; }
+.side-input, .side-textarea {
+  background: rgba(255,255,255,0.85);
+  border: none; border-radius: 12px; padding: 8px 10px;
+}
+.side-textarea { min-height: 68px; resize: vertical; }
+
+/* 時間帯ピル */
+.slot-pills { display:flex; gap:10px; flex-wrap: wrap; }
+.slot {
+  padding: 8px 16px; border-radius: 999px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #e9e9ff, #d1d1f7);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+.slot.active { background: linear-gradient(135deg, #ffffff, #7ea0e6); color: #004CA0; font-weight: 800; }
+
+.time-range { display:flex; gap:14px; }
+.time-col { display:flex; flex-direction:column; gap:6px; }
+.time-col input {
+  background: rgba(255,255,255,0.9); border:none; border-radius:10px; padding:6px 10px;
+}
+
+/* 登録ボタン（大きめ） */
+.register-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 18px;
+  border-radius: 16px; border: none; cursor: pointer;
+  font-size: 1rem; font-weight: 800; letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #004CA0, #FDB9C8);
   color: #fff;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.2);
 }
+
+/* 保存済み一覧 */
+.saved-wrap, .links-wrap {
+  width: min(1200px, 92vw);
+  margin: 16px auto 0;
+}
+.saved-title {
+  font-size: 1.05rem; font-weight: 800; color: #222; margin-bottom: 8px;
+}
+.event-list { list-style: none; padding: 0; margin: 0; }
+.event-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 14px; padding: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  margin-bottom: 10px;
+}
+.event-date { min-width: 90px; font-weight: 800; color: #004CA0; }
+.event-title { font-weight: 800; }
+.event-meta { margin-top: 4px; }
+.event-memo { margin-top: 6px; color: #333; }
+.chip {
+  display:inline-block; padding: 4px 10px; border-radius: 999px;
+  background: #004CA0; color:#fff; font-size: .8rem;
+}
+.chip.outline { background: transparent; border: 1px solid #FDB9C8; color: #FDB9C8; }
+
+/* 共通ボタン */
+.btn { padding: 8px 14px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; }
+.btn.primary { background: #FDB9C8; color: #000; }
+.btn.primary:hover { filter: brightness(1.05); }
+.btn.outline { background: transparent; border: 2px solid #FDB9C8; color: #FDB9C8; }
+.btn.outline:hover { background:#FDB9C8; color:#000; }
+.btn.danger { background:#a00028; color:#fff; }
+.btn.danger.outline { background: transparent; border: 2px solid #a00028; color:#a00028; }
+
+/* テキスト */
+.muted { color: rgba(0,0,0,0.6); }
+.error { color:#ff4d6d; margin: 8px 0; }
+
+/* リンク一覧 */
+.link-list { list-style:none; padding:0; }
+.link-item { margin-bottom:8px; }
+.cool-link { color:#004CA0; font-weight:700; text-decoration:none; }
+.cool-link:hover { color:#000; }
