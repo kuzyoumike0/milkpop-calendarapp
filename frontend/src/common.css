@@ -125,7 +125,7 @@ a:hover {
 /* ユーザー名（他のナビ文字と同じ見た目） */
 .nav-user {
   color: #fff;
-  font-family: inherit;
+  font-weight: bold;
   font-size: 1.1rem;
   padding: 0.4rem 0.8rem;
   border-radius: 8px;
