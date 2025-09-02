@@ -1,15 +1,25 @@
-/* ===== カラーパレット ===== */
+/* ===== カラーパレット（高コントラスト版） ===== */
 :root{
   --mp-pink:#FDB9C8;
   --mp-blue:#004CA0;
-  --mp-black:#111; /* 高級感のある黒 */
+  --mp-black:#111;
+  --ink-900:#0f172a;
+  --ink-800:#1f2937;
+  --ink-700:#374151;
+  --ink-600:#475569;
+  --ink-500:#64748b;
+  --surface:#ffffff;
+  --surface-2:#f6f7fb;
+  --border:#d8deea;
+  --border-strong:#94a3b8;
+  --shadow:0 10px 24px rgba(2,6,23,.15);
 }
 
 /* ===== ページ土台 ===== */
 .personal-page{
   min-height:100vh;
-  background: linear-gradient(135deg, #f9c4d2 0%, #c4b8ff 45%, #a9c1ff 100%);
-  color:#222;
+  background: linear-gradient(135deg, #f7c4d3 0%, #bcb3ff 45%, #9ab8ff 100%);
+  color:var(--ink-900);
 }
 
 /* ===== バナー ===== */
@@ -19,163 +29,186 @@
 }
 .brand{
   font-weight:900; letter-spacing:.5px; color:var(--mp-pink);
-  text-shadow:0 1px 0 rgba(0,0,0,.3);
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
 }
-.banner-actions{ display:flex; gap:8px; }
+.banner-actions{ display:flex; gap:10px; }
 .pill-link{
-  padding:6px 12px; border-radius:999px; text-decoration:none;
-  background:rgba(255,255,255,.08); color:#eee;
+  padding:8px 14px; border-radius:999px; text-decoration:none;
+  background:#2a2a2a; color:#eaeaea; border:1px solid rgba(255,255,255,.18);
+  font-weight:700;
 }
 .pill-link:hover, .pill-link.active{ background:var(--mp-blue); color:#fff; }
 
 /* ===== タイトル・入力 ===== */
 .page-title{
-  text-align:center; margin:24px 0 10px; font-size:2.1rem;
+  text-align:center; margin:22px 0 12px; font-size:2.2rem;
   color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.25);
 }
 .title-memo-row{
-  width:min(980px,92vw); margin:0 auto 10px; display:grid; gap:10px;
+  width:min(980px,92vw); margin:0 auto 8px; display:grid; gap:10px;
 }
 .title-input, .memo-input{
-  width:100%; border:none; border-radius:18px;
-  background:rgba(255,255,255,.9);
-  box-shadow:0 10px 22px rgba(0,0,0,.12) inset, 0 8px 16px rgba(0,0,0,.08);
-  padding:12px 16px; font-size:1rem;
+  width:100%; border:1.5px solid var(--border); border-radius:14px;
+  background:var(--surface); color:var(--ink-900);
+  box-shadow: var(--shadow);
+  padding:12px 14px; font-size:1rem;
 }
-.memo-input{ min-height:74px; resize:vertical; }
+.title-input::placeholder, .memo-input::placeholder{ color:var(--ink-500); }
+.title-input:focus, .memo-input:focus{
+  outline:none; border-color:var(--mp-blue);
+  box-shadow:0 0 0 3px rgba(0,76,160,.15), var(--shadow);
+}
+.memo-input{ min-height:88px; resize:vertical; }
 
-/* ===== モード切替（お洒落ピル） ===== */
-.select-mode{ display:flex; justify-content:center; gap:10px; margin:12px 0 6px; }
+/* ===== モード切替（見やすさ強化） ===== */
+.select-mode{ display:flex; justify-content:center; gap:12px; margin:14px 0 10px; }
 .pill-btn{
-  padding:10px 18px; border:none; border-radius:999px; cursor:pointer;
-  background:linear-gradient(135deg, #fff, #e9e6ff);
-  box-shadow:0 6px 16px rgba(0,0,0,.15);
-  transition:transform .05s ease, filter .2s ease;
+  padding:10px 18px; border:1.5px solid var(--border-strong); border-radius:999px; cursor:pointer;
+  background:var(--surface-2); color:var(--ink-800); font-weight:800;
+  transition:transform .05s ease, filter .2s ease, background .2s ease;
 }
-.pill-btn:hover{ transform:translateY(-1px); }
+.pill-btn:hover{ transform:translateY(-1px); filter:brightness(1.02); }
 .pill-btn.active{
-  background:linear-gradient(135deg, var(--mp-pink), #7ea0e6);
-  color:#fff; font-weight:800;
+  background:var(--mp-blue); border-color:#0b3e83; color:#fff;
 }
 
 /* ===== 2カラムレイアウト ===== */
 .calendar-list-container{
-  width:min(1200px,92vw); margin:8px auto 22px;
-  display:grid; grid-template-columns:2fr 1fr; gap:18px;
+  width:min(1200px,92vw); margin:8px auto 28px;
+  display:grid; grid-template-columns: 2fr 1fr; gap:22px;
 }
 .neo{
-  background:rgba(255,255,255,.45);
-  border-radius:18px; backdrop-filter: blur(8px);
-  box-shadow: 6px 6px 20px rgba(0,0,0,.16), -6px -6px 20px rgba(255,255,255,.35);
+  background:rgba(255,255,255,.9);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow: var(--shadow);
 }
 
 /* ===== カレンダー ===== */
-.calendar-container{ padding:14px; }
+.calendar-container{ padding:16px; }
 .calendar-header{
-  display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;
+  display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:12px;
 }
 .nav-circle{
-  width:36px; height:36px; border-radius:999px; border:none; cursor:pointer;
-  background:linear-gradient(135deg, #ffffff, #dcd6ff);
-  box-shadow:0 6px 16px rgba(0,0,0,.15);
-  font-size:1.1rem;
+  width:38px; height:38px; border-radius:999px; border:1.5px solid var(--border-strong); cursor:pointer;
+  background:var(--surface-2); color:var(--ink-800); font-size:1.1rem; font-weight:900;
 }
-.nav-circle:hover{ transform:translateY(-1px); }
-.ym{ min-width:180px; text-align:center; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.3); }
+.nav-circle:hover{ background:#e9eefc; }
 
+.ym{
+  min-width:220px; text-align:center; font-weight:900; letter-spacing:.02em;
+  color:var(--ink-900);
+}
+
+/* 表 */
 .calendar-table{
-  width:100%; border-collapse:separate; border-spacing:8px;
+  width:100%; border-collapse:separate; border-spacing:10px;
 }
 .calendar-table th{
-  text-align:center; font-weight:800; color:#fff; opacity:.95;
+  text-align:center; font-weight:900; color:var(--ink-700); font-size:.95rem;
 }
-.calendar-table th.sunday{ color:#ff5a6b; }
-.calendar-table th.saturday{ color:#1e50ff; }
+.calendar-table th.sunday{ color:#e11d48; }
+.calendar-table th.saturday{ color:#1e40af; }
 
+/* セル（視認性重視） */
 .cell{
-  min-height:78px; border-radius:14px; background:rgba(255,255,255,.6);
-  box-shadow:6px 6px 16px rgba(0,0,0,.12), -6px -6px 16px rgba(255,255,255,.32);
+  min-height:84px; border-radius:16px;
+  background:var(--surface);
+  border:2px solid var(--border);
   padding:8px; cursor:pointer; vertical-align:top;
-  transition:transform .05s ease, background .2s ease;
+  transition:transform .06s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
-.cell:hover{ transform:translateY(-1px); }
-.cell.today{ outline:2px solid var(--mp-pink); }
-.cell.holiday .daynum{ color:#ff5a6b; }
-.cell.sunday .daynum{ color:#ff5a6b; }
-.cell.saturday .daynum{ color:#2563eb; }
+.cell:hover{ transform:translateY(-1px); border-color:var(--border-strong); }
+.cell.today{ box-shadow:0 0 0 3px rgba(253,185,200,.45) inset; }
+.cell.holiday .daynum{ color:#e11d48; }
+.cell.sunday .daynum{ color:#e11d48; }
+.cell.saturday .daynum{ color:#1e40af; }
+
+/* 選択状態は“濃い境界＋薄い塗り”でくっきり */
 .cell.selected{
-  background:linear-gradient(135deg, var(--mp-pink), #7ea0e6);
-  color:#fff;
+  border-color:var(--mp-blue);
+  box-shadow:0 0 0 3px rgba(0,76,160,.18) inset;
+  background:linear-gradient(0deg, rgba(0,76,160,.08), rgba(255,255,255,1));
+  color:var(--ink-900);
 }
-.daynum{ font-weight:900; }
-.holiday-name{ font-size:.75rem; margin-top:2px; color:#ff5a6b; font-weight:700; }
+.daynum{ font-weight:900; font-size:1.05rem; color:var(--ink-900); }
+.holiday-name{ font-size:.78rem; margin-top:4px; color:#e11d48; font-weight:800; }
 
 /* ===== サイドパネル ===== */
 .side-panel{ padding:16px; }
 .side-title{
-  font-size:1.1rem; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.25);
+  font-size:1.1rem; font-weight:900; color:var(--ink-900); border-bottom:1px solid var(--border);
+  padding-bottom:8px; margin-bottom:12px;
 }
 .date-card{
-  background:rgba(255,255,255,.85); border-radius:12px; padding:10px; margin:10px 0;
+  background:var(--surface); border:1.5px solid var(--border); border-radius:12px; padding:10px; margin:10px 0;
 }
-.date-label{ font-weight:800; margin-bottom:6px; }
-.chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.date-label{ font-weight:900; margin-bottom:8px; color:var(--ink-800); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
 .chip{
-  display:inline-block; padding:4px 10px; border-radius:999px;
-  background:var(--mp-blue); color:#fff; font-size:.85rem;
+  display:inline-block; padding:6px 12px; border-radius:999px;
+  background:#e8f0ff; color:#0b3e83; font-size:.9rem; font-weight:800; border:1px solid #b6c9ff;
 }
-.chip.soft{ background:linear-gradient(135deg, #ffffff, #dcd6ff); color:#1f2b5c; }
+.chip.soft{ background:#f3f4f6; color:#111827; border:1px solid #e5e7eb; }
 
-/* 時間帯ボタン */
-.time-options{ display:flex; gap:10px; flex-wrap:wrap; }
+/* 時間帯ボタン（濃色アクティブで判別しやすく） */
+.time-options{ display:flex; gap:12px; flex-wrap:wrap; }
 .time-btn{
-  padding:8px 16px; border-radius:999px; border:none; cursor:pointer;
-  background:linear-gradient(135deg, #ffffff, #e6e6ff);
-  box-shadow:0 6px 16px rgba(0,0,0,.15);
-  transition:transform .05s ease;
+  padding:10px 16px; border-radius:999px; border:1.5px solid var(--border-strong); cursor:pointer;
+  background:var(--surface-2); color:var(--ink-800); font-weight:900;
 }
-.time-btn:hover{ transform:translateY(-1px); }
+.time-btn:hover{ background:#eef2ff; }
 .time-btn.active{
-  background:linear-gradient(135deg, #ffffff, #7ea0e6);
-  color:var(--mp-blue); font-weight:800;
+  background:var(--mp-blue); color:#fff; border-color:#0b3e83;
 }
 
 /* カスタム時間帯 */
-.time-range{ display:flex; align-items:center; gap:10px; margin:8px 0; }
+.time-range{ display:flex; align-items:center; gap:10px; margin:10px 0; }
 .cute-select{
-  border:none; border-radius:12px; padding:8px 12px;
-  background:rgba(255,255,255,.95); box-shadow:0 6px 14px rgba(0,0,0,.1);
+  border:1.5px solid var(--border-strong); border-radius:12px; padding:8px 12px;
+  background:var(--surface); color:var(--ink-900); font-weight:700;
 }
-.time-separator{ font-weight:800; }
+.time-separator{ font-weight:900; color:var(--ink-800); }
 
-/* 登録ボタン（大） */
+/* 登録ボタン（文字を大きく・コントラスト高） */
 .register-btn{
-  width:100%; margin-top:10px; padding:14px 18px; border:none; border-radius:16px;
-  background:linear-gradient(135deg, var(--mp-blue), var(--mp-pink));
-  color:#fff; font-weight:800; letter-spacing:.05em; cursor:pointer;
-  box-shadow:0 12px 24px rgba(0,0,0,.2);
+  width:100%; margin-top:14px; padding:14px 18px; border:none; border-radius:14px; cursor:pointer;
+  background:linear-gradient(90deg, var(--mp-blue), #7ea0e6 60%, var(--mp-pink));
+  color:#fff; font-weight:900; letter-spacing:.06em; font-size:1rem;
+  box-shadow: var(--shadow);
 }
+.register-btn:hover{ filter:brightness(1.03); }
 
 /* ===== 保存済みリスト ===== */
-.registered-list{ width:min(1200px,92vw); margin:0 auto 30px; }
-.saved-title{ font-size:1.05rem; font-weight:800; color:#222; margin:6px 0 10px; }
-.muted{ color:rgba(0,0,0,.6); }
+.registered-list{ width:min(1200px,92vw); margin:0 auto 36px; }
+.saved-title{ font-size:1.08rem; font-weight:900; color:var(--ink-900); margin:8px 0 12px; }
+.muted{ color:var(--ink-600); }
 
-.schedule-card{ padding:14px; margin-bottom:12px; }
-.schedule-header{ font-weight:900; }
-.created-at{ opacity:.72; font-weight:400; margin-left:8px; }
-.schedule-memo{ margin:6px 0; }
-.schedule-items{ margin:0; padding-left:18px; }
+.schedule-card{
+  padding:14px; margin-bottom:14px; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:14px; box-shadow: var(--shadow);
+}
+.schedule-header{ font-weight:900; color:var(--ink-900); }
+.created-at{ opacity:.78; font-weight:600; margin-left:8px; color:var(--ink-700); }
+.schedule-memo{ margin:8px 0; color:var(--ink-800); }
+.schedule-items{ margin:0; padding-left:20px; color:var(--ink-800); }
 
-/* カード内ボタン */
+/* カード内ボタン（視認性高） */
 .card-actions{
-  display:flex; gap:8px; justify-content:flex-end; margin-top:10px;
+  display:flex; gap:10px; justify-content:flex-end; margin-top:12px;
 }
 .ghost-btn{
-  border:none; border-radius:12px; padding:8px 14px; cursor:pointer;
-  background:rgba(255,255,255,.9);
-  box-shadow:0 6px 14px rgba(0,0,0,.1);
+  border:1.5px solid var(--border-strong); border-radius:12px; padding:8px 14px; cursor:pointer;
+  background:var(--surface-2); color:var(--ink-800); font-weight:900;
 }
-.ghost-btn.primary{ color:#fff; background:linear-gradient(135deg, var(--mp-blue), #7ea0e6); }
-.ghost-btn.danger{ color:#fff; background:#a00028; }
-.ghost-btn:hover{ filter:brightness(1.05); }
+.ghost-btn.primary{ color:#fff; background:var(--mp-blue); border-color:#0b3e83; }
+.ghost-btn.danger{ color:#fff; background:#b91c1c; border-color:#991b1b; }
+.ghost-btn:hover{ filter:brightness(1.03); }
+
+/* ===== レスポンシブ：モバイルは1カラム ===== */
+@media (max-width: 880px){
+  .calendar-list-container{
+    grid-template-columns: 1fr;
+  }
+  .ym{ min-width:auto; }
+}
