@@ -18,31 +18,50 @@
   text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
-/* ===== 入力欄 ===== */
+/* ===== 入力欄（タイトル＆メモ） ===== */
 .title-input,
 .memo-input {
   display: block;
   width: 60%;
   max-width: 600px;
-  margin: 0 auto 20px auto;   /* ✅ 横中央寄せ */
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
+  margin: 0 auto 20px auto;      /* 中央配置 */
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.35);
   font-size: 1.1rem;
-  background: rgba(255,255,255,0.8);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.22);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.18),
+    inset 0 0 0 999px rgba(255,255,255,0.05);  /* うっすらガラス感 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-sizing: border-box;
+  transition: box-shadow .25s, transform .12s, border-color .25s;
 }
 
-.title-input {
-  text-align: center;   /* ✅ タイトルは中央寄せ */
+.title-input { text-align: center; }
+
+.title-input:focus,
+.memo-input:focus {
+  outline: none;
+  border-color: rgba(253,185,200,0.9);
+  box-shadow:
+    0 10px 28px rgba(0,0,0,0.22),
+    0 0 0 3px rgba(253,185,200,0.45),
+    0 0 0 6px rgba(0,76,160,0.25);
+  transform: translateY(-1px);
 }
 
 .memo-input {
-  min-height: 80px;
+  min-height: 120px;
   resize: vertical;
-  text-align: left;     /* ✅ メモは左寄せ */
-  line-height: 1.5;
+  text-align: left;               /* メモ本文は左寄せ */
+  line-height: 1.6;
+}
+
+.memo-input::placeholder,
+.title-input::placeholder {
+  color: rgba(0,0,0,0.45);
 }
 
 /* ===== モード切替 ===== */
@@ -79,7 +98,7 @@
   justify-content: center;
   align-items: flex-start;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1200px;              /* 基準幅 */
   margin: 0 auto;
   gap: 20px;
 }
@@ -158,9 +177,7 @@
   border-radius: 10px;
   box-shadow: 0 0 12px rgba(255,100,150,0.7);
 }
-.today.selected {
-  background: linear-gradient(135deg, #ff758c, #ff7eb3);
-}
+.today.selected { background: linear-gradient(135deg, #ff758c, #ff7eb3); }
 .selected {
   background: #fdb9c8;
   color: #000;
@@ -202,10 +219,7 @@
   margin-bottom: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
-.date-label {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
+.date-label { font-weight: bold; margin-bottom: 6px; }
 
 /* ===== 時間帯ボタン ===== */
 .time-options {
@@ -226,10 +240,7 @@
   transition: all 0.2s;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
 }
-.time-btn:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #004ca0, #fdb9c8);
-}
+.time-btn:hover { transform: scale(1.05); background: linear-gradient(135deg, #004ca0, #fdb9c8); }
 .time-btn.active {
   background: #fff;
   color: #004ca0;
@@ -258,19 +269,9 @@
   transition: all 0.2s;
   appearance: none;
 }
-.cute-select:hover {
-  transform: scale(1.05);
-  background: #222;
-}
-.cute-select:focus {
-  outline: none;
-  box-shadow: 0 0 8px #fdb9c8;
-}
-.time-separator {
-  margin: 0 5px;
-  color: #fff;
-  font-weight: bold;
-}
+.cute-select:hover { transform: scale(1.05); background: #222; }
+.cute-select:focus { outline: none; box-shadow: 0 0 8px #fdb9c8; }
+.time-separator { margin: 0 5px; color: #fff; font-weight: bold; }
 
 /* 登録ボタン */
 .register-btn {
@@ -287,27 +288,33 @@
   transition: transform 0.15s;
   text-align: center;
 }
-.register-btn:hover {
-  transform: scale(1.05);
-}
+.register-btn:hover { transform: scale(1.05); }
 
-/* 登録済みリスト */
+/* ===== 登録済みリスト（カレンダー幅に合わせて中央） ===== */
 .registered-list {
-  margin: 40px auto 0 auto;  /* ✅ 中央寄せ */
+  margin: 40px auto 0 auto;
+  width: 100%;
+  max-width: 1200px;              /* 上の .calendar-list-container と同じ */
   background: rgba(255,255,255,0.15);
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   color: #fff;
-  max-width: 900px;
 }
+
 .schedule-card {
   background: rgba(255,255,255,0.2);
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 14px;
   margin-bottom: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform .12s, box-shadow .12s;
 }
+.schedule-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.28);
+}
+
 .schedule-header {
   font-weight: bold;
   margin-bottom: 6px;
@@ -315,18 +322,16 @@
 
 /* レスポンシブ */
 @media (max-width: 768px) {
+  .title-input, .memo-input { width: 92%; max-width: none; }
   .calendar-list-container {
     flex-direction: column;
     align-items: center;
+    max-width: 96%;
   }
-  .calendar-container,
-  .side-panel {
+  .calendar-container, .side-panel {
     width: 100%;
-    max-width: 95%;
+    max-width: 100%;
   }
-  .cell {
-    width: 60px;
-    height: 60px;
-    font-size: 0.85rem;
-  }
+  .cell { width: 60px; height: 60px; font-size: 0.85rem; }
+  .registered-list { max-width: 96%; }
 }
