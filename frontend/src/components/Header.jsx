@@ -55,7 +55,7 @@ export default function Header({ user: userProp = null }) {
         <nav className="nav-links">
         {/* ← 先頭にユーザー名（チェック中は非表示） */}
         {!checking && user && (
-          <span className="nav-user" title={user.username} style={{ marginRight: 12 }}>
+          <span className="nav-user" title={user.username}>
             {user.username}
           </span>
         )}
@@ -71,20 +71,13 @@ export default function Header({ user: userProp = null }) {
 
         {/* 右端：状態ごとの表示（チェック中 or ログアウト or ログイン） */}
         {checking ? (
-          <span className="nav-muted" style={{ marginLeft: "auto" }}>確認中…</span>
+          <span className="nav-muted">確認中…</span>
         ) : user ? (
-          <>
-            <button
-              type="button"
-              className="nav-btn"
-              style={{ marginLeft: "auto" }}
-              onClick={handleLogout}
-            >
-              ログアウト
-            </button>
-          </>
+          <button type="button" className="nav-btn" onClick={handleLogout}>
+            ログアウト
+          </button>
         ) : (
-          <a href={loginHref} className="nav-btn" style={{ marginLeft: "auto" }}>
+          <a href={loginHref} className="nav-btn">
             Discordログイン
           </a>
         )}
