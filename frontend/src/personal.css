@@ -310,3 +310,14 @@
   color: #004ca0; font-weight: 800; text-decoration: underline; word-break: break-all;
 }
 .cool-link:hover { color: #1b6ad8; }
+/* 登録済みリストをカレンダー幅に合わせる */
+.registered-list {
+  max-width: 1000px;   /* カレンダーの横幅に合わせる */
+  margin: 30px auto;   /* 中央寄せ */
+  width: 100%;
+}
+
+.schedule-card {
+  width: 100%;         /* 横幅いっぱい */
+  box-sizing: border-box;
+}
