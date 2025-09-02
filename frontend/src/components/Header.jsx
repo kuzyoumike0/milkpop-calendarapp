@@ -52,6 +52,13 @@ export default function Header({ user: userProp = null }) {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
+        <nav className="nav-links">
+        {/* ← 先頭にユーザー名（チェック中は非表示） */}
+        {!checking && user && (
+          <span className="nav-user" title={user.username} style={{ marginRight: 12 }}>
+            {user.username}
+          </span>
+        )}
         <Link to="/usage" className="nav-link">
           使い方
         </Link>
@@ -62,19 +69,22 @@ export default function Header({ user: userProp = null }) {
           個人日程登録
         </Link>
 
+        {/* 右端：状態ごとの表示（チェック中 or ログアウト or ログイン） */}
         {checking ? (
-          <span className="nav-muted">確認中…</span>
+          <span className="nav-muted" style={{ marginLeft: "auto" }}>確認中…</span>
         ) : user ? (
           <>
-            <span className="nav-user" title={user.username}>
-              {user.username}
-            </span>
-            <button type="button" className="nav-btn" onClick={handleLogout}>
+            <button
+              type="button"
+              className="nav-btn"
+              style={{ marginLeft: "auto" }}
+              onClick={handleLogout}
+            >
               ログアウト
             </button>
           </>
         ) : (
-          <a href={loginHref} className="nav-btn">
+          <a href={loginHref} className="nav-btn" style={{ marginLeft: "auto" }}>
             Discordログイン
           </a>
         )}
