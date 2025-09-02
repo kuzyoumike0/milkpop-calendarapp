@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS schedule_responses (
     UNIQUE(schedule_id, user_id)
 );
 
+-- 出欠削除用インデックス（高速化）
+CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
+ON schedule_responses(schedule_id, user_id);
 
 -- =========================
 -- users（Discord認証情報）
@@ -38,25 +41,23 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 -- =========================
--- 出欠削除用インデックス（高速化）
+-- personal_schedules（個人スケジュール）
+--   schedules.id を share_id で参照し、そこから share_token をJOINする
 -- =========================
-CREATE INDEX IF NOT EXISTS idx_schedule_responses_user
-ON schedule_responses(schedule_id, user_id);
-
-
-CREATE TABLE personal_schedules (
+CREATE TABLE IF NOT EXISTS personal_schedules (
     id UUID PRIMARY KEY,
     user_id VARCHAR(64) NOT NULL,
     title TEXT NOT NULL,
     memo TEXT,
     dates JSONB NOT NULL,
     options JSONB,
-    share_token VARCHAR(64) UNIQUE,
+    share_id UUID REFERENCES schedules(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 既存の外部キー制約を削除
-ALTER TABLE personal_schedules DROP CONSTRAINT IF EXISTS fk_share;
+-- インデックス（JOIN高速化用）
+CREATE INDEX IF NOT EXISTS idx_personal_schedules_user
+ON personal_schedules(user_id);
 
--- share_id を NULL 許容に変更（必ず NOT NULL になっている場合）
-ALTER TABLE personal_schedules ALTER COLUMN share_id DROP NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_personal_schedules_share
+ON personal_schedules(share_id);
