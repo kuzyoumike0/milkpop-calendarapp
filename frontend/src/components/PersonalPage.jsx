@@ -1,367 +1,483 @@
 // frontend/src/components/PersonalPage.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-// 読み込み順：common → personal（personalが最終で上書き）
-import "../common.css";
-import "../personal.css";
+import React, { useMemo, useRef, useState } from "react";
+import "../personal.css"; // personal.css を適用
 
-const emptyEvent = () => ({
-  date: "",
-  title: "",
-  memo: "",
-  allDay: true,
-  slot: "allDay", // allDay | day | night | custom
-  startTime: "",
-  endTime: "",
-  tags: [],
-});
+/* ========================= ユーティリティ ========================= */
+const pad = (n) => String(n).padStart(2, "0");
+const fmt = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+const wdJP = ["日", "月", "火", "水", "木", "金", "土"];
+const todayStr = (() => {
+  const t = new Date();
+  return fmt(t.getFullYear(), t.getMonth() + 1, t.getDate());
+})();
 
-const fmtDate = (iso) => {
-  try {
-    const d = new Date(iso);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}/${m}/${day}`;
-  } catch {
-    return iso;
-  }
+function nthMonday(year, month, n) {
+  const first = new Date(year, month - 1, 1);
+  const offset = (8 - first.getDay()) % 7; // 最初の月曜までの差
+  return fmt(year, month, 1 + offset + 7 * (n - 1));
+}
+
+// 春分・秋分（必要年を追加して運用）
+const EQUINOX = {
+  vernal: { 2024: "2024-03-20", 2025: "2025-03-20", 2026: "2026-03-20" },
+  autumnal: { 2024: "2024-09-22", 2025: "2025-09-23", 2026: "2026-09-22" },
 };
 
-export default function PersonalPage() {
-  const [events, setEvents] = useState([]);
-  const [draft, setDraft] = useState(emptyEvent());
-  const [links, setLinks] = useState([]); // 外部共有用（URL+タイトル）
-  const [shareInfo, setShareInfo] = useState(null); // {url, token, title}
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
+function buildJapaneseHolidays(year) {
+  const map = new Map();
+  map.set(fmt(year, 1, 1), "元日");
+  map.set(nthMonday(year, 1, 2), "成人の日");
+  map.set(fmt(year, 2, 11), "建国記念の日");
+  map.set(fmt(year, 2, 23), "天皇誕生日");
+  if (EQUINOX.vernal[year]) map.set(EQUINOX.vernal[year], "春分の日");
+  map.set(fmt(year, 4, 29), "昭和の日");
+  map.set(fmt(year, 5, 3), "憲法記念日");
+  map.set(fmt(year, 5, 4), "みどりの日");
+  map.set(fmt(year, 5, 5), "こどもの日");
+  map.set(nthMonday(year, 7, 3), "海の日");
+  map.set(fmt(year, 8, 11), "山の日");
+  map.set(nthMonday(year, 9, 3), "敬老の日");
+  if (EQUINOX.autumnal[year]) map.set(EQUINOX.autumnal[year], "秋分の日");
+  map.set(nthMonday(year, 10, 2), "スポーツの日");
+  map.set(fmt(year, 11, 3), "文化の日");
+  map.set(fmt(year, 11, 23), "勤労感謝の日");
 
-  // 画面用：単日/範囲/複数の見た目切替（仕様は維持）
-  const [selectMode, setSelectMode] = useState("single"); // single | range | multi
+  const isHoliday = (dstr) => map.has(dstr);
+  const nextDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const res = await fetch("/api/personal/me");
-        if (!res.ok) throw new Error("failed");
-        const data = await res.json();
-        if (!alive) return;
-        setEvents(Array.isArray(data.events) ? data.events : []);
-        setLinks(Array.isArray(data.links) ? data.links : []);
-        if (data.share && data.share.token) {
-          const url = `${window.location.origin}/personal/share/${data.share.token}`;
-          setShareInfo({ url, token: data.share.token, title: data.title || "個人スケジュール" });
-        }
-      } catch {
-        setEvents([]);
-        setLinks([]);
+  // 振替休日
+  for (const [dstr] of Array.from(map)) {
+    const d = new Date(dstr);
+    if (d.getDay() === 0) {
+      let cur = nextDay(d);
+      while (isHoliday(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()))) {
+        cur = nextDay(cur);
       }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  const canSave = useMemo(() => {
-    if (!draft.date) return false;
-    if (!draft.title) return false;
-    if (draft.slot === "custom") {
-      if (!draft.startTime || !draft.endTime) return false;
+      map.set(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()), "振替休日");
     }
-    return true;
-  }, [draft]);
+  }
+  // 国民の休日（祝日に挟まれた平日）
+  const dates = Array.from(map.keys()).sort();
+  for (let i = 0; i < dates.length - 1; i++) {
+    const a = new Date(dates[i]);
+    const b = new Date(dates[i + 1]);
+    if ((b - a) / 86400000 === 2) {
+      const mid = new Date(a.getFullYear(), a.getMonth(), a.getDate() + 1);
+      const midStr = fmt(mid.getFullYear(), mid.getMonth() + 1, mid.getDate());
+      if (!map.has(midStr) && mid.getDay() !== 0) map.set(midStr, "国民の休日");
+    }
+  }
+  return map;
+}
 
-  const onChangeDraft = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
+function buildMonthMatrix(year, month) {
+  const first = new Date(year, month - 1, 1);
+  const last = new Date(year, month, 0).getDate();
+  const pre = Array.from({ length: first.getDay() }, () => null);
+  const days = Array.from({ length: last }, (_, i) => i + 1);
+  const cells = [...pre, ...days];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
 
-  const addEvent = async () => {
-    if (!canSave) return;
-    setBusy(true); setErr("");
-    try {
-      const res = await fetch("/api/personal/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(draft),
+/* ========================= メイン ========================= */
+export default function PersonalPage() {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+
+  const [title, setTitle] = useState("");
+  const [memo, setMemo] = useState("");
+
+  const [mode, setMode] = useState("single"); // single | range | multi
+  const rangeStartRef = useRef(null);
+  const [selected, setSelected] = useState(new Set()); // 'YYYY-MM-DD'
+
+  const [timePreset, setTimePreset] = useState("allday"); // allday | day | night | custom
+  const [startHour, setStartHour] = useState(9);
+  const [endHour, setEndHour] = useState(18);
+
+  const [records, setRecords] = useState([]); // {id,title,memo,items:[{date,slot,startHour,endHour}],createdAt}
+  const [editingId, setEditingId] = useState(null);
+
+  const holidayMap = useMemo(() => buildJapaneseHolidays(year), [year]);
+  const weeks = useMemo(() => buildMonthMatrix(year, month), [year, month]);
+
+  const prevMonth = () => {
+    const d = new Date(year, month - 2, 1);
+    setYear(d.getFullYear());
+    setMonth(d.getMonth() + 1);
+  };
+  const nextMonth = () => {
+    const d = new Date(year, month, 1);
+    setYear(d.getFullYear());
+    setMonth(d.getMonth() + 1);
+  };
+
+  const onCellClick = (d) => {
+    if (!d) return;
+    const dateStr = fmt(year, month, d);
+
+    if (mode === "single") {
+      setSelected(new Set([dateStr]));
+      rangeStartRef.current = null;
+      return;
+    }
+    if (mode === "multi") {
+      setSelected((prev) => {
+        const s = new Set(prev);
+        s.has(dateStr) ? s.delete(dateStr) : s.add(dateStr);
+        return s;
       });
-      if (!res.ok) throw new Error("保存に失敗しました");
-      const saved = await res.json();
-      setEvents((prev) => [...prev, saved]);
-      setDraft(emptyEvent());
-    } catch (e) {
-      setErr(e.message || "保存に失敗しました");
-    } finally {
-      setBusy(false);
+      return;
+    }
+    // range
+    if (!rangeStartRef.current) {
+      rangeStartRef.current = dateStr;
+      setSelected(new Set([dateStr]));
+    } else {
+      let a = new Date(rangeStartRef.current);
+      let b = new Date(dateStr);
+      if (a > b) [a, b] = [b, a];
+      const s = new Set();
+      for (let cur = new Date(a); cur <= b; cur.setDate(cur.getDate() + 1)) {
+        s.add(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()));
+      }
+      setSelected(s);
+      rangeStartRef.current = null;
     }
   };
 
-  const removeEvent = async (idx) => {
-    const target = events[idx];
-    if (!target) return;
-    setBusy(true); setErr("");
-    try {
-      const res = await fetch(`/api/personal/events/${encodeURIComponent(target.id)}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("削除に失敗しました");
-      setEvents((prev) => prev.filter((_, i) => i !== idx));
-    } catch (e) {
-      setErr(e.message || "削除に失敗しました");
-    } finally {
-      setBusy(false);
+  const holidayName = (y, m, d) => holidayMap.get(fmt(y, m, d));
+  const isToday = (d) => fmt(year, month, d) === todayStr;
+  const isSelected = (d) => selected.has(fmt(year, month, d));
+  const dayClass = (y, m, d) => {
+    const dow = new Date(y, m - 1, d).getDay();
+    return dow === 0 ? "sunday" : dow === 6 ? "saturday" : "";
+  };
+
+  const slotLabel = useMemo(() => {
+    switch (timePreset) {
+      case "allday":
+        return "終日";
+      case "day":
+        return "昼";
+      case "night":
+        return "夜";
+      case "custom":
+        return `${startHour}時〜${endHour}時`;
+      default:
+        return "";
+    }
+  }, [timePreset, startHour, endHour]);
+
+  const onRegister = () => {
+    if (selected.size === 0) return;
+
+    const items = Array.from(selected)
+      .sort()
+      .map((date) => ({
+        date,
+        slot: slotLabel,
+        startHour: timePreset === "custom" ? startHour : null,
+        endHour: timePreset === "custom" ? endHour : null,
+      }));
+
+    if (editingId) {
+      setRecords((prev) =>
+        prev.map((r) =>
+          r.id === editingId ? { ...r, title: title || "（無題）", memo, items } : r
+        )
+      );
+      setEditingId(null);
+    } else {
+      const id = `${Date.now()}${Math.random().toString(16).slice(2, 7)}`;
+      setRecords((prev) => [
+        {
+          id,
+          title: title || "（無題）",
+          memo,
+          items,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+    }
+    setSelected(new Set());
+  };
+
+  const onEdit = (rec) => {
+    setEditingId(rec.id);
+    setTitle(rec.title === "（無題）" ? "" : rec.title);
+    setMemo(rec.memo || "");
+
+    const firstSlot = rec.items[0]?.slot || "終日";
+    if (firstSlot === "終日") setTimePreset("allday");
+    else if (firstSlot === "昼") setTimePreset("day");
+    else if (firstSlot === "夜") setTimePreset("night");
+    else {
+      const m = firstSlot.match(/^(\d+)時〜(\d+)時$/);
+      if (m) {
+        setTimePreset("custom");
+        setStartHour(Number(m[1]));
+        setEndHour(Number(m[2]));
+      } else setTimePreset("allday");
+    }
+
+    const s = new Set(rec.items.map((i) => i.date));
+    setSelected(s);
+
+    const first = rec.items[0]?.date;
+    if (first) {
+      const d = new Date(first);
+      setYear(d.getFullYear());
+      setMonth(d.getMonth() + 1);
     }
   };
 
-  const issueShareLink = async () => {
-    setBusy(true); setErr("");
-    try {
-      const res = await fetch("/api/personal/share", { method: "POST" });
-      if (!res.ok) throw new Error("共有リンクの発行に失敗しました（ログインが必要です）");
-      const data = await res.json();
-      const url = `${window.location.origin}/personal/share/${data.token}`;
-      setShareInfo({ url, token: data.token, title: data.title || "個人スケジュール" });
-    } catch (e) {
-      setErr(e.message || "共有リンクの発行に失敗しました");
-    } finally {
-      setBusy(false);
+  const onDelete = (id) => {
+    setRecords((prev) => prev.filter((r) => r.id !== id));
+    if (editingId === id) {
+      setEditingId(null);
+      setSelected(new Set());
     }
   };
 
-  const addExternalLink = async (title, url) => {
-    setBusy(true); setErr("");
-    try {
-      const res = await fetch("/api/personal/links", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, url }),
-      });
-      if (!res.ok) throw new Error("リンクの追加に失敗しました");
-      const saved = await res.json();
-      setLinks((prev) => [...prev, saved]);
-    } catch (e) {
-      setErr(e.message || "リンクの追加に失敗しました");
-    } finally {
-      setBusy(false);
+  // 個人日程共有専用（/personal/share/:token）
+  const onShare = (rec) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/personal/share/${rec.id}`;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).catch(() => {});
     }
+    alert(`共有リンクを作成しました。\n${url}\n\n（/personal/share/:token は個人日程共有専用）`);
   };
 
-  const [linkTitle, setLinkTitle] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
+  const hourOptions = Array.from({ length: 24 }, (_, i) => i);
 
-  const copyShareUrl = async () => {
-    if (!shareInfo?.url) return;
-    try {
-      await navigator.clipboard.writeText(shareInfo.url);
-      alert("共有URLをコピーしました");
-    } catch { /* noop */ }
-  };
-
+  /* ========================= JSX ========================= */
   return (
     <div className="personal-page">
-      {/* ヘッダー（バナー＆ナビ） */}
-      <div className="page-header">
-        <h1 className="brand">MilkPOP Calendar</h1>
-        <div className="breadcrumbs">
-          <Link to="/" className="nav-pill">トップ</Link>
-          <Link to="/register" className="nav-pill">日程登録</Link>
-          <Link to="/share" className="nav-pill">日程共有</Link>
-          <Link to="/personal" className="nav-pill active">個人日程登録</Link>
+      {/* バナー（ブランド） */}
+      <header className="top-banner">
+        <div className="brand">MilkPOP Calendar</div>
+        <div className="banner-actions">
+          <a className="pill-link" href="/register">日程登録</a>
+          <a className="pill-link" href="/share">日程共有</a>
+          <a className="pill-link active" href="/personal">個人日程登録</a>
         </div>
-        <div className="header-actions">
-          {shareInfo ? (
-            <div className="share-compact">
-              <input className="share-compact-input" value={shareInfo.url} readOnly onFocus={(e)=>e.currentTarget.select()} />
-              <button className="btn outline" onClick={copyShareUrl}>コピー</button>
-              <Link className="btn primary" to={`/personal/share/${shareInfo.token}`} target="_blank" rel="noreferrer">共有を表示</Link>
-            </div>
-          ) : (
-            <button className="btn primary" onClick={issueShareLink} disabled={busy}>共有リンクを発行</button>
-          )}
-        </div>
-      </div>
+      </header>
 
-      {/* タイトル（中央入力） */}
-      <h2 className="ppage-title">個人日程登録</h2>
-      <div className="title-input-wrap">
+      {/* タイトル */}
+      <h1 className="page-title">個人日程登録</h1>
+
+      {/* 入力欄 */}
+      <div className="title-memo-row">
         <input
           className="title-input"
           type="text"
           placeholder="タイトルを入力してください"
-          value={draft.title}
-          onChange={(e)=>onChangeDraft("title", e.target.value)}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          className="memo-input"
+          placeholder="メモを入力してください"
+          value={memo}
+          onChange={(e) => setMemo(e.target.value)}
         />
       </div>
 
-      {/* モード切替（単日/範囲/複数） */}
-      <div className="mode-toggle">
+      {/* モード切替 */}
+      <div className="select-mode">
         <button
-          className={`pill ${selectMode === "single" ? "active" : ""}`}
-          onClick={()=>setSelectMode("single")}
-          type="button"
-        >単日選択</button>
+          className={`pill-btn ${mode === "single" ? "active" : ""}`}
+          onClick={() => {
+            setMode("single");
+            rangeStartRef.current = null;
+          }}
+        >
+          単日選択
+        </button>
         <button
-          className={`pill ${selectMode === "range" ? "active" : ""}`}
-          onClick={()=>setSelectMode("range")}
-          type="button"
-        >範囲選択</button>
+          className={`pill-btn ${mode === "range" ? "active" : ""}`}
+          onClick={() => {
+            setMode("range");
+            rangeStartRef.current = null;
+          }}
+        >
+          範囲選択
+        </button>
         <button
-          className={`pill ${selectMode === "multi" ? "active" : ""}`}
-          onClick={()=>setSelectMode("multi")}
-          type="button"
-        >複数選択</button>
+          className={`pill-btn ${mode === "multi" ? "active" : ""}`}
+          onClick={() => {
+            setMode("multi");
+            rangeStartRef.current = null;
+          }}
+        >
+          複数選択
+        </button>
       </div>
 
-      {/* 2カラム：左カレンダー／右サイドパネル */}
-      <div className="ppage-grid">
-        {/* 左：カレンダー（ここに自作カレンダーを描画する想定。date input で代替も可） */}
-        <div className="calendar-card neo-card">
-          <div className="calendar-head" />
-          <div className="calendar-body">
-            {/* 既存仕様に合わせて date input も残します */}
-            <div className="fallback-date-row">
-              <label>日付</label>
-              <input
-                type="date"
-                value={draft.date}
-                onChange={(e)=>onChangeDraft("date", e.target.value)}
-              />
-            </div>
-            <div id="personal-calendar" className="calendar-placeholder">
-              {/* ここにカレンダーUIを入れてOK（祝日マーキングもここで） */}
-              <p className="muted">（ここに自作カレンダーが入ります）</p>
-            </div>
+      {/* カレンダー + サイド */}
+      <div className="calendar-list-container">
+        {/* カレンダー */}
+        <div className="calendar-container neo">
+          <div className="calendar-header">
+            <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
+            <span className="ym">{year}年 {month}月</span>
+            <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
           </div>
+
+          <table className="calendar-table">
+            <thead>
+              <tr>
+                {wdJP.map((w, i) => (
+                  <th key={w} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>
+                    {w}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {weeks.map((week, wi) => (
+                <tr key={wi}>
+                  {week.map((d, di) => {
+                    if (!d) return <td key={`e-${di}`} />;
+                    const classes = [
+                      "cell",
+                      dayClass(year, month, d),
+                      isToday(d) ? "today" : "",
+                      isSelected(d) ? "selected" : "",
+                      holidayName(year, month, d) ? "holiday" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const hname = holidayName(year, month, d);
+                    return (
+                      <td key={d} className={classes} onClick={() => onCellClick(d)}>
+                        <div className="daynum">{d}</div>
+                        {hname && <div className="holiday-name">{hname}</div>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* 右：選択中の日程（メモ・時間帯・登録） */}
-        <div className="side-card neo-card">
-          <h3 className="side-title">選択中の日程</h3>
+        {/* サイドパネル */}
+        <aside className="side-panel neo">
+          <h2 className="side-title">選択中の日程</h2>
 
-          <div className="side-row">
-            <label>日付</label>
-            <input type="text" className="side-input" value={draft.date ? fmtDate(draft.date) : "未選択"} readOnly />
-          </div>
-
-          <div className="side-row">
-            <label>メモ</label>
-            <textarea
-              className="side-textarea"
-              placeholder="メモを入力してください"
-              value={draft.memo}
-              onChange={(e)=>onChangeDraft("memo", e.target.value)}
-            />
-          </div>
-
-          <div className="side-row">
-            <label>時間帯</label>
-            <div className="slot-pills">
-              <button className={`slot ${draft.slot==="allDay"?"active":""}`} onClick={()=>onChangeDraft("slot","allDay")} type="button">終日</button>
-              <button className={`slot ${draft.slot==="day"?"active":""}`} onClick={()=>onChangeDraft("slot","day")} type="button">昼</button>
-              <button className={`slot ${draft.slot==="night"?"active":""}`} onClick={()=>onChangeDraft("slot","night")} type="button">夜</button>
-              <button className={`slot ${draft.slot==="custom"?"active":""}`} onClick={()=>onChangeDraft("slot","custom")} type="button">カスタム</button>
+          <div className="date-card">
+            <div className="date-label">
+              {selected.size ? `${selected.size}日 選択中` : "未選択"}
             </div>
+            {selected.size > 0 && (
+              <div className="chips">
+                {Array.from(selected)
+                  .sort()
+                  .map((d) => (
+                    <span key={d} className="chip soft">{d}</span>
+                  ))}
+              </div>
+            )}
           </div>
 
-          {draft.slot === "custom" && (
+          {/* 時間帯プリセット */}
+          <div className="time-options">
+            <button
+              className={`time-btn ${timePreset === "allday" ? "active" : ""}`}
+              onClick={() => setTimePreset("allday")}
+            >
+              終日
+            </button>
+            <button
+              className={`time-btn ${timePreset === "day" ? "active" : ""}`}
+              onClick={() => setTimePreset("day")}
+            >
+              昼
+            </button>
+            <button
+              className={`time-btn ${timePreset === "night" ? "active" : ""}`}
+              onClick={() => setTimePreset("night")}
+            >
+              夜
+            </button>
+            <button
+              className={`time-btn ${timePreset === "custom" ? "active" : ""}`}
+              onClick={() => setTimePreset("custom")}
+            >
+              カスタム
+            </button>
+          </div>
+
+          {/* カスタム時間帯 */}
+          {timePreset === "custom" && (
             <div className="time-range">
-              <div className="time-col">
-                <label>開始</label>
-                <input type="time" value={draft.startTime} onChange={(e)=>onChangeDraft("startTime", e.target.value)} />
-              </div>
-              <div className="time-col">
-                <label>終了</label>
-                <input type="time" value={draft.endTime} onChange={(e)=>onChangeDraft("endTime", e.target.value)} />
-              </div>
+              <select
+                className="cute-select"
+                value={startHour}
+                onChange={(e) => setStartHour(Number(e.target.value))}
+              >
+                {hourOptions.map((h) => (
+                  <option key={h} value={h}>{h}時</option>
+                ))}
+              </select>
+              <span className="time-separator">〜</span>
+              <select
+                className="cute-select"
+                value={endHour}
+                onChange={(e) => setEndHour(Number(e.target.value))}
+              >
+                {hourOptions.map((h) => (
+                  <option key={h} value={h}>{h}時</option>
+                ))}
+              </select>
             </div>
           )}
 
-          {err && <div className="error">{err}</div>}
-
-          <button className="register-btn" onClick={addEvent} disabled={!canSave || busy}>登録</button>
-        </div>
+          <button className="register-btn" onClick={onRegister}>
+            {editingId ? "更新する" : "登録"}
+          </button>
+        </aside>
       </div>
 
-      {/* 保存済み一覧 */}
-      <div className="saved-wrap">
-        <h3 className="saved-title">あなたの個人日程（保存済み）</h3>
-        {events.length === 0 ? (
-          <p className="muted">まだ登録はありません。</p>
-        ) : (
-          <ul className="event-list">
-            {events
-              .slice()
-              .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
-              .map((ev, idx) => (
-                <li key={ev.id || idx} className="event-item">
-                  <div className="event-date">{fmtDate(ev.date)}</div>
-                  <div className="event-main">
-                    <div className="event-title">{ev.title || "（無題）"}</div>
-                    <div className="event-meta">
-                      <span className="chip">
-                        {ev.allDay ? "終日" :
-                          ev.slot === "night" ? "夜" :
-                          ev.slot === "day" ? "昼" :
-                          (ev.startTime && ev.endTime) ? `${ev.startTime} - ${ev.endTime}` : "時間未設定"}
-                      </span>
-                    </div>
-                    {ev.memo && <p className="event-memo">{ev.memo}</p>}
-                  </div>
-                  <div className="event-actions">
-                    <button className="btn danger outline" onClick={() => removeEvent(idx)} disabled={busy}>削除</button>
-                  </div>
-                </li>
+      {/* 登録済みリスト */}
+      <section className="registered-list">
+        <h2 className="saved-title">あなたの個人日程（保存済み）</h2>
+
+        {records.length === 0 && <p className="muted">まだ登録はありません。</p>}
+
+        {records.map((rec) => (
+          <div key={rec.id} className="schedule-card neo">
+            <div className="schedule-header">
+              {rec.title}
+              <span className="created-at">
+                （作成日時: {new Date(rec.createdAt || Date.now()).toLocaleString("ja-JP")}）
+              </span>
+            </div>
+
+            {rec.memo && <div className="schedule-memo">〈メモ〉{rec.memo}</div>}
+
+            <ul className="schedule-items">
+              {rec.items.map((it, i) => (
+                <li key={i}>{it.date} / {it.slot}</li>
               ))}
-          </ul>
-        )}
-      </div>
+            </ul>
 
-      {/* 自分の共有リンク一覧（仕様維持） */}
-      <div className="links-wrap">
-        <h3 className="section-title">自分の共有リンク一覧</h3>
-        <div className="form-grid compact">
-          <div className="form-row">
-            <label>タイトル</label>
-            <input
-              type="text"
-              placeholder="例：案件Aの共有カレンダー"
-              value={linkTitle}
-              onChange={(e) => setLinkTitle(e.target.value)}
-            />
+            <div className="card-actions">
+              <button className="ghost-btn" onClick={() => onEdit(rec)}>編集</button>
+              <button className="ghost-btn danger" onClick={() => onDelete(rec.id)}>削除</button>
+              <button className="ghost-btn primary" onClick={() => onShare(rec)}>共有</button>
+            </div>
           </div>
-          <div className="form-row">
-            <label>URL</label>
-            <input
-              type="url"
-              placeholder="https://example.com/..."
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-            />
-          </div>
-          <div className="form-actions">
-            <button
-              className="btn"
-              onClick={() => {
-                if (!linkUrl) return;
-                addExternalLink(linkTitle, linkUrl);
-                setLinkTitle("");
-                setLinkUrl("");
-              }}
-              disabled={busy}
-            >
-              追加
-            </button>
-          </div>
-        </div>
-
-        {links.length === 0 ? (
-          <p className="muted">追加された共有リンクはありません。</p>
-        ) : (
-          <ul className="link-list">
-            {links.map((lk, i) => (
-              <li key={i} className="link-item">
-                <a href={lk.url} target="_blank" rel="noreferrer" className="cool-link">
-                  {lk.title || lk.url}
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        ))}
+      </section>
     </div>
   );
 }
