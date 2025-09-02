@@ -1,8 +1,7 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useMemo, useState, useEffect } from "react";
 import Holidays from "date-holidays";
-// ⚠️ CSS は App.jsx で一括読込するため、このファイルからはインポートしません。
-// import "../personal.css";
+// CSS は App.jsx で一括読み込み
 import { createPersonalEvent, listPersonalEvents } from "../api";
 
 export default function PersonalPage() {
@@ -383,17 +382,7 @@ export default function PersonalPage() {
   // ====== UI ======
   return (
     <div className="personal-page">
-      {/* バナー（全ページ共通ナビ） */}
-      <header className="banner">
-        <div className="brand">MilkPOP Calendar</div>
-        <nav className="nav">
-          <a href="/">トップ</a>
-          <a href="/register">日程登録</a>
-          <a className="active" href="/personal">
-            個人スケジュール
-          </a>
-        </nav>
-      </header>
+      {/* ← ヘッダー/フッターは App.jsx で共通表示 */}
 
       <h1 className="page-title">個人日程登録</h1>
 
