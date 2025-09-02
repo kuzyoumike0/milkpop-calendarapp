@@ -1,5 +1,5 @@
 // frontend/src/components/PersonalPage.jsx
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../personal.css";
 
 /* ========================= ユーティリティ ========================= */
@@ -99,11 +99,71 @@ export default function PersonalPage() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
 
+  // 内部編集用の完全データ
   const [records, setRecords] = useState([]); // {id,title,memo,items:[{date,slot,startHour,endHour}],createdAt}
   const [editingId, setEditingId] = useState(null);
 
-  // 共有リンク表示用： { [recordId]: url }
+  // 共有URL表示: { [recordId]: url }
   const [shareLinks, setShareLinks] = useState({});
+
+  // ==== 起動時に localStorage から復元 ====
+  useEffect(() => {
+    try {
+      const loadedRecords = JSON.parse(localStorage.getItem("personalRecords")) || [];
+      setRecords(Array.isArray(loadedRecords) ? loadedRecords : []);
+
+      const linksArr = JSON.parse(localStorage.getItem("personalShareLinks")) || [];
+      const map = {};
+      for (const l of linksArr) {
+        if (l.recordId && l.url) map[l.recordId] = l.url;
+      }
+      setShareLinks(map);
+    } catch {
+      setRecords([]);
+      setShareLinks({});
+    }
+  }, []);
+
+  // ==== records/links が変わったら localStorage に保存 & 共有ページ用データを同期 ====
+  useEffect(() => {
+    // 1) 内部編集用の完全データ
+    localStorage.setItem("personalRecords", JSON.stringify(records));
+
+    // 2) 共有ページが読む簡易イベント配列（タイトル/メモ付き・並び替えしやすい形）
+    //    PersonalSharePage.jsx は "personalEvents" を参照します
+    const flatEvents = [];
+    for (const r of records) {
+      for (const it of r.items) {
+        flatEvents.push({
+          date: it.date,
+          title: r.title || "（無題）",
+          memo: r.memo || "",
+          // Share側の表示用
+          allDay: it.slot === "終日",
+          slot: it.slot, // "終日" | "昼" | "夜" | "X時〜Y時"
+          startTime:
+            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime:
+            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+        });
+      }
+    }
+    localStorage.setItem("personalEvents", JSON.stringify(flatEvents));
+  }, [records]);
+
+  useEffect(() => {
+    // 3) 共有リンク一覧（配列）を保存
+    const linksArr = Object.entries(shareLinks).map(([recordId, url]) => {
+      const rec = records.find((r) => r.id === recordId);
+      return {
+        recordId,
+        url,
+        title: rec?.title || url,
+        note: rec?.memo || "",
+      };
+    });
+    localStorage.setItem("personalShareLinks", JSON.stringify(linksArr));
+  }, [shareLinks, records]);
 
   const holidayMap = useMemo(() => buildJapaneseHolidays(year), [year]);
   const weeks = useMemo(() => buildMonthMatrix(year, month), [year, month]);
@@ -330,9 +390,15 @@ export default function PersonalPage() {
         {/* カレンダー */}
         <div className="calendar-container neo">
           <div className="calendar-header">
-            <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
-            <span className="ym">{year}年 {month}月</span>
-            <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
+            <button className="nav-circle" onClick={prevMonth} aria-label="前の月">
+              ‹
+            </button>
+            <span className="ym">
+              {year}年 {month}月
+            </span>
+            <button className="nav-circle" onClick={nextMonth} aria-label="次の月">
+              ›
+            </button>
           </div>
 
           <table className="calendar-table">
@@ -386,7 +452,9 @@ export default function PersonalPage() {
                 {Array.from(selected)
                   .sort()
                   .map((d) => (
-                    <span key={d} className="chip soft">{d}</span>
+                    <span key={d} className="chip soft">
+                      {d}
+                    </span>
                   ))}
               </div>
             )}
@@ -428,8 +496,10 @@ export default function PersonalPage() {
                 value={startHour}
                 onChange={(e) => setStartHour(Number(e.target.value))}
               >
-                {hourOptions.map((h) => (
-                  <option key={h} value={h}>{h}時</option>
+                {Array.from({ length: 24 }, (_, h) => (
+                  <option key={h} value={h}>
+                    {h}時
+                  </option>
                 ))}
               </select>
               <span className="time-separator">〜</span>
@@ -438,8 +508,10 @@ export default function PersonalPage() {
                 value={endHour}
                 onChange={(e) => setEndHour(Number(e.target.value))}
               >
-                {hourOptions.map((h) => (
-                  <option key={h} value={h}>{h}時</option>
+                {Array.from({ length: 24 }, (_, h) => (
+                  <option key={h} value={h}>
+                    {h}時
+                  </option>
                 ))}
               </select>
             </div>
@@ -470,7 +542,9 @@ export default function PersonalPage() {
 
             <ul className="schedule-items">
               {rec.items.map((it, i) => (
-                <li key={i}>{it.date} / {it.slot}</li>
+                <li key={i}>
+                  {it.date} / {it.slot}
+                </li>
               ))}
             </ul>
 
@@ -490,9 +564,15 @@ export default function PersonalPage() {
             )}
 
             <div className="card-actions">
-              <button className="ghost-btn" onClick={() => onEdit(rec)}>編集</button>
-              <button className="ghost-btn danger" onClick={() => onDelete(rec.id)}>削除</button>
-              <button className="ghost-btn primary" onClick={() => onShare(rec)}>共有</button>
+              <button className="ghost-btn" onClick={() => onEdit(rec)}>
+                編集
+              </button>
+              <button className="ghost-btn danger" onClick={() => onDelete(rec.id)}>
+                削除
+              </button>
+              <button className="ghost-btn primary" onClick={() => onShare(rec)}>
+                共有
+              </button>
             </div>
           </div>
         ))}
