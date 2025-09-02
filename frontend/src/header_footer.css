@@ -39,6 +39,18 @@
   border-radius: 8px;
   transition: 0.3s;
 }
+/* ユーザー名の見た目（他の文字と揃える） */
+ .nav-user {
+   color: #fff;            /* 文字色を他と同じに */
+   font-family: inherit;    /* ← 追加：ナビと同じフォントを継承 */
+   font-size: 1.1rem;      /* .nav-link/.nav-btn と同じ */
+   padding: 0.4rem 0.8rem; /* 高さと余白を合わせる */
+   border-radius: 8px;
+ }
+  .nav-user:hover {
+    background: transparent; /* ユーザー名はホバーで色変化なし */
+    color: #fff;
+ }
 
 .nav-link:hover, .nav-btn:hover {
   background: #FDB9C8;
