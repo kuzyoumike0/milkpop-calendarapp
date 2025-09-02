@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import PersonalPage from "./components/PersonalPage";
-import SharePage from "./components/SharePage";
+import ShareLinkPage from "./components/ShareLinkPage"; // ✅ 変更：SharePage → ShareLinkPage
 import UsagePage from "./components/UsagePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -71,7 +71,7 @@ function App() {
         <Route path="/" element={<TopPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/personal" element={<PersonalPage />} />
-        <Route path="/share/:token" element={<SharePage />} />
+        <Route path="/share/:token" element={<ShareLinkPage />} /> {/* ✅ 変更 */}
         <Route path="/usage" element={<UsagePage />} />
         <Route path="/auth/success" element={<AuthSuccess />} /> {/* ✅ 追加 */}
         <Route path="/me" element={<MeRedirect />} />
