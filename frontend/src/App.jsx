@@ -11,18 +11,6 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AuthSuccess from "./components/AuthSuccess";
 import UsagePage from "./components/UsagePage";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-
-function ShareRedirect() {
-  const nav = useNavigate();
-  const { search } = useLocation();
-  useEffect(() => {
-    const t = new URLSearchParams(search).get("token");
-    nav(t ? `/share/${t}` : "/share", { replace: true });
-  }, [search, nav]);
-  return null;
-}
 
 function ShareEntryPoint() {
   const nav = useNavigate();
