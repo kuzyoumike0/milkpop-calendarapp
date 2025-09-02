@@ -1,8 +1,9 @@
 // backend/index.js
-// ===== 完全統合版 v19 =====
-// - 変更点: Helmet CSP の frameSrc に ep1/ep2.adtrafficquality.google を追加
-//   （sodar2 の iframe ブロック解消）
-// - それ以外は v18 と同じ
+// ===== 完全統合版 v20 =====
+// - 追加: POST /api/schedules/create（ログイン済みなら日程0件でも共有発行可）
+// - 追加: GET  /api/schedules/mine（作成者の共有一覧）
+// - 既存の v19（CSP: ep1/ep2.adtrafficquality.google 許可）は維持
+// - 既存の /api/schedules, /api/personal-events などは互換維持
 
 import express from "express";
 import cors from "cors";
@@ -69,7 +70,7 @@ app.use(
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
-        // ★ 追加: SODAR の iframe を許可
+        // ★ SODAR iframe 許可
         frameSrc: [
           "'self'",
           "https://googleads.g.doubleclick.net",
@@ -81,7 +82,7 @@ app.use(
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
-        // 互換のため child-src もそろえておく（古いUA用）
+        // 古いUA向け
         childSrc: [
           "'self'",
           "https://googleads.g.doubleclick.net",
@@ -155,6 +156,7 @@ app.use(
   })
 );
 
+// ===== DB 初期化 =====
 const initDB = async () => {
   try {
     await pool.query(`
@@ -197,6 +199,7 @@ const initDB = async () => {
 };
 initDB();
 
+// ===== Socket.io =====
 io.on("connection", (socket) => {
   console.log("🟢 connected:", socket.id);
   socket.on("joinSchedule", (token) => {
@@ -207,6 +210,7 @@ io.on("connection", (socket) => {
   });
 });
 
+// ===== 認証 =====
 app.use("/auth", authRouter);
 
 function authRequired(req, res, next) {
@@ -237,6 +241,9 @@ function timeLabel(t, s, e) {
   return t;
 }
 
+// ======================
+// 共有リンク: 既存（互換維持）
+// ======================
 app.post("/api/schedules", async (req, res) => {
   try {
     const { title, dates } = req.body;
@@ -269,6 +276,65 @@ app.post("/api/schedules", async (req, res) => {
   }
 });
 
+// ======================
+// 共有リンク: 新規（★日程0件でも作成OK / 要ログイン）
+// ======================
+app.post("/api/schedules/create", authRequired, async (req, res) => {
+  try {
+    const { title, dates } = req.body || {};
+    if (!title || typeof title !== "string") {
+      return res.status(400).json({ error: "title required" });
+    }
+    const normalizedDates = Array.isArray(dates)
+      ? dates.map((d) =>
+          typeof d === "string"
+            ? d
+            : d?.date ?? null
+        ).filter(Boolean)
+      : [];
+
+    const shareToken = uuidv4().replace(/-/g, "").slice(0, 24);
+    const scheduleId = uuidv4();
+
+    await pool.query(
+      `INSERT INTO schedules (id, title, dates, options, share_token)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        scheduleId,
+        title.trim() || "未設定スケジュール",
+        // 0件でも空配列で保存
+        JSON.stringify(normalizedDates),
+        JSON.stringify({ owner: req.user.discord_id }),
+        shareToken,
+      ]
+    );
+
+    res.json({ id: scheduleId, share_token: shareToken });
+  } catch (err) {
+    console.error("❌ schedules/create 失敗:", err);
+    res.status(500).json({ error: "作成失敗" });
+  }
+});
+
+// 自分の共有一覧（owner フィルタ）
+app.get("/api/schedules/mine", authRequired, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT id, title, share_token, created_at
+       FROM schedules
+       WHERE (options->>'owner') = $1
+       ORDER BY created_at DESC
+       LIMIT 100`,
+      [String(req.user.discord_id || "")]
+    );
+    res.json(r.rows);
+  } catch (err) {
+    console.error("❌ schedules/mine 取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 単一共有取得
 app.get("/api/schedules/:shareToken", async (req, res) => {
   try {
     const { shareToken } = req.params;
@@ -280,10 +346,12 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
       return res.status(404).json({ error: "スケジュールが見つかりません" });
     }
     const schedule = result.rows[0];
-    const dates = schedule.dates.map((d) => ({
-      ...d,
-      label: timeLabel(d.timeType, d.startTime, d.endTime),
-    }));
+    // 既存仕様: mapしてlabel付与（既存の /api/schedules 互換）
+    const raw = Array.isArray(schedule.dates) ? schedule.dates : [];
+    const isObjectDates = raw.length > 0 && typeof raw[0] === "object" && raw[0] !== null;
+    const dates = isObjectDates
+      ? raw.map((d) => ({ ...d, label: timeLabel(d.timeType, d.startTime, d.endTime) }))
+      : raw; // 文字列配列（空やシンプル日付配列）も許容
     res.json({ id: schedule.id, title: schedule.title, dates });
   } catch (err) {
     console.error("❌ schedules取得失敗:", err);
@@ -291,6 +359,9 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
   }
 });
 
+// ======================
+// 個人日程: 既存（互換維持）
+// ======================
 app.post("/api/personal-events", authRequired, async (req, res) => {
   try {
     const { title, memo, dates, options } = req.body;
@@ -412,6 +483,7 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   }
 });
 
+// ===== 静的配信（SPA）=====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendDist = path.resolve(__dirname, "../frontend/build");
@@ -429,10 +501,12 @@ app.use(
   })
 );
 
+// 未定義API
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
 
+// SPA fallback
 app.get("*", (_req, res) => {
   if (!hasIndex) {
     return res
@@ -442,11 +516,13 @@ app.get("*", (_req, res) => {
   res.sendFile(indexHtmlPath);
 });
 
+// エラーハンドラ
 app.use((err, _req, res, _next) => {
   console.error("🔥 Unhandled error:", err);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
+// ===== 起動・終了処理 =====
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT} (env: ${NODE_ENV})`);
 });
