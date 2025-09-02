@@ -259,7 +259,7 @@ export default function PersonalPage() {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/personal/share/${rec.id}`;
 
-    // クリップボードには静かにコピー（失敗しても無視）
+    // クリップボードへ静かにコピー（失敗しても無視）
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
@@ -273,15 +273,7 @@ export default function PersonalPage() {
   /* ========================= JSX ========================= */
   return (
     <div className="personal-page">
-      {/* バナー（ブランド） */}
-      <header className="top-banner">
-        <div className="brand">MilkPOP Calendar</div>
-        <div className="banner-actions">
-          <a className="pill-link" href="/register">日程登録</a>
-          <a className="pill-link" href="/share">日程共有</a>
-          <a className="pill-link active" href="/personal">個人日程登録</a>
-        </div>
-      </header>
+      {/* ❌ ヘッダー/フッターは App.jsx に集約 */}
 
       {/* タイトル */}
       <h1 className="page-title">個人日程登録</h1>
