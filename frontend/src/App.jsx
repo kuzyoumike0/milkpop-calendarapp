@@ -10,6 +10,7 @@ import PersonalSharePage from "./components/PersonalSharePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AuthSuccess from "./components/AuthSuccess";
+import UsagePage from "./components/UsagePage";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<TopPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/usage" element={<UsagePage />} />
             <Route path="/share" element={<SharePage />} />
             <Route path="/personal" element={<PersonalPage />} />
             {/* 👇 ログイン成功後のリダイレクト */}
