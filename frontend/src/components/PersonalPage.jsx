@@ -1,23 +1,25 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useMemo, useState, useEffect } from "react";
 import Holidays from "date-holidays";
+// ⚠️ CSS は App.jsx で一括読込するため、このファイルからはインポートしません。
+// import "../personal.css";
 import { createPersonalEvent, listPersonalEvents } from "../api";
 
+// ===== ヘルパ =====
+const pad2 = (n) => String(n).padStart(2, "0");
+const ymd = (d) =>
+  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const ymdd = (Y, M, D) => `${Y}-${pad2(M + 1)}-${pad2(D)}`;
+
+// 日本時間の今日（表示用）
+const todayJST = (() => {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const jst = new Date(utc + 9 * 60 * 60000);
+  return ymd(jst);
+})();
+
 export default function PersonalPage() {
-  // ===== ヘルパ =====
-  const pad2 = (n) => String(n).padStart(2, "0");
-  const ymd = (d) =>
-    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-  const ymdd = (Y, M, D) => `${Y}-${pad2(M + 1)}-${pad2(D)}`;
-
-  // 日本時間の今日（表示用）
-  const todayJST = (() => {
-    const now = new Date();
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    const jst = new Date(utc + 9 * 60 * 60000);
-    return ymd(jst);
-  })();
-
   // ===== 状態 =====
   const [current, setCurrent] = useState(() => {
     const now = new Date();
@@ -30,7 +32,7 @@ export default function PersonalPage() {
   const [selectedDates, setSelectedDates] = useState(new Set());
   const [dateOptions, setDateOptions] = useState({}); // {dateStr: {timeType, startTime, endTime}}
 
-  // サーバ由来の正式な個人日程（カード単位で編集/削除可能）
+  // サーバ由来の正式な個人日程（カード単位）
   const [personalList, setPersonalList] = useState([]); // [{id,title,memo,dates:[...] ,created_at}]
   const [loadingPersonal, setLoadingPersonal] = useState(false);
 
@@ -178,7 +180,7 @@ export default function PersonalPage() {
       [dateStr]: { ...(p[dateStr] || {}), timeType: "custom", endTime: v },
     }));
 
-  // ===== 登録（サーバ登録 → 一覧再取得） =====
+  // ===== 登録（重複表示を避けるため、ローカルの別セクションは廃止。必要最小の楽観反映を personalList に挿入） =====
   const handleRegister = async () => {
     const safeTitle = title.trim() || "未設定タイトル";
     if (!safeTitle || selectedDates.size === 0) {
@@ -186,19 +188,40 @@ export default function PersonalPage() {
       return;
     }
 
+    // 楽観的に「一時カード」を personalList に挿入（重複回避のため別リストは使用しない）
+    const tempId = `temp-${Date.now()}`;
+    const tempDates = Array.from(selectedDates).sort().map((date) => {
+      const opt =
+        dateOptions[date] || { timeType: "allday", startTime: null, endTime: null };
+      return {
+        date,
+        timeType: opt.timeType,
+        startTime: opt.timeType === "custom" ? opt.startTime : null,
+        endTime: opt.timeType === "custom" ? opt.endTime : null,
+      };
+    });
+    setPersonalList((prev) => [
+      {
+        id: tempId,
+        title: safeTitle,
+        memo: memo.trim(),
+        dates: tempDates,
+        created_at: new Date().toISOString(),
+        _optimistic: true,
+      },
+      ...prev,
+    ]);
+
     try {
       setLoading(true);
       setErrorMsg("");
 
-      const payload = Array.from(selectedDates).sort().map((d) => {
-        const opt = dateOptions[d] || { timeType: "allday" };
-        return {
-          date: d,
-          timeType: opt.timeType,
-          startTime: opt.timeType === "custom" ? opt.startTime || "09:00" : null,
-          endTime: opt.timeType === "custom" ? opt.endTime || "18:00" : null,
-        };
-      });
+      const payload = tempDates.map((d) => ({
+        date: d.date,
+        timeType: d.timeType,
+        startTime: d.timeType === "custom" ? d.startTime || "09:00" : null,
+        endTime: d.timeType === "custom" ? d.endTime || "18:00" : null,
+      }));
 
       await createPersonalEvent({
         title: safeTitle,
@@ -207,11 +230,13 @@ export default function PersonalPage() {
         options: {},
       });
 
-      // 登録後はサーバの正式データのみ表示（重複回避）
+      // 成功したら正式データで同期（これにより temp カードは消える）
       await loadPersonalList();
     } catch (e) {
       console.error("個人スケジュール登録エラー:", e);
-      setErrorMsg("登録に失敗しました。ログイン状態やネットワークを確認してください。");
+      setErrorMsg("登録に失敗しました。");
+      // 失敗時は一時カードを取り除く
+      setPersonalList((prev) => prev.filter((p) => p.id !== tempId));
     } finally {
       setLoading(false);
     }
@@ -251,7 +276,6 @@ export default function PersonalPage() {
 
   useEffect(() => {
     loadPersonalList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ===== 編集/削除 =====
@@ -344,6 +368,29 @@ export default function PersonalPage() {
     }
   };
 
+  // ===== 共有リンク発行（他の人が閲覧できるようにする） =====
+  const issueShareLink = async (id) => {
+    try {
+      const res = await fetch(`/api/personal-events/${id}/share`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json(); // { token: "xxxx" }
+      const url = `${window.location.origin}/personalshare/${data.token}`;
+      // すぐ使えるようにクリップボードにもコピー
+      try {
+        await navigator.clipboard.writeText(url);
+        alert(`共有URLをクリップボードにコピーしました:\n${url}`);
+      } catch {
+        alert(`共有URL: ${url}`);
+      }
+    } catch (e) {
+      console.error("共有リンク発行エラー:", e);
+      setErrorMsg("共有リンクの発行に失敗しました。");
+    }
+  };
+
   // ===== 表示ラベル =====
   const timeLabel = (t, s, e) =>
     t === "allday"
@@ -405,16 +452,24 @@ export default function PersonalPage() {
         {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
-            <button aria-label="prev month" onClick={prevMonth}>‹</button>
-            <span>{y}年 {m + 1}月</span>
-            <button aria-label="next month" onClick={nextMonth}>›</button>
+            <button aria-label="prev month" onClick={prevMonth}>
+              ‹
+            </button>
+            <span>
+              {y}年 {m + 1}月
+            </span>
+            <button aria-label="next month" onClick={nextMonth}>
+              ›
+            </button>
           </div>
 
           <table className="calendar-table">
             <thead>
               <tr>
                 {weekdayHeaders.map((w, i) => (
-                  <th key={w} className={weekdayClass(i)}>{w}</th>
+                  <th key={w} className={weekdayClass(i)}>
+                    {w}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -449,9 +504,18 @@ export default function PersonalPage() {
           </table>
 
           <div className="legend">
-            <span className="legend-item"><i className="box selected" />選択中</span>
-            <span className="legend-item"><i className="box holiday" />祝日</span>
-            <span className="legend-item"><i className="box today" />今日</span>
+            <span className="legend-item">
+              <i className="box selected" />
+              選択中
+            </span>
+            <span className="legend-item">
+              <i className="box holiday" />
+              祝日
+            </span>
+            <span className="legend-item">
+              <i className="box today" />
+              今日
+            </span>
           </div>
         </div>
 
@@ -464,54 +528,66 @@ export default function PersonalPage() {
                 <div className="date-label">未選択</div>
               </div>
             ) : (
-              Array.from(selectedDates).sort().map((d) => {
-                const opt =
-                  dateOptions[d] || { timeType: "allday", startTime: null, endTime: null };
-                return (
-                  <div className="date-card" key={d}>
-                    <div className="date-label">{d}</div>
-                    <div className="time-options">
-                      {[
-                        { k: "allday", t: "終日" },
-                        { k: "morning", t: "午前" },
-                        { k: "afternoon", t: "午後" },
-                        { k: "custom", t: "時間指定" },
-                      ].map((o) => (
-                        <button
-                          key={o.k}
-                          className={`time-btn ${opt.timeType === o.k ? "active" : ""}`}
-                          onClick={() => setTimeTypeForDate(d, o.k)}
-                        >
-                          {o.t}
-                        </button>
-                      ))}
-                    </div>
-                    {opt.timeType === "custom" && (
-                      <div className="time-range">
-                        <select
-                          className="cute-select"
-                          value={opt.startTime || "09:00"}
-                          onChange={(e) => setStartForDate(d, e.target.value)}
-                        >
-                          {timeOptions1h.map((t) => (
-                            <option key={`s-${d}-${t}`} value={t}>{t}</option>
-                          ))}
-                        </select>
-                        <span className="time-separator">〜</span>
-                        <select
-                          className="cute-select"
-                          value={opt.endTime || "18:00"}
-                          onChange={(e) => setEndForDate(d, e.target.value)}
-                        >
-                          {timeOptions1h.map((t) => (
-                            <option key={`e-${d}-${t}`} value={t}>{t}</option>
-                          ))}
-                        </select>
+              Array.from(selectedDates)
+                .sort()
+                .map((d) => {
+                  const opt =
+                    dateOptions[d] || {
+                      timeType: "allday",
+                      startTime: null,
+                      endTime: null,
+                    };
+                  return (
+                    <div className="date-card" key={d}>
+                      <div className="date-label">{d}</div>
+                      <div className="time-options">
+                        {[
+                          { k: "allday", t: "終日" },
+                          { k: "morning", t: "午前" },
+                          { k: "afternoon", t: "午後" },
+                          { k: "custom", t: "時間指定" },
+                        ].map((o) => (
+                          <button
+                            key={o.k}
+                            className={`time-btn ${
+                              opt.timeType === o.k ? "active" : ""
+                            }`}
+                            onClick={() => setTimeTypeForDate(d, o.k)}
+                          >
+                            {o.t}
+                          </button>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                );
-              })
+                      {opt.timeType === "custom" && (
+                        <div className="time-range">
+                          <select
+                            className="cute-select"
+                            value={opt.startTime || "09:00"}
+                            onChange={(e) => setStartForDate(d, e.target.value)}
+                          >
+                            {timeOptions1h.map((t) => (
+                              <option key={`s-${d}-${t}`} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="time-separator">〜</span>
+                          <select
+                            className="cute-select"
+                            value={opt.endTime || "18:00"}
+                            onChange={(e) => setEndForDate(d, e.target.value)}
+                          >
+                            {timeOptions1h.map((t) => (
+                              <option key={`e-${d}-${t}`} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
             )}
           </div>
 
@@ -523,7 +599,7 @@ export default function PersonalPage() {
         </aside>
       </div>
 
-      {/* ★ サーバ保存済みの個人日程（編集/削除可能） */}
+      {/* ★ サーバ保存済みの個人日程（編集/削除/共有可能） */}
       <section className="registered-list">
         <h2 className="schedule-header">あなたの個人日程（保存済み）</h2>
 
@@ -536,23 +612,23 @@ export default function PersonalPage() {
             const isEdit = editingId === item.id;
             const view = isEdit ? editBuffer : item;
 
-            const timeLabel = (t, s, e) =>
-              t === "allday"
-                ? "終日"
-                : t === "morning"
-                ? "午前"
-                : t === "afternoon"
-                ? "午後"
-                : `${s ?? "—"}〜${e ?? "—"}`;
-
             return (
               <div className="schedule-card" key={item.id}>
-                <div className="schedule-header" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                {/* タイトル & 操作 */}
+                <div
+                  className="schedule-header"
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   {isEdit ? (
                     <input
                       className="title-input"
                       value={view.title}
-                      onChange={(e) => setEditBuffer((b) => ({ ...b, title: e.target.value }))}
+                      onChange={(e) => updateEditTitle(e.target.value)}
                       placeholder="タイトル"
                       style={{ maxWidth: 260, margin: 0 }}
                     />
@@ -563,32 +639,57 @@ export default function PersonalPage() {
                   <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                     {!isEdit ? (
                       <>
-                        <button className="time-btn" onClick={() => startEdit(item)}>編集</button>
-                        <button className="time-btn" onClick={() => deleteItem(item.id)}>削除</button>
+                        <button className="time-btn" onClick={() => startEdit(item)}>
+                          編集
+                        </button>
+                        <button className="time-btn" onClick={() => deleteItem(item.id)}>
+                          削除
+                        </button>
+                        {/* 共有リンク発行 */}
+                        {!item._optimistic && (
+                          <button
+                            className="time-btn"
+                            onClick={() => issueShareLink(item.id)}
+                          >
+                            共有
+                          </button>
+                        )}
                       </>
                     ) : (
                       <>
-                        <button className="time-btn active" onClick={saveEdit} disabled={loading}>保存</button>
-                        <button className="time-btn" onClick={cancelEdit}>キャンセル</button>
+                        <button
+                          className="time-btn active"
+                          onClick={saveEdit}
+                          disabled={loading}
+                        >
+                          保存
+                        </button>
+                        <button className="time-btn" onClick={cancelEdit}>
+                          キャンセル
+                        </button>
                       </>
                     )}
                   </div>
                 </div>
 
+                {/* メモ */}
                 <div style={{ margin: "8px 0" }}>
                   {isEdit ? (
                     <textarea
                       className="memo-input"
                       value={view.memo}
-                      onChange={(e) => setEditBuffer((b) => ({ ...b, memo: e.target.value }))}
+                      onChange={(e) => updateEditMemo(e.target.value)}
                       placeholder="メモ"
                       style={{ minHeight: 64 }}
                     />
+                  ) : item.memo ? (
+                    <div>{item.memo}</div>
                   ) : (
-                    item.memo ? <div>{item.memo}</div> : <div style={{ opacity: 0.7 }}>（メモなし）</div>
+                    <div style={{ opacity: 0.7 }}>（メモなし）</div>
                   )}
                 </div>
 
+                {/* 日付一覧 */}
                 <div style={{ display: "grid", gap: 8 }}>
                   {view.dates.map((d, idx) =>
                     !isEdit ? (
@@ -598,9 +699,16 @@ export default function PersonalPage() {
                         </div>
                       </div>
                     ) : (
-                      <div key={`${item.id}-edit-${d.date}`} className="date-card" style={{ alignItems: "center" }}>
+                      <div
+                        key={`${item.id}-edit-${d.date}`}
+                        className="date-card"
+                        style={{ alignItems: "center" }}
+                      >
                         <div className="date-label">{d.date}</div>
-                        <div className="time-options" style={{ marginTop: 6, flexWrap: "wrap", gap: 6 }}>
+                        <div
+                          className="time-options"
+                          style={{ marginTop: 6, flexWrap: "wrap", gap: 6 }}
+                        >
                           {[
                             { k: "allday", t: "終日" },
                             { k: "morning", t: "午前" },
@@ -610,37 +718,12 @@ export default function PersonalPage() {
                             <button
                               key={o.k}
                               className={`time-btn ${d.timeType === o.k ? "active" : ""}`}
-                              onClick={() =>
-                                setEditBuffer((b) => {
-                                  const ds = b.dates.slice();
-                                  const nd = { ...ds[idx] };
-                                  if (o.k !== "custom") {
-                                    nd.timeType = o.k;
-                                    nd.startTime = null;
-                                    nd.endTime = null;
-                                  } else {
-                                    nd.timeType = "custom";
-                                    nd.startTime = nd.startTime || "09:00";
-                                    nd.endTime = nd.endTime || "18:00";
-                                  }
-                                  ds[idx] = nd;
-                                  return { ...b, dates: ds };
-                                })
-                              }
+                              onClick={() => updateEditDateField(idx, "timeType", o.k)}
                             >
                               {o.t}
                             </button>
                           ))}
-                          <button
-                            className="time-btn"
-                            onClick={() =>
-                              setEditBuffer((b) => {
-                                const ds = b.dates.slice();
-                                ds.splice(idx, 1);
-                                return { ...b, dates: ds };
-                              })
-                            }
-                          >
+                          <button className="time-btn" onClick={() => removeEditDate(idx)}>
                             この日を削除
                           </button>
                         </div>
@@ -650,15 +733,13 @@ export default function PersonalPage() {
                               className="cute-select"
                               value={d.startTime || "09:00"}
                               onChange={(e) =>
-                                setEditBuffer((b) => {
-                                  const ds = b.dates.slice();
-                                  ds[idx] = { ...ds[idx], startTime: e.target.value, timeType: "custom" };
-                                  return { ...b, dates: ds };
-                                })
+                                updateEditDateField(idx, "startTime", e.target.value)
                               }
                             >
                               {timeOptions1h.map((t) => (
-                                <option key={`s-${item.id}-${idx}-${t}`} value={t}>{t}</option>
+                                <option key={`s-${item.id}-${idx}-${t}`} value={t}>
+                                  {t}
+                                </option>
                               ))}
                             </select>
                             <span className="time-separator">〜</span>
@@ -666,15 +747,13 @@ export default function PersonalPage() {
                               className="cute-select"
                               value={d.endTime || "18:00"}
                               onChange={(e) =>
-                                setEditBuffer((b) => {
-                                  const ds = b.dates.slice();
-                                  ds[idx] = { ...ds[idx], endTime: e.target.value, timeType: "custom" };
-                                  return { ...b, dates: ds };
-                                })
+                                updateEditDateField(idx, "endTime", e.target.value)
                               }
                             >
                               {timeOptions1h.map((t) => (
-                                <option key={`e-${item.id}-${idx}-${t}`} value={t}>{t}</option>
+                                <option key={`e-${item.id}-${idx}-${t}`} value={t}>
+                                  {t}
+                                </option>
                               ))}
                             </select>
                           </div>
@@ -684,7 +763,9 @@ export default function PersonalPage() {
                   )}
                   {isEdit && view.dates.length === 0 && (
                     <div className="date-card">
-                      <div className="date-label">このカードには日程がありません（保存すると空のまま更新されます）</div>
+                      <div className="date-label">
+                        このカードには日程がありません（保存すると空のまま更新されます）
+                      </div>
                     </div>
                   )}
                 </div>
@@ -692,6 +773,7 @@ export default function PersonalPage() {
                 {item.created_at && (
                   <div style={{ opacity: 0.8, marginTop: 8 }}>
                     作成日時: {new Date(item.created_at).toLocaleString()}
+                    {item._optimistic && "（送信中…）"}
                   </div>
                 )}
               </div>
