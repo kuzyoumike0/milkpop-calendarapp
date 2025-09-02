@@ -1,9 +1,47 @@
-import React, { useState } from "react";
+// frontend/src/components/Header.jsx
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../common.css";
 
-export default function Header({ user }) {
+// ヘッダー（ログイン状態は /api/me で確認。ログアウト時は localStorage の互換JWTも確実に削除）
+export default function Header({ user: userProp = null }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState(userProp);
+  const [checking, setChecking] = useState(!userProp);
+
+  useEffect(() => {
+    if (userProp) return; // 親から渡された場合は確認不要
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (!cancelled && res.ok) {
+          const data = await res.json().catch(() => null);
+          setUser(data?.user ?? null);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userProp]);
+
+  const handleLogout = () => {
+    try {
+      // 互換用に残っている可能性があるJWTを必ず削除
+      localStorage.removeItem("jwt");
+    } catch {}
+    // サーバ側でHttpOnly Cookieを消す
+    window.location.href = "/auth/logout";
+  };
+
+  const loginHref = "/auth/discord";
 
   return (
     <header className="header">
@@ -23,12 +61,20 @@ export default function Header({ user }) {
         <Link to="/personal" className="nav-link">
           個人日程登録
         </Link>
-        {user ? (
-          <a href="/auth/logout" className="nav-btn">
-            ログアウト
-          </a>
+
+        {checking ? (
+          <span className="nav-muted">確認中…</span>
+        ) : user ? (
+          <>
+            <span className="nav-user" title={user.username}>
+              {user.username}
+            </span>
+            <button type="button" className="nav-btn" onClick={handleLogout}>
+              ログアウト
+            </button>
+          </>
         ) : (
-          <a href="/auth/discord" className="nav-btn">
+          <a href={loginHref} className="nav-btn">
             Discordログイン
           </a>
         )}
@@ -37,7 +83,13 @@ export default function Header({ user }) {
       {/* ハンバーガーメニュー（スマホ用） */}
       <div
         className={`hamburger ${menuOpen ? "open" : ""}`}
-        onClick={() => setMenuOpen(!menuOpen)}
+        onClick={() => setMenuOpen((v) => !v)}
+        aria-label="メニュー"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setMenuOpen((v) => !v);
+        }}
       >
         <span></span>
         <span></span>
@@ -67,17 +119,23 @@ export default function Header({ user }) {
         >
           個人日程登録
         </Link>
-        {user ? (
-          <a
-            href="/auth/logout"
+
+        {checking ? (
+          <span className="nav-muted-mobile">確認中…</span>
+        ) : user ? (
+          <button
+            type="button"
             className="nav-btn-mobile"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => {
+              setMenuOpen(false);
+              handleLogout();
+            }}
           >
             ログアウト
-          </a>
+          </button>
         ) : (
           <a
-            href="/auth/discord"
+            href={loginHref}
             className="nav-btn-mobile"
             onClick={() => setMenuOpen(false)}
           >
