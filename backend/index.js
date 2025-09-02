@@ -265,10 +265,13 @@ app.post("/api/schedules", async (req, res) => {
        RETURNING id, share_token`,
       [uuidv4(), title, JSON.stringify(normalizedDates), JSON.stringify({}), shareToken]
     );
-
+    
+    const baseUrl = resolveBaseUrl(req);
+    const shareUrl = `${baseUrl}/share/${result.rows[0].share_token}`;
     res.json({
       id: result.rows[0].id,
       share_token: result.rows[0].share_token,
+      share_url: shareUrl,
     });
   } catch (err) {
     console.error("❌ schedules作成失敗:", err);
@@ -309,7 +312,9 @@ app.post("/api/schedules/create", authRequired, async (req, res) => {
       ]
     );
 
-    res.json({ id: scheduleId, share_token: shareToken });
+    const baseUrl = resolveBaseUrl(req);
+    const shareUrl = `${baseUrl}/share/${shareToken}`;
+    res.json({ id: scheduleId, share_token: shareToken, share_url: shareUrl,});
   } catch (err) {
     console.error("❌ schedules/create 失敗:", err);
     res.status(500).json({ error: "作成失敗" });
