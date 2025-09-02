@@ -1,199 +1,139 @@
 // frontend/src/components/PersonalSharePage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import "../personal.css";
+import "../common.css";
 
-/**
- * 個人日程 共有ページ（/share/:token）
- * App.jsx 側で Header/Footer を共通表示するため、
- * このコンポーネントでは独自のヘッダー/フッターは持たない。
- */
+const fmtDate = (iso) => {
+  try {
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}/${m}/${day}`;
+  } catch {
+    return iso;
+  }
+};
+
+const fmtTimeRange = (ev) => {
+  if (ev.allDay) return "終日";
+  if (ev.slot === "night") return "夜";
+  if (ev.slot === "day") return "昼";
+  if (ev.startTime && ev.endTime) return `${ev.startTime} - ${ev.endTime}`;
+  return "時間未設定";
+};
+
 export default function PersonalSharePage() {
   const { token } = useParams();
   const [loading, setLoading] = useState(true);
-  const [schedule, setSchedule] = useState(null);
-  const [error, setError] = useState("");
+  const [owner, setOwner] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [links, setLinks] = useState([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    let aborted = false;
-
-    async function fetchSchedule() {
+    let alive = true;
+    (async () => {
       try {
-        // バックエンド：GET /api/personal/schedules/:token を想定
-        // （まだ未実装でもビルドが通るようにフォールバックあり）
-        const res = await fetch(`/api/personal/schedules/${token}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch(`/api/personal/view/${token}`);
+        if (!res.ok) throw new Error("failed");
         const data = await res.json();
-        if (!aborted) {
-          setSchedule(data);
-          setLoading(false);
-        }
+        if (!alive) return;
+        setOwner(data.owner || null);
+        setTitle(data.title || "個人スケジュール");
+        setEvents(Array.isArray(data.events) ? data.events : []);
+        setLinks(Array.isArray(data.links) ? data.links : []);
       } catch (e) {
-        if (!aborted) {
-          // フォールバック（デモ表示）
-          setSchedule({
-            title: "（デモ）個人スケジュール",
-            share_token: token,
-            events: [
-              { date: "2025-09-05", range: "複数選択", slots: ["昼", "夜"] },
-              { date: "2025-09-06", range: "範囲選択", slots: ["終日"] },
-            ],
-            my_links: [
-              { url: "https://example.com/my-portfolio", title: "自分の共有リンク例" },
-            ],
-            created_at: "2025-09-01T00:00:00Z",
-          });
-          setError(String(e));
-          setLoading(false);
-        }
+        setOwner(null);
+        setTitle("個人スケジュール（共有）");
+        setEvents([]);
+        setLinks([]);
+      } finally {
+        if (alive) setLoading(false);
       }
-    }
-
-    fetchSchedule();
-    return () => {
-      aborted = true;
-    };
+    })();
+    return () => { alive = false; };
   }, [token]);
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>読み込み中…</h2>
-        </div>
-      </div>
-    );
-  }
-
-  if (!schedule) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h2 style={styles.title}>共有データが見つかりません</h2>
-          <p style={styles.muted}>トークン: {token}</p>
-          <Link to="/" style={styles.primaryBtn}>トップへ戻る</Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>{schedule.title}</h2>
-        <p style={styles.muted}>共有トークン: <code>{schedule.share_token}</code></p>
-        {error && <p style={styles.warn}>⚠ {error}</p>}
-
-        {/* 日程一覧 */}
-        <section style={styles.section}>
-          <h3 style={styles.h3}>日程</h3>
-          <ul style={styles.list}>
-            {(schedule.events || []).map((ev, idx) => (
-              <li key={idx} style={styles.listItem}>
-                <div style={styles.itemRow}>
-                  <span style={styles.dateText}>{ev.date}</span>
-                  <span style={styles.badge}>{ev.range}</span>
-                </div>
-                <div style={styles.slotRow}>
-                  {(ev.slots || []).map((s, i) => (
-                    <span key={i} style={styles.slotChip}>{s}</span>
-                  ))}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* 自分が入力した共有リンクURLとタイトル一覧 */}
-        <section style={styles.section}>
-          <h3 style={styles.h3}>自分の共有リンク</h3>
-          {(!schedule.my_links || schedule.my_links.length === 0) ? (
-            <p style={styles.muted}>（リンクはまだありません）</p>
-          ) : (
-            <ul style={styles.list}>
-              {schedule.my_links.map((l, i) => (
-                <li key={i} style={styles.listItem}>
-                  <a href={l.url} target="_blank" rel="noreferrer" style={styles.anchor}>
-                    {l.title || l.url}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <div style={styles.actions}>
-          <Link to="/personal" style={styles.secondaryBtn}>個人スケジュールへ</Link>
-          <Link to="/" style={styles.primaryBtn}>トップへ</Link>
+    <div className="personal-page view-only">
+      <div className="page-header">
+        <h1 className="brand">MilkPOP Calendar</h1>
+        <div className="breadcrumbs">
+          <Link to="/" className="nav-pill">トップ</Link>
+          <Link to="/register" className="nav-pill">日程登録</Link>
+          <Link to="/personal" className="nav-pill">個人スケジュール</Link>
         </div>
+      </div>
+
+      <div className="card glass">
+        <div className="card-header">
+          <h2 className="card-title">
+            {title} <span className="badge">閲覧専用</span>
+          </h2>
+          {owner?.displayName && (
+            <p className="muted">作成者: {owner.displayName}</p>
+          )}
+        </div>
+
+        {loading ? (
+          <div className="skeleton-list">
+            <div className="skeleton-item" />
+            <div className="skeleton-item" />
+            <div className="skeleton-item" />
+          </div>
+        ) : (
+          <>
+            <section className="section">
+              <h3 className="section-title">登録済みの予定</h3>
+              {events.length === 0 ? (
+                <p className="muted">まだ予定がありません。</p>
+              ) : (
+                <ul className="event-list">
+                  {events
+                    .slice()
+                    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))
+                    .map((ev, idx) => (
+                      <li key={idx} className="event-item">
+                        <div className="event-date">{fmtDate(ev.date)}</div>
+                        <div className="event-main">
+                          <div className="event-title">{ev.title || "（無題）"}</div>
+                          <div className="event-meta">
+                            <span className="chip">{fmtTimeRange(ev)}</span>
+                            {Array.isArray(ev.tags) && ev.tags.length > 0 && (
+                              <span className="chip outline">
+                                {ev.tags.join(" / ")}
+                              </span>
+                            )}
+                          </div>
+                          {ev.memo && <p className="event-memo">{ev.memo}</p>}
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="section">
+              <h3 className="section-title">共有リンク（作成者のメモ）</h3>
+              {links.length === 0 ? (
+                <p className="muted">共有リンクはありません。</p>
+              ) : (
+                <ul className="link-list">
+                  {links.map((lk, i) => (
+                    <li key={i} className="link-item">
+                      <a href={lk.url} target="_blank" rel="noreferrer" className="cool-link">
+                        {lk.title || lk.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "calc(100vh - 160px)", // ヘッダー/フッター分の余白を考慮
-    background: "linear-gradient(135deg, #FDB9C8 0%, #004CA0 100%)",
-    padding: "24px",
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-  },
-  card: {
-    width: "100%",
-    maxWidth: "960px",
-    background: "rgba(0,0,0,0.45)",
-    color: "#fff",
-    borderRadius: "16px",
-    padding: "20px",
-    boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-    backdropFilter: "blur(10px)",
-  },
-  title: { margin: "0 0 6px", fontWeight: 800 },
-  muted: { opacity: 0.9 },
-  warn: { color: "#FFD966", marginTop: 6 },
-  section: { marginTop: 20 },
-  h3: { margin: "0 0 10px", fontSize: "1.1rem" },
-  list: { listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 },
-  listItem: {
-    background: "rgba(255,255,255,0.08)",
-    borderRadius: "12px",
-    padding: "12px 14px",
-  },
-  itemRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 8 },
-  dateText: { fontWeight: 700 },
-  badge: {
-    background: "#FDB9C8",
-    color: "#000",
-    padding: "2px 10px",
-    borderRadius: "999px",
-    fontSize: 12,
-    fontWeight: 700,
-  },
-  slotRow: { display: "flex", gap: 8, flexWrap: "wrap" },
-  slotChip: {
-    background: "rgba(255,255,255,0.15)",
-    padding: "2px 10px",
-    borderRadius: "999px",
-    fontSize: 12,
-  },
-  actions: { display: "flex", gap: 10, marginTop: 16 },
-  primaryBtn: {
-    background: "#FDB9C8",
-    color: "#000",
-    padding: "8px 14px",
-    borderRadius: "12px",
-    textDecoration: "none",
-    fontWeight: 700,
-  },
-  secondaryBtn: {
-    background: "#004CA0",
-    color: "#fff",
-    padding: "8px 14px",
-    borderRadius: "12px",
-    textDecoration: "none",
-    fontWeight: 700,
-    border: "1px solid rgba(255,255,255,0.25)",
-  },
-  anchor: { color: "#fff", textDecoration: "underline" },
-};
