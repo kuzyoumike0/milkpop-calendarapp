@@ -1,6 +1,6 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useMemo, useRef, useState } from "react";
-import "../personal.css"; // ★ これがないと personal.css が反映されません！
+import "../personal.css"; // personal.css を適用
 
 /* ========================= ユーティリティ ========================= */
 const pad = (n) => String(n).padStart(2, "0");
@@ -89,7 +89,7 @@ export default function PersonalPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const [title, setTitle] = useState("");
-  the [memo, setMemo] = useState("");
+  const [memo, setMemo] = useState(""); // ★ 修正：const で定義
 
   const [mode, setMode] = useState("single"); // single | range | multi
   const rangeStartRef = useRef(null);
