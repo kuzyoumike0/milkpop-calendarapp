@@ -40,11 +40,15 @@ export default function PersonalPage() {
   const [myEvents, setMyEvents] = useState([]); // {id,title,memo,date,timeType,startTime,endTime,createdAt}[]
   const [loadingMyEvents, setLoadingMyEvents] = useState(false);
 
+  // 共有リンクの内容を個人日程ページ内で表示
+  const [viewShareToken, setViewShareToken] = useState(null);
+  const [viewShareTitle, setViewShareTitle] = useState("");
+  const [viewShareDates, setViewShareDates] = useState([]); // [{date,timeType,startTime,endTime,label}]
+  const [loadingViewShare, setLoadingViewShare] = useState(false);
+
   // 読み込み/エラー表示
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [creatingShare, setCreatingShare] = useState(false);
-  const [shareMsg, setShareMsg] = useState("");
 
   // ===== 祝日 =====
   const hd = useMemo(() => new Holidays("JP"), []);
@@ -205,7 +209,7 @@ export default function PersonalPage() {
     );
     setSchedules(merged);
 
-    // サーバ登録（共有リンクはサーバ側で自動発行 → 一覧に反映）
+    // サーバ登録
     try {
       setLoading(true);
       setErrorMsg("");
@@ -344,55 +348,59 @@ export default function PersonalPage() {
     }
   };
 
-  // ===== 共有リンクを「日程0件でも」発行（/api/schedules/create） =====
-  const createEmptyShare = async () => {
+  // ===== 共有リンク内容を読み込み表示（個人日程ページ内） =====
+  const loadSharedIntoView = async (token) => {
+    if (!token) return;
     try {
-      setCreatingShare(true);
-      setShareMsg("");
+      setLoadingViewShare(true);
       setErrorMsg("");
-
-      const res = await fetch("/api/schedules/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          title: title.trim() || "未設定スケジュール",
-          // ★ ここがポイント：日程0件でもOK
-          dates: [],
-        }),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "create failed");
-      }
-      const data = await res.json();
-      const base = window.location.origin;
-      const url = `${base}/share/${data.share_token}`;
-      setShareMsg(`共有リンクを発行しました: ${url}`);
-
-      // 即反映
-      setShareLinks((prev) => [
-        {
-          id: data.id,
-          title: title.trim() || "未設定スケジュール",
-          url,
-          createdAt: new Date().toISOString(),
-          source: "mine",
-        },
-        ...prev,
-      ]);
+      const res = await fetch(`/api/schedules/${token}`);
+      if (!res.ok) throw new Error(await res.text());
+      const json = await res.json(); // {id,title,dates:[...]}
+      setViewShareToken(token);
+      setViewShareTitle(json.title || "共有スケジュール");
+      // dates は {date,timeType,startTime,endTime,label} または文字列の可能性があるので正規化
+      const norm = (json.dates || []).map((d) =>
+        typeof d === "string"
+          ? { date: d, timeType: "allday", startTime: null, endTime: null, label: "終日" }
+          : {
+              date: d.date,
+              timeType: d.timeType || "allday",
+              startTime: d.startTime || null,
+              endTime: d.endTime || null,
+              label: d.label || (d.timeType === "custom"
+                ? `${d.startTime ?? "—"}〜${d.endTime ?? "—"}`
+                : d.timeType === "morning"
+                ? "午前"
+                : d.timeType === "afternoon"
+                ? "午後"
+                : "終日"),
+            }
+      );
+      norm.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+      setViewShareDates(norm);
+      // URLクエリにも反映（リロードしても同じ表示に）
+      const url = new URL(window.location.href);
+      url.searchParams.set("share", token);
+      window.history.replaceState(null, "", url.toString());
     } catch (e) {
-      console.error("共有リンク発行エラー:", e);
-      setErrorMsg("共有リンクの発行に失敗しました。ログイン状態と権限を確認してください。");
+      console.error("共有内容表示エラー:", e);
+      setErrorMsg("共有スケジュールの読み込みに失敗しました。");
+      setViewShareToken(null);
+      setViewShareTitle("");
+      setViewShareDates([]);
     } finally {
-      setCreatingShare(false);
+      setLoadingViewShare(false);
     }
   };
 
+  // 初回：共有リンク & 自分の日程 両方ロード / URL ?share=token に対応
   useEffect(() => {
-    // 初回：共有リンク & 自分の日程 両方ロード
-    Promise.all([loadShareLinks(), loadMyEvents()]);
+    const p = new URLSearchParams(window.location.search);
+    const t = p.get("share");
+    Promise.all([loadShareLinks(), loadMyEvents()]).then(() => {
+      if (t) loadSharedIntoView(t);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -612,18 +620,6 @@ export default function PersonalPage() {
             {loading ? "保存中..." : "登録"}
           </button>
 
-          {/* 共有リンクを「日程0件でも」発行 */}
-          <button
-            className="register-btn"
-            style={{ marginTop: 10 }}
-            onClick={createEmptyShare}
-            disabled={creatingShare}
-            title="ログイン済みなら、日程未選択でも共有用URLを発行します"
-          >
-            {creatingShare ? "共有リンク発行中..." : "共有リンクを発行（0件でも可）"}
-          </button>
-          {!!shareMsg && <div className="info" style={{ marginTop: 8 }}>{shareMsg}</div>}
-
           {!!errorMsg && <div className="error">{errorMsg}</div>}
         </aside>
       </div>
@@ -648,7 +644,7 @@ export default function PersonalPage() {
         )}
       </section>
 
-      {/* ★ 自分の保存済み日程（サーバ由来 / 常時閲覧） */}
+      {/* あなたの保存済み日程（サーバ由来 / 常時閲覧） */}
       <section className="registered-list">
         <h2 className="schedule-header">あなたの個人日程（保存済み）</h2>
         {loadingMyEvents ? (
@@ -670,39 +666,74 @@ export default function PersonalPage() {
         )}
       </section>
 
-      {/* 共有リンク一覧（読み込み中と空の表示を分岐） */}
+      {/* 共有リンク一覧（この一覧から個人日程ページ内で表示可能） */}
       <section className="registered-list">
         <h2 className="schedule-header">共有リンク一覧</h2>
         {loadingShares ? (
           <div className="schedule-card">共有リンクを読み込み中...</div>
         ) : shareLinks.length === 0 ? (
           <div className="schedule-card">
-            まだ共有リンクがありません。「共有リンクを発行（0件でも可）」を押してください。
+            共有リンクはまだありません（登録時に自動で作成される場合があります）。
           </div>
         ) : (
-          shareLinks.map((l) => (
-            <div className="schedule-card" key={l.url}>
-              <div className="schedule-header">{l.title}</div>
-              <div>
-                <a
-                  href={l.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "#fff", textDecoration: "underline" }}
-                >
-                  {l.url}
-                </a>
-              </div>
-              {l.createdAt && (
-                <div style={{ opacity: 0.8, marginTop: 6 }}>
-                  発行日時: {new Date(l.createdAt).toLocaleString()}
-                  {l.source ? `（${l.source}）` : ""}
+          shareLinks.map((l) => {
+            const token = l.url.split("/share/")[1] || "";
+            return (
+              <div className="schedule-card" key={l.url}>
+                <div className="schedule-header">{l.title}</div>
+                <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#fff", textDecoration: "underline" }}
+                  >
+                    共有ページを開く
+                  </a>
+                  <button
+                    className="btn-inline"
+                    onClick={() => loadSharedIntoView(token)}
+                    title="この共有内容を個人日程ページ内で表示します"
+                  >
+                    個人日程を表示
+                  </button>
                 </div>
-              )}
-            </div>
-          ))
+                {l.createdAt && (
+                  <div style={{ opacity: 0.8, marginTop: 6 }}>
+                    発行日時: {new Date(l.createdAt).toLocaleString()}
+                    {l.source ? `（${l.source}）` : ""}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </section>
+
+      {/* 共有リンクの中身をこのページ内で表示するビュー */}
+      {viewShareToken && (
+        <section className="registered-list">
+          <h2 className="schedule-header">
+            共有の内容を表示中：{viewShareTitle}
+            <small style={{ marginLeft: 8, opacity: 0.8 }}>
+              （トークン: {viewShareToken}）
+            </small>
+          </h2>
+          {loadingViewShare ? (
+            <div className="schedule-card">読み込み中...</div>
+          ) : viewShareDates.length === 0 ? (
+            <div className="schedule-card">この共有にはまだ日程が登録されていません</div>
+          ) : (
+            viewShareDates.map((d) => (
+              <div className="schedule-card" key={`${viewShareToken}-${d.date}`}>
+                <div className="schedule-header">
+                  {d.date} / {d.label || timeLabel(d.timeType, d.startTime, d.endTime)}
+                </div>
+              </div>
+            ))
+          )}
+        </section>
+      )}
     </div>
   );
 }
