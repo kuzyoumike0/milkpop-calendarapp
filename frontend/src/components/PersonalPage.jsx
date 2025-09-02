@@ -1,6 +1,6 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useMemo, useRef, useState } from "react";
-import "../personal.css"; // personal.css を適用
+import "../personal.css";
 
 /* ========================= ユーティリティ ========================= */
 const pad = (n) => String(n).padStart(2, "0");
@@ -13,11 +13,11 @@ const todayStr = (() => {
 
 function nthMonday(year, month, n) {
   const first = new Date(year, month - 1, 1);
-  const offset = (8 - first.getDay()) % 7; // 最初の月曜までの差
+  const offset = (8 - first.getDay()) % 7;
   return fmt(year, month, 1 + offset + 7 * (n - 1));
 }
 
-// 春分・秋分（必要年を追加して運用）
+// 春分・秋分
 const EQUINOX = {
   vernal: { 2024: "2024-03-20", 2025: "2025-03-20", 2026: "2026-03-20" },
   autumnal: { 2024: "2024-09-22", 2025: "2025-09-23", 2026: "2026-09-22" },
@@ -56,7 +56,7 @@ function buildJapaneseHolidays(year) {
       map.set(fmt(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()), "振替休日");
     }
   }
-  // 国民の休日（祝日に挟まれた平日）
+  // 国民の休日
   const dates = Array.from(map.keys()).sort();
   for (let i = 0; i < dates.length - 1; i++) {
     const a = new Date(dates[i]);
@@ -229,8 +229,7 @@ export default function PersonalPage() {
       } else setTimePreset("allday");
     }
 
-    const s = new Set(rec.items.map((i) => i.date));
-    setSelected(s);
+    setSelected(new Set(rec.items.map((i) => i.date)));
 
     const first = rec.items[0]?.date;
     if (first) {
@@ -259,7 +258,7 @@ export default function PersonalPage() {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/personal/share/${rec.id}`;
 
-    // クリップボードへ静かにコピー（失敗しても無視）
+    // クリップボードには静かにコピー（失敗しても無視）
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
@@ -273,7 +272,7 @@ export default function PersonalPage() {
   /* ========================= JSX ========================= */
   return (
     <div className="personal-page">
-      {/* ❌ ヘッダー/フッターは App.jsx に集約 */}
+      {/* ❌ ここにはヘッダー／フッターを書かない（App.jsx に集約） */}
 
       {/* タイトル */}
       <h1 className="page-title">個人日程登録</h1>
@@ -475,7 +474,7 @@ export default function PersonalPage() {
               ))}
             </ul>
 
-            {/* 共有URLをカード内に表示（クリック可能） */}
+            {/* 共有URLをカード内に表示 */}
             {shareLinks[rec.id] && (
               <div className="share-link-row">
                 <span className="share-label">共有URL：</span>
