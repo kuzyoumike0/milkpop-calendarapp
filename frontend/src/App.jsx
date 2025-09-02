@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-// ✅ CSS をここで一括読み込み
+// ✅ CSS をここで一括読み込み（すべて src/ 直下）
 import "./common.css";
 import "./personal.css";
 import "./register.css";
@@ -13,10 +13,10 @@ import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import SharePage from "./components/SharePage";
 import PersonalPage from "./components/PersonalPage";
-import ShareLinkPage from "./components/ShareLinkPage";
-import PersonalSharePage from "./components/PersonalSharePage";
+import ShareLinkPage from "./components/ShareLinkPage";        // 共有リンク（登録用）
+import PersonalSharePage from "./components/PersonalSharePage"; // 個人日程の共有閲覧
 
-// 共通ヘッダー
+// 共通ヘッダー（.header / .logo-link / .nav-link などのCSSに対応）
 const Header = () => {
   const [open, setOpen] = useState(false);
   const toggle = () => setOpen((v) => !v);
@@ -41,13 +41,14 @@ const Header = () => {
         </Link>
       </nav>
 
-      {/* ハンバーガー */}
+      {/* ハンバーガー（モバイル） */}
       <button
         className={`hamburger ${open ? "open" : ""}`}
         onClick={toggle}
         aria-label="open navigation"
         aria-expanded={open}
         aria-controls="mobile-menu"
+        type="button"
       >
         <span></span>
         <span></span>
@@ -74,7 +75,7 @@ const Header = () => {
   );
 };
 
-// 共通フッター
+// 共通フッター（.footer のCSSに対応）
 const Footer = () => (
   <footer className="footer">
     <div>© {new Date().getFullYear()} MilkPOP</div>
@@ -92,7 +93,9 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/share/:token?" element={<SharePage />} />
             <Route path="/personal" element={<PersonalPage />} />
+            {/* 登録スケジュールの共有リンク閲覧（例: /sharelink/abcd1234） */}
             <Route path="/sharelink/:token" element={<ShareLinkPage />} />
+            {/* 個人日程カードの共有リンク閲覧（例: /personalshare/efgh5678） */}
             <Route path="/personalshare/:token" element={<PersonalSharePage />} />
           </Routes>
         </main>
