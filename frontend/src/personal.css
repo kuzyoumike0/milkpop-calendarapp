@@ -1,163 +1,228 @@
-/* ===== ページ全体 ===== */
+/* ====== ページ全体 ====== */
 .personal-page {
-  padding: 40px;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  min-height: 100vh;
-  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
-  color: #222;
-  box-sizing: border-box;
-}
-
-/* タイトル */
-.page-title {
-  text-align: center;
-  font-size: 2.4rem;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: white;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.5);
-}
-
-/* ===== 入力欄（タイトル＆メモ） ===== */
-.title-input,
-.memo-input {
-  display: block;
-  width: 60%;
-  max-width: 600px;
-  margin: 0 auto 20px auto;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.35);
-  font-size: 1.1rem;
-  background: rgba(255,255,255,0.22);
-  box-shadow:
-    0 6px 18px rgba(0,0,0,0.18),
-    inset 0 0 0 999px rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-sizing: border-box;
-  transition: box-shadow .25s, transform .12s, border-color .25s;
-}
-
-.title-input {
-  text-align: center;
-}
-
-.memo-input {
-  min-height: 120px;
-  resize: vertical;
-  text-align: left;
-  line-height: 1.6;
-}
-
-.title-input:focus,
-.memo-input:focus {
-  outline: none;
-  border-color: rgba(253,185,200,0.9);
-  box-shadow:
-    0 10px 28px rgba(0,0,0,0.22),
-    0 0 0 3px rgba(253,185,200,0.45),
-    0 0 0 6px rgba(0,76,160,0.25);
-  transform: translateY(-1px);
-}
-
-/* ===== モード切替 ===== */
-.select-mode {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.select-mode button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #fdb9c8, #004ca0);
+  padding: 20px;
+  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.25s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-.select-mode button:hover {
-  transform: scale(1.08);
-  background: linear-gradient(135deg, #004ca0, #fdb9c8);
-}
-.select-mode button.active {
-  background: #fff;
-  color: #004ca0;
-  border: 2px solid #004ca0;
-}
-
-/* ===== カレンダーとサイド ===== */
-.calendar-list-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: 20px;
-}
-
-/* カレンダー */
-.calendar-container {
-  flex: 0 0 65%;
-  background: rgba(255,255,255,0.15);
-  border-radius: 20px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #FDB9C8, #004CA0);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* サイドパネル */
-.side-panel {
-  flex: 0 0 30%;
-  background: rgba(255,255,255,0.15);
+/* ====== カード（ガラス風デザイン） ====== */
+.card.glass {
+  background: rgba(0, 0, 0, 0.45);
   border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  padding: 24px;
+  margin: 20px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  width: 90%;
+  max-width: 800px;
+}
+
+/* ====== 見出し ====== */
+.card-title {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #FDB9C8;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  margin: 20px 0 10px;
+  border-left: 5px solid #FDB9C8;
+  padding-left: 10px;
+  color: #fff;
+}
+
+/* ====== フォーム部分 ====== */
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+.form-row {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  color: #fff;
 }
-
-/* ===== 登録済みリスト（カレンダー幅に合わせる） ===== */
-.registered-list {
-  margin: 40px auto 0 auto;
-  width: 100%;
-  max-width: 1200px;  /* ✅ カレンダーと揃える */
-  background: rgba(255,255,255,0.15);
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  color: #fff;
-}
-
-.schedule-card {
-  background: rgba(255,255,255,0.2);
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  transition: transform .12s, box-shadow .12s;
-}
-.schedule-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.28);
-}
-.schedule-header {
+.form-row label {
   font-weight: bold;
   margin-bottom: 6px;
+  color: #FDB9C8;
+}
+.form-row input,
+.form-row textarea,
+.form-row select {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #aaa;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.form-row input:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: #FDB9C8;
+  box-shadow: 0 0 5px #FDB9C8;
 }
 
-/* ===== レスポンシブ ===== */
-@media (max-width: 768px) {
-  .title-input, .memo-input { width: 92%; max-width: none; }
-  .calendar-list-container { flex-direction: column; max-width: 96%; }
-  .calendar-container, .side-panel { width: 100%; max-width: 100%; }
-  .registered-list { max-width: 96%; }
+/* ====== ボタン ====== */
+.btn {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.btn.primary {
+  background: #FDB9C8;
+  color: #000;
+}
+.btn.primary:hover {
+  background: #fff;
+  color: #004CA0;
+}
+.btn.outline {
+  background: transparent;
+  border: 2px solid #FDB9C8;
+  color: #FDB9C8;
+}
+.btn.outline:hover {
+  background: #FDB9C8;
+  color: #000;
+}
+.btn.danger {
+  background: #a00028;
+  color: #fff;
+}
+.btn.danger:hover {
+  background: #ff4060;
+}
+
+/* ====== イベントリスト ====== */
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 12px;
+}
+.event-date {
+  font-weight: bold;
+  margin-right: 15px;
+  min-width: 80px;
+  color: #FDB9C8;
+}
+.event-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+.event-meta {
+  margin-top: 4px;
+}
+.event-memo {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #eee;
+}
+.event-actions {
+  margin-left: auto;
+}
+
+/* ====== チップ（時間帯など） ====== */
+.chip {
+  display: inline-block;
+  background: #004CA0;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-right: 6px;
+}
+.chip.outline {
+  background: transparent;
+  border: 1px solid #FDB9C8;
+  color: #FDB9C8;
+}
+
+/* ====== 共有リンク表示 ====== */
+.share-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.share-url {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #aaa;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ====== 外部リンク一覧 ====== */
+.link-list {
+  list-style: none;
+  padding: 0;
+}
+.link-item {
+  margin-bottom: 8px;
+}
+.cool-link {
+  color: #FDB9C8;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.cool-link:hover {
+  color: #fff;
+}
+
+/* ====== バッジ ====== */
+.badge {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #FDB9C8;
+  color: #000;
+  margin-left: 10px;
+}
+
+/* ====== 補助テキスト ====== */
+.muted {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+.muted.small {
+  font-size: 0.8rem;
+}
+.error {
+  color: #ff6b6b;
+  margin-bottom: 10px;
+}
+
+/* ====== スケルトン（ロード中） ====== */
+.skeleton-list {
+  display: grid;
+  gap: 12px;
+}
+.skeleton-item {
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
 }
