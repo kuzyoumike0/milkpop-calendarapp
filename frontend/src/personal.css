@@ -1,5 +1,5 @@
 /* =========================
-   Personal Page 共通
+   Personal Page 共通（登録／共有）
    ========================= */
 .personal-page {
   min-height: 100vh;
@@ -9,7 +9,7 @@
   color: #ffffff;
 }
 
-/* 見出し（ヘッダーと被らないように抑制） */
+/* ページ見出し（ヘッダーと二重に見えない控えめデザイン） */
 .page-title {
   font-size: 1.6rem;
   font-weight: 800;
@@ -18,22 +18,21 @@
   margin: 8px 0 20px;
 }
 
-/* セクションレイアウト */
+/* =========================
+   レイアウト
+   ========================= */
 .calendar-list-container {
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 24px;
   align-items: start;
 }
-
 @media (max-width: 1024px) {
-  .calendar-list-container {
-    grid-template-columns: 1fr;
-  }
+  .calendar-list-container { grid-template-columns: 1fr; }
 }
 
-/* カード風ベース */
-.neo {
+/* ガラス系カード */
+.neo, .glass, .card {
   background: rgba(255, 255, 255, 0.85);
   color: #111;
   border-radius: 18px;
@@ -41,7 +40,9 @@
   backdrop-filter: blur(8px);
 }
 
-/* タイトル・メモ */
+/* =========================
+   入力（タイトル／メモ）
+   ========================= */
 .title-memo-row {
   display: grid;
   grid-template-columns: 1fr;
@@ -49,7 +50,6 @@
   max-width: 920px;
   margin: 0 auto 16px;
 }
-
 .title-input,
 .memo-input {
   width: 100%;
@@ -61,13 +61,11 @@
   background: #fff;
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
+.memo-input { min-height: 120px; resize: vertical; }
 
-.memo-input {
-  min-height: 120px;
-  resize: vertical;
-}
-
-/* モード切替ボタン */
+/* =========================
+   モード切替ボタン
+   ========================= */
 .select-mode {
   display: flex;
   justify-content: center;
@@ -92,10 +90,10 @@
   border-color: transparent;
 }
 
-/* カレンダー */
-.calendar-container {
-  padding: 18px;
-}
+/* =========================
+   カレンダー
+   ========================= */
+.calendar-container { padding: 18px; }
 .calendar-header {
   display: flex;
   align-items: center;
@@ -104,42 +102,25 @@
   margin-bottom: 10px;
 }
 .nav-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; cursor: pointer; font-size: 20px; color: #fff;
   background: linear-gradient(135deg, #fdb9c8, #004ca0);
-  color: #fff;
-  font-size: 20px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-  cursor: pointer;
 }
 .ym { font-weight: 800; color: #111; }
 
 .calendar-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 8px;
-  table-layout: fixed;
+  width: 100%; border-collapse: separate; border-spacing: 8px; table-layout: fixed;
 }
 .calendar-table th {
-  color: #555;
-  font-weight: 800;
-  padding: 6px 0;
+  color: #555; font-weight: 800; padding: 6px 0;
 }
 .calendar-table td {
-  background: #fff;
-  border-radius: 14px;
-  height: 64px;
-  vertical-align: top;
-  padding: 6px 8px;
-  cursor: pointer;
-  position: relative;
+  background: #fff; border-radius: 14px; height: 64px; vertical-align: top;
+  padding: 6px 8px; cursor: pointer; position: relative;
   box-shadow: inset 0 0 0 2px rgba(0,0,0,0.05);
 }
-.calendar-table td:hover {
-  box-shadow: inset 0 0 0 2px #fdb9c8;
-}
+.calendar-table td:hover { box-shadow: inset 0 0 0 2px #fdb9c8; }
 .cell.today { box-shadow: inset 0 0 0 2px #004ca0; }
 .cell.selected { background: #e8f1ff; box-shadow: inset 0 0 0 2px #1b6ad8; }
 .sunday { color: #e3342f; }
@@ -148,129 +129,78 @@
 
 .daynum { font-weight: 800; color: #111; }
 .holiday-name {
-  position: absolute;
-  left: 8px; bottom: 6px;
-  font-size: 0.72rem;
-  color: #d61f69;
+  position: absolute; left: 8px; bottom: 6px;
+  font-size: 0.72rem; color: #d61f69;
 }
 
-/* サイドパネル */
-.side-panel {
-  padding: 18px;
-}
-.side-title {
-  font-weight: 800;
-  color: #111;
-  margin: 2px 0 12px;
-}
+/* =========================
+   サイドパネル
+   ========================= */
+.side-panel { padding: 18px; }
+.side-title { font-weight: 800; color: #111; margin: 2px 0 12px; }
 .date-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-  margin-bottom: 12px;
+  background: #fff; border-radius: 14px; padding: 12px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1); margin-bottom: 12px;
 }
 .date-label { font-weight: 700; color: #111; margin-bottom: 6px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #111;
-  font-size: 0.85rem;
+  padding: 6px 10px; border-radius: 999px; background: #f1f5f9; color: #111; font-size: 0.85rem;
 }
 .chip.soft { background: #eef4ff; color: #1b6ad8; }
-
-/* ===== ここが見づらさ対策（セレクト強化） ===== */
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 14px;
+.chip.outline {
+  background: transparent; border: 1.5px solid #004ca0; color: #004ca0;
 }
 
+/* =========================
+   時刻プルダウン（視認性UP）
+   ========================= */
+.time-range {
+  display: flex; align-items: center; gap: 8px; margin: 10px 0 14px;
+}
 /* Select 本体 */
 .cute-select {
-  min-width: 140px;
-  padding: 10px 38px 10px 12px;
-  border-radius: 12px;
-  border: 1.8px solid #004ca0;
-  background: #ffffff;               /* 白地でコントラスト確保 */
-  color: #111111;                    /* 濃い文字色 */
-  font-weight: 700;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  outline: none;
-
-  /* 余計なネイティブ装飾を消す */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-
-  /* 右側の矢印をカスタム（SVG） */
+  min-width: 140px; padding: 10px 38px 10px 12px;
+  border-radius: 12px; border: 1.8px solid #004ca0;
+  background: #ffffff; color: #111111; font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12); outline: none;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23004CA0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 16px;
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
 }
-
-/* フォーカス時の視認性 */
 .cute-select:focus {
-  box-shadow:
-    0 0 0 3px rgba(253, 185, 200, 0.5),
-    0 8px 18px rgba(0,0,0,0.18);
+  box-shadow: 0 0 0 3px rgba(253,185,200,0.5), 0 8px 18px rgba(0,0,0,0.18);
   border-color: #fdb9c8;
 }
-
-/* オプションの背景/文字色も強制する（OS依存のダーク化を防ぐ） */
 .cute-select option {
-  background: #ffffff !important;
-  color: #111111 !important;
-  font-weight: 600;
+  background: #ffffff !important; color: #111111 !important; font-weight: 600;
 }
-
-/* Firefox のスクロール色を調整（可能な範囲） */
 @supports selector(:is(*)) {
-  .cute-select option:checked {
-    background: #eef4ff !important;
-    color: #004ca0 !important;
-  }
+  .cute-select option:checked { background: #eef4ff !important; color: #004ca0 !important; }
 }
+.time-separator { color: #111; font-weight: 800; }
 
-/* 時間区切りの「〜」 */
-.time-separator {
-  color: #111;
-  font-weight: 800;
-}
-
-/* 登録ボタン */
+/* =========================
+   登録ボタン
+   ========================= */
 .register-btn {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-weight: 800;
+  width: 100%; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;
+  font-weight: 800; color: #fff;
   background: linear-gradient(135deg, #004ca0, #1b6ad8);
-  color: #fff;
   box-shadow: 0 10px 20px rgba(0,0,0,0.22);
   transition: transform .05s ease;
 }
 .register-btn:hover { transform: translateY(-1px); }
 
-/* 保存済みリスト */
+/* =========================
+   保存済みリスト（個人日程登録）
+   ========================= */
 .registered-list { margin-top: 22px; }
-.saved-title {
-  font-weight: 800;
-  margin: 0 0 10px;
-}
+.saved-title { font-weight: 800; margin: 0 0 10px; }
 .schedule-card {
-  background: #fff;
-  color: #111;
-  border-radius: 16px;
-  padding: 14px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
-  margin-bottom: 14px;
+  background: #fff; color: #111; border-radius: 16px; padding: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.16); margin-bottom: 14px;
 }
 .schedule-header { font-weight: 800; margin-bottom: 6px; }
 .created-at { font-weight: 600; color: #6b7280; margin-left: 6px; }
@@ -279,46 +209,104 @@
 
 /* 共有URL 表示行 */
 .share-link-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 8px 10px;
-  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+  background: #f8fafc; border-radius: 10px; padding: 8px 10px; margin-bottom: 8px;
 }
 .share-label { font-weight: 800; color: #004ca0; }
-.share-url {
-  color: #1b6ad8;
-  text-decoration: underline;
-  word-break: break-all;
-}
+.share-url { color: #1b6ad8; text-decoration: underline; word-break: break-all; }
 
 /* カードのアクション */
-.card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .ghost-btn {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1.6px solid #cbd5e1;
-  background: #fff;
-  color: #111;
-  font-weight: 700;
-  cursor: pointer;
+  padding: 8px 12px; border-radius: 10px; border: 1.6px solid #cbd5e1;
+  background: #fff; color: #111; font-weight: 700; cursor: pointer;
 }
-.ghost-btn.primary {
-  border-color: #004ca0;
-  color: #004ca0;
-  background: #eef4ff;
+.ghost-btn.primary { border-color: #004ca0; color: #004ca0; background: #eef4ff; }
+.ghost-btn.danger  { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
+
+/* =========================
+   閲覧専用（PersonalSharePage）
+   ========================= */
+.personal-page.view-only { padding-top: 20px; }
+
+/* 上部ヘッダー（独自・ページ内） */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1120px; margin: 0 auto 16px; padding: 8px 12px;
+  border-radius: 14px; background: rgba(0,0,0,0.35);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
 }
-.ghost-btn.danger {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: #fff5f5;
+.page-header .brand {
+  font-weight: 900; letter-spacing: .02em; font-size: 1.1rem; color: #fdb9c8;
+}
+.breadcrumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.nav-pill {
+  display: inline-block; padding: 8px 12px; border-radius: 999px;
+  background: rgba(255,255,255,0.9); color: #004ca0; font-weight: 800;
+  text-decoration: none; border: 1.5px solid #004ca0;
+}
+.nav-pill:hover { background: #eef4ff; }
+
+/* ビューカード */
+.card.glass { max-width: 1120px; margin: 0 auto; padding: 18px; }
+.card-header { margin-bottom: 10px; }
+.card-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1.3rem; font-weight: 900; color: #111;
+}
+.badge {
+  display: inline-block; padding: 4px 8px; border-radius: 999px;
+  background: #eef4ff; color: #004ca0; border: 1.5px solid #004ca0; font-weight: 800;
+}
+.muted { color: #6b7280; }
+
+/* ローディング骨組み */
+.skeleton-list { display: grid; gap: 10px; }
+.skeleton-item {
+  height: 52px; border-radius: 12px;
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
 }
 
-/* 細かい文字色など */
-.muted { color: #e5e7eb; }
+/* セクション */
+.section { margin-top: 16px; }
+.section-title {
+  font-weight: 900; color: #111; margin: 0 0 10px;
+  border-left: 6px solid #004ca0; padding-left: 10px;
+}
+
+/* 予定リスト */
+.event-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.event-item {
+  display: grid; grid-template-columns: 120px 1fr; gap: 12px;
+  background: #fff; border-radius: 14px; padding: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+@media (max-width: 640px) {
+  .event-item { grid-template-columns: 1fr; }
+}
+.event-date {
+  font-weight: 900; color: #004ca0; background: #eef4ff;
+  border: 1.5px solid #004ca0; border-radius: 10px; padding: 8px 10px; text-align: center;
+}
+.event-main { color: #111; }
+.event-title { font-weight: 800; margin-bottom: 4px; }
+.event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.event-memo {
+  background: #f8fafc; border-radius: 10px; padding: 8px 10px; margin-top: 6px; color: #374151;
+}
+
+/* 共有リンクリスト */
+.link-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.link-item {
+  background: #fff; border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+.cool-link {
+  color: #004ca0; font-weight: 800; text-decoration: underline; word-break: break-all;
+}
+.cool-link:hover { color: #1b6ad8; }
