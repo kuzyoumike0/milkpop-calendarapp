@@ -52,36 +52,34 @@ export default function Header({ user: userProp = null }) {
 
       {/* PC用ナビゲーション */}
       <nav className="nav-links">
-        {/* ← 先頭にユーザー名（チェック中は非表示） */}
-        {!checking && user && (
-          <span className="nav-user" title={user.username}>
-            {user.username}
-          </span>
-        )}
-        <Link to="/usage" className="nav-link">
-          使い方
-        </Link>
-        <Link to="/register" className="nav-link">
-          日程登録
-        </Link>
-        <Link to="/personal" className="nav-link">
-          個人日程登録
-        </Link>
-
-        {/* 右端：状態ごとの表示（チェック中 or ログアウト or ログイン） */}
+        {/* ← 先頭：ユーザー名（確認中は不可視プレースホルダで幅確保） */}
         {checking ? (
-          <span className="nav-muted">確認中…</span>
+          <span className="nav-user" style={{ visibility: "hidden" }}>placeholder</span>
         ) : user ? (
-          <button type="button" className="nav-btn" onClick={handleLogout}>
-            ログアウト
-          </button>
+          <span className="nav-user" title={user.username}>{user.username}</span>
         ) : (
-          <a href={loginHref} className="nav-btn">
-            Discordログイン
-          </a>
+          <span className="nav-user" style={{ visibility: "hidden" }}>placeholder</span>
         )}
-      </nav>
 
+        {/* 中央：通常リンク */}
+        <Link to="/usage" className="nav-link">使い方</Link>
+        <Link to="/register" className="nav-link">日程登録</Link>
+        <Link to="/personal" className="nav-link">個人日程登録</Link>
+
+        {/* 右端：状態（常に右寄せ） */}
+        <div style={{ marginLeft: "auto", display: "flex", gap: "1.2rem" }}>
+          {checking ? (
+            <span className="nav-muted">確認中…</span>
+          ) : user ? (
+            <button type="button" className="nav-btn" onClick={handleLogout}>
+              ログアウト
+            </button>
+          ) : (
+            <a href={loginHref} className="nav-btn">Discordログイン</a>
+          )}
+        </div>
+      </nav>
+      
       {/* ハンバーガーメニュー（スマホ用） */}
       <div
         className={`hamburger ${menuOpen ? "open" : ""}`}
