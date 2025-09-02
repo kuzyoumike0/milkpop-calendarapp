@@ -102,6 +102,9 @@ export default function PersonalPage() {
   const [records, setRecords] = useState([]); // {id,title,memo,items:[{date,slot,startHour,endHour}],createdAt}
   const [editingId, setEditingId] = useState(null);
 
+  // 共有リンク表示用： { [recordId]: url }
+  const [shareLinks, setShareLinks] = useState({});
+
   const holidayMap = useMemo(() => buildJapaneseHolidays(year), [year]);
   const weeks = useMemo(() => buildMonthMatrix(year, month), [year, month]);
 
@@ -243,16 +246,26 @@ export default function PersonalPage() {
       setEditingId(null);
       setSelected(new Set());
     }
+    setShareLinks((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   // 個人日程共有専用（/personal/share/:token）
   const onShare = (rec) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/personal/share/${rec.id}`;
+
+    // クリップボードには静かにコピー（失敗しても無視）
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
-    alert(`共有リンクを作成しました。\n${url}\n\n（/personal/share/:token は個人日程共有専用）`);
+
+    // トースト/alertは使わず、カード内にURLを表示
+    setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
   };
 
   const hourOptions = Array.from({ length: 24 }, (_, i) => i);
@@ -469,6 +482,21 @@ export default function PersonalPage() {
                 <li key={i}>{it.date} / {it.slot}</li>
               ))}
             </ul>
+
+            {/* 共有URLをカード内に表示（クリック可能） */}
+            {shareLinks[rec.id] && (
+              <div className="share-link-row">
+                <span className="share-label">共有URL：</span>
+                <a
+                  className="share-url"
+                  href={shareLinks[rec.id]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {shareLinks[rec.id]}
+                </a>
+              </div>
+            )}
 
             <div className="card-actions">
               <button className="ghost-btn" onClick={() => onEdit(rec)}>編集</button>
