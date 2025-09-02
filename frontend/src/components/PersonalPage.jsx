@@ -32,12 +32,14 @@ export default function PersonalPage() {
   const [dateOptions, setDateOptions] = useState({}); // {dateStr: {timeType, startTime, endTime}}
   const [schedules, setSchedules] = useState([]);
 
-  // Discord共有リンク（/api/personal-events の share_url を使う）
+  // 共有リンク一覧（/api/personal-events の share_url or /api/schedules/create で増える）
   const [shareLinks, setShareLinks] = useState([]);
 
   // 読み込み/エラー表示
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [creatingShare, setCreatingShare] = useState(false);
+  const [shareMsg, setShareMsg] = useState("");
 
   // ===== 祝日 =====
   const hd = useMemo(() => new Holidays("JP"), []);
@@ -175,7 +177,7 @@ export default function PersonalPage() {
       [dateStr]: { ...(p[dateStr] || {}), timeType: "custom", endTime: v },
     }));
 
-  // ===== 登録（ローカル即時反映 + サーバ登録） =====
+  // ===== 個人日程 登録（ローカル即時反映 + サーバ登録） =====
   const handleRegister = async () => {
     if (!title.trim() || selectedDates.size === 0) return;
 
@@ -263,6 +265,47 @@ export default function PersonalPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ===== 共有リンクを「日程0件でも」発行（/api/schedules/create） =====
+  const createEmptyShare = async () => {
+    try {
+      setCreatingShare(true);
+      setShareMsg("");
+      setErrorMsg("");
+
+      const res = await fetch("/api/schedules/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Cookie(JWT) 認証を利用 — 同一オリジンを想定。別オリジンの場合は CORS+credentials を整備。
+        credentials: "include",
+        body: JSON.stringify({
+          title: title.trim() || "未設定スケジュール",
+          // ★ ここがポイント：日程0件でもOK
+          dates: [],
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "create failed");
+      }
+      const data = await res.json();
+      const base = window.location.origin;
+      const url = `${base}/share/${data.share_token}`;
+      setShareMsg(`共有リンクを発行しました: ${url}`);
+
+      // 個人イベント一覧には出ない可能性があるため、明示的に即時画面反映しておく
+      setShareLinks((prev) => [
+        { id: data.id, title: title.trim() || "未設定スケジュール", url, createdAt: new Date().toISOString() },
+        ...prev,
+      ]);
+    } catch (e) {
+      console.error("共有リンク発行エラー:", e);
+      setErrorMsg("共有リンクの発行に失敗しました。ログイン状態と権限を確認してください。");
+    } finally {
+      setCreatingShare(false);
     }
   };
 
@@ -487,6 +530,18 @@ export default function PersonalPage() {
             {loading ? "保存中..." : "登録"}
           </button>
 
+          {/* 共有リンクを「日程0件でも」発行 */}
+          <button
+            className="register-btn"
+            style={{ marginTop: 10 }}
+            onClick={createEmptyShare}
+            disabled={creatingShare}
+            title="ログイン済みなら、日程未選択でも共有用URLを発行します"
+          >
+            {creatingShare ? "共有リンク発行中..." : "共有リンクを発行（0件でも可）"}
+          </button>
+          {!!shareMsg && <div className="info" style={{ marginTop: 8 }}>{shareMsg}</div>}
+
           {!!errorMsg && <div className="error">{errorMsg}</div>}
         </aside>
       </div>
@@ -511,9 +566,9 @@ export default function PersonalPage() {
         )}
       </section>
 
-      {/* Discord共有リンク（閲覧のみ表示） */}
+      {/* 共有リンク一覧 */}
       <section className="registered-list">
-        <h2 className="schedule-header">Discord 共有リンク（閲覧のみ）</h2>
+        <h2 className="schedule-header">共有リンク一覧</h2>
         {shareLinks.length === 0 ? (
           <div className="schedule-card">共有リンクを準備中...</div>
         ) : (
