@@ -21,6 +21,8 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/share" element={<SharePage />} />
             <Route path="/personal" element={<PersonalPage />} />
+            {/* ログイン成功後のリダイレクト */}
+            <Route path="/auth/success" element={<AuthSuccess />} />
             {/* 👇 共有閲覧用（誰でもアクセス可） */}
             <Route path="/personal/share/:token" element={<PersonalSharePage />} />
             {/* 旧ルート救済 */}
