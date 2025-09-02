@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-// ✅ CSS をここで一括読み込み（すべて src/ 直下）
+// ✅ CSS をここで一括読み込み
 import "./common.css";
 import "./personal.css";
 import "./register.css";
@@ -13,9 +13,10 @@ import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import SharePage from "./components/SharePage";
 import PersonalPage from "./components/PersonalPage";
-import ShareLinkPage from "./components/ShareLinkPage"; // 共有リンク直閲覧
+import ShareLinkPage from "./components/ShareLinkPage";
+import PersonalSharePage from "./components/PersonalSharePage";
 
-// 共通ヘッダー（CSSの .header / .logo-link / .nav-links に合わせる）
+// 共通ヘッダー
 const Header = () => {
   const [open, setOpen] = useState(false);
   const toggle = () => setOpen((v) => !v);
@@ -73,7 +74,7 @@ const Header = () => {
   );
 };
 
-// 共通フッター（CSSの footer, .footer に合わせる）
+// 共通フッター
 const Footer = () => (
   <footer className="footer">
     <div>© {new Date().getFullYear()} MilkPOP</div>
@@ -91,8 +92,8 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/share/:token?" element={<SharePage />} />
             <Route path="/personal" element={<PersonalPage />} />
-            {/* 共有リンク閲覧用（例: /sharelink/abcd1234） */}
             <Route path="/sharelink/:token" element={<ShareLinkPage />} />
+            <Route path="/personalshare/:token" element={<PersonalSharePage />} />
           </Routes>
         </main>
         <Footer />
