@@ -1,8 +1,9 @@
 // frontend/src/components/PersonalPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import "../personal.css";
+// ✅ 読み込み順を修正：common → personal
 import "../common.css";
+import "../personal.css";
 
 const emptyEvent = () => ({
   date: "",
@@ -47,7 +48,8 @@ export default function PersonalPage() {
         setEvents(Array.isArray(data.events) ? data.events : []);
         setLinks(Array.isArray(data.links) ? data.links : []);
         if (data.share && data.share.token) {
-          const url = `${window.location.origin}/personal/view/${data.share.token}`;
+          // 公式共有パスは /personal/share/:token
+          const url = `${window.location.origin}/personal/share/${data.share.token}`;
           setShareInfo({ url, token: data.share.token, title: data.title || "個人スケジュール" });
         }
       } catch {
@@ -113,7 +115,8 @@ export default function PersonalPage() {
       const res = await fetch("/api/personal/share", { method: "POST" });
       if (!res.ok) throw new Error("共有リンクの発行に失敗しました（ログインが必要です）");
       const data = await res.json();
-      const url = `${window.location.origin}/personal/view/${data.token}`;
+      // 公式共有パスは /personal/share/:token
+      const url = `${window.location.origin}/personal/share/${data.token}`;
       setShareInfo({ url, token: data.token, title: data.title || "個人スケジュール" });
     } catch (e) {
       setErr(e.message || "共有リンクの発行に失敗しました");
@@ -182,7 +185,7 @@ export default function PersonalPage() {
                 onFocus={(e) => e.currentTarget.select()}
               />
               <button className="btn outline" onClick={copyShareUrl}>コピー</button>
-              <Link className="btn primary" to={`/personal/view/${shareInfo.token}`} target="_blank" rel="noreferrer">
+              <Link className="btn primary" to={`/personal/share/${shareInfo.token}`} target="_blank" rel="noreferrer">
                 閲覧ページを開く
               </Link>
             </div>
