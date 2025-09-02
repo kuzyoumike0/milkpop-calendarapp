@@ -1,204 +1,322 @@
-/* ====== 基本レイアウト ====== */
-.register-page {
-  padding: 20px;
-  min-height: 100vh;
-  font-family: 'Zen Maru Gothic', 'M PLUS Rounded 1c', system-ui, -apple-system, sans-serif;
-  color: #0b0b0b; /* 高級感のある黒 */
-  background: linear-gradient(135deg, #f3c7d4 0%, #90a9db 100%);
-}
-.page-title {
-  margin: 0 0 16px;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: .02em;
+/* =========================================
+   MilkPOP Calendar - RegisterPage.css (Full)
+   配色: #FDB9C8, #004CA0, 高級感のある黒(#0b0b0b)
+   レイアウト: PC=横並び / モバイル=縦積み
+   ========================================= */
+
+/* ---------- ベース ---------- */
+:root{
+  --brand-pink:#FDB9C8;
+  --brand-blue:#004CA0;
+  --ink:#0b0b0b;
+  --panel-bg:rgba(255,255,255,.9);
+  --glass-bg:rgba(255,255,255,.28);
+  --shadow-1:0 6px 18px rgba(0,0,0,.12);
+  --shadow-2:0 10px 24px rgba(0,0,0,.18);
+  --shadow-3:0 12px 36px rgba(0,0,0,.18);
+  --radius-lg:18px;
+  --radius-md:14px;
+  --radius-sm:10px;
+  --gap-lg:32px;
+  --gap-md:16px;
+  --gap-sm:8px;
 }
 
-/* 入力 */
-.title-input {
-  width: 100%;
-  max-width: 720px;
-  height: 44px;
-  border-radius: 14px;
-  border: 2px solid #eee;
-  padding: 0 14px;
-  font-size: 16px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+*{box-sizing:border-box}
+
+.register-page{
+  padding:24px 20px 40px;
+  min-height:100vh;
+  font-family:'Zen Maru Gothic','M PLUS Rounded 1c',system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(135deg,#f4c4d4 0%, #91a9de 100%);
 }
 
-/* モード切替 */
-.select-mode {
-  margin: 16px 0 20px;
-  display: flex;
-  gap: 8px;
-}
-.select-mode button {
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1.5px solid #004CA0;
-  background: #fff;
-  cursor: pointer;
-  font-weight: 700;
-}
-.select-mode button.active {
-  background: #004CA0;
-  color: #fff;
+/* ---------- 見出し/入力 ---------- */
+.page-title{
+  margin:0 0 18px;
+  text-align:center;
+  font-size:28px;
+  font-weight:800;
+  letter-spacing:.02em;
 }
 
-/* 2カラム */
-.calendar-list-container {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
+.title-input{
+  display:block;
+  width:100%;
+  max-width:820px;
+  height:46px;
+  margin:0 auto 12px;
+  border-radius:var(--radius-md);
+  border:1.8px solid rgba(0,0,0,.08);
+  padding:0 14px;
+  font-size:16px;
+  background:#fff;
+  box-shadow:var(--shadow-1);
 }
 
-/* カレンダー */
-.calendar-container {
-  background: rgba(255,255,255,.28);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 12px 36px rgba(0,0,0,.18);
-  backdrop-filter: blur(8px);
+/* ---------- モード切替 ---------- */
+.select-mode{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:10px 0 18px;
+  flex-wrap:wrap;
 }
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid rgba(0,0,0,.08);
+.select-mode button{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1.6px solid var(--brand-blue);
+  background:#fff;
+  color:var(--ink);
+  font-weight:700;
+  cursor:pointer;
+  transition:all .15s ease;
 }
-.calendar-header button {
-  width: 36px; height: 36px; border-radius: 50%;
-  border: none; cursor: pointer;
-  background: linear-gradient(#FDB9C8, #9fb7ea);
-  color: #0b0b0b; font-weight: 900;
-  box-shadow: 0 6px 18px rgba(0,0,0,.2);
-}
-
-.calendar-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 12px 12px;
-  margin-top: 14px;
-}
-.calendar-table th {
-  text-align: center;
-  opacity: .8;
-  font-weight: 800;
-}
-.calendar-table td.cell {
-  height: 82px;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 6px 18px rgba(0,0,0,.12);
-  vertical-align: top;
-  position: relative;
-  padding: 8px 10px;
-  cursor: pointer;
-  transition: transform .08s ease, box-shadow .12s ease;
-}
-.calendar-table td.cell:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
-}
-.calendar-table .daynum {
-  font-weight: 800;
-}
-.calendar-table td.sunday .daynum { color: #e25555; }
-.calendar-table td.saturday .daynum { color: #2764e1; }
-
-/* 祝日表示 */
-.holiday-name {
-  position: absolute;
-  left: 8px; bottom: 8px;
-  font-size: 12px;
-  color: #e25555;
-  font-weight: 700;
-}
-.calendar-table td.holiday {
-  background: #fff5f5;
+.select-mode button:hover{box-shadow:var(--shadow-1)}
+.select-mode button.active{
+  background:var(--brand-blue);
+  color:#fff;
 }
 
-/* ★ 当日強調（見やすさUP） */
-.calendar-table td.today {
-  outline: 3px solid #004CA0;
-  box-shadow: 0 0 0 4px rgba(0,76,160,0.15), 0 10px 24px rgba(0,0,0,.22);
-  background: #fff; /* 文字可読性重視で白ベース */
+/* ---------- 2カラム（PC） ---------- */
+.calendar-list-container{
+  display:flex;
+  justify-content:center;     /* 全体をセンターに */
+  align-items:flex-start;
+  gap:var(--gap-lg);
+  max-width:1200px;           /* 全体幅を制御 */
+  margin:0 auto;
+  flex-wrap:wrap;             /* 画面が狭いと縦積み */
 }
-.calendar-table td.today .daynum {
-  background: #FDB9C8;
-  color: #0b0b0b;
-  border-radius: 10px;
-  padding: 2px 8px;
+
+/* 左カラム：カレンダー */
+.calendar-container{
+  flex:1 1 760px;             /* 基本幅 760px、余白に応じて伸縮 */
+  max-width:860px;
+  background:var(--glass-bg);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow-3);
+  backdrop-filter:blur(8px);
+}
+
+/* カレンダーヘッダ */
+.calendar-header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  padding:10px 0 14px;
+  border-bottom:2px solid rgba(0,0,0,.08);
+}
+.calendar-header button{
+  width:36px;height:36px;border-radius:50%;
+  border:none;cursor:pointer;
+  background:linear-gradient(var(--brand-pink), #9fb7ea);
+  color:var(--ink);font-weight:900;
+  box-shadow:var(--shadow-2);
+}
+.calendar-header span{
+  font-weight:800;opacity:.9;
+}
+
+/* カレンダーテーブル */
+.calendar-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:12px 12px;
+  margin-top:14px;
+}
+.calendar-table th{
+  text-align:center;
+  opacity:.8;
+  font-weight:800;
+}
+.calendar-table td.cell{
+  height:88px;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:var(--shadow-1);
+  vertical-align:top;
+  position:relative;
+  padding:8px 10px;
+  cursor:pointer;
+  transition:transform .08s ease, box-shadow .12s ease, outline-color .12s ease;
+}
+.calendar-table td.cell:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-2);
+}
+.daynum{font-weight:800}
+.calendar-table td.sunday .daynum{color:#e25555}
+.calendar-table td.saturday .daynum{color:#2764e1}
+
+/* 祝日 */
+.holiday-name{
+  position:absolute;left:8px;bottom:8px;
+  font-size:12px;color:#e25555;font-weight:700;
+}
+.calendar-table td.holiday{background:#fff5f5}
+
+/* 当日強調（見やすく） */
+.calendar-table td.today{
+  outline:3px solid var(--brand-blue);
+  box-shadow:0 0 0 4px rgba(0,76,160,.15), 0 10px 24px rgba(0,0,0,.22);
+  background:#fff;
+}
+.calendar-table td.today .daynum{
+  background:var(--brand-pink);
+  color:var(--ink);
+  border-radius:10px;
+  padding:2px 8px;
 }
 
 /* 選択済み */
-.calendar-table td.selected {
-  background: linear-gradient(180deg, #FDB9C8 0%, #ffe7ed 100%);
-  outline: 3px solid #004CA0;
+.calendar-table td.selected{
+  background:linear-gradient(180deg, var(--brand-pink) 0%, #ffe7ed 100%);
+  outline:3px solid var(--brand-blue);
 }
 
-/* 右パネル */
-.side-panel {
-  background: rgba(255,255,255,.9);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 12px 36px rgba(0,0,0,.18);
+/* 右カラム：サイドパネル */
+.side-panel{
+  flex:0 0 320px;             /* 固定幅 */
+  background:var(--panel-bg);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow-3);
+  align-self:stretch;         /* カレンダーと高さ揃え（可能な範囲で） */
 }
-.date-card {
-  border: 1.5px dashed rgba(0,0,0,.12);
-  border-radius: 12px;
-  padding: 12px;
-  margin: 10px 0;
+
+/* 選択中カード */
+.date-card{
+  border:1.5px dashed rgba(0,0,0,.12);
+  border-radius:12px;
+  padding:12px;
+  margin:10px 0;
+  background:#fff;
 }
-.date-label {
-  font-weight: 800;
-  margin-bottom: 8px;
+.date-label{
+  font-weight:800;
+  margin-bottom:8px;
 }
-.time-options {
-  display: flex; gap: 8px; flex-wrap: wrap;
+
+/* 時間帯ボタン */
+.time-options{
+  display:flex;gap:8px;flex-wrap:wrap;
 }
-.time-btn {
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1.5px solid #004CA0;
-  background: #fff;
-  cursor: pointer;
-  font-weight: 700;
+.time-btn{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1.5px solid var(--brand-blue);
+  background:#fff;
+  cursor:pointer;
+  font-weight:700;
 }
-.time-btn.active {
-  background: #004CA0;
-  color: #fff;
+.time-btn.active{
+  background:var(--brand-blue);
+  color:#fff;
 }
-.time-range {
-  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+
+/* 時間指定 */
+.time-range{
+  display:flex;align-items:center;gap:8px;margin-top:8px;
 }
-.cute-select {
-  height: 36px; border-radius: 10px; padding: 0 8px;
-  border: 1.5px solid rgba(0,0,0,.15);
+.cute-select{
+  height:36px;border-radius:10px;padding:0 8px;
+  border:1.5px solid rgba(0,0,0,.15);
+  background:#fff;
 }
-.time-separator { opacity: .7; }
+.time-separator{opacity:.7}
 
 /* 発行ボタン・共有URL */
-.register-btn {
-  margin-top: 10px;
-  width: 100%;
-  height: 42px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #004CA0, #2f72d0);
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(0,76,160,.35);
-  cursor: pointer;
+.register-btn{
+  margin-top:10px;width:100%;height:42px;border:none;
+  border-radius:12px;font-weight:800;
+  background:linear-gradient(90deg, var(--brand-blue), #2f72d0);
+  color:#fff;box-shadow:0 10px 24px rgba(0,76,160,.35);
+  cursor:pointer;
 }
-.share-link-box {
-  margin-top: 12px;
-  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+.share-link-box{
+  margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
 }
-.copy-btn {
-  height: 32px; padding: 0 10px;
-  border-radius: 8px; border: 1px solid #004CA0; background: #fff; cursor: pointer;
+.copy-btn{
+  height:32px;padding:0 10px;border-radius:8px;
+  border:1px solid var(--brand-blue);background:#fff;cursor:pointer;
+}
+
+/* ---------- 登録済みリスト（幅合わせ） ---------- */
+.registered-list{
+  max-width:1200px;           /* 上のコンテナ幅と合わせる */
+  margin:28px auto 0;
+  width:100%;
+}
+.saved-title{
+  font-size:20px;font-weight:800;margin:0 0 12px;padding-left:2px;
+}
+.schedule-card{
+  width:100%;
+  background:var(--panel-bg);
+  border-radius:var(--radius-lg);
+  padding:14px;
+  box-shadow:var(--shadow-3);
+  margin-bottom:12px;
+}
+.schedule-header{font-weight:800;margin-bottom:6px}
+.created-at{opacity:.7;margin-left:8px}
+.schedule-memo{
+  background:#fff;border-radius:10px;padding:8px 10px;margin:6px 0 8px;
+  border:1px solid rgba(0,0,0,.06);
+}
+.schedule-items{margin:0 0 8px 18px}
+.share-link-row{margin:6px 0 10px}
+.share-label{font-weight:700;margin-right:6px}
+.share-url{color:var(--brand-blue);text-decoration:underline;word-break:break-all}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ghost-btn{
+  padding:6px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.15);
+  background:#fff;cursor:pointer;font-weight:700;
+}
+.ghost-btn.primary{border-color:var(--brand-blue);color:var(--brand-blue)}
+.ghost-btn.danger{border-color:#e25555;color:#e25555}
+
+/* ---------- レスポンシブ ---------- */
+/* L: 1200px 以下で微調整 */
+@media (max-width: 1200px){
+  .calendar-container{flex:1 1 680px;max-width:760px}
+  .calendar-table{border-spacing:10px 10px}
+  .calendar-table td.cell{height:84px}
+}
+
+/* M: 992px 以下でややコンパクトに */
+@media (max-width: 992px){
+  .calendar-container{flex:1 1 620px;max-width:700px}
+  .side-panel{flex:0 0 300px}
+  .calendar-table td.cell{height:78px}
+}
+
+/* S: 768px 以下で縦積み（中央寄せ） */
+@media (max-width: 768px){
+  .calendar-list-container{
+    gap:20px;
+    max-width:680px;
+  }
+  .calendar-container,
+  .side-panel{
+    flex:1 1 100%;
+    max-width:100%;
+  }
+  .side-panel{align-self:auto}
+  .calendar-table{border-spacing:8px 8px}
+  .calendar-table td.cell{height:70px}
+}
+
+/* XS: 560px 以下でさらに見やすく */
+@media (max-width: 560px){
+  .title-input{max-width:100%}
+  .calendar-table{border-spacing:6px 6px}
+  .calendar-table td.cell{height:64px;border-radius:12px}
+  .holiday-name{font-size:11px}
+  .select-mode{gap:6px}
+  .time-btn{padding:6px 10px}
 }
