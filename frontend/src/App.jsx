@@ -1,6 +1,6 @@
 // frontend/src/App.jsx
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import "./common.css";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
@@ -24,6 +24,17 @@ function ShareRedirect() {
   return null;
 }
 
+function ShareEntryPoint() {
+  const nav = useNavigate();
+  const { search } = useLocation();
+  useEffect(() => {
+    const t = new URLSearchParams(search).get("token");
+    if (t) nav(`/share/${t}`, { replace: true });
+  }, [search, nav]);
+  // token が無い /share は既存の SharePage をそのまま表示
+  return <SharePage />;
+}
+
 export default function App() {
   return (
     <Router>
@@ -34,7 +45,7 @@ export default function App() {
             <Route path="/" element={<TopPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/usage" element={<UsagePage />} />
-            <Route path="/share" element={<SharePage />} />
+            <Route path="/share" element={<ShareEntryPoint />} />
             <Route path="/share/:token" element={<SharePage />} />
             <Route path="/personal" element={<PersonalPage />} />
             {/* 👇 ログイン成功後のリダイレクト */}
