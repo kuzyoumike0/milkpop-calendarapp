@@ -122,6 +122,19 @@ a:hover {
   transform: translateY(-2px);
 }
 
+/* ユーザー名（他のナビ文字と同じ見た目） */
+.nav-user {
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.1rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+}
+.nav-user:hover {
+  background: transparent;
+  color: #fff;
+}
+
 /* ===== ハンバーガーメニュー ===== */
 .hamburger {
   display: none;
