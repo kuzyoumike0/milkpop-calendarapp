@@ -1,38 +1,39 @@
 // frontend/src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import "./common.css";
 import TopPage from "./components/TopPage";
 import RegisterPage from "./components/RegisterPage";
 import SharePage from "./components/SharePage";
 import PersonalPage from "./components/PersonalPage";
-import PersonalSharePage from "./components/PersonalSharePage";
-
-import "./common.css";
+import PersonalViewPage from "./components/PersonalViewPage";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 export default function App() {
   return (
     <Router>
-      <div className="mp-app">
-        {/* 全ページ共通バナー */}
+      <div className="app-shell">
         <Header />
-
-        {/* ページ本体 */}
-        <main className="mp-main">
+        <main className="main">
           <Routes>
             <Route path="/" element={<TopPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/personal" element={<PersonalPage />} />
             <Route path="/share" element={<SharePage />} />
-            {/* 「個人日程」共有専用ルート */}
-            <Route path="/share/:token" element={<PersonalSharePage />} />
+            <Route path="/personal" element={<PersonalPage />} />
+            {/* 👇 共有閲覧用（誰でもアクセス可） */}
+            <Route path="/personal/view/:token" element={<PersonalViewPage />} />
+            {/* 旧リンク救済 */}
+            <Route path="/personal/share/:token" element={<Navigate to="/personal/view/:token" replace />} />
+            {/* フォールバック */}
+            <Route path="*" element={
+              <div className="notfound">
+                <h2>ページが見つかりません</h2>
+                <Link to="/" className="btn primary">トップに戻る</Link>
+              </div>
+            } />
           </Routes>
         </main>
-
-        {/* 全ページ共通フッター */}
         <Footer />
       </div>
     </Router>
