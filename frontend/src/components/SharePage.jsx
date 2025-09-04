@@ -38,6 +38,18 @@ const timeLabel = (t) => {
   return t;
 };
 
+// ==== 曜日付き日付表示（YYYY/MM/DD(曜)） ====
+const youbiJP = ["日", "月", "火", "水", "木", "金", "土"];
+const pad = (n) => String(n).padStart(2, "0");
+const fmtDateWithYoubi = (date) => {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const w = youbiJP[d.getDay()];
+  return `${y}/${m}/${day}(${w})`;
+};
+
 // ==== キー生成（同一キーで集計・保存するための正規化文字列） ====
 const buildKey = (date, d) => {
   const isoDate = new Date(date).toISOString().split("T")[0];
@@ -45,6 +57,14 @@ const buildKey = (date, d) => {
     return `${isoDate} (${d.startTime} ~ ${d.endTime})`;
   }
   return `${isoDate} (${timeLabel(d.timeType)})`;
+};
+
+// ==== 画面表示用のラベル（曜日付き） ====
+const buildDisplay = (date, d) => {
+  if (d.timeType === "custom" && d.startTime && d.endTime) {
+    return `${fmtDateWithYoubi(date)} ${d.startTime} ~ ${d.endTime}`;
+  }
+  return `${fmtDateWithYoubi(date)} ${timeLabel(d.timeType)}`;
 };
 
 // ==== responses のキーを統一（ISO日付 + 日本語スロット） ====
@@ -72,7 +92,6 @@ function buildAutoNgMap(scheduleDates) {
     const personal = JSON.parse(localStorage.getItem("personalEvents") || "[]");
     if (!Array.isArray(personal) || personal.length === 0) return {};
 
-    // 個人イベントがある「日付」を不参加（✖）の既定値とする
     const ngDateSet = new Set(personal.map((ev) => new Date(ev.date).toISOString().split("T")[0]));
 
     const map = {};
@@ -159,7 +178,6 @@ export default function SharePage() {
           if (mine) {
             setUsername(mine.username || "");
             setMyResponses((prev) => {
-              // 既に自分の回答が存在する場合はそれを優先
               return mine.responses || prev;
             });
           }
@@ -179,7 +197,6 @@ export default function SharePage() {
       setUsername(mine.username || "");
       setMyResponses(mine.responses || {});
     } else {
-      // DBに自分の回答がまだ無い場合は空初期化（この後の auto ✖ 適用が走る）
       setMyResponses({});
     }
   }, [responses, myUserId]);
@@ -195,27 +212,27 @@ export default function SharePage() {
     }
 
     setMyResponses((prev) => {
-      // 既に値が入っているキーは尊重し、未設定のキーのみ ✖ を適用
       const next = { ...prev };
       for (const [k, v] of Object.entries(autoNg)) {
-        if (next[k] == null || next[k] === "-") next[k] = v; // ← 自動で✖
+        if (next[k] == null || next[k] === "-") next[k] = v;
       }
       return next;
     });
     setAutoNgApplied(true);
   }, [schedule, autoNgApplied]);
 
-  // ===== 集計 & ソート =====
+  // ===== 集計 & ソート（表示用ラベルに曜日を付ける） =====
   const summary = useMemo(() => {
     const dates = schedule?.dates || [];
     return dates.map((d) => {
       const key = buildKey(d.date, d);
+      const display = buildDisplay(d.date, d); // ← 曜日付き
       const counts = { "◯": 0, "✕": 0, "△": 0 };
       responses.forEach((r) => {
         const val = r.responses?.[key];
         if (val && counts[val] !== undefined) counts[val]++;
       });
-      return { ...d, key, counts };
+      return { ...d, key, display, counts };
     });
   }, [schedule, responses]);
 
@@ -235,30 +252,27 @@ export default function SharePage() {
     }
     try {
       const payload = {
-        user_id: myUserId || getOrCreateMyUserId(), // 端末固定 → DBでこのIDにUPSERT
+        user_id: myUserId || getOrCreateMyUserId(),
         username,
         responses: normalizeResponses(myResponses),
       };
 
       await fetch(`/api/schedules/${token}/responses`, {
-        method: "POST", // サーバ側をUPSERT実装（INSERT or UPDATE by user_id）
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // 即時ローカル反映（自分の行を置き換え）
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== payload.user_id);
         return [...others, { user_id: payload.user_id, username, responses: payload.responses }];
       });
 
-      // 共有URLを個人ページに残す（ローカル履歴）
       recordAnsweredShare({
         url: window.location.href,
         title: schedule?.title || "共有日程",
       });
 
-      // 参加者全員へ更新通知
       socket.emit("updateResponses", token);
 
       setSaveMessage("保存しました！");
@@ -280,7 +294,7 @@ export default function SharePage() {
       };
 
       await fetch(`/api/schedules/${token}/responses`, {
-        method: "POST", // UPSERT
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -290,7 +304,6 @@ export default function SharePage() {
         return [...others, { user_id: editingUser, username: payload.username, responses: payload.responses }];
       });
 
-      // 自分本人を編集していたらフォームにも反映
       if (editingUser === (myUserId || localStorage.getItem(STORAGE_MY_UID))) {
         setMyResponses(payload.responses);
       }
@@ -331,9 +344,10 @@ export default function SharePage() {
             <div className="my-responses-list">
               {(schedule.dates || []).map((d, idx) => {
                 const key = buildKey(d.date, d);
+                const label = buildDisplay(d.date, d); // ← 曜日付き表示
                 return (
                   <div key={idx} className="my-response-item">
-                    <span className="date-label">{key}</span>
+                    <span className="date-label">{label}</span>
                     <select
                       className="fancy-select"
                       value={myResponses[key] || "-"}
@@ -398,7 +412,7 @@ export default function SharePage() {
               <tbody>
                 {filteredSummary.map((d, idx) => (
                   <tr key={idx}>
-                    <td>{d.key}</td>
+                    <td>{d.display}</td> {/* ← 曜日付き表示 */}
                     <td>
                       <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                       <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
