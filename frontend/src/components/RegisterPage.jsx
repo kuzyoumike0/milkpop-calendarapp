@@ -30,18 +30,17 @@ export default function RegisterPage() {
 
   const hd = useMemo(() => new Holidays("JP"), []);
 
-  /* ===================== カレンダー生成（曜日ズレ修正） ===================== */
+  /* ===================== カレンダー生成（曜日ズレ & 当月/翌月トーン管理） ===================== */
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0-11
 
   // その月の1日の曜日（0=日）
   const firstWeekday = new Date(year, month, 1).getDay();
 
-  // カレンダーは常に 日〜土 の7列。1日の前に「前月の埋め」を入れる
-  // 先頭セル（日曜）に合わせるため、1日から firstWeekday 日戻った日をグリッド開始日にする
+  // グリッド開始日（1日から firstWeekday 日戻る）
   const gridStart = new Date(year, month, 1 - firstWeekday);
 
-  // 6週×7日=42セル生成（どの月も収まる）
+  // 6週×7日=42セル（当月だけ強調、前後月は減光）
   const cells = [];
   for (let i = 0; i < 42; i++) {
     const d = new Date(
@@ -64,24 +63,21 @@ export default function RegisterPage() {
   const defaultInfo = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
 
   const handleDateClick = (date) => {
-    // 当月以外は選択不可（ズレ抑止）
+    // 当月以外は選択不可（トーン下げ対象）
     if (date.getMonth() !== month) return;
 
     const iso = dateToISO(date);
 
     if (mode === "single") {
-      // すでにその1日が選択されている → 解除（空に）
       if (selectedDates[iso] && Object.keys(selectedDates).length === 1) {
         setSelectedDates({});
       } else if (selectedDates[iso] && Object.keys(selectedDates).length > 1) {
-        // 他の日もある場合でも、同日を再クリックで解除
         setSelectedDates((prev) => {
           const next = { ...prev };
           delete next[iso];
           return Object.keys(next).length ? next : {};
         });
       } else {
-        // その日だけを選択
         setSelectedDates({ [iso]: { ...defaultInfo } });
       }
       setRangeStart(null);
@@ -89,7 +85,6 @@ export default function RegisterPage() {
     }
 
     if (mode === "multiple") {
-      // トグル
       setSelectedDates((prev) => {
         const next = { ...prev };
         if (next[iso]) delete next[iso];
@@ -102,7 +97,6 @@ export default function RegisterPage() {
 
     // mode === "range"
     if (!rangeStart) {
-      // 範囲開始前：同日を再クリックで解除、未選択なら開始マークとして一旦選択
       if (selectedDates[iso]) {
         setSelectedDates((prev) => {
           const next = { ...prev };
@@ -114,27 +108,29 @@ export default function RegisterPage() {
         setRangeStart(date);
       }
     } else {
-      // 範囲終了：開始～終了まで作って、すでに全部選ばれていれば解除、そうでなければ追加
       const start = rangeStart < date ? rangeStart : date;
       const end = rangeStart < date ? date : rangeStart;
 
       const rangeDates = {};
       const cur = new Date(start);
       while (cur <= end) {
-        const dIso = dateToISO(cur);
-        rangeDates[dIso] = { ...defaultInfo };
+        if (cur.getMonth() === month) {
+          // 範囲内でも当月のみ選択可
+          const dIso = dateToISO(cur);
+          rangeDates[dIso] = { ...defaultInfo };
+        }
         cur.setDate(cur.getDate() + 1);
       }
 
       setSelectedDates((prev) => {
-        const allSelected = Object.keys(rangeDates).every((d) => !!prev[d]);
+        const allSelected =
+          Object.keys(rangeDates).length > 0 &&
+          Object.keys(rangeDates).every((d) => !!prev[d]);
         if (allSelected) {
-          // すべて選択済み → 一括解除
           const next = { ...prev };
           Object.keys(rangeDates).forEach((d) => delete next[d]);
           return next;
         }
-        // 追加
         return { ...prev, ...rangeDates };
       });
 
@@ -297,25 +293,31 @@ export default function RegisterPage() {
                   {week.map((d, j) => {
                     const iso = dateToISO(d);
                     const isCurrentMonth = d.getMonth() === month;
-                    const isToday = iso === todayIso;
-                    const isSelected = !!selectedDates[iso];
+                    const isToday = iso === todayIso && isCurrentMonth;
+                    const isSelected = !!selectedDates[iso] && isCurrentMonth;
                     const holiday = isCurrentMonth ? hd.isHoliday(d) : null;
+
+                    // 当月外は減光＋クリック不可
+                    const classNames = [
+                      "cell",
+                      isCurrentMonth ? "" : "outside muted",
+                      isToday ? "today" : "",
+                      isSelected ? "selected" : "",
+                      holiday ? "holiday" : "",
+                      // 週末色は当月のみ適用
+                      isCurrentMonth && j === 0 ? "sunday" : "",
+                      isCurrentMonth && j === 6 ? "saturday" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
 
                     return (
                       <td
                         key={`${iso}-${j}`}
-                        className={[
-                          "cell",
-                          isCurrentMonth ? "" : "outside",
-                          isToday ? "today" : "",
-                          isSelected && isCurrentMonth ? "selected" : "",
-                          holiday ? "holiday" : "",
-                          j === 0 ? "sunday" : "",
-                          j === 6 ? "saturday" : "",
-                        ]
-                          .join(" ")
-                          .trim()}
+                        className={classNames}
                         onClick={() => handleDateClick(d)}
+                        aria-disabled={!isCurrentMonth}
+                        tabIndex={isCurrentMonth ? 0 : -1}
                       >
                         <div className="daynum">{d.getDate()}</div>
                         {holiday && (
