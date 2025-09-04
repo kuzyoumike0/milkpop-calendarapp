@@ -163,8 +163,7 @@ export default function PersonalPage() {
     // 1) 内部編集用の完全データ
     localStorage.setItem("personalRecords", JSON.stringify(records));
 
-    // 2) 共有ページが読む簡易イベント配列（タイトル/メモ付き・並び替えしやすい形）
-    //    PersonalSharePage.jsx は "personalEvents" を参照します
+    // 2) 共有ページが読む簡易イベント配列
     const flatEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -172,13 +171,10 @@ export default function PersonalPage() {
           date: it.date,
           title: r.title || "（無題）",
           memo: r.memo || "",
-          // Share側の表示用
           allDay: it.slot === "終日",
-          slot: it.slot, // "終日" | "昼" | "夜" | "X時〜Y時"
-          startTime:
-            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
-          endTime:
-            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+          slot: it.slot,
+          startTime: typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime: typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
         });
       }
     }
@@ -352,12 +348,9 @@ export default function PersonalPage() {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/personal/share/${rec.id}`;
 
-    // クリップボードには静かにコピー（失敗しても無視）
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
-
-    // トースト/alertは使わず、カード内にURLを表示
     setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
   };
 
@@ -375,8 +368,6 @@ export default function PersonalPage() {
       return next;
     });
   };
-
-  const hourOptions = Array.from({ length: 24 }, (_, i) => i);
 
   /* ========================= JSX ========================= */
   return (
@@ -637,33 +628,104 @@ export default function PersonalPage() {
             <ul className="answered-list">
               {answeredShares.map((x, i) => (
                 <li key={`${x.url}-${x.savedAt}-${i}`} className="answered-item">
-                  <div className="answered-main">
+                  <div className="answered-main" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div
+                      className="answered-avatar"
+                      aria-hidden
+                      style={{
+                        width: 36,
+                        height: 36,
+                        flex: "0 0 auto",
+                        borderRadius: 999,
+                        background: "#FDB9C8",
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: 18,
+                        color: "#111",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      }}
+                    >
+                      🔗
+                    </div>
+
                     <a
                       className="answered-link"
                       href={x.url}
                       target="_blank"
                       rel="noreferrer"
                       title={x.url}
+                      style={{ textDecoration: "none" }}
                     >
-                      <span className="answered-title">{x.title || "共有日程"}</span>
-                      <span className="answered-url">{x.url}</span>
+                      {/* タイトル（1行） */}
+                      <div
+                        className="answered-title"
+                        style={{
+                          fontWeight: 700,
+                          fontSize: "1rem",
+                          lineHeight: 1.3,
+                          color: "#004CA0",
+                          display: "block",
+                        }}
+                      >
+                        {x.title || "共有日程"}
+                      </div>
+
+                      {/* URL（タイトルの下に小さく・折返し可） */}
+                      <div
+                        className="answered-url"
+                        style={{
+                          marginTop: 2,
+                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                          fontSize: "0.85rem",
+                          color: "#444",
+                          opacity: 0.9,
+                          wordBreak: "break-all",
+                          display: "block",
+                        }}
+                      >
+                        {x.url}
+                      </div>
                     </a>
-                    <span className="answered-time">保存: {fmtDateTime(x.savedAt)}</span>
                   </div>
-                  <div className="answered-actions">
-                    <button
-                      className="ghost-btn danger small"
-                      aria-label="この履歴を削除"
-                      title="この履歴を削除"
-                      onClick={() => removeOneAnsweredShare(x.url, x.savedAt)}
-                    >
-                      削除
-                    </button>
+
+                  <div
+                    className="answered-meta"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      marginTop: 6,
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span className="answered-time" style={{ color: "#666", fontSize: "0.85rem" }}>
+                      保存: {fmtDateTime(x.savedAt)}
+                    </span>
+
+                    <div className="answered-actions" style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="ghost-btn danger small"
+                        aria-label="この履歴を削除"
+                        title="この履歴を削除"
+                        onClick={() => removeOneAnsweredShare(x.url, x.savedAt)}
+                        style={{
+                          borderRadius: 999,
+                          padding: "6px 12px",
+                          border: "1px solid rgba(0,0,0,0.08)",
+                          background: "#fff",
+                          color: "#d11",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                        }}
+                      >
+                        削除
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
             </ul>
-            <div className="card-actions">
+
+            <div className="card-actions" style={{ marginTop: 12 }}>
               <button className="ghost-btn danger" onClick={clearAnsweredShares}>
                 すべてクリア
               </button>
