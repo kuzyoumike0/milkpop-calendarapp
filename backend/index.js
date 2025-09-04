@@ -1,9 +1,8 @@
 // backend/index.js
-// ===== 完全統合版 v20 =====
-// - 追加: POST /api/schedules/create（ログイン済みなら日程0件でも共有発行可）
-// - 追加: GET  /api/schedules/mine（作成者の共有一覧）
-// - 既存の v19（CSP: ep1/ep2.adtrafficquality.google 許可）は維持
-// - 既存の /api/schedules, /api/personal-events などは互換維持
+// ===== 完全統合版 v21 =====
+// - 追加: GET/POST /api/schedules/:shareToken/responses（回答のDB保存＆取得、UPSERT）
+// - 追加: socket.on("updateResponses") 中継 → 部屋(shareToken)へブロードキャスト
+// - 既存の v20 の仕様はすべて維持
 
 import express from "express";
 import cors from "cors";
@@ -40,9 +39,9 @@ const FRONTEND_URL_ENV = process.env.FRONTEND_URL || "http://localhost:3000";
 function resolveBaseUrl(req) {
   const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
   const host  = req.headers["x-forwarded-host"] || req.get("host");
-  if (host) return `${proto}://${host}`;                 // ← リクエスト基準を最優先
+  if (host) return `${proto}://${host}`;
   if (FRONTEND_URL_ENV && /^https?:\/\//i.test(FRONTEND_URL_ENV)) {
-    return FRONTEND_URL_ENV.replace(/\/+$/, "");         // ← フォールバック
+    return FRONTEND_URL_ENV.replace(/\/+$/, "");
   }
   return "http://localhost:3000";
 }
@@ -72,7 +71,6 @@ app.use(
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
-        // ★ SODAR iframe 許可
         frameSrc: [
           "'self'",
           "https://googleads.g.doubleclick.net",
@@ -84,7 +82,6 @@ app.use(
           "https://ep1.adtrafficquality.google",
           "https://ep2.adtrafficquality.google",
         ],
-        // 古いUA向け
         childSrc: [
           "'self'",
           "https://googleads.g.doubleclick.net",
@@ -204,9 +201,18 @@ initDB();
 // ===== Socket.io =====
 io.on("connection", (socket) => {
   console.log("🟢 connected:", socket.id);
+
   socket.on("joinSchedule", (token) => {
     if (typeof token === "string" && token.length > 0) socket.join(token);
   });
+
+  // ← 追加: クライアントからのトリガを部屋にブロードキャスト
+  socket.on("updateResponses", (token) => {
+    if (typeof token === "string" && token.length > 0) {
+      io.to(token).emit("updateResponses");
+    }
+  });
+
   socket.on("disconnect", (reason) => {
     console.log("🔴 disconnected:", socket.id, reason);
   });
@@ -307,7 +313,6 @@ app.post("/api/schedules/create", authRequired, async (req, res) => {
       [
         scheduleId,
         title.trim() || "未設定スケジュール",
-        // 0件でも空配列で保存
         JSON.stringify(normalizedDates),
         JSON.stringify({ owner: req.user.discord_id }),
         shareToken,
@@ -353,16 +358,94 @@ app.get("/api/schedules/:shareToken", async (req, res) => {
       return res.status(404).json({ error: "スケジュールが見つかりません" });
     }
     const schedule = result.rows[0];
-    // 既存仕様: mapしてlabel付与（既存の /api/schedules 互換）
     const raw = Array.isArray(schedule.dates) ? schedule.dates : [];
     const isObjectDates = raw.length > 0 && typeof raw[0] === "object" && raw[0] !== null;
     const dates = isObjectDates
       ? raw.map((d) => ({ ...d, label: timeLabel(d.timeType, d.startTime, d.endTime) }))
-      : raw; // 文字列配列（空やシンプル日付配列）も許容
+      : raw;
     res.json({ id: schedule.id, title: schedule.title, dates });
   } catch (err) {
     console.error("❌ schedules取得失敗:", err);
     res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// ======================
+// ★ 追加: 回答の取得/保存（DB, UPSERT）
+// ======================
+
+// 共有トークン → schedule_id を取得
+async function getScheduleIdByShareToken(shareToken) {
+  const r = await pool.query(
+    `SELECT id FROM schedules WHERE share_token = $1 LIMIT 1`,
+    [shareToken]
+  );
+  return r.rows[0]?.id || null;
+}
+
+// 回答一覧の取得
+app.get("/api/schedules/:shareToken/responses", async (req, res) => {
+  try {
+    const { shareToken } = req.params;
+    const scheduleId = await getScheduleIdByShareToken(shareToken);
+    if (!scheduleId) return res.status(404).json({ error: "スケジュールが見つかりません" });
+
+    const r = await pool.query(
+      `SELECT user_id, username, responses, created_at
+       FROM schedule_responses
+       WHERE schedule_id = $1
+       ORDER BY created_at ASC`,
+      [scheduleId]
+    );
+
+    // DBのJSONBをそのまま返す（フロントでnormalizeResponses済み）
+    res.json(
+      r.rows.map((row) => ({
+        user_id: row.user_id,
+        username: row.username,
+        responses: row.responses,
+        created_at: row.created_at,
+      }))
+    );
+  } catch (err) {
+    console.error("❌ responses取得失敗:", err);
+    res.status(500).json({ error: "取得失敗" });
+  }
+});
+
+// 回答の保存（UPSERT: schedule_id + user_id）
+app.post("/api/schedules/:shareToken/responses", async (req, res) => {
+  try {
+    const { shareToken } = req.params;
+    const { user_id, username, responses } = req.body || {};
+
+    if (!user_id || typeof user_id !== "string") {
+      return res.status(400).json({ error: "user_id is required" });
+    }
+    if (!responses || typeof responses !== "object") {
+      return res.status(400).json({ error: "responses must be an object" });
+    }
+
+    const scheduleId = await getScheduleIdByShareToken(shareToken);
+    if (!scheduleId) return res.status(404).json({ error: "スケジュールが見つかりません" });
+
+    await pool.query(
+      `INSERT INTO schedule_responses (schedule_id, user_id, username, responses)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (schedule_id, user_id)
+       DO UPDATE SET username = EXCLUDED.username,
+                     responses = EXCLUDED.responses,
+                     created_at = NOW()`,
+      [scheduleId, user_id, username || "", JSON.stringify(responses)]
+    );
+
+    // 同じトークン部屋にブロードキャスト（即時反映）
+    io.to(shareToken).emit("updateResponses");
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("❌ responses保存失敗:", err);
+    res.status(500).json({ error: "保存失敗" });
   }
 });
 
