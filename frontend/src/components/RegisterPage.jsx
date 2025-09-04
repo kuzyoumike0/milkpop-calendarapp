@@ -30,19 +30,23 @@ export default function RegisterPage() {
 
   const hd = useMemo(() => new Holidays("JP"), []);
 
-  /* ===================== カレンダー生成（曜日ズレ & 当月/翌月トーン管理） ===================== */
+  /* ===================== カレンダー生成（曜日ズレ＆余分週カット） ===================== */
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0-11
 
-  // その月の1日の曜日（0=日）
-  const firstWeekday = new Date(year, month, 1).getDay();
+  const firstWeekday = new Date(year, month, 1).getDay(); // 0=日
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 当月の表示に必要な週数（5 or 6）
+  const weeksCount = Math.ceil((firstWeekday + daysInMonth) / 7);
+  const totalCells = weeksCount * 7;
 
   // グリッド開始日（1日から firstWeekday 日戻る）
   const gridStart = new Date(year, month, 1 - firstWeekday);
 
-  // 6週×7日=42セル（当月だけ強調、前後月は減光）
+  // 必要セル数だけ生成（余計な翌月2週目以降は作らない）
   const cells = [];
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < totalCells; i++) {
     const d = new Date(
       gridStart.getFullYear(),
       gridStart.getMonth(),
@@ -63,7 +67,7 @@ export default function RegisterPage() {
   const defaultInfo = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
 
   const handleDateClick = (date) => {
-    // 当月以外は選択不可（トーン下げ対象）
+    // 当月以外は非アクティブ
     if (date.getMonth() !== month) return;
 
     const iso = dateToISO(date);
@@ -115,7 +119,6 @@ export default function RegisterPage() {
       const cur = new Date(start);
       while (cur <= end) {
         if (cur.getMonth() === month) {
-          // 範囲内でも当月のみ選択可
           const dIso = dateToISO(cur);
           rangeDates[dIso] = { ...defaultInfo };
         }
@@ -297,14 +300,18 @@ export default function RegisterPage() {
                     const isSelected = !!selectedDates[iso] && isCurrentMonth;
                     const holiday = isCurrentMonth ? hd.isHoliday(d) : null;
 
-                    // 当月外は減光＋クリック不可
+                    // 当月外は減光＋クリック無効（inline styleで強制）
+                    const cellStyle = isCurrentMonth
+                      ? {}
+                      : { opacity: 0.35, pointerEvents: "none", filter: "grayscale(40%)" };
+
                     const classNames = [
                       "cell",
                       isCurrentMonth ? "" : "outside muted",
                       isToday ? "today" : "",
                       isSelected ? "selected" : "",
                       holiday ? "holiday" : "",
-                      // 週末色は当月のみ適用
+                      // 週末色は当月のみ適用（outsideには付けない）
                       isCurrentMonth && j === 0 ? "sunday" : "",
                       isCurrentMonth && j === 6 ? "saturday" : "",
                     ]
@@ -315,6 +322,7 @@ export default function RegisterPage() {
                       <td
                         key={`${iso}-${j}`}
                         className={classNames}
+                        style={cellStyle}
                         onClick={() => handleDateClick(d)}
                         aria-disabled={!isCurrentMonth}
                         tabIndex={isCurrentMonth ? 0 : -1}
