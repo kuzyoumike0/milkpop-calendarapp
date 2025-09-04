@@ -92,6 +92,11 @@ const loadAnsweredShares = () => {
     return [];
   }
 };
+const saveAnsweredShares = (arr) => {
+  try {
+    localStorage.setItem(STORAGE_ANSWERED_KEY, JSON.stringify(arr));
+  } catch {}
+};
 const fmtDateTime = (iso) => {
   try {
     const d = new Date(iso);
@@ -248,7 +253,7 @@ export default function PersonalPage() {
   const dayClass = (y, m, d) => {
     const dow = new Date(y, m - 1, d).getDay();
     return dow === 0 ? "sunday" : dow === 6 ? "saturday" : "";
-    };
+  };
 
   const slotLabel = useMemo(() => {
     switch (timePreset) {
@@ -360,6 +365,15 @@ export default function PersonalPage() {
   const clearAnsweredShares = () => {
     localStorage.removeItem(STORAGE_ANSWERED_KEY);
     setAnsweredShares([]);
+  };
+
+  // 回答した共有リンクを1件削除（URLと保存時刻で特定）
+  const removeOneAnsweredShare = (url, savedAt) => {
+    setAnsweredShares((prev) => {
+      const next = prev.filter((x) => !(x.url === url && x.savedAt === savedAt));
+      saveAnsweredShares(next);
+      return next;
+    });
   };
 
   const hourOptions = Array.from({ length: 24 }, (_, i) => i);
@@ -622,24 +636,36 @@ export default function PersonalPage() {
           <div className="answered-box">
             <ul className="answered-list">
               {answeredShares.map((x, i) => (
-                <li key={`${x.url}-${i}`} className="answered-item">
-                  <a
-                    className="answered-link"
-                    href={x.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={x.url}
-                  >
-                    <span className="answered-title">{x.title || "共有日程"}</span>
-                    <span className="answered-url">{x.url}</span>
-                  </a>
-                  <span className="answered-time">保存: {fmtDateTime(x.savedAt)}</span>
+                <li key={`${x.url}-${x.savedAt}-${i}`} className="answered-item">
+                  <div className="answered-main">
+                    <a
+                      className="answered-link"
+                      href={x.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={x.url}
+                    >
+                      <span className="answered-title">{x.title || "共有日程"}</span>
+                      <span className="answered-url">{x.url}</span>
+                    </a>
+                    <span className="answered-time">保存: {fmtDateTime(x.savedAt)}</span>
+                  </div>
+                  <div className="answered-actions">
+                    <button
+                      className="ghost-btn danger small"
+                      aria-label="この履歴を削除"
+                      title="この履歴を削除"
+                      onClick={() => removeOneAnsweredShare(x.url, x.savedAt)}
+                    >
+                      削除
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
             <div className="card-actions">
               <button className="ghost-btn danger" onClick={clearAnsweredShares}>
-                回答履歴をクリア
+                すべてクリア
               </button>
             </div>
           </div>
