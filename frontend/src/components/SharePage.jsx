@@ -129,8 +129,9 @@ export default function SharePage() {
     const handler = () => {
       fetchResponses().then((fixed) => {
         // 他端末で更新された自分の回答を同期
-        if (myUserId) {
-          const mine = fixed.find((r) => r.user_id === myUserId);
+        const myId = myUserId || localStorage.getItem(STORAGE_MY_UID);
+        if (myId) {
+          const mine = fixed.find((r) => r.user_id === myId);
           if (mine) {
             setUsername(mine.username || "");
             setMyResponses(mine.responses || {});
@@ -144,8 +145,9 @@ export default function SharePage() {
 
   // ===== responses or myUserId が変わったら「自分の回答」をフォームに復元 =====
   useEffect(() => {
-    if (!myUserId || responses.length === 0) return;
-    const mine = responses.find((r) => r.user_id === myUserId);
+    const myId = myUserId || localStorage.getItem(STORAGE_MY_UID);
+    if (!myId || responses.length === 0) return;
+    const mine = responses.find((r) => r.user_id === myId);
     if (mine) {
       setUsername(mine.username || "");
       setMyResponses(mine.responses || {});
@@ -155,7 +157,27 @@ export default function SharePage() {
     }
   }, [responses, myUserId]);
 
-  if (!schedule) return <div>読み込み中...</div>;
+  // ===== 集計 & ソート（schedule が null でもフックは常に呼ぶ） =====
+  const summary = useMemo(() => {
+    const dates = schedule?.dates || [];
+    return dates.map((d) => {
+      const key = buildKey(d.date, d);
+      const counts = { "◯": 0, "✕": 0, "△": 0 };
+      responses.forEach((r) => {
+        const val = r.responses?.[key];
+        if (val && counts[val] !== undefined) counts[val]++;
+      });
+      return { ...d, key, counts };
+    });
+  }, [schedule, responses]);
+
+  const filteredSummary = useMemo(() => {
+    const s = [...summary];
+    if (filter === "ok") return s.sort((a, b) => b.counts["◯"] - a.counts["◯"]);
+    if (filter === "ng") return s.sort((a, b) => b.counts["✕"] - a.counts["✕"]);
+    if (filter === "maybe") return s.sort((a, b) => b.counts["△"] - a.counts["△"]);
+    return s.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [summary, filter]);
 
   // ===== 保存（DBへ UPSERT by user_id） =====
   const handleSave = async () => {
@@ -165,7 +187,7 @@ export default function SharePage() {
     }
     try {
       const payload = {
-        user_id: myUserId, // 端末固定 → DBでこのIDにUPSERT
+        user_id: myUserId || getOrCreateMyUserId(), // 端末固定 → DBでこのIDにUPSERT
         username,
         responses: normalizeResponses(myResponses),
       };
@@ -178,8 +200,8 @@ export default function SharePage() {
 
       // 即時ローカル反映（自分の行を置き換え）
       setResponses((prev) => {
-        const others = prev.filter((r) => r.user_id !== myUserId);
-        return [...others, { user_id: myUserId, username, responses: payload.responses }];
+        const others = prev.filter((r) => r.user_id !== payload.user_id);
+        return [...others, { user_id: payload.user_id, username, responses: payload.responses }];
       });
 
       // 共有URLを個人ページに残す（ローカル履歴）
@@ -233,153 +255,139 @@ export default function SharePage() {
     }
   };
 
-  // ===== 集計 & ソート =====
-  const summary = useMemo(() => {
-    return (schedule.dates || []).map((d) => {
-      const key = buildKey(d.date, d);
-      const counts = { "◯": 0, "✕": 0, "△": 0 };
-      responses.forEach((r) => {
-        const val = r.responses?.[key];
-        if (val && counts[val] !== undefined) counts[val]++;
-      });
-      return { ...d, key, counts };
-    });
-  }, [schedule, responses]);
-
-  const filteredSummary = useMemo(() => {
-    const s = [...summary];
-    if (filter === "ok") return s.sort((a, b) => b.counts["◯"] - a.counts["◯"]);
-    if (filter === "ng") return s.sort((a, b) => b.counts["✕"] - a.counts["✕"]);
-    if (filter === "maybe") return s.sort((a, b) => b.counts["△"] - a.counts["△"]);
-    return s.sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [summary, filter]);
-
   return (
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* 自分の回答 */}
-      <div className="my-responses">
-        <h2>自分の回答</h2>
-        <input
-          type="text"
-          placeholder="あなたの名前"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="username-input"
-        />
-        <div className="my-responses-list">
-          {(schedule.dates || []).map((d, idx) => {
-            const key = buildKey(d.date, d);
-            return (
-              <div key={idx} className="my-response-item">
-                <span className="date-label">{key}</span>
-                <select
-                  className="fancy-select"
-                  value={myResponses[key] || "-"}
-                  onChange={(e) =>
-                    setMyResponses({ ...myResponses, [key]: e.target.value })
-                  }
-                >
-                  <option value="-">- 未回答</option>
-                  <option value="◯">◯ 参加</option>
-                  <option value="✕">✕ 不参加</option>
-                  <option value="△">△ 未定</option>
-                </select>
-              </div>
-            );
-          })}
-        </div>
-        <button className="save-btn" onClick={handleSave}>
-          保存する
-        </button>
-        {saveMessage && <div className="save-message">{saveMessage}</div>}
-      </div>
-
-      {/* みんなの回答 */}
-      <div className="all-responses">
-        <h2>みんなの回答</h2>
-        <div style={{ marginBottom: "20px" }}>
-          フィルタ：
-          <select
-            className="fancy-select"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">すべて表示（日付順）</option>
-            <option value="ok">◯ 多い順</option>
-            <option value="ng">✕ 多い順</option>
-            <option value="maybe">△ 多い順</option>
-          </select>
-        </div>
-
-        <table className="responses-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>回答数</th>
-              {responses.map((r, idx) => (
-                <th key={idx}>
-                  <span
-                    className="editable-username"
-                    onClick={() => {
-                      setEditingUser(r.user_id);
-                      setEditedResponses(r.responses);
-                    }}
-                    title="クリックでこの人の回答を編集"
-                  >
-                    {r.username && r.username.trim() !== "" ? r.username : "未入力"}
-                    {r.user_id === myUserId ? "（自分）" : ""}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSummary.map((d, idx) => (
-              <tr key={idx}>
-                <td>{d.key}</td>
-                <td>
-                  <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
-                  <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
-                  <span className="count-maybe">△{d.counts["△"]}</span>
-                </td>
-                {responses.map((r, uIdx) => (
-                  <td key={uIdx}>
-                    {editingUser === r.user_id ? (
-                      <select
-                        className="fancy-select"
-                        value={editedResponses[d.key] || "-"}
-                        onChange={(e) =>
-                          setEditedResponses({
-                            ...editedResponses,
-                            [d.key]: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="-">- 未回答</option>
-                        <option value="◯">◯ 参加</option>
-                        <option value="✕">✕ 不参加</option>
-                        <option value="△">△ 未定</option>
-                      </select>
-                    ) : (
-                      r.responses?.[d.key] || "-"
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {editingUser && (
-          <div className="edit-save-bar">
-            <button className="username-save-btn" onClick={handleEditSave}>
-              編集を保存
+      {/* ローディング表示（フックは上で全て呼んだのでここは条件分岐OK） */}
+      {!schedule ? (
+        <div>読み込み中...</div>
+      ) : (
+        <>
+          {/* 自分の回答 */}
+          <div className="my-responses">
+            <h2>自分の回答</h2>
+            <input
+              type="text"
+              placeholder="あなたの名前"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="username-input"
+            />
+            <div className="my-responses-list">
+              {(schedule.dates || []).map((d, idx) => {
+                const key = buildKey(d.date, d);
+                return (
+                  <div key={idx} className="my-response-item">
+                    <span className="date-label">{key}</span>
+                    <select
+                      className="fancy-select"
+                      value={myResponses[key] || "-"}
+                      onChange={(e) =>
+                        setMyResponses({ ...myResponses, [key]: e.target.value })
+                      }
+                    >
+                      <option value="-">- 未回答</option>
+                      <option value="◯">◯ 参加</option>
+                      <option value="✕">✕ 不参加</option>
+                      <option value="△">△ 未定</option>
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+            <button className="save-btn" onClick={handleSave}>
+              保存する
             </button>
+            {saveMessage && <div className="save-message">{saveMessage}</div>}
           </div>
-        )}
-      </div>
+
+          {/* みんなの回答 */}
+          <div className="all-responses">
+            <h2>みんなの回答</h2>
+            <div style={{ marginBottom: "20px" }}>
+              フィルタ：
+              <select
+                className="fancy-select"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="all">すべて表示（日付順）</option>
+                <option value="ok">◯ 多い順</option>
+                <option value="ng">✕ 多い順</option>
+                <option value="maybe">△ 多い順</option>
+              </select>
+            </div>
+
+            <table className="responses-table">
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>回答数</th>
+                  {responses.map((r, idx) => (
+                    <th key={idx}>
+                      <span
+                        className="editable-username"
+                        onClick={() => {
+                          setEditingUser(r.user_id);
+                          setEditedResponses(r.responses);
+                        }}
+                        title="クリックでこの人の回答を編集"
+                      >
+                        {r.username && r.username.trim() !== "" ? r.username : "未入力"}
+                        {r.user_id === myUserId ? "（自分）" : ""}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSummary.map((d, idx) => (
+                  <tr key={idx}>
+                    <td>{d.key}</td>
+                    <td>
+                      <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
+                      <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
+                      <span className="count-maybe">△{d.counts["△"]}</span>
+                    </td>
+                    {responses.map((r, uIdx) => (
+                      <td key={uIdx}>
+                        {editingUser === r.user_id ? (
+                          <select
+                            className="fancy-select"
+                            value={editedResponses[d.key] || "-"}
+                            onChange={(e) =>
+                              setEditedResponses({
+                                ...editedResponses,
+                                [d.key]: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="-">- 未回答</option>
+                            <option value="◯">◯ 参加</option>
+                            <option value="✕">✕ 不参加</option>
+                            <option value="△">△ 未定</option>
+                          </select>
+                        ) : (
+                          r.responses?.[d.key] || "-"
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {editingUser && (
+              <div className="edit-save-bar">
+                <button className="username-save-btn" onClick={handleEditSave}>
+                  編集を保存
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
