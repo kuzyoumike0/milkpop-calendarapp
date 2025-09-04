@@ -66,6 +66,29 @@ const normalizeResponses = (obj) => {
   return normalized;
 };
 
+// ==== 個人日程（PersonalPage→localStorage）を読み取り、該当日の既定値を✖にする ====
+function buildAutoNgMap(scheduleDates) {
+  try {
+    const personal = JSON.parse(localStorage.getItem("personalEvents") || "[]");
+    if (!Array.isArray(personal) || personal.length === 0) return {};
+
+    // 個人イベントがある「日付」を不参加（✖）の既定値とする
+    const ngDateSet = new Set(personal.map((ev) => new Date(ev.date).toISOString().split("T")[0]));
+
+    const map = {};
+    for (const d of scheduleDates || []) {
+      const iso = new Date(d.date).toISOString().split("T")[0];
+      if (ngDateSet.has(iso)) {
+        const key = buildKey(d.date, d);
+        map[key] = "✕";
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export default function SharePage() {
   const { token } = useParams();
 
@@ -84,6 +107,7 @@ export default function SharePage() {
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
+  const [autoNgApplied, setAutoNgApplied] = useState(false);
 
   // ===== 固定 user_id を確定 =====
   useEffect(() => {
@@ -134,7 +158,10 @@ export default function SharePage() {
           const mine = fixed.find((r) => r.user_id === myId);
           if (mine) {
             setUsername(mine.username || "");
-            setMyResponses(mine.responses || {});
+            setMyResponses((prev) => {
+              // 既に自分の回答が存在する場合はそれを優先
+              return mine.responses || prev;
+            });
           }
         }
       });
@@ -152,12 +179,33 @@ export default function SharePage() {
       setUsername(mine.username || "");
       setMyResponses(mine.responses || {});
     } else {
-      // DBに自分の回答がまだ無い場合は空初期化
+      // DBに自分の回答がまだ無い場合は空初期化（この後の auto ✖ 適用が走る）
       setMyResponses({});
     }
   }, [responses, myUserId]);
 
-  // ===== 集計 & ソート（schedule が null でもフックは常に呼ぶ） =====
+  // ===== 初期表示時：個人日程に基づき、自分の未回答キーを ✖ でプレフィル =====
+  useEffect(() => {
+    if (!schedule || autoNgApplied) return;
+
+    const autoNg = buildAutoNgMap(schedule.dates);
+    if (Object.keys(autoNg).length === 0) {
+      setAutoNgApplied(true);
+      return;
+    }
+
+    setMyResponses((prev) => {
+      // 既に値が入っているキーは尊重し、未設定のキーのみ ✖ を適用
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(autoNg)) {
+        if (next[k] == null || next[k] === "-") next[k] = v; // ← 自動で✖
+      }
+      return next;
+    });
+    setAutoNgApplied(true);
+  }, [schedule, autoNgApplied]);
+
+  // ===== 集計 & ソート =====
   const summary = useMemo(() => {
     const dates = schedule?.dates || [];
     return dates.map((d) => {
@@ -243,7 +291,7 @@ export default function SharePage() {
       });
 
       // 自分本人を編集していたらフォームにも反映
-      if (editingUser === myUserId) {
+      if (editingUser === (myUserId || localStorage.getItem(STORAGE_MY_UID))) {
         setMyResponses(payload.responses);
       }
 
@@ -259,7 +307,6 @@ export default function SharePage() {
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
 
-      {/* ローディング表示（フックは上で全て呼んだのでここは条件分岐OK） */}
       {!schedule ? (
         <div>読み込み中...</div>
       ) : (
@@ -274,6 +321,13 @@ export default function SharePage() {
               onChange={(e) => setUsername(e.target.value)}
               className="username-input"
             />
+
+            {autoNgApplied && (
+              <div className="save-message" style={{ marginTop: 8 }}>
+                個人日程で登録済みの日は自動で「✕」に設定しました（必要なら変更できます）。
+              </div>
+            )}
+
             <div className="my-responses-list">
               {(schedule.dates || []).map((d, idx) => {
                 const key = buildKey(d.date, d);
@@ -335,7 +389,7 @@ export default function SharePage() {
                         title="クリックでこの人の回答を編集"
                       >
                         {r.username && r.username.trim() !== "" ? r.username : "未入力"}
-                        {r.user_id === myUserId ? "（自分）" : ""}
+                        {r.user_id === (myUserId || localStorage.getItem(STORAGE_MY_UID)) ? "（自分）" : ""}
                       </span>
                     </th>
                   ))}
