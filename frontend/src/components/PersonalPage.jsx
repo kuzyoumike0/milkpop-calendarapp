@@ -82,7 +82,7 @@ function buildMonthMatrix(year, month) {
   return weeks;
 }
 
-/* ====== 共有ページで保存した「回答した共有リンク」を表示するためのユーティリティ ====== */
+/* ====== 共有ページで保存した「回答した共有リンク」を表示するユーティリティ ====== */
 const STORAGE_ANSWERED_KEY = "mp_answeredShares";
 const loadAnsweredShares = () => {
   try {
@@ -124,7 +124,8 @@ export default function PersonalPage() {
   const rangeStartRef = useRef(null);
   const [selected, setSelected] = useState(new Set()); // 'YYYY-MM-DD'
 
-  const [timePreset, setTimePreset] = useState("allday"); // allday | day | night | custom
+  // 時間帯プリセット: allday | day | night | ng | custom
+  const [timePreset, setTimePreset] = useState("allday");
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(18);
 
@@ -154,7 +155,6 @@ export default function PersonalPage() {
       setRecords([]);
       setShareLinks({});
     }
-    // 回答した共有リンクをロード
     setAnsweredShares(loadAnsweredShares());
   }, []);
 
@@ -163,7 +163,7 @@ export default function PersonalPage() {
     // 1) 内部編集用の完全データ
     localStorage.setItem("personalRecords", JSON.stringify(records));
 
-    // 2) 共有ページが読む簡易イベント配列
+    // 2) 共有ページが読む簡易イベント配列（タイトル/メモ付き・並び替えしやすい形）
     const flatEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -172,9 +172,11 @@ export default function PersonalPage() {
           title: r.title || "（無題）",
           memo: r.memo || "",
           allDay: it.slot === "終日",
-          slot: it.slot,
-          startTime: typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
-          endTime: typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+          slot: it.slot, // "終日" | "昼" | "夜" | "✕" | "X時〜Y時"
+          startTime:
+            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime:
+            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
         });
       }
     }
@@ -259,6 +261,8 @@ export default function PersonalPage() {
         return "昼";
       case "night":
         return "夜";
+      case "ng":
+        return "✕";
       case "custom":
         return `${startHour}時〜${endHour}時`;
       default:
@@ -310,6 +314,7 @@ export default function PersonalPage() {
     if (firstSlot === "終日") setTimePreset("allday");
     else if (firstSlot === "昼") setTimePreset("day");
     else if (firstSlot === "夜") setTimePreset("night");
+    else if (firstSlot === "✕") setTimePreset("ng");
     else {
       const m = firstSlot.match(/^(\d+)時〜(\d+)時$/);
       if (m) {
@@ -354,13 +359,10 @@ export default function PersonalPage() {
     setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
   };
 
-  // 回答した共有リンクのクリア
   const clearAnsweredShares = () => {
     localStorage.removeItem(STORAGE_ANSWERED_KEY);
     setAnsweredShares([]);
   };
-
-  // 回答した共有リンクを1件削除（URLと保存時刻で特定）
   const removeOneAnsweredShare = (url, savedAt) => {
     setAnsweredShares((prev) => {
       const next = prev.filter((x) => !(x.url === url && x.savedAt === savedAt));
@@ -372,8 +374,6 @@ export default function PersonalPage() {
   /* ========================= JSX ========================= */
   return (
     <div className="personal-page">
-      {/* ❌ ここにはヘッダー／フッターを書かない（App.jsx に集約） */}
-
       {/* タイトル */}
       <h1 className="page-title">個人日程登録</h1>
 
@@ -519,6 +519,13 @@ export default function PersonalPage() {
               onClick={() => setTimePreset("night")}
             >
               夜
+            </button>
+            <button
+              className={`time-btn ${timePreset === "ng" ? "active" : ""}`}
+              onClick={() => setTimePreset("ng")}
+              title="この日は参加不可（✕）として登録"
+            >
+              ✕
             </button>
             <button
               className={`time-btn ${timePreset === "custom" ? "active" : ""}`}
