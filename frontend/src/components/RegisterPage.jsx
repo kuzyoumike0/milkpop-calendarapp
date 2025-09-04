@@ -30,22 +30,32 @@ export default function RegisterPage() {
 
   const hd = useMemo(() => new Holidays("JP"), []);
 
-  /* ===================== カレンダー生成 ===================== */
+  /* ===================== カレンダー生成（曜日ズレ修正） ===================== */
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth(); // 0-11
 
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+  // その月の1日の曜日（0=日）
+  const firstWeekday = new Date(year, month, 1).getDay();
 
+  // カレンダーは常に 日〜土 の7列。1日の前に「前月の埋め」を入れる
+  // 先頭セル（日曜）に合わせるため、1日から firstWeekday 日戻った日をグリッド開始日にする
+  const gridStart = new Date(year, month, 1 - firstWeekday);
+
+  // 6週×7日=42セル生成（どの月も収まる）
+  const cells = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(
+      gridStart.getFullYear(),
+      gridStart.getMonth(),
+      gridStart.getDate() + i
+    );
+    cells.push(d);
+  }
+
+  // 7個ずつで週に分割
   const weeks = [];
-  let day = new Date(firstDay);
-  while (day <= lastDay) {
-    const week = [];
-    for (let i = 0; i < 7 && day <= lastDay; i++) {
-      week.push(new Date(day));
-      day.setDate(day.getDate() + 1);
-    }
-    weeks.push(week);
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
   }
 
   const todayIso = todayISO_JST();
@@ -54,6 +64,9 @@ export default function RegisterPage() {
   const defaultInfo = { timeType: "allday", startTime: "09:00", endTime: "18:00" };
 
   const handleDateClick = (date) => {
+    // 当月以外は選択不可（ズレ抑止）
+    if (date.getMonth() !== month) return;
+
     const iso = dateToISO(date);
 
     if (mode === "single") {
@@ -161,7 +174,7 @@ export default function RegisterPage() {
     if (Object.keys(selectedDates).length === 0) {
       alert("少なくとも1日を選択してください");
       return;
-    }  
+    }
     const payload = {
       title,
       dates: Object.entries(selectedDates)
@@ -180,8 +193,7 @@ export default function RegisterPage() {
         alert(data?.error || "共有リンクの発行に失敗しました");
         return;
       }
-      // サーバが share_url を返してきたらそれを優先、なければ share_token で組み立て
-     const url =
+      const url =
         data?.share_url ??
         (data?.share_token ? `${window.location.origin}/share/${data.share_token}` : "");
       if (!url) {
@@ -190,7 +202,6 @@ export default function RegisterPage() {
         return;
       }
       setShareLink(url);
-      
     } catch (err) {
       console.error(err);
       alert("保存に失敗しました");
@@ -218,13 +229,31 @@ export default function RegisterPage() {
 
       {/* モード切替 */}
       <div className="select-mode">
-        <button className={mode === "single" ? "active" : ""} onClick={() => { setMode("single"); setRangeStart(null); }}>
+        <button
+          className={mode === "single" ? "active" : ""}
+          onClick={() => {
+            setMode("single");
+            setRangeStart(null);
+          }}
+        >
           単日選択
         </button>
-        <button className={mode === "range" ? "active" : ""} onClick={() => { setMode("range"); setRangeStart(null); }}>
+        <button
+          className={mode === "range" ? "active" : ""}
+          onClick={() => {
+            setMode("range");
+            setRangeStart(null);
+          }}
+        >
           範囲選択
         </button>
-        <button className={mode === "multiple" ? "active" : ""} onClick={() => { setMode("multiple"); setRangeStart(null); }}>
+        <button
+          className={mode === "multiple" ? "active" : ""}
+          onClick={() => {
+            setMode("multiple");
+            setRangeStart(null);
+          }}
+        >
           複数選択
         </button>
       </div>
@@ -233,15 +262,33 @@ export default function RegisterPage() {
         {/* カレンダー */}
         <div className="calendar-container">
           <div className="calendar-header">
-            <button onClick={() => setCurrentDate(new Date(year, month - 1, 1))} aria-label="前の月">◀</button>
-            <span>{year}年 {month + 1}月</span>
-            <button onClick={() => setCurrentDate(new Date(year, month + 1, 1))} aria-label="次の月">▶</button>
+            <button
+              onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
+              aria-label="前の月"
+            >
+              ◀
+            </button>
+            <span>
+              {year}年 {month + 1}月
+            </span>
+            <button
+              onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
+              aria-label="次の月"
+            >
+              ▶
+            </button>
           </div>
 
           <table className="calendar-table">
             <thead>
               <tr>
-                <th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th>
+                <th>日</th>
+                <th>月</th>
+                <th>火</th>
+                <th>水</th>
+                <th>木</th>
+                <th>金</th>
+                <th>土</th>
               </tr>
             </thead>
             <tbody>
@@ -249,25 +296,31 @@ export default function RegisterPage() {
                 <tr key={i}>
                   {week.map((d, j) => {
                     const iso = dateToISO(d);
+                    const isCurrentMonth = d.getMonth() === month;
                     const isToday = iso === todayIso;
                     const isSelected = !!selectedDates[iso];
-                    const holiday = hd.isHoliday(d);
+                    const holiday = isCurrentMonth ? hd.isHoliday(d) : null;
 
                     return (
                       <td
                         key={`${iso}-${j}`}
                         className={[
                           "cell",
+                          isCurrentMonth ? "" : "outside",
                           isToday ? "today" : "",
-                          isSelected ? "selected" : "",
+                          isSelected && isCurrentMonth ? "selected" : "",
                           holiday ? "holiday" : "",
                           j === 0 ? "sunday" : "",
                           j === 6 ? "saturday" : "",
-                        ].join(" ").trim()}
+                        ]
+                          .join(" ")
+                          .trim()}
                         onClick={() => handleDateClick(d)}
                       >
                         <div className="daynum">{d.getDate()}</div>
-                        {holiday && <div className="holiday-name">{holiday[0].name}</div>}
+                        {holiday && (
+                          <div className="holiday-name">{holiday[0].name}</div>
+                        )}
                       </td>
                     );
                   })}
@@ -312,20 +365,28 @@ export default function RegisterPage() {
                     <select
                       className="cute-select"
                       value={info.startTime || "09:00"}
-                      onChange={(e) => handleTimeChange(dateIso, "startTime", e.target.value)}
+                      onChange={(e) =>
+                        handleTimeChange(dateIso, "startTime", e.target.value)
+                      }
                     >
                       {hours.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                     <span className="time-separator">〜</span>
                     <select
                       className="cute-select"
                       value={info.endTime || "10:00"}
-                      onChange={(e) => handleTimeChange(dateIso, "endTime", e.target.value)}
+                      onChange={(e) =>
+                        handleTimeChange(dateIso, "endTime", e.target.value)
+                      }
                     >
                       {hours.map((h) => (
-                        <option key={h} value={h}>{h}</option>
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -344,8 +405,13 @@ export default function RegisterPage() {
 
           {shareLink && (
             <div className="share-link-box">
-              <a href={shareLink} target="_blank" rel="noreferrer">{shareLink}</a>
-              <button className="copy-btn" onClick={() => navigator.clipboard.writeText(shareLink)}>
+              <a href={shareLink} target="_blank" rel="noreferrer">
+                {shareLink}
+              </a>
+              <button
+                className="copy-btn"
+                onClick={() => navigator.clipboard.writeText(shareLink)}
+              >
                 コピー
               </button>
             </div>
