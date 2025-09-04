@@ -82,6 +82,30 @@ function buildMonthMatrix(year, month) {
   return weeks;
 }
 
+/* ====== 共有ページで保存した「回答した共有リンク」を表示するためのユーティリティ ====== */
+const STORAGE_ANSWERED_KEY = "mp_answeredShares";
+const loadAnsweredShares = () => {
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORAGE_ANSWERED_KEY) || "[]");
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+};
+const fmtDateTime = (iso) => {
+  try {
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    return `${y}/${m}/${day} ${hh}:${mm}`;
+  } catch {
+    return iso;
+  }
+};
+
 /* ========================= メイン ========================= */
 export default function PersonalPage() {
   const now = new Date();
@@ -106,6 +130,9 @@ export default function PersonalPage() {
   // 共有URL表示: { [recordId]: url }
   const [shareLinks, setShareLinks] = useState({});
 
+  // 回答した共有リンク一覧（SharePageで保存時に記録されたものを表示）
+  const [answeredShares, setAnsweredShares] = useState([]);
+
   // ==== 起動時に localStorage から復元 ====
   useEffect(() => {
     try {
@@ -122,6 +149,8 @@ export default function PersonalPage() {
       setRecords([]);
       setShareLinks({});
     }
+    // 回答した共有リンクをロード
+    setAnsweredShares(loadAnsweredShares());
   }, []);
 
   // ==== records/links が変わったら localStorage に保存 & 共有ページ用データを同期 ====
@@ -219,7 +248,7 @@ export default function PersonalPage() {
   const dayClass = (y, m, d) => {
     const dow = new Date(y, m - 1, d).getDay();
     return dow === 0 ? "sunday" : dow === 6 ? "saturday" : "";
-  };
+    };
 
   const slotLabel = useMemo(() => {
     switch (timePreset) {
@@ -325,6 +354,12 @@ export default function PersonalPage() {
 
     // トースト/alertは使わず、カード内にURLを表示
     setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
+  };
+
+  // 回答した共有リンクのクリア
+  const clearAnsweredShares = () => {
+    localStorage.removeItem(STORAGE_ANSWERED_KEY);
+    setAnsweredShares([]);
   };
 
   const hourOptions = Array.from({ length: 24 }, (_, i) => i);
@@ -576,6 +611,39 @@ export default function PersonalPage() {
             </div>
           </div>
         ))}
+      </section>
+
+      {/* 回答した共有リンク一覧（SharePageで保存したもの） */}
+      <section className="registered-list">
+        <h2 className="saved-title">回答した共有リンク</h2>
+        {answeredShares.length === 0 ? (
+          <p className="muted">まだ共有ページでの回答履歴はありません。</p>
+        ) : (
+          <div className="answered-box">
+            <ul className="answered-list">
+              {answeredShares.map((x, i) => (
+                <li key={`${x.url}-${i}`} className="answered-item">
+                  <a
+                    className="answered-link"
+                    href={x.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={x.url}
+                  >
+                    <span className="answered-title">{x.title || "共有日程"}</span>
+                    <span className="answered-url">{x.url}</span>
+                  </a>
+                  <span className="answered-time">保存: {fmtDateTime(x.savedAt)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="card-actions">
+              <button className="ghost-btn danger" onClick={clearAnsweredShares}>
+                回答履歴をクリア
+              </button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
