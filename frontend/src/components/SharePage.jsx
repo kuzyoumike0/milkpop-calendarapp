@@ -7,6 +7,18 @@ import "../share.css";
 
 const socket = io();
 
+// === 個人ページで表示する「回答した共有リンク」用ストレージ ===
+const STORAGE_ANSWERED_KEY = "mp_answeredShares";
+// URLとタイトルの履歴を保存（同一URLは新しいものを先頭に）
+function recordAnsweredShare({ url, title }) {
+  try {
+    const list = JSON.parse(localStorage.getItem(STORAGE_ANSWERED_KEY) || "[]");
+    const filtered = list.filter((x) => x.url !== url);
+    const next = [{ url, title, savedAt: new Date().toISOString() }, ...filtered].slice(0, 200);
+    localStorage.setItem(STORAGE_ANSWERED_KEY, JSON.stringify(next));
+  } catch {}
+}
+
 export default function SharePage() {
   const { token } = useParams();
   const [schedule, setSchedule] = useState(null);
@@ -128,6 +140,12 @@ export default function SharePage() {
 
       socket.emit("updateResponses", token);
 
+      // ✅ 個人ページ用に記録（URL & タイトル）
+      recordAnsweredShare({
+        url: window.location.href,
+        title: schedule?.title || "共有日程",
+      });
+
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 2000);
     } catch {
@@ -160,6 +178,13 @@ export default function SharePage() {
       });
 
       socket.emit("updateResponses", token);
+
+      // ✅ 編集保存時も記録しておく（URL & タイトル）
+      recordAnsweredShare({
+        url: window.location.href,
+        title: schedule?.title || "共有日程",
+      });
+
       setEditingUser(null);
     } catch {
       alert("保存に失敗しました");
