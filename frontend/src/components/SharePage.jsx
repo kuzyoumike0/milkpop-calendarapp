@@ -1,5 +1,5 @@
 // frontend/src/components/SharePage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
@@ -7,7 +7,7 @@ import "../share.css";
 
 const socket = io();
 
-// === 個人ページに出す「回答した共有リンク」用ローカル履歴 ===
+// === 個人ページに載せる「回答した共有リンク」用ローカル履歴 ===
 const STORAGE_ANSWERED_KEY = "mp_answeredShares";
 function recordAnsweredShare({ url, title }) {
   try {
@@ -18,7 +18,7 @@ function recordAnsweredShare({ url, title }) {
   } catch {}
 }
 
-// === 自分の固定 user_id を端末ごとに保存・再利用（DBに紐づく主キー相当） ===
+// === 端末ごとの固定 user_id を保持（DBの自分の回答レコードと1対1で紐づく） ===
 const STORAGE_MY_UID = "mp_my_user_id";
 function getOrCreateMyUserId() {
   let id = localStorage.getItem(STORAGE_MY_UID);
@@ -38,7 +38,7 @@ const timeLabel = (t) => {
   return t;
 };
 
-// ==== キー生成 ====
+// ==== キー生成（同一キーで集計・保存するための正規化文字列） ====
 const buildKey = (date, d) => {
   const isoDate = new Date(date).toISOString().split("T")[0];
   if (d.timeType === "custom" && d.startTime && d.endTime) {
@@ -70,26 +70,29 @@ export default function SharePage() {
   const { token } = useParams();
 
   const [schedule, setSchedule] = useState(null);
+
+  // 全員分の回答（DBから取得）
   const [responses, setResponses] = useState([]);
+
+  // 自分の表示・編集用
+  const [myUserId, setMyUserId] = useState(null);
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
-  const [myUserId, setMyUserId] = useState(null);
 
+  // UI
   const [filter, setFilter] = useState("all");
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
 
-  // ==== 初期化（固定の自分用 user_id を用意） ====
+  // ===== 固定 user_id を確定 =====
   useEffect(() => {
     setMyUserId(getOrCreateMyUserId());
   }, []);
 
-  // ==== スケジュール＆回答読み込み（DBから） ====
+  // ===== スケジュール本体をDBから取得 =====
   useEffect(() => {
     if (!token) return;
-
-    // スケジュール本体
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
       .then((data) => {
@@ -101,9 +104,11 @@ export default function SharePage() {
         };
         setSchedule(sorted);
       });
+  }, [token]);
 
-    // 参加者の回答一覧
-    fetch(`/api/schedules/${token}/responses`)
+  // ===== 回答一覧をDBから取得（初期表示 & ソケット更新時） =====
+  const fetchResponses = () => {
+    return fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
       .then((data) => {
         const fixed = data.map((r) => ({
@@ -111,42 +116,48 @@ export default function SharePage() {
           responses: normalizeResponses(r.responses),
         }));
         setResponses(fixed);
-
-        // 自分の回答が既にDBにあればフォームへ復元
-        const mine = fixed.find((r) => r.user_id === (myUserId || localStorage.getItem(STORAGE_MY_UID)));
-        if (mine) {
-          setUsername(mine.username || "");
-          setMyResponses(mine.responses || {});
-        }
+        return fixed;
       });
+  };
 
-    // Socket接続＆購読
+  useEffect(() => {
+    if (!token) return;
+    fetchResponses();
+
+    // ソケット購読
     socket.emit("joinSchedule", token);
-    socket.on("updateResponses", () => {
-      fetch(`/api/schedules/${token}/responses`)
-        .then((res) => res.json())
-        .then((data) => {
-          const fixed = data.map((r) => ({
-            ...r,
-            responses: normalizeResponses(r.responses),
-          }));
-          setResponses(fixed);
-
-          // 他端末で自分の回答が更新された場合に同期
-          const mine = fixed.find((r) => r.user_id === (myUserId || localStorage.getItem(STORAGE_MY_UID)));
+    const handler = () => {
+      fetchResponses().then((fixed) => {
+        // 他端末で更新された自分の回答を同期
+        if (myUserId) {
+          const mine = fixed.find((r) => r.user_id === myUserId);
           if (mine) {
             setUsername(mine.username || "");
             setMyResponses(mine.responses || {});
           }
-        });
-    });
-
-    return () => socket.off("updateResponses");
+        }
+      });
+    };
+    socket.on("updateResponses", handler);
+    return () => socket.off("updateResponses", handler);
   }, [token, myUserId]);
+
+  // ===== responses or myUserId が変わったら「自分の回答」をフォームに復元 =====
+  useEffect(() => {
+    if (!myUserId || responses.length === 0) return;
+    const mine = responses.find((r) => r.user_id === myUserId);
+    if (mine) {
+      setUsername(mine.username || "");
+      setMyResponses(mine.responses || {});
+    } else {
+      // DBに自分の回答がまだ無い場合は空初期化
+      setMyResponses({});
+    }
+  }, [responses, myUserId]);
 
   if (!schedule) return <div>読み込み中...</div>;
 
-  // ==== 自分の回答を DB に保存（UPSERT by user_id） ====
+  // ===== 保存（DBへ UPSERT by user_id） =====
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -154,40 +165,41 @@ export default function SharePage() {
     }
     try {
       const payload = {
-        user_id: myUserId,                // ← 固定IDで紐付け（DBはこのIDでUPSERT）
+        user_id: myUserId, // 端末固定 → DBでこのIDにUPSERT
         username,
         responses: normalizeResponses(myResponses),
       };
 
       await fetch(`/api/schedules/${token}/responses`, {
-        method: "POST",
+        method: "POST", // サーバ側をUPSERT実装（INSERT or UPDATE by user_id）
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      // ローカル状態を更新（自分の回答を置換）
+      // 即時ローカル反映（自分の行を置き換え）
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== myUserId);
         return [...others, { user_id: myUserId, username, responses: payload.responses }];
       });
 
-      socket.emit("updateResponses", token);
-
-      // 個人ページ用に共有URL履歴も記録（UI連携）
+      // 共有URLを個人ページに残す（ローカル履歴）
       recordAnsweredShare({
         url: window.location.href,
         title: schedule?.title || "共有日程",
       });
 
+      // 参加者全員へ更新通知
+      socket.emit("updateResponses", token);
+
       setSaveMessage("保存しました！");
-      setTimeout(() => setSaveMessage(""), 2000);
+      setTimeout(() => setSaveMessage(""), 1800);
     } catch (e) {
       console.error(e);
       alert("保存に失敗しました");
     }
   };
 
-  // ==== 任意ユーザーの編集保存（管理・ホスト用の想定） ====
+  // ===== 任意ユーザーの編集保存（主催側の想定） =====
   const handleEditSave = async () => {
     try {
       const user = responses.find((r) => r.user_id === editingUser);
@@ -198,7 +210,7 @@ export default function SharePage() {
       };
 
       await fetch(`/api/schedules/${token}/responses`, {
-        method: "POST",
+        method: "POST", // UPSERT
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -208,12 +220,12 @@ export default function SharePage() {
         return [...others, { user_id: editingUser, username: payload.username, responses: payload.responses }];
       });
 
-      socket.emit("updateResponses", token);
-
-      // 自分自身を編集していた場合はフォームにも反映
+      // 自分本人を編集していたらフォームにも反映
       if (editingUser === myUserId) {
         setMyResponses(payload.responses);
       }
+
+      socket.emit("updateResponses", token);
       setEditingUser(null);
     } catch (e) {
       console.error(e);
@@ -221,23 +233,26 @@ export default function SharePage() {
     }
   };
 
-  // ==== 集計 ====
-  const summary = (schedule.dates || []).map((d) => {
-    const key = buildKey(d.date, d);
-    const counts = { "◯": 0, "✕": 0, "△": 0 };
-    responses.forEach((r) => {
-      const val = r.responses?.[key];
-      if (val && counts[val] !== undefined) counts[val]++;
+  // ===== 集計 & ソート =====
+  const summary = useMemo(() => {
+    return (schedule.dates || []).map((d) => {
+      const key = buildKey(d.date, d);
+      const counts = { "◯": 0, "✕": 0, "△": 0 };
+      responses.forEach((r) => {
+        const val = r.responses?.[key];
+        if (val && counts[val] !== undefined) counts[val]++;
+      });
+      return { ...d, key, counts };
     });
-    return { ...d, key, counts };
-  });
+  }, [schedule, responses]);
 
-  const filteredSummary = [...summary].sort((a, b) => {
-    if (filter === "ok") return b.counts["◯"] - a.counts["◯"];
-    if (filter === "ng") return b.counts["✕"] - a.counts["✕"];
-    if (filter === "maybe") return b.counts["△"] - a.counts["△"];
-    return new Date(a.date) - new Date(b.date); // デフォルトは日付順
-  });
+  const filteredSummary = useMemo(() => {
+    const s = [...summary];
+    if (filter === "ok") return s.sort((a, b) => b.counts["◯"] - a.counts["◯"]);
+    if (filter === "ng") return s.sort((a, b) => b.counts["✕"] - a.counts["✕"]);
+    if (filter === "maybe") return s.sort((a, b) => b.counts["△"] - a.counts["△"]);
+    return s.sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [summary, filter]);
 
   return (
     <div className="share-container">
