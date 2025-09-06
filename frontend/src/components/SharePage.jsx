@@ -341,29 +341,35 @@ export default function SharePage() {
               </div>
             )}
 
+            {/* ← 行を“左：ラベル / 右：操作部”で固定幅にして揃える */}
             <div className="my-responses-list">
               {(schedule.dates || []).map((d, idx) => {
                 const key = buildKey(d.date, d);
-                const label = buildDisplay(d.date, d); // ← 曜日付き表示
+                const label = buildDisplay(d.date, d); // 曜日付き表示
                 return (
-                  <div key={idx} className="my-response-item">
-                    <span className="date-label">{label}</span>
-                    <select
-                      className="fancy-select"
-                      value={myResponses[key] || "-"}
-                      onChange={(e) =>
-                        setMyResponses({ ...myResponses, [key]: e.target.value })
-                      }
-                    >
-                      <option value="-">- 未回答</option>
-                      <option value="◯">◯ 参加</option>
-                      <option value="✕">✕ 不参加</option>
-                      <option value="△">△ 未定</option>
-                    </select>
+                  <div key={idx} className="resp-row">
+                    <div className="resp-label">
+                      <span className="date-label">{label}</span>
+                    </div>
+                    <div className="resp-ctrl">
+                      <select
+                        className="fancy-select resp-select"
+                        value={myResponses[key] || "-"}
+                        onChange={(e) =>
+                          setMyResponses({ ...myResponses, [key]: e.target.value })
+                        }
+                      >
+                        <option value="-">- 未回答</option>
+                        <option value="◯">◯ 参加</option>
+                        <option value="✕">✕ 不参加</option>
+                        <option value="△">△ 未定</option>
+                      </select>
+                    </div>
                   </div>
                 );
               })}
             </div>
+
             <button className="save-btn" onClick={handleSave}>
               保存する
             </button>
@@ -412,7 +418,7 @@ export default function SharePage() {
               <tbody>
                 {filteredSummary.map((d, idx) => (
                   <tr key={idx}>
-                    <td>{d.display}</td> {/* ← 曜日付き表示 */}
+                    <td>{d.display}</td>
                     <td>
                       <span className="count-ok">◯{d.counts["◯"]}</span>{" "}
                       <span className="count-ng">✕{d.counts["✕"]}</span>{" "}
