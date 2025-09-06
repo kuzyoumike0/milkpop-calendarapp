@@ -1,17 +1,15 @@
-/* frontend/src/share.css */
-/* ======= いただいたCSSをベースに、行レイアウト用クラスを統合 ======= */
-
 .share-container {
   padding: 20px;
-  max-width: 1100px;
-  margin: auto;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  width: auto;              /* コンテンツに応じた幅 */
+  margin-left: 40px;        /* 左寄せ（40px余白） */
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 10px;
-  min-height: 100vh; /* 背景が途切れないようにする */
+  min-height: 90vh;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .share-title {
-  text-align: center;
+  text-align: left; /* 左寄せ */
   font-size: 24px;
   margin-bottom: 20px;
   color: #222;
@@ -37,41 +35,41 @@
   color: #111;
 }
 
-.my-responses-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-/* ==== 右側プルダウンを揃えるための行レイアウト ==== */
-.resp-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 12px;
-  padding: 6px 4px;
+/* 自分の回答テーブル（コンパクト版） */
+.my-responses-table {
+  border-collapse: collapse;
+  margin-top: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   border-radius: 8px;
+  overflow: hidden;
+  table-layout: auto;   /* 列幅を自動調整 */
+  width: auto;          /* コンテンツに応じた幅 */
 }
 
-.resp-label {
-  flex: 1;
-  display: flex;
-  align-items: center;
+.my-responses-table th,
+.my-responses-table td {
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.9);
+  text-align: left;   /* 左寄せ */
+  vertical-align: middle;
+  white-space: nowrap; /* 折り返さない */
 }
 
-.resp-ctrl {
-  width: 180px;    /* ← 固定幅：画像2枚目のように右端を揃える */
-  min-width: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  background: rgba(255, 255, 255, 0.18);
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 10px;
-  padding: 6px;
+.my-responses-table th {
+  background: #355c7d;
+  color: #fff;
+  font-weight: bold;
 }
 
-.resp-select { width: 100%; }
+/* プルダウンもコンパクトに */
+.my-responses-table td select {
+  min-width: 120px;   /* 最小幅 */
+  width: auto;        /* 内容に合わせる */
+  max-width: 160px;   /* 広がりすぎ防止 */
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
 
 .date-label {
   font-weight: bold;
@@ -124,7 +122,7 @@
 
 .all-responses label {
   display: block;
-  margin-bottom: 20px; /* フィルタと表に余白 */
+  margin-bottom: 20px;
   font-weight: bold;
   color: #222;
 }
@@ -177,7 +175,8 @@
   margin-top: 20px;
   text-align: center;
 }
-/* 編集保存ボタンを可愛く */
+
+/* 編集保存ボタン */
 .username-save-btn {
   background: linear-gradient(90deg, #4facfe, #f093fb);
   color: #fff;
@@ -194,33 +193,10 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* ベース */
+/* ページ全体の背景 */
 body {
   margin: 0;
   min-height: 100vh;
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
-}
-/* 自分の回答テーブル */
-.my-responses-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.my-responses-table th,
-.my-responses-table td {
-  border: 1px solid #ddd;
-  padding: 8px 10px;
-  text-align: center;
-  background: rgba(255,255,255,0.9);
-}
-
-.my-responses-table th {
-  background: #355c7d;
-  color: #fff;
-  font-weight: bold;
 }
