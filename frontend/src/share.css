@@ -1,3 +1,6 @@
+/* frontend/src/share.css */
+/* ======= いただいたCSSをベースに、行レイアウト用クラスを統合 ======= */
+
 .share-container {
   padding: 20px;
   max-width: 1100px;
@@ -30,6 +33,8 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   margin-bottom: 12px;
+  background: #fff;
+  color: #111;
 }
 
 .my-responses-list {
@@ -38,12 +43,35 @@
   gap: 10px;
 }
 
-.my-response-item {
+/* ==== 右側プルダウンを揃えるための行レイアウト ==== */
+.resp-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
+  align-items: stretch;
+  gap: 12px;
+  padding: 6px 4px;
+  border-radius: 8px;
 }
+
+.resp-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.resp-ctrl {
+  width: 180px;    /* ← 固定幅：画像2枚目のように右端を揃える */
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.resp-select { width: 100%; }
 
 .date-label {
   font-weight: bold;
@@ -125,20 +153,11 @@
   z-index: 2;
 }
 
-.count-ok {
-  color: green;
-  font-weight: bold;
-}
-.count-ng {
-  color: red;
-  font-weight: bold;
-}
-.count-maybe {
-  color: orange;
-  font-weight: bold;
-}
+.count-ok { color: green; font-weight: bold; }
+.count-ng { color: red; font-weight: bold; }
+.count-maybe { color: orange; font-weight: bold; }
 
-/* 編集用 */
+/* ユーザ名リンク */
 .editable-username {
   color: orange;
   font-weight: bold;
@@ -158,43 +177,6 @@
   margin-top: 20px;
   text-align: center;
 }
-.username-save-btn {
-  padding: 12px 28px;
-  border: none;
-  border-radius: 25px;
-  background: linear-gradient(90deg, #004ca0, #fdb9c8);
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  transition: 0.3s ease;
-}
-.username-save-btn:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
-  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
-}
-/* ユーザ名リンク */
-.editable-username {
-  color: orange;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: underline;
-  transition: color 0.2s ease, background 0.2s ease;
-  padding: 2px 4px;
-  border-radius: 4px;
-}
-.editable-username:hover {
-  color: #ff4b91;
-  background: rgba(255, 75, 145, 0.15);
-}
-
 /* 編集保存ボタンを可愛く */
 .username-save-btn {
   background: linear-gradient(90deg, #4facfe, #f093fb);
@@ -210,4 +192,12 @@ body {
 .username-save-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ベース */
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
+  font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
 }
