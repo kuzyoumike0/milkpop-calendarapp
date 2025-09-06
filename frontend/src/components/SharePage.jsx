@@ -7,7 +7,6 @@ import "../share.css";
 
 const socket = io();
 
-// === 個人ページに載せる「回答した共有リンク」用ローカル履歴 ===
 const STORAGE_ANSWERED_KEY = "mp_answeredShares";
 function recordAnsweredShare({ url, title }) {
   try {
@@ -18,7 +17,6 @@ function recordAnsweredShare({ url, title }) {
   } catch {}
 }
 
-// === 端末ごとの固定 user_id を保持（DBの自分の回答レコードと1対1で紐づく） ===
 const STORAGE_MY_UID = "mp_my_user_id";
 function getOrCreateMyUserId() {
   let id = localStorage.getItem(STORAGE_MY_UID);
@@ -29,7 +27,6 @@ function getOrCreateMyUserId() {
   return id;
 }
 
-// ==== timeType → 日本語表示 ====
 const timeLabel = (t) => {
   if (t === "allday") return "終日";
   if (t === "day") return "午前";
@@ -38,7 +35,6 @@ const timeLabel = (t) => {
   return t;
 };
 
-// ==== 曜日付き日付表示（YYYY/MM/DD(曜)） ====
 const youbiJP = ["日", "月", "火", "水", "木", "金", "土"];
 const pad = (n) => String(n).padStart(2, "0");
 const fmtDateWithYoubi = (date) => {
@@ -50,7 +46,6 @@ const fmtDateWithYoubi = (date) => {
   return `${y}/${m}/${day}(${w})`;
 };
 
-// ==== キー生成（DB保存用の正規化キー） ====
 const buildKey = (date, d) => {
   const isoDate = new Date(date).toISOString().split("T")[0];
   if (d.timeType === "custom" && d.startTime && d.endTime) {
@@ -59,7 +54,6 @@ const buildKey = (date, d) => {
   return `${isoDate} (${timeLabel(d.timeType)})`;
 };
 
-// ==== 画面表示用のラベル（曜日付き） ====
 const buildDisplay = (date, d) => {
   if (d.timeType === "custom" && d.startTime && d.endTime) {
     return `${fmtDateWithYoubi(date)} ${d.startTime} ~ ${d.endTime}`;
@@ -67,7 +61,6 @@ const buildDisplay = (date, d) => {
   return `${fmtDateWithYoubi(date)} ${timeLabel(d.timeType)}`;
 };
 
-// ==== responses のキーをISO+日本語に正規化 ====
 const normalizeResponses = (obj) => {
   const normalized = {};
   Object.entries(obj || {}).forEach(([k, v]) => {
@@ -83,7 +76,6 @@ const normalizeResponses = (obj) => {
   return normalized;
 };
 
-// ==== 個人日程に重なる日は自動で✕をプレフィル ====
 function buildAutoNgMap(scheduleDates) {
   try {
     const personal = JSON.parse(localStorage.getItem("personalEvents") || "[]");
@@ -107,11 +99,10 @@ export default function SharePage() {
   const { token } = useParams();
 
   const [schedule, setSchedule] = useState(null);
-  const [responses, setResponses] = useState([]);   // 全員分
+  const [responses, setResponses] = useState([]);
   const [myUserId, setMyUserId] = useState(null);
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
-
   const [filter, setFilter] = useState("all");
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
@@ -120,7 +111,6 @@ export default function SharePage() {
 
   useEffect(() => { setMyUserId(getOrCreateMyUserId()); }, []);
 
-  // スケジュール取得
   useEffect(() => {
     if (!token) return;
     fetch(`/api/schedules/${token}`)
@@ -133,7 +123,6 @@ export default function SharePage() {
       );
   }, [token]);
 
-  // 回答取得 + ソケット購読
   const fetchResponses = () =>
     fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
@@ -163,7 +152,6 @@ export default function SharePage() {
     return () => socket.off("updateResponses", handler);
   }, [token, myUserId]);
 
-  // 自分の行をフォームへ
   useEffect(() => {
     const myId = myUserId || localStorage.getItem(STORAGE_MY_UID);
     if (!myId || responses.length === 0) return;
@@ -172,7 +160,6 @@ export default function SharePage() {
     setMyResponses(mine?.responses || {});
   }, [responses, myUserId]);
 
-  // 初期プレフィル（✕）
   useEffect(() => {
     if (!schedule || autoNgApplied) return;
     const autoNg = buildAutoNgMap(schedule.dates);
@@ -190,7 +177,6 @@ export default function SharePage() {
     setAutoNgApplied(true);
   }, [schedule, autoNgApplied]);
 
-  // 集計
   const summary = useMemo(() => {
     const dates = schedule?.dates || [];
     return dates.map((d) => {
@@ -213,7 +199,6 @@ export default function SharePage() {
     return s.sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [summary, filter]);
 
-  // 保存
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -244,7 +229,6 @@ export default function SharePage() {
     }
   };
 
-  // 任意ユーザーの編集保存
   const handleEditSave = async () => {
     try {
       const user = responses.find((r) => r.user_id === editingUser);
@@ -281,7 +265,6 @@ export default function SharePage() {
         <div>読み込み中...</div>
       ) : (
         <>
-          {/* 自分の回答 */}
           <div className="my-responses">
             <h2>自分の回答</h2>
             <input
@@ -298,37 +281,45 @@ export default function SharePage() {
               </div>
             )}
 
-            <div className="my-responses-list">
-              {(schedule.dates || []).map((d, idx) => {
-                const key = buildKey(d.date, d);
-                const label = buildDisplay(d.date, d);
-                return (
-                  <div key={idx} className="resp-row">
-                    <div className="resp-label">
-                      <span className="date-label">{label}</span>
-                    </div>
-                    <div className="resp-ctrl">
-                      <select
-                        className="fancy-select resp-select"
-                        value={myResponses[key] || "-"}
-                        onChange={(e) => setMyResponses({ ...myResponses, [key]: e.target.value })}
-                      >
-                        <option value="-">- 未回答</option>
-                        <option value="◯">◯ 参加</option>
-                        <option value="✕">✕ 不参加</option>
-                        <option value="△">△ 未定</option>
-                      </select>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* 表形式 */}
+            <table className="my-responses-table">
+              <thead>
+                <tr>
+                  <th>日付</th>
+                  <th>あなたの回答</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(schedule.dates || []).map((d, idx) => {
+                  const key = buildKey(d.date, d);
+                  const label = buildDisplay(d.date, d);
+                  return (
+                    <tr key={idx}>
+                      <td>{label}</td>
+                      <td>
+                        <select
+                          className="fancy-select"
+                          value={myResponses[key] || "-"}
+                          onChange={(e) =>
+                            setMyResponses({ ...myResponses, [key]: e.target.value })
+                          }
+                        >
+                          <option value="-">- 未回答</option>
+                          <option value="◯">◯ 参加</option>
+                          <option value="✕">✕ 不参加</option>
+                          <option value="△">△ 未定</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
             <button className="save-btn" onClick={handleSave}>保存する</button>
             {saveMessage && <div className="save-message">{saveMessage}</div>}
           </div>
 
-          {/* みんなの回答 */}
           <div className="all-responses">
             <h2>みんなの回答</h2>
             <label>
