@@ -201,3 +201,26 @@ body {
   background: linear-gradient(135deg, #fbc2eb, #a6c1ee);
   font-family: "Zen Maru Gothic", "M PLUS Rounded 1c", sans-serif;
 }
+/* 自分の回答テーブル */
+.my-responses-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.my-responses-table th,
+.my-responses-table td {
+  border: 1px solid #ddd;
+  padding: 8px 10px;
+  text-align: center;
+  background: rgba(255,255,255,0.9);
+}
+
+.my-responses-table th {
+  background: #355c7d;
+  color: #fff;
+  font-weight: bold;
+}
