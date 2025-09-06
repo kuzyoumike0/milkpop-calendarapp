@@ -50,7 +50,7 @@ const fmtDateWithYoubi = (date) => {
   return `${y}/${m}/${day}(${w})`;
 };
 
-// ==== キー生成（同一キーで集計・保存するための正規化文字列） ====
+// ==== キー生成（DB保存用の正規化キー） ====
 const buildKey = (date, d) => {
   const isoDate = new Date(date).toISOString().split("T")[0];
   if (d.timeType === "custom" && d.startTime && d.endTime) {
@@ -67,33 +67,28 @@ const buildDisplay = (date, d) => {
   return `${fmtDateWithYoubi(date)} ${timeLabel(d.timeType)}`;
 };
 
-// ==== responses のキーを統一（ISO日付 + 日本語スロット） ====
+// ==== responses のキーをISO+日本語に正規化 ====
 const normalizeResponses = (obj) => {
   const normalized = {};
   Object.entries(obj || {}).forEach(([k, v]) => {
     const datePart = k.split(" ")[0];
     const iso = new Date(datePart).toISOString().split("T")[0];
     let rest = k.substring(k.indexOf(" "));
-
-    // 英語表記→日本語
-    rest = rest.replace("(allday)", "(終日)");
-    rest = rest.replace("(day)", "(午前)");
-    rest = rest.replace("(night)", "(午後)");
-    rest = rest.replace("(custom)", "(時間指定)");
-
+    rest = rest.replace("(allday)", "(終日)")
+               .replace("(day)", "(午前)")
+               .replace("(night)", "(午後)")
+               .replace("(custom)", "(時間指定)");
     normalized[`${iso}${rest}`] = v;
   });
   return normalized;
 };
 
-// ==== 個人日程（PersonalPage→localStorage）を読み取り、該当日の既定値を✖にする ====
+// ==== 個人日程に重なる日は自動で✕をプレフィル ====
 function buildAutoNgMap(scheduleDates) {
   try {
     const personal = JSON.parse(localStorage.getItem("personalEvents") || "[]");
     if (!Array.isArray(personal) || personal.length === 0) return {};
-
     const ngDateSet = new Set(personal.map((ev) => new Date(ev.date).toISOString().split("T")[0]));
-
     const map = {};
     for (const d of scheduleDates || []) {
       const iso = new Date(d.date).toISOString().split("T")[0];
@@ -112,74 +107,54 @@ export default function SharePage() {
   const { token } = useParams();
 
   const [schedule, setSchedule] = useState(null);
-
-  // 全員分の回答（DBから取得）
-  const [responses, setResponses] = useState([]);
-
-  // 自分の表示・編集用
+  const [responses, setResponses] = useState([]);   // 全員分
   const [myUserId, setMyUserId] = useState(null);
   const [username, setUsername] = useState("");
   const [myResponses, setMyResponses] = useState({});
 
-  // UI
   const [filter, setFilter] = useState("all");
   const [editingUser, setEditingUser] = useState(null);
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
   const [autoNgApplied, setAutoNgApplied] = useState(false);
 
-  // ===== 固定 user_id を確定 =====
-  useEffect(() => {
-    setMyUserId(getOrCreateMyUserId());
-  }, []);
+  useEffect(() => { setMyUserId(getOrCreateMyUserId()); }, []);
 
-  // ===== スケジュール本体をDBから取得 =====
+  // スケジュール取得
   useEffect(() => {
     if (!token) return;
     fetch(`/api/schedules/${token}`)
       .then((res) => res.json())
-      .then((data) => {
-        const sorted = {
+      .then((data) =>
+        setSchedule({
           ...data,
-          dates: [...(data.dates || [])].sort(
-            (a, b) => new Date(a.date) - new Date(b.date)
-          ),
-        };
-        setSchedule(sorted);
-      });
+          dates: [...(data.dates || [])].sort((a, b) => new Date(a.date) - new Date(b.date)),
+        })
+      );
   }, [token]);
 
-  // ===== 回答一覧をDBから取得（初期表示 & ソケット更新時） =====
-  const fetchResponses = () => {
-    return fetch(`/api/schedules/${token}/responses`)
+  // 回答取得 + ソケット購読
+  const fetchResponses = () =>
+    fetch(`/api/schedules/${token}/responses`)
       .then((res) => res.json())
       .then((data) => {
-        const fixed = data.map((r) => ({
-          ...r,
-          responses: normalizeResponses(r.responses),
-        }));
+        const fixed = data.map((r) => ({ ...r, responses: normalizeResponses(r.responses) }));
         setResponses(fixed);
         return fixed;
       });
-  };
 
   useEffect(() => {
     if (!token) return;
     fetchResponses();
-
-    // ソケット購読
     socket.emit("joinSchedule", token);
     const handler = () => {
       fetchResponses().then((fixed) => {
-        // 他端末で更新された自分の回答を同期
         const myId = myUserId || localStorage.getItem(STORAGE_MY_UID);
         if (myId) {
           const mine = fixed.find((r) => r.user_id === myId);
           if (mine) {
             setUsername(mine.username || "");
-            setMyResponses((prev) => {
-              return mine.responses || prev;
-            });
+            setMyResponses((prev) => mine.responses || prev);
           }
         }
       });
@@ -188,29 +163,23 @@ export default function SharePage() {
     return () => socket.off("updateResponses", handler);
   }, [token, myUserId]);
 
-  // ===== responses or myUserId が変わったら「自分の回答」をフォームに復元 =====
+  // 自分の行をフォームへ
   useEffect(() => {
     const myId = myUserId || localStorage.getItem(STORAGE_MY_UID);
     if (!myId || responses.length === 0) return;
     const mine = responses.find((r) => r.user_id === myId);
-    if (mine) {
-      setUsername(mine.username || "");
-      setMyResponses(mine.responses || {});
-    } else {
-      setMyResponses({});
-    }
+    setUsername(mine?.username || "");
+    setMyResponses(mine?.responses || {});
   }, [responses, myUserId]);
 
-  // ===== 初期表示時：個人日程に基づき、自分の未回答キーを ✖ でプレフィル =====
+  // 初期プレフィル（✕）
   useEffect(() => {
     if (!schedule || autoNgApplied) return;
-
     const autoNg = buildAutoNgMap(schedule.dates);
     if (Object.keys(autoNg).length === 0) {
       setAutoNgApplied(true);
       return;
     }
-
     setMyResponses((prev) => {
       const next = { ...prev };
       for (const [k, v] of Object.entries(autoNg)) {
@@ -221,12 +190,12 @@ export default function SharePage() {
     setAutoNgApplied(true);
   }, [schedule, autoNgApplied]);
 
-  // ===== 集計 & ソート（表示用ラベルに曜日を付ける） =====
+  // 集計
   const summary = useMemo(() => {
     const dates = schedule?.dates || [];
     return dates.map((d) => {
       const key = buildKey(d.date, d);
-      const display = buildDisplay(d.date, d); // ← 曜日付き
+      const display = buildDisplay(d.date, d);
       const counts = { "◯": 0, "✕": 0, "△": 0 };
       responses.forEach((r) => {
         const val = r.responses?.[key];
@@ -244,7 +213,7 @@ export default function SharePage() {
     return s.sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [summary, filter]);
 
-  // ===== 保存（DBへ UPSERT by user_id） =====
+  // 保存
   const handleSave = async () => {
     if (!username.trim()) {
       alert("名前を入力してください");
@@ -256,25 +225,17 @@ export default function SharePage() {
         username,
         responses: normalizeResponses(myResponses),
       };
-
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== payload.user_id);
         return [...others, { user_id: payload.user_id, username, responses: payload.responses }];
       });
-
-      recordAnsweredShare({
-        url: window.location.href,
-        title: schedule?.title || "共有日程",
-      });
-
+      recordAnsweredShare({ url: window.location.href, title: schedule?.title || "共有日程" });
       socket.emit("updateResponses", token);
-
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 1800);
     } catch (e) {
@@ -283,7 +244,7 @@ export default function SharePage() {
     }
   };
 
-  // ===== 任意ユーザーの編集保存（主催側の想定） =====
+  // 任意ユーザーの編集保存
   const handleEditSave = async () => {
     try {
       const user = responses.find((r) => r.user_id === editingUser);
@@ -292,22 +253,18 @@ export default function SharePage() {
         username: user?.username || "未入力",
         responses: normalizeResponses(editedResponses),
       };
-
       await fetch(`/api/schedules/${token}/responses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       setResponses((prev) => {
         const others = prev.filter((r) => r.user_id !== editingUser);
         return [...others, { user_id: editingUser, username: payload.username, responses: payload.responses }];
       });
-
       if (editingUser === (myUserId || localStorage.getItem(STORAGE_MY_UID))) {
         setMyResponses(payload.responses);
       }
-
       socket.emit("updateResponses", token);
       setEditingUser(null);
     } catch (e) {
@@ -341,11 +298,10 @@ export default function SharePage() {
               </div>
             )}
 
-            {/* ← 行を“左：ラベル / 右：操作部”で固定幅にして揃える */}
             <div className="my-responses-list">
               {(schedule.dates || []).map((d, idx) => {
                 const key = buildKey(d.date, d);
-                const label = buildDisplay(d.date, d); // 曜日付き表示
+                const label = buildDisplay(d.date, d);
                 return (
                   <div key={idx} className="resp-row">
                     <div className="resp-label">
@@ -355,9 +311,7 @@ export default function SharePage() {
                       <select
                         className="fancy-select resp-select"
                         value={myResponses[key] || "-"}
-                        onChange={(e) =>
-                          setMyResponses({ ...myResponses, [key]: e.target.value })
-                        }
+                        onChange={(e) => setMyResponses({ ...myResponses, [key]: e.target.value })}
                       >
                         <option value="-">- 未回答</option>
                         <option value="◯">◯ 参加</option>
@@ -370,28 +324,27 @@ export default function SharePage() {
               })}
             </div>
 
-            <button className="save-btn" onClick={handleSave}>
-              保存する
-            </button>
+            <button className="save-btn" onClick={handleSave}>保存する</button>
             {saveMessage && <div className="save-message">{saveMessage}</div>}
           </div>
 
           {/* みんなの回答 */}
           <div className="all-responses">
             <h2>みんなの回答</h2>
-            <div style={{ marginBottom: "20px" }}>
+            <label>
               フィルタ：
               <select
-                className="fancy-select"
+                className="fancy-filter"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
+                style={{ marginLeft: 8 }}
               >
                 <option value="all">すべて表示（日付順）</option>
                 <option value="ok">◯ 多い順</option>
                 <option value="ng">✕ 多い順</option>
                 <option value="maybe">△ 多い順</option>
               </select>
-            </div>
+            </label>
 
             <table className="responses-table">
               <thead>
@@ -402,10 +355,7 @@ export default function SharePage() {
                     <th key={idx}>
                       <span
                         className="editable-username"
-                        onClick={() => {
-                          setEditingUser(r.user_id);
-                          setEditedResponses(r.responses);
-                        }}
+                        onClick={() => { setEditingUser(r.user_id); setEditedResponses(r.responses); }}
                         title="クリックでこの人の回答を編集"
                       >
                         {r.username && r.username.trim() !== "" ? r.username : "未入力"}
@@ -431,10 +381,7 @@ export default function SharePage() {
                             className="fancy-select"
                             value={editedResponses[d.key] || "-"}
                             onChange={(e) =>
-                              setEditedResponses({
-                                ...editedResponses,
-                                [d.key]: e.target.value,
-                              })
+                              setEditedResponses({ ...editedResponses, [d.key]: e.target.value })
                             }
                           >
                             <option value="-">- 未回答</option>
@@ -454,9 +401,7 @@ export default function SharePage() {
 
             {editingUser && (
               <div className="edit-save-bar">
-                <button className="username-save-btn" onClick={handleEditSave}>
-                  編集を保存
-                </button>
+                <button className="username-save-btn" onClick={handleEditSave}>編集を保存</button>
               </div>
             )}
           </div>
