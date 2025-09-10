@@ -50,11 +50,13 @@ const saveAnswers = (token, obj) => {
 
 export default function PersonalSharePage() {
   const { token } = useParams(); // rec.id または 'bundle'
+  const isBundle = token === "bundle"; // ✅ バンドルは閲覧のみ
+
   const [events, setEvents] = useState([]); // {date,title,memo,allDay,slot,startTime,endTime}
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
-  // 回答状態
+  // 回答状態（※閲覧のみのときは使用しない）
   const [name, setName] = useState("");
   const [answers, setAnswers] = useState({}); // date -> '◯' | '✖'
 
@@ -96,7 +98,7 @@ export default function PersonalSharePage() {
 
     try {
       let evs = [];
-      if (token === "bundle") {
+      if (isBundle) {
         evs = loadBundleFromHash();
       } else {
         evs = loadSingleFromLocal(token);
@@ -110,17 +112,20 @@ export default function PersonalSharePage() {
       setLoading(false);
     }
 
-    // 回答の復元
-    const saved = loadAnswers(token);
-    setName(saved.name || "");
-    setAnswers(saved.answers || {});
-  }, [token]);
+    // 単体共有のときだけ、回答の復元
+    if (!isBundle) {
+      const saved = loadAnswers(token);
+      setName(saved.name || "");
+      setAnswers(saved.answers || {});
+    }
+  }, [token, isBundle]);
 
   const onChangeAnswer = (d, v) => {
     setAnswers((prev) => ({ ...prev, [d]: v }));
   };
 
   const onSave = () => {
+    if (isBundle) return; // 閲覧のみ
     const payload = { name: name || "", answers };
     saveAnswers(token, payload);
   };
@@ -148,32 +153,47 @@ export default function PersonalSharePage() {
         </nav>
       </header>
 
-      <h1 className="share-title">共有日程（閲覧＆回答）</h1>
+      <h1 className="share-title">
+        {isBundle ? "共有日程（閲覧のみ）" : "共有日程（閲覧＆回答）"}
+      </h1>
 
       {loading && <p className="muted">読み込み中…</p>}
       {loadError && <p className="error">{loadError}</p>}
 
       {!loading && !loadError && (
         <>
-          <div className="answer-box neo" style={{ marginBottom: 16 }}>
-            <label className="muted" style={{ display: "block", marginBottom: 6 }}>
-              あなたの名前（任意）
-            </label>
-            <input
-              className="title-input"
-              placeholder="お名前を入力"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{ maxWidth: 420 }}
-            />
-          </div>
+          {/* ✅ バンドル（閲覧のみ）の場合は、回答UIを一切表示しない */}
+          {!isBundle ? (
+            <div className="answer-box neo" style={{ marginBottom: 16 }}>
+              <label className="muted" style={{ display: "block", marginBottom: 6 }}>
+                あなたの名前（任意）
+              </label>
+              <input
+                className="title-input"
+                placeholder="お名前を入力"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{ maxWidth: 420 }}
+              />
+            </div>
+          ) : null}
 
-          {/* 日付ごとの回答表（左寄せ・レスポンシブ） */}
+          {/* 日付ごとの表（左寄せ・レスポンシブ） */}
           <div className="share-table neo" style={{ padding: 12 }}>
             {grouped.length === 0 && <p className="muted">共有された日程はありません。</p>}
 
             {grouped.map(([d, arr]) => (
-              <div key={d} className="share-row" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, padding: "10px 8px", borderBottom: "1px dashed rgba(0,0,0,0.15)" }}>
+              <div
+                key={d}
+                className="share-row"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isBundle ? "1fr" : "1fr auto",
+                  gap: 12,
+                  padding: "10px 8px",
+                  borderBottom: "1px dashed rgba(0,0,0,0.15)",
+                }}
+              >
                 <div>
                   <div className="share-date" style={{ fontWeight: 700, marginBottom: 6 }}>
                     {fmtDate(d)}
@@ -192,46 +212,63 @@ export default function PersonalSharePage() {
                   </ul>
                 </div>
 
-                <div>
-                  <label className="muted" style={{ display: "block", marginBottom: 4 }}>
-                    回答
-                  </label>
-                  <select
-                    className="cute-select"
-                    value={answers[d] || ""}
-                    onChange={(e) => onChangeAnswer(d, e.target.value)}
-                  >
-                    <option value=""></option>
-                    <option value="◯">◯</option>
-                    <option value="✖">✖</option>
-                  </select>
-                </div>
+                {/* ✅ 閲覧のみでは回答プルダウンを非表示 */}
+                {!isBundle ? (
+                  <div>
+                    <label className="muted" style={{ display: "block", marginBottom: 4 }}>
+                      回答
+                    </label>
+                    <select
+                      className="cute-select"
+                      value={answers[d] || ""}
+                      onChange={(e) => onChangeAnswer(d, e.target.value)}
+                    >
+                      <option value=""></option>
+                      <option value="◯">◯</option>
+                      <option value="✖">✖</option>
+                    </select>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
 
-          <div className="card-actions" style={{ marginTop: 12 }}>
-            <button className="ghost-btn primary" onClick={onSave}>保存</button>
-          </div>
+          {/* ✅ 閲覧のみでは保存ボタンと即時プレビューも非表示 */}
+          {!isBundle ? (
+            <>
+              <div className="card-actions" style={{ marginTop: 12 }}>
+                <button className="ghost-btn primary" onClick={onSave}>保存</button>
+              </div>
 
-          {/* 即時プレビュー */}
-          <div className="answered-box neo" style={{ marginTop: 16 }}>
-            <h3 style={{ marginTop: 0 }}>あなたの回答（即時反映）</h3>
-            {Object.keys(answers).length === 0 ? (
-              <p className="muted">まだ回答がありません。</p>
-            ) : (
-              <ul className="answered-list">
-                {Object.entries(answers)
-                  .sort((a, b) => cmpDate(a[0], b[0]))
-                  .map(([d, v]) => (
-                    <li key={d} className="answered-item" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, padding: "6px 0", borderBottom: "1px dashed rgba(0,0,0,0.1)" }}>
-                      <span>{fmtDate(d)}</span>
-                      <strong>{v}</strong>
-                    </li>
-                  ))}
-              </ul>
-            )}
-          </div>
+              <div className="answered-box neo" style={{ marginTop: 16 }}>
+                <h3 style={{ marginTop: 0 }}>あなたの回答（即時反映）</h3>
+                {Object.keys(answers).length === 0 ? (
+                  <p className="muted">まだ回答がありません。</p>
+                ) : (
+                  <ul className="answered-list">
+                    {Object.entries(answers)
+                      .sort((a, b) => cmpDate(a[0], b[0]))
+                      .map(([d, v]) => (
+                        <li
+                          key={d}
+                          className="answered-item"
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr auto",
+                            gap: 12,
+                            padding: "6px 0",
+                            borderBottom: "1px dashed rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          <span>{fmtDate(d)}</span>
+                          <strong>{v}</strong>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          ) : null}
         </>
       )}
     </div>
