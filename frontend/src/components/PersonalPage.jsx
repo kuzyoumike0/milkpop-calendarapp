@@ -139,6 +139,10 @@ export default function PersonalPage() {
   // 回答した共有リンク一覧（SharePageで保存時に記録されたものを表示）
   const [answeredShares, setAnsweredShares] = useState([]);
 
+  // ===== ソート状態 =====
+  // key: 'created_desc' | 'created_asc' | 'title_asc' | 'title_desc' | 'date_asc' | 'date_desc'
+  const [sortKey, setSortKey] = useState("created_desc");
+
   // ==== 起動時に localStorage から復元 ====
   useEffect(() => {
     try {
@@ -371,6 +375,51 @@ export default function PersonalPage() {
     });
   };
 
+  // ====== ソート用ユーティリティ ======
+  const recordFirstDate = (rec) => {
+    if (!rec?.items?.length) return null;
+    const min = rec.items
+      .map((it) => it.date)
+      .filter(Boolean)
+      .sort()[0];
+    return min ? new Date(min).getTime() : null;
+  };
+
+  const sortedRecords = useMemo(() => {
+    const arr = [...records];
+    switch (sortKey) {
+      case "created_asc":
+        arr.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        break;
+      case "created_desc":
+        arr.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        break;
+      case "title_asc":
+        arr.sort((a, b) => (a.title || "").localeCompare(b.title || "", "ja"));
+        break;
+      case "title_desc":
+        arr.sort((a, b) => (b.title || "").localeCompare(a.title || "", "ja"));
+        break;
+      case "date_asc":
+        arr.sort((a, b) => {
+          const da = recordFirstDate(a) ?? Number.POSITIVE_INFINITY;
+          const db = recordFirstDate(b) ?? Number.POSITIVE_INFINITY;
+          return da - db;
+        });
+        break;
+      case "date_desc":
+        arr.sort((a, b) => {
+          const da = recordFirstDate(a) ?? Number.NEGATIVE_INFINITY;
+          const db = recordFirstDate(b) ?? Number.NEGATIVE_INFINITY;
+          return db - da;
+        });
+        break;
+      default:
+        break;
+    }
+    return arr;
+  }, [records, sortKey]);
+
   /* ========================= JSX ========================= */
   return (
     <div className="personal-page">
@@ -572,11 +621,34 @@ export default function PersonalPage() {
 
       {/* 登録済みリスト */}
       <section className="registered-list">
-        <h2 className="saved-title">あなたの個人日程（保存済み）</h2>
+        <div className="saved-title-row" style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between", flexWrap: "wrap" }}>
+          <h2 className="saved-title" style={{ margin: 0 }}>あなたの個人日程（保存済み）</h2>
 
-        {records.length === 0 && <p className="muted">まだ登録はありません。</p>}
+          {/* ソートUI */}
+          <div className="sort-box" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <label htmlFor="sortKey" className="muted" style={{ fontSize: "0.95rem" }}>
+              並び替え:
+            </label>
+            <select
+              id="sortKey"
+              className="cute-select"
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+              aria-label="登録済み日程の並び順"
+            >
+              <option value="created_desc">作成が新しい順</option>
+              <option value="created_asc">作成が古い順</option>
+              <option value="date_asc">最初の日付が早い順</option>
+              <option value="date_desc">最初の日付が遅い順</option>
+              <option value="title_asc">タイトル昇順</option>
+              <option value="title_desc">タイトル降順</option>
+            </select>
+          </div>
+        </div>
 
-        {records.map((rec) => (
+        {sortedRecords.length === 0 && <p className="muted">まだ登録はありません。</p>}
+
+        {sortedRecords.map((rec) => (
           <div key={rec.id} className="schedule-card neo">
             <div className="schedule-header">
               {rec.title}
