@@ -27,10 +27,11 @@ function getOrCreateMyUserId() {
   return id;
 }
 
+// ✅ 表示表記を登録ページと同じに統一：終日 / 昼 / 夜 / 時間指定
 const timeLabel = (t) => {
   if (t === "allday") return "終日";
-  if (t === "day") return "午前";
-  if (t === "night") return "午後";
+  if (t === "day") return "昼";
+  if (t === "night") return "夜";
   if (t === "custom") return "時間指定";
   return t;
 };
@@ -61,16 +62,23 @@ const buildDisplay = (date, d) => {
   return `${fmtDateWithYoubi(date)} ${timeLabel(d.timeType)}`;
 };
 
+// ✅ 正規化時の表記も「昼 / 夜」に統一。
+//    互換のため、過去データの「(午前)/(午後)」も「(昼)/(夜)」に置換して揃える。
 const normalizeResponses = (obj) => {
   const normalized = {};
   Object.entries(obj || {}).forEach(([k, v]) => {
     const datePart = k.split(" ")[0];
     const iso = new Date(datePart).toISOString().split("T")[0];
     let rest = k.substring(k.indexOf(" "));
-    rest = rest.replace("(allday)", "(終日)")
-               .replace("(day)", "(午前)")
-               .replace("(night)", "(午後)")
-               .replace("(custom)", "(時間指定)");
+    rest = rest
+      // 英語コードから日本語ラベルへ
+      .replace("(allday)", "(終日)")
+      .replace("(day)", "(昼)")
+      .replace("(night)", "(夜)")
+      .replace("(custom)", "(時間指定)")
+      // 過去互換（午前/午後 → 昼/夜）
+      .replace("(午前)", "(昼)")
+      .replace("(午後)", "(夜)");
     normalized[`${iso}${rest}`] = v;
   });
   return normalized;
