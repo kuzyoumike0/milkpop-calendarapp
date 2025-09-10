@@ -214,90 +214,180 @@ export default function PersonalSharePage() {
 
   return (
     <div className="share-container">
-      <h1 className="share-title">{isBundle ? "共有日程（閲覧のみ）" : "共有日程"}</h1>
+      {/* タイトルを中央寄せ */}
+      <h1 className="share-title" style={{ textAlign: "center" }}>
+        {isBundle ? "共有日程（閲覧のみ）" : "共有日程"}
+      </h1>
 
-      {loading && <p className="muted">読み込み中…</p>}
-      {loadError && <p className="error">{loadError}</p>}
+      {loading && <p className="muted" style={{ textAlign: "center" }}>読み込み中…</p>}
+      {loadError && <p className="error" style={{ textAlign: "center" }}>{loadError}</p>}
 
       {!loading && !loadError && (
         <>
-          {/* ===== 自作カレンダー（祝日対応） ===== */}
-          <div className="calendar-container neo" style={{ marginBottom: 16 }}>
-            <div className="calendar-header">
-              <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
-              <span className="ym">{year}年 {month}月</span>
-              <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
+          {/* ======= TimeTree 風：中央寄せラッパ ======= */}
+          <div className="tt-center" style={{ maxWidth: 980, margin: "0 auto" }}>
+            {/* ===== 自作カレンダー（祝日対応） ===== */}
+            <div className="calendar-container neo" style={{ marginBottom: 16 }}>
+              {/* ヘッダーは中央揃え（左右にナビ） */}
+              <div
+                className="calendar-header"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "56px 1fr 56px",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
+                <span className="ym" style={{ textAlign: "center", fontWeight: 700 }}>
+                  {year}年 {month}月
+                </span>
+                <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
+              </div>
+
+              <table className="calendar-table" style={{ margin: "0 auto" }}>
+                <thead>
+                  <tr>
+                    {wdJP.map((w, i) => (
+                      <th
+                        key={w}
+                        className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}
+                        style={{ textAlign: "center" }}
+                      >
+                        {w}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {weeks.map((week, wi) => (
+                    <tr key={wi}>
+                      {week.map((d, di) => {
+                        if (!d) return <td key={`e-${di}`} />;
+                        const dateStr = fmt(year, month, d);
+                        const hname = holidayName(year, month, d);
+                        const dayEvents = eventsByDate.get(dateStr) || [];
+                        const classes = [
+                          "cell",
+                          new Date(year, month - 1, d).getDay() === 0
+                            ? "sunday"
+                            : new Date(year, month - 1, d).getDay() === 6
+                            ? "saturday"
+                            : "",
+                          hname ? "holiday" : "",
+                          isToday(d) ? "today" : "",
+                          dayEvents.length ? "has-events" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ");
+
+                        return (
+                          <td key={d} className={classes} style={{ verticalAlign: "top" }}>
+                            {/* 日付は上部、全体は中央に近い見栄えへ */}
+                            <div
+                              className="daynum"
+                              style={{ textAlign: "center", fontWeight: 700, marginBottom: 4 }}
+                            >
+                              {d}
+                            </div>
+                            {hname && (
+                              <div
+                                className="holiday-name"
+                                style={{ textAlign: "center", opacity: 0.85 }}
+                              >
+                                {hname}
+                              </div>
+                            )}
+
+                            {/* その日のイベント一覧（中央寄せ） */}
+                            {dayEvents.length > 0 && (
+                              <ul
+                                className="day-events"
+                                style={{
+                                  listStyle: "none",
+                                  padding: 0,
+                                  margin: "6px 0 0",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                {dayEvents.map((e, i) => (
+                                  <li
+                                    key={i}
+                                    className="event-chip"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      padding: "4px 8px",
+                                      borderRadius: 999,
+                                      background: "rgba(0,0,0,0.05)",
+                                    }}
+                                  >
+                                    <span className="event-title" style={{ fontWeight: 600 }}>
+                                      {e.title || "（無題）"}
+                                    </span>
+                                    <span
+                                      className="event-badge"
+                                      style={{
+                                        fontSize: "0.8rem",
+                                        padding: "2px 6px",
+                                        borderRadius: 999,
+                                        background: "rgba(0,76,160,0.1)",
+                                      }}
+                                    >
+                                      {slotBadge(e)}
+                                    </span>
+                                    {e.memo ? (
+                                      <span className="event-memo" style={{ opacity: 0.8 }}>
+                                        （{e.memo}）
+                                      </span>
+                                    ) : null}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <table className="calendar-table">
-              <thead>
-                <tr>
-                  {wdJP.map((w, i) => (
-                    <th key={w} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>{w}</th>
+            {/* ===== 補助：一覧表示（中央寄せのまま） ===== */}
+            <div className="share-table neo" style={{ padding: 12, margin: "0 auto" }}>
+              {events.length === 0 ? (
+                <p className="muted" style={{ textAlign: "center" }}>
+                  共有された日程はありません。
+                </p>
+              ) : (
+                <ul className="answered-list" style={{ maxWidth: 760, margin: "0 auto" }}>
+                  {events.map((e, i) => (
+                    <li
+                      key={i}
+                      className="answered-item"
+                      style={{
+                        padding: "6px 0",
+                        borderBottom: "1px dashed rgba(0,0,0,0.1)",
+                        display: "flex",
+                        gap: 8,
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <strong>{e.date}</strong>
+                      <span style={{ fontWeight: 600 }}>{e.title || "（無題）"}</span>
+                      {e.memo ? <span className="muted">（{e.memo}）</span> : null}
+                      <span className="muted">/ {slotBadge(e)}</span>
+                    </li>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {weeks.map((week, wi) => (
-                  <tr key={wi}>
-                    {week.map((d, di) => {
-                      if (!d) return <td key={`e-${di}`} />;
-                      const dateStr = fmt(year, month, d);
-                      const hname = holidayName(year, month, d);
-                      const dayEvents = eventsByDate.get(dateStr) || [];
-                      const classes = [
-                        "cell",
-                        new Date(year, month - 1, d).getDay() === 0 ? "sunday" :
-                        new Date(year, month - 1, d).getDay() === 6 ? "saturday" : "",
-                        hname ? "holiday" : "",
-                        isToday(d) ? "today" : "",
-                        dayEvents.length ? "has-events" : "",
-                      ].filter(Boolean).join(" ");
-
-                      return (
-                        <td key={d} className={classes}>
-                          <div className="daynum">{d}</div>
-                          {hname && <div className="holiday-name">{hname}</div>}
-
-                          {/* その日のイベント一覧 */}
-                          {dayEvents.length > 0 && (
-                            <ul className="day-events">
-                              {dayEvents.map((e, i) => (
-                                <li key={i} className="event-chip">
-                                  <span className="event-title">{e.title || "（無題）"}</span>
-                                  <span className="event-badge">{slotBadge(e)}</span>
-                                  {e.memo ? <span className="event-memo">（{e.memo}）</span> : null}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* ===== 補助：一覧表示（読みやすさ用） ===== */}
-          <div className="share-table neo" style={{ padding: 12 }}>
-            {events.length === 0 ? (
-              <p className="muted">共有された日程はありません。</p>
-            ) : (
-              <ul className="answered-list">
-                {events.map((e, i) => (
-                  <li key={i} className="answered-item" style={{ padding: "6px 0", borderBottom: "1px dashed rgba(0,0,0,0.1)" }}>
-                    <strong style={{ marginRight: 8 }}>{e.date}</strong>
-                    <span style={{ fontWeight: 600 }}>{e.title || "（無題）"}</span>
-                    {e.memo ? <span className="muted">（{e.memo}）</span> : null}
-                    <span className="muted" style={{ marginLeft: 6 }}>
-                      / {slotBadge(e)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+                </ul>
+              )}
+            </div>
           </div>
         </>
       )}
