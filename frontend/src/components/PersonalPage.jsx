@@ -111,6 +111,18 @@ const fmtDateTime = (iso) => {
   }
 };
 
+/* ====== 文字列の安全エンコード・デコード（UTF-8対応Base64） ====== */
+const b64encodeUtf8 = (obj) => {
+  const json = JSON.stringify(obj);
+  const utf8 = unescape(encodeURIComponent(json));
+  return btoa(utf8);
+};
+const b64decodeUtf8 = (b64) => {
+  const utf8 = atob(b64);
+  const json = decodeURIComponent(escape(utf8));
+  return JSON.parse(json);
+};
+
 /* ========================= メイン ========================= */
 export default function PersonalPage() {
   const now = new Date();
@@ -136,11 +148,13 @@ export default function PersonalPage() {
   // 共有URL表示: { [recordId]: url }
   const [shareLinks, setShareLinks] = useState({});
 
+  // 全件共有URL
+  const [allShareUrl, setAllShareUrl] = useState("");
+
   // 回答した共有リンク一覧（SharePageで保存時に記録されたものを表示）
   const [answeredShares, setAnsweredShares] = useState([]);
 
   // ===== ソート状態 =====
-  // key: 'created_desc' | 'created_asc' | 'title_asc' | 'title_desc' | 'date_asc' | 'date_desc'
   const [sortKey, setSortKey] = useState("created_desc");
 
   // ==== 起動時に localStorage から復元 ====
@@ -155,9 +169,13 @@ export default function PersonalPage() {
         if (l.recordId && l.url) map[l.recordId] = l.url;
       }
       setShareLinks(map);
+
+      const savedAll = localStorage.getItem("personalShareAllLink") || "";
+      setAllShareUrl(savedAll);
     } catch {
       setRecords([]);
       setShareLinks({});
+      setAllShareUrl("");
     }
     setAnsweredShares(loadAnsweredShares());
   }, []);
@@ -167,7 +185,7 @@ export default function PersonalPage() {
     // 1) 内部編集用の完全データ
     localStorage.setItem("personalRecords", JSON.stringify(records));
 
-    // 2) 共有ページが読む簡易イベント配列（タイトル/メモ付き・並び替えしやすい形）
+    // 2) 共有ページが読む簡易イベント配列
     const flatEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -176,7 +194,7 @@ export default function PersonalPage() {
           title: r.title || "（無題）",
           memo: r.memo || "",
           allDay: it.slot === "終日",
-          slot: it.slot, // "終日" | "昼" | "夜" | "✕" | "X時〜Y時"
+          slot: it.slot,
           startTime:
             typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
           endTime:
@@ -352,15 +370,55 @@ export default function PersonalPage() {
     });
   };
 
-  // 個人日程共有専用（/personal/share/:token）
+  // 1件共有（既存）
   const onShare = (rec) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/personal/share/${rec.id}`;
-
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
     setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
+  };
+
+  // 全件共有（新規）
+  const onShareAll = () => {
+    // 共有用の最小データに正規化
+    const allEvents = [];
+    for (const r of records) {
+      for (const it of r.items) {
+        allEvents.push({
+          date: it.date,
+          title: r.title || "（無題）",
+          memo: r.memo || "",
+          allDay: it.slot === "終日",
+          slot: it.slot, // "終日" | "昼" | "夜" | "✕" | "X時〜Y時"
+          startTime:
+            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime:
+            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+        });
+      }
+    }
+    // 日付昇順で見やすく
+    allEvents.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    const payload = {
+      type: "bundle",
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      events: allEvents,
+    };
+
+    const b64 = b64encodeUtf8(payload);
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/personal/share/bundle#${b64}`;
+
+    setAllShareUrl(url);
+    localStorage.setItem("personalShareAllLink", url);
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).catch(() => {});
+    }
   };
 
   const clearAnsweredShares = () => {
@@ -621,30 +679,57 @@ export default function PersonalPage() {
 
       {/* 登録済みリスト */}
       <section className="registered-list">
-        <div className="saved-title-row" style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between", flexWrap: "wrap" }}>
-          <h2 className="saved-title" style={{ margin: 0 }}>あなたの個人日程（保存済み）</h2>
+        <div
+          className="saved-title-row"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+          }}
+        >
+          <h2 className="saved-title" style={{ margin: 0 }}>
+            あなたの個人日程（保存済み）
+          </h2>
 
-          {/* ソートUI */}
-          <div className="sort-box" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <label htmlFor="sortKey" className="muted" style={{ fontSize: "0.95rem" }}>
-              並び替え:
-            </label>
-            <select
-              id="sortKey"
-              className="cute-select"
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value)}
-              aria-label="登録済み日程の並び順"
-            >
-              <option value="created_desc">作成が新しい順</option>
-              <option value="created_asc">作成が古い順</option>
-              <option value="date_asc">最初の日付が早い順</option>
-              <option value="date_desc">最初の日付が遅い順</option>
-              <option value="title_asc">タイトル昇順</option>
-              <option value="title_desc">タイトル降順</option>
-            </select>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            {/* ソートUI */}
+            <div className="sort-box" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <label htmlFor="sortKey" className="muted" style={{ fontSize: "0.95rem" }}>
+                並び替え:
+              </label>
+              <select
+                id="sortKey"
+                className="cute-select"
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value)}
+                aria-label="登録済み日程の並び順"
+              >
+                <option value="created_desc">作成が新しい順</option>
+                <option value="created_asc">作成が古い順</option>
+                <option value="date_asc">最初の日付が早い順</option>
+                <option value="date_desc">最初の日付が遅い順</option>
+                <option value="title_asc">タイトル昇順</option>
+                <option value="title_desc">タイトル降順</option>
+              </select>
+            </div>
+
+            {/* 全件共有ボタン */}
+            <button className="ghost-btn primary" onClick={onShareAll} title="登録済みすべてを1本のリンクで共有">
+              全件共有リンクを発行
+            </button>
           </div>
         </div>
+
+        {allShareUrl && (
+          <div className="share-link-row neo" style={{ marginTop: 10, padding: 12, borderRadius: 12 }}>
+            <span className="share-label">全件共有URL：</span>
+            <a className="share-url" href={allShareUrl} target="_blank" rel="noopener noreferrer">
+              {allShareUrl}
+            </a>
+          </div>
+        )}
 
         {sortedRecords.length === 0 && <p className="muted">まだ登録はありません。</p>}
 
@@ -735,7 +820,6 @@ export default function PersonalPage() {
                       title={x.url}
                       style={{ textDecoration: "none" }}
                     >
-                      {/* タイトル（1行） */}
                       <div
                         className="answered-title"
                         style={{
@@ -749,12 +833,12 @@ export default function PersonalPage() {
                         {x.title || "共有日程"}
                       </div>
 
-                      {/* URL（タイトルの下に小さく・折返し可） */}
                       <div
                         className="answered-url"
                         style={{
                           marginTop: 2,
-                          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                          fontFamily:
+                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                           fontSize: "0.85rem",
                           color: "#444",
                           opacity: 0.9,
