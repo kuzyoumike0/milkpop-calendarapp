@@ -1,5 +1,5 @@
 // frontend/src/components/PersonalSharePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useMemo as useMemo2 } from "react";
 import { useParams } from "react-router-dom";
 import "../common.css";
 import "../personal.css";
@@ -119,6 +119,35 @@ async function copyToClipboard(text) {
     }
   }
 }
+
+/* ========= リッチボタン（インラインスタイル） ========= */
+const luxBtn = (variant = "primary", disabled = false) => {
+  const base = {
+    appearance: "none",
+    border: "0",
+    outline: "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    borderRadius: "9999px",
+    padding: "10px 18px",
+    fontWeight: 700,
+    letterSpacing: "0.02em",
+    transition: "transform .08s ease, box-shadow .2s ease, opacity .2s ease",
+    boxShadow: disabled
+      ? "none"
+      : "0 6px 18px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.08)",
+    opacity: disabled ? 0.6 : 1,
+    userSelect: "none",
+    WebkitTapHighlightColor: "transparent",
+  };
+  const gradients = {
+    primary: `linear-gradient(135deg, #004CA0 0%, #3b6fc7 60%, #FDB9C8 120%)`,
+    pink: `linear-gradient(135deg, #FDB9C8 0%, #ff9fb4 40%, #004CA0 120%)`,
+    dark: `linear-gradient(135deg, #111 0%, #2a2a2a 55%, #004CA0 120%)`,
+    ghost: `linear-gradient(135deg, rgba(0,0,0,.02), rgba(0,0,0,.02))`,
+  };
+  const fg = variant === "ghost" ? "#111" : "#fff";
+  return { ...base, background: gradients[variant] || gradients.primary, color: fg };
+};
 
 /* ========================= 本体 ========================= */
 export default function PersonalSharePage() {
@@ -242,19 +271,32 @@ export default function PersonalSharePage() {
     return e.slot || "";
   };
 
-  // 短縮リンク生成
+  // ====== 短縮リンク生成（堅牢化＋リトライ） ======
   const handleCreateShortLink = async () => {
     if (!fullUrl) return;
+    if (!navigator.onLine) {
+      setShortErr("オフラインのため短縮できません。ネットワーク接続を確認してください。");
+      return;
+    }
     setShortening(true);
     setShortErr("");
     setShortMsg("");
-    try {
+
+    const tryOnce = async (signal) => {
       const res = await fetch("/api/shorten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: fullUrl }),
+        signal,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const j = await res.json();
+          detail = j?.error || j?.message || "";
+        } catch {}
+        throw new Error(detail || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       const out =
         data?.shortUrl
@@ -263,12 +305,39 @@ export default function PersonalSharePage() {
           ? `${window.location.origin.replace(/\/$/, "")}/s/${data.code}`
           : "";
       if (!out) throw new Error("短縮結果が不正です");
+      return out;
+    };
+
+    // タイムアウト付きで最大2回
+    const withTimeout = (ms) => {
+      const ctrl = new AbortController();
+      const id = setTimeout(() => ctrl.abort(), ms);
+      return { ctrl, id };
+    };
+
+    try {
+      let out = "";
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const { ctrl, id } = withTimeout(8000);
+        try {
+          out = await tryOnce(ctrl.signal);
+          clearTimeout(id);
+          break;
+        } catch (e) {
+          clearTimeout(id);
+          if (attempt === 2) throw e;
+        }
+      }
       setShortUrl(out);
       setShortMsg("短縮リンクを作成しました。");
       setTimeout(() => setShortMsg(""), 2000);
     } catch (e) {
       console.error(e);
-      setShortErr("短縮リンクの作成に失敗しました。後でもう一度お試しください。");
+      const msg =
+        e?.name === "AbortError"
+          ? "短縮リクエストがタイムアウトしました。時間をおいて再度お試しください。"
+          : `短縮リンクの作成に失敗しました${e?.message ? `（${e.message}）` : ""}。`;
+      setShortErr(msg);
     } finally {
       setShortening(false);
     }
@@ -280,6 +349,11 @@ export default function PersonalSharePage() {
     setTimeout(() => setShortMsg(""), 1500);
   };
 
+  // ===== ボタンの見た目（メモ化） =====
+  const navBtnStyle = useMemo(() => luxBtn("dark", false), []);
+  const shortenBtnStyle = useMemo(() => luxBtn("primary", shortening), [shortening]);
+  const copyBtnStyle = useMemo(() => luxBtn("ghost", false), []);
+
   return (
     <div className="share-container">
       {/* タイトルを中央寄せ */}
@@ -289,30 +363,73 @@ export default function PersonalSharePage() {
 
       {/* === 共有URL & 短縮リンク UI === */}
       <div className="share-link-box" style={{ maxWidth: 980, margin: "0 auto 12px" }}>
-        <div className="share-link-row" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <div
+          className="share-link-row"
+          style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+        >
           <span className="share-link-label">共有URL：</span>
-          <a className="share-link-url" href={fullUrl} target="_blank" rel="noreferrer" style={{ overflowWrap: "anywhere" }}>
+          <a
+            className="share-link-url"
+            href={fullUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{ overflowWrap: "anywhere" }}
+          >
             {fullUrl}
           </a>
-          <button className="share-link-copy-btn" onClick={() => handleCopy(fullUrl)}>コピー</button>
+          <button
+            className="share-link-copy-btn"
+            onClick={() => handleCopy(fullUrl)}
+            style={copyBtnStyle}
+          >
+            コピー
+          </button>
         </div>
 
-        <div className="share-shorten-row" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-          <button className="shorten-btn" disabled={shortening} onClick={handleCreateShortLink}>
-            {shortening ? "作成中..." : "短縮リンクを作成"}
+        <div
+          className="share-shorten-row"
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            marginTop: 6,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            className="shorten-btn"
+            disabled={shortening}
+            onClick={handleCreateShortLink}
+            style={shortenBtnStyle}
+            onMouseDown={(e) => !shortening && (e.currentTarget.style.transform = "translateY(1px)")}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+          >
+            {shortening ? "⏳ 作成中..." : "短縮リンクを作成"}
           </button>
           {shortUrl && (
             <span className="short-url-wrap" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-              <a className="short-url" href={shortUrl} target="_blank" rel="noreferrer" style={{ overflowWrap: "anywhere" }}>
+              <a
+                className="short-url"
+                href={shortUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ overflowWrap: "anywhere" }}
+              >
                 {shortUrl}
               </a>
-              <button className="shorten-copy-btn" onClick={() => handleCopy(shortUrl)}>コピー</button>
+              <button className="shorten-copy-btn" onClick={() => handleCopy(shortUrl)} style={copyBtnStyle}>
+                コピー
+              </button>
             </span>
           )}
         </div>
 
         {(shortMsg || shortErr) && (
-          <div className={`shorten-message ${shortErr ? "error" : "ok"}`} style={{ marginTop: 6 }}>
+          <div
+            className={`shorten-message ${shortErr ? "error" : "ok"}`}
+            style={{ marginTop: 6, fontWeight: 600 }}
+          >
             {shortErr || shortMsg}
           </div>
         )}
@@ -337,11 +454,25 @@ export default function PersonalSharePage() {
                   gap: 12,
                 }}
               >
-                <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
+                <button
+                  className="nav-circle"
+                  onClick={prevMonth}
+                  aria-label="前の月"
+                  style={navBtnStyle}
+                >
+                  ‹
+                </button>
                 <span className="ym" style={{ textAlign: "center", fontWeight: 700 }}>
                   {year}年 {month}月
                 </span>
-                <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
+                <button
+                  className="nav-circle"
+                  onClick={nextMonth}
+                  aria-label="次の月"
+                  style={navBtnStyle}
+                >
+                  ›
+                </button>
               </div>
 
               <table className="calendar-table" style={{ margin: "0 auto" }}>
