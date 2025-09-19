@@ -103,6 +103,29 @@ function buildAutoNgMap(scheduleDates) {
   }
 }
 
+// クリップボードコピー（フォールバック付き）
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.top = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export default function SharePage() {
   const { token } = useParams();
 
@@ -116,6 +139,13 @@ export default function SharePage() {
   const [editedResponses, setEditedResponses] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
   const [autoNgApplied, setAutoNgApplied] = useState(false);
+
+  // 短縮リンク関連
+  const fullUrl = typeof window !== "undefined" ? window.location.href : "";
+  const [shortUrl, setShortUrl] = useState("");
+  const [shortening, setShortening] = useState(false);
+  const [shortenMsg, setShortenMsg] = useState("");
+  const [shortenErr, setShortenErr] = useState("");
 
   useEffect(() => { setMyUserId(getOrCreateMyUserId()); }, []);
 
@@ -227,7 +257,8 @@ export default function SharePage() {
         const others = prev.filter((r) => r.user_id !== payload.user_id);
         return [...others, { user_id: payload.user_id, username, responses: payload.responses }];
       });
-      recordAnsweredShare({ url: window.location.href, title: schedule?.title || "共有日程" });
+      // ここで短縮URLがあればそれを記録、なければフルURLを記録
+      recordAnsweredShare({ url: shortUrl || (typeof window !== "undefined" ? window.location.href : ""), title: schedule?.title || "共有日程" });
       socket.emit("updateResponses", token);
       setSaveMessage("保存しました！");
       setTimeout(() => setSaveMessage(""), 1800);
@@ -265,9 +296,78 @@ export default function SharePage() {
     }
   };
 
+  // 短縮リンク生成
+  const handleCreateShortLink = async () => {
+    if (!fullUrl) return;
+    setShortening(true);
+    setShortenErr("");
+    setShortenMsg("");
+    try {
+      const res = await fetch("/api/shorten", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: fullUrl }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const out =
+        data?.shortUrl
+          ? data.shortUrl
+          : data?.code
+          ? `${window.location.origin.replace(/\/$/, "")}/s/${data.code}`
+          : "";
+      if (!out) throw new Error("短縮結果が不正です");
+      setShortUrl(out);
+      setShortenMsg("短縮リンクを作成しました。");
+      setTimeout(() => setShortenMsg(""), 2000);
+    } catch (e) {
+      console.error(e);
+      setShortenErr("短縮リンクの作成に失敗しました。後でもう一度お試しください。");
+    } finally {
+      setShortening(false);
+    }
+  };
+
+  const handleCopy = async (text) => {
+    const ok = await copyToClipboard(text);
+    setShortenMsg(ok ? "コピーしました。" : "コピーに失敗しました。");
+    setTimeout(() => setShortenMsg(""), 1500);
+  };
+
   return (
     <div className="share-container">
       <h1 className="share-title">MilkPOP Calendar</h1>
+
+      {/* === 共有URL & 短縮リンク UI === */}
+      <div className="share-link-box">
+        <div className="share-link-row">
+          <span className="share-link-label">共有URL：</span>
+          <a className="share-link-url" href={fullUrl} target="_blank" rel="noreferrer">
+            {fullUrl}
+          </a>
+          <button className="share-link-copy-btn" onClick={() => handleCopy(fullUrl)}>コピー</button>
+        </div>
+
+        <div className="share-shorten-row">
+          <button className="shorten-btn" disabled={shortening} onClick={handleCreateShortLink}>
+            {shortening ? "作成中..." : "短縮リンクを作成"}
+          </button>
+          {shortUrl && (
+            <span className="short-url-wrap" style={{ marginLeft: 12 }}>
+              <a className="short-url" href={shortUrl} target="_blank" rel="noreferrer">{shortUrl}</a>
+              <button className="shorten-copy-btn" onClick={() => handleCopy(shortUrl)} style={{ marginLeft: 8 }}>
+                コピー
+              </button>
+            </span>
+          )}
+        </div>
+
+        {(shortenMsg || shortenErr) && (
+          <div className={`shorten-message ${shortenErr ? "error" : "ok"}`} style={{ marginTop: 6 }}>
+            {shortenErr || shortenMsg}
+          </div>
+        )}
+      </div>
 
       {!schedule ? (
         <div>読み込み中...</div>
