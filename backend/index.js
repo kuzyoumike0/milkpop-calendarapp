@@ -1,7 +1,8 @@
 // backend/index.js
-// ===== 完全統合版 v21 =====
+// ===== 完全統合版 v22 =====
 // - 追加: GET/POST /api/schedules/:shareToken/responses（回答のDB保存＆取得、UPSERT）
 // - 追加: socket.on("updateResponses") 中継 → 部屋(shareToken)へブロードキャスト
+// - 追加: POST /api/shorten, GET /s/:code（PostgreSQLによる短縮URL機能）
 // - 既存の v20 の仕様はすべて維持
 
 import express from "express";
@@ -18,6 +19,7 @@ import compression from "compression";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import jwt from "jsonwebtoken";
+import { nanoid } from "nanoid"; // ★ 追加：短縮コード生成
 
 import authRouter from "./auth.js";
 import pool from "./db.js";
@@ -191,6 +193,16 @@ const initDB = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    // ★ 追加：短縮URLテーブル（PostgreSQL）
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS short_urls (
+        code VARCHAR(32) PRIMARY KEY,
+        url  TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_short_urls_url ON short_urls(url);`);
+
     console.log("✅ Database initialized");
   } catch (err) {
     console.error("❌ DB初期化エラー:", err);
@@ -573,6 +585,79 @@ app.delete("/api/personal-events/:id", authRequired, async (req, res) => {
   }
 });
 
+// ======================
+// ★ 短縮URL API（PostgreSQL）
+// ======================
+
+// POST /api/shorten { url } -> { code, shortUrl }
+app.post("/api/shorten", async (req, res) => {
+  try {
+    const { url } = req.body || {};
+    if (typeof url !== "string" || url.length < 5) {
+      return res.status(400).json({ error: "Invalid url" });
+    }
+    // http/https のみ許可
+    try {
+      const u = new URL(url);
+      if (!/^https?:$/.test(u.protocol)) {
+        return res.status(400).json({ error: "Only http/https is allowed" });
+      }
+    } catch {
+      return res.status(400).json({ error: "URL parse failed" });
+    }
+
+    // 既存チェック
+    const found = await pool.query(
+      `SELECT code FROM short_urls WHERE url = $1 LIMIT 1`,
+      [url]
+    );
+
+    let code = found.rows[0]?.code;
+    if (!code) {
+      // ユニークコード生成（最大5回トライ）
+      for (let i = 0; i < 5; i++) {
+        const c = nanoid(7);
+        try {
+          await pool.query(
+            `INSERT INTO short_urls(code, url) VALUES($1, $2)`,
+            [c, url]
+          );
+          code = c;
+          break;
+        } catch (e) {
+          // 重複時はリトライ
+          if (i === 4) throw e;
+        }
+      }
+    }
+
+    const origin = resolveBaseUrl(req).replace(/\/+$/, "");
+    const shortUrl = `${origin}/s/${code}`;
+    return res.json({ code, shortUrl });
+  } catch (e) {
+    console.error("❌ shorten error:", e);
+    return res.status(500).json({ error: "internal error" });
+  }
+});
+
+// GET /s/:code -> 302 redirect
+app.get("/s/:code", async (req, res) => {
+  try {
+    const { code } = req.params;
+    if (!code) return res.status(400).send("Bad Request");
+    const r = await pool.query(
+      `SELECT url FROM short_urls WHERE code = $1 LIMIT 1`,
+      [code]
+    );
+    const target = r.rows[0]?.url;
+    if (!target) return res.status(404).send("Not Found");
+    return res.redirect(302, target);
+  } catch (e) {
+    console.error("❌ redirect error:", e);
+    return res.status(500).send("Internal Server Error");
+  }
+});
+
 // ===== 静的配信（SPA）=====
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -591,7 +676,7 @@ app.use(
   })
 );
 
-// 未定義API
+// 未定義API（※ /api/shorten より後に置く）
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "API not found" });
 });
