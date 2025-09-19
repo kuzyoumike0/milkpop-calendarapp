@@ -97,6 +97,29 @@ const b64decodeUtf8 = (b64) => {
 
 const cmpDate = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 
+// クリップボードコピー（フォールバック付き）
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.top = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
 /* ========================= 本体 ========================= */
 export default function PersonalSharePage() {
   const { token } = useParams(); // rec.id または 'bundle'
@@ -109,6 +132,13 @@ export default function PersonalSharePage() {
   // カレンダー年月（イベントがあれば、最も早い日付の月を初期表示）
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
+
+  // 共有URL/短縮リンク
+  const fullUrl = typeof window !== "undefined" ? window.location.href : "";
+  const [shortUrl, setShortUrl] = useState("");
+  const [shortening, setShortening] = useState(false);
+  const [shortMsg, setShortMsg] = useState("");
+  const [shortErr, setShortErr] = useState("");
 
   // ===== データ読み込み =====
   const loadSingleFromLocal = (recId) => {
@@ -212,12 +242,81 @@ export default function PersonalSharePage() {
     return e.slot || "";
   };
 
+  // 短縮リンク生成
+  const handleCreateShortLink = async () => {
+    if (!fullUrl) return;
+    setShortening(true);
+    setShortErr("");
+    setShortMsg("");
+    try {
+      const res = await fetch("/api/shorten", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: fullUrl }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const out =
+        data?.shortUrl
+          ? data.shortUrl
+          : data?.code
+          ? `${window.location.origin.replace(/\/$/, "")}/s/${data.code}`
+          : "";
+      if (!out) throw new Error("短縮結果が不正です");
+      setShortUrl(out);
+      setShortMsg("短縮リンクを作成しました。");
+      setTimeout(() => setShortMsg(""), 2000);
+    } catch (e) {
+      console.error(e);
+      setShortErr("短縮リンクの作成に失敗しました。後でもう一度お試しください。");
+    } finally {
+      setShortening(false);
+    }
+  };
+
+  const handleCopy = async (text) => {
+    const ok = await copyToClipboard(text);
+    setShortMsg(ok ? "コピーしました。" : "コピーに失敗しました。");
+    setTimeout(() => setShortMsg(""), 1500);
+  };
+
   return (
     <div className="share-container">
       {/* タイトルを中央寄せ */}
       <h1 className="share-title" style={{ textAlign: "center" }}>
         {isBundle ? "共有日程（閲覧のみ）" : "共有日程"}
       </h1>
+
+      {/* === 共有URL & 短縮リンク UI === */}
+      <div className="share-link-box" style={{ maxWidth: 980, margin: "0 auto 12px" }}>
+        <div className="share-link-row" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="share-link-label">共有URL：</span>
+          <a className="share-link-url" href={fullUrl} target="_blank" rel="noreferrer" style={{ overflowWrap: "anywhere" }}>
+            {fullUrl}
+          </a>
+          <button className="share-link-copy-btn" onClick={() => handleCopy(fullUrl)}>コピー</button>
+        </div>
+
+        <div className="share-shorten-row" style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+          <button className="shorten-btn" disabled={shortening} onClick={handleCreateShortLink}>
+            {shortening ? "作成中..." : "短縮リンクを作成"}
+          </button>
+          {shortUrl && (
+            <span className="short-url-wrap" style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+              <a className="short-url" href={shortUrl} target="_blank" rel="noreferrer" style={{ overflowWrap: "anywhere" }}>
+                {shortUrl}
+              </a>
+              <button className="shorten-copy-btn" onClick={() => handleCopy(shortUrl)}>コピー</button>
+            </span>
+          )}
+        </div>
+
+        {(shortMsg || shortErr) && (
+          <div className={`shorten-message ${shortErr ? "error" : "ok"}`} style={{ marginTop: 6 }}>
+            {shortErr || shortMsg}
+          </div>
+        )}
+      </div>
 
       {loading && <p className="muted" style={{ textAlign: "center" }}>読み込み中…</p>}
       {loadError && <p className="error" style={{ textAlign: "center" }}>{loadError}</p>}
