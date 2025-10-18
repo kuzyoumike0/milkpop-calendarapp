@@ -125,7 +125,6 @@ const b64decodeUtf8 = (b64) => {
 
 /* ====== 短縮URLユーティリティ（タイムアウト＋リトライ＋フォールバック） ====== */
 async function shortenUrlWithFallback(fullUrl) {
-  // フロントと同一オリジンの /api/shorten を想定（別オリジンの場合はプロキシ等で合わせてください）
   const attempt = async (signal) => {
     const res = await fetch("/api/shorten", {
       method: "POST",
@@ -176,6 +175,10 @@ async function shortenUrlWithFallback(fullUrl) {
     return fullUrl; // フォールバック
   }
 }
+
+// 既存URLが短縮済みかどうかの簡易判定
+const isLikelyShort = (url = "") =>
+  !!url && (url.includes("/s/") || url.length < 80);
 
 /* ========================= メイン ========================= */
 export default function PersonalPage() {
@@ -272,6 +275,46 @@ export default function PersonalPage() {
     });
     localStorage.setItem("personalShareLinks", JSON.stringify(linksArr));
   }, [shareLinks, records]);
+
+  // ==== 既存の長いURLを起動時にまとめて短縮へ自動移行（1回限り） ====
+  const migratedRef = useRef(false);
+  useEffect(() => {
+    if (migratedRef.current) return;
+
+    const doMigrate = async () => {
+      let changed = false;
+
+      // 1) 1件共有リンク群
+      const entries = Object.entries(shareLinks);
+      const newMap = { ...shareLinks };
+      for (const [rid, url] of entries) {
+        if (!url || isLikelyShort(url)) continue;
+        try {
+          const short = await shortenUrlWithFallback(url);
+          if (short && short !== url) {
+            newMap[rid] = short;
+            changed = true;
+          }
+        } catch {}
+      }
+      if (changed) setShareLinks(newMap);
+
+      // 2) 全件共有
+      if (allShareUrl && !isLikelyShort(allShareUrl)) {
+        try {
+          const shortAll = await shortenUrlWithFallback(allShareUrl);
+          if (shortAll && shortAll !== allShareUrl) {
+            setAllShareUrl(shortAll);
+            localStorage.setItem("personalShareAllLink", shortAll);
+          }
+        } catch {}
+      }
+    };
+
+    doMigrate().finally(() => {
+      migratedRef.current = true;
+    });
+  }, [shareLinks, allShareUrl]);
 
   const holidayMap = useMemo(() => buildJapaneseHolidays(year), [year]);
   const weeks = useMemo(() => buildMonthMatrix(year, month), [year, month]);
@@ -424,7 +467,7 @@ export default function PersonalPage() {
     });
   };
 
-  // 1件共有（短縮URLに変更）
+  // 1件共有（短縮URL）
   const onShare = async (rec) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const fullUrl = `${origin}/personal/share/${rec.id}`;
@@ -437,9 +480,8 @@ export default function PersonalPage() {
     }
   };
 
-  // 全件共有（短縮URLに変更）
+  // 全件共有（短縮URL）
   const onShareAll = async () => {
-    // 共有用の最小データに正規化
     const allEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -448,7 +490,7 @@ export default function PersonalPage() {
           title: r.title || "（無題）",
           memo: r.memo || "",
           allDay: it.slot === "終日",
-          slot: it.slot, // "終日" | "昼" | "夜" | "✕" | "X時〜Y時"
+          slot: it.slot,
           startTime:
             typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
           endTime:
@@ -456,7 +498,6 @@ export default function PersonalPage() {
         });
       }
     }
-    // 日付昇順で見やすく
     allEvents.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
     const payload = {
