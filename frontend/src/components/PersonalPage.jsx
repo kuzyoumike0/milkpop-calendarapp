@@ -123,6 +123,60 @@ const b64decodeUtf8 = (b64) => {
   return JSON.parse(json);
 };
 
+/* ====== 短縮URLユーティリティ（タイムアウト＋リトライ＋フォールバック） ====== */
+async function shortenUrlWithFallback(fullUrl) {
+  // フロントと同一オリジンの /api/shorten を想定（別オリジンの場合はプロキシ等で合わせてください）
+  const attempt = async (signal) => {
+    const res = await fetch("/api/shorten", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: fullUrl }),
+      signal,
+    });
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const j = await res.json();
+        detail = j?.error || j?.message || "";
+      } catch {}
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const out = data?.shortUrl
+      ? data.shortUrl
+      : data?.code
+      ? `${window.location.origin.replace(/\/$/, "")}/s/${data.code}`
+      : "";
+    if (!out) throw new Error("短縮結果が不正です");
+    return out;
+  };
+
+  const withTimeout = (ms) => {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), ms);
+    return { ctrl, id };
+  };
+
+  try {
+    let short = "";
+    for (let i = 1; i <= 2; i++) {
+      const { ctrl, id } = withTimeout(8000);
+      try {
+        short = await attempt(ctrl.signal);
+        clearTimeout(id);
+        break;
+      } catch (e) {
+        clearTimeout(id);
+        if (i === 2) throw e;
+      }
+    }
+    return short;
+  } catch (e) {
+    console.warn("短縮URL失敗（フォールバック使用）:", e?.message || e);
+    return fullUrl; // フォールバック
+  }
+}
+
 /* ========================= メイン ========================= */
 export default function PersonalPage() {
   const now = new Date();
@@ -145,10 +199,10 @@ export default function PersonalPage() {
   const [records, setRecords] = useState([]); // {id,title,memo,items:[{date,slot,startHour,endHour}],createdAt}
   const [editingId, setEditingId] = useState(null);
 
-  // 共有URL表示: { [recordId]: url }
+  // 共有URL表示: { [recordId]: url }  ← 短縮済みURLを保持
   const [shareLinks, setShareLinks] = useState({});
 
-  // 全件共有URL
+  // 全件共有URL（短縮済み）
   const [allShareUrl, setAllShareUrl] = useState("");
 
   // 回答した共有リンク一覧（SharePageで保存時に記録されたものを表示）
@@ -206,7 +260,7 @@ export default function PersonalPage() {
   }, [records]);
 
   useEffect(() => {
-    // 3) 共有リンク一覧（配列）を保存
+    // 3) 共有リンク一覧（配列）を保存（短縮済みURLを保存）
     const linksArr = Object.entries(shareLinks).map(([recordId, url]) => {
       const rec = records.find((r) => r.id === recordId);
       return {
@@ -370,18 +424,21 @@ export default function PersonalPage() {
     });
   };
 
-  // 1件共有（既存）
-  const onShare = (rec) => {
+  // 1件共有（短縮URLに変更）
+  const onShare = async (rec) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/personal/share/${rec.id}`;
+    const fullUrl = `${origin}/personal/share/${rec.id}`;
+
+    const short = await shortenUrlWithFallback(fullUrl);
+    setShareLinks((prev) => ({ ...prev, [rec.id]: short }));
+
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url).catch(() => {});
+      navigator.clipboard.writeText(short).catch(() => {});
     }
-    setShareLinks((prev) => ({ ...prev, [rec.id]: url }));
   };
 
-  // 全件共有（新規）
-  const onShareAll = () => {
+  // 全件共有（短縮URLに変更）
+  const onShareAll = async () => {
     // 共有用の最小データに正規化
     const allEvents = [];
     for (const r of records) {
@@ -411,13 +468,14 @@ export default function PersonalPage() {
 
     const b64 = b64encodeUtf8(payload);
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/personal/share/bundle#${b64}`;
+    const fullUrl = `${origin}/personal/share/bundle#${b64}`;
 
-    setAllShareUrl(url);
-    localStorage.setItem("personalShareAllLink", url);
+    const short = await shortenUrlWithFallback(fullUrl);
+    setAllShareUrl(short);
+    localStorage.setItem("personalShareAllLink", short);
 
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(url).catch(() => {});
+      navigator.clipboard.writeText(short).catch(() => {});
     }
   };
 
@@ -752,7 +810,7 @@ export default function PersonalPage() {
               ))}
             </ul>
 
-            {/* 共有URLをカード内に表示 */}
+            {/* 共有URLをカード内に表示（短縮URLを表示） */}
             {shareLinks[rec.id] && (
               <div className="share-link-row">
                 <span className="share-label">共有URL：</span>
