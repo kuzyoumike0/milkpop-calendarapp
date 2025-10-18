@@ -117,11 +117,6 @@ const b64encodeUtf8 = (obj) => {
   const utf8 = unescape(encodeURIComponent(json));
   return btoa(utf8);
 };
-const b64decodeUtf8 = (b64) => {
-  const utf8 = atob(b64);
-  const json = decodeURIComponent(escape(utf8));
-  return JSON.parse(json);
-};
 
 /* ====== 短縮URLユーティリティ（タイムアウト＋リトライ＋フォールバック） ====== */
 async function shortenUrlWithFallback(fullUrl) {
@@ -171,14 +166,13 @@ async function shortenUrlWithFallback(fullUrl) {
     }
     return short;
   } catch (e) {
-    console.warn("短縮URL失敗（フォールバック使用）:", e?.message || e);
-    return fullUrl; // フォールバック
+    console.warn("短縮URL失敗（フォールバックで元URLを返却）:", e?.message || e);
+    return fullUrl;
   }
 }
 
-// 既存URLが短縮済みかどうかの簡易判定
-const isLikelyShort = (url = "") =>
-  !!url && (url.includes("/s/") || url.length < 80);
+// 既存URLが短縮済みかどうか（簡易判定）
+const isLikelyShort = (url = "") => !!url && (url.includes("/s/") || url.length < 80);
 
 /* ========================= メイン ========================= */
 export default function PersonalPage() {
@@ -205,10 +199,12 @@ export default function PersonalPage() {
   // 共有URL表示: { [recordId]: url }  ← 短縮済みURLを保持
   const [shareLinks, setShareLinks] = useState({});
 
-  // 全件共有URL（短縮済み）
+  // 全件共有URL（短縮済み）と状態
   const [allShareUrl, setAllShareUrl] = useState("");
+  const [allShortening, setAllShortening] = useState(false);
+  const [allShortMsg, setAllShortMsg] = useState("");
 
-  // 回答した共有リンク一覧（SharePageで保存時に記録されたものを表示）
+  // 回答した共有リンク一覧
   const [answeredShares, setAnsweredShares] = useState([]);
 
   // ===== ソート状態 =====
@@ -234,15 +230,17 @@ export default function PersonalPage() {
       setShareLinks({});
       setAllShareUrl("");
     }
-    setAnsweredShares(loadAnsweredShares());
+    try {
+      const arr = JSON.parse(localStorage.getItem(STORAGE_ANSWERED_KEY) || "[]");
+      setAnsweredShares(Array.isArray(arr) ? arr : []);
+    } catch {
+      setAnsweredShares([]);
+    }
   }, []);
 
-  // ==== records/links が変わったら localStorage に保存 & 共有ページ用データを同期 ====
+  // ==== records が変わったら 共有ページ用データを同期 ====
   useEffect(() => {
-    // 1) 内部編集用の完全データ
     localStorage.setItem("personalRecords", JSON.stringify(records));
-
-    // 2) 共有ページが読む簡易イベント配列
     const flatEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -252,42 +250,32 @@ export default function PersonalPage() {
           memo: r.memo || "",
           allDay: it.slot === "終日",
           slot: it.slot,
-          startTime:
-            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
-          endTime:
-            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+          startTime: typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime: typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
         });
       }
     }
     localStorage.setItem("personalEvents", JSON.stringify(flatEvents));
   }, [records]);
 
+  // ==== shareLinks を保存
   useEffect(() => {
-    // 3) 共有リンク一覧（配列）を保存（短縮済みURLを保存）
     const linksArr = Object.entries(shareLinks).map(([recordId, url]) => {
       const rec = records.find((r) => r.id === recordId);
-      return {
-        recordId,
-        url,
-        title: rec?.title || url,
-        note: rec?.memo || "",
-      };
+      return { recordId, url, title: rec?.title || url, note: rec?.memo || "" };
     });
     localStorage.setItem("personalShareLinks", JSON.stringify(linksArr));
   }, [shareLinks, records]);
 
-  // ==== 既存の長いURLを起動時にまとめて短縮へ自動移行（1回限り） ====
+  // ==== 既存“長い全件URL”を自動移行（1回）
   const migratedRef = useRef(false);
   useEffect(() => {
     if (migratedRef.current) return;
-
-    const doMigrate = async () => {
-      let changed = false;
-
+    const migrate = async () => {
       // 1) 1件共有リンク群
-      const entries = Object.entries(shareLinks);
+      let changed = false;
       const newMap = { ...shareLinks };
-      for (const [rid, url] of entries) {
+      for (const [rid, url] of Object.entries(shareLinks)) {
         if (!url || isLikelyShort(url)) continue;
         try {
           const short = await shortenUrlWithFallback(url);
@@ -299,19 +287,20 @@ export default function PersonalPage() {
       }
       if (changed) setShareLinks(newMap);
 
-      // 2) 全件共有
+      // 2) 全件共有URL
       if (allShareUrl && !isLikelyShort(allShareUrl)) {
         try {
-          const shortAll = await shortenUrlWithFallback(allShareUrl);
-          if (shortAll && shortAll !== allShareUrl) {
-            setAllShareUrl(shortAll);
-            localStorage.setItem("personalShareAllLink", shortAll);
+          setAllShortening(true);
+          const short = await shortenUrlWithFallback(allShareUrl);
+          if (short && short !== allShareUrl) {
+            setAllShareUrl(short);
+            localStorage.setItem("personalShareAllLink", short);
           }
         } catch {}
+        setAllShortening(false);
       }
     };
-
-    doMigrate().finally(() => {
+    migrate().finally(() => {
       migratedRef.current = true;
     });
   }, [shareLinks, allShareUrl]);
@@ -333,7 +322,6 @@ export default function PersonalPage() {
   const onCellClick = (d) => {
     if (!d) return;
     const dateStr = fmt(year, month, d);
-
     if (mode === "single") {
       setSelected(new Set([dateStr]));
       rangeStartRef.current = null;
@@ -364,9 +352,9 @@ export default function PersonalPage() {
     }
   };
 
-  const holidayName = (y, m, d) => holidayMap.get(fmt(y, m, d));
   const isToday = (d) => fmt(year, month, d) === todayStr;
   const isSelected = (d) => selected.has(fmt(year, month, d));
+  const holidayName = (y, m, d) => holidayMap.get(fmt(y, m, d));
   const dayClass = (y, m, d) => {
     const dow = new Date(y, m - 1, d).getDay();
     return dow === 0 ? "sunday" : dow === 6 ? "saturday" : "";
@@ -391,7 +379,6 @@ export default function PersonalPage() {
 
   const onRegister = () => {
     if (selected.size === 0) return;
-
     const items = Array.from(selected)
       .sort()
       .map((date) => ({
@@ -411,13 +398,7 @@ export default function PersonalPage() {
     } else {
       const id = `${Date.now()}${Math.random().toString(16).slice(2, 7)}`;
       setRecords((prev) => [
-        {
-          id,
-          title: title || "（無題）",
-          memo,
-          items,
-          createdAt: new Date().toISOString(),
-        },
+        { id, title: title || "（無題）", memo, items, createdAt: new Date().toISOString() },
         ...prev,
       ]);
     }
@@ -428,7 +409,6 @@ export default function PersonalPage() {
     setEditingId(rec.id);
     setTitle(rec.title === "（無題）" ? "" : rec.title);
     setMemo(rec.memo || "");
-
     const firstSlot = rec.items[0]?.slot || "終日";
     if (firstSlot === "終日") setTimePreset("allday");
     else if (firstSlot === "昼") setTimePreset("day");
@@ -442,9 +422,7 @@ export default function PersonalPage() {
         setEndHour(Number(m[2]));
       } else setTimePreset("allday");
     }
-
     setSelected(new Set(rec.items.map((i) => i.date)));
-
     const first = rec.items[0]?.date;
     if (first) {
       const d = new Date(first);
@@ -471,17 +449,17 @@ export default function PersonalPage() {
   const onShare = async (rec) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const fullUrl = `${origin}/personal/share/${rec.id}`;
-
     const short = await shortenUrlWithFallback(fullUrl);
     setShareLinks((prev) => ({ ...prev, [rec.id]: short }));
-
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(short).catch(() => {});
-    }
+    try { await navigator.clipboard.writeText(short); } catch {}
   };
 
-  // 全件共有（短縮URL）
+  // 全件共有（短縮URL）— 成功/失敗のUIを追加
   const onShareAll = async () => {
+    setAllShortMsg("");
+    setAllShortening(true);
+
+    // 共有用データ作成
     const allEvents = [];
     for (const r of records) {
       for (const it of r.items) {
@@ -491,32 +469,31 @@ export default function PersonalPage() {
           memo: r.memo || "",
           allDay: it.slot === "終日",
           slot: it.slot,
-          startTime:
-            typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
-          endTime:
-            typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
+          startTime: typeof it.startHour === "number" ? `${pad(it.startHour)}:00` : null,
+          endTime: typeof it.endHour === "number" ? `${pad(it.endHour)}:00` : null,
         });
       }
     }
     allEvents.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
-    const payload = {
-      type: "bundle",
-      version: 1,
-      generatedAt: new Date().toISOString(),
-      events: allEvents,
-    };
-
-    const b64 = b64encodeUtf8(payload);
+    const payload = { type: "bundle", version: 1, generatedAt: new Date().toISOString(), events: allEvents };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const fullUrl = `${origin}/personal/share/bundle#${b64}`;
 
-    const short = await shortenUrlWithFallback(fullUrl);
-    setAllShareUrl(short);
-    localStorage.setItem("personalShareAllLink", short);
-
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(short).catch(() => {});
+    try {
+      const short = await shortenUrlWithFallback(fullUrl);
+      setAllShareUrl(short);
+      localStorage.setItem("personalShareAllLink", short);
+      try { await navigator.clipboard.writeText(short); } catch {}
+      setAllShortMsg(short === fullUrl ? "短縮に失敗したため、元URLを表示しています（/api/shorten を確認してください）。" : "短縮リンクを作成し、コピーしました。");
+    } catch {
+      setAllShareUrl(fullUrl);
+      localStorage.setItem("personalShareAllLink", fullUrl);
+      setAllShortMsg("短縮に失敗したため、元URLを表示しています（/api/shorten を確認してください）。");
+    } finally {
+      setAllShortening(false);
+      setTimeout(() => setAllShortMsg(""), 3000);
     }
   };
 
@@ -532,47 +509,22 @@ export default function PersonalPage() {
     });
   };
 
-  // ====== ソート用ユーティリティ ======
+  // ===== ソート =====
   const recordFirstDate = (rec) => {
     if (!rec?.items?.length) return null;
-    const min = rec.items
-      .map((it) => it.date)
-      .filter(Boolean)
-      .sort()[0];
+    const min = rec.items.map((it) => it.date).filter(Boolean).sort()[0];
     return min ? new Date(min).getTime() : null;
   };
-
   const sortedRecords = useMemo(() => {
     const arr = [...records];
     switch (sortKey) {
-      case "created_asc":
-        arr.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-        break;
-      case "created_desc":
-        arr.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        break;
-      case "title_asc":
-        arr.sort((a, b) => (a.title || "").localeCompare(b.title || "", "ja"));
-        break;
-      case "title_desc":
-        arr.sort((a, b) => (b.title || "").localeCompare(a.title || "", "ja"));
-        break;
-      case "date_asc":
-        arr.sort((a, b) => {
-          const da = recordFirstDate(a) ?? Number.POSITIVE_INFINITY;
-          const db = recordFirstDate(b) ?? Number.POSITIVE_INFINITY;
-          return da - db;
-        });
-        break;
-      case "date_desc":
-        arr.sort((a, b) => {
-          const da = recordFirstDate(a) ?? Number.NEGATIVE_INFINITY;
-          const db = recordFirstDate(b) ?? Number.NEGATIVE_INFINITY;
-          return db - da;
-        });
-        break;
-      default:
-        break;
+      case "created_asc":   arr.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0)); break;
+      case "created_desc":  arr.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)); break;
+      case "title_asc":     arr.sort((a, b) => (a.title || "").localeCompare(b.title || "", "ja")); break;
+      case "title_desc":    arr.sort((a, b) => (b.title || "").localeCompare(a.title || "", "ja")); break;
+      case "date_asc":      arr.sort((a, b) => (recordFirstDate(a) ?? 9e18) - (recordFirstDate(b) ?? 9e18)); break;
+      case "date_desc":     arr.sort((a, b) => (recordFirstDate(b) ?? -9e18) - (recordFirstDate(a) ?? -9e18)); break;
+      default: break;
     }
     return arr;
   }, [records, sortKey]);
@@ -585,50 +537,15 @@ export default function PersonalPage() {
 
       {/* 入力欄 */}
       <div className="title-memo-row">
-        <input
-          className="title-input"
-          type="text"
-          placeholder="タイトルを入力してください"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <textarea
-          className="memo-input"
-          placeholder="メモを入力してください"
-          value={memo}
-          onChange={(e) => setMemo(e.target.value)}
-        />
+        <input className="title-input" type="text" placeholder="タイトルを入力してください" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <textarea className="memo-input" placeholder="メモを入力してください" value={memo} onChange={(e) => setMemo(e.target.value)} />
       </div>
 
       {/* モード切替 */}
       <div className="select-mode">
-        <button
-          className={`pill-btn ${mode === "single" ? "active" : ""}`}
-          onClick={() => {
-            setMode("single");
-            rangeStartRef.current = null;
-          }}
-        >
-          単日選択
-        </button>
-        <button
-          className={`pill-btn ${mode === "range" ? "active" : ""}`}
-          onClick={() => {
-            setMode("range");
-            rangeStartRef.current = null;
-          }}
-        >
-          範囲選択
-        </button>
-        <button
-          className={`pill-btn ${mode === "multi" ? "active" : ""}`}
-          onClick={() => {
-            setMode("multi");
-            rangeStartRef.current = null;
-          }}
-        >
-          複数選択
-        </button>
+        <button className={`pill-btn ${mode === "single" ? "active" : ""}`} onClick={() => { setMode("single"); rangeStartRef.current = null; }}>単日選択</button>
+        <button className={`pill-btn ${mode === "range" ? "active" : ""}`}  onClick={() => { setMode("range"); rangeStartRef.current = null;  }}>範囲選択</button>
+        <button className={`pill-btn ${mode === "multi" ? "active" : ""}`}  onClick={() => { setMode("multi"); rangeStartRef.current = null;   }}>複数選択</button>
       </div>
 
       {/* カレンダー + サイド */}
@@ -636,41 +553,21 @@ export default function PersonalPage() {
         {/* カレンダー */}
         <div className="calendar-container neo">
           <div className="calendar-header">
-            <button className="nav-circle" onClick={prevMonth} aria-label="前の月">
-              ‹
-            </button>
-            <span className="ym">
-              {year}年 {month}月
-            </span>
-            <button className="nav-circle" onClick={nextMonth} aria-label="次の月">
-              ›
-            </button>
+            <button className="nav-circle" onClick={prevMonth} aria-label="前の月">‹</button>
+            <span className="ym">{year}年 {month}月</span>
+            <button className="nav-circle" onClick={nextMonth} aria-label="次の月">›</button>
           </div>
 
           <table className="calendar-table">
             <thead>
-              <tr>
-                {wdJP.map((w, i) => (
-                  <th key={w} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>
-                    {w}
-                  </th>
-                ))}
-              </tr>
+              <tr>{wdJP.map((w, i) => (<th key={w} className={i === 0 ? "sunday" : i === 6 ? "saturday" : ""}>{w}</th>))}</tr>
             </thead>
             <tbody>
               {weeks.map((week, wi) => (
                 <tr key={wi}>
                   {week.map((d, di) => {
                     if (!d) return <td key={`e-${di}`} />;
-                    const classes = [
-                      "cell",
-                      dayClass(year, month, d),
-                      isToday(d) ? "today" : "",
-                      isSelected(d) ? "selected" : "",
-                      holidayName(year, month, d) ? "holiday" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ");
+                    const classes = ["cell", new Date(year, month - 1, d).getDay() === 0 ? "sunday" : new Date(year, month - 1, d).getDay() === 6 ? "saturday" : "", isToday(d) ? "today" : "", isSelected(d) ? "selected" : "", holidayName(year, month, d) ? "holiday" : ""].filter(Boolean).join(" ");
                     const hname = holidayName(year, month, d);
                     return (
                       <td key={d} className={classes} onClick={() => onCellClick(d)}>
@@ -685,126 +582,55 @@ export default function PersonalPage() {
           </table>
         </div>
 
-        {/* サイドパネル */}
+        {/* サイド */}
         <aside className="side-panel neo">
           <h2 className="side-title">選択中の日程</h2>
 
           <div className="date-card">
-            <div className="date-label">
-              {selected.size ? `${selected.size}日 選択中` : "未選択"}
-            </div>
+            <div className="date-label">{selected.size ? `${selected.size}日 選択中` : "未選択"}</div>
             {selected.size > 0 && (
               <div className="chips">
-                {Array.from(selected)
-                  .sort()
-                  .map((d) => (
-                    <span key={d} className="chip soft">
-                      {d}
-                    </span>
-                  ))}
+                {Array.from(selected).sort().map((d) => (<span key={d} className="chip soft">{d}</span>))}
               </div>
             )}
           </div>
 
           {/* 時間帯プリセット */}
           <div className="time-options">
-            <button
-              className={`time-btn ${timePreset === "allday" ? "active" : ""}`}
-              onClick={() => setTimePreset("allday")}
-            >
-              終日
-            </button>
-            <button
-              className={`time-btn ${timePreset === "day" ? "active" : ""}`}
-              onClick={() => setTimePreset("day")}
-            >
-              昼
-            </button>
-            <button
-              className={`time-btn ${timePreset === "night" ? "active" : ""}`}
-              onClick={() => setTimePreset("night")}
-            >
-              夜
-            </button>
-            <button
-              className={`time-btn ${timePreset === "ng" ? "active" : ""}`}
-              onClick={() => setTimePreset("ng")}
-              title="この日は参加不可（✕）として登録"
-            >
-              ✕
-            </button>
-            <button
-              className={`time-btn ${timePreset === "custom" ? "active" : ""}`}
-              onClick={() => setTimePreset("custom")}
-            >
-              カスタム
-            </button>
+            <button className={`time-btn ${timePreset === "allday" ? "active" : ""}`} onClick={() => setTimePreset("allday")}>終日</button>
+            <button className={`time-btn ${timePreset === "day" ? "active" : ""}`} onClick={() => setTimePreset("day")}>昼</button>
+            <button className={`time-btn ${timePreset === "night" ? "active" : ""}`} onClick={() => setTimePreset("night")}>夜</button>
+            <button className={`time-btn ${timePreset === "ng" ? "active" : ""}`} onClick={() => setTimePreset("ng")} title="この日は参加不可（✕）として登録">✕</button>
+            <button className={`time-btn ${timePreset === "custom" ? "active" : ""}`} onClick={() => setTimePreset("custom")}>カスタム</button>
           </div>
 
           {/* カスタム時間帯 */}
           {timePreset === "custom" && (
             <div className="time-range">
-              <select
-                className="cute-select"
-                value={startHour}
-                onChange={(e) => setStartHour(Number(e.target.value))}
-              >
-                {Array.from({ length: 24 }, (_, h) => (
-                  <option key={h} value={h}>
-                    {h}時
-                  </option>
-                ))}
+              <select className="cute-select" value={startHour} onChange={(e) => setStartHour(Number(e.target.value))}>
+                {Array.from({ length: 24 }, (_, h) => (<option key={h} value={h}>{h}時</option>))}
               </select>
               <span className="time-separator">〜</span>
-              <select
-                className="cute-select"
-                value={endHour}
-                onChange={(e) => setEndHour(Number(e.target.value))}
-              >
-                {Array.from({ length: 24 }, (_, h) => (
-                  <option key={h} value={h}>
-                    {h}時
-                  </option>
-                ))}
+              <select className="cute-select" value={endHour} onChange={(e) => setEndHour(Number(e.target.value))}>
+                {Array.from({ length: 24 }, (_, h) => (<option key={h} value={h}>{h}時</option>))}
               </select>
             </div>
           )}
 
-          <button className="register-btn" onClick={onRegister}>
-            {editingId ? "更新する" : "登録"}
-          </button>
+          <button className="register-btn" onClick={onRegister}>{editingId ? "更新する" : "登録"}</button>
         </aside>
       </div>
 
       {/* 登録済みリスト */}
       <section className="registered-list">
-        <div
-          className="saved-title-row"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-          }}
-        >
-          <h2 className="saved-title" style={{ margin: 0 }}>
-            あなたの個人日程（保存済み）
-          </h2>
+        <div className="saved-title-row" style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between", flexWrap: "wrap" }}>
+          <h2 className="saved-title" style={{ margin: 0 }}>あなたの個人日程（保存済み）</h2>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {/* ソートUI */}
+            {/* ソート */}
             <div className="sort-box" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <label htmlFor="sortKey" className="muted" style={{ fontSize: "0.95rem" }}>
-                並び替え:
-              </label>
-              <select
-                id="sortKey"
-                className="cute-select"
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value)}
-                aria-label="登録済み日程の並び順"
-              >
+              <label htmlFor="sortKey" className="muted" style={{ fontSize: "0.95rem" }}>並び替え:</label>
+              <select id="sortKey" className="cute-select" value={sortKey} onChange={(e) => setSortKey(e.target.value)} aria-label="登録済み日程の並び順">
                 <option value="created_desc">作成が新しい順</option>
                 <option value="created_asc">作成が古い順</option>
                 <option value="date_asc">最初の日付が早い順</option>
@@ -814,9 +640,9 @@ export default function PersonalPage() {
               </select>
             </div>
 
-            {/* 全件共有ボタン */}
-            <button className="ghost-btn primary" onClick={onShareAll} title="登録済みすべてを1本のリンクで共有">
-              全件共有リンクを発行
+            {/* 全件共有ボタン（状態表示付き） */}
+            <button className="ghost-btn primary" onClick={onShareAll} title="登録済みすべてを1本のリンクで共有" disabled={allShortening}>
+              {allShortening ? "短縮リンク作成中…" : "全件共有リンクを発行"}
             </button>
           </div>
         </div>
@@ -824,11 +650,10 @@ export default function PersonalPage() {
         {allShareUrl && (
           <div className="share-link-row neo" style={{ marginTop: 10, padding: 12, borderRadius: 12 }}>
             <span className="share-label">全件共有URL：</span>
-            <a className="share-url" href={allShareUrl} target="_blank" rel="noopener noreferrer">
-              {allShareUrl}
-            </a>
+            <a className="share-url" href={allShareUrl} target="_blank" rel="noopener noreferrer">{allShareUrl}</a>
           </div>
         )}
+        {allShortMsg && <div className="save-message" style={{ marginTop: 6 }}>{allShortMsg}</div>}
 
         {sortedRecords.length === 0 && <p className="muted">まだ登録はありません。</p>}
 
@@ -836,52 +661,35 @@ export default function PersonalPage() {
           <div key={rec.id} className="schedule-card neo">
             <div className="schedule-header">
               {rec.title}
-              <span className="created-at">
-                （作成日時: {new Date(rec.createdAt || Date.now()).toLocaleString("ja-JP")}）
-              </span>
+              <span className="created-at">（作成日時: {new Date(rec.createdAt || Date.now()).toLocaleString("ja-JP")}）</span>
             </div>
 
             {rec.memo && <div className="schedule-memo">〈メモ〉{rec.memo}</div>}
 
             <ul className="schedule-items">
-              {rec.items.map((it, i) => (
-                <li key={i}>
-                  {it.date} / {it.slot}
-                </li>
-              ))}
+              {rec.items.map((it, i) => (<li key={i}>{it.date} / {it.slot}</li>))}
             </ul>
 
-            {/* 共有URLをカード内に表示（短縮URLを表示） */}
+            {/* 共有URL（短縮） */}
             {shareLinks[rec.id] && (
               <div className="share-link-row">
                 <span className="share-label">共有URL：</span>
-                <a
-                  className="share-url"
-                  href={shareLinks[rec.id]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a className="share-url" href={shareLinks[rec.id]} target="_blank" rel="noopener noreferrer">
                   {shareLinks[rec.id]}
                 </a>
               </div>
             )}
 
             <div className="card-actions">
-              <button className="ghost-btn" onClick={() => onEdit(rec)}>
-                編集
-              </button>
-              <button className="ghost-btn danger" onClick={() => onDelete(rec.id)}>
-                削除
-              </button>
-              <button className="ghost-btn primary" onClick={() => onShare(rec)}>
-                共有
-              </button>
+              <button className="ghost-btn" onClick={() => onEdit(rec)}>編集</button>
+              <button className="ghost-btn danger" onClick={() => onDelete(rec.id)}>削除</button>
+              <button className="ghost-btn primary" onClick={() => onShare(rec)}>共有</button>
             </div>
           </div>
         ))}
       </section>
 
-      {/* 回答した共有リンク一覧（SharePageで保存したもの） */}
+      {/* 回答した共有リンク */}
       <section className="registered-list">
         <h2 className="saved-title">回答した共有リンク</h2>
         {answeredShares.length === 0 ? (
@@ -892,93 +700,16 @@ export default function PersonalPage() {
               {answeredShares.map((x, i) => (
                 <li key={`${x.url}-${x.savedAt}-${i}`} className="answered-item">
                   <div className="answered-main" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div
-                      className="answered-avatar"
-                      aria-hidden
-                      style={{
-                        width: 36,
-                        height: 36,
-                        flex: "0 0 auto",
-                        borderRadius: 999,
-                        background: "#FDB9C8",
-                        display: "grid",
-                        placeItems: "center",
-                        fontSize: 18,
-                        color: "#111",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      }}
-                    >
-                      🔗
-                    </div>
-
-                    <a
-                      className="answered-link"
-                      href={x.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={x.url}
-                      style={{ textDecoration: "none" }}
-                    >
-                      <div
-                        className="answered-title"
-                        style={{
-                          fontWeight: 700,
-                          fontSize: "1rem",
-                          lineHeight: 1.3,
-                          color: "#004CA0",
-                          display: "block",
-                        }}
-                      >
-                        {x.title || "共有日程"}
-                      </div>
-
-                      <div
-                        className="answered-url"
-                        style={{
-                          marginTop: 2,
-                          fontFamily:
-                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                          fontSize: "0.85rem",
-                          color: "#444",
-                          opacity: 0.9,
-                          wordBreak: "break-all",
-                          display: "block",
-                        }}
-                      >
-                        {x.url}
-                      </div>
+                    <div className="answered-avatar" aria-hidden style={{ width: 36, height: 36, flex: "0 0 auto", borderRadius: 999, background: "#FDB9C8", display: "grid", placeItems: "center", fontSize: 18, color: "#111", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>🔗</div>
+                    <a className="answered-link" href={x.url} target="_blank" rel="noreferrer" title={x.url} style={{ textDecoration: "none" }}>
+                      <div className="answered-title" style={{ fontWeight: 700, fontSize: "1rem", lineHeight: 1.3, color: "#004CA0", display: "block" }}>{x.title || "共有日程"}</div>
+                      <div className="answered-url" style={{ marginTop: 2, fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace", fontSize: "0.85rem", color: "#444", opacity: 0.9, wordBreak: "break-all", display: "block" }}>{x.url}</div>
                     </a>
                   </div>
-
-                  <div
-                    className="answered-meta"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      marginTop: 6,
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <span className="answered-time" style={{ color: "#666", fontSize: "0.85rem" }}>
-                      保存: {fmtDateTime(x.savedAt)}
-                    </span>
-
+                  <div className="answered-meta" style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6, justifyContent: "space-between" }}>
+                    <span className="answered-time" style={{ color: "#666", fontSize: "0.85rem" }}>保存: {fmtDateTime(x.savedAt)}</span>
                     <div className="answered-actions" style={{ display: "flex", gap: 8 }}>
-                      <button
-                        className="ghost-btn danger small"
-                        aria-label="この履歴を削除"
-                        title="この履歴を削除"
-                        onClick={() => removeOneAnsweredShare(x.url, x.savedAt)}
-                        style={{
-                          borderRadius: 999,
-                          padding: "6px 12px",
-                          border: "1px solid rgba(0,0,0,0.08)",
-                          background: "#fff",
-                          color: "#d11",
-                          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-                        }}
-                      >
+                      <button className="ghost-btn danger small" aria-label="この履歴を削除" title="この履歴を削除" onClick={() => removeOneAnsweredShare(x.url, x.savedAt)} style={{ borderRadius: 999, padding: "6px 12px", border: "1px solid rgba(0,0,0,0.08)", background: "#fff", color: "#d11", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                         削除
                       </button>
                     </div>
@@ -988,9 +719,7 @@ export default function PersonalPage() {
             </ul>
 
             <div className="card-actions" style={{ marginTop: 12 }}>
-              <button className="ghost-btn danger" onClick={clearAnsweredShares}>
-                すべてクリア
-              </button>
+              <button className="ghost-btn danger" onClick={clearAnsweredShares}>すべてクリア</button>
             </div>
           </div>
         )}
